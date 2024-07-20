@@ -1,17 +1,27 @@
 //! Recipya is a clean, simple and powerful recipe manager your whole family will enjoy.
 
-mod app;
-
+use axum::response::{IntoResponse, Redirect};
 use axum::Router;
 use axum::routing::get;
 use tokio::signal;
+use tower_http::services::ServeDir;
+
 use crate::app::App;
+
+mod app;
 
 /// Starts the web server.
 pub async fn run_server() {
     let app = App::new().await;
 
-    let router = Router::new().route("/", get(|| async { "Hello, world!" }));
+    let router = Router::new()
+        .route("/", get(|| async { "Hello, world!" }))
+        .route(
+            "/guide/auth/login",
+            get(|| async { Redirect::permanent("/auth/login") }),
+        )
+        .nest_service("/guide", ServeDir::new("docs/public"));
+
     let addr = app.address(true);
     let listener = tokio::net::TcpListener::bind(addr.trim_start_matches("http://"))
         .await
