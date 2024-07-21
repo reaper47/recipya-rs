@@ -314,6 +314,18 @@ impl App {
             String::from(&self.config.server.url)
         }
     }
+
+    pub fn is_bypass_guide(&self) -> bool {
+        self.config.server.is_bypass_guide
+    }
+    
+    pub fn is_demo(&self) -> bool {
+        self.config.server.is_demo
+    }
+
+    pub fn is_no_signups(&self) -> bool {
+        self.config.server.is_no_signups
+    }
 }
 
 impl ConfigFile {
@@ -601,5 +613,27 @@ mod tests {
         let got = app.address(true);
 
         assert_eq!(got, "http://localhost:8078");
+    }
+
+    #[test]
+    fn app_is_demo() {
+        let mut app = App{
+            config: Default::default(),
+            general: Default::default(),
+            paths: Paths {
+                backup: Default::default(),
+                db: Default::default(),
+                images: Default::default(),
+                logs: Default::default(),
+                thumbnails: Default::default(),
+                videos: Default::default(),
+            }
+        };
+
+        app.config.server.is_demo = true;
+        assert!(app.is_demo());
+
+        app.config.server.is_demo = false;
+        assert!(!app.is_demo());
     }
 }

@@ -1,28 +1,23 @@
 //! Recipya is a clean, simple and powerful recipe manager your whole family will enjoy.
 
-use axum::response::{IntoResponse, Redirect};
-use axum::Router;
-use axum::routing::get;
-use tokio::signal;
-use tower_http::services::ServeDir;
+use std::sync::Arc;
 
-use crate::app::App;
+use axum::{http::StatusCode, response::IntoResponse, Router};
+use tokio::signal;
 
 mod app;
+mod web;
 
 /// Starts the web server.
 pub async fn run_server() {
-    let app = App::new().await;
+    let app = Arc::new(app::App::new().await);
+    let addr = app.address(true);
 
     let router = Router::new()
-        .route("/", get(|| async { "Hello, world!" }))
-        .route(
-            "/guide/auth/login",
-            get(|| async { Redirect::permanent("/auth/login") }),
-        )
-        .nest_service("/guide", ServeDir::new("docs/public"));
+        .merge(web::routes::general::routes(Arc::clone(&app)))
+        .merge(web::routes::auth::routes(app))
+        .fallback(handler_404);
 
-    let addr = app.address(true);
     let listener = tokio::net::TcpListener::bind(addr.trim_start_matches("http://"))
         .await
         .expect("failed to start server");
@@ -33,6 +28,16 @@ pub async fn run_server() {
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap()
+}
+
+async fn handler_404() -> impl IntoResponse {
+    (
+        StatusCode::NOT_FOUND,
+        web::templates::general::simple(
+            "Page Not Found",
+            "The page you requested to view is not found. Please go back to the main page.",
+        ),
+    )
 }
 
 async fn shutdown_signal() {
