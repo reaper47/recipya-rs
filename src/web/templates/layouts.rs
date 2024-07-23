@@ -1,4 +1,4 @@
-use maud::{DOCTYPE, html, Markup};
+use maud::{html, Markup, DOCTYPE};
 
 use crate::web;
 

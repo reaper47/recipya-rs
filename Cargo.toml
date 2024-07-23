@@ -16,8 +16,10 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 axum = {  version = "0.7.5" }
 clap = { version = "4.5.9", features = ["derive"] }
+deadpool-postgres = "0.14.0"
 dirs = "5.0.1"
 maud = { version = "*", features = ["axum"] }
+refinery = {  version = "0.8.14", features = ["tokio-postgres"] }
 reqwest = "0.12.5" 
 serde = {  version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"

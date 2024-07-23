@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use axum::extract::State;
 use axum::response::Redirect;
-use axum::Router;
 use axum::routing::get;
+use axum::Router;
 use tower_http::services::ServeDir;
 
 use crate::app;

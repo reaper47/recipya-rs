@@ -1,26 +1,23 @@
-use std::{env, fs, io, process};
 use std::fs::File;
 use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-
+use std::{env, fs, io, process};
+use std::ops::DerefMut;
+use deadpool_postgres::tokio_postgres::NoTls;
+use deadpool_postgres::{ManagerConfig, Pool, RecyclingMethod, Runtime};
 use serde::{Deserialize, Serialize};
 use spinach::{Color, Spinach};
 use tokio::net::TcpListener;
+use tokio::task;
+
+refinery::embed_migrations!("migrations");
 
 pub struct App {
     config: ConfigFile,
     general: General,
     paths: Paths,
-}
-
-struct Paths {
-    backup: PathBuf,
-    db: PathBuf,
-    images: PathBuf,
-    logs: PathBuf,
-    thumbnails: PathBuf,
-    videos: PathBuf,
+    pool: Option<Pool>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -30,16 +27,16 @@ struct ConfigFile {
     server: ConfigServer,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
 struct ConfigEmail {
     from: String,
     sendgrid_api_key: String,
 }
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
 struct ConfigIntegrations {
     azure_di: AzureDI,
 }
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
 struct AzureDI {
     endpoint: String,
     key: String,
@@ -47,6 +44,7 @@ struct AzureDI {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct ConfigServer {
+    database_url: String,
     is_autologin: bool,
     is_bypass_guide: bool,
     is_demo: bool,
@@ -56,8 +54,18 @@ struct ConfigServer {
     url: String,
 }
 
+#[derive(Default)]
 struct General {
     is_ffmpeg_installed: bool,
+}
+
+struct Paths {
+    backup: PathBuf,
+    db: PathBuf,
+    images: PathBuf,
+    logs: PathBuf,
+    thumbnails: PathBuf,
+    videos: PathBuf,
 }
 
 impl App {
@@ -79,6 +87,11 @@ impl App {
                 println!("****************************");
 
                 let mut config = ConfigFile::default();
+
+                config.server.database_url = prompt_user(
+                    "What is your PostgreSQL URL? [postgres://user:password@localhost/recipya]",
+                    "",
+                );
 
                 let has_send_grid = prompt_user("Do you have a SendGrid account? If not, important emails will not be sent [y/N]", "N");
                 if has_send_grid.to_lowercase() == "y" {
@@ -130,6 +143,25 @@ impl App {
         };
         println!("\x1b[32mOK\x1b[0m Configuration file");
 
+        // Connect to database
+        let mut db_config = deadpool_postgres::Config::new();
+        db_config.url = Some("postgres://postgres:Poule420!@localhost:5432/recipya".into());
+        db_config.manager = Some(ManagerConfig {
+            recycling_method: RecyclingMethod::Fast,
+        });
+
+        let pool = db_config.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
+        {
+            let client = pool.get().await.unwrap();
+            let rows = client.query("SELECT 1", &[]).await.unwrap();
+            let value: i32 = rows[0].get(0);
+            assert_eq!(value, 1);
+        }
+
+        let mut conn = pool.get().await.unwrap();
+        let client = conn.deref_mut().deref_mut();
+        migrations::runner().run_async(client).await.unwrap();
+        
         // Setup FDC database
         let fdc_db_path = paths.db.join("fdc.db");
         if fdc_db_path.exists() {
@@ -290,9 +322,10 @@ impl App {
         println!("\t- Videos:   {}", paths.videos.display());
 
         Self {
-            paths,
             config,
             general,
+            paths,
+            pool: Some(pool),
         }
     }
 
@@ -318,7 +351,7 @@ impl App {
     pub fn is_bypass_guide(&self) -> bool {
         self.config.server.is_bypass_guide
     }
-    
+
     pub fn is_demo(&self) -> bool {
         self.config.server.is_demo
     }
@@ -349,15 +382,6 @@ impl ConfigFile {
             process::exit(1);
         }
 
-        let port = env::var("RECIPYA_SERVER_PORT").unwrap();
-        let port: u16 = port.parse().expect("port '{}' must be a number");
-
-        let is_autologin = env::var("RECIPYA_SERVER_AUTOLOGIN").unwrap_or_default() == "true";
-        let is_bypass_guide = env::var("RECIPYA_SERVER_BYPASS_GUIDE").unwrap_or_default() == "true";
-        let is_demo = env::var("RECIPYA_SERVER_IS_DEMO").unwrap_or_default() == "true";
-        let is_no_signups = env::var("RECIPYA_SERVER_NO_SIGNUPS").unwrap_or_default() == "true";
-        let is_production = env::var("RECIPYA_SERVER_IS_PROD").unwrap_or_default() == "true";
-
         let config = Self {
             email: ConfigEmail {
                 from: env::var("RECIPYA_EMAIL").unwrap_or_default(),
@@ -370,12 +394,17 @@ impl ConfigFile {
                 },
             },
             server: ConfigServer {
-                is_autologin,
-                is_bypass_guide,
-                is_demo,
-                is_no_signups,
-                is_production,
-                port,
+                database_url: env::var("RECIPYA_SERVER_DB_URL").unwrap_or_default(),
+                is_autologin: env::var("RECIPYA_SERVER_AUTOLOGIN").unwrap_or_default() == "true",
+                is_bypass_guide: env::var("RECIPYA_SERVER_BYPASS_GUIDE").unwrap_or_default()
+                    == "true",
+                is_demo: env::var("RECIPYA_SERVER_IS_DEMO").unwrap_or_default() == "true",
+                is_no_signups: env::var("RECIPYA_SERVER_NO_SIGNUPS").unwrap_or_default() == "true",
+                is_production: env::var("RECIPYA_SERVER_IS_PROD").unwrap_or_default() == "true",
+                port: env::var("RECIPYA_SERVER_PORT")
+                    .unwrap()
+                    .parse()
+                    .expect("port '{}' must be a number"),
                 url: env::var("RECIPYA_SERVER_URL").unwrap_or(String::from("http://0.0.0.0")),
             },
         };
@@ -388,17 +417,10 @@ impl ConfigFile {
 impl Default for ConfigFile {
     fn default() -> Self {
         ConfigFile {
-            email: ConfigEmail {
-                from: String::new(),
-                sendgrid_api_key: String::new(),
-            },
-            integrations: ConfigIntegrations {
-                azure_di: AzureDI {
-                    endpoint: String::new(),
-                    key: String::new(),
-                },
-            },
+            email: ConfigEmail::default(),
+            integrations: ConfigIntegrations::default(),
             server: ConfigServer {
+                database_url: String::new(),
                 is_autologin: false,
                 is_bypass_guide: false,
                 is_demo: false,
@@ -407,14 +429,6 @@ impl Default for ConfigFile {
                 port: 8078,
                 url: String::from("http://0.0.0.0"),
             },
-        }
-    }
-}
-
-impl Default for General {
-    fn default() -> Self {
-        Self {
-            is_ffmpeg_installed: false,
         }
     }
 }
@@ -485,7 +499,11 @@ mod tests {
             ("RECIPYA_EMAIL", "my@email.com"),
             ("RECIPYA_EMAIL_SENDGRID", "API_KEY"),
             ("RECIPYA_SERVER_IS_DEMO", "false"),
-            ("RECIPYA_SERVER_IS_BYPASS_GUIDE", "true"),
+            (
+                "RECIPYA_SERVER_DB_URL",
+                "postgres://postgres:pwd@localhost:5432/recipya",
+            ),
+            ("RECIPYA_SERVER_BYPASS_GUIDE", "true"),
             ("RECIPYA_SERVER_IS_PROD", "true"),
             ("RECIPYA_SERVER_PORT", "8078"),
             ("RECIPYA_SERVER_AUTOLOGIN", "true"),
@@ -527,6 +545,7 @@ mod tests {
                     }
                 },
                 server: ConfigServer {
+                    database_url: String::from("postgres://postgres:pwd@localhost:5432/recipya"),
                     is_autologin: true,
                     is_bypass_guide: true,
                     is_demo: false,
@@ -557,6 +576,7 @@ mod tests {
                     }
                 },
                 server: ConfigServer {
+                    database_url: String::new(),
                     is_autologin: false,
                     is_bypass_guide: false,
                     is_demo: false,
@@ -577,6 +597,7 @@ mod tests {
             config,
             general: General::default(),
             paths: Paths::new(),
+            pool: None,
         };
 
         let got = app.address(true);
@@ -592,6 +613,7 @@ mod tests {
             config,
             general: General::default(),
             paths: Paths::new(),
+            pool: None,
         };
 
         let got = app.address(false);
@@ -608,6 +630,7 @@ mod tests {
             config,
             general: General::default(),
             paths: Paths::new(),
+            pool: None,
         };
 
         let got = app.address(true);
@@ -617,7 +640,7 @@ mod tests {
 
     #[test]
     fn app_is_demo() {
-        let mut app = App{
+        let mut app = App {
             config: Default::default(),
             general: Default::default(),
             paths: Paths {
@@ -627,7 +650,8 @@ mod tests {
                 logs: Default::default(),
                 thumbnails: Default::default(),
                 videos: Default::default(),
-            }
+            },
+            pool: None,
         };
 
         app.config.server.is_demo = true;

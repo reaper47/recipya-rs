@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
-use recipya::run_server;
 
+use recipya::run_server;
 
 #[derive(Parser)]
 #[command(name = "Recipya")]
@@ -13,7 +13,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-   #[command(about = "Starts the web server")]
+    #[command(about = "Starts the web server")]
     Serve,
 }
 

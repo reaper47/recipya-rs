@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use axum::extract::State;
-use axum::Router;
-use axum::routing::get;
-use maud::Markup;
 use crate::{app, web};
+use axum::extract::State;
+use axum::routing::get;
+use axum::Router;
+use maud::Markup;
+use std::sync::Arc;
 
 pub fn routes(state: Arc<app::App>) -> Router {
     Router::new()
