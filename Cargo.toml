@@ -14,21 +14,31 @@ categories = ["web-programming"]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-axum = {  version = "0.7.5" }
+argon2 = "0.5.3"
+axum = { version = "0.7.5" }
 clap = { version = "4.5.9", features = ["derive"] }
+deadpool = "0.12.1"
 deadpool-postgres = "0.14.0"
 dirs = "5.0.1"
+lazy-regex = "3.2.0"
 maud = { version = "*", features = ["axum"] }
-refinery = {  version = "0.8.14", features = ["tokio-postgres"] }
+mrml = "4.0.1"
+refinery = { version = "0.8.14", features = ["tokio-postgres"] }
 reqwest = "0.12.5" 
-serde = {  version = "1.0.204", features = ["derive"] }
+sendgrid = { version = "0.21.0", features = ["blocking"] }
+serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
+serde_urlencoded = "0.7.1"
 spinach = "2.1.0"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread", "signal"] }
-tower-http = {  version = "0.5.2", features = ["fs"] }
+tower-cookies = "0.10.0"
+tower-http = { version = "0.5.2", features = ["fs"] }
+validator = { version = "0.16", features = ["derive"] }
 zip = "2.1.3"
 
 [dev-dependencies]
+axum-test = "15.3.0"
+pgtemp = "0.3.0"
 tower = { version = "0.4", features = ["util"] }
 
 [features]

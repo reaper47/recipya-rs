@@ -337,6 +337,8 @@ BEGIN
                    'dessert', 'lunch', 'main dish', 'salad', 'side dish',
                    'snacks', 'soups', 'stews'
         );
+    
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -359,6 +361,8 @@ BEGIN
     UPDATE times
     SET total_seconds = NEW.prep_seconds + NEW.cook_seconds
     WHERE id = NEW.id;
+
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -370,6 +374,8 @@ BEGIN
     UPDATE counts
     SET recipes = recipes + 1
     WHERE id = NEW.user_id;
+
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -381,6 +387,8 @@ BEGIN
     UPDATE app
     SET update_last_checked_at = CURRENT_TIMESTAMP
     WHERE id = 1;
+
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -392,6 +400,8 @@ BEGIN
     UPDATE counts
     SET recipes = recipes - 1
     WHERE id = OLD.user_id;
+
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -403,6 +413,8 @@ BEGIN
     UPDATE cookbooks
     SET count = count + 1
     WHERE NEW.cookbook_id = id;
+
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -414,6 +426,8 @@ BEGIN
     UPDATE counts
     SET cookbooks = cookbooks + 1
     WHERE user_id = NEW.user_id;
+    
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -430,6 +444,8 @@ BEGIN
 --     FROM cookbooks_fts
 --     WHERE id = OLD.id
 --       AND user_id = OLD.user_id;
+
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -441,6 +457,8 @@ BEGIN
     UPDATE cookbooks
     SET count = count - 1
     WHERE OLD.cookbook_id = id;
+
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 

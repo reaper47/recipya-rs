@@ -66,7 +66,7 @@ pub async fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                             span class="label-text" {
                                 "Remember me"
                             }
-                            input class="checkbox checkbox-primary" type="checkbox" name="remember-me" value="yes";
+                            input class="checkbox checkbox-primary" type="checkbox" name="remember_me" value="true";
                         }
                     }
                     div class="card-actions justify-end" {
@@ -126,7 +126,7 @@ pub async fn register() -> Markup {
                                 "Confirm password"
                             }
                         }
-                        input required type="password" placeholder="Enter your password" class="input input-bordered w-full" name="password-confirm";
+                        input required type="password" placeholder="Enter your password" class="input input-bordered w-full" name="password_confirm";
                     }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {

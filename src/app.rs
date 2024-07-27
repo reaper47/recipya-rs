@@ -1,34 +1,41 @@
-use std::fs::File;
-use std::io::{BufWriter, Read, Write};
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::{env, fs, io, process};
-use std::ops::DerefMut;
-use deadpool_postgres::tokio_postgres::NoTls;
-use deadpool_postgres::{ManagerConfig, Pool, RecyclingMethod, Runtime};
+use std::{
+    {env, fs, io, process},
+    fs::File,
+    io::{BufWriter, Read, Write},
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+    sync::Arc,
+};
+
 use serde::{Deserialize, Serialize};
 use spinach::{Color, Spinach};
 use tokio::net::TcpListener;
-use tokio::task;
+
+use crate::services::{
+    email::Sendgrid,
+    repository::{MockRepository, PsqlRepository, RepositoryService},
+};
 
 refinery::embed_migrations!("migrations");
 
 pub struct App {
-    config: ConfigFile,
+    pub config: ConfigFile,
     general: General,
     paths: Paths,
-    pool: Option<Pool>,
+
+    pub email: Option<Arc<Sendgrid>>,
+    pub repository: Arc<dyn RepositoryService + Sync + Send>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct ConfigFile {
+pub struct ConfigFile {
     email: ConfigEmail,
     integrations: ConfigIntegrations,
-    server: ConfigServer,
+    pub server: ConfigServer,
 }
 
 #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
-struct ConfigEmail {
+pub struct ConfigEmail {
     from: String,
     sendgrid_api_key: String,
 }
@@ -43,12 +50,12 @@ struct AzureDI {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct ConfigServer {
+pub struct ConfigServer {
     database_url: String,
-    is_autologin: bool,
-    is_bypass_guide: bool,
-    is_demo: bool,
-    is_no_signups: bool,
+    pub is_autologin: bool,
+    pub is_bypass_guide: bool,
+    pub is_demo: bool,
+    pub is_no_signups: bool,
     is_production: bool,
     port: u16,
     url: String,
@@ -144,24 +151,9 @@ impl App {
         println!("\x1b[32mOK\x1b[0m Configuration file");
 
         // Connect to database
-        let mut db_config = deadpool_postgres::Config::new();
-        db_config.url = Some("postgres://postgres:Poule420!@localhost:5432/recipya".into());
-        db_config.manager = Some(ManagerConfig {
-            recycling_method: RecyclingMethod::Fast,
-        });
+        let repository = PsqlRepository::from_url(config.server.database_url.clone()).await;
+        println!("\x1b[32mOK\x1b[0m Database connection");
 
-        let pool = db_config.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
-        {
-            let client = pool.get().await.unwrap();
-            let rows = client.query("SELECT 1", &[]).await.unwrap();
-            let value: i32 = rows[0].get(0);
-            assert_eq!(value, 1);
-        }
-
-        let mut conn = pool.get().await.unwrap();
-        let client = conn.deref_mut().deref_mut();
-        migrations::runner().run_async(client).await.unwrap();
-        
         // Setup FDC database
         let fdc_db_path = paths.db.join("fdc.db");
         if fdc_db_path.exists() {
@@ -314,6 +306,12 @@ impl App {
             }
         }
 
+        let email = &config.email;
+        let email = match Sendgrid::new(email.sendgrid_api_key.to_owned(), email.from.to_owned()) {
+            None => None,
+            Some(sg) => Some(Arc::new(sg)),
+        };
+
         println!("\nFile locations:");
         println!("\t- Backups:  {}", paths.backup.display());
         println!("\t- Database: {}", paths.db.display());
@@ -325,7 +323,20 @@ impl App {
             config,
             general,
             paths,
-            pool: Some(pool),
+
+            email,
+            repository: Arc::new(repository),
+        }
+    }
+
+    pub fn new_test() -> Self {
+        App {
+            config: ConfigFile::default(),
+            general: General::default(),
+            paths: Paths::new(),
+
+            email: None,
+            repository: Arc::new(MockRepository::default()),
         }
     }
 
@@ -346,18 +357,6 @@ impl App {
         } else {
             String::from(&self.config.server.url)
         }
-    }
-
-    pub fn is_bypass_guide(&self) -> bool {
-        self.config.server.is_bypass_guide
-    }
-
-    pub fn is_demo(&self) -> bool {
-        self.config.server.is_demo
-    }
-
-    pub fn is_no_signups(&self) -> bool {
-        self.config.server.is_no_signups
     }
 }
 
@@ -524,6 +523,16 @@ mod tests {
         }
     }
 
+    fn new_app(config: ConfigFile) -> App {
+        App {
+            config,
+            general: General::default(),
+            paths: Paths::new(),
+            email: None,
+            repository: Arc::new(MockRepository::default()),
+        }
+    }
+
     #[test]
     fn config_new_from_env_set_all_fields() {
         setup_env();
@@ -593,12 +602,7 @@ mod tests {
     fn address_without_port() {
         let mut config = ConfigFile::default();
         config.server.url = String::from("https://localhost");
-        let app = App {
-            config,
-            general: General::default(),
-            paths: Paths::new(),
-            pool: None,
-        };
+        let app = new_app(config);
 
         let got = app.address(true);
 
@@ -613,7 +617,9 @@ mod tests {
             config,
             general: General::default(),
             paths: Paths::new(),
-            pool: None,
+
+            email: None,
+            repository: Arc::new(MockRepository::default()),
         };
 
         let got = app.address(false);
@@ -626,38 +632,10 @@ mod tests {
         let mut config = ConfigFile::default();
         config.server.is_production = true;
         config.server.url = String::from("https://recipya.com");
-        let app = App {
-            config,
-            general: General::default(),
-            paths: Paths::new(),
-            pool: None,
-        };
+        let app = new_app(config);
 
         let got = app.address(true);
 
         assert_eq!(got, "http://localhost:8078");
-    }
-
-    #[test]
-    fn app_is_demo() {
-        let mut app = App {
-            config: Default::default(),
-            general: Default::default(),
-            paths: Paths {
-                backup: Default::default(),
-                db: Default::default(),
-                images: Default::default(),
-                logs: Default::default(),
-                thumbnails: Default::default(),
-                videos: Default::default(),
-            },
-            pool: None,
-        };
-
-        app.config.server.is_demo = true;
-        assert!(app.is_demo());
-
-        app.config.server.is_demo = false;
-        assert!(!app.is_demo());
     }
 }

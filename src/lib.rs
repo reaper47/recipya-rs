@@ -5,8 +5,16 @@ use std::sync::Arc;
 use axum::{http::StatusCode, response::IntoResponse, Router};
 use tokio::signal;
 
-mod app;
-mod web;
+pub use self::error::{Error, Result};
+
+mod error;
+
+pub mod app;
+mod ctx;
+pub mod models;
+pub mod queries;
+mod services;
+pub mod web;
 
 /// Starts the web server.
 pub async fn run_server() {
@@ -14,8 +22,7 @@ pub async fn run_server() {
     let addr = app.address(true);
 
     let router = Router::new()
-        .merge(web::routes::general::routes(Arc::clone(&app)))
-        .merge(web::routes::auth::routes(app))
+        .merge(web::routes(Arc::clone(&app)))
         .fallback(handler_404);
 
     let listener = tokio::net::TcpListener::bind(addr.trim_start_matches("http://"))
