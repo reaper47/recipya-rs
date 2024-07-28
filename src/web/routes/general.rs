@@ -1,25 +1,24 @@
 use std::sync::Arc;
 
-use axum::extract::State;
 use axum::response::Redirect;
 use axum::routing::get;
 use axum::Router;
 use tower_http::services::ServeDir;
 
-use crate::app;
+use crate::{app, config};
 
 pub fn routes(state: Arc<app::App>) -> Router {
     Router::new()
         .route("/", get(index))
         .route("/guide/auth/login", get(redirect_to_login))
-        .nest_service("/guide", ServeDir::new("docs/public"))
-        .nest_service("/static", ServeDir::new("web/static"))
+        .nest_service("/guide", ServeDir::new(&config().PATHS.DOCS))
+        .nest_service("/static", ServeDir::new(&config().PATHS.STATIC))
         .with_state(state)
 }
 
-async fn index(State(app): State<Arc<app::App>>) -> Redirect {
+async fn index() -> Redirect {
     let mut redirect_url = "/guide";
-    if app.config.server.is_bypass_guide {
+    if config().IS_BYPASS_GUIDE {
         redirect_url = "/auth/login";
     }
 

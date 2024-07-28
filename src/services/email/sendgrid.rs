@@ -3,7 +3,10 @@ use std::thread;
 use mrml::prelude::render::RenderOptions;
 use sendgrid::v3::{Content, Email, Message, Personalization, Sender};
 
-use crate::services::email::{Data, Template};
+use crate::{
+    config,
+    services::email::{Data, Template},
+};
 
 pub struct Sendgrid {
     from: String,
@@ -11,14 +14,10 @@ pub struct Sendgrid {
 }
 
 impl Sendgrid {
-    pub fn new(api_key: String, from: String) -> Option<Self> {
-        if api_key.is_empty() {
-            return None;
-        }
-
+    pub fn new() -> Option<Self> {
         Some(Self {
-            from,
-            sender: Sender::new(api_key),
+            from: config().EMAIL_FROM.clone(),
+            sender: Sender::new(config().EMAIL_SENDGRID_API_KEY.clone()),
         })
     }
 
@@ -64,7 +63,7 @@ impl Sendgrid {
                     )
                     .add_personalization(Personalization::new(Email::new(to))),
             ) {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(error) => {
                     // TODO: Log error
                     println!("{error}");
@@ -74,4 +73,3 @@ impl Sendgrid {
         });
     }
 }
-

@@ -1,86 +1,16 @@
-use std::{
-    {env, fs, io, process},
-    fs::File,
-    io::{BufWriter, Read, Write},
-    path::{Path, PathBuf},
-    process::{Command, Stdio},
-    sync::Arc,
-};
-
-use serde::{Deserialize, Serialize};
-use spinach::{Color, Spinach};
-use tokio::net::TcpListener;
-
-use crate::services::{
-    email::Sendgrid,
-    repository::{MockRepository, PsqlRepository, RepositoryService},
-};
+use crate::services::email::Sendgrid;
+use std::{io, io::Write, sync::Arc};
 
 refinery::embed_migrations!("migrations");
 
 pub struct App {
-    pub config: ConfigFile,
-    general: General,
-    paths: Paths,
-
     pub email: Option<Arc<Sendgrid>>,
-    pub repository: Arc<dyn RepositoryService + Sync + Send>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct ConfigFile {
-    email: ConfigEmail,
-    integrations: ConfigIntegrations,
-    pub server: ConfigServer,
-}
-
-#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct ConfigEmail {
-    from: String,
-    sendgrid_api_key: String,
-}
-#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
-struct ConfigIntegrations {
-    azure_di: AzureDI,
-}
-#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
-struct AzureDI {
-    endpoint: String,
-    key: String,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct ConfigServer {
-    database_url: String,
-    pub is_autologin: bool,
-    pub is_bypass_guide: bool,
-    pub is_demo: bool,
-    pub is_no_signups: bool,
-    is_production: bool,
-    port: u16,
-    url: String,
-}
-
-#[derive(Default)]
-struct General {
-    is_ffmpeg_installed: bool,
-}
-
-struct Paths {
-    backup: PathBuf,
-    db: PathBuf,
-    images: PathBuf,
-    logs: PathBuf,
-    thumbnails: PathBuf,
-    videos: PathBuf,
 }
 
 impl App {
     pub async fn new() -> Self {
-        let paths = Paths::new();
-
         // Setup config file
-        let is_running_in_docker = Path::new("/.dockerenv").exists();
+        /*let is_running_in_docker = Path::new("/.dockerenv").exists();
         let config = if is_running_in_docker {
             ConfigFile::new_from_env()
         } else {
@@ -148,14 +78,15 @@ impl App {
                 config
             }
         };
-        println!("\x1b[32mOK\x1b[0m Configuration file");
+        println!("\x1b[32mOK\x1b[0m Configuration file");*/
 
         // Connect to database
-        let repository = PsqlRepository::from_url(config.server.database_url.clone()).await;
-        println!("\x1b[32mOK\x1b[0m Database connection");
+        //let repository = PsqlRepository::new().await.unwrap();
+        //println!("\x1b[32mOK\x1b[0m Database connection");
 
         // Setup FDC database
-        let fdc_db_path = paths.db.join("fdc.db");
+        // TODO: Figure out what to do with FDC database
+        /*let fdc_db_path = paths.db.join("fdc.db");
         if fdc_db_path.exists() {
             println!("\x1b[32mOK\x1b[0m FDC database");
         } else {
@@ -261,202 +192,23 @@ impl App {
                     }
                 }
             };
-        }
+        }*/
 
-        // Verify extra software
-        let mut general = General::default();
-        if let Ok(mut child) = Command::new("ffmpeg")
-            .arg("-version")
-            .stdout(Stdio::piped())
-            .spawn()
-        {
-            child.wait().unwrap();
-            general.is_ffmpeg_installed = true;
-            println!("\x1b[32mOK\x1b[0m FFmpeg installed");
-        } else {
-            print!("\x1b[31mX\x1b[0m Could not find ffmpeg");
-            #[cfg(target_os = "macos")]
-            {
-                println!("\tPlease execute: brew install ffmpeg");
-            }
-
-            #[cfg(target_os = "linux")]
-            {
-                println!("\tPlease consult your package manager to install it.");
-            }
-
-            #[cfg(target_os = "windows")]
-            {
-                let s = Spinach::new("Attempting to install using winget");
-                if let Ok(mut child) = Command::new("winget")
-                    .args(["install", "FFmpeg (Essentials Build)"])
-                    .stdout(Stdio::piped())
-                    .spawn()
-                {
-                    child.wait().unwrap();
-                    s.stop_with("OK", "FFmpeg installed", Color::Green);
-                    println!("\x1b[32mOK\x1b[0m FFmpeg installed");
-                    println!(
-                        "Please reload your command prompt to refresh the environment variables."
-                    );
-                    process::exit(1);
-                } else {
-                    s.stop_with("X", "Failed to install using winget. Please install manually: https://www.gyan.dev/ffmpeg/builds", Color::Red);
-                }
-            }
-        }
-
-        let email = &config.email;
-        let email = match Sendgrid::new(email.sendgrid_api_key.to_owned(), email.from.to_owned()) {
+        /*let email = match Sendgrid::new() {
             None => None,
             Some(sg) => Some(Arc::new(sg)),
-        };
-
-        println!("\nFile locations:");
-        println!("\t- Backups:  {}", paths.backup.display());
-        println!("\t- Database: {}", paths.db.display());
-        println!("\t- Images:   {}", paths.images.display());
-        println!("\t- Logs:     {}", paths.logs.display());
-        println!("\t- Videos:   {}", paths.videos.display());
+        };*/
 
         Self {
-            config,
-            general,
-            paths,
-
-            email,
-            repository: Arc::new(repository),
+            email: None,
+            //repository: Arc::new(repository),
         }
     }
 
     pub fn new_test() -> Self {
         App {
-            config: ConfigFile::default(),
-            general: General::default(),
-            paths: Paths::new(),
-
             email: None,
-            repository: Arc::new(MockRepository::default()),
-        }
-    }
-
-    pub fn address(&self, provide_localhost: bool) -> String {
-        let is_localhost = self.config.server.url.contains("0.0.0.0")
-            || self.config.server.url.contains("localhost")
-            || self.config.server.url.contains("127.0.0.1");
-
-        if self.config.server.is_production && !is_localhost {
-            if provide_localhost {
-                return format!("http://localhost:{}", self.config.server.port);
-            }
-            return String::from(&self.config.server.url);
-        }
-
-        if is_localhost {
-            format!("{}:{}", self.config.server.url, self.config.server.port)
-        } else {
-            String::from(&self.config.server.url)
-        }
-    }
-}
-
-impl ConfigFile {
-    fn new<R: Read>(src: R) -> Self {
-        serde_json::from_reader(src).unwrap()
-    }
-
-    fn new_from_env() -> Self {
-        let mut is_env_ok = true;
-
-        let mandatory_env = vec!["RECIPYA_SERVER_PORT"];
-        for env in mandatory_env.iter() {
-            if env::var(env).is_err() {
-                is_env_ok = false;
-                println!("Missing required environment variable: {env}");
-            }
-        }
-
-        if !is_env_ok {
-            println!("Application setup will terminate");
-            process::exit(1);
-        }
-
-        let config = Self {
-            email: ConfigEmail {
-                from: env::var("RECIPYA_EMAIL").unwrap_or_default(),
-                sendgrid_api_key: env::var("RECIPYA_EMAIL_SENDGRID").unwrap_or_default(),
-            },
-            integrations: ConfigIntegrations {
-                azure_di: AzureDI {
-                    endpoint: env::var("RECIPYA_DI_ENDPOINT").unwrap_or_default(),
-                    key: env::var("RECIPYA_DI_KEY").unwrap_or_default(),
-                },
-            },
-            server: ConfigServer {
-                database_url: env::var("RECIPYA_SERVER_DB_URL").unwrap_or_default(),
-                is_autologin: env::var("RECIPYA_SERVER_AUTOLOGIN").unwrap_or_default() == "true",
-                is_bypass_guide: env::var("RECIPYA_SERVER_BYPASS_GUIDE").unwrap_or_default()
-                    == "true",
-                is_demo: env::var("RECIPYA_SERVER_IS_DEMO").unwrap_or_default() == "true",
-                is_no_signups: env::var("RECIPYA_SERVER_NO_SIGNUPS").unwrap_or_default() == "true",
-                is_production: env::var("RECIPYA_SERVER_IS_PROD").unwrap_or_default() == "true",
-                port: env::var("RECIPYA_SERVER_PORT")
-                    .unwrap()
-                    .parse()
-                    .expect("port '{}' must be a number"),
-                url: env::var("RECIPYA_SERVER_URL").unwrap_or(String::from("http://0.0.0.0")),
-            },
-        };
-
-        println!("\x1b[32mOK\x1b[0m Environment variables");
-        config
-    }
-}
-
-impl Default for ConfigFile {
-    fn default() -> Self {
-        ConfigFile {
-            email: ConfigEmail::default(),
-            integrations: ConfigIntegrations::default(),
-            server: ConfigServer {
-                database_url: String::new(),
-                is_autologin: false,
-                is_bypass_guide: false,
-                is_demo: false,
-                is_no_signups: false,
-                is_production: false,
-                port: 8078,
-                url: String::from("http://0.0.0.0"),
-            },
-        }
-    }
-}
-
-impl Paths {
-    fn new() -> Self {
-        let mut root = dirs::config_dir().expect("failed to get config directory path");
-        root.push("Recipya2");
-
-        let backup = root.join("Backup");
-        let db = root.join("Database");
-        let images = root.join("Images");
-        let logs = root.join("Logs");
-        let thumbnails = images.join("Thumbnails");
-        let videos = root.join("Videos");
-
-        fs::create_dir_all(&backup).unwrap();
-        fs::create_dir_all(&db).unwrap();
-        fs::create_dir_all(&logs).unwrap();
-        fs::create_dir_all(&thumbnails).unwrap();
-        fs::create_dir_all(&videos).unwrap();
-
-        Paths {
-            backup,
-            db,
-            images,
-            logs,
-            thumbnails,
-            videos,
+            //repository: Arc::new(MockRepository::default()),
         }
     }
 }
@@ -482,160 +234,5 @@ fn prompt_user(question: &str, default: &str) -> String {
         }
 
         println!();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-
-    use super::*;
-
-    fn env<'a>() -> HashMap<&'a str, &'a str> {
-        HashMap::from([
-            ("RECIPYA_DI_ENDPOINT", "https://{res}.azure.com"),
-            ("RECIPYA_DI_KEY", "KEY_1"),
-            ("RECIPYA_EMAIL", "my@email.com"),
-            ("RECIPYA_EMAIL_SENDGRID", "API_KEY"),
-            ("RECIPYA_SERVER_IS_DEMO", "false"),
-            (
-                "RECIPYA_SERVER_DB_URL",
-                "postgres://postgres:pwd@localhost:5432/recipya",
-            ),
-            ("RECIPYA_SERVER_BYPASS_GUIDE", "true"),
-            ("RECIPYA_SERVER_IS_PROD", "true"),
-            ("RECIPYA_SERVER_PORT", "8078"),
-            ("RECIPYA_SERVER_AUTOLOGIN", "true"),
-            ("RECIPYA_SERVER_NO_SIGNUPS", "true"),
-            ("RECIPYA_SERVER_URL", "localhost"),
-        ])
-    }
-
-    fn setup_env() {
-        for (k, v) in env().iter() {
-            env::set_var(k, v);
-        }
-    }
-
-    fn teardown_env() {
-        for (k, _) in env().iter() {
-            env::remove_var(k);
-        }
-    }
-
-    fn new_app(config: ConfigFile) -> App {
-        App {
-            config,
-            general: General::default(),
-            paths: Paths::new(),
-            email: None,
-            repository: Arc::new(MockRepository::default()),
-        }
-    }
-
-    #[test]
-    fn config_new_from_env_set_all_fields() {
-        setup_env();
-
-        let config = ConfigFile::new_from_env();
-
-        teardown_env();
-        assert_eq!(
-            config,
-            ConfigFile {
-                email: ConfigEmail {
-                    from: String::from("my@email.com"),
-                    sendgrid_api_key: String::from("API_KEY"),
-                },
-                integrations: ConfigIntegrations {
-                    azure_di: AzureDI {
-                        endpoint: String::from("https://{res}.azure.com"),
-                        key: String::from("KEY_1"),
-                    }
-                },
-                server: ConfigServer {
-                    database_url: String::from("postgres://postgres:pwd@localhost:5432/recipya"),
-                    is_autologin: true,
-                    is_bypass_guide: true,
-                    is_demo: false,
-                    is_no_signups: true,
-                    is_production: true,
-                    port: 8078,
-                    url: String::from("localhost"),
-                },
-            }
-        );
-    }
-
-    #[test]
-    fn config_default() {
-        let config = ConfigFile::default();
-
-        assert_eq!(
-            config,
-            ConfigFile {
-                email: ConfigEmail {
-                    from: String::new(),
-                    sendgrid_api_key: String::new()
-                },
-                integrations: ConfigIntegrations {
-                    azure_di: AzureDI {
-                        endpoint: String::new(),
-                        key: String::new()
-                    }
-                },
-                server: ConfigServer {
-                    database_url: String::new(),
-                    is_autologin: false,
-                    is_bypass_guide: false,
-                    is_demo: false,
-                    is_no_signups: false,
-                    is_production: false,
-                    port: 8078,
-                    url: String::from("http://0.0.0.0"),
-                },
-            }
-        )
-    }
-
-    #[test]
-    fn address_without_port() {
-        let mut config = ConfigFile::default();
-        config.server.url = String::from("https://localhost");
-        let app = new_app(config);
-
-        let got = app.address(true);
-
-        assert_eq!(got, "https://localhost:8078");
-    }
-
-    #[test]
-    fn address_hosted() {
-        let mut config = ConfigFile::default();
-        config.server.url = String::from("https://recipya.com");
-        let app = App {
-            config,
-            general: General::default(),
-            paths: Paths::new(),
-
-            email: None,
-            repository: Arc::new(MockRepository::default()),
-        };
-
-        let got = app.address(false);
-
-        assert_eq!(got, "https://recipya.com");
-    }
-
-    #[test]
-    fn address_hosted_provide_localhost() {
-        let mut config = ConfigFile::default();
-        config.server.is_production = true;
-        config.server.url = String::from("https://recipya.com");
-        let app = new_app(config);
-
-        let got = app.address(true);
-
-        assert_eq!(got, "http://localhost:8078");
     }
 }

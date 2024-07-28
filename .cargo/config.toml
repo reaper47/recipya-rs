@@ -1,0 +1,19 @@
+[env]
+RUST_LOG="recipya=debug"
+
+SERVICE_EMAIL_FROM="macpoule@gmail.com"
+SERVICE_EMAIL_SENDGRID_API_KEY = "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"
+
+SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT = ""
+SERVICE_INTEGRATIONS_AZURE_DI_KEY = ""
+
+SERVICE_ADDRESS = "http://0.0.0.0:43073"
+SERVICE_DB_URL = "postgres://postgres:Poule420!@localhost:5432/recipya"
+SERVICE_AUTOLOGIN = "true"
+SERVICE_BYPASS_GUIDE = "false"
+SERVICE_DEMO = "false"
+SERVICE_NO_SIGNUPS = "false"
+SERVICE_PRODUCTION = "false"
+
+SERVICE_DOCS_FOLDER = "docs/public"
+SERVICE_STATIC_FOLDER = "web/static"

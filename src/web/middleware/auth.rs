@@ -1,21 +1,17 @@
-use std::sync::Arc;
-
 use axum::{
-    extract::{Request, State},
+    extract::Request,
     middleware::Next,
     response::{IntoResponse, Redirect, Response},
 };
 
-use crate::{app, Error};
-use crate::ctx::Ctx;
+use crate::{
+    config,
+    ctx::Ctx,
+    web::{middleware::ctx::CtxExtError, Error},
+};
 
-pub async fn require(
-    ctx: Result<Ctx, Error>,
-    State(app): State<Arc<app::App>>,
-    req: Request,
-    next: Next,
-) -> Response {
-    if app.config.server.is_autologin {
+pub async fn require(ctx: Result<Ctx, Error>, req: Request, next: Next) -> Response {
+    if config().IS_AUTOLOGIN {
         return Redirect::to("/recipes").into_response();
     }
 
@@ -26,12 +22,8 @@ pub async fn require(
     next.run(req).await.into_response()
 }
 
-pub async fn redirect_if_no_signups(
-    State(app): State<Arc<app::App>>,
-    req: Request,
-    next: Next,
-) -> Response {
-    if app.config.server.is_no_signups {
+pub async fn redirect_if_no_signups(req: Request, next: Next) -> Response {
+    if config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
     }
     next.run(req).await
@@ -39,12 +31,11 @@ pub async fn redirect_if_no_signups(
 
 pub async fn redirect_if_logged_in(
     ctx: Result<Ctx, Error>,
-    State(app): State<Arc<app::App>>,
     mut req: Request,
     next: Next,
 ) -> Response {
-    if app.config.server.is_autologin {
-        let ctx = Ctx::new(1);
+    if config().IS_AUTOLOGIN {
+        let ctx = Ctx::new(1).map_err(|_| CtxExtError::CtxNotInRequestExt);
         req.extensions_mut().insert(ctx);
         return Redirect::to("/").into_response();
     }

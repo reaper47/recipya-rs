@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
-
-use recipya::run_server;
+use std::env;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Parser)]
 #[command(name = "Recipya")]
@@ -19,11 +19,16 @@ enum Commands {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_target(true)
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
     let cli = Cli::parse();
 
     match &cli.command {
         Some(Commands::Serve) => {
-            run_server().await;
+            recipya::run_server().await;
         }
         None => {}
     }

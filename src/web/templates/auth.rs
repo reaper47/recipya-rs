@@ -1,4 +1,4 @@
-use crate::web;
+use crate::{config, web};
 use maud::{html, Markup};
 
 pub async fn forgot_password() -> Markup {
@@ -36,7 +36,7 @@ pub async fn forgot_password() -> Markup {
     )
 }
 
-pub async fn login(is_demo: bool, is_no_signups: bool) -> Markup {
+pub async fn login() -> Markup {
     web::templates::layouts::auth(
         "Login",
         html!(
@@ -51,7 +51,7 @@ pub async fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                                 "Email"
                             }
                         }
-                        input class="input input-bordered w-full" required type="email" placeholder="Enter your email address" name="email" value=@if is_demo { "demo@demo.com" };
+                        input class="input input-bordered w-full" required type="email" placeholder="Enter your email address" name="email" value=@if config().IS_DEMO { "demo@demo.com" };
                     }
                     label class="form-control w-full" {
                         div class="label" {
@@ -59,7 +59,7 @@ pub async fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                                 "Password"
                             }
                         }
-                        input class="input input-bordered w-full" required type="password" placeholder="Enter your password" name="password" value=@if is_demo { "demo" };
+                        input class="input input-bordered w-full" required type="password" placeholder="Enter your password" name="password" value=@if config().IS_DEMO { "demo" };
                     }
                     div class="form-control grid place-content-center" {
                         label class="label cursor-pointer gap-2" {
@@ -75,7 +75,7 @@ pub async fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                         }
                     }
                     div class="grid place-content-center text-center gap-2" {
-                        @if !is_no_signups {
+                        @if !config().IS_NO_SIGNUPS {
                             div {
                                 p class="text-center" {
                                     "Don't have an account?"

@@ -1,15 +1,15 @@
 mod sendgrid;
 
-pub(crate) use sendgrid::Sendgrid;
+pub use sendgrid::Sendgrid;
 
-pub(crate) enum Template {
+pub enum Template {
     ForgotPassword,
     Intro,
 }
 
 #[derive(Default)]
-pub(crate) struct Data {
-    pub token    : String,
-    pub username : String,
-    pub url  : String,
+pub struct Data {
+    pub token: String,
+    pub username: String,
+    pub url: String,
 }

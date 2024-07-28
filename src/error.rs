@@ -1,47 +1,26 @@
-use std::sync::Arc;
-use axum::{
-    http::StatusCode,
-    response::{IntoResponse, Response},
-};
+use crate::model;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Error {
-    // Auth
-    AuthFailCtxNotInRequestExt,
-    AuthFailNoAuthTokenCookie,
-    AuthFailTokenWrongFormat,
-    HashError(argon2::password_hash::Error),
-    LoginFail,
-    RegisterFail,
-    UserExists,
+    // Config
+    ConfigMissingEnv(&'static str),
 
-    // Services
-    QueryFail(Arc<deadpool_postgres::tokio_postgres::Error>),
-    PoolFail(Arc<deadpool::managed::PoolError<deadpool_postgres::tokio_postgres::Error>>),
+    // Modules
+    Model(model::Error),
 }
 
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        (StatusCode::INTERNAL_SERVER_ERROR, "UNHANDLED_CLIENT_ERROR").into_response()
+impl From<model::Error> for Error {
+    fn from(value: model::Error) -> Self {
+        Self::Model(value)
     }
 }
 
-impl From<argon2::password_hash::Error> for Error {
-    fn from(value: argon2::password_hash::Error) -> Self {
-        Error::HashError(value)
+impl core::fmt::Display for Error {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
+        write!(fmt, "{self:?}")
     }
 }
 
-impl From<deadpool::managed::PoolError<deadpool_postgres::tokio_postgres::Error>> for Error {
-    fn from(value: deadpool::managed::PoolError<deadpool_postgres::tokio_postgres::Error>) -> Self {
-        Error::PoolFail(Arc::new(value))
-    }
-}
-
-impl From<deadpool_postgres::tokio_postgres::Error> for Error {
-    fn from(value: deadpool_postgres::tokio_postgres::Error) -> Self {
-        Error::QueryFail(Arc::new(value))
-    }
-}
+impl std::error::Error for Error {}
