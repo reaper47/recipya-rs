@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use std::env;
 use tracing_subscriber::EnvFilter;
 
 #[derive(Parser)]
@@ -19,6 +18,8 @@ enum Commands {
 
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().ok();
+
     tracing_subscriber::fmt()
         .with_target(true)
         .with_env_filter(EnvFilter::from_default_env())

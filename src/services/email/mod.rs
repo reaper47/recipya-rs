@@ -1,3 +1,4 @@
+mod error;
 mod sendgrid;
 
 pub use sendgrid::Sendgrid;

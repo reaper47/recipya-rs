@@ -1,16 +1,19 @@
-use crate::web;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
 
+use crate::{model, web};
+
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Clone, Debug, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
-    LoginFail,
+    LoginFailUserNotFound,
+    LoginFailPasswordNotMatching { user_id: i64 },
+
     RegisterFail,
     UserExists,
 
@@ -18,17 +21,25 @@ pub enum Error {
     AuthFailCtxNotInRequestExt,
     AuthFailNoAuthTokenCookie,
     AuthFailTokenWrongFormat,
+    CtxExt(web::middleware::ctx::CtxExtError),
 
     // Services
     RepositoryError(String),
 
-    // CtxExtError
-    CtxExt(web::middleware::ctx::CtxExtError),
+    // Modules
+    Model(model::Error),
+}
+
+impl From<model::Error> for Error {
+    fn from(value: model::Error) -> Self {
+        Self::Model(value)
+    }
 }
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        let mut res = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        let (status_code, _client_error) = self.client_status_and_error();
+        let mut res = status_code.into_response();
         res.extensions_mut().insert(self);
         res
     }
@@ -48,20 +59,20 @@ impl Error {
         use web::error::Error::*;
 
         match self {
-            LoginFail => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
+            LoginFailUserNotFound | LoginFailPasswordNotMatching { .. } => {
+                (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL)
+            }
             RegisterFail => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::REGISTER_FAIL,
             ),
             UserExists => (StatusCode::CONFLICT, ClientError::SERVICE_ERROR),
 
-            // Login/Auth
+            // Auth
             AuthFailNoAuthTokenCookie | AuthFailTokenWrongFormat | AuthFailCtxNotInRequestExt => {
                 (StatusCode::FORBIDDEN, ClientError::NO_AUTH)
             }
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
-
-            // Model
 
             // Fallback
             _ => (
@@ -72,7 +83,7 @@ impl Error {
     }
 }
 
-#[derive(strum_macros::AsRefStr)]
+#[derive(Debug, Serialize, strum_macros::AsRefStr)]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     LOGIN_FAIL,

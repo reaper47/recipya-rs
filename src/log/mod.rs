@@ -48,7 +48,8 @@ pub async fn log_request(
         .ok()
         .and_then(|mut v| v.get_mut("data").map(|v| v.take()));
 
-    let log_line = RequestLogLine {
+    // TODO: Do something with the log line
+    let _log_line = RequestLogLine {
         uuid: uuid.to_string(),
         timestamp: timestamp.to_string(),
         user_id: ctx.map(|c| c.user_id()),

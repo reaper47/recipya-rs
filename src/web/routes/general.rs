@@ -1,19 +1,17 @@
-use std::sync::Arc;
-
 use axum::response::Redirect;
-use axum::routing::get;
 use axum::Router;
+use axum::routing::get;
 use tower_http::services::ServeDir;
 
-use crate::{app, config};
+use crate::config;
 
-pub fn routes(state: Arc<app::App>) -> Router {
+pub fn routes() -> Router {
     Router::new()
         .route("/", get(index))
         .route("/guide/auth/login", get(redirect_to_login))
         .nest_service("/guide", ServeDir::new(&config().PATHS.DOCS))
         .nest_service("/static", ServeDir::new(&config().PATHS.STATIC))
-        .with_state(state)
+    //.with_state(state)
 }
 
 async fn index() -> Redirect {

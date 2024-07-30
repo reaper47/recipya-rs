@@ -1,7 +1,4 @@
 //! Recipya is a clean, simple and powerful recipe manager your whole family will enjoy.
-
-use std::sync::Arc;
-
 use axum::{http::StatusCode, response::IntoResponse, Router};
 use tokio::signal;
 
@@ -9,22 +6,22 @@ pub use config::config;
 pub use error::{Error, Result};
 
 mod config;
+mod crypt;
 mod ctx;
 mod error;
 mod log;
 mod services;
 
-pub mod app;
 pub mod model;
+pub mod schema;
 pub mod web;
 
 /// Starts the web server.
 pub async fn run_server() {
-    let app = Arc::new(app::App::new().await);
     let mm = model::ModelManager::new().await.unwrap();
 
     let router = Router::new()
-        .merge(web::routes(Arc::clone(&app), mm.clone()))
+        .merge(web::routes(mm.clone()))
         .fallback(handler_404);
 
     let addr = &config().ADDRESS;

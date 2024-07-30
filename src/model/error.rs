@@ -1,14 +1,19 @@
-use crate::model::store;
-use deadpool_postgres::tokio_postgres;
 use serde::Serialize;
+use crate::crypt;
+use crate::model::store;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Error {
+    PoolConnection,
     EntityNotFound { entity: &'static str, id: i64 },
-    Store(store::Error),
     Bind(String),
+
+    Crypt(crypt::Error),
+    Diesel(String),
+    Pool(String),
+    Store(store::Error),
 }
 
 impl core::fmt::Display for Error {
@@ -17,9 +22,33 @@ impl core::fmt::Display for Error {
     }
 }
 
+impl From<crypt::Error> for Error {
+    fn from(err: crypt::Error) -> Error {
+        Error::Crypt(err)
+    }
+}
+
 impl From<tokio_postgres::Error> for Error {
     fn from(err: tokio_postgres::Error) -> Error {
         Error::Bind(err.to_string())
+    }
+}
+
+impl From<diesel::result::Error> for Error {
+    fn from(error: diesel::result::Error) -> Self {
+        Error::Diesel(error.to_string())
+    }
+}
+
+impl From<diesel_async::pooled_connection::PoolError> for Error {
+    fn from(error: diesel_async::pooled_connection::PoolError) -> Self {
+        Error::Pool(error.to_string())
+    }
+}
+
+impl From<diesel_async::pooled_connection::bb8::RunError> for Error {
+    fn from(_: diesel_async::pooled_connection::bb8::RunError) -> Self {
+        Error::PoolConnection
     }
 }
 

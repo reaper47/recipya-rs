@@ -31,7 +31,8 @@ pub async fn resolver(
     mut req: Request,
     next: Next,
 ) -> Response {
-    let token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
+    // TODO: Do something with the token
+    let _token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
     let result_ctx = Ctx::new(100).map_err(|e| CtxExtError::CtxCreateFail(e.to_string()));
 

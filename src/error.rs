@@ -1,18 +1,17 @@
-use crate::model;
-
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
     // Config
     ConfigMissingEnv(&'static str),
+    ConfigWrongFormat(&'static str),
 
     // Modules
-    Model(model::Error),
+    Model(crate::model::Error),
 }
 
-impl From<model::Error> for Error {
-    fn from(value: model::Error) -> Self {
+impl From<crate::model::Error> for Error {
+    fn from(value: crate::model::Error) -> Self {
         Self::Model(value)
     }
 }

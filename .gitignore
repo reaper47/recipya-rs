@@ -4,6 +4,7 @@ debug/
 target/
 
 # Remove files related to the documentation
+.env
 .cargo/config.toml
 docs/.hugo_build.lock
 docs/public

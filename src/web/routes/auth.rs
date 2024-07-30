@@ -1,68 +1,88 @@
-use std::sync::Arc;
-
 use axum::{
+    {Form, middleware, Router},
     extract::State,
     http::{HeaderValue, StatusCode},
     response::{IntoResponse, Redirect},
     routing::get,
-    {middleware, Form, Router},
 };
+use axum::routing::post;
 use maud::Markup;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::model::payloads::collect_errors;
 use crate::{
-    model,
-    web::KEY_HX_REDIRECT,
-    {app, web},
+    {crypt, model, web, web::KEY_HX_REDIRECT},
+    ctx::Ctx,
+    model::{ModelManager, payloads::collect_errors, user::UserBmc},
+    web::Error,
 };
 
-pub fn routes(state: Arc<app::App>) -> Router {
+pub fn routes(mm: ModelManager) -> Router {
     Router::new()
-        /*.route("/auth/confirm", get(todo!()))
-        .route("/auth/forgot-password", get(todo!()).post(todo!()))
-        .route("/auth/forgot-password/reset", post(todo!()))
-        .route("/auth/forgot-password", get(forgot_password))
-        .route("/auth/logout", post(todo!()))*/
-        .merge(routes_require_auth(Arc::clone(&state)))
-        .merge(routes_redirect_if_logged_in(Arc::clone(&state)))
-        .merge(routes_register(Arc::clone(&state)))
-        .with_state(state)
+        .route("/auth/confirm", get(confirm))
+        .route(
+            "/auth/forgot-password",
+            get(forgot_password).post(forgot_password_post),
+        )
+        .route(
+            "/auth/forgot-password/reset",
+            post(forgot_password_reset_post),
+        )
+        .route("/auth/logout", post(logout_post))
+        .merge(routes_require_auth(mm.clone()))
+        .merge(routes_redirect_if_logged_in(mm.clone()))
+        .merge(routes_register(mm.clone()))
+        .with_state(mm.clone())
 }
 
-fn routes_require_auth(state: Arc<app::App>) -> Router<Arc<app::App>> {
+fn routes_require_auth(mm: ModelManager) -> Router<ModelManager> {
     Router::new()
-        //.route("/auth/change-password", post(todo!()))
+        .route("/auth/change-password", post(change_password))
         .layer(middleware::from_fn_with_state(
-            Arc::clone(&state),
+            mm,
             web::middleware::auth::require,
         ))
 }
 
-fn routes_redirect_if_logged_in(state: Arc<app::App>) -> Router<Arc<app::App>> {
+fn routes_redirect_if_logged_in(mm: ModelManager) -> Router<ModelManager> {
     Router::new()
         .route("/auth/login", get(login).post(login_post))
         .layer(middleware::from_fn_with_state(
-            Arc::clone(&state),
+            mm.clone(),
             web::middleware::auth::redirect_if_logged_in,
         ))
 }
 
-fn routes_register(state: Arc<app::App>) -> Router<Arc<app::App>> {
+fn routes_register(mm: ModelManager) -> Router<ModelManager> {
     Router::new()
         .route("/auth/register", get(register).post(register_post))
         .layer(middleware::from_fn_with_state(
-            Arc::clone(&state),
+            mm.clone(),
             web::middleware::auth::redirect_if_logged_in,
         ))
         .layer(middleware::from_fn_with_state(
-            Arc::clone(&state),
+            mm,
             web::middleware::auth::redirect_if_no_signups,
         ))
 }
 
+async fn change_password() -> Markup {
+    todo!()
+}
+
+async fn confirm() -> Markup {
+    todo!()
+}
+
 async fn forgot_password() -> Markup {
     web::templates::auth::forgot_password().await
+}
+
+async fn forgot_password_post() -> Markup {
+    todo!()
+}
+
+async fn forgot_password_reset_post() -> Markup {
+    todo!()
 }
 
 async fn login() -> Markup {
@@ -70,6 +90,7 @@ async fn login() -> Markup {
 }
 
 async fn login_post(
+    State(mm): State<ModelManager>,
     cookies: Cookies,
     Form(form): Form<model::payloads::LoginForm>,
 ) -> impl IntoResponse {
@@ -78,10 +99,35 @@ async fn login_post(
         return (StatusCode::BAD_REQUEST, collect_errors(&form).join(", ")).into_response();
     }
 
+    let root_ctx = Ctx::root_ctx();
+
+    let user = match UserBmc::first_by_email(&root_ctx, &mm, &form.email).await {
+        Ok(user) => match user {
+            None => return Error::LoginFailUserNotFound.into_response(),
+            Some(user) => user,
+        },
+        Err(error) => return Error::RepositoryError(error.to_string()).into_response(),
+    };
+
+    let res = crypt::password::validate(
+        &crypt::EncryptContent {
+            salt: user.password_salt.to_string(),
+            content: form.password,
+        },
+        &user.password,
+    );
+    if res.is_err() {
+        return Error::LoginFailPasswordNotMatching { user_id: user.id }.into_response();
+    }
+
     // TODO: Make secure cookie
     cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
 
     (StatusCode::OK, "Login successful").into_response()
+}
+
+async fn logout_post() -> Markup {
+    todo!()
 }
 
 async fn register() -> impl IntoResponse {
@@ -89,8 +135,8 @@ async fn register() -> impl IntoResponse {
 }
 
 async fn register_post(
-    State(app): State<Arc<app::App>>,
-    Form(form): Form<model::payloads::RegisterForm>,
+    State(_mm): State<ModelManager>,
+    Form(_form): Form<model::payloads::RegisterForm>,
 ) -> impl IntoResponse {
     /*if let Err(error) = app.repository.register(&form.email, &form.password).await {
         // TODO: Log error
@@ -108,9 +154,8 @@ async fn register_post(
         return res;
     }*/
 
-    if let Some(email) = &app.email {
-        todo!();
-        /*email.send(
+    /*if let Some(email) = &app.email {
+        email.send(
             String::from(&form.email),
             "Confirm Account".to_string(),
             Template::Intro,
@@ -119,8 +164,8 @@ async fn register_post(
                 username: form.email,
                 url: app.address(false),
             },
-        );*/
-    }
+        );
+    }*/
 
     let mut res = Redirect::to("/auth/login").into_response();
     res.headers_mut()

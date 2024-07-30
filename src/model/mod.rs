@@ -1,37 +1,40 @@
-use std::sync::Arc;
+use diesel_async::{AsyncPgConnection, pooled_connection::bb8};
 
-use crate::model::store::mock::MockRepository;
-use crate::model::store::{psql::PsqlRepository, Db};
+use crate::{
+    config,
+    model::store::{new_db_pool, Pool},
+    services::email::Sendgrid,
+};
 
 pub use self::error::{Error, Result};
 
-mod base;
 mod error;
 mod store;
 
 pub mod payloads;
 pub mod user;
-pub mod user_old;
 
 #[derive(Clone)]
 pub struct ModelManager {
-    db: Db,
+    db: Pool,
+    email: Option<Sendgrid>,
 }
 
 impl ModelManager {
     pub async fn new() -> Result<Self> {
         Ok(Self {
-            db: Arc::new(PsqlRepository::new().await?),
+            db: new_db_pool(&config().DB_URL).await?,
+            email: Sendgrid::new(),
         })
     }
 
-    pub fn new_test() -> Self {
-        Self {
-            db: Arc::new(MockRepository::default()),
-        }
+    pub(in crate::model) fn db(&self) -> &Pool {
+        &self.db
     }
 
-    pub(in crate::model) fn db(&self) -> &Db {
-        &self.db
+    pub(in crate::model) async fn connection(
+        &self,
+    ) -> Result<bb8::PooledConnection<AsyncPgConnection>> {
+        Ok(self.db.get().await?)
     }
 }

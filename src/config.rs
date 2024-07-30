@@ -1,6 +1,7 @@
 use crate::{Error, Result};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::str::FromStr;
 use std::sync::OnceLock;
 use std::{env, fs};
 
@@ -29,6 +30,10 @@ pub struct Config {
     pub IS_PRODUCTION: bool,
     pub IS_FFMPEG_INSTALLED: bool,
 
+    pub PASSWORD_KEY: Vec<u8>,
+    pub TOKEN_KEY: Vec<u8>,
+    pub TOKEN_DURATION_SEC: f64,
+
     pub PATHS: Paths,
 }
 
@@ -54,14 +59,17 @@ impl Config {
             INTEGRATIONS_AZURE_DI_KEY: get_env("SERVICE_INTEGRATIONS_AZURE_DI_KEY")?,
 
             ADDRESS: get_env("SERVICE_ADDRESS")?,
-            DB_URL: get_env("SERVICE_DB_URL")?,
+            DB_URL: get_env("DATABASE_URL")?,
             IS_AUTOLOGIN: get_env("SERVICE_AUTOLOGIN")?.to_lowercase() == "true",
             IS_BYPASS_GUIDE: get_env("SERVICE_BYPASS_GUIDE")?.to_lowercase() == "true",
             IS_DEMO: get_env("SERVICE_DEMO")?.to_lowercase() == "true",
             IS_NO_SIGNUPS: get_env("SERVICE_NO_SIGNUPS")?.to_lowercase() == "true",
             IS_PRODUCTION: get_env("SERVICE_PRODUCTION")?.to_lowercase() == "true",
-
             IS_FFMPEG_INSTALLED: check_ffmpeg(),
+
+            PASSWORD_KEY: get_env_b64u_as_u8s("SERVICE_PASSWORD_KEY")?,
+            TOKEN_KEY: get_env_b64u_as_u8s("SERVICE_TOKEN_KEY")?,
+            TOKEN_DURATION_SEC: get_env_parse("SERVICE_TOKEN_DURATION_SEC")?,
 
             PATHS: Paths::new()?,
         })
@@ -156,4 +164,16 @@ fn get_env(name: &'static str) -> Result<String> {
     env::var(name)
         .map(|v| v.trim_matches('"').to_string())
         .map_err(|_| Error::ConfigMissingEnv(name))
+}
+
+fn get_env_b64u_as_u8s(name: &'static str) -> Result<Vec<u8>> {
+    let a = get_env(name)?;
+    println!("{a}");
+    base64_url::decode(&get_env(name)?).map_err(|_| Error::ConfigWrongFormat(name))
+}
+
+fn get_env_parse<T: FromStr>(name: &'static str) -> Result<T> {
+    get_env(name)?
+        .parse::<T>()
+        .map_err(|_| Error::ConfigWrongFormat(name))
 }

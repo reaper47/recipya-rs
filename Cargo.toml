@@ -14,35 +14,41 @@ categories = ["web-programming"]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-argon2 = "0.5.3"
 axum = { version = "0.7.5" }
+base64-url = "3.0.0"
 chrono = "0.4.38"
 clap = { version = "4.5.9", features = ["derive"] }
-deadpool = "0.12.1"
-deadpool-postgres = "0.14.0"
+diesel = { version = "2.2.2", features = ["postgres", "chrono", "uuid"] }
+diesel-async = { version = "0.5.0", features = ["postgres", "bb8","async-connection-wrapper"] }
+diesel_migrations = "2.1.0"
 dirs = "5.0.1"
+dotenv = "0.15.0"
+hmac = "0.12.1"
 lazy-regex = "3.2.0"
 maud = { version = "*", features = ["axum"] }
 mrml = "4.0.1"
-refinery = { version = "0.8.14", features = ["tokio-postgres"] }
-reqwest = "0.12.5" 
-sendgrid = { version = "0.21.0", features = ["blocking"] }
+rand = "0.8.5"
+reqwest = "0.12.5"
+sendgrid = "0.21.0"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 serde_urlencoded = "0.7.1"
 serde_with = "3.9.0"
+sha2 = "0.10.8"
 strum_macros = "0.26.4"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread", "signal"] }
+tokio-postgres = { version = "0.7.11", features = ["with-chrono-0_4", "with-uuid-1"]}
 tower-cookies = "0.10.0"
 tower-http = { version = "0.5.2", features = ["fs"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uuid = { version = "1.10.0", features = ["v4"] }
-validator = { version = "0.16", features = ["derive"] }
+validator = { version = "0.18.1", features = ["derive"] }
 
 [dev-dependencies]
 anyhow = "1.0.86"
 axum-test = "15.3.0"
+futures = "0.3.30"
 pgtemp = "0.3.0"
 tower = { version = "0.4", features = ["util"] }
 
