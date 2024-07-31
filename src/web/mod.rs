@@ -6,6 +6,7 @@ pub use routes::*;
 use crate::crypt::token::generate_web_token;
 
 mod middleware;
+pub(crate) mod rpc;
 mod routes;
 
 pub mod error;

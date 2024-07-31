@@ -3,6 +3,7 @@ use diesel::{
     ExpressionMethods,
 };
 use diesel_async::RunQueryDsl;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
@@ -12,7 +13,7 @@ use crate::{
     schema::users,
 };
 
-#[derive(Clone, Queryable, Selectable, Debug)]
+#[derive(Clone, Debug, Queryable, Selectable, Serialize)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
@@ -25,6 +26,7 @@ pub struct User {
 }
 
 // For app API (sent from client), e.g. UserBmc::create argument
+#[derive(Deserialize)]
 pub struct UserForCreate {
     pub email: String,
     pub password_clear: String,

@@ -8,7 +8,10 @@ use uuid::Uuid;
 
 use crate::{
     ctx::Ctx,
-    web::error::{ClientError, Error},
+    web::{
+        error::{ClientError, Error},
+        rpc::RpcInfo,
+    },
 };
 
 #[skip_serializing_none]
@@ -24,6 +27,10 @@ struct RequestLogLine {
     http_path: String,
     http_method: String,
 
+    // RPC info
+    rpc_id: Option<String>,
+    rpc_method: Option<String>,
+
     // Error attributes
     client_error_type: Option<String>,
     error_type: Option<String>,
@@ -34,6 +41,7 @@ pub async fn log_request(
     uuid: Uuid,
     req_method: Method,
     uri: Uri,
+    rpc_info: Option<&RpcInfo>,
     ctx: Option<Ctx>,
     service_error: Option<&Error>,
     client_error: Option<ClientError>,
@@ -55,6 +63,8 @@ pub async fn log_request(
         user_id: ctx.map(|c| c.user_id()),
         http_path: uri.to_string(),
         http_method: req_method.to_string(),
+        rpc_id: rpc_info.and_then(|rpc| rpc.id.as_ref().map(|id| id.to_string())),
+        rpc_method: rpc_info.map(|rpc| rpc.method.to_string()),
         client_error_type: client_error.map(|e| e.as_ref().to_string()),
         error_type,
         error_data,

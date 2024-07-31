@@ -11,6 +11,10 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Clone, Debug, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
+    RpcMethodUnknown(String),
+    RpcMissingParams { rpc_method: String },
+    RpcFailJsonParams { rpc_method: String },
+
     LoginFailUserNotFound,
     LoginFailPasswordNotMatching { user_id: i64 },
 
@@ -29,6 +33,9 @@ pub enum Error {
     // Modules
     Crypt(crypt::Error),
     Model(model::Error),
+
+    // External modules
+    SerdeJson(String),
 }
 
 impl From<crypt::Error> for Error {
@@ -40,6 +47,12 @@ impl From<crypt::Error> for Error {
 impl From<model::Error> for Error {
     fn from(value: model::Error) -> Self {
         Self::Model(value)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(val: serde_json::Error) -> Self {
+        Self::SerdeJson(val.to_string())
     }
 }
 
@@ -81,6 +94,12 @@ impl Error {
             }
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
+            // Model
+            Model(model::Error::EntityNotFound { entity, id }) => (
+                StatusCode::BAD_REQUEST,
+                ClientError::ENTITY_NOT_FOUND { entity, id: *id },
+            ),
+
             // Fallback
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -91,8 +110,10 @@ impl Error {
 }
 
 #[derive(Debug, Serialize, strum_macros::AsRefStr)]
+#[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
+    ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     LOGIN_FAIL,
     REGISTER_FAIL,
     NO_AUTH,
