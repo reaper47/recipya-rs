@@ -43,7 +43,7 @@ sudo systemctl start recipya.service
 sudo systemctl enable recipya.service
 ```
 
-You can now access the application on your local network at http://<host computer IP>:[<port>](/docs/installation/build/config-file)].
+You can now access the application on your local network at http://<host computer IP>:[<port>](/web/docs/installation/build/config-file)].
 
 ### Windows
 

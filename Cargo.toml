@@ -16,7 +16,6 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 axum = { version = "0.7.5" }
 base64-url = "3.0.0"
-chrono = "0.4.38"
 clap = { version = "4.5.9", features = ["derive"] }
 diesel = { version = "2.2.2", features = ["postgres", "chrono", "uuid"] }
 diesel-async = { version = "0.5.0", features = ["postgres", "bb8","async-connection-wrapper"] }
@@ -36,8 +35,8 @@ serde_urlencoded = "0.7.1"
 serde_with = "3.9.0"
 sha2 = "0.10.8"
 strum_macros = "0.26.4"
+time = "0.3.36"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread", "signal"] }
-tokio-postgres = { version = "0.7.11", features = ["with-chrono-0_4", "with-uuid-1"]}
 tower-cookies = "0.10.0"
 tower-http = { version = "0.5.2", features = ["fs"] }
 tracing = "0.1.40"

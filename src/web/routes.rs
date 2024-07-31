@@ -12,9 +12,6 @@ pub fn routes(mm: ModelManager) -> Router {
         .merge(general::routes())
         .merge(auth::routes(mm.clone()))
         .layer(middleware::map_response(web::middleware::response::map))
-        .layer(middleware::from_fn_with_state(
-            mm,
-            web::middleware::ctx::resolver,
-        ))
+        .layer(middleware::from_fn_with_state(mm.clone(), web::middleware::ctx::resolve))
         .layer(CookieManagerLayer::new())
 }

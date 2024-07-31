@@ -2,18 +2,20 @@ use axum::{
     {Form, middleware, Router},
     extract::State,
     http::{HeaderValue, StatusCode},
-    response::{IntoResponse, Redirect},
-    routing::get,
+    Json,
+    response::{IntoResponse, Redirect}, routing::get,
 };
 use axum::routing::post;
 use maud::Markup;
-use tower_cookies::{Cookie, Cookies};
+use serde::Deserialize;
+use serde_json::{json, Value};
+use tower_cookies::Cookies;
 
 use crate::{
     {crypt, model, web, web::KEY_HX_REDIRECT},
     ctx::Ctx,
     model::{ModelManager, payloads::collect_errors, user::UserBmc},
-    web::Error,
+    web::{Error, remove_token_cookie},
 };
 
 pub fn routes(mm: ModelManager) -> Router {
@@ -31,16 +33,19 @@ pub fn routes(mm: ModelManager) -> Router {
         .merge(routes_require_auth(mm.clone()))
         .merge(routes_redirect_if_logged_in(mm.clone()))
         .merge(routes_register(mm.clone()))
+        .layer(middleware::from_fn_with_state(
+            mm.clone(),
+            web::middleware::ctx::require,
+        ))
         .with_state(mm.clone())
 }
 
-fn routes_require_auth(mm: ModelManager) -> Router<ModelManager> {
-    Router::new()
-        .route("/auth/change-password", post(change_password))
-        .layer(middleware::from_fn_with_state(
-            mm,
-            web::middleware::auth::require,
-        ))
+fn routes_require_auth(_mm: ModelManager) -> Router<ModelManager> {
+    Router::new().route("/auth/change-password", post(change_password))
+    /*.layer(middleware::from_fn_with_state(
+        mm,
+        web::middleware::auth::require,
+    ))*/
 }
 
 fn routes_redirect_if_logged_in(mm: ModelManager) -> Router<ModelManager> {
@@ -120,14 +125,33 @@ async fn login_post(
         return Error::LoginFailPasswordNotMatching { user_id: user.id }.into_response();
     }
 
-    // TODO: Make secure cookie
-    cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
-
-    (StatusCode::OK, "Login successful").into_response()
+    match web::set_token_cookie(&cookies, &user.email, &user.token_salt.to_string()) {
+        Ok(_) =>  (StatusCode::OK, "Login successful").into_response(),
+        Err(_) =>  (StatusCode::BAD_REQUEST, "Login failed").into_response(),
+    }
 }
 
-async fn logout_post() -> Markup {
-    todo!()
+#[derive(Debug, Deserialize)]
+struct LogoffPayload {
+    logoff: bool,
+}
+
+async fn logout_post(
+    cookies: Cookies,
+    Json(payload): Json<LogoffPayload>,
+) -> Result<Json<Value>, Error> {
+    let is_logoff = payload.logoff;
+    if is_logoff {
+        remove_token_cookie(&cookies)?;
+    }
+
+    let body = Json(json!({
+        "result": {
+            "logged_off": is_logoff,
+        }
+    }));
+
+    Ok(body)
 }
 
 async fn register() -> impl IntoResponse {

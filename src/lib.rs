@@ -13,8 +13,10 @@ mod log;
 mod services;
 
 pub mod model;
-pub mod schema;
+mod schema;
+mod utils;
 pub mod web;
+
 
 /// Starts the web server.
 pub async fn run_server() {

@@ -6,14 +6,14 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Clone, Debug, Serialize)]
 pub enum Error {
-    PoolConnection,
     EntityNotFound { entity: &'static str, id: i64 },
-    Bind(String),
 
+    // Modules
     Crypt(crypt::Error),
-    Diesel(String),
-    Pool(String),
     Store(store::Error),
+
+    // Externals
+    Diesel(String),
 }
 
 impl core::fmt::Display for Error {
@@ -28,12 +28,6 @@ impl From<crypt::Error> for Error {
     }
 }
 
-impl From<tokio_postgres::Error> for Error {
-    fn from(err: tokio_postgres::Error) -> Error {
-        Error::Bind(err.to_string())
-    }
-}
-
 impl From<diesel::result::Error> for Error {
     fn from(error: diesel::result::Error) -> Self {
         Error::Diesel(error.to_string())
@@ -42,13 +36,13 @@ impl From<diesel::result::Error> for Error {
 
 impl From<diesel_async::pooled_connection::PoolError> for Error {
     fn from(error: diesel_async::pooled_connection::PoolError) -> Self {
-        Error::Pool(error.to_string())
+        Error::Diesel(error.to_string())
     }
 }
 
 impl From<diesel_async::pooled_connection::bb8::RunError> for Error {
-    fn from(_: diesel_async::pooled_connection::bb8::RunError) -> Self {
-        Error::PoolConnection
+    fn from(value: diesel_async::pooled_connection::bb8::RunError) -> Self {
+        Error::Diesel(value.to_string())
     }
 }
 

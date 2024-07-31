@@ -4,7 +4,7 @@ use axum::{
 };
 use serde::Serialize;
 
-use crate::{model, web};
+use crate::{crypt, model, web};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -27,7 +27,14 @@ pub enum Error {
     RepositoryError(String),
 
     // Modules
+    Crypt(crypt::Error),
     Model(model::Error),
+}
+
+impl From<crypt::Error> for Error {
+    fn from(value: crypt::Error) -> Self {
+        Self::Crypt(value)
+    }
 }
 
 impl From<model::Error> for Error {

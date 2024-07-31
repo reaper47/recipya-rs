@@ -1,8 +1,6 @@
 use diesel::{
-    {
-        {Insertable, OptionalExtension, Queryable, QueryDsl, Selectable, SelectableHelper},
-        ExpressionMethods,
-    },
+    {Insertable, OptionalExtension, Queryable, QueryDsl, Selectable, SelectableHelper},
+    ExpressionMethods,
 };
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
@@ -13,7 +11,6 @@ use crate::{
     model::{Error, Result},
     schema::users,
 };
-use crate::crypt::password::encrypt;
 
 #[derive(Clone, Queryable, Selectable, Debug)]
 #[diesel(table_name = crate::schema::users)]
@@ -56,12 +53,6 @@ pub struct UserForAuth {
     pub token_salt: Uuid,
 }
 
-pub trait UserBy: Send + Sync {}
-
-impl UserBy for User {}
-impl UserBy for UserForLogin {}
-impl UserBy for UserForAuth {}
-
 /// User backend model controller.
 pub struct UserBmc;
 
@@ -69,7 +60,7 @@ impl UserBmc {
     pub async fn create(_ctx: &Ctx, mm: &ModelManager, user_c: UserForCreate) -> Result<i64> {
         let email = user_c.email.to_string();
         let password_salt = Uuid::new_v4();
-        let password = encrypt(&EncryptContent {
+        let password = password::encrypt(&EncryptContent {
             content: user_c.password_clear,
             salt: password_salt.to_string(),
         })?;
@@ -106,6 +97,22 @@ impl UserBmc {
             .first(&mut *mm.connection().await?)
             .await
             .optional()?)
+    }
+
+    pub async fn first_by_email_auth(
+        _ctx: &Ctx,
+        mm: &ModelManager,
+        email: &str,
+    ) -> Result<UserForAuth> {
+        let user = Self::first_by_email(_ctx, mm, email)
+            .await?
+            .ok_or(Error::EntityNotFound { entity: "user", id: -1 })?;
+
+        Ok(UserForAuth {
+            id: user.id,
+            email: user.email,
+            token_salt: user.token_salt,
+        })
     }
 
     pub async fn delete(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {

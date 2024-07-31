@@ -5,6 +5,7 @@ pub use self::error::{Error, Result};
 
 mod error;
 pub mod password;
+pub mod token;
 
 pub struct EncryptContent {
     pub content: String,
