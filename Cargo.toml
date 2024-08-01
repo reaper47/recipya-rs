@@ -1,54 +1,18 @@
-[package]
-name = "recipya"
-version = "0.1.0"
-edition = "2021"
-description = "A clean, simple and powerful recipe manager your whole family will enjoy."
-readme = "README.md"
-homepage = "https://recipes.musicavis.ca"
-repository = "https://github.com/reaper47/recipya"
-license = "AGPL-3.0-or-later"
-keywords = ["food", "recipes", "recipe-manager"]
-categories = ["web-programming"]
+[workspace.lints.rust]
+unsafe_code = "forbid"
 
-[badges]
-maintenance = { status = "actively-developed" }
+[workspace]
+resolver = "2"
+members = [ # e.g. rpc routing
+    "crates/libs/lib-auth", # e.g. for password, token
+    "crates/libs/lib-core", "crates/libs/lib-email", # e.g. base64, time
+    "crates/libs/lib-rpc",
+    # Application libraries
+    "crates/libs/lib-utils", # e.g. model, ctx, config
 
-[dependencies]
-axum = { version = "0.7.5" }
-base64-url = "3.0.0"
-clap = { version = "4.5.9", features = ["derive"] }
-diesel = { version = "2.2.2", features = ["postgres", "chrono", "uuid"] }
-diesel-async = { version = "0.5.0", features = ["postgres", "bb8","async-connection-wrapper"] }
-diesel_migrations = "2.1.0"
-dirs = "5.0.1"
-dotenv = "0.15.0"
-hmac = "0.12.1"
-maud = { version = "*", features = ["axum"] }
-mrml = "4.0.1"
-rand = "0.8.5"
-reqwest = "0.12.5"
-sendgrid = "0.21.0"
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = "1.0.120"
-serde_with = "3.9.0"
-sha2 = "0.10.8"
-strum_macros = "0.26.4"
-time = "0.3.36"
-tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread", "signal"] }
-tower-cookies = "0.10.0"
-tower-http = { version = "0.5.2", features = ["fs"] }
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-uuid = { version = "1.10.0", features = ["serde", "v4"] }
-validator = { version = "0.18.1", features = ["derive"] }
+    # Applications services
+    "crates/services/web-server",
 
-[dev-dependencies]
-anyhow = "1.0.86"
-axum-test = "15.3.0"
-futures = "0.3.30"
-pgtemp = "0.3.0"
-tower = { version = "0.4", features = ["util"] }
-
-[features]
-default = []
-docs = []
-web = []
+    # Tools
+    "crates/tools/gen-key",
+]

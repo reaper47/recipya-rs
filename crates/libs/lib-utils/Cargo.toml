@@ -1,0 +1,14 @@
+[package]
+name = "lib-utils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+base64 = "0.22.1"
+time = { version = "0.3.36", features = ["formatting", "parsing", "serde"] }
+
+[lib]
+doctest = false
+
+[lints]
+workspace = true

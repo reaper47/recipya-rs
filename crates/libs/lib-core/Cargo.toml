@@ -1,0 +1,30 @@
+[package]
+name = "lib-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+derive_more = "0.99.18"
+diesel = { version = "2.2.2", features = ["postgres", "chrono", "uuid"] }
+diesel-async = { version = "0.5.0", features = ["postgres", "bb8","async-connection-wrapper"] }
+diesel_migrations = "2.1.0"
+dirs = "5.0.1"
+lib-auth = { path = "../../libs/lib-auth" }
+lib-email = { path = "../../libs/lib-email" }
+lib-utils = { path = "../../libs/lib-utils" }
+serde = { version = "1.0.204", features = ["derive"] }
+tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread", "signal"] }
+uuid = { version = "1.10.0", features = ["serde", "v4"] }
+
+[dev-dependencies]
+anyhow = "1.0.86"
+axum-test = "15.3.0"
+futures = "0.3.30"
+pgtemp = "0.3.0"
+reqwest = "0.12.5"
+
+[lib]
+doctest = false
+
+[lints]
+workspace = true

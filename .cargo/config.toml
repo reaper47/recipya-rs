@@ -3,7 +3,6 @@
 
 [env]
 DATABASE_URL="postgres://postgres:Poule420!@localhost:5432/recipya"
-RUST_LOG="recipya=debug"
 
 SERVICE_EMAIL_FROM="example@test.com"
 SERVICE_EMAIL_SENDGRID_API_KEY="YOUR_API_KEY"
@@ -23,5 +22,5 @@ SERVICE_PASSWORD_KEY="s0lTGcTmAm8xuFj6-x1LVXk7kC2r3eZIRv1miVzmoJRsP42MFMb3_UrGIa
 SERVICE_TOKEN_KEY="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w"
 SERVICE_TOKEN_DURATION_SEC="1800"
 
-SERVICE_DOCS_FOLDER="docs/public"
+SERVICE_DOCS_FOLDER="web/docs/public"
 SERVICE_STATIC_FOLDER="web/static"

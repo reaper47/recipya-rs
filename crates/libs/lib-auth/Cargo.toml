@@ -1,0 +1,20 @@
+[package]
+name = "lib-auth"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hmac = "0.12.1"
+lib-utils = { path = "../../libs/lib-utils" }
+serde = { version = "1.0.204", features = ["derive"] }
+sha2 = "0.10.8"
+uuid = { version = "1.10.0", features = ["v4"] }
+
+[dev-dependencies]
+anyhow = "1.0.86"
+
+[lib]
+doctest = false
+
+[lints]
+workspace = true

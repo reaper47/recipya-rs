@@ -1,0 +1,16 @@
+[package]
+name = "lib-email"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lib-utils = { path = "../lib-utils" }
+mrml = "4.0.1"
+reqwest = "0.12.5"
+sendgrid = "0.21.0"
+
+[lib]
+doctest = false
+
+[lints]
+workspace = true

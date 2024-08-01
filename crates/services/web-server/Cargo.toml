@@ -1,0 +1,45 @@
+[package]
+name = "recipya"
+version = "0.1.0"
+edition = "2021"
+description = "A clean, simple and powerful recipe manager your whole family will enjoy."
+readme = "README.md"
+homepage = "https://recipes.musicavis.ca"
+repository = "https://github.com/reaper47/recipya"
+license = "AGPL-3.0-or-later"
+keywords = ["food", "recipes", "recipe-manager"]
+categories = ["web-programming"]
+
+[dependencies]
+axum = { version = "0.7.5" }
+derive_more = { version = "1.0.0-beta.6", features = ["from"] }
+lib-auth = { path = "../../libs/lib-auth" }
+lib-core = { path = "../../libs/lib-core" }
+lib-rpc = { path = "../../libs/lib-rpc" }
+lib-utils = { path = "../../libs/lib-utils" }
+maud = { version = "*", features = ["axum"] }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
+serde_with = "3.9.0"
+strum_macros = "0.26.4"
+tokio = { version = "1.39.2", features = ["macros", "rt-multi-thread", "signal"] }
+tower-cookies = "0.10.0"
+tower-http = { version = "0.5.2", features = ["fs"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+uuid = { version = "1.10.0", features = ["v4"] }
+validator = { version = "0.18.1", features = ["derive"] }
+
+[dev-dependencies]
+axum-test = "15.3.0"
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[lints]
+workspace = true
+
+[features]
+default = []
+docs = []
+web = []

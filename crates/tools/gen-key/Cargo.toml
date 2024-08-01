@@ -1,0 +1,12 @@
+[package]
+name = "gen-key"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+lib-utils = { path = "../../libs/lib-utils" }
+rand = "0.9.0-alpha.2"
+
+[lints]
+workspace = true
