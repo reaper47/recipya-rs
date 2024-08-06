@@ -12,6 +12,9 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/libs/lib-utils/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/services/web-server/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src_bak" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/libs/lib-scraper/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/libs/lib-scraper/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/lib-scraper2/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
