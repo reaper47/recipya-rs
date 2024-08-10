@@ -1,19 +1,22 @@
 use iso8601::{
-    {DateTime, Time},
     Date::YMD,
     Duration::YMDHMS,
+    {DateTime, Time},
 };
 use url::Url;
 
-use lib_scraper::{{schema::RecipeSchema, websites::Website}, schema::{AggregateRating, AtContext::SchemaDotOrg, AtType, Organization, Container}, websites};
 use lib_scraper::schema::{Instructions, Yield};
+use lib_scraper::{
+    schema::{AggregateRating, AtContext::SchemaDotOrg, AtType, Container, Organization},
+    websites,
+    {schema::RecipeSchema, websites::Website},
+};
 
 mod helpers;
 
 #[test]
 fn test_claudia_abril_dot_com_dot_br() {
     let got = helpers::scrape(Website::ClaudiaAbrilComBr);
-
 
     let want = RecipeSchema {
         aggregate_rating: Some(AggregateRating { at_type: AtType::AggregateRating, rating_value: 4, best_rating: 5, rating_count: 38 }),

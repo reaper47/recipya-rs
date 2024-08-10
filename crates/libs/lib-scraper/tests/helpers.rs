@@ -4,8 +4,7 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
-use lib_scraper::{HttpClient, Result, Scraper, websites::Website};
-use lib_scraper::schema::RecipeSchema;
+use lib_scraper::{HttpClient, Result, schema::recipe::RecipeSchema, Scraper, websites::Website};
 
 pub fn mock_scraper() -> &'static Scraper {
     static INSTANCE: OnceLock<Scraper> = OnceLock::new();
@@ -39,4 +38,3 @@ pub fn scrape(website: Website) -> RecipeSchema {
     let url = lib_scraper::websites().get(&website).unwrap();
     mock_scraper().scrape(url).unwrap()
 }
-

@@ -7,10 +7,7 @@ use std::{
 
 use scraper::{Html, Selector};
 
-use crate::{
-    schema::{AtType, RecipeSchema, Container},
-    websites::Website,
-};
+use crate::{schema::recipe::RecipeSchema, websites::Website};
 
 pub use self::error::{Error, Result};
 
@@ -71,8 +68,12 @@ impl HttpClient for AppHttpClient {
         let body = res.text().await?;
         Ok(body)
     }
-    fn get(&self, host: Website, url: &str) -> Result<String> {
-        todo!()
+
+    fn get(&self, _host: Website, url: &str) -> Result<String> {
+        let client = reqwest::blocking::Client::new();
+        let res = client.get(url).send()?;
+        let body = res.text()?;
+        Ok(body)
     }
 }
 
@@ -91,29 +92,17 @@ impl Scraper {
 
         let sel = Selector::parse(r#"script[type='application/ld+json']"#)?;
         for el in doc.select(&sel).into_iter() {
-            let json = *el.text().collect::<Vec<_>>().get(0).unwrap();
-            let res: RecipeSchema = serde_json::from_str(json)?;
-            match &res.at_type {
-                None => continue,
-                Some(t) => match t {
-                    Container::Item(s) => {
-                        if *s == AtType::Recipe {
-                            return Ok(res);
-                        }
-                    }
-                    Container::Vec(v) => {
-                        if v.iter().find(|&t| *t == AtType::Recipe).is_some() {
-                            return Ok(res);
-                        }
-                    }
-                },
-            }
+            let json = &el.inner_html();
+            let recipe: RecipeSchema = match serde_json::from_str(json) {
+                Ok(value) => value,
+                Err(error) => {
+                    println!("Error while parsing schema of {url}: {error}");
+                    continue;
+                }
+            };
+            return Ok(recipe);
         }
 
         Err(Error::DomainNotImplemented)
-    }
-
-    fn scrape_website() -> Result<()> {
-        Ok(())
     }
 }

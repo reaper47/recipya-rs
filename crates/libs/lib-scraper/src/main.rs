@@ -1,11 +1,3 @@
-use std::{
-    fs::File,
-    io::{Read, Write},
-    path::PathBuf,
-};
-
-use lib_scraper::websites;
-
 fn main() {
     #[cfg(feature = "refresh_html")]
     refresh_html();
@@ -15,7 +7,7 @@ fn main() {
 fn refresh_html() {
     let client = reqwest::blocking::Client::new();
 
-    let map = websites();
+    let map = lib_scraper::websites();
     let i = 1;
     let total = map.len();
 
@@ -24,11 +16,13 @@ fn refresh_html() {
 
         match client.get(url).send() {
             Ok(res) => {
-                File::create(PathBuf::from(format!(
+                std::fs::File::File::create(std::path::PathBuf::PathBuf::from(format!(
                     "./crates/libs/lib-scraper/tests/data/{}.html",
                     website
                 )))
-                .unwrap_or_else(|_| File::create(format!("./tests/data/{}.html", website)).unwrap())
+                .unwrap_or_else(|_| {
+                    std::fs::File::File::create(format!("./tests/data/{}.html", website)).unwrap()
+                })
                 .write(&res.bytes().unwrap())
                 .inspect_err(|err| println!("Could not write {}: {:?}", website, err))
                 .unwrap();

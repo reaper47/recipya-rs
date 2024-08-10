@@ -1,13 +1,13 @@
-use std::fmt::Formatter;
 use reqwest::Url;
+use std::fmt::Formatter;
 
 use crate::{Error, Result};
 
 #[derive(Eq, Hash, PartialEq)]
 pub enum Website {
     AbuelasCounterCom,
+    ACoupleCooksCom,
     ClaudiaAbrilComBr,
-    Unknown,
 }
 
 impl Website {
@@ -17,13 +17,14 @@ impl Website {
             Err(_) => return Err(Error::UnknownWebsite),
         };
 
-        let host = match url.host_str() {
+        let domain = match url.domain() {
             None => return Err(Error::UnknownWebsite),
-            Some(host) => host,
+            Some(domain) => domain,
         };
 
-        match host {
+        match domain {
             "abuelascounter.com" => Ok(Self::AbuelasCounterCom),
+            "www.acouplecooks.com" => Ok(Self::ACoupleCooksCom),
             "claudia.abril.com.br" => Ok(Self::ClaudiaAbrilComBr),
             _ => Err(Error::UnknownWebsite),
         }
@@ -34,8 +35,8 @@ impl std::fmt::Display for Website {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Website::AbuelasCounterCom => write!(f, "abuelascounter.com"),
+            Website::ACoupleCooksCom => write!(f, "www.acouplecooks.com"),
             Website::ClaudiaAbrilComBr => write!(f, "claudia.abril.com.br"),
-            Website::Unknown => write!(f, "unknown"),
         }
     }
 }
