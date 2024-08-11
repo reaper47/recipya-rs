@@ -7,9 +7,10 @@ use std::{
 
 use scraper::{Html, Selector};
 
-use crate::{schema::recipe::RecipeSchema, websites::Website};
-
 pub use self::error::{Error, Result};
+use crate::schema::recipe::GraphObject;
+use crate::schema::AtType;
+use crate::{schema::recipe::RecipeSchema, websites::Website};
 
 mod custom;
 mod error;
@@ -100,7 +101,21 @@ impl Scraper {
                     continue;
                 }
             };
-            return Ok(recipe);
+
+            match recipe.at_graph {
+                None => return Ok(recipe),
+                Some(graph) => {
+                    for temp in graph.into_iter() {
+                        match temp {
+                            GraphObject::Recipe(mut recipe) => {
+                                recipe.at_type = Some(AtType::Recipe);
+                                return Ok(recipe);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
         }
 
         Err(Error::DomainNotImplemented)

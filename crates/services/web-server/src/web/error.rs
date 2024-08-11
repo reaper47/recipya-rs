@@ -4,7 +4,7 @@ use axum::{
 };
 use derive_more::From;
 use serde::Serialize;
-use serde_with::{DisplayFromStr, serde_as};
+use serde_with::{serde_as, DisplayFromStr};
 use validator::Validate;
 
 use lib_auth::{pwd, token};

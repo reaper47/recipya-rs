@@ -4,7 +4,7 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
-use lib_scraper::{HttpClient, Result, schema::recipe::RecipeSchema, Scraper, websites::Website};
+use lib_scraper::{schema::recipe::RecipeSchema, websites::Website, HttpClient, Result, Scraper};
 
 pub fn mock_scraper() -> &'static Scraper {
     static INSTANCE: OnceLock<Scraper> = OnceLock::new();

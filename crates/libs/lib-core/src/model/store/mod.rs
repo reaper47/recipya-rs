@@ -1,5 +1,5 @@
 use diesel::Connection;
-use diesel_async::{AsyncPgConnection, pooled_connection::AsyncDieselConnectionManager};
+use diesel_async::{pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
 pub use self::error::{Error, Result};
@@ -60,7 +60,7 @@ mod tests {
 pub mod test_db {
     use std::{sync::atomic::AtomicU32, thread};
 
-    use diesel::{Connection, PgConnection, RunQueryDsl, sql_query};
+    use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
     use futures::future::BoxFuture;
     use reqwest::Url;
 

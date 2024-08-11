@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use lib_core::ctx::Ctx;
 
-use crate::web::{self, ClientError, Result, routes_rpc::RpcInfo};
+use crate::web::{self, routes_rpc::RpcInfo, ClientError, Result};
 pub async fn log_request(
     uuid: Uuid,
     req_method: Method,

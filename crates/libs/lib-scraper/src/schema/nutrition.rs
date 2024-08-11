@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 
 use serde::{de, Deserialize, Deserializer};
 
-use crate::schema::{AtType, nutrition::RestrictedDiet::UnspecifiedDiet};
+use crate::schema::{nutrition::RestrictedDiet::UnspecifiedDiet, AtType};
 
 /// Nutritional information about the recipe as described in the [schema](https://schema.org/NutritionInformation).
 #[derive(Debug, Default, Deserialize, PartialEq)]

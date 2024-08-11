@@ -2,11 +2,11 @@ use serde::Deserialize;
 use url::Url;
 
 use crate::schema::{
-    AtType,
     common::{
         Action, CreativeWorkOrUrl, DateOrDateTime, DefinedTermOrTextOrUrl, ImageObjectOrUrl,
         LanguageOrText, OrganizationOrPerson, OrganizationType,
     },
+    AtType,
 };
 
 /// An article, such as a news article or piece of investigative report. Newspapers and magazines

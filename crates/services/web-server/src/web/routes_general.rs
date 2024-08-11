@@ -1,4 +1,4 @@
-use axum::{response::Redirect, Router, routing::get};
+use axum::{response::Redirect, routing::get, Router};
 use tower_http::services::ServeDir;
 
 use lib_core::config::config;

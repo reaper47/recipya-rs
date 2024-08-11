@@ -3,14 +3,11 @@ use iso8601::{
     Duration::YMDHMS,
     {DateTime, Time},
 };
-use url::Url;
-
-use lib_scraper::schema::{Instructions, Yield};
 use lib_scraper::{
-    schema::{AggregateRating, AtContext::SchemaDotOrg, AtType, Container, Organization},
-    websites,
-    {schema::RecipeSchema, websites::Website},
+    schema::{common::AggregateRating, recipe::RecipeSchema, AtType},
+    websites::Website,
 };
+use url::Url;
 
 mod helpers;
 

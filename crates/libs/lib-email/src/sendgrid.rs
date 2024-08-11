@@ -1,8 +1,8 @@
 use mrml::prelude::render::RenderOptions;
 use sendgrid::v3::{Content, Email, Message, Personalization, Sender};
 
-use crate::{config::config, Data, Template};
 pub use crate::error::{Error, Result};
+use crate::{config::config, Data, Template};
 
 #[derive(Clone)]
 pub struct Sendgrid {

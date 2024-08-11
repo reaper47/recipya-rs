@@ -1,11 +1,6 @@
 use std::fmt::Formatter;
 
-use reqwest::Url;
-use serde::{de, Deserialize, Deserializer};
-
 use crate::schema::{
-    AtContext,
-    AtType,
     common::{
         AggregateRating, AudioObjectOrClipOrMusicRecording, ClipOrVideoObject, CommentType,
         CountryType, CreativeWorkOrHowToSectionOrHowToStepOrText, CreativeWorkOrItemListOrText,
@@ -14,8 +9,22 @@ use crate::schema::{
         ImageObjectType, LanguageOrText, MonetaryAmountOrText, OrganizationOrPerson,
         OrganizationType, PlaceType, PropertyValueOrTextOrUrl, QuantitativeValueOrText,
         RatingOrText, ReviewType, TextOrTextObject,
-    }, nutrition::{NutritionInformationSchema, RestrictedDiet},
+    },
+    nutrition::{NutritionInformationSchema, RestrictedDiet},
+    AtContext, AtType,
 };
+use reqwest::Url;
+use serde::{de, Deserialize, Deserializer};
+
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum GraphObject {
+    Recipe(RecipeSchema),
+    Unknown(UnknownType),
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct UnknownType {}
 
 /// The recipe schema as described in the [schema](https://schema.org/Recipe).
 #[derive(Debug, Default, Deserialize, PartialEq)]
@@ -30,7 +39,7 @@ pub struct RecipeSchema {
     pub at_type: Option<AtType>,
 
     #[serde(rename = "@graph")]
-    pub at_graph: Option<Graph>,
+    pub at_graph: Option<Vec<GraphObject>>,
 
     #[serde(rename = "@id")]
     pub at_id: Option<String>,
@@ -169,18 +178,18 @@ pub struct RecipeSchema {
 
     /// A step in making the recipe, in the form of a single item (document, video, etc.)
     /// or an ordered list with HowToStep and/or HowToSection items.
-    pub recipe_ingredient: Vec<String>,
+    pub recipe_ingredient: Option<Vec<String>>,
 
     /// A step in making the recipe, in the form of a single item (document, video, etc.) or an
     /// ordered list with HowToStep and/or HowToSection items.
-    pub recipe_instructions: CreativeWorkOrItemListOrText,
+    pub recipe_instructions: Option<CreativeWorkOrItemListOrText>,
 
     /// The quantity produced by the recipe (for example, number of people served, number of servings, etc).
     #[serde(default)]
     pub recipe_yield: QuantitativeValueOrText,
 
     /// A review of the item. Supersedes reviews.
-    pub review: Option<ReviewType>,
+    pub review: Option<Vec<ReviewType>>,
 
     /// URL of a reference Web page that unambiguously indicates the item's identity. E.g. the URL
     /// of the item's Wikipedia page, Wikidata entry, or official website.
@@ -355,43 +364,5 @@ impl<'de> Deserialize<'de> for RecipeCuisine {
         }
 
         deserializer.deserialize_any(Visitor)
-    }
-}
-
-#[derive(Debug, Default, PartialEq)]
-pub struct Graph {
-    recipe: Box<RecipeSchema>,
-}
-
-impl<'de> Deserialize<'de> for Graph {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct Visitor;
-
-        impl<'de> de::Visitor<'de> for Visitor {
-            type Value = Graph;
-
-            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
-                formatter.write_str("ArrayKeyedMap key value sequence.")
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: de::SeqAccess<'de>,
-            {
-                while let Some(item) = seq.next_element::<RecipeSchema>()? {
-                    let t = item.at_type.clone();
-                    if t == Some(AtType::Recipe) {
-                        return Ok(Graph {
-                            recipe: Box::new(item),
-                        });
-                    }
-                }
-                Err(de::Error::custom("no recipe in the graph object"))
-            }
-        }
-        deserializer.deserialize_seq(Visitor)
     }
 }

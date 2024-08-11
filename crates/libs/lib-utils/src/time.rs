@@ -1,4 +1,4 @@
-pub use time::{Duration, format_description::well_known::Rfc3339, OffsetDateTime};
+pub use time::{format_description::well_known::Rfc3339, Duration, OffsetDateTime};
 
 pub fn now_utc() -> OffsetDateTime {
     OffsetDateTime::now_utc()

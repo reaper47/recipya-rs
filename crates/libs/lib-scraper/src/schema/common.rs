@@ -69,7 +69,7 @@ impl<'de> Deserialize<'de> for Action {
 }
 
 /// The average rating based on multiple ratings or reviews.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct AggregateRating {
     #[serde(rename = "@type")]
@@ -344,7 +344,11 @@ impl<'de> Deserialize<'de> for CreativeWorkOrItemListOrText {
                 A: SeqAccess<'de>,
             {
                 let mut vec: Vec<HowTo> = Vec::new();
-                while let Some(object) = seq.next_element::<HowTo>()? {
+                while let Some(mut object) = seq.next_element::<HowTo>()? {
+                    if let Some(name) = object.name {
+                        object.name = Some(deserialize_trim(name));
+                    }
+                    object.text = deserialize_trim(object.text);
                     vec.push(object);
                 }
                 Ok(ItemList(vec))
@@ -361,6 +365,15 @@ impl<'de> Deserialize<'de> for CreativeWorkOrItemListOrText {
 
         deserializer.deserialize_any(Visitor)
     }
+}
+
+fn deserialize_trim<'a>(mut s: String) -> String {
+    let replace_map: HashMap<&str, &str> = HashMap::from_iter([("&nbsp;", " ")]);
+    for (old, new) in replace_map.iter() {
+        s = s.replace(old, new)
+    }
+
+    s.trim().to_string()
 }
 
 #[derive(Debug, PartialEq)]
@@ -656,14 +669,14 @@ impl<'de> Deserialize<'de> for DistanceOrQuantitativeValue {
             where
                 E: Error,
             {
-                Ok(QuantitativeValue(QuantitativeValueType{value:v}))
+                Ok(QuantitativeValue(QuantitativeValueType { value: v }))
             }
 
             fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
             where
                 E: Error,
             {
-                Ok(QuantitativeValue(QuantitativeValueType{value:v as i64}))
+                Ok(QuantitativeValue(QuantitativeValueType { value: v as i64 }))
             }
         }
 
@@ -683,48 +696,10 @@ pub struct HowToSectionType {}
 pub struct HowTo {
     #[serde(rename = "@type")]
     pub at_type: AtType,
-    #[serde(deserialize_with = "trim_option_string")]
     pub name: Option<String>,
-    #[serde(deserialize_with = "trim_string")]
     pub text: String,
     pub url: Option<Url>,
-    #[serde(deserialize_with = "custom_deserialize_image")]
     pub image: Option<ImageObjectOrUrl>,
-}
-
-fn custom_deserialize_image<'de, D>(deserializer: D) -> Result<Option<ImageObjectOrUrl>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    match ImageObjectOrUrl::deserialize(deserializer) {
-        Ok(res) => Ok(Some(res)),
-        Err(_) => Ok(None),
-    }
-}
-
-fn trim_string<'de, D>(deserializer: D) -> Result<String, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    Ok(deserialize_trim(s))
-}
-
-fn trim_option_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    Ok(Some(deserialize_trim(s)))
-}
-
-fn deserialize_trim<'a>(mut s: String) -> String {
-    let replace_map: HashMap<&str, &str> = HashMap::from_iter([("&nbsp;", " ")]);
-    for (old, new) in replace_map.iter() {
-        s = s.replace(old, new)
-    }
-
-    s.trim().to_string()
 }
 
 #[derive(Debug, PartialEq)]
@@ -842,7 +817,7 @@ pub enum ImageObjectOrUrl {
 }
 
 /// An image file.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ImageObjectType {
     #[serde(rename = "@type", default = "set_image_object")]
@@ -896,6 +871,10 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
             where
                 E: Error,
             {
+                if v.is_empty() {
+                    return Ok(ImageObject(ImageObjectType::default()));
+                }
+
                 if let Ok(url) = url::Url::parse(v) {
                     return Ok(Url(url));
                 }
@@ -906,6 +885,10 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
             where
                 E: Error,
             {
+                if v.is_empty() {
+                    return Ok(ImageObject(ImageObjectType::default()));
+                }
+
                 if let Ok(url) = url::Url::parse(&v) {
                     return Ok(Url(url));
                 }
@@ -921,11 +904,12 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                     vec.push(s)
                 }
 
-                let v = vec
-                    .get(0)
-                    .ok_or_else(|| Error::custom("sequence is empty"))?;
+                let v = match vec.pop() {
+                    None => return Err(Error::custom("sequence is empty")),
+                    Some(v) => v,
+                };
 
-                let url = url::Url::parse(v).map_err(|ex| Error::custom(ex.to_string()))?;
+                let url = url::Url::parse(&v).map_err(|ex| Error::custom(ex.to_string()))?;
                 Ok(Url(url))
             }
 
@@ -1526,7 +1510,7 @@ impl<'de> Deserialize<'de> for RatingOrText {
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct ReviewType {
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub at_type: AtType,
     #[serde(rename = "reviewRating")]
     pub review_rating: ReviewRating,
     pub author: OrganizationOrPerson,
@@ -1539,7 +1523,7 @@ pub struct ReviewType {
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct ReviewRating {
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub at_type: AtType,
     #[serde(rename = "ratingValue")]
     pub rating_value: String,
 }

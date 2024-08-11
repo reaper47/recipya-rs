@@ -1,7 +1,7 @@
 use lib_core::{
     ctx::Ctx,
-    model::ModelManager,
     model::user::{User, UserBmc, UserForCreate},
+    model::ModelManager,
 };
 
 use crate::{

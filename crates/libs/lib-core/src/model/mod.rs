@@ -17,7 +17,7 @@
 //!   to all Model Controllers functions.
 //!
 
-use diesel_async::{AsyncPgConnection, pooled_connection::bb8};
+use diesel_async::{pooled_connection::bb8, AsyncPgConnection};
 
 use lib_email::Sendgrid;
 

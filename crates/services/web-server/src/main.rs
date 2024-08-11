@@ -8,9 +8,9 @@ use tracing::info;
 use lib_core::model::ModelManager;
 
 use crate::web::{
-    {routes_auth, routes_general, routes_rpc},
     mw_auth::{mw_ctx_require, mw_ctx_resolve},
     mw_res_map::mw_reponse_map,
+    {routes_auth, routes_general, routes_rpc},
 };
 
 pub use self::error::{Error, Result};
