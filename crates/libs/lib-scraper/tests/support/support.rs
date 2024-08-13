@@ -1,5 +1,8 @@
 use std::{
-    fs, io::Write, path::{Path, PathBuf}, sync::{Arc, OnceLock}
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+    sync::{Arc, OnceLock},
 };
 
 use lib_scraper::{schema::recipe::RecipeSchema, websites::Website, HttpClient, Result, Scraper};
@@ -36,15 +39,13 @@ impl HttpClient for MockHttpClient {
 
 pub fn scrape(website: Website, number: usize) -> RecipeSchema {
     let url = match websites_for_tests().get(&website) {
-        Some(urls) => {
-            urls.get(number).expect("url to test not in vector of urls")
-        },
+        Some(urls) => urls.get(number).expect("url to test not in vector of urls"),
         None => panic!("website '{}' not found in map", website),
     };
 
     {
         let file_name = format!("./crates/libs/lib-scraper/tests/data/{}.html", website);
-        let path =  Path::new(file_name.as_str());
+        let path = Path::new(file_name.as_str());
 
         let file_name = format!("./tests/data/{}.html", website);
         let path2 = Path::new(file_name.as_str());
@@ -53,17 +54,18 @@ pub fn scrape(website: Website, number: usize) -> RecipeSchema {
             let client = reqwest::blocking::Client::new();
             match client.get(url).send() {
                 Ok(res) => {
-                    fs::File::create(path).unwrap_or_else(|_| {
-                        fs::File::create(format!("./tests/data/{}.html", website)).unwrap()
-                    })
-                    .write(&res.bytes().unwrap())
-                    .inspect_err(|err| println!("Could not write {}: {:?}", website, err))
-                    .unwrap();
+                    fs::File::create(path)
+                        .unwrap_or_else(|_| {
+                            fs::File::create(format!("./tests/data/{}.html", website)).unwrap()
+                        })
+                        .write(&res.bytes().unwrap())
+                        .inspect_err(|err| println!("Could not write {}: {:?}", website, err))
+                        .unwrap();
                 }
                 Err(err) => println!("Could not fetch {}: {:?}", website, err),
             };
         }
     }
-    
+
     mock_scraper().scrape(url).unwrap()
 }

@@ -163,7 +163,7 @@ fn test_acouplecooks_dot_com() {
             AggregateRating {
                 at_type: AtType::AggregateRating,
                 rating_value: Some(NumberOrText::Text("5".to_string())),
-                review_count: Some(NumberOrText::Text("3".to_string())),
+                review_count: Some(3),
                 ..Default::default()
             },
         ),
@@ -262,8 +262,8 @@ fn test_acouplecooks_dot_com() {
                     name: Some("Larry Harmon".to_string()),
                     ..Default::default()
                 }),
-                date_published: "2022-04-02".to_string(),
-                review_body: "Thanks Sonja!\r\nI just made this for lunch and it has converted me.\r\nI didn't think I liked brussel sprouts until now.\r\nMy daughter, who does love brussel sprouts, said it is now her favorite recipe. \r\n\r\nLarry".to_string(),
+                date_published: DateOrDateTime::Date(YMD { year: 2022, month: 4, day: 2 }),
+                review_body: Some("Thanks Sonja!\r\nI just made this for lunch and it has converted me.\r\nI didn't think I liked brussel sprouts until now.\r\nMy daughter, who does love brussel sprouts, said it is now her favorite recipe. \r\n\r\nLarry".to_string()),
             },
             ReviewType {
                 at_type: AtType::Review,
@@ -276,8 +276,8 @@ fn test_acouplecooks_dot_com() {
                     name: Some("Alpana Hoffman".to_string()),
                     ..Default::default()
                 }),
-                date_published: "2022-11-25".to_string(),
-                review_body: "I made this recipe on thanksgiving and our guests loved it.  Awesome!  Thank you very much".to_string(),
+                date_published: DateOrDateTime::Date(YMD { year: 2022, month: 11, day: 25 }),
+                review_body: Some("I made this recipe on thanksgiving and our guests loved it.  Awesome!  Thank you very much".to_string()),
             },
             ReviewType {
                 at_type: AtType::Review,
@@ -290,8 +290,8 @@ fn test_acouplecooks_dot_com() {
                     name: Some("Gretchen g".to_string()),
                     ..Default::default()
                 }),
-                date_published: "2023-10-15".to_string(),
-                review_body: "Fantastic! I cooked as is along with  beets and put in oven after for 15 minutes at 345 to get everything to cook a bit more. Was perfection!!".to_string(),
+                date_published: DateOrDateTime::Date(YMD { year: 2023, month: 10, day: 15 }),
+                review_body: Some("Fantastic! I cooked as is along with  beets and put in oven after for 15 minutes at 345 to get everything to cook a bit more. Was perfection!!".to_string()),
             },
         ].into()),
         suitable_for_diet: RestrictedDiet::VegetarianDiet,

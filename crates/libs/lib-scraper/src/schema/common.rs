@@ -91,13 +91,57 @@ pub struct AggregateRating {
     pub rating_count: Option<i64>,
 
     /// The count of total number of reviews.
-    pub review_count: Option<NumberOrText>
+    #[serde(default, deserialize_with = "deserialize_int64")]
+    pub review_count: Option<i64>,
 }
 
 fn set_aggregate_rating_type() -> AtType {
     AtType::AggregateRating
 }
 
+fn deserialize_int64<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct Visitor;
+
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = Option<i64>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("an integer or a string that can be parsed into an integer")
+        }
+
+        fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(value))
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            match v.parse::<i64>() {
+                Ok(num) => Ok(Some(num)),
+                Err(_) => Ok(None),
+            }
+        }
+
+        fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            match v.parse::<i64>() {
+                Ok(num) => Ok(Some(num)),
+                Err(_) => Ok(None),
+            }
+        }
+    }
+
+    deserializer.deserialize_any(Visitor)
+}
 
 #[derive(Debug, PartialEq)]
 pub enum AudioObjectOrClipOrMusicRecording {
@@ -1586,9 +1630,9 @@ pub struct ReviewType {
     pub review_rating: ReviewRating,
     pub author: OrganizationOrPerson,
     #[serde(rename = "datePublished")]
-    pub date_published: String,
+    pub date_published: DateOrDateTime,
     #[serde(rename = "reviewBody")]
-    pub review_body: String,
+    pub review_body: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Deserialize)]

@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 
 use crate::schema::{
     common::{
-        AggregateRating, AudioObjectOrClipOrMusicRecording, ClipOrVideoObject, CommentType,
+        Action, AggregateRating, AudioObjectOrClipOrMusicRecording, ClipOrVideoObject, CommentType,
         CountryType, CreativeWorkOrHowToSectionOrHowToStepOrText, CreativeWorkOrItemListOrText,
         CreativeWorkOrText, CreativeWorkOrUrl, CreativeWorkType, DateOrDateTime,
         DefinedTermOrTextOrUrl, HowToSupplyOrText, HowToToolOrText, ImageObjectOrUrl,
@@ -49,6 +49,12 @@ pub struct RecipeSchema {
 
     /// An alias for the item.
     pub alternate_name: Option<String>,
+
+    /// The actual body of the article.
+    ///
+    /// To ignore. It is not part of the Recipe schema but some websites fuse the
+    /// Article and Recipe together.
+    pub article_body: Option<String>,
 
     /// An embedded audio object.
     pub audio: Option<AudioObjectOrClipOrMusicRecording>,
@@ -133,6 +139,10 @@ pub struct RecipeSchema {
     /// language codes from the IETF BCP 47 standard. See also availableLanguage. Supersedes language.
     pub in_language: Option<LanguageOrText>,
 
+    /// A flag to signal that the item, event, or place is accessible for free. Supersedes free.
+    #[serde(default, deserialize_with = "deserialize_bool")]
+    pub is_accessible_for_free: bool,
+
     /// Indicates an item or CreativeWork that this item, or CreativeWork (in some sense), is part of.
     // Inverse property: hasPart
     pub is_part_of: Option<CreativeWorkOrUrl>,
@@ -160,6 +170,10 @@ pub struct RecipeSchema {
     /// The length of time it takes to perform instructions or a direction (not including time to
     /// prepare the supplies), in ISO 8601 duration format.
     pub perform_time: Option<iso8601::Duration>,
+
+    /// Indicates a potential Action, which describes an idealized action in which this thing
+    /// would play an 'object' role.
+    pub potential_action: Option<Action>,
 
     /// The length of time it takes to prepare the items to be used in instructions or a
     /// direction, in ISO 8601 duration format.
@@ -189,6 +203,7 @@ pub struct RecipeSchema {
     pub recipe_yield: QuantitativeValueOrText,
 
     /// A review of the item. Supersedes reviews.
+    #[serde(alias = "Review")]
     pub review: Option<Vec<ReviewType>>,
 
     /// URL of a reference Web page that unambiguously indicates the item's identity. E.g. the URL
@@ -247,6 +262,44 @@ pub struct RecipeSchema {
     /// “Journey to the West”, a German workTranslation “Monkeys Pilgerfahrt” and a Vietnamese translation
     /// Tây du ký bình khảo. Inverse property: translationOfWork
     pub work_translation: Option<CreativeWorkType>,
+}
+
+fn deserialize_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct Visitor;
+
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = bool;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a bool or text")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(v.to_lowercase() == "true")
+        }
+
+        fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(v.to_lowercase() == "true")
+        }
+
+        fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(v)
+        }
+    }
+
+    deserializer.deserialize_any(Visitor)
 }
 
 #[derive(Debug, PartialEq)]

@@ -11,7 +11,7 @@ use lib_scraper::{
             DateOrDateTime, DefinedTermOrTextOrUrl, DistanceOrQuantitativeValue, DistanceType,
             ImageObjectOrUrl, ImageObjectType, NumberOrText, OrganizationOrPerson,
             OrganizationType, QuantitativeValueOrText, QuantitativeValueType, RatingOrText,
-            TextOrTextObject,
+            ReviewRating, ReviewType, TextOrTextObject,
         },
         recipe::{RecipeCategory, RecipeCuisine, RecipeSchema},
         AtContext, AtType,
@@ -34,6 +34,7 @@ fn test_claudia_abril_dot_com_dot_br() {
             rating_count: Some(38),
             ..Default::default()
         }),
+        article_body: Some("Derreta a manteiga e refogue a cebola até ficar transparente.Junte a carne e tempere com o sal.Mexa até a carne dourar de todos os lados.Acrescente a mostarda, o catchup, a pimenta-do-reino e o tomate picado.Cozinhe até formar um molho espesso.Se necessário, adicione água quente aos poucos.Quando o molho estiver encorpado e a carne macia, adicione os cogumelos e o creme de leite.Mexa por 1 minuto e retire do fogo.Sirva imediatamente, acompanhado de arroz e batata palha.Dica:&nbsp;Se juntar água ao refogar a carne, frite-a até todo o líquido evaporar.".to_string()),
         at_context: AtContext::SchemaDotOrg,
         at_type: Some(AtType::Recipe),
         author: Some(OrganizationType {
@@ -92,6 +93,24 @@ fn test_claudia_abril_dot_com_dot_br() {
         ]),
         recipe_instructions: Some(CreativeWorkOrItemListOrText::Text("Derreta a manteiga e refogue a cebola até ficar transparente.Junte a carne e tempere com o sal.Mexa até a carne dourar de todos os lados.Acrescente a mostarda, o catchup, a pimenta-do-reino e o tomate picado.Cozinhe até formar um molho espesso.Se necessário, adicione água quente aos poucos.Quando o molho estiver encorpado e a carne macia, adicione os cogumelos e o creme de leite.Mexa por 1 minuto e retire do fogo.Sirva imediatamente, acompanhado de arroz e batata palha.Dica:&nbsp;Se juntar água ao refogar a carne, frite-a até todo o líquido evaporar.".to_string())),
         recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType { value: 4 }),
+        review: Some(vec![
+                      ReviewType {
+                          at_type: AtType::Review,
+                          review_rating: ReviewRating {
+                              at_type: AtType::Rating,
+                              rating_value: "5".to_string(),
+                          },
+                          author: OrganizationOrPerson::Organization(
+                              OrganizationType {
+                                  at_type: AtType::Organization,
+                                  name: Some("CLAUDIA".to_string()),
+                                  ..Default::default()
+                              },
+                          ),
+                          date_published: DateOrDateTime::DateTime(DateTime { date: YMD { year: 2008, month: 10, day: 24 }, time: Time { hour: 20, minute: 47, second: 0, millisecond: 0, tz_offset_hours: -2, tz_offset_minutes: 0 } }),
+                          review_body: None,
+                      },
+                  ]),
         total_time: Some(YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 30, second: 0, millisecond: 0 }),
         ..Default::default()
     };

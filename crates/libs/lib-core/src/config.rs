@@ -98,7 +98,7 @@ fn check_ffmpeg() -> bool {
                     println!(
                         "Please reload your command prompt to refresh the environment variables."
                     );
-                    process::exit(1);
+                    std::process::exit(1);
                 } else {
                     print!("\x1b[31mX\x1b[0m Failed to install using winget. Please install manually: https://www.gyan.dev/ffmpeg/builds");
                 }
