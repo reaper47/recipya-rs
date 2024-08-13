@@ -1,6 +1,5 @@
-use serde::{de, Deserialize, Deserializer};
-
 use crate::schema::AtContext::SchemaDotOrg;
+use serde::{de, de::SeqAccess, Deserialize, Deserializer};
 
 pub mod article;
 pub mod common;
@@ -40,6 +39,7 @@ pub enum AtType {
     AggregateRating,
     Article,
     BreadcrumbList,
+    CreativeWork,
     HowToStep,
     ImageObject,
     ListItem,
@@ -100,8 +100,19 @@ impl<'de> Deserialize<'de> for AtType {
                     _ => Ok(AtType::Unspecified),
                 }
             }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut vec: Vec<AtType> = Vec::new();
+                while let Some(action) = seq.next_element::<AtType>()? {
+                    vec.push(action);
+                }
+                Ok(vec.pop().unwrap_or_default())
+            }
         }
 
-        deserializer.deserialize_str(Visitor)
+        deserializer.deserialize_any(Visitor)
     }
 }

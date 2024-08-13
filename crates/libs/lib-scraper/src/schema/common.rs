@@ -72,7 +72,7 @@ impl<'de> Deserialize<'de> for Action {
 #[derive(Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct AggregateRating {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", default = "set_aggregate_rating_type")]
     pub at_type: AtType,
 
     /// The rating for the content.
@@ -82,8 +82,7 @@ pub struct AggregateRating {
     //   than superficially similar Unicode symbols.
     // - Use '.' (Unicode 'FULL STOP' (U+002E)) rather than ',' to indicate a decimal point. Avoid
     //   using these symbols as a readability separator.
-    #[serde(deserialize_with = "deserialize_integer_from_string")]
-    pub rating_value: Option<i64>,
+    pub rating_value: Option<NumberOrText>,
 
     /// The highest value allowed in this rating system.
     pub best_rating: Option<i64>,
@@ -91,20 +90,14 @@ pub struct AggregateRating {
     /// The count of total number of ratings.
     pub rating_count: Option<i64>,
 
-    /// The count of total number of ratings.
-    pub review_count: Option<String>,
+    /// The count of total number of reviews.
+    pub review_count: Option<NumberOrText>
 }
 
-fn deserialize_integer_from_string<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    s.parse::<i64>()
-        .map(Some)
-        .map_err(D::Error::custom)
-        .or(Ok(None))
+fn set_aggregate_rating_type() -> AtType {
+    AtType::AggregateRating
 }
+
 
 #[derive(Debug, PartialEq)]
 pub enum AudioObjectOrClipOrMusicRecording {
@@ -481,11 +474,27 @@ impl<'de> Deserialize<'de> for CreativeWorkOrUrl {
 }
 
 /// The most generic kind of creative work, including books, movies, photographs, software programs, etc.
-#[derive(Debug, Deserialize, PartialEq)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Default, Deserialize, PartialEq)]
 pub struct CreativeWorkType {
     #[serde(rename = "@id")]
     pub at_id: Option<Url>,
+
+    #[serde(rename = "@type", default = "set_creative_work_type")]
+    pub at_type: AtType,
+
+    /// A description of the item.
+    pub description: Option<TextOrTextObject>,
+
+    /// An image of the item. This can be a URL or a fully described ImageObject.
+    pub image: Option<ImageObjectOrUrl>,
+
+    /// The name of the item.
+    #[serde(alias = "Name")]
+    pub name: Option<String>,
+}
+
+fn set_creative_work_type() -> AtType {
+    AtType::CreativeWork
 }
 
 #[derive(Debug, PartialEq)]
@@ -1236,6 +1245,61 @@ impl<'de> Deserialize<'de> for MonetaryAmountOrText {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum NumberOrText {
+    Number(i64),
+    Text(String),
+}
+
+impl<'de> Deserialize<'de> for NumberOrText {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use crate::schema::common::NumberOrText::*;
+
+        struct Visitor;
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = NumberOrText;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("a number or a string")
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Text(v))
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Text(v.to_owned()))
+            }
+
+            fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Number(v))
+            }
+
+            fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Number(v as i64))
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum OrganizationOrPerson {
     Organization(OrganizationType),
     Person(PersonType),
@@ -1248,8 +1312,15 @@ pub struct OrganizationType {
     #[serde(rename = "@id")]
     pub at_id: Option<Url>,
     #[serde(rename = "@type")]
-    pub at_type: Option<AtType>,
+    pub at_type: AtType,
+
+    /// The name of the item.
     pub name: Option<String>,
+
+    /// An associated logo.
+    pub logo: Option<ImageObjectOrUrl>,
+
+    /// URL of the item.
     pub url: Option<Url>,
 }
 

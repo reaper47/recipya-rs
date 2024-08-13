@@ -22,7 +22,3 @@ doctest = false
 
 [lints]
 workspace = true
-
-[features]
-default = []
-refresh_html = []

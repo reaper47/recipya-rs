@@ -3,18 +3,18 @@ use iso8601::{
     Duration::YMDHMS,
     {DateTime, Time},
 };
-use url::Url;
 
-use crate::helpers::scrape;
+mod support;
+use url::Url;
 
 use lib_scraper::{
     schema::{
         common::{
             AggregateRating, ClipOrVideoObject, CreativeWorkOrItemListOrText::ItemList,
             CreativeWorkOrUrl, CreativeWorkType, DateOrDateTime, DefinedTermOrTextOrUrl, HowTo,
-            ImageObjectOrUrl, ImageObjectType, OrganizationOrPerson, OrganizationType,
-            QuantitativeValueOrText, QuantitativeValueType, ReviewRating, ReviewType,
-            TextOrTextObject, VideoObjectType,
+            ImageObjectOrUrl, ImageObjectType, NumberOrText, OrganizationOrPerson,
+            OrganizationType, QuantitativeValueOrText, QuantitativeValueType, ReviewRating,
+            ReviewType, TextOrTextObject, VideoObjectType,
         },
         nutrition::{Energy, Mass, NutritionInformationSchema, RestrictedDiet},
         recipe::{RecipeCategory, RecipeCuisine, RecipeSchema},
@@ -24,16 +24,14 @@ use lib_scraper::{
     websites::Website,
 };
 
-mod helpers;
-
 #[test]
 fn test_abuelascounter_dot_com() {
-    let got = scrape(Website::AbuelasCounterCom);
+    let got = support::scrape(Website::AbuelasCounterDotCom, 0);
 
     let want = RecipeSchema {
         at_context: SchemaDotOrg,
         at_type: Some(AtType::Recipe),
-        author: Some(OrganizationType { at_type: Some(AtType::Person), name: Some("Abuelas Cuban Counter".to_string()), ..Default::default() }),
+        author: Some(OrganizationType { at_type: AtType::Person, name: Some("Abuelas Cuban Counter".to_string()), ..Default::default() }),
         cook_time: Some(YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 35, second: 0, millisecond: 0 }),
         date_published: Some(DateOrDateTime::DateTime(DateTime {
             date: YMD {
@@ -51,7 +49,7 @@ fn test_abuelascounter_dot_com() {
             },
         })),
         description: Some(TextOrTextObject::Text("".to_string())),
-        image: Some(ImageObjectOrUrl::Url(Url::parse("https://abuelascounter.com/wp-content/uploads/2023/10/Roasted-Carrot-Soup-Recipe.jpeg").unwrap())),
+        image: Some(ImageObjectOrUrl::Url(Url::parse("https://abuelascounter.com/wp-content/uploads/2023/10/Roasted-Carrot-Soup-Recipe-480x270.jpeg").unwrap())),
         keywords: Some(DefinedTermOrTextOrUrl::Text(vec![
             "abuelau0026#039;s".to_string(),
             "cuban".to_string(),
@@ -154,8 +152,8 @@ fn test_abuelascounter_dot_com() {
 }
 
 #[test]
-fn test_acouple_cooks_dot_com() {
-    let got = scrape(Website::ACoupleCooksCom);
+fn test_acouplecooks_dot_com() {
+    let got = support::scrape(Website::ACoupleCooksDotCom, 0);
 
     let want = RecipeSchema {
         at_context: SchemaDotOrg,
@@ -164,13 +162,13 @@ fn test_acouple_cooks_dot_com() {
         aggregate_rating: Some(
             AggregateRating {
                 at_type: AtType::AggregateRating,
-                rating_value: Some(5),
-                review_count: Some("3".to_string()),
+                rating_value: Some(NumberOrText::Text("5".to_string())),
+                review_count: Some(NumberOrText::Text("3".to_string())),
                 ..Default::default()
             },
         ),
         author: Some(OrganizationType {
-            at_type: Some(AtType::Person),
+            at_type: AtType::Person,
             name: Some("Sonja Overhiser".to_string()),
             url: Some(Url::parse("https://www.acouplecooks.com/about/").unwrap()),
             ..Default::default()
@@ -181,7 +179,9 @@ fn test_acouple_cooks_dot_com() {
         description: Some(TextOrTextObject::Text("This shaved Brussels sprouts recipe make a tasty side dish that's full of texture and flavor! Shredded Brussels are quick and crowd-pleasing.".to_string())),
         image: Some(ImageObjectOrUrl::Url(Url::parse("https://www.acouplecooks.com/wp-content/uploads/2022/03/Shredded-Brussels-Sprouts-001.jpg").unwrap())),
         is_part_of: Some(CreativeWorkOrUrl::CreativeWork(CreativeWorkType {
+            at_type: AtType::CreativeWork,
             at_id: Some(Url::parse("https://www.acouplecooks.com/shaved-brussels-sprouts/#article").unwrap()),
+            ..Default::default()
         })),
         keywords: Some(DefinedTermOrTextOrUrl::Text(vec![
             "Shaved Brussels sprouts".to_string(),
@@ -258,7 +258,7 @@ fn test_acouple_cooks_dot_com() {
                     rating_value: "5".to_string(),
                 },
                 author: OrganizationOrPerson::Organization(OrganizationType {
-                    at_type: Some(AtType::Person),
+                    at_type: AtType::Person,
                     name: Some("Larry Harmon".to_string()),
                     ..Default::default()
                 }),
@@ -272,7 +272,7 @@ fn test_acouple_cooks_dot_com() {
                     rating_value: "5".to_string(),
                 },
                 author: OrganizationOrPerson::Organization(OrganizationType {
-                    at_type: Some(AtType::Person),
+                    at_type: AtType::Person,
                     name: Some("Alpana Hoffman".to_string()),
                     ..Default::default()
                 }),
@@ -286,7 +286,7 @@ fn test_acouple_cooks_dot_com() {
                     rating_value: "5".to_string(),
                 },
                 author: OrganizationOrPerson::Organization(OrganizationType {
-                    at_type: Some(AtType::Person),
+                    at_type: AtType::Person,
                     name: Some("Gretchen g".to_string()),
                     ..Default::default()
                 }),
@@ -300,4 +300,129 @@ fn test_acouple_cooks_dot_com() {
         ..Default::default()
     };
     pretty_assertions::assert_eq!(got, want);
+}
+
+#[test]
+fn test_abril_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_addapinch_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_afghankitchenrecipes_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_aflavorjournal_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_ah_dot_nl() {
+    todo!();
+}
+
+#[test]
+fn test_akispetretzikis_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_aldi_dot_com_dot_au() {
+    todo!();
+}
+
+#[test]
+fn test_alexandracooks_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_alittlebityummy_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_all_clad_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_allrecipes_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_allthehealthythings_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_altonbrown_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_amazingribs_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_ambitiouskitchen_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_americastestkitchen_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_angielaeats_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_aniagotuje_dot_pl() {
+    todo!();
+}
+
+#[test]
+fn test_antilliaans_eten_dot_nl() {
+    todo!();
+}
+
+#[test]
+fn test_archanaskitchen_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_argiro_dot_gr() {
+    todo!();
+}
+
+#[test]
+fn test_arla_dot_se() {
+    todo!();
+}
+
+#[test]
+fn test_atelierdeschefs_dot_fr() {
+    todo!();
+}
+
+#[test]
+fn test_averiecooks_dot_com() {
+    todo!();
+}
+
+#[test]
+fn test_avocadoskillet_dot_com() {
+    todo!();
 }
