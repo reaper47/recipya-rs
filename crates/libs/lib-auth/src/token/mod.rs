@@ -116,11 +116,12 @@ fn _token_sign_into_b64u(ident: &str, exp: &str, salt: Uuid, key: &[u8]) -> Resu
 
 #[cfg(test)]
 mod tests {
-    use std::{thread, time::Duration};
-
-    use anyhow::Result;
+    pub type Result<T> = core::result::Result<T, Error>;
+    pub type Error = Box<dyn std::error::Error>;
 
     use super::*;
+    use crate::token;
+    use std::{thread, time::Duration};
 
     #[test]
     fn test_token_display_ok() -> Result<()> {
@@ -177,7 +178,7 @@ mod tests {
         let res = validate_web_token(&fx_token, fx_salt);
 
         assert!(
-            matches!(res, Err(Error::Expired)),
+            matches!(res, Err(token::Error::Expired)),
             "Should have matched `Err(Error::Expired)` but was `{res:?}`"
         );
         Ok(())

@@ -97,8 +97,10 @@ impl FromStr for PwdParts {
 
 #[cfg(test)]
 mod tests {
+    pub type Result<T> = core::result::Result<T, Error>;
+    pub type Error = Box<dyn std::error::Error>;
+
     use super::*;
-    use anyhow::{Ok, Result};
 
     #[tokio::test]
     async fn test_multi_scheme_ok() -> Result<()> {

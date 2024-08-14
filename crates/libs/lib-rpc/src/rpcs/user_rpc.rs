@@ -7,8 +7,8 @@ use lib_core::{
 };
 
 use crate::{
-    params::{ParamsForCreate, ParamsIded},
     router::RpcRouter,
+    rpc_params::{ParamsForCreate, ParamsIded},
     rpc_router, Result,
 };
 

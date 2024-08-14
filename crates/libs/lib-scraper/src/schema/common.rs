@@ -1833,8 +1833,7 @@ where
             if s.is_empty() {
                 return Ok(None);
             }
-            let (_, dur) =
-                iso8601::parsers::parse_duration(s.as_bytes()).map_err(Error::custom)?;
+            let (_, dur) = iso8601::parsers::parse_duration(s.as_bytes()).map_err(Error::custom)?;
             Ok(Some(dur))
         }
         None => Ok(None),

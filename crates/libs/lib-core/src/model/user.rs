@@ -164,13 +164,15 @@ impl UserBmc {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Context;
-    use futures::FutureExt;
-
-    use crate::model::store::test_db::TestDb;
-    use crate::model::store::Pool;
+    pub type Result<T> = core::result::Result<T, Error>;
+    pub type Error = Box<dyn std::error::Error>;
 
     use super::*;
+    use crate::{
+        model,
+        model::store::{test_db::TestDb, Pool},
+    };
+    use futures::FutureExt;
 
     #[tokio::test]
     async fn test_create_ok() {
@@ -228,7 +230,7 @@ mod tests {
                 )
                 .await;
 
-                assert!(matches!(res, Err(Error::Diesel(..))));
+                assert!(matches!(res, Err(model::Error::Diesel(..))));
             }
             .boxed()
         })
@@ -236,7 +238,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_first_by_email_ok() {
+    async fn test_first_by_email_ok() -> Result<()> {
         let db = TestDb::new().await;
         db.run_test(|| {
             let db = db.pool.clone();
@@ -246,17 +248,17 @@ mod tests {
                 let fx_email = "test@example.com";
                 let _ = add_user(&ctx, &mm, fx_email).await;
 
-                let user = UserBmc::first_by_email(&ctx, &mm, fx_email)
-                    .await
-                    .context("Should have user 'demo1'")
-                    .unwrap()
-                    .unwrap();
+                let user = UserBmc::first_by_email(&ctx, &mm, fx_email).await.unwrap();
 
-                assert_eq!(user.email, fx_email);
+                match user {
+                    Some(user) => assert_eq!(user.email, fx_email),
+                    None => panic!("Should have user 'demo1'"),
+                };
             }
             .boxed()
         })
         .await;
+        Ok(())
     }
 
     #[tokio::test]
@@ -292,7 +294,7 @@ mod tests {
 
                 assert!(matches!(
                     res,
-                    Err(Error::EntityNotFound {
+                    Err(model::Error::EntityNotFound {
                         entity: "user",
                         id: 100
                     })
@@ -339,7 +341,7 @@ mod tests {
                 let res = UserBmc::get(&ctx, &mm, fx_id).await;
                 assert!(matches!(
                     res,
-                    Err(Error::EntityNotFound {
+                    Err(model::Error::EntityNotFound {
                         entity: "user",
                         id: _fx_id,
                     })

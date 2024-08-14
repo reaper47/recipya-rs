@@ -6,7 +6,6 @@ use tower_cookies::CookieManagerLayer;
 use tracing::info;
 
 use lib_core::model::ModelManager;
-use web::routes_rpc::RpcState;
 
 use crate::web::{
     mw_auth::{mw_ctx_require, mw_ctx_resolve},
@@ -26,9 +25,8 @@ async fn main() -> Result<()> {
 
     let mm = ModelManager::new().await?;
 
-    let rpc_state = RpcState { mm: mm.clone() };
     let routes_rpc =
-        web::routes_rpc::routes(rpc_state).route_layer(middleware::from_fn(mw_ctx_require));
+        web::routes_rpc::routes(mm.clone()).route_layer(middleware::from_fn(mw_ctx_require));
 
     let routes_all = Router::new()
         .nest("/api", routes_rpc)

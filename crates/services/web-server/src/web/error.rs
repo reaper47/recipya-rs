@@ -29,7 +29,6 @@ pub enum Error {
         user_id: i64,
     },
 
-
     UpdatePassword,
 
     // CtxExtError

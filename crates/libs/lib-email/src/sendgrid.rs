@@ -44,19 +44,18 @@ impl Sendgrid {
             Err(_) => return Err(Error::RenderFail),
         };
 
-        func
-            .send(
-                &Message::new(Email::new(&from))
-                    .set_subject(&subject)
-                    .set_reply_to(Email::new(&from))
-                    .add_content(
-                        Content::new()
-                            .set_content_type("text/html")
-                            .set_value(content),
-                    )
-                    .add_personalization(Personalization::new(Email::new(to))),
-            )
-            .await
-            .map_err(|e| Error::SendFail(e.to_string()))
+        func.send(
+            &Message::new(Email::new(&from))
+                .set_subject(&subject)
+                .set_reply_to(Email::new(&from))
+                .add_content(
+                    Content::new()
+                        .set_content_type("text/html")
+                        .set_value(content),
+                )
+                .add_personalization(Personalization::new(Email::new(to))),
+        )
+        .await
+        .map_err(|e| Error::SendFail(e.to_string()))
     }
 }
