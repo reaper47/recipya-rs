@@ -44,7 +44,7 @@ impl Sendgrid {
             Err(_) => return Err(Error::RenderFail),
         };
 
-        let res = func
+        func
             .send(
                 &Message::new(Email::new(&from))
                     .set_subject(&subject)
@@ -57,8 +57,6 @@ impl Sendgrid {
                     .add_personalization(Personalization::new(Email::new(to))),
             )
             .await
-            .map_err(|e| Error::SendFail(e.to_string()));
-
-        res
+            .map_err(|e| Error::SendFail(e.to_string()))
     }
 }

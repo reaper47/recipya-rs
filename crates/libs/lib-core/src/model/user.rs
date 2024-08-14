@@ -332,7 +332,7 @@ mod tests {
                 let (mm, ctx) = setup(db);
                 let fx_id = add_user(&ctx, &mm, "hello@test.com").await;
 
-                let _ = UserBmc::delete(&ctx, &mm, fx_id)
+                UserBmc::delete(&ctx, &mm, fx_id)
                     .await
                     .expect("should have succeeded");
 
@@ -380,8 +380,8 @@ mod tests {
 
     async fn add_user(ctx: &Ctx, mm: &ModelManager, email: impl Into<String>) -> i64 {
         UserBmc::create(
-            &ctx,
-            &mm,
+            ctx,
+            mm,
             UserForCreate {
                 email: email.into(),
                 password_clear: "12345678".to_string(),

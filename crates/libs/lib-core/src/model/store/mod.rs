@@ -98,7 +98,7 @@ pub mod test_db {
             Self {
                 default_db_url: default_db_url.to_string(),
                 name,
-                pool: new_db_pool(&url.to_string()).await.unwrap(),
+                pool: new_db_pool(url.as_str()).await.unwrap(),
             }
         }
 

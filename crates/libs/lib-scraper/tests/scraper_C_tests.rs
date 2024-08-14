@@ -51,30 +51,30 @@ fn test_claudia_abril_dot_com_dot_br() {
         description: Some(TextOrTextObject::Text("Derreta a manteiga e refogue a cebola até ficar transparente. Junte a carne e tempere com o sal. Mexa até a carne dourar de todos os lados. Acrescente a mostarda, o catchup, a pimenta-do-reino e o tomate picado. Cozinhe até formar um molho espesso. Se necessário, adicione água quente aos poucos. Quando o molho estiver [&amp;hellip;]".to_string())),
         headline: Some("Estrogonofe de carne".to_string()),
         image: Some(ImageObjectOrUrl::Url(Url::parse("https://claudia.abril.com.br/wp-content/uploads/2020/02/receita-estrogonofe-de-carne.jpg?quality=85&amp;strip=info&amp;w=620&amp;h=372&amp;crop=1?crop=1&amp;resize=1212,909").unwrap())),
-        is_part_of: Some(CreativeWorkOrUrl::CreativeWork(CreativeWorkType {
+        is_part_of: Some(CreativeWorkOrUrl::CreativeWork(Box::new(CreativeWorkType {
             description: Some(TextOrTextObject::Text("Domine o fato. Confie na fonte.".to_string())),
             image: Some(ImageObjectOrUrl::Url(Url::parse("https://claudia.abril.com.br/wp-content/uploads/2016/09/claudia-schema.png?w=150").unwrap())),
             name: Some("CLAUDIA".to_string()),
             ..Default::default()
-        })),
+        }))),
         keywords: Some(DefinedTermOrTextOrUrl::Text("Estrogonofe de carne, Refogado, Dia a Dia, Carne, Brasileira, creme de leite, ketchup (ou catchup), pimenta-do-reino".to_string())),
-        main_entity_of_page: Some(CreativeWorkOrUrl::CreativeWork(CreativeWorkType {
+        main_entity_of_page: Some(CreativeWorkOrUrl::CreativeWork(Box::new(CreativeWorkType {
             at_type: AtType::WebPage,
             at_id: Some(Url::parse("https://claudia.abril.com.br/receitas/estrogonofe-de-carne").unwrap()),
             ..Default::default()
-        })),
+        }))),
         name: Some("Estrogonofe de carne".to_string()),
         prep_time: Some(YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 30, second: 0, millisecond: 0 }),
         publisher: Some(OrganizationOrPerson::Organization(OrganizationType {
             at_type: AtType::Organization,
             name: Some("CLAUDIA".to_string()),
-            logo: Some(ImageObjectOrUrl::ImageObject(ImageObjectType {
+            logo: Some(ImageObjectOrUrl::ImageObject(Box::new(ImageObjectType {
                 at_type: AtType::ImageObject,
                 height: Some(DistanceOrQuantitativeValue::Distance(DistanceType { value: "60".to_string() })),
                 url: Some(Url::parse("https://claudia.abril.com.br/wp-content/uploads/2016/09/claudia-schema.png?w=240&amp;resize=90,60").unwrap()),
                 width: Some(DistanceOrQuantitativeValue::Distance(DistanceType { value: "90".to_string() })),
                 ..Default::default()
-            })),
+            }))),
             ..Default::default()
         })),
         recipe_category: RecipeCategory::Text("Carne".to_string()),

@@ -217,7 +217,7 @@ pub struct CommentType {}
 #[derive(Debug, PartialEq)]
 pub enum ClipOrVideoObject {
     Clip(ClipType),
-    VideoObject(VideoObjectType),
+    VideoObject(Box<VideoObjectType>),
 }
 
 impl<'de> Deserialize<'de> for ClipOrVideoObject {
@@ -243,7 +243,7 @@ impl<'de> Deserialize<'de> for ClipOrVideoObject {
                 if let Ok(video) =
                     VideoObjectType::deserialize(de::value::MapAccessDeserializer::new(&mut map))
                 {
-                    return Ok(VideoObject(video));
+                    return Ok(VideoObject(Box::new(video)));
                 }
 
                 if let Ok(clip) =
@@ -335,7 +335,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrHowToSectionOrHowToStepOrText {
 
 #[derive(Debug, PartialEq)]
 pub enum CreativeWorkOrItemListOrText {
-    CreativeWork(CreativeWorkType),
+    CreativeWork(Box<CreativeWorkType>),
     ItemList(Vec<HowTo>),
     Text(String),
 }
@@ -396,7 +396,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrItemListOrText {
                 A: MapAccess<'de>,
             {
                 let c = CreativeWorkType::deserialize(de::value::MapAccessDeserializer::new(map))?;
-                Ok(CreativeWork(c))
+                Ok(CreativeWork(Box::new(c)))
             }
         }
 
@@ -404,7 +404,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrItemListOrText {
     }
 }
 
-fn deserialize_trim<'a>(mut s: String) -> String {
+fn deserialize_trim(mut s: String) -> String {
     let replace_map: HashMap<&str, &str> = HashMap::from_iter([("&nbsp;", " ")]);
     for (old, new) in replace_map.iter() {
         s = s.replace(old, new)
@@ -415,7 +415,7 @@ fn deserialize_trim<'a>(mut s: String) -> String {
 
 #[derive(Debug, PartialEq)]
 pub enum CreativeWorkOrText {
-    CreativeWork(CreativeWorkType),
+    CreativeWork(Box<CreativeWorkType>),
     Text(String),
 }
 
@@ -454,7 +454,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrText {
                 A: MapAccess<'de>,
             {
                 let c = CreativeWorkType::deserialize(de::value::MapAccessDeserializer::new(map))?;
-                Ok(CreativeWork(c))
+                Ok(CreativeWork(Box::new(c)))
             }
         }
 
@@ -465,7 +465,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrText {
 #[derive(Debug, PartialEq)]
 pub enum CreativeWorkOrUrl {
     Url(Url),
-    CreativeWork(CreativeWorkType),
+    CreativeWork(Box<CreativeWorkType>),
 }
 
 impl<'de> Deserialize<'de> for CreativeWorkOrUrl {
@@ -509,7 +509,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrUrl {
                 A: MapAccess<'de>,
             {
                 let c = CreativeWorkType::deserialize(de::value::MapAccessDeserializer::new(map))?;
-                Ok(CreativeWork(c))
+                Ok(CreativeWork(Box::new(c)))
             }
         }
 
@@ -567,15 +567,15 @@ impl<'de> Deserialize<'de> for DateOrDateTime {
             where
                 E: Error,
             {
-                if let Ok(dt) = iso8601::DateTime::from_str(&v) {
+                if let Ok(dt) = iso8601::DateTime::from_str(v) {
                     return Ok(DateTime(dt));
                 }
 
-                if let Ok(date) = iso8601::Date::from_str(&v) {
+                if let Ok(date) = iso8601::Date::from_str(v) {
                     return Ok(Date(date));
                 }
 
-                Err(Error::invalid_value(de::Unexpected::Str(&v), &self))
+                Err(Error::invalid_value(de::Unexpected::Str(v), &self))
             }
 
             fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
@@ -866,7 +866,7 @@ impl<'de> Deserialize<'de> for HowToToolOrText {
 #[derive(Debug, PartialEq)]
 pub enum ImageObjectOrUrl {
     Url(Url),
-    ImageObject(ImageObjectType),
+    ImageObject(Box<ImageObjectType>),
 }
 
 /// An image file.
@@ -925,7 +925,7 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                 E: Error,
             {
                 if v.is_empty() {
-                    return Ok(ImageObject(ImageObjectType::default()));
+                    return Ok(ImageObject(Box::default()));
                 }
 
                 if let Ok(url) = url::Url::parse(v) {
@@ -939,7 +939,7 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                 E: Error,
             {
                 if v.is_empty() {
-                    return Ok(ImageObject(ImageObjectType::default()));
+                    return Ok(ImageObject(Box::default()));
                 }
 
                 if let Ok(url) = url::Url::parse(&v) {
@@ -971,7 +971,7 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                 A: MapAccess<'de>,
             {
                 let img = ImageObjectType::deserialize(de::value::MapAccessDeserializer::new(map))?;
-                Ok(ImageObject(img))
+                Ok(ImageObject(Box::new(img)))
             }
         }
 
@@ -1455,7 +1455,7 @@ impl<'de> Deserialize<'de> for PropertyValueOrTextOrUrl {
             where
                 E: Error,
             {
-                if let Ok(url) = url::Url::parse(&v) {
+                if let Ok(url) = url::Url::parse(v) {
                     return Ok(Url(url));
                 }
                 Ok(Text(v.to_owned()))
@@ -1557,9 +1557,9 @@ impl<'de> Deserialize<'de> for QuantitativeValueOrText {
                 }
 
                 let v = vec
-                    .get(0)
+                    .first()
                     .ok_or_else(|| Error::custom("sequence is empty"))?;
-                let v: i64 = v.parse().map_err(|err| Error::custom(err))?;
+                let v: i64 = v.parse().map_err(Error::custom)?;
                 Ok(QuantitativeValue(QuantitativeValueType { value: v }))
             }
         }
@@ -1834,7 +1834,7 @@ where
                 return Ok(None);
             }
             let (_, dur) =
-                iso8601::parsers::parse_duration(&s.as_bytes()).map_err(Error::custom)?;
+                iso8601::parsers::parse_duration(s.as_bytes()).map_err(Error::custom)?;
             Ok(Some(dur))
         }
         None => Ok(None),

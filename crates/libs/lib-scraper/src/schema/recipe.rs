@@ -353,7 +353,7 @@ impl<'de> Deserialize<'de> for RecipeCategory {
                 }
 
                 let v = vec
-                    .get(0)
+                    .first()
                     .ok_or_else(|| de::Error::custom("sequence is empty"))?;
 
                 Ok(Text(v.to_string()))
@@ -409,7 +409,7 @@ impl<'de> Deserialize<'de> for RecipeCuisine {
                 }
 
                 let v = vec
-                    .get(0)
+                    .first()
                     .ok_or_else(|| de::Error::custom("sequence is empty"))?;
 
                 Ok(Text(v.to_string()))
