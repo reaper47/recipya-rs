@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 
 use serde::{de, Deserialize, Deserializer};
 
-use crate::schema::{nutrition::RestrictedDiet::UnspecifiedDiet, AtType};
+use crate::schema::AtType;
 
 /// Nutritional information about the recipe as described in the [schema](https://schema.org/NutritionInformation).
 #[derive(Debug, Default, Deserialize, PartialEq)]
@@ -119,7 +119,7 @@ impl<'de> Deserialize<'de> for Mass {
 }
 
 /// A diet restricted to certain foods or preparations for cultural, religious, health or lifestyle reasons.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub enum RestrictedDiet {
     DiabeticDiet,
     GlutenFreeDiet,
@@ -132,13 +132,8 @@ pub enum RestrictedDiet {
     LowSaltDiet,
     VeganDiet,
     VegetarianDiet,
+    #[default]
     UnspecifiedDiet,
-}
-
-impl Default for RestrictedDiet {
-    fn default() -> Self {
-        UnspecifiedDiet
-    }
 }
 
 impl<'de> Deserialize<'de> for RestrictedDiet {

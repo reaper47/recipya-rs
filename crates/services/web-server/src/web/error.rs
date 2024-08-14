@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -27,6 +29,9 @@ pub enum Error {
         user_id: i64,
     },
 
+
+    UpdatePassword,
+
     // CtxExtError
     #[from]
     CtxExt(web::mw_auth::CtxExtError),
@@ -36,22 +41,28 @@ pub enum Error {
     Model(model::Error),
     #[from]
     Pwd(pwd::Error),
+    Rpc(String),
     #[from]
     Token(token::Error),
-    #[from]
-    Rpc(lib_rpc::Error),
 
     // External Modules
     #[from]
     SerdeJson(#[serde_as(as = "DisplayFromStr")] String),
 }
-
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        let (status_code, _client_error) = self.client_status_and_error();
-        let mut res = status_code.into_response();
-        res.extensions_mut().insert(self);
-        res
+        let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        response.extensions_mut().insert(Arc::new(self));
+        response
+    }
+}
+
+use lib_rpc::Error as RpcError;
+
+impl From<RpcError> for Error {
+    fn from(err: RpcError) -> Self {
+        // You can customize the conversion logic here
+        Error::Rpc(err.to_string())
     }
 }
 

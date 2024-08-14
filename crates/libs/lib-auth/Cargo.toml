@@ -4,10 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+argon2 = { version = "0.5.3", features = ["std"] }
+derive_more = { version = "1.0.0", features = ["from"] }
+enum_dispatch = "0.3.13"
 hmac = "0.12.1"
+lazy-regex = "3.2.0"
 lib-utils = { path = "../../libs/lib-utils" }
 serde = { version = "1.0.204", features = ["derive"] }
 sha2 = "0.10.8"
+tokio = { version = "1.39.2", features = ["macros", "rt-multi-thread"] }
 uuid = { version = "1.10.0", features = ["v4"] }
 
 [dev-dependencies]

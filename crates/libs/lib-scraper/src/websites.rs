@@ -410,7 +410,7 @@ pub enum Website {
 
 impl Website {
     pub fn from(url: &str) -> Result<Self> {
-        let url = match Url::parse(&url).map_err(|err| Error::Parse(err.to_string())) {
+        let url = match Url::parse(url).map_err(|err| Error::Parse(err.to_string())) {
             Ok(url) => url,
             Err(_) => return Err(Error::UnknownWebsite),
         };
@@ -431,7 +431,7 @@ impl std::fmt::Display for Website {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match websites_map_to_domain().get_key_value(self) {
             Some((_, url)) => write!(f, "{url}"),
-            None => write!(f, "URL '{self}' not found"),
+            None => write!(f, "URL not found"),
         }
     }
 }

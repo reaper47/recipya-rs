@@ -1,4 +1,3 @@
-use crate::schema::AtContext::SchemaDotOrg;
 use serde::{de, de::SeqAccess, Deserialize, Deserializer};
 
 pub mod article;
@@ -6,15 +5,10 @@ pub mod common;
 pub mod nutrition;
 pub mod recipe;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub enum AtContext {
+    #[default]
     SchemaDotOrg,
-}
-
-impl Default for AtContext {
-    fn default() -> Self {
-        SchemaDotOrg
-    }
 }
 
 impl<'de> Deserialize<'de> for AtContext {
@@ -80,7 +74,7 @@ impl<'de> Deserialize<'de> for AtType {
             where
                 E: de::Error,
             {
-                match v.trim().as_ref() {
+                match v.trim() {
                     "AggregateRating" => Ok(AtType::AggregateRating),
                     "Article" => Ok(AtType::Article),
                     "BreadcrumbList" => Ok(AtType::BreadcrumbList),

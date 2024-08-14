@@ -60,10 +60,11 @@ pub struct UserBmc;
 impl UserBmc {
     pub async fn create(_ctx: &Ctx, mm: &ModelManager, user_c: UserForCreate) -> Result<i64> {
         let password_salt = Uuid::new_v4();
-        let password = pwd::hash(&ContentToHash {
+        let password = pwd::hash_pwd(ContentToHash {
             content: user_c.password_clear,
             salt: password_salt,
-        })?;
+        })
+        .await?;
 
         let res = diesel::insert_into(schema::users::table)
             .values(&UserForInsert {
@@ -146,10 +147,11 @@ impl UserBmc {
             token_salt: user.token_salt,
         };
 
-        let password = pwd::hash(&ContentToHash {
+        let password = pwd::hash_pwd(ContentToHash {
             content: password_clear.to_string(),
             salt: user.password_salt,
-        })?;
+        })
+        .await?;
 
         diesel::update(schema::users::dsl::users.find(id))
             .set(schema::users::dsl::password.eq(password))

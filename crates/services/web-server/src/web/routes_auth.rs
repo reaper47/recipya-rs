@@ -1,20 +1,24 @@
 use crate::web::error::collect_errors;
-use crate::web::{
-    mw_auth::CtxW, remove_token_cookie, set_token_cookie, templates, Error, Result, KEY_HX_REDIRECT,
+use crate::web::{remove_token_cookie, set_token_cookie, templates, Error, KEY_HX_REDIRECT};
+
+use axum::{
+    extract::State,
+    http::{HeaderValue, StatusCode},
+    response::{IntoResponse, Redirect},
+    routing::{get, post},
+    Form, Json, Router,
 };
-use axum::extract::State;
-use axum::http::{HeaderValue, StatusCode};
-use axum::response::{IntoResponse, Redirect};
-use axum::routing::{get, post};
-use axum::{Form, Json, Router};
-use lib_auth::pwd;
-use lib_core::ctx::Ctx;
-use lib_core::model::user::UserBmc;
-use lib_core::model::ModelManager;
+
+use lib_auth::{pwd, pwd::scheme::SchemeStatus};
+use lib_core::{
+    ctx::Ctx,
+    model::{user::UserBmc, ModelManager},
+};
 use maud::Markup;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tower_cookies::Cookies;
+use tracing::debug;
 use validator::Validate;
 
 #[derive(Default, Validate, Deserialize, Serialize)]
@@ -95,15 +99,26 @@ async fn login_post(
         Err(error) => return Error::Model(error).into_response(),
     };
 
-    let res = pwd::validate(
-        &pwd::ContentToHash {
+    // Validate password
+    let scheme_status = match pwd::validate_pwd(
+        pwd::ContentToHash {
             salt: user.password_salt,
             content: form.password,
         },
         &user.password,
-    );
-    if res.is_err() {
-        return Error::LoginFailPwdNotMatching { user_id: user.id }.into_response();
+    )
+    .await
+    {
+        Ok(status) => status,
+        Err(_) => return Error::LoginFailPwdNotMatching { user_id: user.id }.into_response(),
+    };
+
+    // Update password scheme if needed
+    if let SchemeStatus::Outdated = scheme_status {
+        debug!("pwd encrypt scheme outdated, upgrading");
+        if let Err(_) = UserBmc::update_password(&root_ctx, &mm, user.id, &user.password).await {
+            return Error::UpdatePassword.into_response();
+        }
     }
 
     match set_token_cookie(&cookies, &user.email, user.token_salt) {

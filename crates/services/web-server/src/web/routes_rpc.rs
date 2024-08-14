@@ -1,15 +1,27 @@
+use std::sync::Arc;
+
 use axum::{
     response::IntoResponse,
     routing::post,
     {extract::State, response::Response, Json, Router},
 };
 use serde_json::{json, Value};
-use tracing::debug;
 
-use lib_core::{ctx::Ctx, model::ModelManager};
-use lib_rpc::{exec_rpc, RpcRequest};
+use lib_core::model::ModelManager;
+use lib_rpc::{router::RpcRouter, user_rpc, RpcRequest, RpcResources};
 
-use crate::web::{mw_auth::CtxW, Result};
+use crate::web::mw_auth::CtxW;
+
+/// The RpcState is the Axum State that will
+/// be used for the Axum RPC router handler.
+///
+/// Note: Not to be confused with the RpcResources that are for the lib-rpc
+///      layer for the RpcRouter System. The RpcResources typically contains some elements
+///      from the RpcState
+#[derive(Clone)]
+pub struct RpcState {
+    pub mm: ModelManager,
+}
 
 /// RPC basic information containing the rpc request id and method for additional logging purposes.
 #[derive(Clone, Debug)]
@@ -18,40 +30,45 @@ pub struct RpcInfo {
     pub method: String,
 }
 
-pub fn routes(mm: ModelManager) -> Router {
+/// Axum router for '/api/rpc'
+pub fn routes(rpc_state: RpcState) -> Router {
+    let rpc_router = RpcRouter::new().extend(user_rpc::rpc_router());
+
     Router::new()
-        .route("/rpc", post(rpc_handler))
-        .with_state(mm)
+        .route("/rpc", post(rpc_axum_handler))
+        .with_state((rpc_state, Arc::new(rpc_router)))
 }
 
-async fn rpc_handler(
-    State(mm): State<ModelManager>,
+async fn rpc_axum_handler(
+    State((rpc_state, rpc_router)): State<(RpcState, Arc<RpcRouter>)>,
     ctx: CtxW,
     Json(rpc_req): Json<RpcRequest>,
 ) -> Response {
     let ctx = ctx.0;
+
     let rpc_info = RpcInfo {
         id: rpc_req.id.clone(),
         method: rpc_req.method.clone(),
     };
+    let rpc_method = &rpc_info.method;
+    let rpc_params = rpc_req.params;
+    let rpc_resources = RpcResources {
+        ctx: Some(ctx),
+        mm: rpc_state.mm,
+    };
 
-    let mut res = _rpc_handler(ctx, mm, rpc_req).await.into_response();
-    res.extensions_mut().insert(rpc_info);
-    res
-}
-
-async fn _rpc_handler(ctx: Ctx, mm: ModelManager, rpc_req: RpcRequest) -> Result<Json<Value>> {
-    let rpc_method = rpc_req.method.clone();
-    let rpc_id = rpc_req.id.clone();
-
-    debug!("{:<12} - _rpc_handler - method: {rpc_method}", "HANDLER");
-
-    let result = exec_rpc(ctx, mm, rpc_req).await?;
-
-    let body_response = json!({
-        "id": rpc_id,
-        "result": result
+    let res = rpc_router.call(rpc_method, rpc_resources, rpc_params).await;
+    let res = res.map(|v| {
+        let body_response = json!({
+            "id": rpc_info.id,
+            "result": v
+        });
+        Json(body_response)
     });
 
-    Ok(Json(body_response))
+    let res: crate::web::Result<_> = res.map_err(crate::web::Error::from);
+    let mut res = res.into_response();
+    res.extensions_mut().insert(Arc::new(rpc_info));
+
+    res
 }

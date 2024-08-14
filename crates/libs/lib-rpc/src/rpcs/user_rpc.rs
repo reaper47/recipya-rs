@@ -1,13 +1,20 @@
 use lib_core::{
     ctx::Ctx,
-    model::user::{User, UserBmc, UserForCreate},
-    model::ModelManager,
+    model::{
+        user::{User, UserBmc, UserForCreate},
+        ModelManager,
+    },
 };
 
 use crate::{
     params::{ParamsForCreate, ParamsIded},
-    Result,
+    router::RpcRouter,
+    rpc_router, Result,
 };
+
+pub fn rpc_router() -> RpcRouter {
+    rpc_router!(create_user, delete_user,)
+}
 
 pub async fn create_user(
     ctx: Ctx,

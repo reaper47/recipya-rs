@@ -1,28 +1,25 @@
 use derive_more::From;
-use lib_core::model;
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[serde_as]
-#[derive(Clone, Debug, Serialize, From)]
+#[derive(Debug, From, Serialize)]
 pub enum Error {
+    MissingCtx,
+
+    // -- RPC Router
     RpcMethodUnknown(String),
-    RpcMissingParams {
-        rpc_method: String,
-    },
-    RpcFailJsonParams {
-        rpc_method: String,
-    },
+    RpcIntoParamsMissing,
 
-    // Modules
+    // -- Modules
     #[from]
-    Model(model::Error),
+    Model(lib_core::model::Error),
 
-    // External Modules
+    // -- External Modules
     #[from]
-    SerdeJson(#[serde_as(as = "DisplayFromStr")] String),
+    SerdeJson(#[serde_as(as = "DisplayFromStr")] serde_json::Error),
 }
 
 impl core::fmt::Display for Error {

@@ -5,12 +5,17 @@
 //! each rpc handler function to receive the exact desired type.
 //!
 
-use serde::Deserialize;
+use serde::{de::DeserializeOwned, Deserialize};
 
+use crate::router::IntoParams;
+
+/// Params structure for any RPC Create call.
 #[derive(Deserialize)]
 pub struct ParamsForCreate<D> {
     pub data: D,
 }
+
+impl<D> IntoParams for ParamsForCreate<D> where D: DeserializeOwned + Send {}
 
 #[derive(Deserialize)]
 pub struct ParamsForUpdate<D> {
@@ -18,7 +23,11 @@ pub struct ParamsForUpdate<D> {
     pub data: D,
 }
 
+impl<D> IntoParams for ParamsForUpdate<D> where D: DeserializeOwned + Send {}
+
 #[derive(Deserialize)]
 pub struct ParamsIded {
     pub id: i64,
 }
+
+impl IntoParams for ParamsIded {}
