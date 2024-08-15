@@ -2,7 +2,7 @@ use serde::Serialize;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize)]
 pub enum Error {
     HmacFailNewFromSlice,
 

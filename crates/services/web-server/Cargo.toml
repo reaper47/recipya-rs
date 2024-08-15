@@ -17,6 +17,7 @@ lib-auth = { path = "../../libs/lib-auth" }
 lib-core = { path = "../../libs/lib-core" }
 lib-rpc = { path = "../../libs/lib-rpc" }
 lib-utils = { path = "../../libs/lib-utils" }
+lib-web = { path = "../../libs/lib-web"}
 maud = { version = "*", features = ["axum"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

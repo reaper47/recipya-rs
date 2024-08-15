@@ -1,0 +1,16 @@
+[package]
+name = "lib-rpc-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+derive_more = { workspace = true }
+lib-core = { path = "../../libs/lib-core", features = ["with-rpc"] }
+lib-rpc-core = { path = "../../libs/lib-rpc-core"}
+rpc-router = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_with = { workspace = true }
+
+[lints]
+workspace = true

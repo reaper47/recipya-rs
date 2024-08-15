@@ -140,7 +140,7 @@ impl Paths {
             DOCS: PathBuf::from(get_env("SERVICE_DOCS_FOLDER")?),
             IMAGES: images,
             LOGS: logs,
-            STATIC: PathBuf::from(get_env("SERVICE_STATIC_FOLDER")?),
+            STATIC: PathBuf::from(get_env("SERVICE_WEB_FOLDER")?),
             THUMBNAILS: thumbnails,
             VIDEOS: videos,
         })

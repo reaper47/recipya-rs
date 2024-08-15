@@ -66,31 +66,34 @@ impl Scraper {
         };
 
         let sel = Selector::parse(r#"script[type='application/ld+json']"#)?;
-        for el in doc.select(&sel) {
-            let json = &el.inner_html();
-            let recipe: RecipeSchema = match serde_json::from_str(json) {
-                Ok(value) => value,
-                Err(error) => {
-                    println!(
-                        "Error while parsing schema: {error}\nURL: {url}\nJSON: {json}\n-----"
-                    );
-                    continue;
-                }
-            };
-
-            match recipe.at_graph {
-                None => return Ok(recipe),
-                Some(graph) => {
-                    for temp in graph.into_iter() {
-                        if let GraphObject::Recipe(mut recipe) = temp {
-                            recipe.at_type = Some(AtType::Recipe);
-                            return Ok(recipe);
-                        }
+        doc.select(&sel) 
+            .filter_map(|el| {
+                let json = &el.inner_html();
+                match serde_json::from_str::<RecipeSchema>(json) {
+                    Ok(recipe) => Some(recipe),
+                    Err(error) => {
+                        println!(
+                            "Error while parsing schema: {error}\nURL: {url}\nJSON: {json}\n-----"
+                        );
+                        None
                     }
                 }
-            }
-        }
-
-        Err(Error::DomainNotImplemented)
+            })
+            .find_map(|recipe| {
+                match recipe.at_graph {
+                    None => Some(recipe),
+                    Some(graph) => {
+                         graph.into_iter().find_map(|temp| {
+                            if let GraphObject::Recipe(mut recipe) = temp {
+                                recipe.at_type = Some(AtType::Recipe);
+                                Some(recipe)
+                            } else {
+                                None
+                            }
+                         })
+                    }
+                }
+            })
+            .ok_or_else(|| Error::DomainNotImplemented)
     }
 }

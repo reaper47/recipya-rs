@@ -2,6 +2,8 @@
 # See: https://doc.rust-lang.org/cargo/reference/config.html
 
 [env]
+RUST_LOG="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug"
+
 DATABASE_URL="postgres://postgres:Poule420!@localhost:5432/recipya"
 
 SERVICE_EMAIL_FROM="example@test.com"
@@ -23,4 +25,4 @@ SERVICE_TOKEN_KEY="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc
 SERVICE_TOKEN_DURATION_SEC="1800"
 
 SERVICE_DOCS_FOLDER="web/docs/public"
-SERVICE_STATIC_FOLDER="web/static"
+SERVICE_WEB_FOLDER="web/"

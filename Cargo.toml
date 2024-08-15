@@ -6,9 +6,9 @@ resolver = "2"
 members = [ # e.g. rpc routing
     "crates/libs/lib-auth", # e.g. for password, token
     "crates/libs/lib-core", "crates/libs/lib-email", # e.g. base64, time
-    "crates/libs/lib-rpc", "crates/libs/lib-scraper",
+    "crates/libs/lib-rpc", "crates/libs/lib-rpc-app", "crates/libs/lib-rpc-core", "crates/libs/lib-scraper",
     # Application libraries
-    "crates/libs/lib-utils", # e.g. model, ctx, config
+    "crates/libs/lib-utils", "crates/libs/lib-web", # e.g. model, ctx, config
 
     # Applications services
     "crates/services/web-server",
@@ -19,6 +19,7 @@ members = [ # e.g. rpc routing
 
 [workspace.dependencies]
 derive_more = { version = "1.0.0", features = ["from"] }
+rpc-router = { version = "0.1.3" } 
 serde = { version = "1.0.207", features = ["derive"] }
 serde_json = "1.0.124"
 serde_with = "3.9.0"

@@ -2,7 +2,7 @@ use serde::Serialize;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Debug, Serialize)]
 pub enum Error {
     Key,
     Salt,
