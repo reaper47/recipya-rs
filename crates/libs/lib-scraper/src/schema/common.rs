@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Formatter, str::FromStr, vec::Vec};
 
+use iso8601::Date;
 use serde::{
     de,
     de::{Error, MapAccess, SeqAccess},
@@ -545,6 +546,12 @@ fn set_creative_work_type() -> AtType {
 pub enum DateOrDateTime {
     DateTime(iso8601::DateTime),
     Date(iso8601::Date),
+}
+
+impl Default for DateOrDateTime {
+    fn default() -> Self {
+        Self::Date(iso8601::Date::default())
+    }
 }
 
 impl<'de> Deserialize<'de> for DateOrDateTime {
@@ -1349,6 +1356,12 @@ pub enum OrganizationOrPerson {
     Person(PersonType),
 }
 
+impl Default for OrganizationOrPerson {
+    fn default() -> Self {
+        Self::Organization(OrganizationType::default())
+    }
+}
+
 /// An organization such as a school, NGO, corporation, club, etc.
 #[derive(Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -1622,7 +1635,7 @@ impl<'de> Deserialize<'de> for RatingOrText {
     }
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, Default, PartialEq, Deserialize)]
 pub struct ReviewType {
     #[serde(rename = "@type")]
     pub at_type: AtType,
@@ -1635,7 +1648,7 @@ pub struct ReviewType {
     pub review_body: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, Default, PartialEq, Deserialize)]
 pub struct ReviewRating {
     #[serde(rename = "@type")]
     pub at_type: AtType,

@@ -7,8 +7,9 @@ use serde_json::{json, to_value};
 use tracing::debug;
 use uuid::Uuid;
 
-use crate::{error::Error, handlers::handlers_rpc::RpcInfo, log::log_request, middleware::mw_auth::CtxW};
-
+use crate::{
+    error::Error, handlers::handlers_rpc::RpcInfo, log::log_request, middleware::mw_auth::CtxW,
+};
 
 pub async fn mw_reponse_map(
     ctx: Option<CtxW>,

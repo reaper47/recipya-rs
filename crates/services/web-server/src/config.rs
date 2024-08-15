@@ -7,7 +7,7 @@ pub fn web_config() -> &'static WebConfig {
 
     INSTANCE.get_or_init(|| {
         WebConfig::load_from_env()
-        .unwrap_or_else(|ex| panic!("Fatal - Could not load configuration: {ex:?}"))
+            .unwrap_or_else(|ex| panic!("Fatal - Could not load configuration: {ex:?}"))
     })
 }
 

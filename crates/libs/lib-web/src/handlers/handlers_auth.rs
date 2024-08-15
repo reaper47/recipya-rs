@@ -1,6 +1,14 @@
-use axum::{extract::State, http::{HeaderValue, StatusCode}, response::{IntoResponse, Redirect}, Form, Json};
+use axum::{
+    extract::State,
+    http::{HeaderValue, StatusCode},
+    response::{IntoResponse, Redirect},
+    Form, Json,
+};
 use lib_auth::pwd::scheme::SchemeStatus;
-use lib_core::{ctx::Ctx, model::{user::UserBmc, ModelManager}};
+use lib_core::{
+    ctx::Ctx,
+    model::{user::UserBmc, ModelManager},
+};
 use maud::Markup;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -8,7 +16,11 @@ use tower_cookies::Cookies;
 use tracing::debug;
 use validator::Validate;
 
-use crate::{error::{collect_errors, Error}, templates, utils::token::{remove_token_cookie, set_token_cookie, KEY_HX_REDIRECT}};
+use crate::{
+    error::{collect_errors, Error},
+    templates,
+    utils::token::{remove_token_cookie, set_token_cookie, KEY_HX_REDIRECT},
+};
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct LoginForm {
@@ -90,7 +102,10 @@ pub async fn login_post(
     // Update password scheme if needed
     if let SchemeStatus::Outdated = scheme_status {
         debug!("pwd encrypt scheme outdated, upgrading");
-        if UserBmc::update_password(&root_ctx, &mm, user.id, &user.password).await.is_err() {
+        if UserBmc::update_password(&root_ctx, &mm, user.id, &user.password)
+            .await
+            .is_err()
+        {
             return Error::UpdatePassword.into_response();
         }
     }

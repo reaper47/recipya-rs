@@ -66,7 +66,7 @@ impl Scraper {
         };
 
         let sel = Selector::parse(r#"script[type='application/ld+json']"#)?;
-        doc.select(&sel) 
+        doc.select(&sel)
             .filter_map(|el| {
                 let json = &el.inner_html();
                 match serde_json::from_str::<RecipeSchema>(json) {
@@ -79,20 +79,16 @@ impl Scraper {
                     }
                 }
             })
-            .find_map(|recipe| {
-                match recipe.at_graph {
-                    None => Some(recipe),
-                    Some(graph) => {
-                         graph.into_iter().find_map(|temp| {
-                            if let GraphObject::Recipe(mut recipe) = temp {
-                                recipe.at_type = Some(AtType::Recipe);
-                                Some(recipe)
-                            } else {
-                                None
-                            }
-                         })
+            .find_map(|recipe| match recipe.at_graph {
+                None => Some(recipe),
+                Some(graph) => graph.into_iter().find_map(|temp| {
+                    if let GraphObject::Recipe(mut recipe) = temp {
+                        recipe.at_type = Some(AtType::Recipe);
+                        Some(recipe)
+                    } else {
+                        None
                     }
-                }
+                }),
             })
             .ok_or_else(|| Error::DomainNotImplemented)
     }

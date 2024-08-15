@@ -24,18 +24,18 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[serde_as]
 #[derive(Debug, From, Serialize, RpcHandlerError)]
 pub enum Error {
-	// App Libs
-	#[from]
-	Model(lib_core::model::Error),
+    // App Libs
+    #[from]
+    Model(lib_core::model::Error),
 
-	// External Modules
-	#[from]
-	SerdeJson(#[serde_as(as = "DisplayFromStr")] serde_json::Error),
+    // External Modules
+    #[from]
+    SerdeJson(#[serde_as(as = "DisplayFromStr")] serde_json::Error),
 }
 
 // region:    --- Error Boilerplate
 impl core::fmt::Display for Error {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{self:?}")
     }
 }

@@ -8,7 +8,10 @@ use std::net::SocketAddr;
 
 use axum::{middleware, Router};
 use config::web_config;
-use lib_web::{middleware::{mw_auth::mw_ctx_resolve, mw_res_map::mw_reponse_map}, routes::routes_static};
+use lib_web::{
+    middleware::{mw_auth::mw_ctx_resolve, mw_res_map::mw_reponse_map},
+    routes::routes_static,
+};
 use tokio::{net::TcpListener, signal};
 use tower_cookies::CookieManagerLayer;
 use tracing::info;

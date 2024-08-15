@@ -12,7 +12,7 @@ use serde::Deserialize;
 /// Params structure for any RPC Create call.
 #[derive(Deserialize)]
 pub struct ParamsForCreate<D> {
-	pub data: D,
+    pub data: D,
 }
 
 impl<D> IntoParams for ParamsForCreate<D> where D: DeserializeOwned + Send {}
@@ -20,8 +20,8 @@ impl<D> IntoParams for ParamsForCreate<D> where D: DeserializeOwned + Send {}
 /// Params structure for any RPC Update call.
 #[derive(Deserialize)]
 pub struct ParamsForUpdate<D> {
-	pub id: i64,
-	pub data: D,
+    pub id: i64,
+    pub data: D,
 }
 
 impl<D> IntoParams for ParamsForUpdate<D> where D: DeserializeOwned + Send {}
@@ -29,6 +29,7 @@ impl<D> IntoParams for ParamsForUpdate<D> where D: DeserializeOwned + Send {}
 /// Params structure for any RPC Update call.
 #[derive(Deserialize)]
 pub struct ParamsIded {
-	pub id: i64,
+    pub id: i64,
 }
+
 impl IntoParams for ParamsIded {}

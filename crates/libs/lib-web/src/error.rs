@@ -42,16 +42,16 @@ pub enum Error {
     #[from]
     Pwd(pwd::Error),
     #[from]
-	Rpc(lib_rpc_core::Error),
+    Rpc(lib_rpc_core::Error),
     RpcHandlerErrorUnhandled(&'static str),
     RpcLibRpc(lib_rpc_core::Error),
     #[from]
-	RpcRequestParsing(rpc_router::RequestParsingError),
+    RpcRequestParsing(rpc_router::RequestParsingError),
     RpcRouter {
-		id: Value,
-		method: String,
-		error: rpc_router::Error,
-	},
+        id: Value,
+        method: String,
+        error: rpc_router::Error,
+    },
     #[from]
     Token(token::Error),
 
@@ -61,13 +61,12 @@ pub enum Error {
 }
 
 impl IntoResponse for Error {
-	fn into_response(self) -> Response {
-		let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
-		response.extensions_mut().insert(Arc::new(self));
-		response
-	}
+    fn into_response(self) -> Response {
+        let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        response.extensions_mut().insert(Arc::new(self));
+        response
+    }
 }
-
 
 impl core::fmt::Display for Error {
     fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
@@ -88,25 +87,23 @@ impl std::error::Error for Error {}
 /// - If it's not an `rpc_router::Error::Handler` variant, then we can capture the `rpc_router::Error`
 ///   as it is, treating all other variants as "concrete/direct" types.
 impl From<rpc_router::CallError> for Error {
-	fn from(call_error: rpc_router::CallError) -> Self {
-		let rpc_router::CallError { id, method, error } = call_error;
-		match error {
-			rpc_router::Error::Handler(mut rpc_handler_error) => {
-				if let Some(lib_rpc_error) =
-					rpc_handler_error.remove::<lib_rpc_core::Error>()
-				{
-					Error::RpcLibRpc(lib_rpc_error)
-				}
-				// report the unhandled error for debugging and completing code.
-				else {
-					let type_name = rpc_handler_error.type_name();
-					warn!("Unhandled RpcHandlerError type: {type_name}");
-					Error::RpcHandlerErrorUnhandled(type_name)
-				}
-			}
-			error => Error::RpcRouter { id, method, error },
-		}
-	}
+    fn from(call_error: rpc_router::CallError) -> Self {
+        let rpc_router::CallError { id, method, error } = call_error;
+        match error {
+            rpc_router::Error::Handler(mut rpc_handler_error) => {
+                if let Some(lib_rpc_error) = rpc_handler_error.remove::<lib_rpc_core::Error>() {
+                    Error::RpcLibRpc(lib_rpc_error)
+                }
+                // report the unhandled error for debugging and completing code.
+                else {
+                    let type_name = rpc_handler_error.type_name();
+                    warn!("Unhandled RpcHandlerError type: {type_name}");
+                    Error::RpcHandlerErrorUnhandled(type_name)
+                }
+            }
+            error => Error::RpcRouter { id, method, error },
+        }
+    }
 }
 
 /// From the root error to the http status code and ClientError
@@ -131,37 +128,35 @@ impl Error {
             ),
 
             // -- Rpc
-			RpcRequestParsing(req_parsing_err) => (
-				StatusCode::BAD_REQUEST,
-				ClientError::RPC_REQUEST_INVALID(req_parsing_err.to_string()),
-			),
-			RpcRouter {
-				error: rpc_router::Error::MethodUnknown,
-				method,
-				..
-			} => (
-				StatusCode::BAD_REQUEST,
-				ClientError::RPC_REQUEST_METHOD_UNKNOWN(format!(
-					"rpc method '{method}' unknown"
-				)),
-			),
-			RpcRouter {
-				error: rpc_router::Error::ParamsParsing(params_parsing_err),
-				..
-			} => (
-				StatusCode::BAD_REQUEST,
-				ClientError::RPC_PARAMS_INVALID(params_parsing_err.to_string()),
-			),
-			RpcRouter {
-				error: rpc_router::Error::ParamsMissingButRequested,
-				method,
-				..
-			} => (
-				StatusCode::BAD_REQUEST,
-				ClientError::RPC_PARAMS_INVALID(format!(
-					"Params missing. Method '{method}' requires params"
-				)),
-			),
+            RpcRequestParsing(req_parsing_err) => (
+                StatusCode::BAD_REQUEST,
+                ClientError::RPC_REQUEST_INVALID(req_parsing_err.to_string()),
+            ),
+            RpcRouter {
+                error: rpc_router::Error::MethodUnknown,
+                method,
+                ..
+            } => (
+                StatusCode::BAD_REQUEST,
+                ClientError::RPC_REQUEST_METHOD_UNKNOWN(format!("rpc method '{method}' unknown")),
+            ),
+            RpcRouter {
+                error: rpc_router::Error::ParamsParsing(params_parsing_err),
+                ..
+            } => (
+                StatusCode::BAD_REQUEST,
+                ClientError::RPC_PARAMS_INVALID(params_parsing_err.to_string()),
+            ),
+            RpcRouter {
+                error: rpc_router::Error::ParamsMissingButRequested,
+                method,
+                ..
+            } => (
+                StatusCode::BAD_REQUEST,
+                ClientError::RPC_PARAMS_INVALID(format!(
+                    "Params missing. Method '{method}' requires params"
+                )),
+            ),
 
             // Fallback.
             _ => (
@@ -181,8 +176,8 @@ pub enum ClientError {
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
 
     RPC_REQUEST_INVALID(String),
-	RPC_REQUEST_METHOD_UNKNOWN(String),
-	RPC_PARAMS_INVALID(String),
+    RPC_REQUEST_METHOD_UNKNOWN(String),
+    RPC_PARAMS_INVALID(String),
 
     SERVICE_ERROR,
 }

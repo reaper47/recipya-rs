@@ -6,7 +6,7 @@ target/
 # Remove files related to the documentation
 .env
 .cargo/config.toml
-crates/libs/lib-scraper/tests/data
+crates/libs/lib-scraper/tests/data/*.html
 web/docs/.hugo_build.lock
 web/docs/public
 web/docs/themes/hextra

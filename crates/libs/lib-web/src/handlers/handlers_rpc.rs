@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
-use axum::{extract::State, response::{IntoResponse, Response}, Json};
+use axum::{
+    extract::State,
+    response::{IntoResponse, Response},
+    Json,
+};
 use rpc_router::resources_builder;
 use serde_json::{json, Value};
 
@@ -36,8 +40,8 @@ pub async fn rpc_axum_handler(
     let additional_resources = resources_builder![ctx].build();
 
     let rpc_call_result = rpc_router
-		.call_with_resources(rpc_req, additional_resources)
-		.await;
+        .call_with_resources(rpc_req, additional_resources)
+        .await;
 
     let res = rpc_call_result.map(|rpc_call_response| {
         let body_response = json!({

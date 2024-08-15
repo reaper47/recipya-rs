@@ -1,20 +1,23 @@
+mod support;
+
 use iso8601::{
     Date::YMD,
     Duration::YMDHMS,
     {DateTime, Time},
 };
 
-mod support;
 use url::Url;
 
 use lib_scraper::{
     schema::{
         common::{
-            AggregateRating, ClipOrVideoObject, CreativeWorkOrItemListOrText::ItemList,
-            CreativeWorkOrUrl, CreativeWorkType, DateOrDateTime, DefinedTermOrTextOrUrl, HowTo,
+            AggregateRating, ClipOrVideoObject,
+            CreativeWorkOrItemListOrText::{self, ItemList},
+            CreativeWorkOrUrl, CreativeWorkType, DateOrDateTime,
+            DefinedTermOrTextOrUrl, DistanceOrQuantitativeValue, DistanceType, HowTo,
             ImageObjectOrUrl, ImageObjectType, NumberOrText, OrganizationOrPerson,
-            OrganizationType, QuantitativeValueOrText, QuantitativeValueType, ReviewRating,
-            ReviewType, TextOrTextObject, VideoObjectType,
+            OrganizationType, QuantitativeValueOrText, QuantitativeValueType, RatingOrText,
+            ReviewRating, ReviewType, TextOrTextObject, VideoObjectType,
         },
         nutrition::{Energy, Mass, NutritionInformationSchema, RestrictedDiet},
         recipe::{RecipeCategory, RecipeCuisine, RecipeSchema},
@@ -24,9 +27,13 @@ use lib_scraper::{
     websites::Website,
 };
 
+use support::scrape;
+
+type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
 #[test]
-fn test_abuelascounter_dot_com() {
-    let got = support::scrape(Website::AbuelasCounterDotCom, 0);
+fn test_abuelascounter_dot_com() -> Result<()> {
+    let got = scrape(Website::AbuelasCounterDotCom, 0)?;
 
     let want = RecipeSchema {
         at_context: SchemaDotOrg,
@@ -149,11 +156,12 @@ fn test_abuelascounter_dot_com() {
         ..Default::default()
     };
     pretty_assertions::assert_eq!(got, want);
+    Ok(())
 }
 
 #[test]
-fn test_acouplecooks_dot_com() {
-    let got = support::scrape(Website::ACoupleCooksDotCom, 0);
+fn test_acouplecooks_dot_com()->Result<()> {
+    let got = scrape(Website::ACoupleCooksDotCom, 0)?;
 
     let want = RecipeSchema {
         at_context: SchemaDotOrg,
@@ -300,16 +308,159 @@ fn test_acouplecooks_dot_com() {
         ..Default::default()
     };
     pretty_assertions::assert_eq!(got, want);
+    Ok(())
 }
 
 #[test]
-fn test_abril_dot_com() {
-    todo!();
+fn test_abril_dot_com()->Result<()> {
+    let got = scrape(Website::ClaudiaAbrilComBr, 0)?;
+
+    let want = RecipeSchema {
+        at_context: SchemaDotOrg,
+        at_type: Some(AtType::Recipe),
+        aggregate_rating: Some(
+            AggregateRating {
+                at_type: AtType::AggregateRating,
+                rating_value: Some(NumberOrText::Number(4)),
+                best_rating: Some(5),
+                rating_count: Some(38,),
+                ..Default::default()
+            },
+       ),
+       article_body: Some("Derreta a manteiga e refogue a cebola até ficar transparente.Junte a carne e tempere com o sal.Mexa até a carne dourar de todos os lados.Acrescente a mostarda, o catchup, a pimenta-do-reino e o tomate picado.Cozinhe até formar um molho espesso.Se necessário, adicione água quente aos poucos.Quando o molho estiver encorpado e a carne macia, adicione os cogumelos e o creme de leite.Mexa por 1 minuto e retire do fogo.Sirva imediatamente, acompanhado de arroz e batata palha.Dica:&nbsp;Se juntar água ao refogar a carne, frite-a até todo o líquido evaporar.".to_string()),
+       author: Some(
+            OrganizationType {
+                at_type: AtType::Organization,
+                name: Some("CLAUDIA".to_string()),
+                logo: None,
+                url: Some(Url::parse("https://claudia.abril.com.br/").unwrap()),
+                ..Default::default()
+            },
+       ),
+       content_rating: Some(RatingOrText::Text("Fácil".to_string())),
+       cook_time: Some(YMDHMS {year: 0,month: 0,day: 0,hour: 0,minute: 30,second: 0,millisecond: 0}),
+       cooking_method: Some("Refogado".to_string()),
+       date_modified: Some(
+            DateOrDateTime::DateTime(
+                DateTime {
+                    date: YMD {year: 2020,month: 2,day: 5,},
+                    time: Time {hour: 7,minute: 51,second: 35,millisecond: 0,tz_offset_hours: -3,tz_offset_minutes: 0,},
+                },
+           ),
+       ),
+       date_published: Some(
+            DateOrDateTime::DateTime(
+               DateTime {
+                    date: YMD {year: 2008,month: 10,day: 24,},
+                    time: Time {hour: 20,minute: 47,second: 0,millisecond: 0,tz_offset_hours: -2,tz_offset_minutes: 0,},
+                },
+            ),
+       ),
+       description: Some(TextOrTextObject::Text("Derreta a manteiga e refogue a cebola até ficar transparente. Junte a carne e tempere com o sal. Mexa até a carne dourar de todos os lados. Acrescente a mostarda, o catchup, a pimenta-do-reino e o tomate picado. Cozinhe até formar um molho espesso. Se necessário, adicione água quente aos poucos. Quando o molho estiver [&amp;hellip;]".to_string()) ),
+       headline: Some("Estrogonofe de carne".to_string()),
+       image: Some(ImageObjectOrUrl::Url(Url::parse("https://claudia.abril.com.br/wp-content/uploads/2020/02/receita-estrogonofe-de-carne.jpg?quality=85&amp;strip=info&amp;w=620&amp;h=372&amp;crop=1?crop=1&amp;resize=1212,909").unwrap())),
+       is_part_of: Some(
+            CreativeWorkOrUrl::CreativeWork(
+                Box::new(CreativeWorkType {
+                    description: Some(TextOrTextObject::Text("Domine o fato. Confie na fonte.".to_string()),),
+                    image: Some(ImageObjectOrUrl::Url(Url::parse("https://claudia.abril.com.br/wp-content/uploads/2016/09/claudia-schema.png?w=150").unwrap())),
+                    name: Some("CLAUDIA".to_string()),
+                    ..Default::default()
+                }),
+           ),
+       ),
+       keywords: Some(DefinedTermOrTextOrUrl::Text("Estrogonofe de carne, Refogado, Dia a Dia, Carne, Brasileira, creme de leite, ketchup (ou catchup), pimenta-do-reino".to_string())),
+       main_entity_of_page: Some(
+            CreativeWorkOrUrl::CreativeWork(
+                Box::new(CreativeWorkType {
+                    at_id: Some(Url::parse("https://claudia.abril.com.br/receitas/estrogonofe-de-carne").unwrap()),
+                    at_type: AtType::WebPage,
+                    ..Default::default()
+                },
+            )),
+       ),
+       name: Some("Estrogonofe de carne".to_string()),
+       prep_time: Some(YMDHMS { year: 0,month: 0,day: 0,hour: 0,minute: 30,second: 0,millisecond: 0,},),
+       publisher: Some(
+            OrganizationOrPerson::Organization(
+                OrganizationType {
+                    at_type: AtType::Organization,
+                    name: Some("CLAUDIA".to_string()),
+                   logo: Some(
+                        ImageObjectOrUrl::ImageObject(
+                            Box::new(ImageObjectType {
+                                at_type: AtType::ImageObject,
+                                height: Some(DistanceOrQuantitativeValue::Distance(DistanceType {value: "60".to_string(),},),),
+                                url: Some(Url::parse("https://claudia.abril.com.br/wp-content/uploads/2016/09/claudia-schema.png?w=240&amp;resize=90,60").unwrap()),
+                                width: Some(DistanceOrQuantitativeValue::Distance(DistanceType {value: "90".to_string(),},),),
+                                ..Default::default()
+                            }),
+                        ),
+                    ),
+                    ..Default::default()
+                },
+            ),
+        ),
+        recipe_category: RecipeCategory::Text("Carne".to_string()),
+        recipe_cuisine: Some(RecipeCuisine::Text("Brasileira".to_string())),
+        recipe_ingredient: Some(vec![
+            "500 gramas de alcatra cortada em tirinhas".to_string(),
+            "1/4 xícara (chá) de manteiga ".to_string(),
+            "1 unidade de cebola picada".to_string(),
+            "1 colher (sobremesa) de mostarda ".to_string(),
+            "1 colher (sopa) de ketchup (ou catchup) ".to_string(),
+            "1 pitada de pimenta-do-reino ".to_string(),
+            "1 unidade de tomate sem pele picado".to_string(),
+            "1 xícara (chá) de cogumelo variado | variados escorridos".to_string(),
+            "1 lata de creme de leite ".to_string(),
+            " sal a gosto".to_string(),
+        ]),
+        recipe_instructions: Some(
+            CreativeWorkOrItemListOrText::Text(
+                "Derreta a manteiga e refogue a cebola até ficar transparente.Junte a carne e tempere com o sal.Mexa até a carne dourar de todos os lados.Acrescente a mostarda, o catchup, a pimenta-do-reino e o tomate picado.Cozinhe até formar um molho espesso.Se necessário, adicione água quente aos poucos.Quando o molho estiver encorpado e a carne macia, adicione os cogumelos e o creme de leite.Mexa por 1 minuto e retire do fogo.Sirva imediatamente, acompanhado de arroz e batata palha.Dica:&nbsp;Se juntar água ao refogar a carne, frite-a até todo o líquido evaporar.".to_string(),
+            ),
+        ),
+        recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType { value: 4 }),
+        review: Some(vec![
+            ReviewType {
+                at_type: AtType::Review,
+                review_rating: ReviewRating {
+                at_type: AtType::Rating,
+                rating_value: "5".to_string(),
+            },
+            author: OrganizationOrPerson::Organization(
+                OrganizationType {
+                    at_type: AtType::Organization,
+                    name: Some("CLAUDIA".to_string()),
+                    ..Default::default()
+                },
+            ),
+            date_published: DateOrDateTime::DateTime(
+                DateTime {
+                    date: YMD { year: 2008,month: 10,day: 24,},
+                        time: Time {hour: 20,minute: 47,second: 0,millisecond: 0,tz_offset_hours: -2,tz_offset_minutes: 0,},
+                    },
+                ),
+                ..Default::default()
+            },
+        ]),
+        suitable_for_diet: RestrictedDiet::UnspecifiedDiet,
+        total_time: Some(YMDHMS { year: 0, month: 0, day: 0,  hour: 0, minute: 30,second: 0,millisecond: 0}),
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
 }
 
 #[test]
-fn test_addapinch_dot_com() {
-    todo!();
+fn test_addapinch_dot_com()->Result<()> {
+    let got = scrape(Website::AddapinchDotCom, 0)?;
+
+    let want = RecipeSchema {
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
 }
 
 #[test]

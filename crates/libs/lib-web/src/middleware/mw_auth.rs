@@ -4,10 +4,20 @@ use crate::{
 };
 
 use axum::{
-    body::Body, extract::{FromRequestParts, State}, http::{request::Parts, Request}, middleware::Next, response::Response
+    body::Body,
+    extract::{FromRequestParts, State},
+    http::{request::Parts, Request},
+    middleware::Next,
+    response::Response,
 };
 use lib_auth::token::{validate_web_token, Token};
-use lib_core::{ctx::Ctx, model::{user::{UserBmc, UserForAuth}, ModelManager}};
+use lib_core::{
+    ctx::Ctx,
+    model::{
+        user::{UserBmc, UserForAuth},
+        ModelManager,
+    },
+};
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 

@@ -7,7 +7,10 @@ use serde_json::Value;
 use serde_with::skip_serializing_none;
 use uuid::Uuid;
 
-use crate::{error::{ClientError, Error, Result}, handlers::handlers_rpc::RpcInfo};
+use crate::{
+    error::{ClientError, Error, Result},
+    handlers::handlers_rpc::RpcInfo,
+};
 
 pub async fn log_request(
     uuid: Uuid,
