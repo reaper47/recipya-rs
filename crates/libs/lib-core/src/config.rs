@@ -6,6 +6,7 @@ use std::{
 };
 
 use lib_utils::envs::get_env;
+use tracing::info;
 
 pub fn config() -> &'static CoreConfig {
     static INSTANCE: OnceLock<CoreConfig> = OnceLock::new();
@@ -127,12 +128,15 @@ impl Paths {
         fs::create_dir_all(&thumbnails).unwrap();
         fs::create_dir_all(&videos).unwrap();
 
-        println!("\nFile locations:");
-        println!("\t- Backups:  {}", backup.display());
-        println!("\t- Database: {}", db.display());
-        println!("\t- Images:   {}", images.display());
-        println!("\t- Logs:     {}", logs.display());
-        println!("\t- Videos:   {}", videos.display());
+        let stars = "*".repeat(backup.to_str().unwrap().len() + 20);
+        info!("{stars}");
+        info!("File locations:");
+        info!("\tBackups:  {}", backup.display());
+        info!("\tDatabase: {}", db.display());
+        info!("\tImages:   {}", images.display());
+        info!("\tLogs:     {}", logs.display());
+        info!("\tVideos:   {}", videos.display());
+        info!("{stars}");
 
         Ok(Paths {
             BACKUP: backup,

@@ -5,10 +5,9 @@
   "description": "A clean, simple and powerful recipe manager your whole family will enjoy.",
   "main": "index.js",
   "scripts": {
-    "build": "npm run build:css && npm run build:mjml && npm run build:js",
+    "build": "npm run build:css && npm run build:js",
     "build:css": "tailwind -m -i ../static/css/tailwind-custom.css --output ../static/css/tailwind.css",
-    "build:js": "uglifyjs --compress --mangle -o ../static/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../static/js/toast.min.js -- toast.js",
-    "build:mjml": "mjml ../emails/error-admin.mjml -o ../emails/transpiled/error-admin.gohtml --config.minify && mjml ../emails/forgot-password.mjml -o ../emails/transpiled/forgot-password.gohtml --config.minify && mjml ../emails/intro.mjml -o ../emails/transpiled/intro.gohtml --config.minify"
+    "build:js": "uglifyjs --compress --mangle -o ../static/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../static/js/toast.min.js -- toast.js"
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {

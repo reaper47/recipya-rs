@@ -1,3 +1,5 @@
+mod support;
+
 use iso8601::{
     Date::YMD,
     Duration::YMDHMS,
@@ -20,11 +22,12 @@ use lib_scraper::{
 };
 use url::Url;
 
-mod support;
+type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
 
 #[test]
-fn test_claudia_abril_dot_com_dot_br() {
-    let got = support::scrape(Website::ClaudiaAbrilComBr, 0);
+fn test_claudia_abril_dot_com_dot_br() -> Result<()> {
+    let got = support::scrape(Website::ClaudiaAbrilComBr, 0)?;
 
     let want = RecipeSchema {
         aggregate_rating: Some(AggregateRating {
@@ -115,6 +118,7 @@ fn test_claudia_abril_dot_com_dot_br() {
         ..Default::default()
     };
     pretty_assertions::assert_eq!(got, want);
+    Ok(())
 }
 
 #[test]

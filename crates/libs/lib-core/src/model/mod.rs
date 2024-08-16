@@ -27,15 +27,15 @@ use crate::model::store::{new_db_pool, Pool};
 pub use self::error::{Error, Result};
 
 mod error;
-mod store;
+pub mod store;
 
 pub(in crate::model) mod schema;
 pub mod user;
 
 #[derive(Clone)]
 pub struct ModelManager {
-    db: Pool,
-    email: Option<Sendgrid>,
+    pub db: Pool,
+    pub email: Option<Sendgrid>,
 }
 
 impl ModelManager {

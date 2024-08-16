@@ -7,10 +7,11 @@ target/
 .env
 .cargo/config.toml
 crates/libs/lib-scraper/tests/data/*.html
+web/app/node_modules
 web/docs/.hugo_build.lock
 web/docs/public
 web/docs/themes/hextra
-web/app/node_modules
+web/sponsors/node_modules
 
 # Remove Cargo.lock from gitignore if creating an executable, leave it for libraries
 # More information here https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html

@@ -111,7 +111,7 @@ pub async fn login_post(
     }
 
     match set_token_cookie(&cookies, &user.email, user.token_salt) {
-        Ok(_) => (StatusCode::OK, "Login successful").into_response(),
+        Ok(_) => Redirect::to("/").into_response(),
         Err(_) => (StatusCode::BAD_REQUEST, "Login failed").into_response(),
     }
 }

@@ -1,20 +1,99 @@
-/*
-use std::sync::Arc;
+mod support;
 
+use crate::support::{
+    assert::assert_html,
+    server::{build_server, build_server_logged_in},
+};
 use axum::http::StatusCode;
+use lib_core::model::ModelManager;
+use lib_web::handlers::handlers_auth::LoginForm;
 
-use helpers::*;
-
-mod helpers;
+type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 #[cfg(test)]
-mod login {
-    use recipya::app::App;
-    use recipya::model::ModelManager;
-    use recipya::models::payloads::LoginForm;
+pub mod test_db {
+    use std::sync::atomic::AtomicU32;
+
+    use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
+    use lib_core::{ctx::Ctx, model::{store::Pool, user::{UserBmc, UserForCreate}, ModelManager}};
+
+    static TEST_DB_COUNTER: AtomicU32 = AtomicU32::new(0);
+
+    #[derive(Clone)]
+    pub struct TestDb {
+        default_db_url: String,
+        name: String,
+        pub pool: Pool,
+    }
+
+    impl TestDb {
+        pub async fn new() -> Self {
+            let default_db_url = &std::env::var("DATABASE_URL").unwrap();
+            let mut conn = PgConnection::establish(default_db_url).unwrap();
+
+            let name = format!(
+                "test_db_{}_{}",
+                std::process::id(),
+                TEST_DB_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+            );
+
+            sql_query(format!("CREATE DATABASE {};", name))
+                .execute(&mut conn)
+                .unwrap();
+
+            let mut url = url::Url::parse(default_db_url).unwrap();
+            url.set_path(&name);
+
+let pool = lib_core::model::store::new_db_pool(url.as_str()).await.unwrap();
+
+            UserBmc::create(
+                &Ctx::root_ctx(),
+                &ModelManager { db: pool.clone(), email: None},
+                UserForCreate {
+                    email: "test@example.com".to_string(),
+                    password_clear: "12345678".to_string(),
+                },
+            )
+            .await
+            .unwrap();
+
+            Self {
+                default_db_url: default_db_url.to_string(),
+                name,
+                pool,
+            }
+        }
+
+        pub fn mm(&self) -> ModelManager {
+            ModelManager { db: self.pool.clone(), email: None}
+        }
+    }
+
+    impl Drop for TestDb {
+        fn drop(&mut self) {
+            /*if thread::panicking() {
+                println!("TestDb leaking database {}", self.name);
+                return;
+            }*/
+            let mut conn = PgConnection::establish(&self.default_db_url).unwrap();
+            sql_query(format!(
+                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}'",
+                self.name
+            ))
+            .execute(&mut conn)
+            .unwrap();
+            sql_query(format!("DROP DATABASE {}", self.name))
+                .execute(&mut conn)
+                .unwrap();
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests_login {
+    use test_db::TestDb;
 
     use super::*;
-
     const BASE_URI: &str = "/auth/login";
 
     fn a_login_form() -> LoginForm {
@@ -26,23 +105,9 @@ mod login {
     }
 
     #[tokio::test]
-    async fn success() {
-        let server = build_server(
-            Arc::new(App::new_test()),
-            ModelManager::new().await.unwrap(),
-        );
-
-        let res = server.post(BASE_URI).form(&a_login_form()).await;
-
-        res.assert_status(StatusCode::SEE_OTHER);
-    }
-
-    #[tokio::test]
-    async fn get_login_page() {
-        let server = build_server(
-            Arc::new(App::new_test()),
-            ModelManager::new().await.unwrap(),
-        );
+    async fn test_get_login_page_ok() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
 
         let res = server.get(BASE_URI).await;
 
@@ -58,10 +123,22 @@ mod login {
                 r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log In</button></div><div class="grid place-content-center text-center gap-2"><div><p class="text-center">Don't have an account?</p><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a></div><a class="btn btn-sm btn-ghost" href="/auth/forgot-password">Forgot your password?</a></div>"#,
             ],
         );
+        Ok(())
     }
 
     #[tokio::test]
-    async fn hide_signup_button_when_registration_disabled() {
+    async fn test_post_login_ok() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
+
+        let res = server.post(BASE_URI).form(&a_login_form()).await;
+
+        res.assert_status(StatusCode::SEE_OTHER);
+        Ok(())
+    }
+
+    /*#[tokio::test]
+    async fn hide_signup_button_when_registration_disabled() -> Result<()>{
         let mut app = App::new_test();
         app.config.server.is_no_signups = true;
         let server = build_server(Arc::new(app), ModelManager::new().await.unwrap());
@@ -75,14 +152,13 @@ mod login {
                 r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log In</button></div><div class="grid place-content-center text-center gap-2"><div><p class="text-center">Don't have an account?</p><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a></div><a class="btn btn-sm btn-ghost" href="/auth/forgot-password">Forgot your password?</a></div>"#,
             ],
         );
-    }
+        Ok(())
+    }*/
 
     #[tokio::test]
-    async fn invalid_email() {
-        let server = build_server(
-            Arc::new(App::new_test()),
-            ModelManager::new().await.unwrap(),
-        );
+    async fn invalid_email() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
 
         let res = server
             .post(BASE_URI)
@@ -95,14 +171,13 @@ mod login {
 
         res.assert_status(StatusCode::BAD_REQUEST);
         res.assert_text("Field 'email': Invalid email address");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn invalid_password() {
-        let server = build_server(
-            Arc::new(App::new_test()),
-            ModelManager::new().await.unwrap(),
-        );
+    async fn invalid_password() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
 
         let res = server
             .post(BASE_URI)
@@ -115,14 +190,12 @@ mod login {
 
         res.assert_status(StatusCode::BAD_REQUEST);
         res.assert_text("Field 'password': Password must be at least 8 characters long");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn redirect_to_home_when_logged_in() {
-        let server = build_server_logged_in(
-            Arc::new(App::new_test()),
-            ModelManager::new().await.unwrap(),
-        );
+    async fn redirect_to_home_when_logged_in() -> Result<()> {
+        let server = build_server_logged_in(ModelManager::new().await.unwrap());
 
         let res = server.get(BASE_URI).await;
 
@@ -132,10 +205,11 @@ mod login {
             "/",
             "Location should be set to login"
         );
+        Ok(())
     }
 
-    #[tokio::test]
-    async fn redirect_to_index_when_autologin() {
+    /*#[tokio::test]
+    async fn redirect_to_index_when_autologin() -> Result<()>{
         let mut app = App::new_test();
         app.config.server.is_autologin = true;
         let server = build_server_logged_in(Arc::new(app), ModelManager::new().await.unwrap());
@@ -148,9 +222,11 @@ mod login {
             "/",
             "Location should be set to login"
         );
-    }
+        Ok(())
+    }*/
 }
 
+/*
 #[cfg(test)]
 mod register {
     use std::sync::Arc;
@@ -293,5 +369,4 @@ mod register {
             "Only one user should be registered"
         );
     }
-}
 */
