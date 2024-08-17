@@ -52,7 +52,9 @@ Dependencies:
 1. Install rust: https://www.rust-lang.org/
 2. Install nodejs to build the frontend: https://nodejs.org/en/download/package-manager
 3. Install Task: https://taskfile.dev/installation/
-4. Install hugo extended to build the documentation website: https://gohugo.io/installation/linux/
+4. Install hugo extended to build the documentation website: https://gohugo.io/installation/
+5. PostgreSQL: https://www.postgresql.org/download/
+6. Diesel: `cargo install diesel_cli`
 
 To build:
 1. Build the docs: `task build-docs`
