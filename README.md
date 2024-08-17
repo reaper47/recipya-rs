@@ -1,21 +1,28 @@
-# Recipya
+# Recipya Rust &emsp; [![Build Status]][actions] [![Latest Version]][version] [![Contributions]][contributions]
 
-[![Build](https://img.shields.io/github/actions/workflow/status/reaper47/recipya/go.yml?branch=main&logo=Github)](https://github.com/reaper47/recipya/actions/workflows/go.yml)
-[![Report](https://goreportcard.com/badge/github.com/reaper47/recipya)](https://goreportcard.com/report/github.com/reaper47/recipya)
-[![Contributions](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/reaper47/recipya/issues)
+[Build Status]: https://img.shields.io/github/actions/workflow/status/serde-rs/serde/ci.yml?branch=master
+[actions]: https://github.com/reaper47/recipya-rs/actions/new
 
-[![GitHub tag](https://img.shields.io/github/v/tag/reaper47/recipya?include_prereleases&label=version)](https://github.com/reaper47/recipya/tags)
-[![License](https://img.shields.io/github/license/reaper47/recipya)](./LICENSE)
+[Contributions]: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
+[contributions]: https://github.com/reaper47/recipya-rs/issues
+
+[Latest Version]: https://img.shields.io/github/v/tag/reaper47/recipya-rs?include_prereleases&label=version
+[version]: https://github.com/reaper47/recipya-rs/tags
 
 [Explore the docs](https://recipes.musicavis.ca/guide/docs/) · 
 [Demo](https://recipes.musicavis.ca)
+
+## Warning
+
+The [Recipya](https://github.com/reaper47/recipya) project is currently being rewritten in Go as announced [here](https://github.com/reaper47/recipya/discussions/422). The Rust project is not ready for production nor to selfhost. 
+The user interface should look exactly the same as the original. 
 
 ## Introduction
 
 A clean, simple and powerful recipe manager web application for unforgettable family recipes, empowering you to curate and share your favorite recipes.
 It is focused on simplicity for the whole family to enjoy.
 
-![Recipe page screenshot](.github/screenshot-recipes.png)
+![Recipe page screenshot](.github/screenshot-recipes.webp)
 
 ## Features
 
@@ -39,17 +46,32 @@ The installation instructions are written in the [installation section](https://
 
 ### Building the Project
 
+#### Current state
+
+Dependencies:
+1. Install rust: https://www.rust-lang.org/
+2. Install nodejs to build the frontend: https://nodejs.org/en/download/package-manager
+3. Install Task: https://taskfile.dev/installation/
+4. Install hugo extended to build the documentation website: https://gohugo.io/installation/linux/
+
+To build:
+1. Build the docs: `task build-docs`
+2. Build the frontend: `task build-web` 
+3. Set the environment variables in `.cargo/config.toml`
+3. Run recipya: `cargo run -p recipya`
+
+#### Once recipya-rs becomes the defacto Recipya:
+
 Follow these steps to build the project yourself:
 1. Clone the project.
    ```bash
-   git clone --recurse-submodules https://github.com/reaper47/recipya.git
+   git clone https://github.com/reaper47/recipya-rs.git
    ```
 2. Install the required [dependencies](https://recipes.musicavis.ca/guide/docs/development/intro/#dependencies).
 3. [Build](https://recipes.musicavis.ca/guide/docs/development/build/) the project.
 
 Alternatively, you may use the [development container](https://recipes.musicavis.ca/guide/docs/development/devcontainer/).
-Recipya's Docker [container](https://github.com/reaper47/recipya/tree/main/.devcontainer) includes all the necessary tools and dependencies 
-you need to start writing code quickly. 
+Recipya's Docker [container](https://github.com/reaper47/recipya-rs/tree/main/.devcontainer) includes all the necessary tools and dependencies you need to start writing code quickly. 
 
 ## Contributing
 

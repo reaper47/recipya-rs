@@ -1,0 +1,23 @@
+{
+	"name": "Recipya Rust",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"forwardPorts": [
+		7324
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"vadimcn.vscode-lldb",
+				"fill-labs.dependi",
+				"bierner.docs-view",
+				"usernamehw.errorlens",
+				"tamasfe.even-better-toml",
+				"rust-lang.rust-analyzer",
+				"gruntfuggly.todo-tree"
+			]
+		}
+	},
+	"remoteUser": "root"
+}

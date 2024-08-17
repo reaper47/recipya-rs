@@ -5,10 +5,14 @@ unsafe_code = "forbid"
 resolver = "2"
 members = [ # e.g. rpc routing
     "crates/libs/lib-auth", # e.g. for password, token
-    "crates/libs/lib-core", "crates/libs/lib-email", # e.g. base64, time
-    "crates/libs/lib-rpc", "crates/libs/lib-rpc-app", "crates/libs/lib-rpc-core", "crates/libs/lib-scraper",
+    "crates/libs/lib-core", 
+    "crates/libs/lib-email", # e.g. base64, time
+    "crates/libs/lib-rpc-app", 
+    "crates/libs/lib-rpc-core",
+     "crates/libs/lib-scraper",
     # Application libraries
-    "crates/libs/lib-utils", "crates/libs/lib-web", # e.g. model, ctx, config
+    "crates/libs/lib-utils", 
+    "crates/libs/lib-web", # e.g. model, ctx, config
 
     # Applications services
     "crates/services/web-server",
