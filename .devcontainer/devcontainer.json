@@ -1,9 +1,10 @@
 {
 	"name": "Recipya Rust",
-	"dockerComposeFile": "docker-compose.yml",
+	"dockerComposeFile": "docker-compose.yaml",
 	"service": "app",
 	"workspaceFolder": "/workspace",
-	"forwardPorts": [7324, 5434],
+	"forwardPorts": [7324, 5432],
+	"remoteUser": "root",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -22,7 +23,7 @@
 						"driver": "PostgreSQL",
 						"previewLimit": 50,
 						"server": "localhost",
-						"port": 5434,
+						"port": 5432,
 						"database": "recipya",
 						"username": "postgres",
 						"password": "postgres"

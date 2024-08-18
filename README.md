@@ -65,8 +65,7 @@ To build:
 #### Development Container
 
 You may use the devcontainer to help develop Recipya. The `DATABASE_URL` environment variable in your `.cargo/config.toml` file
-would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5434/recipya"`. The PostgreSQL port is `5434` rather than the usual
-`5432` because some users might have PostgreSQL installed locally running on port `5432`.
+would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432/recipya"`.
 
 #### Once recipya-rs becomes the defacto Recipya:
 
