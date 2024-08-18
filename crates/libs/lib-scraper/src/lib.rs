@@ -1,6 +1,11 @@
-use std::sync::Arc;
+mod custom;
+mod error;
+
+pub mod schema;
+pub mod websites;
 
 use scraper::{Html, Selector};
+use std::sync::{Arc, OnceLock};
 
 use crate::{
     schema::{
@@ -9,11 +14,6 @@ use crate::{
     },
     websites::Website,
 };
-
-mod custom;
-mod error;
-pub mod schema;
-pub mod websites;
 
 pub use self::error::{Error, Result};
 
@@ -33,6 +33,18 @@ impl AppHttpClient {
             client: reqwest::Client::new(),
         }
     }
+}
+
+fn scraper() -> &'static Scraper {
+    static INSTANCE: OnceLock<Scraper> = OnceLock::new();
+
+    INSTANCE.get_or_init(|| Scraper {
+        client: Arc::new(AppHttpClient::new()),
+    })
+}
+
+pub fn scrape(url: impl Into<String>) -> Result<RecipeSchema> {
+    scraper().scrape(&url.into())
 }
 
 #[async_trait::async_trait]
@@ -84,7 +96,7 @@ impl Scraper {
                 Some(graph) => graph.into_iter().find_map(|temp| {
                     if let GraphObject::Recipe(mut recipe) = temp {
                         recipe.at_type = Some(AtType::Recipe);
-                        Some(recipe)
+                        Some(*recipe)
                     } else {
                         None
                     }

@@ -1,3 +1,4 @@
+mod prelude;
 mod support;
 
 use iso8601::{
@@ -6,28 +7,9 @@ use iso8601::{
     {DateTime, Time},
 };
 
-use url::Url;
-
-use lib_scraper::{
-    schema::{
-        common::{
-            AggregateRating, ClipOrVideoObject,
-            CreativeWorkOrItemListOrText::{self, ItemList},
-            CreativeWorkOrUrl, CreativeWorkType, DateOrDateTime,
-            DefinedTermOrTextOrUrl, DistanceOrQuantitativeValue, DistanceType, HowTo,
-            ImageObjectOrUrl, ImageObjectType, NumberOrText, OrganizationOrPerson,
-            OrganizationType, QuantitativeValueOrText, QuantitativeValueType, RatingOrText,
-            ReviewRating, ReviewType, TextOrTextObject, VideoObjectType,
-        },
-        nutrition::{Energy, Mass, NutritionInformationSchema, RestrictedDiet},
-        recipe::{RecipeCategory, RecipeCuisine, RecipeSchema},
-        AtContext::SchemaDotOrg,
-        AtType,
-    },
-    websites::Website,
-};
-
+use prelude::*;
 use support::scrape;
+use url::Url;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -36,7 +18,7 @@ fn test_abuelascounter_dot_com() -> Result<()> {
     let got = scrape(Website::AbuelasCounterDotCom, 0)?;
 
     let want = RecipeSchema {
-        at_context: SchemaDotOrg,
+        at_context: AtContext::SchemaDotOrg,
         at_type: Some(AtType::Recipe),
         author: Some(OrganizationType { at_type: AtType::Person, name: Some("Abuelas Cuban Counter".to_string()), ..Default::default() }),
         cook_time: Some(YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 35, second: 0, millisecond: 0 }),
@@ -85,7 +67,7 @@ fn test_abuelascounter_dot_com() -> Result<()> {
             "Salt and freshly cracked pepper".to_string(),
             "Garnish: chives, sour cream, Calabrian chili peppers".to_string(),
         ]),
-        recipe_instructions: Some(ItemList(vec![
+        recipe_instructions: Some(CreativeWorkOrItemListOrText::ItemList(vec![
             HowTo {
                 at_type: AtType::HowToStep,
                 name: Some("Preheat oven to 425 degrees.".to_string()),
@@ -160,11 +142,11 @@ fn test_abuelascounter_dot_com() -> Result<()> {
 }
 
 #[test]
-fn test_acouplecooks_dot_com()->Result<()> {
+fn test_acouplecooks_dot_com() -> Result<()> {
     let got = scrape(Website::ACoupleCooksDotCom, 0)?;
 
     let want = RecipeSchema {
-        at_context: SchemaDotOrg,
+        at_context: AtContext::SchemaDotOrg,
         at_id: Some("https://www.acouplecooks.com/shaved-brussels-sprouts/#recipe".to_string()),
         at_type: Some(AtType::Recipe),
         aggregate_rating: Some(
@@ -225,7 +207,7 @@ fn test_acouplecooks_dot_com()->Result<()> {
             "2 tablespoons olive oil".to_string(),
             "1/4 cup Italian panko (optional, omit for gluten-free or use GF panko)".to_string(),
         ]),
-        recipe_instructions: Some(ItemList(vec![
+        recipe_instructions: Some(CreativeWorkOrItemListOrText::ItemList(vec![
             HowTo {
                 at_type: AtType::HowToStep,
                 text: "Shave the Brussels sprouts:\n\nWith a knife: Remove any tough outer layers with your fingers. With a large Chef’s knife, cut the Brussels sprout in half lengthwise. Place the cut side down and thinly slice cross-wise to create shreds. Separate the shreds with your fingers. Discard the root end.".to_string(),
@@ -312,11 +294,11 @@ fn test_acouplecooks_dot_com()->Result<()> {
 }
 
 #[test]
-fn test_abril_dot_com()->Result<()> {
+fn test_abril_dot_com() -> Result<()> {
     let got = scrape(Website::ClaudiaAbrilComBr, 0)?;
 
     let want = RecipeSchema {
-        at_context: SchemaDotOrg,
+        at_context: AtContext::SchemaDotOrg,
         at_type: Some(AtType::Recipe),
         aggregate_rating: Some(
             AggregateRating {
@@ -453,7 +435,7 @@ fn test_abril_dot_com()->Result<()> {
 }
 
 #[test]
-fn test_addapinch_dot_com()->Result<()> {
+fn test_addapinch_dot_com() -> Result<()> {
     let got = scrape(Website::AddapinchDotCom, 0)?;
 
     let want = RecipeSchema {

@@ -1,3 +1,4 @@
+mod prelude;
 mod support;
 
 use iso8601::{
@@ -6,24 +7,10 @@ use iso8601::{
     {DateTime, Time},
 };
 
-use lib_scraper::{
-    schema::{
-        common::{
-            AggregateRating, CreativeWorkOrItemListOrText, CreativeWorkOrUrl, CreativeWorkType,
-            DateOrDateTime, DefinedTermOrTextOrUrl, DistanceOrQuantitativeValue, DistanceType,
-            ImageObjectOrUrl, ImageObjectType, NumberOrText, OrganizationOrPerson,
-            OrganizationType, QuantitativeValueOrText, QuantitativeValueType, RatingOrText,
-            ReviewRating, ReviewType, TextOrTextObject,
-        },
-        recipe::{RecipeCategory, RecipeCuisine, RecipeSchema},
-        AtContext, AtType,
-    },
-    websites::Website,
-};
+use prelude::*;
 use url::Url;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
 
 #[test]
 fn test_claudia_abril_dot_com_dot_br() -> Result<()> {
