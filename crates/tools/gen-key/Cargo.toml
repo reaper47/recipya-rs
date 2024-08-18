@@ -1,5 +1,5 @@
 [package]
-name = "gen-key"
+name = "recipya-genkey"
 version = "0.1.0"
 edition = "2021"
 

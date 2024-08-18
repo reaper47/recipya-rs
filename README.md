@@ -62,6 +62,11 @@ To build:
 3. Set the environment variables in `.cargo/config.toml`
 3. Run recipya: `cargo run -p recipya`
 
+#### Development Container
+
+You may use the devcontainer to help develop Recipya. The `DATABASE_URL` environment variable in your `.cargo/config.toml` file
+would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432/recipya"`.
+
 #### Once recipya-rs becomes the defacto Recipya:
 
 Follow these steps to build the project yourself:

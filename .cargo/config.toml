@@ -12,14 +12,14 @@ SERVICE_EMAIL_SENDGRID_API_KEY = "YOUR_API_KEY"
 SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT = ""
 SERVICE_INTEGRATIONS_AZURE_DI_KEY = ""
 
-SERVICE_ADDRESS = "http://0.0.0.0:43073"
+SERVICE_ADDRESS = "http://0.0.0.0:7324"
 SERVICE_AUTOLOGIN = "false"
 SERVICE_BYPASS_GUIDE = "false"
 SERVICE_DEMO = "false"
 SERVICE_NO_SIGNUPS = "false"
 SERVICE_PRODUCTION = "false"
 
-# Run `cargo run -p gen-key` twice and paste the b64u encoded keys, once for the password and the other the token.
+# Run `cargo run -p recipya-genkey` twice and paste the b64u encoded keys, once for the password and the other the token.
 SERVICE_PASSWORD_KEY = "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
 SERVICE_TOKEN_KEY = "MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w"
 SERVICE_TOKEN_DURATION_SEC = "1800"
