@@ -1,11 +1,9 @@
 {
 	"name": "Recipya Rust",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	"forwardPorts": [
-		7324
-	],
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspace",
+	"forwardPorts": [7324, 5434],
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -16,8 +14,21 @@
 				"tamasfe.even-better-toml",
 				"rust-lang.rust-analyzer",
 				"gruntfuggly.todo-tree"
-			]
+			],
+			"settings": {
+				"sqltools.connections": [
+					{
+						"name": "Container database",
+						"driver": "PostgreSQL",
+						"previewLimit": 50,
+						"server": "localhost",
+						"port": 5434,
+						"database": "recipya",
+						"username": "postgres",
+						"password": "postgres"
+					}
+				]
+			}
 		}
-	},
-	"remoteUser": "root"
+	}
 }
