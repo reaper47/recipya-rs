@@ -5,11 +5,30 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
-use lib_scraper::{schema::recipe::RecipeSchema, websites::Website, Scraper};
+use crate::{schema::recipe::RecipeSchema, websites::Website, HttpClient, Scraper};
 
-use crate::support::MockHttpClient;
+use super::{websites::websites_for_tests, Result};
 
-use super::{Result, websites::websites_for_tests};
+pub struct MockHttpClient;
+
+#[async_trait::async_trait]
+impl HttpClient for MockHttpClient {
+    async fn get_async<'a>(&'a self, _host: Website, _url: &str) -> crate::Result<String> {
+        Ok("".to_string())
+    }
+
+    fn get(&self, host: Website, _url: &str) -> crate::Result<String> {
+        let content = fs::read_to_string(PathBuf::from(format!(
+            "./crates/libs/lib-scraper/src/tests/data/{}.html",
+            host
+        )))
+        .unwrap_or_else(|_| {
+            fs::read_to_string(PathBuf::from(format!("./src/tests/data/{}.html", host))).unwrap()
+        });
+
+        Ok(content)
+    }
+}
 
 fn mock_scraper() -> &'static Scraper {
     static INSTANCE: OnceLock<Scraper> = OnceLock::new();
@@ -18,7 +37,6 @@ fn mock_scraper() -> &'static Scraper {
         client: Arc::new(MockHttpClient),
     })
 }
-
 
 pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {
     let url = match websites_for_tests().get(&website) {
@@ -31,7 +49,7 @@ pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {
             "./crates/libs/lib-scraper/tests/data/{}.html",
             website
         ));
-        let path2 = PathBuf::from(format!("./tests/data/{}.html", website));
+        let path2 = PathBuf::from(format!("./src/tests/data/{}.html", website));
 
         if !path1.exists() && !path2.exists() {
             let client = reqwest::blocking::Client::new();

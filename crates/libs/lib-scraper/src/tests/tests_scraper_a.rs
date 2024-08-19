@@ -1,23 +1,25 @@
-mod prelude;
-mod support;
+#[cfg(test)]
+mod tests {
+    use crate::websites::Website;
+    use crate::RecipeSchema;
+    use crate::{schema::*, tests::support::scrape};
+    use common::*;
+    use iso8601::{
+        Date::YMD,
+        Duration::YMDHMS,
+        {DateTime, Time},
+    };
+    use nutrition::*;
+    use recipe::*;
+    use url::Url;
 
-use iso8601::{
-    Date::YMD,
-    Duration::YMDHMS,
-    {DateTime, Time},
-};
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-use prelude::*;
-use support::scrape;
-use url::Url;
+    #[test]
+    fn test_abuelascounter_dot_com() -> Result<()> {
+        let got = scrape(Website::AbuelasCounterDotCom, 0)?;
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
-#[test]
-fn test_abuelascounter_dot_com() -> Result<()> {
-    let got = scrape(Website::AbuelasCounterDotCom, 0)?;
-
-    let want = RecipeSchema {
+        let want = RecipeSchema {
         at_context: AtContext::SchemaDotOrg,
         at_type: Some(AtType::Recipe),
         author: Some(OrganizationType { at_type: AtType::Person, name: Some("Abuelas Cuban Counter".to_string()), ..Default::default() }),
@@ -137,15 +139,15 @@ fn test_abuelascounter_dot_com() -> Result<()> {
         }))),
         ..Default::default()
     };
-    pretty_assertions::assert_eq!(got, want);
-    Ok(())
-}
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 
-#[test]
-fn test_acouplecooks_dot_com() -> Result<()> {
-    let got = scrape(Website::ACoupleCooksDotCom, 0)?;
+    #[test]
+    fn test_acouplecooks_dot_com() -> Result<()> {
+        let got = scrape(Website::ACoupleCooksDotCom, 0)?;
 
-    let want = RecipeSchema {
+        let want = RecipeSchema {
         at_context: AtContext::SchemaDotOrg,
         at_id: Some("https://www.acouplecooks.com/shaved-brussels-sprouts/#recipe".to_string()),
         at_type: Some(AtType::Recipe),
@@ -289,15 +291,15 @@ fn test_acouplecooks_dot_com() -> Result<()> {
         url: Some(Url::parse("https://www.acouplecooks.com/shaved-brussels-sprouts/").unwrap()),
         ..Default::default()
     };
-    pretty_assertions::assert_eq!(got, want);
-    Ok(())
-}
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 
-#[test]
-fn test_abril_dot_com() -> Result<()> {
-    let got = scrape(Website::ClaudiaAbrilComBr, 0)?;
+    #[test]
+    fn test_abril_dot_com() -> Result<()> {
+        let got = scrape(Website::ClaudiaAbrilComBr, 0)?;
 
-    let want = RecipeSchema {
+        let want = RecipeSchema {
         at_context: AtContext::SchemaDotOrg,
         at_type: Some(AtType::Recipe),
         aggregate_rating: Some(
@@ -430,132 +432,133 @@ fn test_abril_dot_com() -> Result<()> {
         total_time: Some(YMDHMS { year: 0, month: 0, day: 0,  hour: 0, minute: 30,second: 0,millisecond: 0}),
         ..Default::default()
     };
-    pretty_assertions::assert_eq!(got, want);
-    Ok(())
-}
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 
-#[test]
-fn test_addapinch_dot_com() -> Result<()> {
-    let got = scrape(Website::AddapinchDotCom, 0)?;
+    #[test]
+    fn test_addapinch_dot_com() -> Result<()> {
+        let got = scrape(Website::AddapinchDotCom, 0)?;
 
-    let want = RecipeSchema {
-        ..Default::default()
-    };
-    pretty_assertions::assert_eq!(got, want);
-    Ok(())
-}
+        let want = RecipeSchema {
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 
-#[test]
-fn test_afghankitchenrecipes_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_afghankitchenrecipes_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_aflavorjournal_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_aflavorjournal_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_ah_dot_nl() {
-    todo!();
-}
+    #[test]
+    fn test_ah_dot_nl() {
+        todo!();
+    }
 
-#[test]
-fn test_akispetretzikis_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_akispetretzikis_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_aldi_dot_com_dot_au() {
-    todo!();
-}
+    #[test]
+    fn test_aldi_dot_com_dot_au() {
+        todo!();
+    }
 
-#[test]
-fn test_alexandracooks_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_alexandracooks_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_alittlebityummy_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_alittlebityummy_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_all_clad_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_all_clad_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_allrecipes_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_allrecipes_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_allthehealthythings_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_allthehealthythings_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_altonbrown_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_altonbrown_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_amazingribs_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_amazingribs_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_ambitiouskitchen_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_ambitiouskitchen_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_americastestkitchen_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_americastestkitchen_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_angielaeats_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_angielaeats_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_aniagotuje_dot_pl() {
-    todo!();
-}
+    #[test]
+    fn test_aniagotuje_dot_pl() {
+        todo!();
+    }
 
-#[test]
-fn test_antilliaans_eten_dot_nl() {
-    todo!();
-}
+    #[test]
+    fn test_antilliaans_eten_dot_nl() {
+        todo!();
+    }
 
-#[test]
-fn test_archanaskitchen_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_archanaskitchen_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_argiro_dot_gr() {
-    todo!();
-}
+    #[test]
+    fn test_argiro_dot_gr() {
+        todo!();
+    }
 
-#[test]
-fn test_arla_dot_se() {
-    todo!();
-}
+    #[test]
+    fn test_arla_dot_se() {
+        todo!();
+    }
 
-#[test]
-fn test_atelierdeschefs_dot_fr() {
-    todo!();
-}
+    #[test]
+    fn test_atelierdeschefs_dot_fr() {
+        todo!();
+    }
 
-#[test]
-fn test_averiecooks_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_averiecooks_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_avocadoskillet_dot_com() {
-    todo!();
+    #[test]
+    fn test_avocadoskillet_dot_com() {
+        todo!();
+    }
 }

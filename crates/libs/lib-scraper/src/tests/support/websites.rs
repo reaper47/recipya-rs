@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::OnceLock};
 
-use lib_scraper::websites::Website;
+use crate::websites::Website;
 
 pub fn websites_for_tests() -> &'static HashMap<Website, Vec<String>> {
     static INSTANCE: OnceLock<HashMap<Website, Vec<String>>> = OnceLock::new();

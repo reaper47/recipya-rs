@@ -1,22 +1,24 @@
-mod prelude;
-mod support;
+#[cfg(test)]
+mod tests {
+    use crate::websites::Website;
+    use crate::RecipeSchema;
+    use crate::{schema::*, tests::support};
+    use common::*;
+    use iso8601::{
+        Date::YMD,
+        Duration::YMDHMS,
+        {DateTime, Time},
+    };
+    use recipe::*;
+    use url::Url;
 
-use iso8601::{
-    Date::YMD,
-    Duration::YMDHMS,
-    {DateTime, Time},
-};
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-use prelude::*;
-use url::Url;
+    #[test]
+    fn test_claudia_abril_dot_com_dot_br() -> Result<()> {
+        let got = support::scrape(Website::ClaudiaAbrilComBr, 0)?;
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
-#[test]
-fn test_claudia_abril_dot_com_dot_br() -> Result<()> {
-    let got = support::scrape(Website::ClaudiaAbrilComBr, 0)?;
-
-    let want = RecipeSchema {
+        let want = RecipeSchema {
         aggregate_rating: Some(AggregateRating {
             at_type: AtType::AggregateRating,
             rating_value: Some(NumberOrText::Number(4)),
@@ -104,151 +106,152 @@ fn test_claudia_abril_dot_com_dot_br() -> Result<()> {
         total_time: Some(YMDHMS { year: 0, month: 0, day: 0, hour: 0, minute: 30, second: 0, millisecond: 0 }),
         ..Default::default()
     };
-    pretty_assertions::assert_eq!(got, want);
-    Ok(())
-}
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 
-#[test]
-fn test_cafedelites_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cafedelites_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_canada_dot_ca() {
-    todo!();
-}
+    #[test]
+    fn test_canada_dot_ca() {
+        todo!();
+    }
 
-#[test]
-fn test_castironketo_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_castironketo_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cdkitchen_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cdkitchen_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cestmafournee_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cestmafournee_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_chatelaine_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_chatelaine_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_chefkoch_dot_de() {
-    todo!();
-}
+    #[test]
+    fn test_chefkoch_dot_de() {
+        todo!();
+    }
 
-#[test]
-fn test_chefnini_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_chefnini_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_chefsavvy_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_chefsavvy_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_chejorge_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_chejorge_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_chetnamakan_dot_co_dot_uk() {
-    todo!();
-}
+    #[test]
+    fn test_chetnamakan_dot_co_dot_uk() {
+        todo!();
+    }
 
-#[test]
-fn test_chinesecookingdemystified_substack_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_chinesecookingdemystified_substack_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_closetcooking_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_closetcooking_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_colruyt_dot_be() {
-    todo!();
-}
+    #[test]
+    fn test_colruyt_dot_be() {
+        todo!();
+    }
 
-#[test]
-fn test_comidinhasdochef_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_comidinhasdochef_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cook_talk_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cook_talk_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cookeatshare_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cookeatshare_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cookieandkate_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cookieandkate_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cookpad_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cookpad_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_coop_dot_se() {
-    todo!();
-}
+    #[test]
+    fn test_coop_dot_se() {
+        todo!();
+    }
 
-#[test]
-fn test_copykat_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_copykat_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_costco_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_costco_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_countryliving_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_countryliving_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_creativecanning_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_creativecanning_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cucchiaio_dot_it() {
-    todo!();
-}
+    #[test]
+    fn test_cucchiaio_dot_it() {
+        todo!();
+    }
 
-#[test]
-fn test_cuisineandtravel_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cuisineandtravel_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_cuisineaz_dot_com() {
-    todo!();
-}
+    #[test]
+    fn test_cuisineaz_dot_com() {
+        todo!();
+    }
 
-#[test]
-fn test_culy_dot_nl() {
-    todo!();
-}
+    #[test]
+    fn test_culy_dot_nl() {
+        todo!();
+    }
 
-#[test]
-fn test_cybercook_dot_com_dot_br() {
-    todo!();
+    #[test]
+    fn test_cybercook_dot_com_dot_br() {
+        todo!();
+    }
 }
