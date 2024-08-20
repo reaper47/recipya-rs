@@ -18,6 +18,7 @@ use crate::{
 pub struct User {
     pub id: i64,
     pub email: String,
+    pub is_remember_me: bool,
 
     pub password: String,
     pub password_salt: Uuid,
@@ -52,6 +53,7 @@ pub struct UserForAuth {
     pub id: i64,
     pub email: String,
     pub token_salt: Uuid,
+    pub is_remember_me: bool,
 }
 
 /// User backend model controller.
@@ -118,6 +120,7 @@ impl UserBmc {
             id: user.id,
             email: user.email,
             token_salt: user.token_salt,
+            is_remember_me: user.is_remember_me,
         })
     }
 
@@ -155,6 +158,20 @@ impl UserBmc {
 
         diesel::update(schema::users::dsl::users.find(id))
             .set(schema::users::dsl::password.eq(password))
+            .execute(&mut *mm.connection().await?)
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn update_remember_me(
+        _ctx: &Ctx,
+        mm: &ModelManager,
+        id: i64,
+        new_value: bool,
+    ) -> Result<()> {
+        diesel::update(schema::users::dsl::users.find(id))
+            .set(schema::users::dsl::is_remember_me.eq(new_value))
             .execute(&mut *mm.connection().await?)
             .await?;
 
@@ -365,11 +382,30 @@ mod tests {
 
                 let _ = UserBmc::update_password(&ctx, &mm, fx_id, "Ukraine is Love").await;
 
-                let _ = UserBmc::get(&ctx, &mm, fx_id).await.unwrap();
+                UserBmc::get(&ctx, &mm, fx_id).await.unwrap();
                 assert_ne!(
                     old_password,
                     UserBmc::get(&ctx, &mm, fx_id).await.unwrap().password
                 );
+            }
+            .boxed()
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_update_remember_me_ok() {
+        let db = TestDb::new().await;
+        db.run_test(|| {
+            let db = db.pool.clone();
+            async move {
+                let (mm, ctx) = setup(db);
+                let fx_id = add_user(&ctx, &mm, "hello@test.com").await;
+
+                let _ = UserBmc::update_remember_me(&ctx, &mm, fx_id, true).await;
+
+                let user = UserBmc::get(&ctx, &mm, fx_id).await.unwrap();
+                assert!(user.is_remember_me, "should have been set to true");
             }
             .boxed()
         })

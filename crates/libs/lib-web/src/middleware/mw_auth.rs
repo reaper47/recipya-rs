@@ -8,7 +8,7 @@ use axum::{
     extract::{FromRequestParts, State},
     http::{request::Parts, Request},
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Redirect, Response},
 };
 use lib_auth::token::{validate_web_token, Token};
 use lib_core::{
@@ -22,7 +22,16 @@ use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 
 pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -> Result<Response> {
-    ctx?;
+    if ctx.is_err() {
+        let intended_url = req
+            .uri()
+            .path_and_query()
+            .map(|pq| pq.as_str())
+            .unwrap_or("/");
+        let redirect_to = format!("/auth/login?redirect_to={}", intended_url);
+        return Ok(Redirect::to(&redirect_to).into_response());
+    }
+
     Ok(next.run(req).await)
 }
 
@@ -52,18 +61,38 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 
     let token: Token = token.parse().map_err(|_| CtxExtError::TokenWrongFormat)?;
 
-    let user: UserForAuth = UserBmc::first_by_email_auth(&Ctx::root_ctx(), &mm, &token.ident)
+    let ctx = Ctx::root_ctx();
+    let user: UserForAuth = UserBmc::first_by_email_auth(&ctx, &mm, &token.ident)
         .await
         .map_err(|_| CtxExtError::UserNotFound)?;
 
-    validate_web_token(&token, user.token_salt).map_err(|_| CtxExtError::FailValidate)?;
+    if let Err(err) =
+        validate_web_token(&token, user.token_salt).map_err(|_| CtxExtError::FailValidate)
+    {
+        UserBmc::update_remember_me(&ctx, &mm, user.id, false)
+            .await
+            .map_err(|_| CtxExtError::ModelAccessError("Could not set remember me".to_string()))?;
+        return Err(err);
+    }
 
-    set_token_cookie(cookies, &user.email, user.token_salt)
+    set_token_cookie(cookies, &user.email, user.token_salt, user.is_remember_me)
         .map_err(|_| CtxExtError::CannotSetTokenCookie)?;
 
     Ctx::new(user.id)
         .map(CtxW)
         .map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()))
+}
+
+pub async fn mw_redirect_if_authenticated(
+    ctx: Result<CtxW>,
+    req: Request<Body>,
+    next: Next,
+) -> Result<Response> {
+    if ctx.is_ok() || lib_core::config().IS_AUTOLOGIN {
+        return Ok(Redirect::to("/").into_response());
+    }
+
+    Ok(next.run(req).await)
 }
 
 #[derive(Debug, Clone)]
@@ -90,10 +119,10 @@ pub enum CtxExtError {
     TokenNotInCookie,
     TokenWrongFormat,
 
-    UserNotFound,
-    ModelAccessError(String),
-    FailValidate,
     CannotSetTokenCookie,
+    FailValidate,
+    ModelAccessError(String),
+    UserNotFound,
 
     CtxNotInRequestExt,
     CtxCreateFail(String),

@@ -56,6 +56,11 @@ pub fn generate_web_token(user: &str, salt: Uuid) -> Result<Token> {
     _generate_token(user, config.TOKEN_DURATION_SEC, salt, &config.TOKEN_KEY)
 }
 
+pub fn generate_long_lasting_web_token(user: &str, salt: Uuid) -> Result<Token> {
+    let config = &auth_config();
+    _generate_token(user, 2_678_400., salt, &config.TOKEN_KEY)
+}
+
 pub fn validate_web_token(origin_token: &Token, salt: Uuid) -> Result<()> {
     let config = &auth_config();
     _validate_token_sign_and_exp(origin_token, salt, &config.TOKEN_KEY)?;

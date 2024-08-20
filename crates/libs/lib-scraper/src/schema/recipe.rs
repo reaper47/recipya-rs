@@ -19,7 +19,7 @@ use serde::{de, Deserialize, Deserializer};
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum GraphObject {
-    Recipe(RecipeSchema),
+    Recipe(Box<RecipeSchema>),
     Unknown(UnknownType),
 }
 

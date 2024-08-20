@@ -1,6 +1,10 @@
-use std::sync::Arc;
+mod custom;
+mod error;
+pub mod schema;
+mod websites;
 
 use scraper::{Html, Selector};
+use std::sync::{Arc, OnceLock};
 
 use crate::{
     schema::{
@@ -10,15 +14,10 @@ use crate::{
     websites::Website,
 };
 
-mod custom;
-mod error;
-pub mod schema;
-pub mod websites;
-
 pub use self::error::{Error, Result};
 
 #[async_trait::async_trait]
-pub trait HttpClient {
+trait HttpClient {
     async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String>;
     fn get(&self, host: Website, url: &str) -> Result<String>;
 }
@@ -33,6 +32,18 @@ impl AppHttpClient {
             client: reqwest::Client::new(),
         }
     }
+}
+
+fn scraper() -> &'static Scraper {
+    static INSTANCE: OnceLock<Scraper> = OnceLock::new();
+
+    INSTANCE.get_or_init(|| Scraper {
+        client: Arc::new(AppHttpClient::new()),
+    })
+}
+
+pub fn scrape(url: impl Into<String>) -> Result<RecipeSchema> {
+    scraper().scrape(&url.into())
 }
 
 #[async_trait::async_trait]
@@ -51,12 +62,12 @@ impl HttpClient for AppHttpClient {
     }
 }
 
-pub struct Scraper {
-    pub client: Arc<dyn HttpClient + Sync + Send>,
+struct Scraper {
+    client: Arc<dyn HttpClient + Sync + Send>,
 }
 
 impl Scraper {
-    pub fn scrape(&self, url: &str) -> Result<RecipeSchema> {
+    fn scrape(&self, url: &str) -> Result<RecipeSchema> {
         let doc = match Website::from(url) {
             Ok(host) => {
                 let content = self.client.get(host, url)?;
@@ -84,7 +95,7 @@ impl Scraper {
                 Some(graph) => graph.into_iter().find_map(|temp| {
                     if let GraphObject::Recipe(mut recipe) = temp {
                         recipe.at_type = Some(AtType::Recipe);
-                        Some(recipe)
+                        Some(*recipe)
                     } else {
                         None
                     }
@@ -92,4 +103,35 @@ impl Scraper {
             })
             .ok_or_else(|| Error::DomainNotImplemented)
     }
+}
+
+#[cfg(test)]
+mod tests {
+    mod support;
+    mod tests_scraper_0_to_9;
+    mod tests_scraper_a;
+    mod tests_scraper_b;
+    mod tests_scraper_c;
+    mod tests_scraper_d;
+    mod tests_scraper_e;
+    mod tests_scraper_f;
+    mod tests_scraper_g;
+    mod tests_scraper_h;
+    mod tests_scraper_i;
+    mod tests_scraper_j;
+    mod tests_scraper_k;
+    mod tests_scraper_l;
+    mod tests_scraper_m;
+    mod tests_scraper_n;
+    mod tests_scraper_o;
+    mod tests_scraper_p;
+    mod tests_scraper_q;
+    mod tests_scraper_r;
+    mod tests_scraper_s;
+    mod tests_scraper_t;
+    mod tests_scraper_u;
+    mod tests_scraper_v;
+    mod tests_scraper_w;
+    mod tests_scraper_y;
+    mod tests_scraper_z;
 }

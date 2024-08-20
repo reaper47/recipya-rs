@@ -6,11 +6,11 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.7.5" }
 derive_more = { workspace = true }
-lib-auth = { path = "../../libs/lib-auth"}
-lib-core = { path = "../../libs/lib-core"}
-lib-rpc-core = { path = "../../libs/lib-rpc-core"}
+lib-auth = { path = "../../libs/lib-auth" }
+lib-core = { path = "../../libs/lib-core" }
+lib-rpc-core = { path = "../../libs/lib-rpc-core" }
 maud = { version = "*", features = ["axum"] }
-rpc-router = { workspace = true } 
+rpc-router = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_with = { workspace = true }
