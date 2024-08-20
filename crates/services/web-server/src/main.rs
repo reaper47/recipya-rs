@@ -23,11 +23,17 @@ async fn main() -> Result<()> {
     let listener = TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], 7324)))
         .await
         .unwrap();
-    info!("Serving HTTP server at address http://{}", listener.local_addr().unwrap().to_string());
-    axum::serve(listener, routes_all(ModelManager::new().await?).await.unwrap())
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .unwrap();
+    info!(
+        "Serving HTTP server at address http://{}",
+        listener.local_addr().unwrap().to_string()
+    );
+    axum::serve(
+        listener,
+        routes_all(ModelManager::new().await?).await.unwrap(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .unwrap();
 
     Ok(())
 }

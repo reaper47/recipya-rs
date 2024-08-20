@@ -4,7 +4,8 @@ use tower_http::services::ServeDir;
 use lib_core::config::config;
 use lib_web::handlers::handlers_general;
 
-pub fn routes() -> Router {
+#[allow(unused)]
+pub fn routes_general() -> Router {
     Router::new()
         .route("/", get(handlers_general::index))
         .route(

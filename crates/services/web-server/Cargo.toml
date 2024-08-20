@@ -15,8 +15,8 @@ axum = { version = "0.7.5" }
 derive_more = { workspace = true }
 lib-auth = { path = "../../libs/lib-auth" }
 lib-core = { path = "../../libs/lib-core" }
-lib-rpc-app = { path = "../../libs/lib-rpc-app"}
-lib-rpc-core = { path = "../../libs/lib-rpc-core"}
+lib-rpc-app = { path = "../../libs/lib-rpc-app" }
+lib-rpc-core = { path = "../../libs/lib-rpc-core" }
 lib-utils = { path = "../../libs/lib-utils" }
 lib-web = { path = "../../libs/lib-web" }
 maud = { version = "*", features = ["axum"] }

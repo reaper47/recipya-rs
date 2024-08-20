@@ -32,6 +32,7 @@ CREATE TABLE users
     password      VARCHAR(256) NOT NULL,
     password_salt UUID         NOT NULL DEFAULT gen_random_uuid(),
     token_salt    UUID         NOT NULL DEFAULT gen_random_uuid(),
+    is_remember_me BOOLEAN  NOT NULL DEFAULT FALSE,
     is_confirmed  BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP

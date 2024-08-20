@@ -31,7 +31,8 @@ pub async fn log_request(
         .ok()
         .and_then(|mut v| v.get_mut("data").map(|v| v.take()));
 
-    let log_line = RequestLogLine {
+    // TODO: Send to cloud-watch or log it somewhere.
+    let _log_line = RequestLogLine {
         uuid: uuid.to_string(),
         timestamp: timestamp.to_string(),
 
@@ -48,8 +49,6 @@ pub async fn log_request(
         error_type,
         error_data,
     };
-
-    // TODO: Send to cloud-watch.
 
     Ok(())
 }

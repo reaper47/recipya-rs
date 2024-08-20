@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use axum::{
-    extract::State,
+    extract::{Query, State},
     http::{HeaderValue, StatusCode},
     response::{IntoResponse, Redirect},
     Form, Json,
@@ -68,6 +70,7 @@ pub async fn login() -> Markup {
 pub async fn login_post(
     State(mm): State<ModelManager>,
     cookies: Cookies,
+    Query(query): Query<HashMap<String, String>>,
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
     let errors = collect_errors(&form);
@@ -110,8 +113,21 @@ pub async fn login_post(
         }
     }
 
-    match set_token_cookie(&cookies, &user.email, user.token_salt) {
-        Ok(_) => Redirect::to("/").into_response(),
+    match set_token_cookie(
+        &cookies,
+        &user.email,
+        user.token_salt,
+        form.remember_me.unwrap_or(false),
+    ) {
+        Ok(_) => {
+            let redirect_to = query
+                .get("redirect_to")
+                .cloned()
+                .unwrap_or_else(|| "/".to_string());
+
+            // TODO: Test this for endpoints that require auth
+            Redirect::to(&redirect_to).into_response()
+        }
         Err(_) => (StatusCode::BAD_REQUEST, "Login failed").into_response(),
     }
 }

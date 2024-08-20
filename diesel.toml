@@ -6,4 +6,4 @@ file = "crates/libs/lib-core/src/model/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
 
 [migrations_directory]
-dir = "/home/macpoule/RustroverProjects/recipya/crates/libs/lib-core/src/model/migrations"
+dir = "/home/macpoule/RustroverProjects/recipya/crates/libs/lib-core/src/model/store/migrations"

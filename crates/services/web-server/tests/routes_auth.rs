@@ -5,7 +5,6 @@ use crate::support::{
     server::{build_server, build_server_logged_in},
 };
 use axum::http::StatusCode;
-use lib_core::model::ModelManager;
 use lib_web::handlers::handlers_auth::LoginForm;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -15,7 +14,14 @@ pub mod test_db {
     use std::sync::atomic::AtomicU32;
 
     use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
-    use lib_core::{ctx::Ctx, model::{store::Pool, user::{UserBmc, UserForCreate}, ModelManager}};
+    use lib_core::{
+        ctx::Ctx,
+        model::{
+            store::Pool,
+            user::{UserBmc, UserForCreate},
+            ModelManager,
+        },
+    };
 
     static TEST_DB_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -44,11 +50,16 @@ pub mod test_db {
             let mut url = url::Url::parse(default_db_url).unwrap();
             url.set_path(&name);
 
-let pool = lib_core::model::store::new_db_pool(url.as_str()).await.unwrap();
+            let pool = lib_core::model::store::new_db_pool(url.as_str())
+                .await
+                .unwrap();
 
             UserBmc::create(
                 &Ctx::root_ctx(),
-                &ModelManager { db: pool.clone(), email: None},
+                &ModelManager {
+                    db: pool.clone(),
+                    email: None,
+                },
                 UserForCreate {
                     email: "test@example.com".to_string(),
                     password_clear: "12345678".to_string(),
@@ -65,7 +76,10 @@ let pool = lib_core::model::store::new_db_pool(url.as_str()).await.unwrap();
         }
 
         pub fn mm(&self) -> ModelManager {
-            ModelManager { db: self.pool.clone(), email: None}
+            ModelManager {
+                db: self.pool.clone(),
+                email: None,
+            }
         }
     }
 
@@ -91,6 +105,10 @@ let pool = lib_core::model::store::new_db_pool(url.as_str()).await.unwrap();
 
 #[cfg(test)]
 mod tests_login {
+    use lib_auth::token::Token;
+    use lib_utils::time::{OffsetDateTime, Rfc3339};
+    use lib_web::utils::token::AUTH_TOKEN;
+    use support::assert::assert_not_in_html;
     use test_db::TestDb;
 
     use super::*;
@@ -137,11 +155,11 @@ mod tests_login {
         Ok(())
     }
 
-    /*#[tokio::test]
-    async fn hide_signup_button_when_registration_disabled() -> Result<()>{
-        let mut app = App::new_test();
-        app.config.server.is_no_signups = true;
-        let server = build_server(Arc::new(app), ModelManager::new().await.unwrap());
+    #[tokio::test]
+    async fn test_get_login_ok_hide_signup_button_when_registration_disabled() -> Result<()> {
+        std::env::set_var("SERVICE_NO_SIGNUPS", "true");
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
 
         let res = server.get(BASE_URI).await;
 
@@ -153,10 +171,10 @@ mod tests_login {
             ],
         );
         Ok(())
-    }*/
+    }
 
     #[tokio::test]
-    async fn invalid_email() -> Result<()> {
+    async fn test_post_login_err_invalid_email() -> Result<()> {
         let db = TestDb::new().await;
         let server = build_server(db.mm()).await.unwrap();
 
@@ -175,7 +193,7 @@ mod tests_login {
     }
 
     #[tokio::test]
-    async fn invalid_password() -> Result<()> {
+    async fn test_post_err_invalid_password() -> Result<()> {
         let db = TestDb::new().await;
         let server = build_server(db.mm()).await.unwrap();
 
@@ -194,8 +212,9 @@ mod tests_login {
     }
 
     #[tokio::test]
-    async fn redirect_to_home_when_logged_in() -> Result<()> {
-        let server = build_server_logged_in(ModelManager::new().await.unwrap());
+    async fn test_get_login_ok_redirect_to_home_when_logged_in() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server_logged_in(db.mm()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -208,11 +227,11 @@ mod tests_login {
         Ok(())
     }
 
-    /*#[tokio::test]
-    async fn redirect_to_index_when_autologin() -> Result<()>{
-        let mut app = App::new_test();
-        app.config.server.is_autologin = true;
-        let server = build_server_logged_in(Arc::new(app), ModelManager::new().await.unwrap());
+    #[tokio::test]
+    async fn test_get_login_ok_redirect_to_index_when_autologin() -> Result<()> {
+        std::env::set_var("SERVICE_AUTOLOGIN", "true");
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -223,7 +242,61 @@ mod tests_login {
             "Location should be set to login"
         );
         Ok(())
-    }*/
+    }
+
+    #[tokio::test]
+    async fn test_post_login_ok_remember_me_checked() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&LoginForm {
+                email: "test@example.com".to_string(),
+                password: "12345678".to_string(),
+                remember_me: Some(true),
+            })
+            .await;
+
+        res.assert_status(StatusCode::SEE_OTHER);
+        assert_eq!(
+            res.header("Location"),
+            "/",
+            "Location should be set to login"
+        );
+        let token: Token = res.cookie(AUTH_TOKEN).value().to_string().parse()?;
+        let token_expire = OffsetDateTime::parse(&token.exp, &Rfc3339)?;
+        let now = OffsetDateTime::now_utc();
+        assert!(
+            (token_expire - now).whole_days() >= 30,
+            "expiration time should be a month"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_login_ok_remember_me_checked() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
+        server
+            .post(BASE_URI)
+            .form(&LoginForm {
+                email: "test@example.com".to_string(),
+                password: "12345678".to_string(),
+                remember_me: Some(true),
+            })
+            .await;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status(StatusCode::SEE_OTHER);
+        assert_eq!(
+            res.header("Location"),
+            "/",
+            "Location should be set to login"
+        );
+        Ok(())
+    }
 }
 
 /*

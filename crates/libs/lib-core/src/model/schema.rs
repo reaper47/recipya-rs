@@ -291,6 +291,7 @@ diesel::table! {
         password -> Varchar,
         password_salt -> Uuid,
         token_salt -> Uuid,
+        is_remember_me -> Bool,
         is_confirmed -> Bool,
         created_at -> Timestamp,
         updated_at -> Timestamp,
