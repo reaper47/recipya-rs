@@ -4,10 +4,11 @@ use axum::{
     extract::{Query, State},
     http::{HeaderValue, StatusCode},
     response::{IntoResponse, Redirect},
-    Form, Json,
+    Form,
 };
 use lib_auth::pwd::scheme::SchemeStatus;
 use lib_core::{
+    config,
     ctx::Ctx,
     model::{
         user::{UserBmc, UserForCreate},
@@ -16,7 +17,6 @@ use lib_core::{
 };
 use maud::Markup;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 use tower_cookies::Cookies;
 use tracing::debug;
 use validator::Validate;
@@ -137,31 +137,19 @@ pub async fn login_post(
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct LogoffPayload {
-    logoff: bool,
-}
-
-pub async fn logout_post(
-    cookies: Cookies,
-    Json(payload): Json<LogoffPayload>,
-) -> std::result::Result<Json<Value>, Error> {
-    let is_logoff = payload.logoff;
-    if is_logoff {
-        remove_token_cookie(&cookies)?;
+pub async fn logout_post(cookies: Cookies) -> impl IntoResponse {
+    if config().IS_AUTOLOGIN {
+        return Error::LogoutForbidden.into_response();
     }
 
-    let body = Json(json!({
-        "result": {
-            "logged_off": is_logoff,
-        }
-    }));
-
-    Ok(body)
+    match remove_token_cookie(&cookies) {
+        Ok(_) => Redirect::to("/").into_response(),
+        Err(_) => Error::LogoutFail.into_response(),
+    }
 }
 
 pub async fn register() -> impl IntoResponse {
-    if lib_core::config().IS_NO_SIGNUPS {
+    if config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
     }
     templates::auth::register().await.into_response()

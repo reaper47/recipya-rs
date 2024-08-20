@@ -304,7 +304,57 @@ mod tests_login {
 }
 
 #[cfg(test)]
-mod register {
+mod tests_logout {
+    use super::*;
+    use lib_auth::token::Token;
+    use lib_web::utils::token::AUTH_TOKEN;
+    use test_db::TestDb;
+
+    const BASE_URI: &str = "/auth/logout";
+
+    #[tokio::test]
+    async fn test_post_logout_ok() -> Result<()> {
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_logout_err_user_already_logged_out() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server_logged_in(db.mm()).await?;
+
+        let res: axum_test::TestResponse = server.post(BASE_URI).await;
+        let res_get = server.get("/auth/login").await;
+
+        res.assert_status(StatusCode::SEE_OTHER);
+        res_get.assert_status_ok();
+        let token: std::result::Result<Token, _> =
+            res.maybe_cookie(AUTH_TOKEN).unwrap().to_string().parse();
+        assert!(token.is_err(), "auth token should be deleted");
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
+    async fn test_post_logout_err_cannot_logout_when_autologin() -> Result<()> {
+        std::env::set_var("SERVICE_AUTOLOGIN", "true");
+        let db = TestDb::new().await;
+        let server = build_server_logged_in(db.mm()).await?;
+
+        let res = server.post(BASE_URI).await;
+
+        std::env::remove_var("SERVICE_AUTOLOGIN");
+        res.assert_status_forbidden();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_logout_ok_remember_me_user_deletes_token() -> Result<()> {
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests_register {
     use super::*;
     use lib_core::{ctx::Ctx, model::user::UserBmc};
     use lib_web::handlers::{handlers_auth::RegisterForm, KEY_HX_TRIGGER};

@@ -12,6 +12,7 @@ use axum::{
 };
 use lib_auth::token::{validate_web_token, Token};
 use lib_core::{
+    config,
     ctx::Ctx,
     model::{
         user::{UserBmc, UserForAuth},
@@ -88,7 +89,7 @@ pub async fn mw_redirect_if_authenticated(
     req: Request<Body>,
     next: Next,
 ) -> Result<Response> {
-    if ctx.is_ok() || lib_core::config().IS_AUTOLOGIN {
+    if ctx.is_ok() || config().IS_AUTOLOGIN {
         return Ok(Redirect::to("/").into_response());
     }
 
