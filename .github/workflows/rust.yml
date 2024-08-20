@@ -1,11 +1,10 @@
 name: Rust
 
 on:
-  workflow_dispatch:
-    inputs:
-      parameter:
-        description: My Parameter
+  push:
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
