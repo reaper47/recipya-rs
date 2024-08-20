@@ -105,13 +105,13 @@ pub mod test_db {
 
 #[cfg(test)]
 mod tests_login {
+    use super::*;
     use lib_auth::token::Token;
     use lib_utils::time::{OffsetDateTime, Rfc3339};
     use lib_web::utils::token::AUTH_TOKEN;
     use support::assert::assert_not_in_html;
     use test_db::TestDb;
 
-    use super::*;
     const BASE_URI: &str = "/auth/login";
 
     fn a_login_form() -> LoginForm {
@@ -221,10 +221,10 @@ mod tests_login {
         let res = server.get(BASE_URI).await;
 
         res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             res.header("Location"),
             "/",
-            "Location should be set to login"
+            "Location should be set to home"
         );
         Ok(())
     }
@@ -240,7 +240,7 @@ mod tests_login {
 
         std::env::remove_var("SERVICE_AUTOLOGIN");
         res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             res.header("Location"),
             "/",
             "Location should be set to login"
@@ -263,7 +263,7 @@ mod tests_login {
             .await;
 
         res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             res.header("Location"),
             "/",
             "Location should be set to login"
@@ -294,7 +294,7 @@ mod tests_login {
         let res = server.get(BASE_URI).await;
 
         res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             res.header("Location"),
             "/",
             "Location should be set to login"
@@ -303,147 +303,148 @@ mod tests_login {
     }
 }
 
-/*
 #[cfg(test)]
 mod register {
-    use std::sync::Arc;
-
-    use reqwest::StatusCode;
-
-    use recipya::model::ModelManager;
-    use recipya::web::KEY_HX_TRIGGER;
-    use recipya::{app::App, models::payloads::RegisterForm};
-
-    use crate::helpers::{build_server, build_server_logged_in};
+    use super::*;
+    use lib_core::{ctx::Ctx, model::user::UserBmc};
+    use lib_web::handlers::{handlers_auth::RegisterForm, KEY_HX_TRIGGER};
+    use test_db::TestDb;
 
     const BASE_URI: &str = "/auth/register";
 
     fn a_register_form() -> RegisterForm {
         RegisterForm {
-            email: "test@example.com".to_string(),
+            email: "new_user@example.com".to_string(),
             password: "12345678".to_string(),
             password_confirm: "12345678".to_string(),
         }
     }
 
     #[tokio::test]
-    async fn success() {
-        let app = Arc::new(App::new_test());
-        let server = build_server(Arc::clone(&app), ModelManager::new().await.unwrap());
+    async fn test_get_register_ok_redirect_to_home_when_logged_in() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server_logged_in(db.mm()).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status(StatusCode::SEE_OTHER);
+        pretty_assertions::assert_eq!(
+            res.header("Location"),
+            "/",
+            "Location should be set to home"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_register_ok() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
         let form = a_register_form();
 
         let res = server.post(BASE_URI).form(&form).await;
 
         res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(res.header("HX-Redirect"), "/auth/login");
+        pretty_assertions::assert_eq!(res.header("HX-Redirect"), "/auth/login");
         assert!(
-            app.repository
-                .users()
-                .await
-                .iter()
-                .any(|u| u.email == form.email),
-            "Expected to find user"
+            UserBmc::first_by_email(&Ctx::root_ctx(), &db.mm(), &form.email)
+                .await?
+                .is_some(),
+            "should have user in database"
         );
+        Ok(())
     }
 
     #[tokio::test]
-    async fn cannot_register_when_no_signups() {
-        let mut app = App::new_test();
-        app.config.server.is_no_signups = true;
-        let app = Arc::new(app);
-        let server = build_server(Arc::clone(&app), ModelManager::new().await.unwrap());
-        let original_num_users = app.repository.users().await.len();
-
-        let res = server.post(BASE_URI).form(&a_register_form()).await;
-
-        res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(
-            res.header("Location"),
-            "/auth/login",
-            "Location should be set to login"
-        );
-        assert_eq!(
-            original_num_users,
-            app.repository.users().await.len(),
-            "No new user should be registered"
-        );
-    }
-
-    #[tokio::test]
-    async fn cannot_access_register_when_no_signups() {
-        let mut app = App::new_test();
-        app.config.server.is_no_signups = true;
-        let server = build_server(Arc::new(app), ModelManager::new().await.unwrap());
-
-        let res = server.get(BASE_URI).await;
-
-        res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(
-            res.header("Location"),
-            "/auth/login",
-            "Location should be set to login"
-        );
-    }
-
-    #[tokio::test]
-    async fn redirect_to_home_when_register_and_autologin() {
-        let mut app = App::new_test();
-        app.config.server.is_autologin = true;
-        let app = Arc::new(app);
-        let server = build_server(Arc::clone(&app), ModelManager::new().await.unwrap());
-        let original_num_users = app.repository.users().await.len();
-
-        let res = server.post(BASE_URI).form(&a_register_form()).await;
-
-        res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(res.header("Location"), "/");
-        assert_eq!(
-            original_num_users,
-            app.repository.users().await.len(),
-            "No new user should be registered"
-        )
-    }
-
-    #[tokio::test]
-    async fn redirect_to_home_when_logged_in() {
-        let server = build_server_logged_in(
-            Arc::new(App::new_test()),
-            ModelManager::new().await.unwrap(),
-        );
-
-        let res = server.get(BASE_URI).await;
-
-        res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(res.header("Location"), "/", "Location should point to home");
-    }
-
-    #[tokio::test]
-    async fn redirect_to_home_when_autologin() {
-        let mut app = App::new_test();
-        app.config.server.is_autologin = true;
-        let server = build_server(Arc::new(app), ModelManager::new().await.unwrap());
-
-        let res = server.get(BASE_URI).await;
-
-        res.assert_status(StatusCode::SEE_OTHER);
-        assert_eq!(res.header("Location"), "/", "Location should point to home");
-    }
-
-    #[tokio::test]
-    async fn fails_when_user_already_registered() {
-        let app = Arc::new(App::new_test());
-        let num_users = app.repository.users().await.len();
-        let server = build_server(Arc::clone(&app), ModelManager::new().await.unwrap());
+    async fn test_post_register_err_when_user_already_registered() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
 
         let _res = server.post(BASE_URI).form(&a_register_form()).await;
         let res = server.post(BASE_URI).form(&a_register_form()).await;
 
         res.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-        assert_eq!(res.header(KEY_HX_TRIGGER), "{}");
-        assert_eq!(
-            num_users + 1,
-            app.repository.users().await.len(),
-            "Only one user should be registered"
+        pretty_assertions::assert_eq!(
+            res.header(KEY_HX_TRIGGER),
+            r#"{"message":"Registration failed","background":"alert-error"}"#
         );
+        Ok(())
     }
-*/
+
+    #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
+    async fn test_register_ok_redirect_to_home_when_autologin() -> Result<()> {
+        std::env::set_var("SERVICE_AUTOLOGIN", "true");
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
+        let fx_form = a_register_form();
+
+        let res_get = server.get(BASE_URI).await;
+        let res_post = server.post(BASE_URI).form(&fx_form).await;
+
+        std::env::remove_var("SERVICE_AUTOLOGIN");
+        res_get.assert_status(StatusCode::SEE_OTHER);
+        res_post.assert_status(StatusCode::SEE_OTHER);
+        pretty_assertions::assert_eq!(
+            res_get.header("Location"),
+            "/",
+            "Location should point to home"
+        );
+        pretty_assertions::assert_eq!(
+            res_post.header("Location"),
+            "/",
+            "Location should point to home"
+        );
+        let user = UserBmc::first_by_email(&Ctx::root_ctx(), &db.mm(), &fx_form.email).await?;
+        assert!(user.is_none(), "user should not have been registered");
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
+    async fn test_register_err_cannot_register_when_no_signups() -> Result<()> {
+        std::env::set_var("SERVICE_NO_SIGNUPS", "true");
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
+        let form = a_register_form();
+
+        let res_get = server.post(BASE_URI).form(&form).await;
+        let res_post = server.post(BASE_URI).form(&form).await;
+
+        std::env::remove_var("SERVICE_NO_SIGNUPS");
+        res_get.assert_status(StatusCode::SEE_OTHER);
+        res_get.assert_status(StatusCode::SEE_OTHER);
+        pretty_assertions::assert_eq!(
+            res_get.header("Location"),
+            "/auth/login",
+            "Location should point to home"
+        );
+        pretty_assertions::assert_eq!(
+            res_post.header("Location"),
+            "/auth/login",
+            "Location should point to home"
+        );
+        let user = UserBmc::first_by_email(&Ctx::root_ctx(), &db.mm(), &form.email).await?;
+        assert!(user.is_none(), "user should not have been registered");
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
+    async fn test_get_err_register_cannot_access_register_when_no_signups() -> Result<()> {
+        std::env::set_var("SERVICE_NO_SIGNUPS", "true");
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        std::env::remove_var("SERVICE_NO_SIGNUPS");
+        res.assert_status(StatusCode::SEE_OTHER);
+        assert_eq!(
+            res.header("Location"),
+            "/auth/login",
+            "Location should be set to login"
+        );
+        Ok(())
+    }
+}

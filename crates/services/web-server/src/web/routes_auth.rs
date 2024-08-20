@@ -28,7 +28,9 @@ pub fn routes_auth(mm: ModelManager) -> Router {
         .route("/logout", post(handlers_auth::logout_post))
         .route(
             "/register",
-            get(handlers_auth::register).post(handlers_auth::register_post),
+            get(handlers_auth::register)
+                .post(handlers_auth::register_post)
+                .layer(middleware::from_fn(mw_auth::mw_redirect_if_authenticated)),
         )
         .with_state(mm)
 }

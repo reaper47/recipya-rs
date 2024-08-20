@@ -9,7 +9,10 @@ use axum::{
 use lib_auth::pwd::scheme::SchemeStatus;
 use lib_core::{
     ctx::Ctx,
-    model::{user::UserBmc, ModelManager},
+    model::{
+        user::{UserBmc, UserForCreate},
+        ModelManager,
+    },
 };
 use maud::Markup;
 use serde::{Deserialize, Serialize};
@@ -21,8 +24,10 @@ use validator::Validate;
 use crate::{
     error::{collect_errors, Error},
     templates,
-    utils::token::{remove_token_cookie, set_token_cookie, KEY_HX_REDIRECT},
+    utils::token::{remove_token_cookie, set_token_cookie},
 };
+
+use super::{add_toast, Toast, ToastStatus, KEY_HX_REDIRECT};
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct LoginForm {
@@ -156,28 +161,42 @@ pub async fn logout_post(
 }
 
 pub async fn register() -> impl IntoResponse {
+    if lib_core::config().IS_NO_SIGNUPS {
+        return Redirect::to("/auth/login").into_response();
+    }
     templates::auth::register().await.into_response()
 }
 
 pub async fn register_post(
-    State(_mm): State<ModelManager>,
-    Form(_form): Form<RegisterForm>,
+    State(mm): State<ModelManager>,
+    Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
-    /*if let Err(error) = app.repository.register(&form.email, &form.password).await {
-        // TODO: Log error
-        println!("{error:?}");
+    if lib_core::config().IS_NO_SIGNUPS {
+        return Redirect::to("/auth/login").into_response();
+    }
 
+    if UserBmc::create(
+        &Ctx::root_ctx(),
+        &mm,
+        UserForCreate {
+            email: form.email,
+            password_clear: form.password,
+        },
+    )
+    .await
+    .is_err()
+    {
         let mut res = Error::RegisterFail.into_response();
-
-        let toast = ToastBuilder::new("Registration failed", "Credentials are invalid.");
-        if let Ok(toast) = serde_json::to_string(&toast) {
-            if let Ok(value) = HeaderValue::from_str(&toast) {
-                res.headers_mut().insert(KEY_HX_TRIGGER, value);
-            }
-        }
-
+        add_toast(
+            &mut res,
+            Toast {
+                action: None,
+                message: "Registration failed".to_string(),
+                status: ToastStatus::Error,
+            },
+        );
         return res;
-    }*/
+    }
 
     /*if let Some(email) = &app.email {
         email.send(

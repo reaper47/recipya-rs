@@ -37,10 +37,8 @@ pub struct CoreConfig {
 pub struct Paths {
     BACKUP: PathBuf,
     DB: PathBuf,
-    pub DOCS: PathBuf,
     IMAGES: PathBuf,
     LOGS: PathBuf,
-    pub STATIC: PathBuf,
     THUMBNAILS: PathBuf,
     VIDEOS: PathBuf,
 }
@@ -141,10 +139,8 @@ impl Paths {
         Ok(Paths {
             BACKUP: backup,
             DB: db,
-            DOCS: PathBuf::from(get_env("SERVICE_DOCS_FOLDER")?),
             IMAGES: images,
             LOGS: logs,
-            STATIC: PathBuf::from(get_env("SERVICE_WEB_FOLDER")?),
             THUMBNAILS: thumbnails,
             VIDEOS: videos,
         })
