@@ -30,6 +30,10 @@ pub enum Error {
         user_id: i64,
     },
 
+    // Logout
+    LogoutFail,
+    LogoutForbidden,
+
     // Register
     RegisterFail,
 
@@ -66,7 +70,8 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        let (status, _) = self.client_status_and_error();
+        let mut response = status.into_response();
         response.extensions_mut().insert(Arc::new(self));
         response
     }
@@ -121,6 +126,10 @@ impl Error {
             LoginFailUsernameNotFound
             | LoginFailUserHasNoPwd { .. }
             | LoginFailPwdNotMatching { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
+
+            // Logout
+            LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LOGOUT_FAIL),
+            LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LOGOUT_FAIL),
 
             // Register
             RegisterFail => (
@@ -182,6 +191,7 @@ impl Error {
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     LOGIN_FAIL,
+    LOGOUT_FAIL,
     REGISTER_FAIL,
     NO_AUTH,
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
