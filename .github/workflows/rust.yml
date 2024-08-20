@@ -1,6 +1,11 @@
 name: Rust
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      parameter:
+        description: My Parameter
+  pull_request:
 
 env:
   CARGO_TERM_COLOR: always
