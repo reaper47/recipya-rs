@@ -1,4 +1,5 @@
 <div align="center">
+   
 # Recipya Rust &emsp; 
 **A clean, simple and powerful recipe manager your whole family will enjoy.**
 
