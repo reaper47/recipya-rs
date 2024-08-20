@@ -30,6 +30,10 @@ pub enum Error {
         user_id: i64,
     },
 
+    // Register
+    RegisterFail,
+
+    // Auth
     UpdatePassword,
 
     // CtxExtError
@@ -118,6 +122,12 @@ impl Error {
             | LoginFailUserHasNoPwd { .. }
             | LoginFailPwdNotMatching { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
 
+            // Register
+            RegisterFail => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ClientError::REGISTER_FAIL,
+            ),
+
             // Auth
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
@@ -172,6 +182,7 @@ impl Error {
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     LOGIN_FAIL,
+    REGISTER_FAIL,
     NO_AUTH,
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
 

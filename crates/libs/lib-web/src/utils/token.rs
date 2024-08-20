@@ -5,9 +5,6 @@ use uuid::Uuid;
 
 pub const AUTH_TOKEN: &str = "auth-token";
 
-pub(crate) const KEY_HX_REDIRECT: &str = "HX-Redirect";
-pub(crate) const KEY_HX_TRIGGER: &str = "HX-Trigger";
-
 pub(crate) fn set_token_cookie(
     cookies: &Cookies,
     user: &str,

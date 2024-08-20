@@ -1,4 +1,7 @@
-use std::sync::OnceLock;
+use std::{
+    path::{Path, PathBuf},
+    sync::OnceLock,
+};
 
 use lib_utils::envs::get_env;
 
@@ -13,12 +16,14 @@ pub fn web_config() -> &'static WebConfig {
 
 #[allow(non_snake_case)]
 pub struct WebConfig {
+    pub DOCS_FOLDER: String,
     pub WEB_FOLDER: String,
 }
 
 impl WebConfig {
     fn load_from_env() -> lib_utils::envs::Result<WebConfig> {
         Ok(WebConfig {
+            DOCS_FOLDER: get_env("SERVICE_DOCS_FOLDER")?,
             WEB_FOLDER: get_env("SERVICE_WEB_FOLDER")?,
         })
     }
