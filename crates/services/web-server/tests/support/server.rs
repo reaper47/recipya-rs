@@ -12,13 +12,21 @@ type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 pub async fn build_server(mm: ModelManager) -> Result<TestServer> {
     let routes = routes_all(mm).await?;
-    let config = TestServerConfig::builder().save_cookies().build();
+    let config = TestServerConfig::builder()
+        .mock_transport()
+        .save_cookies()
+        .build();
+
     Ok(TestServer::new_with_config(routes, config)?)
 }
 
 pub async fn build_server_logged_in(mm: ModelManager) -> Result<TestServer> {
     let routes = routes_all(mm.clone()).await?;
-    let config = TestServerConfig::builder().save_cookies().build();
+    let config = TestServerConfig::builder()
+        .mock_transport()
+        .save_cookies()
+        .build();
+
     let mut server = TestServer::new_with_config(routes, config).unwrap();
 
     let email = "test@example.com";

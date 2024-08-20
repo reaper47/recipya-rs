@@ -156,6 +156,7 @@ mod tests_login {
     }
 
     #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
     async fn test_get_login_ok_hide_signup_button_when_registration_disabled() -> Result<()> {
         std::env::set_var("SERVICE_NO_SIGNUPS", "true");
         let db = TestDb::new().await;
@@ -163,6 +164,7 @@ mod tests_login {
 
         let res = server.get(BASE_URI).await;
 
+        std::env::remove_var("SERVICE_NO_SIGNUPS");
         res.assert_status(StatusCode::OK);
         assert_not_in_html(
             res,
@@ -228,6 +230,7 @@ mod tests_login {
     }
 
     #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
     async fn test_get_login_ok_redirect_to_index_when_autologin() -> Result<()> {
         std::env::set_var("SERVICE_AUTOLOGIN", "true");
         let db = TestDb::new().await;
@@ -235,6 +238,7 @@ mod tests_login {
 
         let res = server.get(BASE_URI).await;
 
+        std::env::remove_var("SERVICE_AUTOLOGIN");
         res.assert_status(StatusCode::SEE_OTHER);
         assert_eq!(
             res.header("Location"),

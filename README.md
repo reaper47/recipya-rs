@@ -1,28 +1,40 @@
-# Recipya Rust &emsp; [![Build Status]][actions] [![Latest Version]][version] [![Contributions]][contributions]
+<div align="center">
+# Recipya Rust &emsp; 
+**A clean, simple and powerful recipe manager your whole family will enjoy.**
 
-[Build Status]: https://img.shields.io/github/actions/workflow/status/serde-rs/serde/ci.yml?branch=master
-[actions]: https://github.com/reaper47/recipya-rs/actions/new
+[![Demo][demo-shield]][demo-url]
+[![Documentation][docs-shield]][docs-url]
+[![Matrix][matrix-shield]][matrix-url]
+<br>
+[![][github-release-shield]][github-release-link]
+[![build-status-shield]][build-status-url]
+[![contributions-shield]][contributions-url]
 
-[Contributions]: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
-[contributions]: https://github.com/reaper47/recipya-rs/issues
+[build-status-shield]: https://img.shields.io/github/actions/workflow/status/serde-rs/serde/ci.yml?branch=master
+[build-status-url]: https://github.com/reaper47/recipya-rs/actions/new
+[contributions-shield]: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
+[contributions-url]: https://github.com/reaper47/recipya-rs/issues
+[demo-shield]: https://img.shields.io/badge/demo-996300?style=flat
+[demo-url]: https://recipes.musicavis.ca
+[docs-shield]: https://img.shields.io/badge/documentation-5d782e?style=flat
+[docs-url]: https://recipes.musicavis.ca/guide/docs/
+[matrix-shield]: https://img.shields.io/badge/Matrix-000000?style=flat&logo=matrix&logoColor=white
+[matrix-url]: https://app.element.io/#/room/%23comfyui_space%3Amatrix.org
+[github-release-shield]: https://img.shields.io/github/v/release/reaper47/recipya-rs?style=flat&sort=semver
+[github-release-link]: https://github.com/reaper47/recipya-rs/releases
 
-[Latest Version]: https://img.shields.io/github/v/tag/reaper47/recipya-rs?include_prereleases&label=version
-[version]: https://github.com/reaper47/recipya-rs/tags
+![Recipe page screenshot](.github/screenshot-recipes.webp)
 
-[Explore the docs](https://recipes.musicavis.ca/guide/docs/) · 
-[Demo](https://recipes.musicavis.ca)
+</div>
+
+## Introduction
+
+A clean, simple and powerful recipe manager web application for unforgettable family recipes, empowering you to curate and share your favorite recipes. It is focused on simplicity for the whole family to enjoy.
 
 ## Warning
 
 The [Recipya](https://github.com/reaper47/recipya) project is currently being rewritten in Go as announced [here](https://github.com/reaper47/recipya/discussions/422). The Rust project is not ready for production nor to selfhost. 
 The user interface should look exactly the same as the original. 
-
-## Introduction
-
-A clean, simple and powerful recipe manager web application for unforgettable family recipes, empowering you to curate and share your favorite recipes.
-It is focused on simplicity for the whole family to enjoy.
-
-![Recipe page screenshot](.github/screenshot-recipes.webp)
 
 ## Features
 
@@ -102,16 +114,6 @@ Your support is greatly appreciated! A third of donations will be sent to the Ar
 
 This project is supported by these kind people:
 <img src="docs/website/static/images/sponsors.svg" style="width:100%;max-width:800px;"/>
-
-## Other Recipe Manager Apps
-
-- [Tandoor](https://github.com/TandoorRecipes/recipes)
-- [Mealie](https://github.com/mealie-recipes/mealie)
-- [Paprika](https://www.paprikaapp.com/)
-- [Grocy](https://grocy.info/)
-- [Cooklist](https://cooklist.com/)
-- [Grossr](https://grossr.com/)
-- [Awesome List](https://github.com/awesome-selfhosted/awesome-selfhosted#recipe-management)
 
 # Inspiration
 
