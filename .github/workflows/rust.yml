@@ -1,0 +1,51 @@
+name: Rust
+
+on: workflow_dispatch
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ikalnytskyi/action-setup-postgres@v6
+        with:
+          username: postgres
+          password: postgres
+          database: recipya
+          port: 5432
+          postgres-version: "16"
+          ssl: "on"
+        id: postgres
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: latest
+          extended: true
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+
+      - name: Build docs
+        run: task build-docs
+      
+      - name: Build website
+        run: task build-web
+
+      - name: Build
+        run: cargo build -p recipya
+
+      # TODO: replace with `cargo test` once all tests pass
+      - name: Test
+        run: cargo test -p recipya
