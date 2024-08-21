@@ -6,8 +6,12 @@ edition = "2021"
 [dependencies]
 derive_more = { workspace = true }
 diesel = { version = "2.2.2", features = ["postgres", "chrono", "uuid"] }
-diesel-async = { version = "0.5.0", features = ["postgres", "bb8", "async-connection-wrapper"] }
-diesel_migrations = "2.1.0"
+diesel-async = { version = "0.5.0", features = [
+    "postgres",
+    "bb8",
+    "async-connection-wrapper",
+] }
+diesel_migrations = "2.2.0"
 dirs = "5.0.1"
 lib-auth = { path = "../../libs/lib-auth" }
 lib-email = { path = "../../libs/lib-email" }

@@ -8,6 +8,7 @@ axum = { version = "0.7.5" }
 derive_more = { workspace = true }
 lib-auth = { path = "../../libs/lib-auth" }
 lib-core = { path = "../../libs/lib-core" }
+lib-email = { path = "../../libs/lib-email" }
 lib-rpc-core = { path = "../../libs/lib-rpc-core" }
 maud = { version = "*", features = ["axum"] }
 rpc-router = { workspace = true }
@@ -18,8 +19,7 @@ strum_macros = "0.26.4"
 tokio = { workspace = true }
 tower-cookies = "0.10.0"
 tower-http = { version = "0.5.2", features = ["fs"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1.40"
 uuid = { workspace = true }
 validator = { version = "0.18.1", features = ["derive"] }
 

@@ -104,6 +104,108 @@ pub mod test_db {
 }
 
 #[cfg(test)]
+mod tests_confirm {
+    use super::*;
+    use lib_auth::token::{generate_web_token, Token};
+    use lib_core::{
+        ctx::Ctx,
+        model::{
+            user::{UserBmc, UserForCreate},
+            ModelManager,
+        },
+    };
+    use lib_utils::time::now_utc_plus_sec_str;
+    use test_db::TestDb;
+
+    const BASE_URI: &str = "/auth/confirm";
+
+    #[tokio::test]
+    async fn test_confirm_err_missing_token() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_bad_request();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_confirm_err_invalid_token() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
+        let mut token = get_token(db.mm()).await;
+        token.exp = now_utc_plus_sec_str(-100.);
+
+        let res = server
+            .get(format!("{BASE_URI}?token={}", &token).as_str())
+            .await;
+
+        res.assert_status_bad_request();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_confirm_err_user_not_exist() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
+        let mut token = get_token(db.mm()).await;
+        token.ident = "dont@exist.com".to_string();
+
+        let res = server
+            .get(format!("{BASE_URI}?token={}", &token).as_str())
+            .await;
+
+        res.assert_status_bad_request();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_confirm_ok() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.mm()).await.unwrap();
+        let token = get_token(db.mm()).await;
+
+        let res = server
+            .get(format!("{BASE_URI}?token={}", &token).as_str())
+            .await;
+
+        res.assert_status_ok();
+        assert_html(
+            res,
+            vec![
+                r#"<title hx-swap-oob="true">Success | Recipya</title>"#,
+                r#"Your account has been confirmed."#,
+            ],
+        );
+        Ok(())
+    }
+
+    async fn get_token(mm: ModelManager) -> Token {
+        let ctx = Ctx::root_ctx();
+        let email = "confirm@test.com".to_string();
+
+        UserBmc::create(
+            &ctx,
+            &mm,
+            UserForCreate {
+                email: email.clone(),
+                password_clear: "12345678".to_string(),
+            },
+        )
+        .await
+        .unwrap();
+
+        let user = UserBmc::first_by_email(&ctx, &mm, &email)
+            .await
+            .unwrap()
+            .unwrap();
+
+        generate_web_token(&user.email, user.token_salt).unwrap()
+    }
+}
+
+#[cfg(test)]
 mod tests_login {
     use super::*;
     use lib_auth::token::Token;
@@ -133,7 +235,7 @@ mod tests_login {
         assert_html(
             res,
             vec![
-                r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/login" method="post" hx-post="/auth/login"><div class="card-body">"#,
+                r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/login" method="post"><div class="card-body">"#,
                 r#"<h2 class="card-title underline self-center">Log In</h2>"#,
                 r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Email</span></div><input class="input input-bordered w-full" required type="email" placeholder="Enter your email address" name="email" value=""></label>"#,
                 r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Password</span></div><input class="input input-bordered w-full" required type="password" placeholder="Enter your password" name="password" value=""></label>"#,
@@ -395,7 +497,6 @@ mod tests_register {
         let res = server.post(BASE_URI).form(&form).await;
 
         res.assert_status(StatusCode::SEE_OTHER);
-        pretty_assertions::assert_eq!(res.header("HX-Redirect"), "/auth/login");
         assert!(
             UserBmc::first_by_email(&Ctx::root_ctx(), &db.mm(), &form.email)
                 .await?

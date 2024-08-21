@@ -38,7 +38,11 @@ pub enum Error {
     RegisterFail,
 
     // Auth
+    ConfirmInvalidToken,
+    ConfirmNoToken,
+    GenerateToken,
     UpdatePassword,
+    ValidateToken,
 
     // CtxExtError
     #[from]
@@ -138,6 +142,9 @@ impl Error {
             ),
 
             // Auth
+            ConfirmInvalidToken | ConfirmNoToken => {
+                (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL)
+            }
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
             // Model
@@ -190,6 +197,7 @@ impl Error {
 #[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
+    CONFIRM_FAIL,
     LOGIN_FAIL,
     LOGOUT_FAIL,
     REGISTER_FAIL,

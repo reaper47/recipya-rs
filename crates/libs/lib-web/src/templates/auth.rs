@@ -42,7 +42,7 @@ pub async fn login() -> Markup {
     layouts::auth(
         "Login",
         html!(
-            form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/login" method="post" hx-post="/auth/login" {
+            form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/login" method="post" {
                 div class="card-body" {
                     h2 class="card-title underline self-center" {
                         "Log In"
@@ -101,7 +101,7 @@ pub async fn register() -> Markup {
     layouts::auth(
         "Register",
         html!(
-             form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-boost="true" hx-post="/auth/register" hx-target="body" {
+             form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/register" method="post" {
                 div class="card-body" {
                     h2 class="card-title underline self-center" {
                         "Create your Account"

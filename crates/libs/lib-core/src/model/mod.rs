@@ -42,12 +42,8 @@ impl ModelManager {
     pub async fn new() -> Result<Self> {
         Ok(Self {
             db: new_db_pool(&config().DB_URL).await?,
-            email: Sendgrid::new(),
+            email: Some(Sendgrid::new()),
         })
-    }
-
-    pub(in crate::model) fn db(&self) -> &Pool {
-        &self.db
     }
 
     pub(in crate::model) async fn connection(

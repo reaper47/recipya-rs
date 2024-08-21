@@ -11,11 +11,11 @@ pub struct Sendgrid {
 }
 
 impl Sendgrid {
-    pub fn new() -> Option<Self> {
-        Some(Self {
+    pub fn new() -> Self {
+        Self {
             from: config().EMAIL_FROM.clone(),
             sender: Sender::new(config().EMAIL_SENDGRID_API_KEY.clone()),
-        })
+        }
     }
 
     pub async fn send(
@@ -57,5 +57,11 @@ impl Sendgrid {
         )
         .await
         .map_err(|e| Error::SendFail(e.to_string()))
+    }
+}
+
+impl Default for Sendgrid {
+    fn default() -> Self {
+        Self::new()
     }
 }
