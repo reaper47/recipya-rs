@@ -22,6 +22,7 @@ pub struct CoreConfig {
     pub INTEGRATIONS_AZURE_DI_ENDPOINT: String,
     pub INTEGRATIONS_AZURE_DI_KEY: String,
 
+    pub ADDRESS_URL: String,
     pub DB_URL: String,
     pub IS_AUTOLOGIN: bool,
     pub IS_BYPASS_GUIDE: bool,
@@ -49,6 +50,7 @@ impl CoreConfig {
             INTEGRATIONS_AZURE_DI_ENDPOINT: get_env("SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT")?,
             INTEGRATIONS_AZURE_DI_KEY: get_env("SERVICE_INTEGRATIONS_AZURE_DI_KEY")?,
 
+            ADDRESS_URL: get_env("SERVICE_ADDRESS_URL")?,
             DB_URL: get_env("DATABASE_URL")?,
             IS_AUTOLOGIN: get_env("SERVICE_AUTOLOGIN")?.to_lowercase() == "true",
             IS_BYPASS_GUIDE: get_env("SERVICE_BYPASS_GUIDE")?.to_lowercase() == "true",

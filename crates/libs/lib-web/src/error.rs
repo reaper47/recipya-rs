@@ -38,6 +38,7 @@ pub enum Error {
     RegisterFail,
 
     // Auth
+    GenerateToken,
     UpdatePassword,
 
     // CtxExtError

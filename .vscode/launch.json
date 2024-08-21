@@ -1,0 +1,309 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_auth'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-auth"
+                ],
+                "filter": {
+                    "name": "lib_auth",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_utils'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-utils"
+                ],
+                "filter": {
+                    "name": "lib_utils",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_core'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-core"
+                ],
+                "filter": {
+                    "name": "lib_core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_email'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-email"
+                ],
+                "filter": {
+                    "name": "lib_email",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_rpc_app'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-rpc-app"
+                ],
+                "filter": {
+                    "name": "lib_rpc_app",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_rpc_core'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-rpc-core"
+                ],
+                "filter": {
+                    "name": "lib_rpc_core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_scraper'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-scraper"
+                ],
+                "filter": {
+                    "name": "lib_scraper",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'c00-scrape'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=c00-scrape",
+                    "--package=lib-scraper"
+                ],
+                "filter": {
+                    "name": "c00-scrape",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'c00-scrape'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=c00-scrape",
+                    "--package=lib-scraper"
+                ],
+                "filter": {
+                    "name": "c00-scrape",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_web'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib-web"
+                ],
+                "filter": {
+                    "name": "lib_web",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'recipya'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=recipya"
+                ],
+                "filter": {
+                    "name": "recipya",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'recipya'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=recipya",
+                    "--package=recipya"
+                ],
+                "filter": {
+                    "name": "recipya",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'recipya'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=recipya",
+                    "--package=recipya"
+                ],
+                "filter": {
+                    "name": "recipya",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'routes_auth'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=routes_auth",
+                    "--package=recipya"
+                ],
+                "filter": {
+                    "name": "routes_auth",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'recipya-genkey'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=recipya-genkey",
+                    "--package=recipya-genkey"
+                ],
+                "filter": {
+                    "name": "recipya-genkey",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'recipya-genkey'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=recipya-genkey",
+                    "--package=recipya-genkey"
+                ],
+                "filter": {
+                    "name": "recipya-genkey",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
