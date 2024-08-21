@@ -19,6 +19,7 @@ pub struct User {
     pub id: i64,
     pub email: String,
     pub is_remember_me: bool,
+    pub is_confirmed: bool,
 
     pub password: String,
     pub password_salt: Uuid,
@@ -158,6 +159,29 @@ impl UserBmc {
 
         diesel::update(schema::users::dsl::users.find(id))
             .set(schema::users::dsl::password.eq(password))
+            .execute(&mut *mm.connection().await?)
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn set_is_confirmed(
+        ctx: &Ctx,
+        mm: &ModelManager,
+        email: impl Into<String>,
+    ) -> Result<()> {
+        let id = match Self::first_by_email(ctx, mm, &email.into()).await? {
+            Some(user) => user.id,
+            None => {
+                return Err(Error::EntityNotFound {
+                    entity: "user",
+                    id: -1,
+                })
+            }
+        };
+
+        diesel::update(schema::users::dsl::users.find(id))
+            .set(schema::users::dsl::is_confirmed.eq(true))
             .execute(&mut *mm.connection().await?)
             .await?;
 
@@ -406,6 +430,29 @@ mod tests {
 
                 let user = UserBmc::get(&ctx, &mm, fx_id).await.unwrap();
                 assert!(user.is_remember_me, "should have been set to true");
+            }
+            .boxed()
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_update_confirm_ok() {
+        let db = TestDb::new().await;
+        db.run_test(|| {
+            let db = db.pool.clone();
+            async move {
+                let (mm, ctx) = setup(db);
+                let fx_email = "hello@test.com";
+                add_user(&ctx, &mm, fx_email).await;
+
+                let _ = UserBmc::set_is_confirmed(&ctx, &mm, fx_email).await;
+
+                let user = UserBmc::first_by_email(&ctx, &mm, fx_email)
+                    .await
+                    .unwrap()
+                    .unwrap();
+                assert!(user.is_confirmed, "should have been set to true");
             }
             .boxed()
         })

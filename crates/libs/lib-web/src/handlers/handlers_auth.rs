@@ -17,7 +17,10 @@ use crate::{
     templates,
     utils::token::{remove_token_cookie, set_token_cookie},
 };
-use lib_auth::{pwd::scheme::SchemeStatus, token::generate_web_token};
+use lib_auth::{
+    pwd::scheme::SchemeStatus,
+    token::{generate_web_token, validate_web_token, Token},
+};
 use lib_core::{
     config,
     ctx::Ctx,
@@ -53,8 +56,41 @@ pub async fn change_password() -> Markup {
     todo!()
 }
 
-pub async fn confirm() -> Markup {
-    todo!()
+pub async fn confirm(
+    State(mm): State<ModelManager>,
+    Query(query): Query<HashMap<String, String>>,
+) -> impl IntoResponse {
+    let token: Token = match query.get("token") {
+        Some(token) => match token.parse() {
+            Ok(token) => token,
+            Err(err) => return Error::Token(err).into_response(),
+        },
+        None => return Error::ConfirmNoToken.into_response(),
+    };
+
+    let user = match UserBmc::first_by_email(&Ctx::root_ctx(), &mm, &token.ident).await {
+        Ok(user) => match user {
+            Some(user) => user,
+            None => {
+                return Error::Model(lib_core::model::Error::EntityNotFound {
+                    entity: "user",
+                    id: -1,
+                })
+                .into_response()
+            }
+        },
+        Err(err) => return Error::Model(err).into_response(),
+    };
+
+    if validate_web_token(&token, user.token_salt).is_err() {
+        return Error::ConfirmInvalidToken.into_response();
+    }
+
+    if let Err(err) = UserBmc::set_is_confirmed(&Ctx::root_ctx(), &mm, token.ident).await {
+        return Error::Model(err).into_response();
+    };
+
+    templates::general::simple("Success", "Your account has been confirmed.").into_response()
 }
 
 pub async fn forgot_password() -> Markup {
@@ -170,49 +206,50 @@ pub async fn register_post(
         password_clear: form.password,
     };
 
-    if UserBmc::create(&ctx, &mm, user_c).await.is_err() {
-        let mut res = Error::RegisterFail.into_response();
-        add_toast(
-            &mut res,
-            Toast {
-                action: None,
-                message: "Registration failed".to_string(),
-                status: ToastStatus::Error,
-            },
-        );
-        return res;
+    let id = match UserBmc::create(&ctx, &mm, user_c).await {
+        Ok(id) => id,
+        Err(_) => {
+            let mut res = Error::RegisterFail.into_response();
+            add_toast(
+                &mut res,
+                Toast {
+                    action: None,
+                    message: "Registration failed".to_string(),
+                    status: ToastStatus::Error,
+                },
+            );
+            return res;
+        }
     };
 
-    match UserBmc::first_by_email(&ctx, &mm, &form.email)
+    match UserBmc::get(&ctx, &mm, id)
         .await
         .map_err(|_| Error::RegisterFail)
     {
         Ok(user) => {
-            if let Some(user) = user {
-                let token = match generate_web_token(&form.email, user.token_salt) {
-                    Ok(token) => token,
-                    Err(_) => return Error::GenerateToken.into_response(),
-                };
+            let token = match generate_web_token(&form.email, user.token_salt) {
+                Ok(token) => token,
+                Err(_) => return Error::GenerateToken.into_response(),
+            };
 
-                tokio::spawn(async move {
-                    if let Err(err) = lib_email::Sendgrid::new()
-                        .send(
-                            String::from(&form.email),
-                            "Confirm Account".to_string(),
-                            Template::Intro,
-                            Data {
-                                token: token.to_string(),
-                                username: form.email,
-                                url: config().ADDRESS_URL.clone(),
-                            },
-                        )
-                        .await
-                    {
-                        let id = user.id;
-                        error!(name: "Error sending email","error: {} - user id: {}", err, id);
-                    }
-                });
-            }
+            tokio::spawn(async move {
+                if let Err(err) = lib_email::Sendgrid::new()
+                    .send(
+                        String::from(&form.email),
+                        "Confirm Account".to_string(),
+                        Template::Intro,
+                        Data {
+                            token: token.to_string(),
+                            username: form.email,
+                            url: config().ADDRESS_URL.clone(),
+                        },
+                    )
+                    .await
+                {
+                    let id = user.id;
+                    error!(name: "Error sending email","error: {} - user id: {}", err, id);
+                }
+            });
         }
         Err(err) => return err.into_response(),
     }
