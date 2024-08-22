@@ -25,9 +25,9 @@ pub fn head(title: &str) -> Markup {
             link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png";
             link rel="manifest" href="/static/site.webmanifest";
             link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#5bbad5";
-            script src="https://unpkg.com/htmx.org@2.0.0" integrity="sha384-wS5l5IKJBvK6sPTKa2WZ1js3d947pvWXbPJ1OmWfEuxLgeHcEbjUUA5i9V5ZkpCw" crossorigin="anonymous" {}
+            script src="https://unpkg.com/htmx.org@2.0.2"{}
             script src="https://unpkg.com/hyperscript.org@0.9.11" {}
-            script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js" {}
+            script src="https://unpkg.com/htmx-ext-ws@2.0.1/ws.js" {}
             script defer src="/static/js/core.min.js" {}
         }
     }

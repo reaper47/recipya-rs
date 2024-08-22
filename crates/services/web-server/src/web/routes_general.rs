@@ -13,6 +13,10 @@ pub fn routes_general(state: AppState) -> Router {
             "/guide/auth/login",
             get(handlers_general::redirect_to_login),
         )
+        .route(
+            "/ws",
+            get(handlers_general::ws_handler).layer(middleware::from_fn(mw_auth::mw_ctx_require)),
+        )
         .nest_service("/guide", ServeDir::new(&web_config().DOCS_FOLDER))
         .nest_service("/static", ServeDir::new(&web_config().WEB_FOLDER))
         .with_state(state)

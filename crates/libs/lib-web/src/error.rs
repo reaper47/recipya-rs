@@ -44,6 +44,9 @@ pub enum Error {
     UpdatePassword,
     ValidateToken,
 
+    // General
+    Form,
+
     // CtxExtError
     #[from]
     CtxExt(middleware::mw_auth::CtxExtError),
@@ -147,6 +150,9 @@ impl Error {
             }
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
+            // General
+            Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
+
             // Model
             Model(model::Error::EntityNotFound { entity, id }) => (
                 StatusCode::BAD_REQUEST,
@@ -198,6 +204,7 @@ impl Error {
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     CONFIRM_FAIL,
+    FORM_ERROR,
     LOGIN_FAIL,
     LOGOUT_FAIL,
     REGISTER_FAIL,

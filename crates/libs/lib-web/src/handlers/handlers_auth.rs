@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{Query, State},
+    extract::{ws::Message, Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
     Form,
@@ -14,6 +14,7 @@ use validator::Validate;
 
 use crate::{
     error::{collect_errors, Error},
+    middleware::mw_auth::CtxW,
     templates,
     utils::token::{remove_token_cookie, set_token_cookie},
     AppState,
@@ -29,7 +30,17 @@ use lib_core::{
 };
 use lib_email::{Data, Template};
 
-use super::{add_toast, Toast, ToastStatus};
+use super::Toast;
+
+#[derive(Default, Validate, Deserialize, Serialize)]
+pub struct ChangePasswordForm {
+    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
+    pub password: String,
+    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
+    pub new_password: String,
+    #[validate(must_match(other = "new_password"))]
+    pub new_password_confirm: String,
+}
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct LoginForm {
@@ -50,8 +61,42 @@ pub struct RegisterForm {
     pub password_confirm: String,
 }
 
-pub async fn change_password() -> Markup {
-    todo!()
+pub async fn change_password(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<ChangePasswordForm>,
+) -> impl IntoResponse {
+    if form.password == form.new_password {
+        let toast = Toast::new(super::ToastData {
+            message: "New password cannot be the same as the current.".to_string(),
+            status: super::ToastStatus::Error,
+            action: None,
+            title: "Request Error".to_string(),
+        });
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
+        }
+
+        return Error::Form.into_response();
+    }
+
+    if form.validate().is_err() {
+        let toast = Toast::new(super::ToastData {
+            message: "Passwords do not match.".to_string(),
+            status: super::ToastStatus::Error,
+            action: None,
+            title: "Request Error".to_string(),
+        });
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
+        }
+
+        return Error::Form.into_response();
+    }
+
+    (StatusCode::OK, "").into_response()
 }
 
 pub async fn confirm(
@@ -103,8 +148,8 @@ pub async fn forgot_password_reset_post() -> Markup {
     todo!()
 }
 
-pub async fn login() -> Markup {
-    templates::auth::login().await
+pub async fn login() -> impl IntoResponse {
+    templates::auth::login(false).await
 }
 
 pub async fn login_post(
@@ -113,9 +158,10 @@ pub async fn login_post(
     Query(query): Query<HashMap<String, String>>,
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
-    let errors = collect_errors(&form);
-    if !errors.is_empty() {
-        return (StatusCode::BAD_REQUEST, collect_errors(&form).join(", ")).into_response();
+    if form.validate().is_err() {
+        let mut res = templates::auth::login(true).await.into_response();
+        *res.status_mut() = StatusCode::BAD_REQUEST;
+        return res;
     }
 
     let root_ctx = Ctx::root_ctx();
@@ -187,13 +233,19 @@ pub async fn register() -> impl IntoResponse {
     if config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
     }
-    templates::auth::register().await.into_response()
+    templates::auth::register(false).await.into_response()
 }
 
 pub async fn register_post(
     State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
+    if form.validate().is_err() {
+        let mut res = templates::auth::register(true).await.into_response();
+        *res.status_mut() = StatusCode::BAD_REQUEST;
+        return res;
+    }
+
     if lib_core::config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
     }
@@ -207,15 +259,8 @@ pub async fn register_post(
     let id = match UserBmc::create(&ctx, &state.mm, user_c).await {
         Ok(id) => id,
         Err(_) => {
-            let mut res = Error::RegisterFail.into_response();
-            add_toast(
-                &mut res,
-                Toast {
-                    action: None,
-                    message: "Registration failed".to_string(),
-                    status: ToastStatus::Error,
-                },
-            );
+            let mut res = templates::auth::register(true).await.into_response();
+            *res.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
             return res;
         }
     };

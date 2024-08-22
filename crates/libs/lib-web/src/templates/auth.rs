@@ -38,7 +38,7 @@ pub async fn forgot_password() -> Markup {
     )
 }
 
-pub async fn login() -> Markup {
+pub async fn login(is_err: bool) -> Markup {
     layouts::auth(
         "Login",
         html!(
@@ -71,6 +71,11 @@ pub async fn login() -> Markup {
                             input class="checkbox checkbox-primary" type="checkbox" name="remember_me" value="true";
                         }
                     }
+                    @if is_err {
+                        p class="text-red-600" {
+                            "Credentials are invalid."
+                        }
+                    }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {
                             "Log In"
@@ -97,7 +102,7 @@ pub async fn login() -> Markup {
     )
 }
 
-pub async fn register() -> Markup {
+pub async fn register(is_err: bool) -> Markup {
     layouts::auth(
         "Register",
         html!(
@@ -129,6 +134,11 @@ pub async fn register() -> Markup {
                             }
                         }
                         input required type="password" placeholder="Enter your password" class="input input-bordered w-full" name="password_confirm";
+                    }
+                    @if is_err {
+                        p class="text-red-600" {
+                            "This account is either already registered or your credentials don't match."
+                        }
                     }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {

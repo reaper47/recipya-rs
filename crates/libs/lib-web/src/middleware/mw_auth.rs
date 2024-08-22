@@ -27,7 +27,12 @@ pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -
             .path_and_query()
             .map(|pq| pq.as_str())
             .unwrap_or("/");
-        let redirect_to = format!("/auth/login?redirect_to={}", intended_url);
+        let redirect_to = if req.method().is_safe() {
+            format!("/auth/login?redirect_to={}", intended_url)
+        } else {
+            "/auth/login".to_string()
+        };
+
         return Ok(Redirect::to(&redirect_to).into_response());
     }
 

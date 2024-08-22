@@ -26,7 +26,7 @@ pub mod test_db {
         },
     };
     use lib_web::AppState;
-    use tokio::sync::{Mutex, RwLock};
+    use tokio::sync::Mutex;
 
     static TEST_DB_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -86,6 +86,7 @@ pub mod test_db {
                     db: self.pool.clone(),
                     email: None,
                 },
+                subscribers: Arc::new(Mutex::new(HashMap::new())),
             }
         }
     }
@@ -129,7 +130,7 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_err_missing_token() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -140,7 +141,7 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_err_invalid_token() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
         let mut token = get_token(db.state().mm).await;
         token.exp = now_utc_plus_sec_str(-100.);
 
@@ -155,7 +156,7 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_err_user_not_exist() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
         let mut token = get_token(db.state().mm).await;
         token.ident = "dont@exist.com".to_string();
 
@@ -170,7 +171,7 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_ok() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
         let token = get_token(db.state().mm).await;
 
         let res = server
@@ -213,6 +214,82 @@ mod tests_confirm {
 }
 
 #[cfg(test)]
+mod tests_change_password {
+    use super::*;
+    use lib_web::handlers::handlers_auth::ChangePasswordForm;
+    use support::server::build_server_ws;
+    use test_db::TestDb;
+
+    const BASE_URI: &str = "/auth/change-password";
+
+    #[tokio::test]
+    async fn test_post_change_password_err_must_be_logged_in() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.state()).await?;
+
+        let res = server.post(BASE_URI).await;
+
+        pretty_assertions::assert_eq!(res.status_code(), StatusCode::SEE_OTHER);
+        pretty_assertions::assert_eq!(res.header("Location"), "/auth/login");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_form_invalid() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "123456789".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"Passwords do not match.","background":"alert-error","title":"Request Error"}}"#)
+            .await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_password_same_as_new() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "12345678".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"New password cannot be the same as the current.","background":"alert-error","title":"Request Error"}}"#)
+            .await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_err_password_cannot_update_if_autologin() -> Result<()> {
+        todo!();
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_ok() -> Result<()> {
+        todo!();
+    }
+}
+
+#[cfg(test)]
 mod tests_login {
     use super::*;
     use lib_auth::token::Token;
@@ -234,7 +311,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_get_login_page_ok() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -269,7 +346,7 @@ mod tests_login {
     async fn test_get_login_ok_hide_signup_button_when_registration_disabled() -> Result<()> {
         std::env::set_var("SERVICE_NO_SIGNUPS", "true");
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -287,7 +364,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_post_login_err_invalid_email() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -299,14 +376,14 @@ mod tests_login {
             .await;
 
         res.assert_status(StatusCode::BAD_REQUEST);
-        res.assert_text("Field 'email': Invalid email address");
+        res.assert_text_contains("Credentials are invalid.");
         Ok(())
     }
 
     #[tokio::test]
     async fn test_post_err_invalid_password() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.state()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -318,7 +395,7 @@ mod tests_login {
             .await;
 
         res.assert_status(StatusCode::BAD_REQUEST);
-        res.assert_text("Field 'password': Password must be at least 8 characters long");
+        res.assert_text_contains("Credentials are invalid.");
         Ok(())
     }
 
@@ -522,9 +599,9 @@ mod tests_register {
         let res = server.post(BASE_URI).form(&a_register_form()).await;
 
         res.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-        pretty_assertions::assert_eq!(
-            res.header(KEY_HX_TRIGGER),
-            r#"{"message":"Registration failed","background":"alert-error"}"#
+        assert_html(
+            res,
+            vec!["This account is either already registered or your credentials don't match."],
         );
         Ok(())
     }

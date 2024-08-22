@@ -1,7 +1,7 @@
 var timeoutToast = timeoutToast || null;
 
 function receiveToastMessage(event) {
-    const {title, message, background, action} = JSON.parse(event.detail.value);
+    const { title, message, background, action } = JSON.parse(event.detail.value);
     showToast(title, message, background, action);
 
     if (title === "Software updated") {
@@ -55,7 +55,7 @@ function showToast(title, message, background, action) {
 
         timeoutToast = setTimeout(() => {
             let opacity = 1;
-            const id = setInterval(function() {
+            const id = setInterval(function () {
                 if (opacity <= 0.1) {
                     clearInterval(id);
                     toast.parentNode.removeChild(toast);

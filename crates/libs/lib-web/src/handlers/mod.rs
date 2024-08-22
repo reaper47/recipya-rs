@@ -16,13 +16,30 @@ pub(crate) fn add_toast(res: &mut Response<Body>, toast: Toast) {
     }
 }
 
-#[derive(Default, Serialize)]
+#[derive(Serialize)]
 pub(crate) struct Toast {
+    #[serde(rename = "type")]
+    _type: String,
+    data: ToastData,
+}
+
+impl Toast {
+    pub(crate) fn new(data: ToastData) -> Self {
+        Self {
+            _type: "toast".to_string(),
+            data,
+        }
+    }
+}
+
+#[derive(Default, Serialize)]
+pub(crate) struct ToastData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub action: Option<String>,
     pub message: String,
     #[serde(rename = "background")]
     pub status: ToastStatus,
+    pub title: String,
 }
 
 #[derive(Default, Serialize)]
