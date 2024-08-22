@@ -1,6 +1,7 @@
 use crate::{
     error::{Error, Result},
     utils::token::{set_token_cookie, AUTH_TOKEN},
+    AppState,
 };
 
 use axum::{
@@ -14,10 +15,7 @@ use lib_auth::token::{validate_web_token, Token};
 use lib_core::{
     config,
     ctx::Ctx,
-    model::{
-        user::{UserBmc, UserForAuth},
-        ModelManager,
-    },
+    model::user::{UserBmc, UserForAuth},
 };
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
@@ -37,12 +35,12 @@ pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -
 }
 
 pub async fn mw_ctx_resolve(
-    mm: State<ModelManager>,
+    state: State<AppState>,
     cookies: Cookies,
     mut req: Request<Body>,
     next: Next,
 ) -> Result<Response> {
-    let ctx_ext_result = _ctx_resolve(mm, &cookies).await;
+    let ctx_ext_result = _ctx_resolve(state, &cookies).await;
 
     if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie)) {
         cookies.remove(Cookie::from(AUTH_TOKEN))
@@ -54,7 +52,7 @@ pub async fn mw_ctx_resolve(
     Ok(next.run(req).await)
 }
 
-async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResult {
+async fn _ctx_resolve(state: State<AppState>, cookies: &Cookies) -> CtxExtResult {
     let token = cookies
         .get(AUTH_TOKEN)
         .map(|c| c.value().to_string())
@@ -63,14 +61,14 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
     let token: Token = token.parse().map_err(|_| CtxExtError::TokenWrongFormat)?;
 
     let ctx = Ctx::root_ctx();
-    let user: UserForAuth = UserBmc::first_by_email_auth(&ctx, &mm, &token.ident)
+    let user: UserForAuth = UserBmc::first_by_email_auth(&ctx, &state.mm, &token.ident)
         .await
         .map_err(|_| CtxExtError::UserNotFound)?;
 
     if let Err(err) =
         validate_web_token(&token, user.token_salt).map_err(|_| CtxExtError::FailValidate)
     {
-        UserBmc::update_remember_me(&ctx, &mm, user.id, false)
+        UserBmc::update_remember_me(&ctx, &state.mm, user.id, false)
             .await
             .map_err(|_| CtxExtError::ModelAccessError("Could not set remember me".to_string()))?;
         return Err(err);

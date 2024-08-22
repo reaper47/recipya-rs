@@ -3,11 +3,10 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use lib_core::model::ModelManager;
-use lib_web::{handlers::handlers_auth, middleware::mw_auth};
+use lib_web::{handlers::handlers_auth, middleware::mw_auth, AppState};
 
 #[allow(unused)]
-pub fn routes_auth(mm: ModelManager) -> Router {
+pub fn routes_auth(state: AppState) -> Router {
     Router::new()
         .route("/change-password", post(handlers_auth::change_password))
         .route("/confirm", get(handlers_auth::confirm))
@@ -32,5 +31,5 @@ pub fn routes_auth(mm: ModelManager) -> Router {
                 .post(handlers_auth::register_post)
                 .layer(middleware::from_fn(mw_auth::mw_redirect_if_authenticated)),
         )
-        .with_state(mm)
+        .with_state(state)
 }

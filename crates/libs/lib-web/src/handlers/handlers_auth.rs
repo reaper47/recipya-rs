@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use axum::{
     extract::{Query, State},
-    http::{HeaderValue, StatusCode},
+    http::StatusCode,
     response::{IntoResponse, Redirect},
     Form,
 };
@@ -16,6 +16,7 @@ use crate::{
     error::{collect_errors, Error},
     templates,
     utils::token::{remove_token_cookie, set_token_cookie},
+    AppState,
 };
 use lib_auth::{
     pwd::scheme::SchemeStatus,
@@ -24,10 +25,7 @@ use lib_auth::{
 use lib_core::{
     config,
     ctx::Ctx,
-    model::{
-        user::{UserBmc, UserForCreate},
-        ModelManager,
-    },
+    model::user::{UserBmc, UserForCreate},
 };
 use lib_email::{Data, Template};
 
@@ -57,7 +55,7 @@ pub async fn change_password() -> Markup {
 }
 
 pub async fn confirm(
-    State(mm): State<ModelManager>,
+    State(state): State<AppState>,
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let token: Token = match query.get("token") {
@@ -68,7 +66,7 @@ pub async fn confirm(
         None => return Error::ConfirmNoToken.into_response(),
     };
 
-    let user = match UserBmc::first_by_email(&Ctx::root_ctx(), &mm, &token.ident).await {
+    let user = match UserBmc::first_by_email(&Ctx::root_ctx(), &state.mm, &token.ident).await {
         Ok(user) => match user {
             Some(user) => user,
             None => {
@@ -86,7 +84,7 @@ pub async fn confirm(
         return Error::ConfirmInvalidToken.into_response();
     }
 
-    if let Err(err) = UserBmc::set_is_confirmed(&Ctx::root_ctx(), &mm, token.ident).await {
+    if let Err(err) = UserBmc::set_is_confirmed(&Ctx::root_ctx(), &state.mm, token.ident).await {
         return Error::Model(err).into_response();
     };
 
@@ -110,7 +108,7 @@ pub async fn login() -> Markup {
 }
 
 pub async fn login_post(
-    State(mm): State<ModelManager>,
+    State(state): State<AppState>,
     cookies: Cookies,
     Query(query): Query<HashMap<String, String>>,
     Form(form): Form<LoginForm>,
@@ -122,7 +120,7 @@ pub async fn login_post(
 
     let root_ctx = Ctx::root_ctx();
 
-    let user = match UserBmc::first_by_email(&root_ctx, &mm, &form.email).await {
+    let user = match UserBmc::first_by_email(&root_ctx, &state.mm, &form.email).await {
         Ok(user) => match user {
             None => return Error::LoginFailUsernameNotFound.into_response(),
             Some(user) => user,
@@ -147,7 +145,7 @@ pub async fn login_post(
     // Update password scheme if needed
     if let SchemeStatus::Outdated = scheme_status {
         debug!("pwd encrypt scheme outdated, upgrading");
-        if UserBmc::update_password(&root_ctx, &mm, user.id, &user.password)
+        if UserBmc::update_password(&root_ctx, &state.mm, user.id, &user.password)
             .await
             .is_err()
         {
@@ -193,7 +191,7 @@ pub async fn register() -> impl IntoResponse {
 }
 
 pub async fn register_post(
-    State(mm): State<ModelManager>,
+    State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
     if lib_core::config().IS_NO_SIGNUPS {
@@ -206,7 +204,7 @@ pub async fn register_post(
         password_clear: form.password,
     };
 
-    let id = match UserBmc::create(&ctx, &mm, user_c).await {
+    let id = match UserBmc::create(&ctx, &state.mm, user_c).await {
         Ok(id) => id,
         Err(_) => {
             let mut res = Error::RegisterFail.into_response();
@@ -222,7 +220,7 @@ pub async fn register_post(
         }
     };
 
-    match UserBmc::get(&ctx, &mm, id)
+    match UserBmc::get(&ctx, &state.mm, id)
         .await
         .map_err(|_| Error::RegisterFail)
     {

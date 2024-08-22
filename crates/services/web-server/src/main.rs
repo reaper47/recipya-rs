@@ -6,7 +6,7 @@ pub use self::error::{Error, Result};
 
 use std::net::SocketAddr;
 
-use lib_core::model::ModelManager;
+use lib_web::AppState;
 use tokio::{net::TcpListener, signal};
 use tracing::info;
 
@@ -27,13 +27,12 @@ async fn main() -> Result<()> {
         "Serving HTTP server at address http://{}",
         listener.local_addr().unwrap().to_string()
     );
-    axum::serve(
-        listener,
-        routes_all(ModelManager::new().await?).await.unwrap(),
-    )
-    .with_graceful_shutdown(shutdown_signal())
-    .await
-    .unwrap();
+
+    let state = AppState::new().await.unwrap();
+    axum::serve(listener, routes_all(state).await.unwrap())
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
 
     Ok(())
 }
