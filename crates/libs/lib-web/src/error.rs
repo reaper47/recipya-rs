@@ -21,7 +21,10 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, Serialize, From, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
-    // Login
+    // Auth
+    ConfirmInvalidToken,
+    ConfirmForbidden,
+    GenerateToken,
     LoginFailUsernameNotFound,
     LoginFailUserHasNoPwd {
         user_id: i64,
@@ -29,24 +32,16 @@ pub enum Error {
     LoginFailPwdNotMatching {
         user_id: i64,
     },
-
-    // Logout
     LogoutFail,
     LogoutForbidden,
-
-    // Register
+    NoToken,
     RegisterFail,
-
-    // Auth
-    ConfirmInvalidToken,
-    ConfirmNoToken,
-    ConfirmForbidden,
-    GenerateToken,
     UpdatePassword,
     ValidateToken,
 
     // General
     Form,
+    NoUser,
 
     // CtxExtError
     #[from]
@@ -130,30 +125,30 @@ impl Error {
 
         #[allow(unreachable_patterns)]
         match self {
-            // Login
+            // Auth
+            ConfirmInvalidToken => (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL),
+            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
+            CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
             LoginFailUsernameNotFound
             | LoginFailUserHasNoPwd { .. }
             | LoginFailPwdNotMatching { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
-
-            // Logout
             LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LOGOUT_FAIL),
             LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LOGOUT_FAIL),
-
-            // Register
+            NoToken => (StatusCode::BAD_REQUEST, ClientError::MISSING_PARAMS),
             RegisterFail => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::REGISTER_FAIL,
             ),
 
-            // Auth
-            ConfirmInvalidToken | ConfirmNoToken => {
-                (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL)
-            }
-            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
-            CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
-
             // General
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
+            NoUser => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ClientError::ENTITY_NOT_FOUND {
+                    entity: "user",
+                    id: -1,
+                },
+            ),
 
             // Model
             Model(model::Error::EntityNotFound { entity, id }) => (
@@ -209,6 +204,7 @@ pub enum ClientError {
     FORM_ERROR,
     LOGIN_FAIL,
     LOGOUT_FAIL,
+    MISSING_PARAMS,
     REGISTER_FAIL,
     NO_AUTH,
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },

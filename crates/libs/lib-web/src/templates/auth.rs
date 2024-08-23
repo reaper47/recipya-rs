@@ -3,7 +3,7 @@ use maud::{html, Markup};
 
 use super::layouts;
 
-pub async fn forgot_password() -> Markup {
+pub fn forgot_password() -> Markup {
     layouts::auth(
         "Forgot Password",
         html!(
@@ -38,7 +38,46 @@ pub async fn forgot_password() -> Markup {
     )
 }
 
-pub async fn login(is_err: bool) -> Markup {
+pub fn forgot_password_reset(user_id: i64) -> Markup {
+    layouts::auth(
+        "Reset Password",
+        html!(
+            div #container {
+                form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-boost="true" hx-target="#container" hx-swap="none" hx-post="/auth/forgot-password/reset" {
+                    div class="card-body" {
+                        h2 class="card-title underline self-center" {
+                            "Change Password"
+                        }
+                        input name="user-id" type="hidden" value=(user_id);
+                        label class="form-control w-full" {
+                            div class="label" {
+                                span class="label-text font-semibold" {
+                                    "New Password"
+                                }
+                            }
+                            input required type="password" placeholder="Enter your new password" class="input input-bordered w-full" name="password";
+                        }
+                        label class="form-control w-full" {
+                            div class="label pt-0" {
+                                span class="label-text font-semibold" {
+                                    "Confirm password"
+                                }
+                            }
+                            input required type="password" placeholder="Retype your password" class="input input-bordered w-full" name="password-confirm";
+                        }
+                        div class="card-actions justify-end" {
+                            button class="btn btn-primary btn-block btn-sm" {
+                                "Change"
+                            }
+                        }
+                    }
+                }
+            }
+        ),
+    )
+}
+
+pub fn login(is_err: bool) -> Markup {
     layouts::auth(
         "Login",
         html!(
@@ -102,7 +141,7 @@ pub async fn login(is_err: bool) -> Markup {
     )
 }
 
-pub async fn register(is_err: bool) -> Markup {
+pub fn register(is_err: bool) -> Markup {
     layouts::auth(
         "Register",
         html!(
