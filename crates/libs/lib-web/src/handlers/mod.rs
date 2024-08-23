@@ -9,7 +9,7 @@ pub const KEY_HX_REDIRECT: &str = "HX-Redirect";
 pub const KEY_HX_TRIGGER: &str = "HX-Trigger";
 
 pub(crate) fn add_hx_toast(res: &mut Response<Body>, mut toast: Toast) {
-    toast._type = ToastType::HX.into();
+    toast._type = ToastType::HX.to_string();
     if let Ok(toast) = serde_json::to_string(&toast) {
         if let Ok(value) = HeaderValue::from_str(&toast) {
             res.headers_mut().insert(KEY_HX_TRIGGER, value);
@@ -69,8 +69,8 @@ pub(crate) enum ToastType {
     Toast,
 }
 
-impl Into<String> for ToastType {
-    fn into(self) -> String {
+impl ToString for ToastType {
+    fn to_string(&self) -> String {
         match self {
             ToastType::HX => "hx-toast".to_string(),
             ToastType::Toast => "toast".to_string(),
@@ -106,14 +106,9 @@ impl ToastBuilder {
         self
     }
 
-    pub(crate) fn toast_type(mut self, t: ToastType) -> Self {
-        self._type = t;
-        self
-    }
-
     pub(crate) fn build(self) -> Toast {
         Toast {
-            _type: self._type.into(),
+            _type: self._type.to_string(),
             data: ToastData {
                 action: self.action,
                 message: self.message,

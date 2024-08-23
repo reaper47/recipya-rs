@@ -1,17 +1,10 @@
-use std::{thread, time::Duration};
-
 use axum::{
-    extract::{
-        ws::{Message, WebSocket},
-        State, WebSocketUpgrade,
-    },
+    extract::{ws::WebSocket, State, WebSocketUpgrade},
     response::{IntoResponse, Redirect},
 };
 use lib_core::config;
 
 use crate::{middleware::mw_auth::CtxW, AppState};
-
-use super::{Toast, ToastData};
 
 pub async fn index() -> Redirect {
     let mut redirect_url = "/guide";

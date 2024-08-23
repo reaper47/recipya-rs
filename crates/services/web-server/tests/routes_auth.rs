@@ -138,14 +138,6 @@ pub mod test_db {
 #[cfg(test)]
 mod tests_confirm {
     use super::*;
-    use lib_auth::token::{generate_web_token, Token};
-    use lib_core::{
-        ctx::Ctx,
-        model::{
-            user::{UserBmc, UserForCreate},
-            ModelManager,
-        },
-    };
     use lib_utils::time::now_utc_plus_sec_str;
     use test_db::{get_token, TestDb};
 
@@ -320,16 +312,11 @@ mod tests_change_password {
 #[cfg(test)]
 mod tests_forgot_password {
     use super::*;
-    use lib_auth::token::{generate_web_token, Token};
-    use lib_utils::time::{now_utc_plus_sec_str, OffsetDateTime, Rfc3339};
-    use lib_web::{
-        handlers::{
-            handlers_auth::{ForgotPasswordForm, ForgotPasswordResetForm},
-            KEY_HX_REDIRECT, KEY_HX_TRIGGER,
-        },
-        utils::token::AUTH_TOKEN,
+    use lib_utils::time::now_utc_plus_sec_str;
+    use lib_web::handlers::{
+        handlers_auth::{ForgotPasswordForm, ForgotPasswordResetForm},
+        KEY_HX_REDIRECT, KEY_HX_TRIGGER,
     };
-    use support::assert::assert_not_in_html;
     use test_db::{get_token, TestDb};
 
     const BASE_URI: &str = "/auth/forgot-password";
@@ -756,7 +743,7 @@ mod tests_logout {
 mod tests_register {
     use super::*;
     use lib_core::{ctx::Ctx, model::user::UserBmc};
-    use lib_web::handlers::{handlers_auth::RegisterForm, KEY_HX_TRIGGER};
+    use lib_web::handlers::handlers_auth::RegisterForm;
     use test_db::TestDb;
 
     const BASE_URI: &str = "/auth/register";
