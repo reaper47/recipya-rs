@@ -26,11 +26,11 @@ use lib_auth::{
 use lib_core::{
     config,
     ctx::Ctx,
-    model::user::{UserBmc, UserForCreate},
+    model::user::{self, UserBmc, UserForCreate},
 };
 use lib_email::{Data, Template};
 
-use super::Toast;
+use super::{Toast, ToastBuilder, ToastStatus};
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct ChangePasswordForm {
@@ -66,13 +66,17 @@ pub async fn change_password(
     State(state): State<AppState>,
     Form(form): Form<ChangePasswordForm>,
 ) -> impl IntoResponse {
+    if config().IS_AUTOLOGIN {
+        return Error::ConfirmForbidden.into_response();
+    }
+
     if form.password == form.new_password {
-        let toast = Toast::new(super::ToastData {
-            message: "New password cannot be the same as the current.".to_string(),
-            status: super::ToastStatus::Error,
-            action: None,
-            title: "Request Error".to_string(),
-        });
+        let toast = ToastBuilder::new(
+            "Request Error",
+            "New password cannot be the same as the current.",
+        )
+        .status(ToastStatus::Error)
+        .build();
 
         if let Ok(json) = serde_json::to_string(&toast) {
             state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
@@ -82,12 +86,9 @@ pub async fn change_password(
     }
 
     if form.validate().is_err() {
-        let toast = Toast::new(super::ToastData {
-            message: "Passwords do not match.".to_string(),
-            status: super::ToastStatus::Error,
-            action: None,
-            title: "Request Error".to_string(),
-        });
+        let toast = ToastBuilder::new("Request Error", "Passwords do not match.")
+            .status(ToastStatus::Error)
+            .build();
 
         if let Ok(json) = serde_json::to_string(&toast) {
             state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
@@ -96,7 +97,31 @@ pub async fn change_password(
         return Error::Form.into_response();
     }
 
-    (StatusCode::OK, "").into_response()
+    let ctx = ctx.0;
+    let user_id = ctx.user_id();
+
+    match UserBmc::update_password(&ctx, &state.mm, user_id, &form.new_password).await {
+        Ok(_) => {
+            let toast = Toast::success("Your password has been updated.");
+
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json)).await;
+            }
+
+            (StatusCode::NO_CONTENT, "").into_response()
+        }
+        Err(err) => {
+            let toast = ToastBuilder::new("Operation Failed", "Failed to update password.")
+                .status(ToastStatus::Error)
+                .build();
+
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json)).await;
+            }
+
+            Error::Model(err).into_response()
+        }
+    }
 }
 
 pub async fn confirm(

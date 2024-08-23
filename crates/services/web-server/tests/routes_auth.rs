@@ -222,6 +222,14 @@ mod tests_change_password {
 
     const BASE_URI: &str = "/auth/change-password";
 
+    fn a_change_password_form() -> ChangePasswordForm {
+        ChangePasswordForm {
+            password: "12345678".to_string(),
+            new_password: "123456789".to_string(),
+            new_password_confirm: "123456789".to_string(),
+        }
+    }
+
     #[tokio::test]
     async fn test_post_change_password_err_must_be_logged_in() -> Result<()> {
         let db = TestDb::new().await;
@@ -279,13 +287,32 @@ mod tests_change_password {
     }
 
     #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
     async fn test_post_change_err_password_cannot_update_if_autologin() -> Result<()> {
-        todo!();
+        std::env::set_var("SERVICE_AUTOLOGIN", "true");
+        let db = TestDb::new().await;
+        let server = build_server_logged_in(db.state()).await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        std::env::remove_var("SERVICE_AUTOLOGIN");
+        res.assert_status_forbidden();
+        Ok(())
     }
 
     #[tokio::test]
     async fn test_post_change_password_ok() -> Result<()> {
-        todo!();
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        res.assert_status(StatusCode::NO_CONTENT);
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"Your password has been updated.","background":"alert-info","title":"Operation Successful"}}"#)
+            .await;
+        Ok(())
     }
 }
 

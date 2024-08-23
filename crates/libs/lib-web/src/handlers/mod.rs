@@ -24,16 +24,24 @@ pub(crate) struct Toast {
 }
 
 impl Toast {
-    pub(crate) fn new(data: ToastData) -> Self {
+    pub(crate) fn success(message: impl Into<String>) -> Self {
         Self {
             _type: "toast".to_string(),
-            data,
+            data: ToastData {
+                message: message.into(),
+                title: "Operation Successful".to_string(),
+                ..Default::default()
+            },
         }
+    }
+
+    pub(crate) fn builder() -> ToastBuilder {
+        ToastBuilder::default()
     }
 }
 
 #[derive(Default, Serialize)]
-pub(crate) struct ToastData {
+struct ToastData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub action: Option<String>,
     pub message: String,
@@ -51,4 +59,44 @@ pub(crate) enum ToastStatus {
     Success,
     #[serde(rename = "alert-warning")]
     Warning,
+}
+
+#[derive(Default)]
+pub(crate) struct ToastBuilder {
+    action: Option<String>,
+    message: String,
+    status: ToastStatus,
+    title: String,
+}
+
+impl ToastBuilder {
+    pub(crate) fn new(title: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            title: title.into(),
+            message: message.into(),
+            ..Default::default()
+        }
+    }
+
+    pub(crate) fn action(mut self, action: Option<String>) -> Self {
+        self.action = action;
+        self
+    }
+
+    pub(crate) fn status(mut self, status: ToastStatus) -> Self {
+        self.status = status;
+        self
+    }
+
+    pub(crate) fn build(self) -> Toast {
+        Toast {
+            _type: "toast".to_string(),
+            data: ToastData {
+                action: self.action,
+                message: self.message,
+                status: self.status,
+                title: self.title,
+            },
+        }
+    }
 }

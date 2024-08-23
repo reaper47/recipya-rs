@@ -40,6 +40,7 @@ pub enum Error {
     // Auth
     ConfirmInvalidToken,
     ConfirmNoToken,
+    ConfirmForbidden,
     GenerateToken,
     UpdatePassword,
     ValidateToken,
@@ -148,6 +149,7 @@ impl Error {
             ConfirmInvalidToken | ConfirmNoToken => {
                 (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL)
             }
+            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
 
             // General
