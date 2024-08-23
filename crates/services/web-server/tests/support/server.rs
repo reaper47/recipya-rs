@@ -7,7 +7,7 @@ use tower_cookies::Cookie;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-pub async fn build_server(state: AppState) -> Result<TestServer> {
+pub async fn build_server_anonymous(state: AppState) -> Result<TestServer> {
     let routes = routes_all(state).await?;
     let config = TestServerConfig::builder()
         .mock_transport()

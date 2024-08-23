@@ -11,6 +11,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use axum::extract::ws::{Message, WebSocket};
 use lib_core::model::ModelManager;
+use lib_email::{Data, Template};
 use tokio::sync::Mutex;
 
 #[derive(Clone)]
@@ -40,6 +41,16 @@ impl AppState {
 
             for &idx in to_remove.iter().rev() {
                 vec.remove(idx);
+            }
+        }
+    }
+
+    pub async fn send_email(self, to: String, subject: String, template: Template, data: Data) {
+        if let Some(email) = self.mm.email {
+            let username = String::from(&data.username);
+
+            if let Err(err) = email.send(to, subject, template, data).await {
+                tracing::error!(name: "Error sending email","error: {err} - username: {username}");
             }
         }
     }

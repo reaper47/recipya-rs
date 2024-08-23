@@ -5,10 +5,11 @@ pub mod handlers_auth;
 pub mod handlers_general;
 pub mod handlers_rpc;
 
-pub(crate) const KEY_HX_REDIRECT: &str = "HX-Redirect";
+pub const KEY_HX_REDIRECT: &str = "HX-Redirect";
 pub const KEY_HX_TRIGGER: &str = "HX-Trigger";
 
-pub(crate) fn add_toast(res: &mut Response<Body>, toast: Toast) {
+pub(crate) fn add_hx_toast(res: &mut Response<Body>, mut toast: Toast) {
+    toast._type = ToastType::HX.into();
     if let Ok(toast) = serde_json::to_string(&toast) {
         if let Ok(value) = HeaderValue::from_str(&toast) {
             res.headers_mut().insert(KEY_HX_TRIGGER, value);
@@ -62,7 +63,24 @@ pub(crate) enum ToastStatus {
 }
 
 #[derive(Default)]
+pub(crate) enum ToastType {
+    HX,
+    #[default]
+    Toast,
+}
+
+impl Into<String> for ToastType {
+    fn into(self) -> String {
+        match self {
+            ToastType::HX => "hx-toast".to_string(),
+            ToastType::Toast => "toast".to_string(),
+        }
+    }
+}
+
+#[derive(Default)]
 pub(crate) struct ToastBuilder {
+    _type: ToastType,
     action: Option<String>,
     message: String,
     status: ToastStatus,
@@ -88,9 +106,14 @@ impl ToastBuilder {
         self
     }
 
+    pub(crate) fn toast_type(mut self, t: ToastType) -> Self {
+        self._type = t;
+        self
+    }
+
     pub(crate) fn build(self) -> Toast {
         Toast {
-            _type: "toast".to_string(),
+            _type: self._type.into(),
             data: ToastData {
                 action: self.action,
                 message: self.message,

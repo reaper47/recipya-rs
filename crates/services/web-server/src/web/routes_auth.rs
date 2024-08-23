@@ -16,11 +16,14 @@ pub fn routes_auth(state: AppState) -> Router {
         .route("/confirm", get(handlers_auth::confirm))
         .route(
             "/forgot-password",
-            get(handlers_auth::forgot_password).post(handlers_auth::forgot_password_post),
+            get(handlers_auth::forgot_password)
+                .post(handlers_auth::forgot_password_post)
+                .layer(middleware::from_fn(mw_auth::mw_redirect_if_authenticated)),
         )
         .route(
             "/forgot-password/reset",
-            post(handlers_auth::forgot_password_reset_post),
+            get(handlers_auth::forgot_password_reset)
+                .post(handlers_auth::forgot_password_reset_post),
         )
         .route(
             "/login",
