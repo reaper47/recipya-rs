@@ -33,7 +33,7 @@ uuid = { workspace = true }
 validator = { version = "0.18.1", features = ["derive"] }
 
 [dev-dependencies]
-axum-test = "15.3.0"
+axum-test = { version = "15.3.0", features = ["ws"] }
 diesel = "2.2.2"
 diesel-async = { version = "0.5.0", features = ["postgres"] }
 pretty_assertions = "1.4.0"

@@ -40,9 +40,13 @@ pub enum Error {
     // Auth
     ConfirmInvalidToken,
     ConfirmNoToken,
+    ConfirmForbidden,
     GenerateToken,
     UpdatePassword,
     ValidateToken,
+
+    // General
+    Form,
 
     // CtxExtError
     #[from]
@@ -145,7 +149,11 @@ impl Error {
             ConfirmInvalidToken | ConfirmNoToken => {
                 (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL)
             }
+            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
+
+            // General
+            Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
 
             // Model
             Model(model::Error::EntityNotFound { entity, id }) => (
@@ -198,6 +206,7 @@ impl Error {
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     CONFIRM_FAIL,
+    FORM_ERROR,
     LOGIN_FAIL,
     LOGOUT_FAIL,
     REGISTER_FAIL,

@@ -11,7 +11,10 @@ type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 #[cfg(test)]
 pub mod test_db {
-    use std::sync::atomic::AtomicU32;
+    use std::{
+        collections::HashMap,
+        sync::{atomic::AtomicU32, Arc},
+    };
 
     use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
     use lib_core::{
@@ -22,6 +25,8 @@ pub mod test_db {
             ModelManager,
         },
     };
+    use lib_web::AppState;
+    use tokio::sync::Mutex;
 
     static TEST_DB_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -75,10 +80,13 @@ pub mod test_db {
             }
         }
 
-        pub fn mm(&self) -> ModelManager {
-            ModelManager {
-                db: self.pool.clone(),
-                email: None,
+        pub fn state(&self) -> AppState {
+            AppState {
+                mm: ModelManager {
+                    db: self.pool.clone(),
+                    email: None,
+                },
+                subscribers: Arc::new(Mutex::new(HashMap::new())),
             }
         }
     }
@@ -122,7 +130,7 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_err_missing_token() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -133,8 +141,8 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_err_invalid_token() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
-        let mut token = get_token(db.mm()).await;
+        let server = build_server(db.state()).await?;
+        let mut token = get_token(db.state().mm).await;
         token.exp = now_utc_plus_sec_str(-100.);
 
         let res = server
@@ -148,8 +156,8 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_err_user_not_exist() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
-        let mut token = get_token(db.mm()).await;
+        let server = build_server(db.state()).await?;
+        let mut token = get_token(db.state().mm).await;
         token.ident = "dont@exist.com".to_string();
 
         let res = server
@@ -163,8 +171,8 @@ mod tests_confirm {
     #[tokio::test]
     async fn test_confirm_ok() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
-        let token = get_token(db.mm()).await;
+        let server = build_server(db.state()).await?;
+        let token = get_token(db.state().mm).await;
 
         let res = server
             .get(format!("{BASE_URI}?token={}", &token).as_str())
@@ -206,6 +214,109 @@ mod tests_confirm {
 }
 
 #[cfg(test)]
+mod tests_change_password {
+    use super::*;
+    use lib_web::handlers::handlers_auth::ChangePasswordForm;
+    use support::server::build_server_ws;
+    use test_db::TestDb;
+
+    const BASE_URI: &str = "/auth/change-password";
+
+    fn a_change_password_form() -> ChangePasswordForm {
+        ChangePasswordForm {
+            password: "12345678".to_string(),
+            new_password: "123456789".to_string(),
+            new_password_confirm: "123456789".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_must_be_logged_in() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server(db.state()).await?;
+
+        let res = server.post(BASE_URI).await;
+
+        pretty_assertions::assert_eq!(res.status_code(), StatusCode::SEE_OTHER);
+        pretty_assertions::assert_eq!(res.header("Location"), "/auth/login");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_form_invalid() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "123456789".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"Passwords do not match.","background":"alert-error","title":"Request Error"}}"#)
+            .await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_password_same_as_new() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "12345678".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"New password cannot be the same as the current.","background":"alert-error","title":"Request Error"}}"#)
+            .await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
+    async fn test_post_change_err_password_cannot_update_if_autologin() -> Result<()> {
+        std::env::set_var("SERVICE_AUTOLOGIN", "true");
+        let db = TestDb::new().await;
+        let server = build_server_logged_in(db.state()).await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        std::env::remove_var("SERVICE_AUTOLOGIN");
+        res.assert_status_forbidden();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_ok() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        res.assert_status(StatusCode::NO_CONTENT);
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"Your password has been updated.","background":"alert-info","title":"Operation Successful"}}"#)
+            .await;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
 mod tests_login {
     use super::*;
     use lib_auth::token::Token;
@@ -227,7 +338,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_get_login_page_ok() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -249,7 +360,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_post_login_ok() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
 
         let res = server.post(BASE_URI).form(&a_login_form()).await;
 
@@ -262,7 +373,7 @@ mod tests_login {
     async fn test_get_login_ok_hide_signup_button_when_registration_disabled() -> Result<()> {
         std::env::set_var("SERVICE_NO_SIGNUPS", "true");
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -280,7 +391,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_post_login_err_invalid_email() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -292,14 +403,14 @@ mod tests_login {
             .await;
 
         res.assert_status(StatusCode::BAD_REQUEST);
-        res.assert_text("Field 'email': Invalid email address");
+        res.assert_text_contains("Credentials are invalid.");
         Ok(())
     }
 
     #[tokio::test]
     async fn test_post_err_invalid_password() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await.unwrap();
+        let server = build_server(db.state()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -311,14 +422,14 @@ mod tests_login {
             .await;
 
         res.assert_status(StatusCode::BAD_REQUEST);
-        res.assert_text("Field 'password': Password must be at least 8 characters long");
+        res.assert_text_contains("Credentials are invalid.");
         Ok(())
     }
 
     #[tokio::test]
     async fn test_get_login_ok_redirect_to_home_when_logged_in() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server_logged_in(db.mm()).await?;
+        let server = build_server_logged_in(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -336,7 +447,7 @@ mod tests_login {
     async fn test_get_login_ok_redirect_to_index_when_autologin() -> Result<()> {
         std::env::set_var("SERVICE_AUTOLOGIN", "true");
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -353,7 +464,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_post_login_ok_remember_me_checked() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -383,7 +494,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_get_login_ok_remember_me_checked() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
         server
             .post(BASE_URI)
             .form(&LoginForm {
@@ -422,7 +533,7 @@ mod tests_logout {
     #[tokio::test]
     async fn test_post_logout_err_user_already_logged_out() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server_logged_in(db.mm()).await?;
+        let server = build_server_logged_in(db.state()).await?;
 
         let res: axum_test::TestResponse = server.post(BASE_URI).await;
         let res_get = server.get("/auth/login").await;
@@ -440,7 +551,7 @@ mod tests_logout {
     async fn test_post_logout_err_cannot_logout_when_autologin() -> Result<()> {
         std::env::set_var("SERVICE_AUTOLOGIN", "true");
         let db = TestDb::new().await;
-        let server = build_server_logged_in(db.mm()).await?;
+        let server = build_server_logged_in(db.state()).await?;
 
         let res = server.post(BASE_URI).await;
 
@@ -475,7 +586,7 @@ mod tests_register {
     #[tokio::test]
     async fn test_get_register_ok_redirect_to_home_when_logged_in() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server_logged_in(db.mm()).await?;
+        let server = build_server_logged_in(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 
@@ -491,14 +602,14 @@ mod tests_register {
     #[tokio::test]
     async fn test_post_register_ok() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
         let form = a_register_form();
 
         let res = server.post(BASE_URI).form(&form).await;
 
         res.assert_status(StatusCode::SEE_OTHER);
         assert!(
-            UserBmc::first_by_email(&Ctx::root_ctx(), &db.mm(), &form.email)
+            UserBmc::first_by_email(&Ctx::root_ctx(), &db.state().mm, &form.email)
                 .await?
                 .is_some(),
             "should have user in database"
@@ -509,15 +620,15 @@ mod tests_register {
     #[tokio::test]
     async fn test_post_register_err_when_user_already_registered() -> Result<()> {
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
 
         let _res = server.post(BASE_URI).form(&a_register_form()).await;
         let res = server.post(BASE_URI).form(&a_register_form()).await;
 
         res.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-        pretty_assertions::assert_eq!(
-            res.header(KEY_HX_TRIGGER),
-            r#"{"message":"Registration failed","background":"alert-error"}"#
+        assert_html(
+            res,
+            vec!["This account is either already registered or your credentials don't match."],
         );
         Ok(())
     }
@@ -527,7 +638,7 @@ mod tests_register {
     async fn test_register_ok_redirect_to_home_when_autologin() -> Result<()> {
         std::env::set_var("SERVICE_AUTOLOGIN", "true");
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
         let fx_form = a_register_form();
 
         let res_get = server.get(BASE_URI).await;
@@ -546,7 +657,8 @@ mod tests_register {
             "/",
             "Location should point to home"
         );
-        let user = UserBmc::first_by_email(&Ctx::root_ctx(), &db.mm(), &fx_form.email).await?;
+        let user =
+            UserBmc::first_by_email(&Ctx::root_ctx(), &db.state().mm, &fx_form.email).await?;
         assert!(user.is_none(), "user should not have been registered");
         Ok(())
     }
@@ -556,7 +668,7 @@ mod tests_register {
     async fn test_register_err_cannot_register_when_no_signups() -> Result<()> {
         std::env::set_var("SERVICE_NO_SIGNUPS", "true");
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
         let form = a_register_form();
 
         let res_get = server.post(BASE_URI).form(&form).await;
@@ -575,7 +687,7 @@ mod tests_register {
             "/auth/login",
             "Location should point to home"
         );
-        let user = UserBmc::first_by_email(&Ctx::root_ctx(), &db.mm(), &form.email).await?;
+        let user = UserBmc::first_by_email(&Ctx::root_ctx(), &db.state().mm, &form.email).await?;
         assert!(user.is_none(), "user should not have been registered");
         Ok(())
     }
@@ -585,7 +697,7 @@ mod tests_register {
     async fn test_get_err_register_cannot_access_register_when_no_signups() -> Result<()> {
         std::env::set_var("SERVICE_NO_SIGNUPS", "true");
         let db = TestDb::new().await;
-        let server = build_server(db.mm()).await?;
+        let server = build_server(db.state()).await?;
 
         let res = server.get(BASE_URI).await;
 

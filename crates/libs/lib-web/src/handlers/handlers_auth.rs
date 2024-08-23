@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{Query, State},
-    http::{HeaderValue, StatusCode},
+    extract::{ws::Message, Query, State},
+    http::StatusCode,
     response::{IntoResponse, Redirect},
     Form,
 };
@@ -14,8 +14,10 @@ use validator::Validate;
 
 use crate::{
     error::{collect_errors, Error},
+    middleware::mw_auth::CtxW,
     templates,
     utils::token::{remove_token_cookie, set_token_cookie},
+    AppState,
 };
 use lib_auth::{
     pwd::scheme::SchemeStatus,
@@ -24,14 +26,21 @@ use lib_auth::{
 use lib_core::{
     config,
     ctx::Ctx,
-    model::{
-        user::{UserBmc, UserForCreate},
-        ModelManager,
-    },
+    model::user::{self, UserBmc, UserForCreate},
 };
 use lib_email::{Data, Template};
 
-use super::{add_toast, Toast, ToastStatus};
+use super::{Toast, ToastBuilder, ToastStatus};
+
+#[derive(Default, Validate, Deserialize, Serialize)]
+pub struct ChangePasswordForm {
+    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
+    pub password: String,
+    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
+    pub new_password: String,
+    #[validate(must_match(other = "new_password"))]
+    pub new_password_confirm: String,
+}
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct LoginForm {
@@ -52,12 +61,71 @@ pub struct RegisterForm {
     pub password_confirm: String,
 }
 
-pub async fn change_password() -> Markup {
-    todo!()
+pub async fn change_password(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<ChangePasswordForm>,
+) -> impl IntoResponse {
+    if config().IS_AUTOLOGIN {
+        return Error::ConfirmForbidden.into_response();
+    }
+
+    if form.password == form.new_password {
+        let toast = ToastBuilder::new(
+            "Request Error",
+            "New password cannot be the same as the current.",
+        )
+        .status(ToastStatus::Error)
+        .build();
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
+        }
+
+        return Error::Form.into_response();
+    }
+
+    if form.validate().is_err() {
+        let toast = ToastBuilder::new("Request Error", "Passwords do not match.")
+            .status(ToastStatus::Error)
+            .build();
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
+        }
+
+        return Error::Form.into_response();
+    }
+
+    let ctx = ctx.0;
+    let user_id = ctx.user_id();
+
+    match UserBmc::update_password(&ctx, &state.mm, user_id, &form.new_password).await {
+        Ok(_) => {
+            let toast = Toast::success("Your password has been updated.");
+
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json)).await;
+            }
+
+            (StatusCode::NO_CONTENT, "").into_response()
+        }
+        Err(err) => {
+            let toast = ToastBuilder::new("Operation Failed", "Failed to update password.")
+                .status(ToastStatus::Error)
+                .build();
+
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json)).await;
+            }
+
+            Error::Model(err).into_response()
+        }
+    }
 }
 
 pub async fn confirm(
-    State(mm): State<ModelManager>,
+    State(state): State<AppState>,
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let token: Token = match query.get("token") {
@@ -68,7 +136,7 @@ pub async fn confirm(
         None => return Error::ConfirmNoToken.into_response(),
     };
 
-    let user = match UserBmc::first_by_email(&Ctx::root_ctx(), &mm, &token.ident).await {
+    let user = match UserBmc::first_by_email(&Ctx::root_ctx(), &state.mm, &token.ident).await {
         Ok(user) => match user {
             Some(user) => user,
             None => {
@@ -86,7 +154,7 @@ pub async fn confirm(
         return Error::ConfirmInvalidToken.into_response();
     }
 
-    if let Err(err) = UserBmc::set_is_confirmed(&Ctx::root_ctx(), &mm, token.ident).await {
+    if let Err(err) = UserBmc::set_is_confirmed(&Ctx::root_ctx(), &state.mm, token.ident).await {
         return Error::Model(err).into_response();
     };
 
@@ -105,24 +173,25 @@ pub async fn forgot_password_reset_post() -> Markup {
     todo!()
 }
 
-pub async fn login() -> Markup {
-    templates::auth::login().await
+pub async fn login() -> impl IntoResponse {
+    templates::auth::login(false).await
 }
 
 pub async fn login_post(
-    State(mm): State<ModelManager>,
+    State(state): State<AppState>,
     cookies: Cookies,
     Query(query): Query<HashMap<String, String>>,
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
-    let errors = collect_errors(&form);
-    if !errors.is_empty() {
-        return (StatusCode::BAD_REQUEST, collect_errors(&form).join(", ")).into_response();
+    if form.validate().is_err() {
+        let mut res = templates::auth::login(true).await.into_response();
+        *res.status_mut() = StatusCode::BAD_REQUEST;
+        return res;
     }
 
     let root_ctx = Ctx::root_ctx();
 
-    let user = match UserBmc::first_by_email(&root_ctx, &mm, &form.email).await {
+    let user = match UserBmc::first_by_email(&root_ctx, &state.mm, &form.email).await {
         Ok(user) => match user {
             None => return Error::LoginFailUsernameNotFound.into_response(),
             Some(user) => user,
@@ -147,7 +216,7 @@ pub async fn login_post(
     // Update password scheme if needed
     if let SchemeStatus::Outdated = scheme_status {
         debug!("pwd encrypt scheme outdated, upgrading");
-        if UserBmc::update_password(&root_ctx, &mm, user.id, &user.password)
+        if UserBmc::update_password(&root_ctx, &state.mm, user.id, &user.password)
             .await
             .is_err()
         {
@@ -189,13 +258,19 @@ pub async fn register() -> impl IntoResponse {
     if config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
     }
-    templates::auth::register().await.into_response()
+    templates::auth::register(false).await.into_response()
 }
 
 pub async fn register_post(
-    State(mm): State<ModelManager>,
+    State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
+    if form.validate().is_err() {
+        let mut res = templates::auth::register(true).await.into_response();
+        *res.status_mut() = StatusCode::BAD_REQUEST;
+        return res;
+    }
+
     if lib_core::config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
     }
@@ -206,23 +281,16 @@ pub async fn register_post(
         password_clear: form.password,
     };
 
-    let id = match UserBmc::create(&ctx, &mm, user_c).await {
+    let id = match UserBmc::create(&ctx, &state.mm, user_c).await {
         Ok(id) => id,
         Err(_) => {
-            let mut res = Error::RegisterFail.into_response();
-            add_toast(
-                &mut res,
-                Toast {
-                    action: None,
-                    message: "Registration failed".to_string(),
-                    status: ToastStatus::Error,
-                },
-            );
+            let mut res = templates::auth::register(true).await.into_response();
+            *res.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
             return res;
         }
     };
 
-    match UserBmc::get(&ctx, &mm, id)
+    match UserBmc::get(&ctx, &state.mm, id)
         .await
         .map_err(|_| Error::RegisterFail)
     {

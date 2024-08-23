@@ -150,10 +150,10 @@ htmx.on('htmx:pushedIntoHistory', () => {
 
 document.addEventListener("htmx:wsBeforeMessage", (event) => {
     try {
-        const {type, data, fileName, toast} = JSON.parse(event.detail.message);
+        const { type, data, fileName } = JSON.parse(event.detail.message);
         switch (type) {
             case "toast":
-                const {title, message, background, action} = toast;
+                const { title, message, background, action } = data;
                 showToast(title, message, background, action);
                 break;
             case "file":
@@ -162,10 +162,10 @@ document.addEventListener("htmx:wsBeforeMessage", (event) => {
                 for (let i = 0; i < decoded.length; i++) {
                     bytes[i] = decoded.charCodeAt(i);
                 }
-                const blob = new Blob([bytes], {type: "application/zip"});
+                const blob = new Blob([bytes], { type: "application/zip" });
                 downloadFile(blob, fileName, "application/zip");
                 event.preventDefault();
                 break;
         }
-    } catch (_) {}
+    } catch (_) { }
 });

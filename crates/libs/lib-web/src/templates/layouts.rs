@@ -7,7 +7,6 @@ pub fn auth(title: &str, content: Markup) -> Markup {
             (super::core::head(title))
             body .h-full.grid.place-content-center {
                 (content)
-                (super::core::toast())
             }
         }
     }
