@@ -11,6 +11,8 @@ use tower_cookies::Cookies;
 use tracing::{debug, error};
 use validator::Validate;
 
+use super::KEY_HX_REDIRECT;
+use crate::handlers::message::{add_hx_message, IMessage, MessageHtmx, MessageStatus, MessageWs};
 use crate::{
     error::Error,
     middleware::mw_auth::CtxW,
@@ -28,8 +30,6 @@ use lib_core::{
     model::user::{UserBmc, UserForCreate},
 };
 use lib_email::{Data, Template};
-
-use super::{add_hx_toast, Toast, ToastBuilder, ToastStatus, KEY_HX_REDIRECT};
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct ChangePasswordForm {
@@ -85,12 +85,7 @@ pub async fn change_password(
     }
 
     if form.password == form.new_password {
-        let toast = ToastBuilder::new(
-            "Request Error",
-            "New password cannot be the same as the current.",
-        )
-        .status(ToastStatus::Error)
-        .build();
+        let toast = MessageWs::error("New password cannot be the same as the current.");
 
         if let Ok(json) = serde_json::to_string(&toast) {
             state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
@@ -100,9 +95,7 @@ pub async fn change_password(
     }
 
     if form.validate().is_err() {
-        let toast = ToastBuilder::new("Request Error", "Passwords do not match.")
-            .status(ToastStatus::Error)
-            .build();
+        let toast = MessageWs::error("Passwords do not match.");
 
         if let Ok(json) = serde_json::to_string(&toast) {
             state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
@@ -116,7 +109,7 @@ pub async fn change_password(
 
     match UserBmc::update_password(&ctx, &state.mm, user_id, &form.new_password).await {
         Ok(_) => {
-            let toast = Toast::success("Your password has been updated.");
+            let toast = MessageWs::success("Your password has been updated.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
                 state.broadcast(user_id, Message::Text(json)).await;
@@ -125,9 +118,7 @@ pub async fn change_password(
             (StatusCode::NO_CONTENT, "").into_response()
         }
         Err(err) => {
-            let toast = ToastBuilder::new("Operation Failed", "Failed to update password.")
-                .status(ToastStatus::Error)
-                .build();
+            let toast = MessageWs::error("Failed to update password.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
                 state.broadcast(user_id, Message::Text(json)).await;
@@ -209,8 +200,8 @@ pub async fn forgot_password_post(
     });
 
     templates::general::simple(
-        "Password Reset Requested", 
-        "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account."
+        "Password Reset Requested",
+        "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
     ).into_response()
 }
 
@@ -251,12 +242,7 @@ pub async fn forgot_password_reset_post(
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_toast(
-            &mut res,
-            ToastBuilder::new("Request Failed", "Password is invalid")
-                .status(ToastStatus::Error)
-                .build(),
-        );
+        add_hx_message(&mut res, MessageHtmx::success("Password is invalid"));
         return res;
     }
 
@@ -269,17 +255,15 @@ pub async fn forgot_password_reset_post(
         );
 
         let mut res = Error::Form.into_response();
-        add_hx_toast(
-            &mut res,
-            ToastBuilder::new("Operation Failed", "Failed to update password.")
-                .status(ToastStatus::Error)
-                .build(),
-        );
+        add_hx_message(&mut res, MessageHtmx::error("Failed to update password."));
         return res;
     }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
-    add_hx_toast(&mut res, Toast::success("Your password has been updated."));
+    add_hx_message(
+        &mut res,
+        MessageHtmx::success("Your password has been updated."),
+    );
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
         res.headers_mut().insert(KEY_HX_REDIRECT, value);
     }
@@ -297,8 +281,8 @@ pub async fn login_post(
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
     if form.validate().is_err() {
-        let mut res = templates::auth::login(true).into_response();
-        *res.status_mut() = StatusCode::BAD_REQUEST;
+        let mut res = Error::Form.into_response();
+        add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid"));
         return res;
     }
 

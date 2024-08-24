@@ -10,6 +10,107 @@ use lib_web::handlers::handlers_auth::LoginForm;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
+mod tests_change_password {
+    use super::*;
+    use lib_web::handlers::handlers_auth::ChangePasswordForm;
+    use support::server::build_server_ws;
+
+    const BASE_URI: &str = "/auth/change-password";
+
+    fn a_change_password_form() -> ChangePasswordForm {
+        ChangePasswordForm {
+            password: "12345678".to_string(),
+            new_password: "123456789".to_string(),
+            new_password_confirm: "123456789".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_must_be_logged_in() -> Result<()> {
+        let db = TestDb::new().await;
+        let server = build_server_anonymous(db.state()).await?;
+
+        let res = server.post(BASE_URI).await;
+
+        pretty_assertions::assert_eq!(res.status_code(), StatusCode::SEE_OTHER);
+        pretty_assertions::assert_eq!(res.header("Location"), "/auth/login");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_form_invalid() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "123456789".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"Passwords do not match.","status":"alert-info","title":"Operation Failed"}}"#)
+            .await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_err_password_same_as_new() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "12345678".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-info","title":"Operation Failed"}}"#)
+            .await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore = "run manually because the lib_core::config() cannot reload"]
+    async fn test_post_change_err_password_cannot_update_if_autologin() -> Result<()> {
+        std::env::set_var("SERVICE_AUTOLOGIN", "true");
+        let db = TestDb::new().await;
+        let server = build_server_logged_in(db.state()).await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        std::env::remove_var("SERVICE_AUTOLOGIN");
+        res.assert_status_forbidden();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_ok() -> Result<()> {
+        let db = TestDb::new().await;
+        let (server, mut ws_server) = build_server_ws(db.state()).await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        res.assert_status(StatusCode::NO_CONTENT);
+        let _ = ws_server.receive_message().await;
+        ws_server
+            .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#)
+            .await;
+        Ok(())
+    }
+}
+
 mod tests_confirm {
     use super::*;
     use lib_utils::time::now_utc_plus_sec_str;
@@ -75,107 +176,6 @@ mod tests_confirm {
                 r#"Your account has been confirmed."#,
             ],
         );
-        Ok(())
-    }
-}
-
-mod tests_change_password {
-    use super::*;
-    use lib_web::handlers::handlers_auth::ChangePasswordForm;
-    use support::server::build_server_ws;
-
-    const BASE_URI: &str = "/auth/change-password";
-
-    fn a_change_password_form() -> ChangePasswordForm {
-        ChangePasswordForm {
-            password: "12345678".to_string(),
-            new_password: "123456789".to_string(),
-            new_password_confirm: "123456789".to_string(),
-        }
-    }
-
-    #[tokio::test]
-    async fn test_post_change_password_err_must_be_logged_in() -> Result<()> {
-        let db = TestDb::new().await;
-        let server = build_server_anonymous(db.state()).await?;
-
-        let res = server.post(BASE_URI).await;
-
-        pretty_assertions::assert_eq!(res.status_code(), StatusCode::SEE_OTHER);
-        pretty_assertions::assert_eq!(res.header("Location"), "/auth/login");
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_post_change_password_err_form_invalid() -> Result<()> {
-        let db = TestDb::new().await;
-        let (server, mut ws_server) = build_server_ws(db.state()).await?;
-
-        let res = server
-            .post(BASE_URI)
-            .form(&ChangePasswordForm {
-                password: "12345678".to_string(),
-                new_password: "123456789".to_string(),
-                new_password_confirm: "12345678".to_string(),
-            })
-            .await;
-
-        res.assert_status_bad_request();
-        let _ = ws_server.receive_message().await;
-        ws_server
-            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"Passwords do not match.","background":"alert-error","title":"Request Error"}}"#)
-            .await;
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_post_change_password_err_password_same_as_new() -> Result<()> {
-        let db = TestDb::new().await;
-        let (server, mut ws_server) = build_server_ws(db.state()).await?;
-
-        let res = server
-            .post(BASE_URI)
-            .form(&ChangePasswordForm {
-                password: "12345678".to_string(),
-                new_password: "12345678".to_string(),
-                new_password_confirm: "12345678".to_string(),
-            })
-            .await;
-
-        res.assert_status_bad_request();
-        let _ = ws_server.receive_message().await;
-        ws_server
-            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"New password cannot be the same as the current.","background":"alert-error","title":"Request Error"}}"#)
-            .await;
-        Ok(())
-    }
-
-    #[tokio::test]
-    #[ignore = "run manually because the lib_core::config() cannot reload"]
-    async fn test_post_change_err_password_cannot_update_if_autologin() -> Result<()> {
-        std::env::set_var("SERVICE_AUTOLOGIN", "true");
-        let db = TestDb::new().await;
-        let server = build_server_logged_in(db.state()).await?;
-
-        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
-
-        std::env::remove_var("SERVICE_AUTOLOGIN");
-        res.assert_status_forbidden();
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_post_change_password_ok() -> Result<()> {
-        let db = TestDb::new().await;
-        let (server, mut ws_server) = build_server_ws(db.state()).await?;
-
-        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
-
-        res.assert_status(StatusCode::NO_CONTENT);
-        let _ = ws_server.receive_message().await;
-        ws_server
-            .assert_receive_text_contains(r#"{"type":"toast","data":{"message":"Your password has been updated.","background":"alert-info","title":"Operation Successful"}}"#)
-            .await;
         Ok(())
     }
 }
@@ -329,7 +329,7 @@ mod tests_forgot_password {
         res.assert_status_bad_request();
         pretty_assertions::assert_eq!(
             res.header(KEY_HX_TRIGGER),
-            r#"{"type":"hx-toast","data":{"message":"Password is invalid","background":"alert-error","title":"Request Failed"}}"#
+            r#"{"showMessageHtmx":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Operation Successful"}}"#
         );
         Ok(())
     }
@@ -351,7 +351,7 @@ mod tests_forgot_password {
         res.assert_status(StatusCode::SEE_OTHER);
         pretty_assertions::assert_eq!(
             res.header(KEY_HX_TRIGGER),
-            r#"{"type":"hx-toast","data":{"message":"Your password has been updated.","background":"alert-info","title":"Operation Successful"}}"#
+            r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#
         );
         pretty_assertions::assert_eq!(res.header(KEY_HX_REDIRECT), "/auth/login");
         Ok(())
@@ -362,6 +362,7 @@ mod tests_login {
     use super::*;
     use lib_auth::token::Token;
     use lib_utils::time::{OffsetDateTime, Rfc3339};
+    use lib_web::handlers::KEY_HX_TRIGGER;
     use lib_web::utils::token::AUTH_TOKEN;
     use support::assert::assert_not_in_html;
 
@@ -386,7 +387,7 @@ mod tests_login {
         assert_html(
             res,
             vec![
-                r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/login" method="post"><div class="card-body">"#,
+                r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login" action="/auth/login" method="post"><div class="card-body">"#,
                 r#"<h2 class="card-title underline self-center">Log In</h2>"#,
                 r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Email</span></div><input class="input input-bordered w-full" required type="email" placeholder="Enter your email address" name="email" value=""></label>"#,
                 r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Password</span></div><input class="input input-bordered w-full" required type="password" placeholder="Enter your password" name="password" value=""></label>"#,
@@ -443,7 +444,10 @@ mod tests_login {
             .await;
 
         res.assert_status(StatusCode::BAD_REQUEST);
-        res.assert_text_contains("Credentials are invalid.");
+        pretty_assertions::assert_eq!(
+            res.header(KEY_HX_TRIGGER),
+            r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid","status":"alert-error","title":"Operation Failed"}}"#
+        );
         Ok(())
     }
 
@@ -462,7 +466,10 @@ mod tests_login {
             .await;
 
         res.assert_status(StatusCode::BAD_REQUEST);
-        res.assert_text_contains("Credentials are invalid.");
+        pretty_assertions::assert_eq!(
+            res.header(KEY_HX_TRIGGER),
+            r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid","status":"alert-error","title":"Operation Failed"}}"#
+        );
         Ok(())
     }
 
