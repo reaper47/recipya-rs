@@ -92,7 +92,13 @@ pub async fn mw_redirect_if_authenticated(
     req: Request<Body>,
     next: Next,
 ) -> Result<Response> {
-    if ctx.is_ok() || config().IS_AUTOLOGIN {
+    let is_ok = ctx.is_ok();
+
+    if is_ok && (config().IS_AUTOLOGIN || req.uri().path().eq("/")) {
+        return Ok(Redirect::to("/recipes").into_response());
+    }
+
+    if is_ok || config().IS_AUTOLOGIN {
         return Ok(Redirect::to("/").into_response());
     }
 

@@ -5,7 +5,6 @@ use axum::{
 };
 use lib_web::{handlers::handlers_auth, middleware::mw_auth, AppState};
 
-#[allow(unused)]
 pub fn routes_auth(state: AppState) -> Router {
     Router::new()
         .route(

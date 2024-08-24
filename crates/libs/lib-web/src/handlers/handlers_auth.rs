@@ -6,14 +6,13 @@ use axum::{
     response::{IntoResponse, Redirect},
     Form,
 };
-use maud::Markup;
 use serde::{Deserialize, Serialize};
 use tower_cookies::Cookies;
 use tracing::{debug, error};
 use validator::Validate;
 
 use crate::{
-    error::{collect_errors, Error},
+    error::Error,
     middleware::mw_auth::CtxW,
     templates,
     utils::token::{remove_token_cookie, set_token_cookie},
@@ -26,11 +25,11 @@ use lib_auth::{
 use lib_core::{
     config,
     ctx::Ctx,
-    model::user::{self, UserBmc, UserForCreate},
+    model::user::{UserBmc, UserForCreate},
 };
 use lib_email::{Data, Template};
 
-use super::{add_hx_toast, Toast, ToastBuilder, ToastStatus, ToastType, KEY_HX_REDIRECT};
+use super::{add_hx_toast, Toast, ToastBuilder, ToastStatus, KEY_HX_REDIRECT};
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct ChangePasswordForm {
