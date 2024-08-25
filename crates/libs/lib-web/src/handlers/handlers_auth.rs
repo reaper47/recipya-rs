@@ -11,8 +11,10 @@ use tower_cookies::Cookies;
 use tracing::{debug, error};
 use validator::Validate;
 
+use super::KEY_HX_REDIRECT;
 use crate::{
-    error::Error,
+    error::{Error, Result},
+    handlers::message::{add_hx_message, IMessage, MessageHtmx, MessageStatus, MessageWs},
     middleware::mw_auth::CtxW,
     templates,
     utils::token::{remove_token_cookie, set_token_cookie},
@@ -28,8 +30,6 @@ use lib_core::{
     model::user::{UserBmc, UserForCreate},
 };
 use lib_email::{Data, Template};
-
-use super::{add_hx_toast, Toast, ToastBuilder, ToastStatus, KEY_HX_REDIRECT};
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct ChangePasswordForm {
@@ -85,12 +85,7 @@ pub async fn change_password(
     }
 
     if form.password == form.new_password {
-        let toast = ToastBuilder::new(
-            "Request Error",
-            "New password cannot be the same as the current.",
-        )
-        .status(ToastStatus::Error)
-        .build();
+        let toast = MessageWs::error("New password cannot be the same as the current.");
 
         if let Ok(json) = serde_json::to_string(&toast) {
             state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
@@ -100,9 +95,7 @@ pub async fn change_password(
     }
 
     if form.validate().is_err() {
-        let toast = ToastBuilder::new("Request Error", "Passwords do not match.")
-            .status(ToastStatus::Error)
-            .build();
+        let toast = MessageWs::error("Passwords do not match.");
 
         if let Ok(json) = serde_json::to_string(&toast) {
             state.broadcast(ctx.0.user_id(), Message::Text(json)).await;
@@ -116,7 +109,7 @@ pub async fn change_password(
 
     match UserBmc::update_password(&ctx, &state.mm, user_id, &form.new_password).await {
         Ok(_) => {
-            let toast = Toast::success("Your password has been updated.");
+            let toast = MessageWs::success("Your password has been updated.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
                 state.broadcast(user_id, Message::Text(json)).await;
@@ -125,9 +118,7 @@ pub async fn change_password(
             (StatusCode::NO_CONTENT, "").into_response()
         }
         Err(err) => {
-            let toast = ToastBuilder::new("Operation Failed", "Failed to update password.")
-                .status(ToastStatus::Error)
-                .build();
+            let toast = MessageWs::error("Failed to update password.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
                 state.broadcast(user_id, Message::Text(json)).await;
@@ -142,12 +133,9 @@ pub async fn confirm(
     State(state): State<AppState>,
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token: Token = match query.get("token") {
-        Some(token) => match token.parse() {
-            Ok(token) => token,
-            Err(err) => return Error::Token(err).into_response(),
-        },
-        None => return Error::NoToken.into_response(),
+    let token = match get_token_from_query(query) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let user = match UserBmc::first_by_email(&Ctx::root_ctx(), &state.mm, &token.ident).await {
@@ -158,7 +146,7 @@ pub async fn confirm(
                     entity: "user",
                     id: -1,
                 })
-                .into_response()
+                    .into_response()
             }
         },
         Err(err) => return Error::Model(err).into_response(),
@@ -191,7 +179,7 @@ pub async fn forgot_password_post(
         if let Ok(Some(user)) =
             UserBmc::first_by_email(&Ctx::root_ctx(), &state.mm, &form.email).await
         {
-            if let Ok(token) = lib_auth::token::generate_web_token(&form.email, user.token_salt) {
+            if let Ok(token) = generate_web_token(&form.email, user.token_salt) {
                 state
                     .send_email(
                         String::from(&form.email),
@@ -209,8 +197,8 @@ pub async fn forgot_password_post(
     });
 
     templates::general::simple(
-        "Password Reset Requested", 
-        "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account."
+        "Password Reset Requested",
+        "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
     ).into_response()
 }
 
@@ -218,12 +206,9 @@ pub async fn forgot_password_reset(
     State(state): State<AppState>,
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token: Token = match query.get("token") {
-        Some(token) => match token.parse() {
-            Ok(token) => token,
-            Err(err) => return Error::Token(err).into_response(),
-        },
-        None => return Error::NoToken.into_response(),
+    let token = match get_token_from_query(query) {
+        Ok(token) => token,
+        Err(err) => return err.into_response(),
     };
 
     let user = match UserBmc::first_by_email(&Ctx::root_ctx(), &state.mm, &token.ident).await {
@@ -245,18 +230,21 @@ pub async fn forgot_password_reset(
     templates::auth::forgot_password_reset(user.id).into_response()
 }
 
+fn get_token_from_query(query: HashMap<String, String>) -> Result<Token> {
+    let token: Token = match query.get("token") {
+        Some(token) => token.parse()?,
+        None => return Err(Error::NoToken),
+    };
+    Ok(token)
+}
+
 pub async fn forgot_password_reset_post(
     State(state): State<AppState>,
     Form(form): Form<ForgotPasswordResetForm>,
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_toast(
-            &mut res,
-            ToastBuilder::new("Request Failed", "Password is invalid")
-                .status(ToastStatus::Error)
-                .build(),
-        );
+        add_hx_message(&mut res, MessageHtmx::success("Password is invalid"));
         return res;
     }
 
@@ -269,17 +257,15 @@ pub async fn forgot_password_reset_post(
         );
 
         let mut res = Error::Form.into_response();
-        add_hx_toast(
-            &mut res,
-            ToastBuilder::new("Operation Failed", "Failed to update password.")
-                .status(ToastStatus::Error)
-                .build(),
-        );
+        add_hx_message(&mut res, MessageHtmx::error("Failed to update password."));
         return res;
     }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
-    add_hx_toast(&mut res, Toast::success("Your password has been updated."));
+    add_hx_message(
+        &mut res,
+        MessageHtmx::success("Your password has been updated."),
+    );
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
         res.headers_mut().insert(KEY_HX_REDIRECT, value);
     }
@@ -287,7 +273,7 @@ pub async fn forgot_password_reset_post(
 }
 
 pub async fn login() -> impl IntoResponse {
-    templates::auth::login(false)
+    templates::auth::login()
 }
 
 pub async fn login_post(
@@ -297,8 +283,8 @@ pub async fn login_post(
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
     if form.validate().is_err() {
-        let mut res = templates::auth::login(true).into_response();
-        *res.status_mut() = StatusCode::BAD_REQUEST;
+        let mut res = Error::Form.into_response();
+        add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid."));
         return res;
     }
 
@@ -306,7 +292,11 @@ pub async fn login_post(
 
     let user = match UserBmc::first_by_email(&root_ctx, &state.mm, &form.email).await {
         Ok(user) => match user {
-            None => return Error::LoginFailUsernameNotFound.into_response(),
+            None => {
+                let mut res = Error::LoginFailUsernameNotFound.into_response();
+                add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid."));
+                return res;
+            }
             Some(user) => user,
         },
         Err(error) => return Error::Model(error).into_response(),
@@ -320,10 +310,14 @@ pub async fn login_post(
         },
         &user.password,
     )
-    .await
+        .await
     {
         Ok(status) => status,
-        Err(_) => return Error::LoginFailPwdNotMatching { user_id: user.id }.into_response(),
+        Err(err) => {
+            let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
+            add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid."));
+            return res;
+        }
     };
 
     // Update password scheme if needed
@@ -333,7 +327,12 @@ pub async fn login_post(
             .await
             .is_err()
         {
-            return Error::UpdatePassword.into_response();
+            let mut res = Error::UpdatePassword.into_response();
+            add_hx_message(
+                &mut res,
+                MessageHtmx::error("Failed to update password schema."),
+            );
+            return res;
         }
     }
 
@@ -352,7 +351,12 @@ pub async fn login_post(
             // TODO: Test this for endpoints that require auth
             Redirect::to(&redirect_to).into_response()
         }
-        Err(_) => (StatusCode::BAD_REQUEST, "Login failed").into_response(),
+        Err(err) => {
+            let mut res = (StatusCode::BAD_REQUEST, "Login failed").into_response();
+            add_hx_message(&mut res, MessageHtmx::error("Failed to log you in."));
+            error!("Failed to set cookie for user {} - Error: {}", user.id, err);
+            res
+        }
     }
 }
 
@@ -371,21 +375,21 @@ pub async fn register() -> impl IntoResponse {
     if config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
     }
-    templates::auth::register(false).into_response()
+    templates::auth::register().into_response()
 }
 
 pub async fn register_post(
     State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
-    if form.validate().is_err() {
-        let mut res = templates::auth::register(true).into_response();
-        *res.status_mut() = StatusCode::BAD_REQUEST;
-        return res;
-    }
-
     if lib_core::config().IS_NO_SIGNUPS {
         return Redirect::to("/auth/login").into_response();
+    }
+
+    if form.validate().is_err() {
+        let mut res = Error::PwdNotMatching { user_id: -1 }.into_response();
+        add_hx_message(&mut res, MessageHtmx::error("Passwords do not match."));
+        return res;
     }
 
     let ctx = Ctx::root_ctx();
@@ -396,9 +400,12 @@ pub async fn register_post(
 
     let id = match UserBmc::create(&ctx, &state.mm, user_c).await {
         Ok(id) => id,
-        Err(_) => {
-            let mut res = templates::auth::register(true).into_response();
-            *res.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+        Err(err) => {
+            let mut res = Error::Model(err).into_response();
+            add_hx_message(
+                &mut res,
+                MessageHtmx::error("An error occurred during registration."),
+            );
             return res;
         }
     };
@@ -408,29 +415,41 @@ pub async fn register_post(
         .map_err(|_| Error::RegisterFail)
     {
         Ok(user) => {
-            let email: String = form.email;
-
-            let token = match generate_web_token(&email, user.token_salt) {
+            let token = match generate_web_token(&form.email, user.token_salt) {
                 Ok(token) => token,
-                Err(_) => return Error::GenerateToken.into_response(),
+                Err(_) => {
+                    let mut res = Error::GenerateToken.into_response();
+                    add_hx_message(
+                        &mut res,
+                        MessageHtmx::error("Could not generate web token for authentication."),
+                    );
+                    return res;
+                }
             };
 
             tokio::spawn(async move {
                 state
                     .send_email(
-                        String::from(&email),
+                        String::from(&form.email),
                         "Confirm Account".to_string(),
                         Template::Intro,
                         Data {
                             token: token.to_string(),
-                            username: String::from(&email),
+                            username: String::from(&form.email),
                             url: config().ADDRESS_URL.clone(),
                         },
                     )
                     .await;
             });
         }
-        Err(err) => return err.into_response(),
+        Err(err) => {
+            let mut res = err.into_response();
+            add_hx_message(
+                &mut res,
+                MessageHtmx::error("An error occurred during registration."),
+            );
+            return res;
+        }
     }
 
     Redirect::to("/auth/login").into_response()

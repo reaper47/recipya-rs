@@ -1,3 +1,4 @@
+use crate::templates::core::toast;
 use maud::{html, Markup, DOCTYPE};
 
 pub fn auth(title: &str, content: Markup) -> Markup {
@@ -8,6 +9,7 @@ pub fn auth(title: &str, content: Markup) -> Markup {
             body .h-full.grid.place-content-center {
                 (content)
             }
+            (toast())
         }
     }
 }
