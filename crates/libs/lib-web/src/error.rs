@@ -29,7 +29,7 @@ pub enum Error {
     LoginFailUserHasNoPwd {
         user_id: i64,
     },
-    LoginFailPwdNotMatching {
+    PwdNotMatching {
         user_id: i64,
     },
     LogoutFail,
@@ -129,9 +129,9 @@ impl Error {
             ConfirmInvalidToken => (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL),
             ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
             CtxExt(_) => (StatusCode::FORBIDDEN, ClientError::NO_AUTH),
-            LoginFailUsernameNotFound
-            | LoginFailUserHasNoPwd { .. }
-            | LoginFailPwdNotMatching { .. } => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
+            LoginFailUsernameNotFound | LoginFailUserHasNoPwd { .. } | PwdNotMatching { .. } => {
+                (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL)
+            }
             LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LOGOUT_FAIL),
             LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LOGOUT_FAIL),
             NoToken => (StatusCode::BAD_REQUEST, ClientError::MISSING_PARAMS),

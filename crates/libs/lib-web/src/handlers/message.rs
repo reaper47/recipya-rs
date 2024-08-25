@@ -2,7 +2,7 @@ use crate::handlers::KEY_HX_TRIGGER;
 use axum::{body::Body, http::HeaderValue, response::Response};
 use serde_with::serde_derive::Serialize;
 
-pub(crate) fn add_hx_message(res: &mut Response<Body>, mut message: MessageHtmx) {
+pub(crate) fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
     if let Ok(toast) = serde_json::to_string(&message) {
         if let Ok(value) = HeaderValue::from_str(&toast) {
             res.headers_mut().insert(KEY_HX_TRIGGER, value);

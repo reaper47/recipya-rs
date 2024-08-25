@@ -446,7 +446,7 @@ mod tests_login {
         res.assert_status(StatusCode::BAD_REQUEST);
         pretty_assertions::assert_eq!(
             res.header(KEY_HX_TRIGGER),
-            r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid","status":"alert-error","title":"Operation Failed"}}"#
+            r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#
         );
         Ok(())
     }
@@ -468,7 +468,7 @@ mod tests_login {
         res.assert_status(StatusCode::BAD_REQUEST);
         pretty_assertions::assert_eq!(
             res.header(KEY_HX_TRIGGER),
-            r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid","status":"alert-error","title":"Operation Failed"}}"#
+            r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#
         );
         Ok(())
     }
@@ -615,6 +615,7 @@ mod tests_register {
     use super::*;
     use lib_core::{ctx::Ctx, model::user::UserBmc};
     use lib_web::handlers::handlers_auth::RegisterForm;
+    use lib_web::handlers::KEY_HX_TRIGGER;
 
     const BASE_URI: &str = "/auth/register";
 
@@ -669,9 +670,9 @@ mod tests_register {
         let res = server.post(BASE_URI).form(&a_register_form()).await;
 
         res.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
-        assert_html(
-            res,
-            vec!["This account is either already registered or your credentials don't match."],
+        pretty_assertions::assert_eq!(
+            res.header(KEY_HX_TRIGGER),
+            r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred during registration.","status":"alert-error","title":"Operation Failed"}}"#
         );
         Ok(())
     }

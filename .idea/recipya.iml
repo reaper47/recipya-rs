@@ -21,6 +21,8 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/tools/gen-key/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/crates/libs/lib-scraper/src/tests/data" />
+      <excludeFolder url="file://$MODULE_DIR$/web/docs/public" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
