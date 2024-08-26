@@ -205,15 +205,15 @@ impl UserBmc {
 
 #[cfg(test)]
 mod tests {
-    pub type Result<T> = core::result::Result<T, Error>;
-    pub type Error = Box<dyn std::error::Error>;
-
     use super::*;
     use crate::{
         model,
         model::store::{test_db::TestDb, Pool},
     };
     use futures::FutureExt;
+
+    pub type Result<T> = core::result::Result<T, Error>;
+    pub type Error = Box<dyn std::error::Error>;
 
     #[tokio::test]
     async fn test_create_ok() {

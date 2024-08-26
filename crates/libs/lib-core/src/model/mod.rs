@@ -29,6 +29,7 @@ pub use self::error::{Error, Result};
 mod error;
 pub mod store;
 
+mod recipe;
 pub(in crate::model) mod schema;
 pub mod user;
 

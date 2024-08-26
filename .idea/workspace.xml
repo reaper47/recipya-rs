@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8926aa5f-8597-4dcc-8c7f-86610f2fcec8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/user.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/diesel.toml" beforeDir="false" afterPath="$PROJECT_DIR$/diesel.toml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Unit Test" />
+        <option value="Python Script" />
+        <option value="Rust File" />
+      </list>
+    </option>
+  </component>
+  <component name="FormatOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;reaper47&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/reaper47/recipya-rs.git&quot;,
+    &quot;accountId&quot;: &quot;b9173ba7-b978-400f-a5f6-360abd498def&quot;
+  }
+}</component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="9drcq83w" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2l4aZRD67mNN8m0IQrwW1RkYm9Y" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Test tests_index::test_get_index_bypass_guide.executor": "Run",
+    "Cargo.Test tests_index::test_get_index_ok_anonymous.executor": "Run",
+    "Cargo.Test tests_index::test_get_index_ok_hide_elements_when_autologin.executor": "Run",
+    "Python tests.Python tests for test.MyTestCase.test_something.executor": "Run",
+    "Python tests.Python tests for test_age.TestCategorizeByAge.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "23-establish-the-recipes-bmc",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "typescript.add.unambiguous.imports.on.the.fly": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ],
+    "com.intellij.ide.scratch.LRUPopupBuilder$1/SQL Dialect": [
+      "PostgreSQL"
+    ]
+  }
+}]]></component>
+  <component name="RsExternalLinterProjectSettings">
+    <option name="runOnTheFly" value="true" />
+    <option name="tool" value="Clippy" />
+  </component>
+  <component name="RunManager" selected="Cargo.Test tests_index::test_get_index_ok_redirect_to_recipes_when_autologin">
+    <configuration name="Test tests_index" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya --test routes_general tests_index" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="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" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value=" &quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value=" &quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test tests_index::test_get_index_ok_bypass_guide" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya --test routes_general tests_index::test_get_index_ok_bypass_guide -- --ignored --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="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" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value=" &quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value=" &quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test tests_index::test_get_index_ok_hide_elements_when_autologin" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya --test routes_general tests_index::test_get_index_ok_hide_elements_when_autologin -- --ignored --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="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" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value=" &quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value=" &quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test tests_index::test_get_index_ok_redirect_to_recipes_when_autologin" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya --test routes_general tests_index::test_get_index_ok_redirect_to_recipes_when_autologin -- --ignored --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="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" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value=" &quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value=" &quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Python tests for test_age.TestCategorizeByAge" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="recipya" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/crates/libs/lib-web/src/handlers" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_age.TestCategorizeByAge&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Cargo.Test tests_index" />
+      <item itemvalue="Cargo.Test tests_index::test_get_index_ok_bypass_guide" />
+      <item itemvalue="Cargo.Test tests_index::test_get_index_ok_hide_elements_when_autologin" />
+      <item itemvalue="Cargo.Test tests_index::test_get_index_ok_redirect_to_recipes_when_autologin" />
+      <item itemvalue="Python tests.Python tests for test_age.TestCategorizeByAge" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.Test tests_index::test_get_index_ok_redirect_to_recipes_when_autologin" />
+        <item itemvalue="Cargo.Test tests_index::test_get_index_ok_bypass_guide" />
+        <item itemvalue="Cargo.Test tests_index" />
+        <item itemvalue="Cargo.Test tests_index::test_get_index_ok_hide_elements_when_autologin" />
+        <item itemvalue="Python tests.Python tests for test_age.TestCategorizeByAge" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="RustfmtProjectSettings">
+    <option name="useRustfmt" value="true" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8926aa5f-8597-4dcc-8c7f-86610f2fcec8" name="Changes" comment="" />
+      <created>1724441858362</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1724441858362</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="LAST_COMMIT_MESSAGE" value="" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand>
+      <path>
+        <item name="recipya" type="b2602c69:ProjectViewProjectNode" />
+        <item name="dir{file:///home/macpoule/RustroverProjects/recipya}" type="462c0819:PsiDirectoryNode" />
+      </path>
+    </expand>
+    <select />
+  </component>
+</project>

@@ -167,8 +167,10 @@ diesel::table! {
         description -> Nullable<Text>,
         image -> Nullable<Uuid>,
         #[sql_name = "yield"]
-        yield_ -> Nullable<Int2>,
-        url -> Nullable<Text>,
+        yield_ -> Int2,
+        #[max_length = 3]
+        language -> Bpchar,
+        source -> Nullable<Text>,
         created_at -> Nullable<Timestamp>,
         updated_at -> Nullable<Timestamp>,
         user_id -> Int8,
