@@ -44,7 +44,7 @@ struct Content {
 }
 
 #[derive(Default, Serialize)]
-enum MessageType {
+pub(crate) enum MessageType {
     #[serde(rename = "toast")]
     #[default]
     Toast,
@@ -137,7 +137,7 @@ impl IMessage for MessageWs {
 }
 
 #[derive(Default)]
-struct MessageBuilder {
+pub(crate) struct MessageBuilder {
     message_type: MessageType,
     action: Option<String>,
     message: String,

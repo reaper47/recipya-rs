@@ -16,18 +16,20 @@ dirs = "5.0.1"
 lib-auth = { path = "../../libs/lib-auth" }
 lib-email = { path = "../../libs/lib-email" }
 lib-utils = { path = "../../libs/lib-utils" }
+paste = "1.0.15"
 rpc-router = { workspace = true, optional = true }
 serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 uuid = { workspace = true }
+whatlang = "0.16.4"
 
 [dev-dependencies]
 axum-test = "15.3.0"
-futures = "0.3.30"
-pgtemp = "0.3.0"
+pretty_assertions = "1.4.0"
 reqwest = "0.12.5"
+
 
 [features]
 with-rpc = ["rpc-router"]

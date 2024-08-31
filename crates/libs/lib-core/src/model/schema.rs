@@ -37,7 +37,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    category_recipe (id) {
+    categories_recipes (id) {
         id -> Int8,
         category_id -> Nullable<Int8>,
         recipe_id -> Int8,
@@ -73,17 +73,17 @@ diesel::table! {
 }
 
 diesel::table! {
-    cuisine_recipe (id) {
+    cuisines (id) {
         id -> Int8,
-        cuisine_id -> Nullable<Int8>,
-        recipe_id -> Int8,
+        name -> Text,
     }
 }
 
 diesel::table! {
-    cuisines (id) {
+    cuisines_recipes (id) {
         id -> Int8,
-        name -> Text,
+        cuisine_id -> Nullable<Int8>,
+        recipe_id -> Int8,
     }
 }
 
@@ -322,14 +322,14 @@ diesel::table! {
 
 diesel::joinable!(additional_images_recipe -> recipes (recipe_id));
 diesel::joinable!(auth_tokens -> users (user_id));
-diesel::joinable!(category_recipe -> categories (category_id));
-diesel::joinable!(category_recipe -> recipes (recipe_id));
+diesel::joinable!(categories_recipes -> categories (category_id));
+diesel::joinable!(categories_recipes -> recipes (recipe_id));
 diesel::joinable!(cookbook_recipes -> cookbooks (cookbook_id));
 diesel::joinable!(cookbook_recipes -> recipes (recipe_id));
 diesel::joinable!(cookbooks -> users (user_id));
 diesel::joinable!(counts -> users (user_id));
-diesel::joinable!(cuisine_recipe -> cuisines (cuisine_id));
-diesel::joinable!(cuisine_recipe -> recipes (recipe_id));
+diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
+diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
 diesel::joinable!(ingredient_recipe -> ingredients (ingredient_id));
 diesel::joinable!(ingredient_recipe -> recipes (recipe_id));
 diesel::joinable!(instruction_recipe -> instructions (instruction_id));
@@ -362,12 +362,12 @@ diesel::allow_tables_to_appear_in_same_query!(
     app,
     auth_tokens,
     categories,
-    category_recipe,
+    categories_recipes,
     cookbook_recipes,
     cookbooks,
     counts,
-    cuisine_recipe,
     cuisines,
+    cuisines_recipes,
     ingredient_recipe,
     ingredients,
     instruction_recipe,

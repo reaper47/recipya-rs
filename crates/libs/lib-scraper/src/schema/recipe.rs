@@ -1,15 +1,7 @@
 use std::fmt::Formatter;
 
 use crate::schema::{
-    common::{
-        Action, AggregateRating, AudioObjectOrClipOrMusicRecording, ClipOrVideoObject, CommentType,
-        CountryType, CreativeWorkOrHowToSectionOrHowToStepOrText, CreativeWorkOrItemListOrText,
-        CreativeWorkOrText, CreativeWorkOrUrl, CreativeWorkType, DateOrDateTime,
-        DefinedTermOrTextOrUrl, HowToSupplyOrText, HowToToolOrText, ImageObjectOrUrl,
-        ImageObjectType, LanguageOrText, MonetaryAmountOrText, OrganizationOrPerson,
-        OrganizationType, PlaceType, PropertyValueOrTextOrUrl, QuantitativeValueOrText,
-        RatingOrText, ReviewType, TextOrTextObject,
-    },
+    common::*,
     nutrition::{NutritionInformationSchema, RestrictedDiet},
     AtContext, AtType,
 };
@@ -183,7 +175,7 @@ pub struct RecipeSchema {
     /// The publisher of the creative work.
     pub publisher: Option<OrganizationOrPerson>,
 
-    /// The category of the recipe—for example, appetizer, entree, etc.
+    /// The category of the recipe—for example, appetizer, entrée, etc.
     #[serde(default)]
     pub recipe_category: RecipeCategory,
 
@@ -270,11 +262,18 @@ where
 {
     struct Visitor;
 
-    impl<'de> serde::de::Visitor<'de> for Visitor {
+    impl<'de> de::Visitor<'de> for Visitor {
         type Value = bool;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
             formatter.write_str("a bool or text")
+        }
+
+        fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(v)
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -289,13 +288,6 @@ where
             E: serde::de::Error,
         {
             Ok(v.to_lowercase() == "true")
-        }
-
-        fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
-            Ok(v)
         }
     }
 
