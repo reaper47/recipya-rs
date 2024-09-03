@@ -8,244 +8,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8926aa5f-8597-4dcc-8c7f-86610f2fcec8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.cargo/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/.cargo/config.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.devcontainer/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/.devcontainer/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.devcontainer/clean_test_dbs.sh" beforeDir="false" afterPath="$PROJECT_DIR$/.devcontainer/clean_test_dbs.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.devcontainer/devcontainer.json" beforeDir="false" afterPath="$PROJECT_DIR$/.devcontainer/devcontainer.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.devcontainer/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/.devcontainer/docker-compose.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/CODE_OF_CONDUCT.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/CODE_OF_CONDUCT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/FUNDING.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/FUNDING.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/SECURITY.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/SECURITY.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/dependabot.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/dependabot.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/rust.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/rust.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/1d6602aa-60a7-4ad8-abbe-3699afbbc63b/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/macpoule.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/macpoule.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/recipya.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/recipya.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" afterPath="$PROJECT_DIR$/.vscode/launch.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/.vscode/settings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Taskfile.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/Taskfile.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/config.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/scheme_01.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/scheme_01.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/scheme_02.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/pwd/scheme/scheme_02.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/token/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/token/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/src/token/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/src/token/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/config.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/ctx/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/ctx/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/ctx/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/ctx/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/00000000000000_diesel_initial_setup/down.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/00000000000000_diesel_initial_setup/down.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/00000000000000_diesel_initial_setup/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/00000000000000_diesel_initial_setup/up.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/down.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/down.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/src/config.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/src/sendgrid.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/src/sendgrid.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/src/templates/original/forgot-password.mjml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/src/templates/original/forgot-password.mjml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-rpc-app/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-rpc-app/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-rpc-core/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-rpc-core/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-rpc-core/src/prelude.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-rpc-core/src/prelude.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-rpc-core/src/rpc_result.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-rpc-core/src/rpc_result.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-rpc-core/src/utils/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-rpc-core/src/utils/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/examples/c00-scrape.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/examples/c00-scrape.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/custom/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/custom/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/article.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/article.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/common.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/nutrition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/schema/recipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/support/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/support/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/support/scraper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/support/scraper.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/support/websites.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/support/websites.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_0_to_9.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_0_to_9.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_a.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_a.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_b.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_b.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_c.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_c.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_d.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_d.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_e.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_e.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_f.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_f.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_g.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_g.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_h.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_h.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_i.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_i.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_j.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_j.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_k.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_k.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_l.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_l.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_m.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_m.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_n.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_n.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_o.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_o.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_p.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_p.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_q.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_q.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_r.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_r.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_s.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_s.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_t.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_t.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_u.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_u.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_v.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_v.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_w.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_w.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_y.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_y.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_z.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/tests/tests_scraper_z.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/src/websites.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/src/websites.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-utils/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-utils/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-utils/src/b64.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-utils/src/b64.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-utils/src/envs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-utils/src/envs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-utils/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-utils/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-utils/src/time.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-utils/src/time.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/handlers_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/handlers_auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/handlers_general.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/handlers_general.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/message.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/handlers/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/log/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/log/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/middleware/mw_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/middleware/mw_auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/routes/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/routes/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/core.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/general.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/general.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/layouts.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/layouts.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/templates/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/utils/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/utils/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/src/utils/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/src/utils/token.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/config.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/web/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/web/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/web/routes_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/web/routes_auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/web/routes_general.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/web/routes_general.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/src/web/routes_rpc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/src/web/routes_rpc.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/tests/routes_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/tests/routes_auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/tests/routes_general.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/tests/routes_general.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/tests/support/assert.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/tests/support/assert.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/tests/support/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/tests/support/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/services/web-server/tests/support/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/tests/support/server.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/tools/gen-key/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/tools/gen-key/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/tools/gen-key/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/tools/gen-key/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diesel.toml" beforeDir="false" afterPath="$PROJECT_DIR$/diesel.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/tailwind.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/toast.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/toast.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/archetypes/default.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/archetypes/default.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/assets/css/custom.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/assets/css/custom.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/changelog/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.0.1.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.0.1.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.1.0.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.1.0.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.2.0.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.2.0.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.3.0.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.3.0.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/coc.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/coc.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/community-guide.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/community-guide.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/credits.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/credits.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/about/roadmap.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/about/roadmap.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2023-08-26-welcome.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/blog/2023-08-26-welcome.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2024-01-02-launch.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/blog/2024-01-02-launch.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2024-03-28-v1.1.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/blog/2024-03-28-v1.1.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2024-07-16-v1.2.0.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/blog/2024-07-16-v1.2.0.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/blog/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/authors.yml" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/blog/authors.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/deployment/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/deployment/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/deployment/internet.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/deployment/internet.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/deployment/local-network.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/deployment/local-network.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/build.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/build.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/devcontainer.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/devcontainer.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/intro.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/intro.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/test.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/test.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/add-endpoint.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/add-endpoint.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/import-website.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/import-website.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/admin.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/admin.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/backups.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/backups.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/add.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/add.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/delete.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/delete.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/download.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/download.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/edit.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/edit.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/share.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/share.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/export-data.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/export-data.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/integrations.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/integrations.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/measurement-systems.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/measurement-systems.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/nutrition-facts.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/nutrition-facts.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/add.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/add.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/categories.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/categories.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/delete.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/delete.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/edit.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/edit.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/print.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/print.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/search.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/search.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/share.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/share.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/view.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/view.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/wakelock.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/wakelock.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/reports.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/reports.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/updater.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/features/updater.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/build/Install.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/build/Install.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/build/_index.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/build/_index.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/build/config-file.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/build/config-file.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/docker.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/docker.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/integrations.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/integrations.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/system-requirements.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/system-requirements.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/windows-users.md" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/content/docs/installation/windows-users.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/hugo.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/hugo.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/i18n/en.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/i18n/en.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/i18n/fr.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/i18n/fr.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/i18n/sl.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/i18n/sl.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/static/favicon-dark.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/static/favicon-dark.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/static/images/devices.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/static/images/devices.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/docs/static/images/sponsors.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/docs/static/images/sponsors.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/sponsors/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/sponsors/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/sponsors/sponsorkit.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/sponsorkit.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/browserconfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/browserconfig.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/css/app.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/css/tailwind-custom.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/css/tailwind-custom.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/img/.cache.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/img/.cache.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/img/bars.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/img/bars.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/img/sponsors.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/img/sponsors.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/robots.txt" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/robots.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/safari-pinned-tab.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/safari-pinned-tab.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/static/site.webmanifest" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/site.webmanifest" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -302,7 +69,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Debug&quot;,
     &quot;Cargo.Test model::user::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test tests_index::test_get_index_bypass_guide.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test tests_index::test_get_index_ok_anonymous.executor&quot;: &quot;Run&quot;,
@@ -315,7 +82,7 @@
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;23-establish-the-recipes-bmc&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;//wsl.localhost/Ubuntu/home/macpoule/recipya-rs&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/macpoule/code/new/recipya-rs&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
@@ -343,25 +110,27 @@
       <window_info id="Pull Requests" />
       <window_info id="Settings Sync History" />
       <window_info id="DFA" show_stripe_button="false" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.11015625" />
-      <window_info id="Commit" order="1" weight="0.08567709" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.1109104" />
+      <window_info id="Commit" order="1" weight="0.14921875" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Database Changes" />
       <window_info anchor="bottom" id="TypeScript" show_stripe_button="false" />
       <window_info anchor="bottom" id="TODO" />
       <window_info anchor="bottom" id="Messages" />
       <window_info anchor="bottom" id="File Transfer" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Find" />
       <window_info anchor="bottom" id="Version Control" order="0" />
       <window_info anchor="bottom" id="Problems" order="1" />
-      <window_info anchor="bottom" id="Problems View" order="2" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="3" visible="true" weight="0.32994187" />
+      <window_info anchor="bottom" id="Problems View" order="2" weight="0.32994187" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="3" visible="true" weight="0.2840447" />
       <window_info anchor="bottom" id="Build" order="4" weight="0.32994187" />
-      <window_info anchor="bottom" id="Run" order="5" weight="0.22819768" />
-      <window_info anchor="bottom" id="Services" order="6" />
+      <window_info anchor="bottom" id="Run" order="5" weight="0.24660853" />
+      <window_info anchor="bottom" id="Debug" order="6" weight="0.2843992" />
+      <window_info anchor="bottom" id="Services" order="7" />
       <window_info anchor="right" id="Coverage" show_stripe_button="false" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Notifications" order="0" weight="0.25" />
       <window_info anchor="right" id="AIAssistant" order="1" weight="0.25" />
-      <window_info anchor="right" id="Database" order="2" weight="0.25" />
+      <window_info anchor="right" id="Database" order="2" weight="0.32994792" />
       <window_info anchor="right" id="Gradle" order="3" weight="0.25" />
       <window_info anchor="right" id="Maven" order="4" weight="0.25" />
       <window_info anchor="right" id="Cargo" order="5" weight="0.2" />
@@ -477,7 +246,17 @@
       <workItem from="1725087567889" duration="967000" />
       <workItem from="1725088991338" duration="2806000" />
       <workItem from="1725094045008" duration="2339000" />
-      <workItem from="1725139321079" duration="702000" />
+      <workItem from="1725139321079" duration="1328000" />
+      <workItem from="1725140742797" duration="66000" />
+      <workItem from="1725201277697" duration="993000" />
+      <workItem from="1725202317711" duration="1620000" />
+      <workItem from="1725204026313" duration="5218000" />
+      <workItem from="1725209632443" duration="1068000" />
+      <workItem from="1725211357635" duration="1280000" />
+      <workItem from="1725212834815" duration="1911000" />
+      <workItem from="1725214901022" duration="186000" />
+      <workItem from="1725290147047" duration="4463000" />
+      <workItem from="1725328565000" duration="89000" />
     </task>
     <servers />
   </component>
