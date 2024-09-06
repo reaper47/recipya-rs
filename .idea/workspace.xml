@@ -11,7 +11,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/down.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/down.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -69,7 +68,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test model::user::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test tests_index::test_get_index_bypass_guide.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test tests_index::test_get_index_ok_anonymous.executor&quot;: &quot;Run&quot;,
@@ -110,8 +109,8 @@
       <window_info id="Pull Requests" />
       <window_info id="Settings Sync History" />
       <window_info id="DFA" show_stripe_button="false" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.1109104" />
-      <window_info id="Commit" order="1" weight="0.14921875" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.15442708" />
+      <window_info active="true" id="Commit" order="1" visible="true" weight="0.32994792" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Database Changes" />
       <window_info anchor="bottom" id="TypeScript" show_stripe_button="false" />
@@ -122,13 +121,13 @@
       <window_info anchor="bottom" id="Version Control" order="0" />
       <window_info anchor="bottom" id="Problems" order="1" />
       <window_info anchor="bottom" id="Problems View" order="2" weight="0.32994187" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="3" visible="true" weight="0.2840447" />
+      <window_info anchor="bottom" id="Terminal" order="3" weight="0.2999031" />
       <window_info anchor="bottom" id="Build" order="4" weight="0.32994187" />
-      <window_info anchor="bottom" id="Run" order="5" weight="0.24660853" />
-      <window_info anchor="bottom" id="Debug" order="6" weight="0.2843992" />
+      <window_info active="true" anchor="bottom" id="Run" order="5" visible="true" weight="0.32994187" />
+      <window_info anchor="bottom" id="Debug" order="6" weight="0.2999031" />
       <window_info anchor="bottom" id="Services" order="7" />
       <window_info anchor="right" id="Coverage" show_stripe_button="false" side_tool="true" />
-      <window_info anchor="right" content_ui="combo" id="Notifications" order="0" weight="0.25" />
+      <window_info anchor="right" id="Notifications" order="0" weight="0.34394574" />
       <window_info anchor="right" id="AIAssistant" order="1" weight="0.25" />
       <window_info anchor="right" id="Database" order="2" weight="0.32994792" />
       <window_info anchor="right" id="Gradle" order="3" weight="0.25" />
@@ -256,7 +255,18 @@
       <workItem from="1725212834815" duration="1911000" />
       <workItem from="1725214901022" duration="186000" />
       <workItem from="1725290147047" duration="4463000" />
-      <workItem from="1725328565000" duration="89000" />
+      <workItem from="1725328565000" duration="545000" />
+      <workItem from="1725375359894" duration="662000" />
+      <workItem from="1725378012785" duration="10985000" />
+      <workItem from="1725448683369" duration="7410000" />
+      <workItem from="1725458334207" duration="7067000" />
+      <workItem from="1725477370947" duration="806000" />
+      <workItem from="1725478379502" duration="2026000" />
+      <workItem from="1725483204328" duration="3622000" />
+      <workItem from="1725645850724" duration="98000" />
+      <workItem from="1725646145454" duration="893000" />
+      <workItem from="1725647273048" duration="2266000" />
+      <workItem from="1725650680268" duration="386000" />
     </task>
     <servers />
   </component>
@@ -276,6 +286,17 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="LAST_COMMIT_MESSAGE" value="" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs</url>
+          <line>477</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand>

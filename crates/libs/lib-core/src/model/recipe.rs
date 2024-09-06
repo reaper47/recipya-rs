@@ -6,12 +6,16 @@ use crate::{
 };
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
+use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, RunQueryDsl};
+use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
+
+pub type Sections = HashMap<i64, (String, Vec<String>)>;
 
 #[derive(Associations, Debug, Queryable, Identifiable, PartialEq, Selectable)]
 #[diesel(belongs_to(super::user::User))]
-#[diesel(table_name = super::schema::recipes)]
+#[diesel(table_name = schema::recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Recipe {
     pub id: i64,
@@ -47,7 +51,7 @@ pub struct RecipeForCreate {
 
 #[derive(Associations, Insertable)]
 #[diesel(belongs_to(super::user::User))]
-#[diesel(table_name = super::schema::recipes)]
+#[diesel(table_name = schema::recipes)]
 pub(in crate::model) struct RecipeForInsert {
     pub(in crate::model) name: String,
     pub(in crate::model) description: Option<String>,
@@ -68,28 +72,23 @@ pub struct RecipeWithData {
     pub keywords: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Sections {
-    WithHeaders(Vec<Section>),
-    WithoutHeaders(Vec<String>),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Section {
-    pub name: String,
-    pub items: Vec<String>,
-}
-
 name_entity_with_relations!(Category, categories, categories_recipes);
 name_entity_with_relations!(Cuisine, cuisines, cuisines_recipes);
 name_entity_with_relations!(Keyword, keywords, keywords_recipes);
 
 #[derive(Queryable, Identifiable, Selectable)]
-#[diesel(table_name = super::schema::ingredients)]
+#[diesel(table_name = schema::ingredients)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Ingredient {
     pub id: i64,
     pub name: String,
+}
+
+#[derive(Queryable)]
+pub struct IngredientForSelect {
+    pub name: String,
+    pub section: Option<String>,
+    pub section_id: i64,
 }
 
 #[derive(Insertable)]
@@ -98,15 +97,41 @@ struct IngredientForInsert {
     name: String,
 }
 
-#[derive(Identifiable, Selectable, Queryable, Insertable, Associations)]
+#[derive(Identifiable, Selectable, Queryable, Associations)]
+#[diesel(table_name = schema::ingredients_recipes)]
 #[diesel(belongs_to(Ingredient), belongs_to(Recipe), belongs_to(Section))]
-#[diesel(table_name = super::schema::ingredients_recipes)]
-#[diesel(primary_key(ingredient_id, recipe_id))]
+#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct IngredientRecipe {
+    pub id: i64,
     pub ingredient_id: i64,
     pub recipe_id: i64,
-    pub section_id: Option<i64>,
+    pub section_id: i64,
     pub item_order: i16,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = schema::ingredients_recipes)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct IngredientRecipeForInsert {
+    pub ingredient_id: i64,
+    pub recipe_id: i64,
+    pub section_id: i64,
+    pub item_order: i16,
+}
+
+#[derive(Queryable, Identifiable, Selectable)]
+#[diesel(table_name = schema::sections)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct Section {
+    id: i64,
+    name: String,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = schema::sections)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct SectionForInsert {
+    name: String,
 }
 
 /// Recipe backend model controller.
@@ -127,24 +152,18 @@ impl RecipeBmc {
                         } else {
                             ""
                         },
-                        match &recipe_c.ingredients {
-                            Sections::WithoutHeaders(vec) => vec.join(" "),
-                            Sections::WithHeaders(vec) => vec
-                                .iter()
-                                .flat_map(|section| section.items.iter())
-                                .cloned()
-                                .collect::<Vec<String>>()
-                                .join(" "),
-                        },
-                        match recipe_c.instructions {
-                            Sections::WithoutHeaders(vec) => vec.join(" "),
-                            Sections::WithHeaders(vec) => vec
-                                .iter()
-                                .flat_map(|section| section.items.iter())
-                                .cloned()
-                                .collect::<Vec<String>>()
-                                .join(" "),
-                        },
+                        recipe_c
+                            .ingredients
+                            .values()
+                            .flat_map(|(_, ingredients)| ingredients.clone())
+                            .collect::<Vec<String>>()
+                            .join(" "),
+                        recipe_c
+                            .instructions
+                            .values()
+                            .flat_map(|(_, ingredients)| ingredients.clone())
+                            .collect::<Vec<String>>()
+                            .join(" "),
                     ))
                     .unwrap_or_else(|| whatlang::Lang::Eng);
 
@@ -167,10 +186,10 @@ impl RecipeBmc {
                         .values(&CategoryForInsert {
                             name: String::from(recipe_c.category.clone()),
                         })
-                        .on_conflict(schema::categories::dsl::name)
+                        .on_conflict(schema::categories::name)
                         .do_update()
-                        .set(schema::categories::dsl::name.eq(recipe_c.category))
-                        .returning(schema::categories::dsl::id)
+                        .set(schema::categories::name.eq(recipe_c.category))
+                        .returning(schema::categories::id)
                         .get_result(&mut *conn)
                         .await?;
 
@@ -186,7 +205,7 @@ impl RecipeBmc {
                     if let Some(cuisine) = recipe_c.cuisine {
                         let cuisine_id = diesel::insert_into(schema::cuisines::table)
                             .values(&CuisineForInsert { name: cuisine })
-                            .returning(schema::cuisines::dsl::id)
+                            .returning(schema::cuisines::id)
                             .get_result(&mut *conn)
                             .await?;
 
@@ -199,39 +218,71 @@ impl RecipeBmc {
                             .await?;
                     }
 
-                    // TODO: Ingredients
-                    match &recipe_c.ingredients {
-                        Sections::WithoutHeaders(ingredients) => {
-                            let ids: Vec<IngredientRecipe> =
-                                diesel::insert_into(schema::ingredients::table)
-                                    .values(
-                                        &ingredients
-                                            .iter()
-                                            .map(|name| IngredientForInsert {
-                                                name: String::from(name),
-                                            })
-                                            .collect::<Vec<IngredientForInsert>>(),
-                                    )
-                                    .returning(schema::ingredients::dsl::id)
-                                    .get_results::<i64>(&mut *conn)
-                                    .await?
-                                    .iter()
-                                    .enumerate()
-                                    .map(|(idx, &ingredient_id)| IngredientRecipe {
-                                        ingredient_id,
-                                        recipe_id,
-                                        section_id: None,
-                                        item_order: idx as i16,
-                                    })
-                                    .collect();
+                    // Sections
+                    let mut sections = recipe_c
+                        .ingredients
+                        .values()
+                        .map(|(name, _)| name.clone())
+                        .collect::<Vec<_>>();
 
-                            diesel::insert_into(schema::ingredients_recipes::table)
-                                .values(ids)
-                                .execute(&mut *conn)
-                                .await?;
-                        }
-                        Sections::WithHeaders(sections) => for section in sections.iter() {},
-                    };
+                    sections.extend(recipe_c.instructions.values().map(|(name, _)| name.clone()));
+
+                    let mut sections_map: HashMap<String, i64> = HashMap::new();
+                    diesel::insert_into(schema::sections::table)
+                        .values(
+                            &sections
+                                .into_iter()
+                                .collect::<HashSet<String>>()
+                                .into_iter()
+                                .map(|name| SectionForInsert { name })
+                                .collect::<Vec<_>>(),
+                        )
+                        .on_conflict(schema::sections::name)
+                        .do_update()
+                        .set(schema::sections::name.eq(excluded(schema::sections::name)))
+                        .returning((schema::sections::id, schema::sections::name))
+                        .get_results::<(i64, String)>(&mut *conn)
+                        .await?
+                        .iter()
+                        .for_each(|(id, name)| {
+                            let _ = sections_map.insert(String::from(name), *id);
+                        });
+
+                    // Ingredients
+                    for (_, entry) in recipe_c.ingredients.iter().enumerate() {
+                        let ids: Vec<IngredientRecipeForInsert> =
+                            diesel::insert_into(schema::ingredients::table)
+                                .values(
+                                    entry
+                                        .1
+                                         .1
+                                        .iter()
+                                        .map(|name| IngredientForInsert {
+                                            name: String::from(name),
+                                        })
+                                        .collect::<Vec<_>>(),
+                                )
+                                .returning((schema::ingredients::id, schema::ingredients::name))
+                                .get_results::<(i64, String)>(&mut *conn)
+                                .await?
+                                .iter()
+                                .enumerate()
+                                .map(|(idx, ingredient)| IngredientRecipeForInsert {
+                                    ingredient_id: ingredient.0,
+                                    recipe_id,
+                                    section_id: *sections_map
+                                        .get(&entry.1 .0)
+                                        .ok_or(1)
+                                        .unwrap_or(&1),
+                                    item_order: idx as i16,
+                                })
+                                .collect::<Vec<IngredientRecipeForInsert>>();
+
+                        diesel::insert_into(schema::ingredients_recipes::table)
+                            .values(ids)
+                            .execute(&mut *conn)
+                            .await?;
+                    }
 
                     // TODO: Instructions
 
@@ -241,10 +292,10 @@ impl RecipeBmc {
                             .values(&KeywordForInsert {
                                 name: String::from(keyword),
                             })
-                            .on_conflict(schema::keywords::dsl::name)
+                            .on_conflict(schema::keywords::name)
                             .do_update()
-                            .set(schema::keywords::dsl::name.eq(String::from(keyword)))
-                            .returning(schema::keywords::dsl::id)
+                            .set(schema::keywords::name.eq(String::from(keyword)))
+                            .returning(schema::keywords::id)
                             .get_result(&mut *conn)
                             .await?;
 
@@ -292,17 +343,47 @@ impl RecipeBmc {
                 id,
             })?;
 
+        let ingredients = schema::ingredients_recipes::table
+            .filter(schema::ingredients_recipes::recipe_id.eq(id))
+            .inner_join(schema::ingredients::table)
+            .inner_join(schema::sections::table)
+            .order(schema::ingredients_recipes::item_order)
+            .select((
+                schema::ingredients::name,
+                schema::sections::name,
+                schema::ingredients_recipes::section_id,
+            ))
+            .load::<(String, String, i64)>(&mut *conn)
+            .await?
+            .into_iter()
+            .fold(
+                HashMap::new(),
+                |mut acc, (ingredient, section, section_id)| {
+                    acc.entry(section_id)
+                        .and_modify(|entry: &mut (String, Vec<String>)| {
+                            entry.1.push(ingredient.clone())
+                        })
+                        .or_insert_with(|| (section, vec![ingredient]));
+
+                    acc
+                },
+            )
+            .into_iter()
+            .enumerate()
+            .map(|(idx, (_k, v))| ((idx + 1) as i64, v))
+            .collect::<Sections>();
+
         Ok(RecipeWithData {
             recipe,
             category,
             cuisine,
-            ingredients: Sections::WithHeaders(vec![]),
-            instructions: Sections::WithHeaders(vec![]),
+            ingredients,
+            instructions: HashMap::new(),
             keywords: match keywords {
                 None => None,
                 Some(_) => Some(
                     schema::keywords_recipes::table
-                        .filter(schema::keywords_recipes::dsl::recipe_id.eq(id))
+                        .filter(schema::keywords_recipes::recipe_id.eq(id))
                         .inner_join(schema::keywords::table)
                         .select(schema::keywords::name)
                         .load::<String>(&mut *conn)
@@ -330,41 +411,47 @@ mod tests {
         let fx_yield = 4;
         let fx_cuisine = Some("thai".to_string());
         let fx_keywords = vec!["vegetarian".to_string(), "tofu".to_string()];
-        /*let fx_ingredients = Sections::WithHeaders(vec![
-            Section {
-                header: "Sauce".to_string(),
-                items: vec![
-                    "1 cup blue spinach".to_string(),
-                    "1/2 tbsp cinnamon".to_string(),
-                ],
-            },
-            Section {
-                header: "Main".to_string(),
-                items: vec![
-                    "4 pounds top quality chicken filet".to_string(),
-                    "1/8 cup lemon juice".to_string(),
-                ],
-            },
-        ]);*/
-        let fx_ingredients = Sections::WithoutHeaders(vec![
-            "1 cup blue spinach".to_string(),
-            "1/2 tbsp cinnamon".to_string(),
-            "4 pounds top quality chicken filet".to_string(),
-            "1/8 cup lemon juice".to_string(),
+        let fx_ingredients = Sections::from([
+            (
+                1,
+                (
+                    "Sauce".to_string(),
+                    vec![
+                        "1 cup blue spinach".to_string(),
+                        "1/2 tbsp cinnamon".to_string(),
+                    ],
+                ),
+            ),
+            (
+                2,
+                (
+                    "Main".to_string(),
+                    vec![
+                        "4 pounds top quality chicken filet".to_string(),
+                        "1/8 cup lemon juice".to_string(),
+                    ],
+                ),
+            ),
         ]);
-        let fx_instructions = Sections::WithHeaders(vec![
-            Section {
-                name: "Sauce".to_string(),
-                items: vec!["Mix all these ingredients".to_string()],
-            },
-            Section {
-                name: "Chicken".to_string(),
-                items: vec![
-                    "Turn the oven at 300 F".to_string(),
-                    "Soak the chicken in the lemon juice".to_string(),
-                    "Bake for 35 minutes".to_string(),
-                ],
-            },
+        let fx_instructions = Sections::from([
+            (
+                1,
+                (
+                    "Sauce".to_string(),
+                    vec!["Mix all these ingredients".to_string()],
+                ),
+            ),
+            (
+                2,
+                (
+                    "Chicken".to_string(),
+                    vec![
+                        "Turn the oven at 300 F".to_string(),
+                        "Soak the chicken in the lemon juice".to_string(),
+                        "Bake for 35 minutes".to_string(),
+                    ],
+                ),
+            ),
         ]);
 
         let got_id = RecipeBmc::create(

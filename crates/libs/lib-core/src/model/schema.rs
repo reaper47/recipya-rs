@@ -99,7 +99,7 @@ diesel::table! {
         id -> Int8,
         ingredient_id -> Int8,
         recipe_id -> Int8,
-        section_id -> Nullable<Int8>,
+        section_id -> Int8,
         item_order -> Int2,
     }
 }
