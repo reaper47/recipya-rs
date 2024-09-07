@@ -27,46 +27,21 @@ pub async fn new_db_pool(url: &str) -> Result<Pool> {
 }
 
 #[cfg(test)]
-mod tests {
-    /*#[tokio::test]
-    async fn test_foo() {
-        let db = TestDb::new().await;
-        db.run_test(|pool| {
-            async move {
-                let conn = &mut pool.get().unwrap();
-
-                let res = diesel::insert_into(users::table)
-                    .values(&UserForInsert {
-                        email: "test@example.com".to_string(),
-                    })
-                    .returning(User::as_returning())
-                    .get_result(conn)
-                    .expect("Error saving new user");
-
-
-                let results = users
-                    .select(User::as_select())
-                    .load(conn)
-                    .expect("expected results");
-                assert_eq!(results.len(), 1);
-            }
-            .boxed()
-        })
-        .await;
-    }*/
-}
-
-#[cfg(test)]
 pub mod test_db {
-    use std::{sync::atomic::AtomicU32, thread};
-
-    use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
-    use futures::future::BoxFuture;
-    use reqwest::Url;
-
-    use crate::config::config;
-
     use super::*;
+    use crate::{
+        config::config,
+        ctx::Ctx,
+        model::{
+            user::{UserBmc, UserForCreate},
+            ModelManager,
+        },
+    };
+    use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
+    use reqwest::Url;
+    use std::sync::atomic::AtomicU32;
+
+    pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     static TEST_DB_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -78,9 +53,9 @@ pub mod test_db {
     }
 
     impl TestDb {
-        pub async fn new() -> Self {
-            let default_db_url = &config().DB_URL;
-            let mut conn = PgConnection::establish(default_db_url).unwrap();
+        pub async fn new() -> Result<Self> {
+            let default_db_url = config().DB_URL.to_string();
+            let mut conn = PgConnection::establish(&default_db_url).unwrap();
 
             let name = format!(
                 "test_db_{}_{}",
@@ -88,31 +63,45 @@ pub mod test_db {
                 TEST_DB_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
             );
 
-            sql_query(format!("CREATE DATABASE {};", name))
-                .execute(&mut conn)
-                .unwrap();
+            sql_query(format!("CREATE DATABASE {};", name)).execute(&mut conn)?;
 
-            let mut url = Url::parse(default_db_url).unwrap();
+            let mut url = Url::parse(&default_db_url)?;
             url.set_path(&name);
+            let pool = new_db_pool(url.as_str()).await?;
 
-            Self {
-                default_db_url: default_db_url.to_string(),
+            UserBmc::create(
+                &Ctx::root_ctx(),
+                &ModelManager {
+                    db: pool.clone(),
+                    email: None,
+                },
+                UserForCreate {
+                    email: "first@user.com".to_string(),
+                    password_clear: "12345678".to_string(),
+                },
+            )
+            .await?;
+
+            Ok(Self {
+                default_db_url,
                 name,
-                pool: new_db_pool(url.as_str()).await.unwrap(),
-            }
+                pool,
+            })
         }
 
-        pub async fn run_test(&self, test: impl Fn() -> BoxFuture<'static, ()>) {
-            test().await;
+        pub fn setup(&self, user_id: i64) -> (ModelManager, Ctx) {
+            (
+                ModelManager {
+                    db: self.pool.clone(),
+                    email: None,
+                },
+                Ctx::new(user_id).unwrap(),
+            )
         }
     }
 
     impl Drop for TestDb {
         fn drop(&mut self) {
-            if thread::panicking() {
-                eprintln!("TestDb leaking database {}", self.name);
-                return;
-            }
             let mut conn = PgConnection::establish(&self.default_db_url).unwrap();
             sql_query(format!(
                 "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}'",

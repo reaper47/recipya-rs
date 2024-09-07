@@ -37,19 +37,10 @@ diesel::table! {
 }
 
 diesel::table! {
-    category_recipe (id) {
+    categories_recipes (id) {
         id -> Int8,
         category_id -> Nullable<Int8>,
         recipe_id -> Int8,
-    }
-}
-
-diesel::table! {
-    cookbook_recipes (id) {
-        id -> Int8,
-        cookbook_id -> Nullable<Int8>,
-        recipe_id -> Nullable<Int8>,
-        order_index -> Int2,
     }
 }
 
@@ -64,19 +55,20 @@ diesel::table! {
 }
 
 diesel::table! {
+    cookbooks_recipes (id) {
+        id -> Int8,
+        cookbook_id -> Nullable<Int8>,
+        recipe_id -> Nullable<Int8>,
+        order_index -> Int2,
+    }
+}
+
+diesel::table! {
     counts (id) {
         id -> Int8,
         user_id -> Nullable<Int8>,
         recipes -> Nullable<Int4>,
         cookbooks -> Nullable<Int4>,
-    }
-}
-
-diesel::table! {
-    cuisine_recipe (id) {
-        id -> Int8,
-        cuisine_id -> Nullable<Int8>,
-        recipe_id -> Int8,
     }
 }
 
@@ -88,11 +80,10 @@ diesel::table! {
 }
 
 diesel::table! {
-    ingredient_recipe (id) {
+    cuisines_recipes (id) {
         id -> Int8,
-        ingredient_id -> Int8,
+        cuisine_id -> Nullable<Int8>,
         recipe_id -> Int8,
-        ingredient_order -> Int2,
     }
 }
 
@@ -104,11 +95,12 @@ diesel::table! {
 }
 
 diesel::table! {
-    instruction_recipe (id) {
+    ingredients_recipes (id) {
         id -> Int8,
-        instruction_id -> Int8,
+        ingredient_id -> Int8,
         recipe_id -> Int8,
-        instruction_order -> Int2,
+        section_id -> Int8,
+        item_order -> Int2,
     }
 }
 
@@ -120,10 +112,12 @@ diesel::table! {
 }
 
 diesel::table! {
-    keyword_recipe (id) {
+    instructions_recipes (id) {
         id -> Int8,
-        keyword_id -> Int8,
+        instruction_id -> Int8,
         recipe_id -> Int8,
+        section_id -> Int8,
+        item_order -> Int2,
     }
 }
 
@@ -131,6 +125,14 @@ diesel::table! {
     keywords (id) {
         id -> Int8,
         name -> Text,
+    }
+}
+
+diesel::table! {
+    keywords_recipes (id) {
+        id -> Int8,
+        keyword_id -> Int8,
+        recipe_id -> Int8,
     }
 }
 
@@ -167,21 +169,13 @@ diesel::table! {
         description -> Nullable<Text>,
         image -> Nullable<Uuid>,
         #[sql_name = "yield"]
-        yield_ -> Nullable<Int2>,
-        url -> Nullable<Text>,
-        created_at -> Nullable<Timestamp>,
-        updated_at -> Nullable<Timestamp>,
+        yield_ -> Int2,
+        #[max_length = 3]
+        language -> Bpchar,
+        source -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
         user_id -> Int8,
-    }
-}
-
-diesel::table! {
-    report_logs (id) {
-        id -> Int8,
-        report_id -> Int8,
-        title -> Text,
-        is_success -> Bool,
-        error_reason -> Text,
     }
 }
 
@@ -203,7 +197,24 @@ diesel::table! {
 }
 
 diesel::table! {
-    share_cookbooks (id) {
+    reports_logs (id) {
+        id -> Int8,
+        report_id -> Int8,
+        title -> Text,
+        is_success -> Bool,
+        error_reason -> Text,
+    }
+}
+
+diesel::table! {
+    sections (id) {
+        id -> Int8,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    shares_cookbooks (id) {
         id -> Int8,
         link -> Text,
         user_id -> Nullable<Int8>,
@@ -213,20 +224,12 @@ diesel::table! {
 }
 
 diesel::table! {
-    share_recipes (id) {
+    shares_recipes (id) {
         id -> Int8,
         link -> Text,
         user_id -> Nullable<Int8>,
         recipe_id -> Nullable<Int8>,
         created_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    time_recipe (id) {
-        id -> Int8,
-        time_id -> Int8,
-        recipe_id -> Int8,
     }
 }
 
@@ -240,12 +243,10 @@ diesel::table! {
 }
 
 diesel::table! {
-    tool_recipe (id) {
+    times_recipes (id) {
         id -> Int8,
-        tool_id -> Int8,
+        time_id -> Int8,
         recipe_id -> Int8,
-        quantity -> Nullable<Int2>,
-        tool_order -> Int2,
     }
 }
 
@@ -257,18 +258,12 @@ diesel::table! {
 }
 
 diesel::table! {
-    user_category (id) {
+    tools_recipes (id) {
         id -> Int8,
-        user_id -> Int8,
-        category_id -> Int8,
-    }
-}
-
-diesel::table! {
-    user_recipe (id) {
-        id -> Int8,
-        user_id -> Int8,
+        tool_id -> Int8,
         recipe_id -> Int8,
+        quantity -> Nullable<Int2>,
+        tool_order -> Int2,
     }
 }
 
@@ -299,7 +294,23 @@ diesel::table! {
 }
 
 diesel::table! {
-    video_recipe (id) {
+    users_categories (id) {
+        id -> Int8,
+        user_id -> Int8,
+        category_id -> Int8,
+    }
+}
+
+diesel::table! {
+    users_recipes (id) {
+        id -> Int8,
+        user_id -> Int8,
+        recipe_id -> Int8,
+    }
+}
+
+diesel::table! {
+    videos_recipes (id) {
         id -> Int4,
         video -> Uuid,
         recipe_id -> Int8,
@@ -320,74 +331,77 @@ diesel::table! {
 
 diesel::joinable!(additional_images_recipe -> recipes (recipe_id));
 diesel::joinable!(auth_tokens -> users (user_id));
-diesel::joinable!(category_recipe -> categories (category_id));
-diesel::joinable!(category_recipe -> recipes (recipe_id));
-diesel::joinable!(cookbook_recipes -> cookbooks (cookbook_id));
-diesel::joinable!(cookbook_recipes -> recipes (recipe_id));
+diesel::joinable!(categories_recipes -> categories (category_id));
+diesel::joinable!(categories_recipes -> recipes (recipe_id));
 diesel::joinable!(cookbooks -> users (user_id));
+diesel::joinable!(cookbooks_recipes -> cookbooks (cookbook_id));
+diesel::joinable!(cookbooks_recipes -> recipes (recipe_id));
 diesel::joinable!(counts -> users (user_id));
-diesel::joinable!(cuisine_recipe -> cuisines (cuisine_id));
-diesel::joinable!(cuisine_recipe -> recipes (recipe_id));
-diesel::joinable!(ingredient_recipe -> ingredients (ingredient_id));
-diesel::joinable!(ingredient_recipe -> recipes (recipe_id));
-diesel::joinable!(instruction_recipe -> instructions (instruction_id));
-diesel::joinable!(instruction_recipe -> recipes (recipe_id));
-diesel::joinable!(keyword_recipe -> keywords (keyword_id));
-diesel::joinable!(keyword_recipe -> recipes (recipe_id));
+diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
+diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
+diesel::joinable!(ingredients_recipes -> ingredients (ingredient_id));
+diesel::joinable!(ingredients_recipes -> recipes (recipe_id));
+diesel::joinable!(ingredients_recipes -> sections (section_id));
+diesel::joinable!(instructions_recipes -> instructions (instruction_id));
+diesel::joinable!(instructions_recipes -> recipes (recipe_id));
+diesel::joinable!(instructions_recipes -> sections (section_id));
+diesel::joinable!(keywords_recipes -> keywords (keyword_id));
+diesel::joinable!(keywords_recipes -> recipes (recipe_id));
 diesel::joinable!(nutrition -> recipes (recipe_id));
 diesel::joinable!(recipes -> users (user_id));
-diesel::joinable!(report_logs -> reports (report_id));
 diesel::joinable!(reports -> report_types (report_type));
 diesel::joinable!(reports -> users (user_id));
-diesel::joinable!(share_cookbooks -> cookbooks (cookbook_id));
-diesel::joinable!(share_cookbooks -> users (user_id));
-diesel::joinable!(share_recipes -> recipes (recipe_id));
-diesel::joinable!(share_recipes -> users (user_id));
-diesel::joinable!(time_recipe -> recipes (recipe_id));
-diesel::joinable!(time_recipe -> times (time_id));
-diesel::joinable!(tool_recipe -> recipes (recipe_id));
-diesel::joinable!(tool_recipe -> tools (tool_id));
-diesel::joinable!(user_category -> categories (category_id));
-diesel::joinable!(user_category -> users (user_id));
-diesel::joinable!(user_recipe -> recipes (recipe_id));
-diesel::joinable!(user_recipe -> users (user_id));
+diesel::joinable!(reports_logs -> reports (report_id));
+diesel::joinable!(shares_cookbooks -> cookbooks (cookbook_id));
+diesel::joinable!(shares_cookbooks -> users (user_id));
+diesel::joinable!(shares_recipes -> recipes (recipe_id));
+diesel::joinable!(shares_recipes -> users (user_id));
+diesel::joinable!(times_recipes -> recipes (recipe_id));
+diesel::joinable!(times_recipes -> times (time_id));
+diesel::joinable!(tools_recipes -> recipes (recipe_id));
+diesel::joinable!(tools_recipes -> tools (tool_id));
 diesel::joinable!(user_settings -> measurement_systems (measurement_system_id));
 diesel::joinable!(user_settings -> users (user_id));
-diesel::joinable!(video_recipe -> recipes (recipe_id));
+diesel::joinable!(users_categories -> categories (category_id));
+diesel::joinable!(users_categories -> users (user_id));
+diesel::joinable!(users_recipes -> recipes (recipe_id));
+diesel::joinable!(users_recipes -> users (user_id));
+diesel::joinable!(videos_recipes -> recipes (recipe_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     additional_images_recipe,
     app,
     auth_tokens,
     categories,
-    category_recipe,
-    cookbook_recipes,
+    categories_recipes,
     cookbooks,
+    cookbooks_recipes,
     counts,
-    cuisine_recipe,
     cuisines,
-    ingredient_recipe,
+    cuisines_recipes,
     ingredients,
-    instruction_recipe,
+    ingredients_recipes,
     instructions,
-    keyword_recipe,
+    instructions_recipes,
     keywords,
+    keywords_recipes,
     measurement_systems,
     nutrition,
     recipes,
-    report_logs,
     report_types,
     reports,
-    share_cookbooks,
-    share_recipes,
-    time_recipe,
+    reports_logs,
+    sections,
+    shares_cookbooks,
+    shares_recipes,
     times,
-    tool_recipe,
+    times_recipes,
     tools,
-    user_category,
-    user_recipe,
+    tools_recipes,
     user_settings,
     users,
-    video_recipe,
+    users_categories,
+    users_recipes,
+    videos_recipes,
     websites,
 );

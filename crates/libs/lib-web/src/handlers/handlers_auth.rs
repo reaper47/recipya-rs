@@ -14,7 +14,7 @@ use validator::Validate;
 use super::KEY_HX_REDIRECT;
 use crate::{
     error::{Error, Result},
-    handlers::message::{add_hx_message, IMessage, MessageHtmx, MessageStatus, MessageWs},
+    handlers::message::{add_hx_message, IMessage, MessageHtmx, MessageWs},
     middleware::mw_auth::CtxW,
     templates,
     utils::token::{remove_token_cookie, set_token_cookie},
@@ -146,7 +146,7 @@ pub async fn confirm(
                     entity: "user",
                     id: -1,
                 })
-                    .into_response()
+                .into_response()
             }
         },
         Err(err) => return Error::Model(err).into_response(),
@@ -310,10 +310,10 @@ pub async fn login_post(
         },
         &user.password,
     )
-        .await
+    .await
     {
         Ok(status) => status,
-        Err(err) => {
+        Err(_err) => {
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
             add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid."));
             return res;

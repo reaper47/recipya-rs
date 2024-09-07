@@ -26,3 +26,7 @@ SERVICE_TOKEN_DURATION_SEC = "1800"
 
 SERVICE_DOCS_FOLDER = "web/docs/public"
 SERVICE_WEB_FOLDER = "web/static"
+
+[target.x86_64-pc-windows-msvc.pq]
+rustc-link-search = ["C:\\Program Files\\PostgreSQL\\12\\lib"]
+rustc-link-lib = ["libpq"]

@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8926aa5f-8597-4dcc-8c7f-86610f2fcec8" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Unit Test" />
+        <option value="Python Script" />
+        <option value="Rust File" />
+      </list>
+    </option>
+  </component>
+  <component name="FormatOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;reaper47&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/reaper47/recipya-rs.git&quot;,
+    &quot;accountId&quot;: &quot;b9173ba7-b978-400f-a5f6-360abd498def&quot;
+  }
+}</component>
+  <component name="InvalidFacetManager">
+    <ignored-facets>
+      <facet id="recipya/invalid/Python facet" />
+    </ignored-facets>
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="9drcq83w" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2l4aZRD67mNN8m0IQrwW1RkYm9Y" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test model::user::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_index::test_get_index_bypass_guide.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_index::test_get_index_ok_anonymous.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_index::test_get_index_ok_hide_elements_when_autologin.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test user::tests.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests for test.MyTestCase.test_something.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests for test_age.TestCategorizeByAge.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;23-establish-the-recipes-bmc&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/macpoule/code/new/recipya-rs&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
+    &quot;org.rust.first.attach.projects&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;dynamic.analysis.tools&quot;,
+    &quot;typescript.add.unambiguous.imports.on.the.fly&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ],
+    &quot;com.intellij.ide.scratch.LRUPopupBuilder$1/SQL Dialect&quot;: [
+      &quot;PostgreSQL&quot;
+    ]
+  }
+}</component>
+  <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
+    <layout>
+      <window_info id="Bookmarks" side_tool="true" />
+      <window_info id="Merge Requests" show_stripe_button="false" />
+      <window_info id="Commit_Guest" show_stripe_button="false" />
+      <window_info id="Pull Requests" />
+      <window_info id="Settings Sync History" />
+      <window_info id="DFA" show_stripe_button="false" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.15442708" />
+      <window_info id="Commit" order="1" weight="0.26878914" />
+      <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="Database Changes" />
+      <window_info anchor="bottom" id="TypeScript" show_stripe_button="false" />
+      <window_info anchor="bottom" id="TODO" />
+      <window_info anchor="bottom" id="Messages" />
+      <window_info anchor="bottom" id="File Transfer" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Find" />
+      <window_info anchor="bottom" id="Version Control" order="0" />
+      <window_info anchor="bottom" id="Problems" order="1" />
+      <window_info anchor="bottom" id="Problems View" order="2" weight="0.32994187" />
+      <window_info anchor="bottom" id="Terminal" order="3" weight="0.3302619" />
+      <window_info anchor="bottom" id="Build" order="4" weight="0.314438" />
+      <window_info anchor="bottom" id="Run" order="5" weight="0.314438" />
+      <window_info active="true" anchor="bottom" id="Debug" order="6" visible="true" weight="0.314438" />
+      <window_info anchor="bottom" id="Services" order="7" />
+      <window_info anchor="right" id="Coverage" show_stripe_button="false" side_tool="true" />
+      <window_info anchor="right" id="Notifications" order="0" weight="0.34394574" />
+      <window_info anchor="right" id="AIAssistant" order="1" weight="0.25" />
+      <window_info anchor="right" id="Database" order="2" weight="0.32994792" />
+      <window_info anchor="right" id="Gradle" order="3" weight="0.25" />
+      <window_info anchor="right" id="Maven" order="4" weight="0.25" />
+      <window_info anchor="right" id="Cargo" order="5" weight="0.2" />
+      <window_info anchor="right" id="RustCargo" order="6" weight="0.2" />
+    </layout>
+  </component>
+  <component name="RsExternalLinterProjectSettings">
+    <option name="tool" value="Clippy" />
+  </component>
+  <component name="RunManager">
+    <configuration name="Test model::recipe::tests::test_create_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfile" value="Dev" />
+      <option name="command" value="test --package lib-core --lib model::recipe::tests::test_create_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.Test model::recipe::tests::test_create_ok" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="RustfmtProjectSettings">
+    <option name="useRustfmt" value="true" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8926aa5f-8597-4dcc-8c7f-86610f2fcec8" name="Changes" comment="" />
+      <created>1724441858362</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1724441858362</updated>
+      <workItem from="1724766367914" duration="1172000" />
+      <workItem from="1724830702550" duration="1953000" />
+      <workItem from="1724835297160" duration="1184000" />
+      <workItem from="1724849108365" duration="3202000" />
+      <workItem from="1724961373522" duration="6061000" />
+      <workItem from="1724968536255" duration="1182000" />
+      <workItem from="1724969777572" duration="21000" />
+      <workItem from="1725007250193" duration="324000" />
+      <workItem from="1725016529256" duration="7081000" />
+      <workItem from="1725025095323" duration="3244000" />
+      <workItem from="1725083882329" duration="2798000" />
+      <workItem from="1725087567889" duration="967000" />
+      <workItem from="1725088991338" duration="2806000" />
+      <workItem from="1725094045008" duration="2339000" />
+      <workItem from="1725139321079" duration="1328000" />
+      <workItem from="1725140742797" duration="66000" />
+      <workItem from="1725201277697" duration="993000" />
+      <workItem from="1725202317711" duration="1620000" />
+      <workItem from="1725204026313" duration="5218000" />
+      <workItem from="1725209632443" duration="1068000" />
+      <workItem from="1725211357635" duration="1280000" />
+      <workItem from="1725212834815" duration="1911000" />
+      <workItem from="1725214901022" duration="186000" />
+      <workItem from="1725290147047" duration="4463000" />
+      <workItem from="1725328565000" duration="545000" />
+      <workItem from="1725375359894" duration="662000" />
+      <workItem from="1725378012785" duration="10985000" />
+      <workItem from="1725448683369" duration="7410000" />
+      <workItem from="1725458334207" duration="7067000" />
+      <workItem from="1725477370947" duration="806000" />
+      <workItem from="1725478379502" duration="2026000" />
+      <workItem from="1725483204328" duration="3622000" />
+      <workItem from="1725645850724" duration="98000" />
+      <workItem from="1725646145454" duration="893000" />
+      <workItem from="1725647273048" duration="2266000" />
+      <workItem from="1725650680268" duration="4086000" />
+      <workItem from="1725673190523" duration="103000" />
+      <workItem from="1725673654592" duration="2611000" />
+      <workItem from="1725676604831" duration="3271000" />
+      <workItem from="1725681183292" duration="412000" />
+      <workItem from="1725712116114" duration="1559000" />
+      <workItem from="1725713791477" duration="1826000" />
+      <workItem from="1725715820396" duration="136000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="LAST_COMMIT_MESSAGE" value="" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs</url>
+          <line>437</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand>
+      <path>
+        <item name="recipya" type="b2602c69:ProjectViewProjectNode" />
+        <item name="dir{file:///home/macpoule/RustroverProjects/recipya}" type="462c0819:PsiDirectoryNode" />
+      </path>
+    </expand>
+    <select />
+  </component>
+</project>

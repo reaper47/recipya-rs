@@ -17,20 +17,19 @@
 //!   to all Model Controllers functions.
 //!
 
-use diesel_async::{pooled_connection::bb8, AsyncPgConnection};
+mod error;
+mod recipe;
+pub(in crate::model) mod schema;
+pub mod store;
+pub mod user;
 
-use lib_email::Sendgrid;
+use diesel_async::{pooled_connection::bb8, AsyncPgConnection};
 
 use crate::config::config;
 use crate::model::store::{new_db_pool, Pool};
+use lib_email::Sendgrid;
 
 pub use self::error::{Error, Result};
-
-mod error;
-pub mod store;
-
-pub(in crate::model) mod schema;
-pub mod user;
 
 #[derive(Clone)]
 pub struct ModelManager {
@@ -51,4 +50,36 @@ impl ModelManager {
     ) -> Result<bb8::PooledConnection<AsyncPgConnection>> {
         Ok(self.db.get().await?)
     }
+}
+
+#[macro_export]
+macro_rules! name_entity_with_relations {
+    ($struct_name:ident, $table_name:ident, $relation_table:ident) => {
+        #[derive(Queryable, Identifiable, Selectable)]
+        #[diesel(table_name = super::schema::$table_name)]
+        #[diesel(check_for_backend(diesel::pg::Pg))]
+        pub struct $struct_name {
+            pub id: i64,
+            pub name: String,
+        }
+
+        paste::paste! {
+            #[derive(Insertable)]
+            #[diesel(table_name = schema::$table_name)]
+            struct [<$struct_name ForInsert>] {
+                name: String,
+            }
+        }
+
+        paste::paste! {
+            #[derive(Identifiable, Selectable, Queryable, Insertable, Associations)]
+            #[diesel(belongs_to($struct_name), belongs_to(Recipe))]
+            #[diesel(table_name = super::schema::$relation_table)]
+            #[diesel(primary_key([<$struct_name:lower _id>], recipe_id))]
+            pub struct [<$struct_name Recipe>] {
+                pub [<$struct_name:lower _id>]: i64,
+                pub recipe_id: i64,
+            }
+        }
+    };
 }

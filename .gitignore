@@ -6,6 +6,7 @@ target/
 # Remove files related to the documentation
 .env
 .cargo/config.toml
+.idea/*.iml
 .idea/workspace.xml
 crates/libs/lib-scraper/src/tests/data/*.html
 web/app/node_modules
