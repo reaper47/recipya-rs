@@ -13,6 +13,7 @@ diesel-async = { version = "0.5.0", features = [
 ] }
 diesel_migrations = "2.2.0"
 dirs = "5.0.1"
+indexmap = "2.5.0"
 lib-auth = { path = "../../libs/lib-auth" }
 lib-email = { path = "../../libs/lib-email" }
 lib-utils = { path = "../../libs/lib-utils" }

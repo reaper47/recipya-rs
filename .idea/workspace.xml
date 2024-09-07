@@ -9,6 +9,7 @@
   <component name="ChangeListManager">
     <list default="true" id="8926aa5f-8597-4dcc-8c7f-86610f2fcec8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" afterDir="false" />
@@ -68,7 +69,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Debug&quot;,
     &quot;Cargo.Test model::user::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test tests_index::test_get_index_bypass_guide.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test tests_index::test_get_index_ok_anonymous.executor&quot;: &quot;Run&quot;,
@@ -110,7 +111,7 @@
       <window_info id="Settings Sync History" />
       <window_info id="DFA" show_stripe_button="false" />
       <window_info content_ui="combo" id="Project" order="0" weight="0.15442708" />
-      <window_info active="true" id="Commit" order="1" visible="true" weight="0.32994792" />
+      <window_info id="Commit" order="1" weight="0.26878914" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Database Changes" />
       <window_info anchor="bottom" id="TypeScript" show_stripe_button="false" />
@@ -121,10 +122,10 @@
       <window_info anchor="bottom" id="Version Control" order="0" />
       <window_info anchor="bottom" id="Problems" order="1" />
       <window_info anchor="bottom" id="Problems View" order="2" weight="0.32994187" />
-      <window_info anchor="bottom" id="Terminal" order="3" weight="0.2999031" />
-      <window_info anchor="bottom" id="Build" order="4" weight="0.32994187" />
-      <window_info active="true" anchor="bottom" id="Run" order="5" visible="true" weight="0.32994187" />
-      <window_info anchor="bottom" id="Debug" order="6" weight="0.2999031" />
+      <window_info anchor="bottom" id="Terminal" order="3" weight="0.3302619" />
+      <window_info anchor="bottom" id="Build" order="4" weight="0.314438" />
+      <window_info anchor="bottom" id="Run" order="5" weight="0.314438" />
+      <window_info active="true" anchor="bottom" id="Debug" order="6" visible="true" weight="0.314438" />
       <window_info anchor="bottom" id="Services" order="7" />
       <window_info anchor="right" id="Coverage" show_stripe_button="false" side_tool="true" />
       <window_info anchor="right" id="Notifications" order="0" weight="0.34394574" />
@@ -266,7 +267,14 @@
       <workItem from="1725645850724" duration="98000" />
       <workItem from="1725646145454" duration="893000" />
       <workItem from="1725647273048" duration="2266000" />
-      <workItem from="1725650680268" duration="386000" />
+      <workItem from="1725650680268" duration="4086000" />
+      <workItem from="1725673190523" duration="103000" />
+      <workItem from="1725673654592" duration="2611000" />
+      <workItem from="1725676604831" duration="3271000" />
+      <workItem from="1725681183292" duration="412000" />
+      <workItem from="1725712116114" duration="1559000" />
+      <workItem from="1725713791477" duration="1826000" />
+      <workItem from="1725715820396" duration="136000" />
     </task>
     <servers />
   </component>
@@ -292,8 +300,8 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs</url>
-          <line>477</line>
-          <option name="timeStamp" value="3" />
+          <line>437</line>
+          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

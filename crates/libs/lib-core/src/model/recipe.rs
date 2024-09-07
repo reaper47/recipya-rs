@@ -8,10 +8,10 @@ use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, RunQueryDsl};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use uuid::Uuid;
 
-pub type Sections = HashMap<i64, (String, Vec<String>)>;
+pub type Sections = Vec<(String, Vec<String>)>;
 
 #[derive(Associations, Debug, Queryable, Identifiable, PartialEq, Selectable)]
 #[diesel(belongs_to(super::user::User))]
@@ -119,6 +119,22 @@ struct IngredientRecipeForInsert {
     pub item_order: i16,
 }
 
+#[derive(Insertable)]
+#[diesel(table_name = schema::instructions)]
+struct InstructionForInsert {
+    name: String,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = schema::instructions_recipes)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct InstructionRecipeForInsert {
+    pub instruction_id: i64,
+    pub recipe_id: i64,
+    pub section_id: i64,
+    pub item_order: i16,
+}
+
 #[derive(Queryable, Identifiable, Selectable)]
 #[diesel(table_name = schema::sections)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -154,13 +170,13 @@ impl RecipeBmc {
                         },
                         recipe_c
                             .ingredients
-                            .values()
+                            .iter()
                             .flat_map(|(_, ingredients)| ingredients.clone())
                             .collect::<Vec<String>>()
                             .join(" "),
                         recipe_c
                             .instructions
-                            .values()
+                            .iter()
                             .flat_map(|(_, ingredients)| ingredients.clone())
                             .collect::<Vec<String>>()
                             .join(" "),
@@ -221,11 +237,11 @@ impl RecipeBmc {
                     // Sections
                     let mut sections = recipe_c
                         .ingredients
-                        .values()
+                        .iter()
                         .map(|(name, _)| name.clone())
                         .collect::<Vec<_>>();
 
-                    sections.extend(recipe_c.instructions.values().map(|(name, _)| name.clone()));
+                    sections.extend(recipe_c.instructions.iter().map(|(name, _)| name.clone()));
 
                     let mut sections_map: HashMap<String, i64> = HashMap::new();
                     diesel::insert_into(schema::sections::table)
@@ -249,13 +265,12 @@ impl RecipeBmc {
                         });
 
                     // Ingredients
-                    for (_, entry) in recipe_c.ingredients.iter().enumerate() {
+                    for entry in recipe_c.ingredients.iter() {
                         let ids: Vec<IngredientRecipeForInsert> =
                             diesel::insert_into(schema::ingredients::table)
                                 .values(
                                     entry
                                         .1
-                                         .1
                                         .iter()
                                         .map(|name| IngredientForInsert {
                                             name: String::from(name),
@@ -265,18 +280,15 @@ impl RecipeBmc {
                                 .returning((schema::ingredients::id, schema::ingredients::name))
                                 .get_results::<(i64, String)>(&mut *conn)
                                 .await?
-                                .iter()
+                                .into_iter()
                                 .enumerate()
                                 .map(|(idx, ingredient)| IngredientRecipeForInsert {
                                     ingredient_id: ingredient.0,
                                     recipe_id,
-                                    section_id: *sections_map
-                                        .get(&entry.1 .0)
-                                        .ok_or(1)
-                                        .unwrap_or(&1),
+                                    section_id: *sections_map.get(&entry.0).ok_or(1).unwrap_or(&1),
                                     item_order: idx as i16,
                                 })
-                                .collect::<Vec<IngredientRecipeForInsert>>();
+                                .collect::<Vec<_>>();
 
                         diesel::insert_into(schema::ingredients_recipes::table)
                             .values(ids)
@@ -284,7 +296,37 @@ impl RecipeBmc {
                             .await?;
                     }
 
-                    // TODO: Instructions
+                    // Instructions
+                    for entry in recipe_c.instructions.iter() {
+                        let ids: Vec<InstructionRecipeForInsert> =
+                            diesel::insert_into(schema::instructions::table)
+                                .values(
+                                    entry
+                                        .1
+                                        .iter()
+                                        .map(|name| InstructionForInsert {
+                                            name: String::from(name),
+                                        })
+                                        .collect::<Vec<_>>(),
+                                )
+                                .returning((schema::instructions::id, schema::instructions::name))
+                                .get_results::<(i64, String)>(&mut *conn)
+                                .await?
+                                .into_iter()
+                                .enumerate()
+                                .map(|(idx, instruction)| InstructionRecipeForInsert {
+                                    instruction_id: instruction.0,
+                                    recipe_id,
+                                    section_id: *sections_map.get(&entry.0).ok_or(1).unwrap_or(&1),
+                                    item_order: idx as i16,
+                                })
+                                .collect::<Vec<_>>();
+
+                        diesel::insert_into(schema::instructions_recipes::table)
+                            .values(ids)
+                            .execute(&mut *conn)
+                            .await?;
+                    }
 
                     // Keywords
                     for keyword in recipe_c.keywords.iter() {
@@ -357,28 +399,54 @@ impl RecipeBmc {
             .await?
             .into_iter()
             .fold(
-                HashMap::new(),
+                BTreeMap::new(),
                 |mut acc, (ingredient, section, section_id)| {
                     acc.entry(section_id)
                         .and_modify(|entry: &mut (String, Vec<String>)| {
                             entry.1.push(ingredient.clone())
                         })
                         .or_insert_with(|| (section, vec![ingredient]));
-
                     acc
                 },
             )
             .into_iter()
-            .enumerate()
-            .map(|(idx, (_k, v))| ((idx + 1) as i64, v))
-            .collect::<Sections>();
+            .map(|(_, v)| v)
+            .collect::<Vec<_>>();
+
+        let instructions = schema::instructions_recipes::table
+            .filter(schema::instructions_recipes::recipe_id.eq(id))
+            .inner_join(schema::instructions::table)
+            .inner_join(schema::sections::table)
+            .order(schema::instructions_recipes::item_order)
+            .select((
+                schema::instructions::name,
+                schema::sections::name,
+                schema::instructions_recipes::section_id,
+            ))
+            .load::<(String, String, i64)>(&mut *conn)
+            .await?
+            .into_iter()
+            .fold(
+                BTreeMap::new(),
+                |mut acc, (instruction, section, section_id)| {
+                    acc.entry(section_id)
+                        .and_modify(|entry: &mut (String, Vec<String>)| {
+                            entry.1.push(instruction.clone())
+                        })
+                        .or_insert_with(|| (section, vec![instruction]));
+                    acc
+                },
+            )
+            .into_iter()
+            .map(|(_, v)| v)
+            .collect::<Vec<_>>();
 
         Ok(RecipeWithData {
             recipe,
             category,
             cuisine,
             ingredients,
-            instructions: HashMap::new(),
+            instructions,
             keywords: match keywords {
                 None => None,
                 Some(_) => Some(
@@ -413,44 +481,32 @@ mod tests {
         let fx_keywords = vec!["vegetarian".to_string(), "tofu".to_string()];
         let fx_ingredients = Sections::from([
             (
-                1,
-                (
-                    "Sauce".to_string(),
-                    vec![
-                        "1 cup blue spinach".to_string(),
-                        "1/2 tbsp cinnamon".to_string(),
-                    ],
-                ),
+                "Sauce".to_string(),
+                vec![
+                    "1 cup blue spinach".to_string(),
+                    "1/2 tbsp cinnamon".to_string(),
+                ],
             ),
             (
-                2,
-                (
-                    "Main".to_string(),
-                    vec![
-                        "4 pounds top quality chicken filet".to_string(),
-                        "1/8 cup lemon juice".to_string(),
-                    ],
-                ),
+                "Main".to_string(),
+                vec![
+                    "4 pounds top quality chicken filet".to_string(),
+                    "1/8 cup lemon juice".to_string(),
+                ],
             ),
         ]);
         let fx_instructions = Sections::from([
             (
-                1,
-                (
-                    "Sauce".to_string(),
-                    vec!["Mix all these ingredients".to_string()],
-                ),
+                "Sauce".to_string(),
+                vec!["Mix all these ingredients".to_string()],
             ),
             (
-                2,
-                (
-                    "Chicken".to_string(),
-                    vec![
-                        "Turn the oven at 300 F".to_string(),
-                        "Soak the chicken in the lemon juice".to_string(),
-                        "Bake for 35 minutes".to_string(),
-                    ],
-                ),
+                "Chicken".to_string(),
+                vec![
+                    "Turn the oven at 300 F".to_string(),
+                    "Soak the chicken in the lemon juice".to_string(),
+                    "Bake for 35 minutes".to_string(),
+                ],
             ),
         ]);
 
