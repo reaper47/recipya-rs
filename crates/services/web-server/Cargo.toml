@@ -3,15 +3,16 @@ name = "recipya"
 version = "0.1.0"
 edition = "2021"
 description = "A clean, simple and powerful recipe manager your whole family will enjoy."
-readme = "README.md"
+readme = "../../../README.md"
 homepage = "https://recipes.musicavis.ca"
 repository = "https://github.com/reaper47/recipya"
 license = "AGPL-3.0-or-later"
 keywords = ["food", "recipes", "recipe-manager"]
 categories = ["web-programming"]
+build = "build.rs"
 
 [dependencies]
-axum = { version = "0.7.5" }
+axum = { version = "0.7.9" }
 derive_more = { workspace = true }
 lib-auth = { path = "../../libs/lib-auth" }
 lib-core = { path = "../../libs/lib-core" }
@@ -26,18 +27,18 @@ serde_with = { workspace = true }
 strum_macros = "0.26.4"
 tokio = { workspace = true }
 tower-cookies = "0.10.0"
-tower-http = { version = "0.5.2", features = ["fs"] }
+tower-http = { version = "0.6.2", features = ["fs"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 uuid = { workspace = true }
-validator = { version = "0.18.1", features = ["derive"] }
+validator = { version = "0.19.0", features = ["derive"] }
 
 [dev-dependencies]
-axum-test = { version = "15.3.0", features = ["ws"] }
-diesel = "2.2.2"
-diesel-async = { version = "0.5.0", features = ["postgres"] }
-pretty_assertions = "1.4.0"
-url = "2.5.2"
+axum-test = { version = "16.4.1", features = ["ws"] }
+diesel = "2.2.6"
+diesel-async = { version = "0.5.2", features = ["postgres"] }
+pretty_assertions = "1.4.1"
+url = "2.5.4"
 
 [badges]
 maintenance = { status = "actively-developed" }

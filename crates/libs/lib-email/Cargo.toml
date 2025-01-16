@@ -7,7 +7,7 @@ edition = "2021"
 lib-utils = { path = "../lib-utils" }
 mrml = "4.0.1"
 reqwest = "0.12.5"
-sendgrid = "0.21.0"
+sendgrid = "0.23.0"
 
 [lib]
 doctest = false

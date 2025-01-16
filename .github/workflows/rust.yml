@@ -15,11 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: rustup toolchain install stable --profile minimal
-      
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: stable
 
-      - uses: ikalnytskyi/action-setup-postgres@v6
+      - uses: ikalnytskyi/action-setup-postgres@v7
         with:
           username: postgres
           password: postgres
@@ -36,24 +37,9 @@ jobs:
       - name: Install templ
         run: go install github.com/a-h/templ/cmd/templ@latest
 
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v3
-        with:
-          hugo-version: latest
-          extended: true
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
-
-      - name: Build docs
-        run: task build-docs
-      
-      - name: Build website
-        run: task build-web
-
-      - name: Build
-        run: cargo build -p recipya
-
       # TODO: replace with `cargo test` once all tests pass
       - name: Test
         run: cargo test -p recipya
+
+      - name: Build
+        run: cargo build -p recipya

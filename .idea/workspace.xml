@@ -8,18 +8,179 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8926aa5f-8597-4dcc-8c7f-86610f2fcec8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/crates/services/web-server/build.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/rust.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/rust.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/recipya.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/recipya.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Taskfile.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-auth/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-auth/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/recipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/schema.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-core/src/model/store/migrations/2024-07-29-095130_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-email/src/sendgrid.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-email/src/sendgrid.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-scraper/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-scraper/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-utils/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-utils/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/libs/lib-web/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/libs/lib-web/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/services/web-server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/services/web-server/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/tools/gen-key/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/tools/gen-key/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/tools/gen-key/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/tools/gen-key/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/archetypes/default.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/assets/css/custom.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/images/v1.0.1/fixed-salmon.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.0.1.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.1.0.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.2.0.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/changelog/v1.3.0.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/coc.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/community-guide.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/credits.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/about/roadmap.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2023-08-26-welcome.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2024-01-02-launch.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2024-03-28-v1.1.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/2024-07-16-v1.2.0.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/blog/authors.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/deployment/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/deployment/internet.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/deployment/local-network.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/build.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/devcontainer.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/intro.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/test.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/add-endpoint.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/development/workflow/import-website.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/admin.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/backups.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/add.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/delete.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/download.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/edit.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-add.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-delete-aftermath.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-delete.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-download.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-no-recipes.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-recipe-added.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-recipes-after-reorder.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-recipes-before-reorder.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-search-results-add.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-share-anonymous.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-share-link.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbook-share.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbooks-grid-mode.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbooks-grid.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbooks-list.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbooks-update-image.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbooks-updated-image.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/images/cookbooks-view.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/cookbooks/share.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/export-data.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/admin-access.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/admin-overview.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/reports-access-after.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/reports-access.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/reports-errors.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/reports-fresh.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/reports-latest.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-access.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-convert-automatically.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-export.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-integrations-nextcloud.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-integrations.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-measurement-system.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-nutrition-facts.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/settings-restore-backup.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/update-available.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/update-button.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/images/update-success-restart.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/integrations.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/measurement-systems.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/nutrition-facts.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/add.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/categories.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/delete.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/edit.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/add-recipe-import.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/add-recipe-manual.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/add-recipe-options.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/add-recipe-scan.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/add-recipe-website.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/add-recipe.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/delete-recipe.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/edit-recipe-enter.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/edit-recipe.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/print-dialog.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/print-icon.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/recipes-categories.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/recipes-search-help.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/recipes-search-query.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/recipes-search-view.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/recipya-bookmarklet.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/search-settings.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/sharing-dialog.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/sharing-icon.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/view-recipe-enter.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/view-recipe-scale.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/view-recipe.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/wakelock-off.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/images/wakelock-on.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/print.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/search.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/share.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/view.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/recipes/wakelock.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/reports.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/features/updater.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/build/Install.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/build/_index.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/build/config-file.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/docker.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/integrations.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/system-requirements.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/content/docs/installation/windows-users.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/go.mod" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/hugo.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/i18n/en.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/i18n/fr.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/i18n/sl.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/android-chrome-192x192.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/android-chrome-512x512.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/apple-touch-icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/favicon-16x16.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/favicon-32x32.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/favicon-dark.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/favicon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/images/curate.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/images/devices.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/images/logo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/images/sponsors.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/images/view-recipe.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/docs/static/site.webmanifest" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/css/tailwind.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/img/sponsors.svg" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -67,41 +228,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Cargo.Test model::recipe::tests::test_create_ok.executor&quot;: &quot;Debug&quot;,
-    &quot;Cargo.Test model::user::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test tests_index::test_get_index_bypass_guide.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test tests_index::test_get_index_ok_anonymous.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test tests_index::test_get_index_ok_hide_elements_when_autologin.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test user::tests.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for test.MyTestCase.test_something.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for test_age.TestCategorizeByAge.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;23-establish-the-recipes-bmc&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/macpoule/code/new/recipya-rs&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
-    &quot;org.rust.first.attach.projects&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;dynamic.analysis.tools&quot;,
-    &quot;typescript.add.unambiguous.imports.on.the.fly&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Build.executor": "Run",
+    "Cargo.Test model::recipe::tests::test_create_ok.executor": "Debug",
+    "Cargo.Test model::user::tests::test_create_ok.executor": "Run",
+    "Cargo.Test tests_index::test_get_index_bypass_guide.executor": "Run",
+    "Cargo.Test tests_index::test_get_index_ok_anonymous.executor": "Run",
+    "Cargo.Test tests_index::test_get_index_ok_hide_elements_when_autologin.executor": "Run",
+    "Cargo.Test user::tests.executor": "Run",
+    "Python tests.Python tests for test.MyTestCase.test_something.executor": "Run",
+    "Python tests.Python tests for test_age.TestCategorizeByAge.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "23-establish-the-recipes-bmc",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "/home/macpoule/Documents/projects/recipya-rs",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.disableDetachedFileInspection/home/macpoule/Documents/projects/recipya-rs/crates/services/web-server/build.rs": "true",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "typescript.add.unambiguous.imports.on.the.fly": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;postgresql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
     ],
-    &quot;com.intellij.ide.scratch.LRUPopupBuilder$1/SQL Dialect&quot;: [
-      &quot;PostgreSQL&quot;
+    "com.intellij.ide.scratch.LRUPopupBuilder$1/SQL Dialect": [
+      "PostgreSQL"
     ]
   }
-}</component>
+}]]></component>
   <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
     <layout>
       <window_info id="Bookmarks" side_tool="true" />
@@ -137,12 +301,56 @@
       <window_info anchor="right" id="RustCargo" order="6" weight="0.2" />
     </layout>
   </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/crates/services/web-server" />
+    </key>
+  </component>
   <component name="RsExternalLinterProjectSettings">
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Cargo.Build">
+    <configuration name="Build" type="CargoCommandRunConfiguration" factoryName="Cargo Command" nameIsGenerated="true">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="build" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://postgres:postgres@localhost:5432/recipya" />
+        <env name="RUST_LOG" value="recipya=debug,lib_core=debug,lib_web=debug,lib_auth=debug,lib_utils=debug" />
+        <env name="SERVICE_ADDRESS_URL" value=" http://localhost:7324" />
+        <env name="SERVICE_AUTOLOGIN" value="false" />
+        <env name="SERVICE_BYPASS_GUIDE" value="false" />
+        <env name="SERVICE_DEMO" value="false" />
+        <env name="SERVICE_DOCS_FOLDER" value="web/docs/public" />
+        <env name="SERVICE_EMAIL_FROM" value="macpoule@gmail.com" />
+        <env name="SERVICE_EMAIL_SENDGRID_API_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_ENDPOINT" value="&quot;&quot;" />
+        <env name="SERVICE_INTEGRATIONS_AZURE_DI_KEY" value="&quot;&quot;" />
+        <env name="SERVICE_NO_SIGNUPS" value="false" />
+        <env name="SERVICE_PASSWORD_KEY" value="CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA" />
+        <env name="SERVICE_PRODUCTION" value="false" />
+        <env name="SERVICE_TOKEN_DURATION_SEC" value="1800" />
+        <env name="SERVICE_TOKEN_KEY" value="MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w" />
+        <env name="SERVICE_WEB_FOLDER" value="web/static" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Test model::recipe::tests::test_create_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="buildProfile" value="Dev" />
+      <option name="buildProfileId" value="test" />
       <option name="command" value="test --package lib-core --lib model::recipe::tests::test_create_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs>
@@ -212,6 +420,10 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Cargo.Build" />
+      <item itemvalue="Cargo.Test model::recipe::tests::test_create_ok" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.Test model::recipe::tests::test_create_ok" />

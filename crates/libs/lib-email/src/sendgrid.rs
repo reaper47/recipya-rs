@@ -14,7 +14,7 @@ impl Sendgrid {
     pub fn new() -> Self {
         Self {
             from: config().EMAIL_FROM.clone(),
-            sender: Sender::new(config().EMAIL_SENDGRID_API_KEY.clone()),
+            sender: Sender::new(config().EMAIL_SENDGRID_API_KEY.clone(), None),
         }
     }
 

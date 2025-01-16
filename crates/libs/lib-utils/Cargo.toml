@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 base64 = "0.22.1"
-time = { version = "0.3.36", features = ["formatting", "parsing", "serde"] }
+time = { version = "0.3.37", features = ["formatting", "parsing", "serde"] }
 
 [lib]
 doctest = false
