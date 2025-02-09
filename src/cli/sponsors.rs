@@ -21,7 +21,7 @@ pub fn generate_sponsors_image() -> Result<()> {
     }
 
     let sponsorkit = Command::new("npx")
-        .args(["sponsorkit", "-o", "web_dir.join(\"sponsorkit.svg\")"])
+        .args(["sponsorkit", "-o", "out"])
         .current_dir(web_dir)
         .status()
         .expect("Failed to run `npx sponsorkit`");
