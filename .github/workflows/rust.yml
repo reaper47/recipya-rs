@@ -30,17 +30,8 @@ jobs:
           ssl: "false"
         id: postgres
 
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          until pg_isready -h postgres -U postgres; do
-            echo "Waiting for PostgreSQL to be ready..."
-            sleep 1
-          done
-
-      - name: Create additional databases
-        run: |
-          psql -h postgres -U postgres -c "CREATE DATABASE recipya_test;"
-          psql -h postgres -U postgres -c "CREATE DATABASE recipya;"
+      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya;"
+      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya_test;"
 
       - uses: actions/setup-node@v4
         with:
