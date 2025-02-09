@@ -1,11 +1,11 @@
 [package]
-name = "recipya-rust"
+name = "recipya-rs"
 version = "0.1.0"
 edition = "2021"
 description = "A clean, simple and powerful recipe manager your whole family will enjoy."
 readme = "README.md"
 homepage = "https://recipya.musicavis.ca"
-repository = "https://github.com/reaper47/recipya"
+repository = "https://github.com/reaper47/recipya-rs"
 license = "AGPL-3.0-or-later"
 keywords = ["food", "recipes", "recipe-manager"]
 categories = ["web-programming"]

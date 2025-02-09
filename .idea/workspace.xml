@@ -8,157 +8,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.devcontainer/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.devcontainer/clean_test_dbs.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.devcontainer/devcontainer.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.devcontainer/docker-compose.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/CODEOWNERS" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/CODE_OF_CONDUCT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/FUNDING.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/SECURITY.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/dependabot.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/screenshot-recipes.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.github/workflows/rust.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/build.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/cli/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/cli/sponsors.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/config.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/pwd/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/pwd/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/pwd/scheme/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/pwd/scheme/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/pwd/scheme/scheme_01.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/pwd/scheme/scheme_02.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/token/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/auth/token/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/config/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/config/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/config.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/sendgrid.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/smtp.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/templates/forgot-password.mjml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/templates/intro.mjml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/templates/original/forgot-password.mjml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/email/templates/original/intro.mjml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/macros.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/model/user.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/repository/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/repository/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/repository/pool.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/client.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/custom/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/schema/article.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/schema/context.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/schema/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/data/.keep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/support/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/support/scraper.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/support/websites.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_0_to_9.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_a.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_b.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_c.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_d.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_e.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_f.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_g.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_h.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_i.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_j.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_k.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_l.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_m.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_n.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_o.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_p.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_q.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_r.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_s.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_t.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_u.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_v.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_w.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_y.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/tests/tests_scraper_z.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/scraper/websites.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/support/b64.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/support/envs.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/support/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/support/time.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/support/token.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/auth_router.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/general_router.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/auth.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/context/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/context/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/general.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/message.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/static_files.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/middleware/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/middleware/mw_auth.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/static_files_router.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/templates/auth.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/templates/core.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/templates/general.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/templates/layouts.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/templates/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/app/tailwind.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/app/toast.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/android-chrome-192x192.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/android-chrome-512x512.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/apple-touch-icon.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/browserconfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/css/app.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/css/tailwind-custom.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/favicon-16x16.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/favicon-32x32.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/favicon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/img/bars.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/img/cookbooks-new/placeholder.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/img/recipes/new/camera.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/img/recipes/new/import.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/img/recipes/new/manual.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/img/recipes/new/schema.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/img/recipes/placeholder.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/js/toast.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/mstile-150x150.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/robots.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/safari-pinned-tab.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/public/site.webmanifest" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sponsors/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sponsors/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sponsors/sponsorkit.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sponsors/sponsorkit/.cache.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -262,7 +113,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "23-establish-the-recipes-bmc",
     "last_opened_file_path": "/home/macpoule/Documents/projects/recipya-rust/src/core/scraper",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
