@@ -26,20 +26,15 @@ jobs:
           password: postgres
           database: recipya
           port: 5432
-          postgres-version: "16"
-          ssl: "on"
+          postgres-version: "17"
         id: postgres
 
       - uses: actions/setup-node@v4
         with:
           node-version: latest
 
-      - name: Install templ
-        run: go install github.com/a-h/templ/cmd/templ@latest
-
-      # TODO: replace with `cargo test` once all tests pass
       - name: Test
-        run: cargo test -p recipya
+        run: cargo test
 
       - name: Build
-        run: cargo build -p recipya
+        run: cargo build
