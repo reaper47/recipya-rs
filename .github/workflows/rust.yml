@@ -30,9 +30,30 @@ jobs:
           ssl: "false"
         id: postgres
 
+      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya;"
+      - run: diesel migration run
+        env:
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+
+
       - uses: actions/setup-node@v4
         with:
           node-version: latest
 
       - name: Test
         run: cargo test
+        env:
+          RECIPYA_DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+          RECIPYA_BASE_URL: "http://localhost:8078"
+          RECIPYA_IS_AUTOLOGIN: "false"
+          RECIPYA_IS_DEMO: "false"
+          RECIPYA_IS_NO_SIGNUPS: "false"
+          RECIPYA_EMAIL_ADMIN: "example@gmail.com"
+          RECIPYA_EMAIL_SMTP_HOST: "smtp.gmail.com"
+          RECIPYA_EMAIL_SMTP_USERNAME: "example@gmail.com"
+          RECIPYA_EMAIL_SMTP_PASSWORD: "abcd abcd bcd abcd"
+          RECIPYA_EMAIL_SENDGRID_API_KEY: "YOUR_API_KEY"
+          RECIPYA_AUTH_PASSWORD_KEY: "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
+          RECIPYA_AUTH_TOKEN_KEY: "MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w"
+          RECIPYA_AUTH_TOKEN_DURATION_SEC: "1800"
+
