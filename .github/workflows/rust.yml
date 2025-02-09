@@ -27,7 +27,12 @@ jobs:
           database: recipya
           port: 5432
           postgres-version: "17"
+          ssl: "false"
         id: postgres
+
+      - run: |
+            psql -U postgres -c "CREATE DATABASE recipya;"
+            psql -U postgres -c "CREATE DATABASE recipya_test;"
 
       - uses: actions/setup-node@v4
         with:
@@ -35,6 +40,3 @@ jobs:
 
       - name: Test
         run: cargo test
-
-      - name: Build
-        run: cargo build
