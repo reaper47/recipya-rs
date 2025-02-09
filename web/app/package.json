@@ -6,17 +6,17 @@
   "main": "index.js",
   "scripts": {
     "build": "npm run build:css && npm run build:js",
-    "build:css": "tailwind -m -i ../static/css/tailwind-custom.css --output ../static/css/tailwind.css",
-    "build:js": "uglifyjs --compress --mangle -o ../static/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../static/js/toast.min.js -- toast.js"
+    "build:css": "tailwind -m -i ../public/css/tailwind-custom.css --output ../public/css/tailwind.css",
+    "build:js": "uglifyjs --compress --mangle -o ../public/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../public/js/toast.min.js -- toast.js"
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.14",
+    "@tailwindcss/typography": "^0.5.16",
     "copyfiles": "^2.4.1",
-    "daisyui": "^4.12.10",
-    "esbuild": "^0.23.1",
+    "daisyui": "^4.12.23",
+    "esbuild": "^0.24.2",
     "mjml": "^4.15.3",
-    "tailwindcss": "^3.4.10",
-    "uglify-js": "^3.19.2"
+    "tailwindcss": "^3.4.17",
+    "uglify-js": "^3.19.3"
   }
 }

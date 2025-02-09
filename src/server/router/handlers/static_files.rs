@@ -1,0 +1,38 @@
+use axum::http::{header, StatusCode, Uri};
+use axum::response::IntoResponse;
+use rust_embed::Embed;
+
+#[derive(Embed)]
+#[folder = "web/public/"]
+struct Asset;
+
+/// Wrapper type for serving static files in the web application.
+pub struct StaticFile<T>(pub T);
+
+impl<T> IntoResponse for StaticFile<T>
+where
+    T: Into<String>,
+{
+    fn into_response(self) -> axum::response::Response {
+        let path = self.0.into();
+
+        match Asset::get(path.as_str()) {
+            Some(content) => {
+                let mime = mime_guess::from_path(path).first_or_octet_stream();
+
+                ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
+            }
+            None => (StatusCode::NOT_FOUND, "404 Not Found").into_response(),
+        }
+    }
+}
+
+/// Serves static files for requests with a URI prefixed by `/public/`.
+pub async fn static_files_handler(uri: Uri) -> impl IntoResponse {
+    let path = uri
+        .path()
+        .trim_start_matches("/public/")
+        .trim_start_matches('/');
+
+    StaticFile(path).into_response()
+}
