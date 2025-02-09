@@ -30,8 +30,6 @@ jobs:
           ssl: "false"
         id: postgres
 
-      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya_test;"
-
       - uses: actions/setup-node@v4
         with:
           node-version: latest
