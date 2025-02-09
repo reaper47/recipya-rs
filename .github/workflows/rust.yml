@@ -24,13 +24,12 @@ jobs:
         with:
           username: postgres
           password: postgres
-          database: recipya
+          database: recipya_test
           port: 5432
           postgres-version: "17"
           ssl: "false"
         id: postgres
 
-      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya;"
       - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya_test;"
 
       - uses: actions/setup-node@v4
