@@ -15,45 +15,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: rustup toolchain install stable --profile minimal
-      
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: stable
 
-      - uses: ikalnytskyi/action-setup-postgres@v6
+      - uses: ikalnytskyi/action-setup-postgres@v7
         with:
           username: postgres
           password: postgres
-          database: recipya
+          database: recipya_test
           port: 5432
-          postgres-version: "16"
-          ssl: "on"
+          postgres-version: "17"
+          ssl: "false"
         id: postgres
+
+      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya;"
+
+      - run: cargo install diesel_cli --no-default-features --features postgres
+      - run: diesel migration run
+        env:
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: latest
 
-      - name: Install templ
-        run: go install github.com/a-h/templ/cmd/templ@latest
-
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v3
-        with:
-          hugo-version: latest
-          extended: true
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
-
-      - name: Build docs
-        run: task build-docs
-      
-      - name: Build website
-        run: task build-web
-
-      - name: Build
-        run: cargo build -p recipya
-
-      # TODO: replace with `cargo test` once all tests pass
       - name: Test
-        run: cargo test -p recipya
+        run: cargo test
+        env:
+          RECIPYA_DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+          RECIPYA_BASE_URL: "http://localhost:8078"
+          RECIPYA_IS_AUTOLOGIN: "false"
+          RECIPYA_IS_DEMO: "false"
+          RECIPYA_IS_NO_SIGNUPS: "false"
+          RECIPYA_EMAIL_ADMIN: "example@gmail.com"
+          RECIPYA_EMAIL_SMTP_HOST: "smtp.gmail.com"
+          RECIPYA_EMAIL_SMTP_USERNAME: "example@gmail.com"
+          RECIPYA_EMAIL_SMTP_PASSWORD: "abcd abcd bcd abcd"
+          RECIPYA_EMAIL_SENDGRID_API_KEY: "YOUR_API_KEY"
+          RECIPYA_AUTH_PASSWORD_KEY: "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
+          RECIPYA_AUTH_TOKEN_KEY: "MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w"
+          RECIPYA_AUTH_TOKEN_DURATION_SEC: "1800"
+

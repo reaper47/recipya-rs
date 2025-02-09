@@ -2,7 +2,7 @@
 <module type="EMPTY_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python facet">
-      <configuration sdkName="Python 3.12 (recipya)" />
+      <configuration sdkName="Python 3.12 (venv)" />
     </facet>
   </component>
   <component name="NewModuleRootManager">
@@ -19,6 +19,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/services/web-server/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/services/web-server/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/crates/tools/gen-key/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/tools/sponsors/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/crates/libs/lib-scraper/src/tests/data" />
@@ -26,6 +27,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Python 3.12 (recipya) interpreter library" level="application" />
+    <orderEntry type="library" name="Python 3.12 (venv) interpreter library" level="application" />
   </component>
 </module>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <option name="projectDefaultTargetUuid" value="09e5279c-27d8-46d1-aa8f-0ac9a53c9533" />
+    <targets>
+      <target name="WSL - Ubuntu" type="wsl" uuid="09e5279c-27d8-46d1-aa8f-0ac9a53c9533">
+        <config>
+          <option name="distributionMsId" value="Ubuntu" />
+          <option name="projectRootOnTarget" value="{exitCode=0, timeout=false, cancelled=false, stdout=/tmp/tmp.9zXqAj2yLs&#10;, stderr=}/recipya-rs" />
+        </config>
+        <ContributedStateBase type="RsLanguageRuntime">
+          <config>
+            <option name="cargoPath" value="/home/macpoule/.cargo/bin/cargo" />
+            <option name="cargoVersion" value="1.80.1 (376290515 2024-07-16)" />
+            <option name="rustcPath" value="/home/macpoule/.cargo/bin/rustc" />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>

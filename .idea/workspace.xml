@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/rust.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/rust.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Rust File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="m9rhMerX" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="2rsGhd0oLeZP8wDduh2Hx3GKD0j" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Run.executor": "Debug",
+    "Cargo.Test auth_router::tests.executor": "Run",
+    "Cargo.Test b64::tests.executor": "Run",
+    "Cargo.Test config::tests.executor": "Run",
+    "Cargo.Test core::config::tests::test_config_ok.executor": "Run",
+    "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
+    "Cargo.Test core::config::tests::test_is_no_signups_err.executor": "Run",
+    "Cargo.Test core::config::tests::test_is_no_signups_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::test_create_ok.executor": "Run",
+    "Cargo.Test core::models::user::tests::test_get_user_by_email_ok.executor": "Run",
+    "Cargo.Test core::models::user::tests::test_get_user_by_id_ok.executor": "Run",
+    "Cargo.Test core::models::user::tests::test_set_is_confirmed_ok.executor": "Run",
+    "Cargo.Test core::models::user::tests::test_update_password_ok.executor": "Run",
+    "Cargo.Test core::models::user::tests::test_update_remember_me_ok.executor": "Debug",
+    "Cargo.Test core::models::user::tests::test_user_new_already_exists_err.executor": "Run",
+    "Cargo.Test core::models::user::tests::test_user_new_ok.executor": "Run",
+    "Cargo.Test core::scraper::tests::tests_scraper_a::tests::test_abuelascounter_dot_com.executor": "Run",
+    "Cargo.Test core::support::b64::tests::test_b64u_decode_err.executor": "Run",
+    "Cargo.Test core::support::b64::tests::test_b64u_decode_ok.executor": "Run",
+    "Cargo.Test core::support::b64::tests::test_b64u_decode_to_string_ok.executor": "Run",
+    "Cargo.Test core::support::b64::tests::test_b64u_encode.executor": "Run",
+    "Cargo.Test create::tests.executor": "Run",
+    "Cargo.Test general_router::tests.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_cannot_update_if_autologin_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_err_must_be_logged_in.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_form_invalid_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_invalid_token_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_missing_token_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_user_not_exist_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_get_confirm_user_not_exist_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_authenticated_no_access_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_ok_anonymous.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_post_forgot_password_cannot_when_authenticated_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_demo_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_demo_show_autologin_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_hide_signup_button_when_no_signups_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_no_signups_hide_signup_button_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_not_demo_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_ok.executor": "Debug",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_home_when_already_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_home_when_logged_in_ok.executor": "Debug",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_index_when_autologin_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_recipes_when_autologin_ok.executor": "Debug",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_remember_me_checked_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_invalid_email_err.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_invalid_password_err.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_remember_me_checked_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_cannot_logout_when_autologin_ok.executor": "Debug",
+    "Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_user_already_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_register::test_get_register_cannot_access_register_when_no_signups_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_register::test_get_register_redirect_to_home_when_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_when_user_already_registered_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_register::test_register_cannot_register_when_no_signups_ok.executor": "Run",
+    "Cargo.Test server::router::auth_router::tests::tests_register::test_register_redirect_to_home_when_autologin_ok.executor": "Run",
+    "Cargo.Test server::router::static_files_router::tests::test_static_files_routes_ok.executor": "Run",
+    "Cargo.Test tests_change_password.executor": "Run",
+    "Cargo.Test tests_confirm.executor": "Run",
+    "Cargo.Test tests_forgot_password.executor": "Run",
+    "Cargo.Test tests_login.executor": "Run",
+    "Cargo.Test tests_register.executor": "Run",
+    "Cargo.Test user::tests.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
+    "git-widget-placeholder": "23-establish-the-recipes-bmc",
+    "last_opened_file_path": "/home/macpoule/Documents/projects/recipya-rust/src/core/scraper",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "language.rust.rustfmt",
+    "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/core/scraper" />
+      <recent name="$PROJECT_DIR$/src/core/email" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/src/core/support" />
+      <recent name="$PROJECT_DIR$/src/core/auth" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/core/model/recipe" />
+      <recent name="$PROJECT_DIR$/src/server/router/handlers" />
+      <recent name="$PROJECT_DIR$/src/core/repository" />
+      <recent name="$PROJECT_DIR$/src/server/router" />
+    </key>
+  </component>
+  <component name="RsExternalLinterProjectSettings">
+    <option name="runOnTheFly" value="false" />
+    <option name="tool" value="Clippy" />
+  </component>
+  <component name="RunManager" selected="Cargo.Test create::tests">
+    <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run --package recipya-rust --bin recipya-rust -- server" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="true" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::model::recipe::create::tests::test_create_bare_minimum_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests::test_create_bare_minimum_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests::test_create_duplicate_cuisines_err -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::model::recipe::create::tests::test_create_duplicate_name_err" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests::test_create_duplicate_name_err -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::model::recipe::create::tests::test_create_duplicates_err" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests::test_create_duplicates_err -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test create::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err" />
+      <item itemvalue="Cargo.Test create::tests" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.Test create::tests" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="" />
+      <created>1737340488511</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1737340488511</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
