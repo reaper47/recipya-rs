@@ -1,4 +1,4 @@
-use axum::routing::{get, get_service};
+use axum::routing::get;
 use axum::Router;
 use tower_http::services::ServeDir;
 
@@ -44,7 +44,7 @@ mod tests {
             ..default_config()
         };
         let state = AppState::new(config).await?;
-        let app = static_files_routes().with_state(state);
+        let app = static_files_routes(state.clone()).with_state(state);
         let test_cases = vec![
             ("/android-chrome-192x192.png", StatusCode::OK),
             ("/android-chrome-512x512.png", StatusCode::OK),
