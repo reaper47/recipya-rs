@@ -17,7 +17,7 @@ pub async fn router(state: AppState) -> Result<Router<AppState>> {
     let router = Router::new()
         .nest("/auth", auth_routes(state.clone()))
         .merge(general_routes(state.clone()))
-        .merge(static_files_routes());
+        .merge(static_files_routes(state.clone()));
 
     Ok(router)
 }

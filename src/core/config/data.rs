@@ -9,13 +9,13 @@ use super::{Error, Result};
 /// Stores paths to various application directories.
 #[derive(Clone)]
 pub struct DataDir {
-    backup: PathBuf,
+    pub backup: PathBuf,
     // TODO: We possibly do not need this folder anymore because of PostgreSQL.
-    database: PathBuf,
-    images: PathBuf,
-    logs: PathBuf,
-    thumbnails: PathBuf,
-    videos: PathBuf,
+    pub database: PathBuf,
+    pub images: PathBuf,
+    pub logs: PathBuf,
+    pub thumbnails: PathBuf,
+    pub videos: PathBuf,
 }
 
 impl DataDir {

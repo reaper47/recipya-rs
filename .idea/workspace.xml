@@ -8,17 +8,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/config/config.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/config/data.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/config/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/config/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/config/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/static_files_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/static_files_router.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,101 +40,101 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Cargo.Run.executor": "Debug",
-    "Cargo.Test auth_router::tests.executor": "Run",
-    "Cargo.Test b64::tests.executor": "Run",
-    "Cargo.Test config::tests.executor": "Run",
-    "Cargo.Test core::config::data::tests::test_new_ok.executor": "Run",
-    "Cargo.Test core::config::tests::test_config_ok.executor": "Run",
-    "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
-    "Cargo.Test core::config::tests::test_is_no_signups_err.executor": "Run",
-    "Cargo.Test core::config::tests::test_is_no_signups_ok.executor": "Run",
-    "Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok.executor": "Run",
-    "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err.executor": "Run",
-    "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
-    "Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err.executor": "Run",
-    "Cargo.Test core::model::recipe::create::tests::test_create_ok.executor": "Run",
-    "Cargo.Test core::models::user::tests::test_get_user_by_email_ok.executor": "Run",
-    "Cargo.Test core::models::user::tests::test_get_user_by_id_ok.executor": "Run",
-    "Cargo.Test core::models::user::tests::test_set_is_confirmed_ok.executor": "Run",
-    "Cargo.Test core::models::user::tests::test_update_password_ok.executor": "Run",
-    "Cargo.Test core::models::user::tests::test_update_remember_me_ok.executor": "Debug",
-    "Cargo.Test core::models::user::tests::test_user_new_already_exists_err.executor": "Run",
-    "Cargo.Test core::models::user::tests::test_user_new_ok.executor": "Run",
-    "Cargo.Test core::scraper::tests::tests_scraper_a::tests::test_abuelascounter_dot_com.executor": "Run",
-    "Cargo.Test core::support::b64::tests::test_b64u_decode_err.executor": "Run",
-    "Cargo.Test core::support::b64::tests::test_b64u_decode_ok.executor": "Run",
-    "Cargo.Test core::support::b64::tests::test_b64u_decode_to_string_ok.executor": "Run",
-    "Cargo.Test core::support::b64::tests::test_b64u_encode.executor": "Run",
-    "Cargo.Test create::tests.executor": "Run",
-    "Cargo.Test general_router::tests.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_cannot_update_if_autologin_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_err_must_be_logged_in.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_form_invalid_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_invalid_token_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_missing_token_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_user_not_exist_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_confirm::test_get_confirm_user_not_exist_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_authenticated_no_access_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_ok_anonymous.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_post_forgot_password_cannot_when_authenticated_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_demo_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_demo_show_autologin_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_hide_signup_button_when_no_signups_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_no_signups_hide_signup_button_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_not_demo_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_ok.executor": "Debug",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_home_when_already_logged_in_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_home_when_logged_in_ok.executor": "Debug",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_index_when_autologin_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_recipes_when_autologin_ok.executor": "Debug",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_remember_me_checked_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_invalid_email_err.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_invalid_password_err.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_remember_me_checked_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_cannot_logout_when_autologin_ok.executor": "Debug",
-    "Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_user_already_logged_in_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_register::test_get_register_cannot_access_register_when_no_signups_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_register::test_get_register_redirect_to_home_when_logged_in_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_when_user_already_registered_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_register::test_register_cannot_register_when_no_signups_ok.executor": "Run",
-    "Cargo.Test server::router::auth_router::tests::tests_register::test_register_redirect_to_home_when_autologin_ok.executor": "Run",
-    "Cargo.Test server::router::static_files_router::tests::test_static_files_routes_ok.executor": "Run",
-    "Cargo.Test tests_change_password.executor": "Run",
-    "Cargo.Test tests_confirm.executor": "Run",
-    "Cargo.Test tests_forgot_password.executor": "Run",
-    "Cargo.Test tests_login.executor": "Run",
-    "Cargo.Test tests_register.executor": "Run",
-    "Cargo.Test user::tests.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.rust.reset.selective.auto.import": "true",
-    "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/home/macpoule/Documents/projects/recipya-rust/src/core/scraper",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
-    "org.rust.first.attach.projects": "true",
-    "settings.editor.selected.configurable": "language.rust.rustfmt",
-    "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Cargo.Run.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test auth_router::tests.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test b64::tests.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test config::tests.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::config::data::tests::test_new_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::config::tests::test_config_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::config::tests::test_is_demo_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::config::tests::test_is_no_signups_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::config::tests::test_is_no_signups_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::model::recipe::create::tests::test_create_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::models::user::tests::test_get_user_by_email_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::models::user::tests::test_get_user_by_id_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::models::user::tests::test_set_is_confirmed_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::models::user::tests::test_update_password_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::models::user::tests::test_update_remember_me_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test core::models::user::tests::test_user_new_already_exists_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::models::user::tests::test_user_new_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::scraper::tests::tests_scraper_a::tests::test_abuelascounter_dot_com.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::support::b64::tests::test_b64u_decode_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::support::b64::tests::test_b64u_decode_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::support::b64::tests::test_b64u_decode_to_string_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test core::support::b64::tests::test_b64u_encode.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test create::tests.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test general_router::tests.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_cannot_update_if_autologin_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_err_must_be_logged_in.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_form_invalid_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_invalid_token_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_missing_token_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_confirm::test_confirm_user_not_exist_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_confirm::test_get_confirm_user_not_exist_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_authenticated_no_access_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_ok_anonymous.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_post_forgot_password_cannot_when_authenticated_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_demo_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_demo_show_autologin_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_hide_signup_button_when_no_signups_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_no_signups_hide_signup_button_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_not_demo_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_page_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_home_when_already_logged_in_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_home_when_logged_in_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_index_when_autologin_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_redirect_to_recipes_when_autologin_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_get_login_remember_me_checked_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_invalid_email_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_invalid_password_err.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_login::test_post_login_remember_me_checked_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_cannot_logout_when_autologin_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_logout::test_post_logout_user_already_logged_in_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_register::test_get_register_cannot_access_register_when_no_signups_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_register::test_get_register_redirect_to_home_when_logged_in_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_when_user_already_registered_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_register::test_register_cannot_register_when_no_signups_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::auth_router::tests::tests_register::test_register_redirect_to_home_when_autologin_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test server::router::static_files_router::tests::test_static_files_routes_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_change_password.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_confirm.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_forgot_password.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_login.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test tests_register.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test user::tests.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/macpoule/Documents/projects/recipya-rust/src/core/scraper&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
+    &quot;org.rust.first.attach.projects&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.rustfmt&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/core/scraper" />
