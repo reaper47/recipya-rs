@@ -10,9 +10,12 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     MissingEnv(&'static str),
+    NoValidHomeDir,
 
     #[from]
     EnvVar(std::env::VarError),
+    #[from]
+    Io(std::io::Error),
 }
 
 impl_display_as_debug!(Error);

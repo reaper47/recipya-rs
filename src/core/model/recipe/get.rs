@@ -21,7 +21,11 @@ impl Recipe {
                 schema::users_recipes::table
                     .on(schema::users_recipes::recipe_id.eq(schema::recipes::id)),
             )
-            .filter(schema::users_recipes::user_id.eq(user_id).and(schema::users_recipes::recipe_id.eq(recipe_id)))
+            .filter(
+                schema::users_recipes::user_id
+                    .eq(user_id)
+                    .and(schema::users_recipes::recipe_id.eq(recipe_id)),
+            )
             .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
             .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
             .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
