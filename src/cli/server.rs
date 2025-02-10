@@ -1,13 +1,15 @@
-use crate::core::config::Config;
-use crate::error::{Error, Result};
-use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
-use crate::server::{router, AppState};
-use axum::middleware::from_fn_with_state;
 use std::net::SocketAddr;
+
+use axum::middleware::from_fn_with_state;
 use tokio::net::TcpListener;
 use tokio::signal;
 use tower_cookies::CookieManagerLayer;
 use tracing::info;
+
+use crate::core::config::{Config, DataDir};
+use crate::error::{Error, Result};
+use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
+use crate::server::{router, AppState};
 
 /// Initializes and starts Recipya's web server.
 pub async fn server() -> Result<()> {

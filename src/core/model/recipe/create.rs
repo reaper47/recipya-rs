@@ -79,7 +79,12 @@ impl Recipe {
                         })
                         .on_conflict(schema::categories::name)
                         .do_update()
-                        .set(schema::categories::name.eq(recipe_c.category.clone().unwrap_or(String::from("uncategorized"))))
+                        .set(
+                            schema::categories::name.eq(recipe_c
+                                .category
+                                .clone()
+                                .unwrap_or(String::from("uncategorized"))),
+                        )
                         .returning(schema::categories::id)
                         .get_result::<i64>(&mut conn)
                         .await?;
@@ -153,7 +158,10 @@ impl Recipe {
                                 )
                                 .on_conflict(schema::ingredients::name)
                                 .do_update()
-                                .set(schema::ingredients::name.eq(excluded(schema::ingredients::name)))
+                                .set(
+                                    schema::ingredients::name
+                                        .eq(excluded(schema::ingredients::name)),
+                                )
                                 .returning((schema::ingredients::id, schema::ingredients::name))
                                 .get_results::<(i64, String)>(&mut conn)
                                 .await?
@@ -187,7 +195,10 @@ impl Recipe {
                                 )
                                 .on_conflict(schema::instructions::name)
                                 .do_update()
-                                .set(schema::instructions::name.eq(excluded(schema::instructions::name)))
+                                .set(
+                                    schema::instructions::name
+                                        .eq(excluded(schema::instructions::name)),
+                                )
                                 .returning((schema::instructions::id, schema::instructions::name))
                                 .get_results::<(i64, String)>(&mut conn)
                                 .await?
@@ -253,10 +264,10 @@ impl Recipe {
 
                     // Times
                     let times = recipe_c.times.clone().unwrap_or_else(|| TimesForCreate {
-                        prep_seconds: 15*60,
+                        prep_seconds: 15 * 60,
                         cook_seconds: 0,
                     });
-                    
+
                     diesel::insert_into(schema::times::table)
                         .values(&TimesForInsert {
                             recipe_id,
@@ -487,7 +498,7 @@ mod tests {
             keywords: vec![],
             nutrition: None,
             times: None,
-            tools: vec![ ],
+            tools: vec![],
         }
     }
 
@@ -502,7 +513,7 @@ mod tests {
         };
 
         let times = recipe.times.unwrap_or(TimesForCreate {
-            prep_seconds: 15*60,
+            prep_seconds: 15 * 60,
             cook_seconds: 0,
         });
 

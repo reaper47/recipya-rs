@@ -36,6 +36,8 @@ pub enum Error {
     #[from]
     CtxExt(crate::server::router::middleware::mw_auth::CtxExtError),
     #[from]
+    Config(crate::core::config::Error),
+    #[from]
     Email(crate::core::email::Error),
     #[from]
     Model(crate::core::model::Error),

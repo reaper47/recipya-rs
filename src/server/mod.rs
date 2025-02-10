@@ -1,6 +1,7 @@
 mod error;
+
 pub mod router;
-pub(crate) mod templates;
+pub(super) mod templates;
 
 pub use error::Result;
 pub use router::router;
@@ -11,7 +12,7 @@ use axum::extract::ws::{Message, WebSocket};
 use std::collections::HashMap;
 use tokio::sync::Mutex;
 
-use crate::core::config::Config;
+use crate::core::config::{Config, DataDir};
 use crate::core::email::EmailClient;
 use crate::core::repository::ModelManager;
 
@@ -19,6 +20,7 @@ use crate::core::repository::ModelManager;
 #[derive(Clone)]
 pub struct AppState {
     pub config: Config,
+    pub data_dir: DataDir,
     pub email_service: Option<EmailClient>,
     pub mm: ModelManager,
     pub subscribers: Arc<Mutex<HashMap<i64, Vec<WebSocket>>>>,
@@ -33,12 +35,14 @@ impl AppState {
             Err(_) => None,
         };
 
-        let database_url = config.clone().database_url;
+        let data_dir = DataDir::new()?;
+        data_dir.log();
 
         Ok(Self {
-            config,
+            config: config.clone(),
+            data_dir,
             email_service,
-            mm: ModelManager::new(String::from(database_url)).await?,
+            mm: ModelManager::new(config.database_url).await?,
             subscribers: Arc::new(Mutex::new(HashMap::new())),
         })
     }

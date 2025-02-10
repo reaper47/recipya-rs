@@ -8,8 +8,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/core/config/config.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/config/data.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cli/sponsors.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/sponsors.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/config/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/config/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,6 +53,7 @@
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
+    "Cargo.Test core::config::data::tests::test_new_ok.executor": "Run",
     "Cargo.Test core::config::tests::test_config_ok.executor": "Run",
     "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
     "Cargo.Test core::config::tests::test_is_no_signups_err.executor": "Run",
@@ -151,7 +161,7 @@
     <option name="runOnTheFly" value="false" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test create::tests">
+  <component name="RunManager" selected="Cargo.Test core::config::data::tests::test_new_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rust --bin recipya-rust -- server" />
@@ -170,8 +180,9 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::model::recipe::create::tests::test_create_bare_minimum_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests::test_create_bare_minimum_ok -- --exact" />
+    <configuration name="Test core::config::data::tests::test_new_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::config::data::tests::test_new_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -187,8 +198,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests::test_create_duplicate_cuisines_err -- --exact" />
+    <configuration name="Test core::model::recipe::create::tests::test_create_bare_minimum_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rust --bin recipya-rust core::model::recipe::create::tests::test_create_bare_minimum_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -257,19 +268,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test core::config::data::tests::test_new_ok" />
       <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
-      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err" />
       <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err" />
       <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err" />
       <item itemvalue="Cargo.Test create::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::config::data::tests::test_new_ok" />
         <item itemvalue="Cargo.Test create::tests" />
         <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err" />
         <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err" />
         <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
-        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err" />
       </list>
     </recent_temporary>
   </component>
