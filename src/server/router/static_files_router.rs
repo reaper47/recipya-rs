@@ -1,11 +1,12 @@
 use axum::routing::get;
 use axum::Router;
+use tower_http::services::ServeDir;
 
 use crate::server::router::handlers::static_files::static_files_handler;
 use crate::server::AppState;
 
 /// Defines the routes for serving static files.
-pub fn static_files_routes() -> Router<AppState> {
+pub fn static_files_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/android-chrome-192x192.png", get(static_files_handler))
         .route("/android-chrome-512x512.png", get(static_files_handler))
@@ -18,6 +19,9 @@ pub fn static_files_routes() -> Router<AppState> {
         .route("/safari-pinned-tab.svg", get(static_files_handler))
         .route("/site.webmanifest", get(static_files_handler))
         .route("/public/{*file}", get(static_files_handler))
+        .nest_service("/data/images", ServeDir::new(state.data_dir.images))
+        .nest_service("/data/images/thumbnails", ServeDir::new(state.data_dir.thumbnails))
+        .nest_service("/data/videos", ServeDir::new(state.data_dir.videos))
 }
 
 #[cfg(test)]
@@ -40,7 +44,7 @@ mod tests {
             ..default_config()
         };
         let state = AppState::new(config).await?;
-        let app = static_files_routes().with_state(state);
+        let app = static_files_routes(state.clone()).with_state(state);
         let test_cases = vec![
             ("/android-chrome-192x192.png", StatusCode::OK),
             ("/android-chrome-512x512.png", StatusCode::OK),

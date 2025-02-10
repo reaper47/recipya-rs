@@ -8,17 +8,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/config/config.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/config/data.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/config/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/config/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/static_files_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/static_files_router.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +44,7 @@
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
-    "Cargo.Test core::config::data::tests::test_new_ok.executor": "Run",
+    "Cargo.Test core::config::data::tests::test_new_ok.executor": "Debug",
     "Cargo.Test core::config::tests::test_config_ok.executor": "Run",
     "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
     "Cargo.Test core::config::tests::test_is_no_signups_err.executor": "Run",
@@ -123,7 +114,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "data-endpoints",
     "last_opened_file_path": "/home/macpoule/Documents/projects/recipya-rust/src/core/scraper",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
