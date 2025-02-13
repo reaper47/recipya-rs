@@ -1,7 +1,7 @@
 use maud::{html, Markup};
 
 /// Renders the <head> section of the HTML.
-pub(crate) fn head(title: &str) -> Markup {
+pub(super) fn head(title: &str) -> Markup {
     html! {
         head {
             title hx-swap-oob="true" {
@@ -36,7 +36,7 @@ pub(crate) fn head(title: &str) -> Markup {
 }
 
 /// Renders a notification toast.
-pub(crate) fn toast() -> Markup {
+pub(super) fn toast() -> Markup {
     html! {
         div #toast_container .toast.toast-top.toast-end.hidden.z-20.cursor-default {
             div .hidden.alert-error.alert-info.alert-success.alert-warning {}
@@ -56,7 +56,7 @@ pub(crate) fn toast() -> Markup {
 }
 
 /// Renders a notification toast through websockets.
-pub(crate) fn toast_ws(title: &str, content: &str, is_toast_visible: bool) -> Markup {
+pub(super) fn toast_ws(title: &str, content: &str, is_toast_visible: bool) -> Markup {
     html! {
         (toast())
         div #ws-notification-container class={

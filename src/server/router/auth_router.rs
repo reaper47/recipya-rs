@@ -76,7 +76,7 @@ impl RegisterForm {
 }
 
 /// Defines the authentication-related routes for the web application.
-pub(crate) fn auth_routes(state: AppState) -> Router<AppState> {
+pub(super) fn auth_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route(
             "/change-password",
