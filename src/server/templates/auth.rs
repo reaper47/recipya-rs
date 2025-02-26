@@ -6,7 +6,7 @@ use crate::server::templates::layouts;
 pub fn forgot_password() -> Markup {
     layouts::auth(
         "Forgot Password",
-        html!(
+        html! {
             div #container {
                 form
                     class="card w-80 sm:w-96 bg-base-100 shadow-xl"
@@ -34,14 +34,14 @@ pub fn forgot_password() -> Markup {
                     }
                 }
             }
-        ),
+        },
     )
 }
 
 pub fn forgot_password_reset(user_id: i64) -> Markup {
     layouts::auth(
         "Reset Password",
-        html!(
+        html! {
             div #container {
                 form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-boost="true" hx-target="#container" hx-swap="none" hx-post="/auth/forgot-password/reset" {
                     div class="card-body" {
@@ -73,7 +73,7 @@ pub fn forgot_password_reset(user_id: i64) -> Markup {
                     }
                 }
             }
-        ),
+        },
     )
 }
 
@@ -81,7 +81,7 @@ pub fn forgot_password_reset(user_id: i64) -> Markup {
 pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
     layouts::auth(
         "Login",
-        html!(
+        html! {
             form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login" action="/auth/login" method="post" {
                 div class="card-body" {
                     h2 class="card-title underline self-center" {
@@ -133,7 +133,7 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                     }
                 }
             }
-        ),
+        },
     )
 }
 
@@ -141,7 +141,7 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
 pub fn register() -> Markup {
     layouts::auth(
         "Register",
-        html!(
+        html! {
              form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/register" method="post" {
                 div class="card-body" {
                     h2 class="card-title underline self-center" {
@@ -188,6 +188,6 @@ pub fn register() -> Markup {
                     }
                 }
             }
-        ),
+        },
     )
 }

@@ -2,7 +2,10 @@ use maud::{html, Markup, DOCTYPE};
 
 use crate::server::templates::core::{head, toast, toast_ws};
 use crate::server::templates::data::Data;
-use crate::server::templates::icons::{icon_book_open, icon_cube_transparent};
+use crate::server::templates::icons::{
+    icon_arrow_right_start_on_rectangle, icon_book_open, icon_building_library, icon_cog_6_tooth,
+    icon_flag, icon_pencil,
+};
 
 /// Renders the authentication layout template.
 pub fn auth(title: &str, content: Markup) -> Markup {
@@ -19,8 +22,8 @@ pub fn auth(title: &str, content: Markup) -> Markup {
 }
 
 /// Renders the main layout template.
-pub fn main(title: &str, data: Data, content: Markup) -> Markup {
-    html!(
+pub fn main(title: &str, data: &Data, content: Markup) -> Markup {
+    html! {
         (DOCTYPE)
         html lang="en" class="h-full" _="on htmx:afterSwap
 		        if location.pathname is '/recipes' or location.pathname is '/' then
@@ -46,10 +49,10 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                 header class="navbar bg-base-200 shadow-sm print:hidden" {
                     div class="navbar-start" {
                         a class="btn btn-ghost text-lg" style="padding-left: 0"
-                          hx-get=[(data.is_authenticated.then(|| "/"))]
-                          hx-push-url=[(data.is_authenticated.then(|| "true"))]
-                          hx-target=[(data.is_authenticated.then(|| "#content"))]
-                          href=[(!data.is_authenticated.then(|| "/"))] {
+                         hx-get=@if data.is_authenticated { "/" }
+                          hx-push-url=@if data.is_authenticated { "true" }
+                          hx-target=@if data.is_authenticated { "#content" }
+                          href=@if !data.is_authenticated { "/" } {
                             img src="/static/android-chrome-192x192.png" alt="Logo" style="width: 2rem";
                             "Recipya"
                         }
@@ -86,7 +89,7 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                                    popovertarget="avatar_menu"
                                    popovertargetaction="toggle"
                                    class={
-                                       (data.about.is_update_available.then(|| "indicator"))
+                                       @if data.about.is_update_available { "indicator" }
                                    }
                                    hx-get="/user-initials"
                                    hx-trigger="load"
@@ -95,7 +98,7 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                                     role="button"
                                     class={
                                        "btn btn-ghost btn-circle avatar placeholder"
-                                       (data.about.is_update_available.then(|| " indicator"))
+                                       @if data.about.is_update_available { " indicator" }
                                     } {
                                     @if data.about.is_update_available {
                                         span class="indicator-item indicator-start badge badge-sm badge-secondary z-30" {
@@ -118,14 +121,14 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                                     @if data.is_admin {
                                         li onclick="document.activeElement?.blur()" {
                                             a href="/admin" hx-get="/admin" hx-target="#content" hx-push-url="true" {
-                                                (iconBuildingLibrary())
+                                                (icon_building_library())
                                                 "Admin"
                                             }
                                         }
                                     }
                                     li onclick="document.activeElement?.blur()" {
                                         a href="/reports" hx-get="/reports" hx-target="#content" hx-push-url="true" {
-                                            (iconFlag())
+                                            (icon_flag())
                                             "Reports"
                                         }
                                     }
@@ -138,7 +141,7 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                                     }
                                     li class="cursor-pointer" onclick="settings_dialog.showModal()" {
                                         a hx-get="/settings" hx-target="#settings_dialog_content" {
-                                            (iconGear())
+                                            (icon_cog_6_tooth())
                                             "Settings"
                                         }
                                     }
@@ -146,7 +149,7 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                                         div class="divider m-0" {}
                                         li {
                                             a hx-post="/auth/logout" {
-                                                (iconLogout())
+                                                (icon_arrow_right_start_on_rectangle())
                                                 "Log out"
                                             }
                                         }
@@ -183,14 +186,14 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                             }
                         }
                     }
-                    div id="fullscreen-loader" class="htmx-indicator";
+                    div id="fullscreen-loader" class="htmx-indicator" {}
                     main class="inline-flex w-full" {
                         @if data.is_authenticated {
                             aside id="desktop_nav" class="hidden md:block" {
                                 ul class="menu menu-sm bg-base-300 rounded-box h-full" style="border-radius: 0" {
                                     li id="recipes_sidebar_recipes" hx-get="/recipes" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap-oob="true" hx-swap="innerHTML transition:true" {
                                         a class="tooltip tooltip-right active" data-tip="Recipes" {
-                                            (icon_cube_transparent())
+                                            (icon_pencil())
                                         }
                                     }
                                     li id="recipes_sidebar_cookbooks"
@@ -221,8 +224,8 @@ pub fn main(title: &str, data: Data, content: Markup) -> Markup {
                     }
                 }
                 (toast())
-			    (toast_ws("", "", false))
+                (toast_ws("", "", false))
             }
         }
-    )
+    }
 }

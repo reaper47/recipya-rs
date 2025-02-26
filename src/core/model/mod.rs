@@ -1,5 +1,5 @@
 mod error;
-mod recipe;
+pub mod recipe;
 
 pub use error::{Error, Result};
 pub use recipe::{Recipe, RecipeDetails};

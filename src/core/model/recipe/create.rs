@@ -366,94 +366,10 @@ impl Recipe {
 mod tests {
     use super::*;
 
-    use diesel::internal::derives::multiconnection::chrono;
-    use uuid::Uuid;
-
-    use crate::server::test_utils::{insert_user, TestDb};
+    use crate::server::test_utils::{a_complete_recipe, insert_user, TestDb};
     use crate::server::AppState;
 
     pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
-    fn a_complete_recipe() -> RecipeForCreate {
-        let main_image = Uuid::new_v4();
-        let secondary_image = Uuid::new_v4();
-        let video = Uuid::new_v4();
-
-        RecipeForCreate {
-            name: String::from("Best Chinese Kale"),
-            description: Some(String::from("dessert")),
-            images: Some(vec![main_image, secondary_image]),
-            yield_: Some(4),
-            source: Some(String::from("The Best Traditional Canadian Dishes")),
-            videos: vec![VideoForCreate {
-                video,
-                duration: Some(chrono::Duration::minutes(7)),
-                content_url: Some(String::from("https://example.com/best-food.mp4")),
-                embed_url: Some(String::from("https://example.com/embed/j43yfe3.mp4")),
-            }],
-            category: Some(String::from("dinner")),
-            cuisine: Some(String::from("thai")),
-            ingredients: Sections::from([
-                (
-                    String::from("Sauce"),
-                    vec![
-                        String::from("1 cup blue spinach"),
-                        String::from("1/2 tbsp cinnamon"),
-                    ],
-                ),
-                (
-                    String::from("Main"),
-                    vec![
-                        String::from("4 pounds top quality chicken filet"),
-                        String::from("1/8 cup lemon juice"),
-                    ],
-                ),
-            ]),
-            instructions: Sections::from([
-                (
-                    String::from("Sauce"),
-                    vec![String::from("Mix all these ingredients")],
-                ),
-                (
-                    String::from("Chicken"),
-                    vec![
-                        String::from("Turn the oven at 300 F"),
-                        String::from("Soak the chicken in the lemon juice"),
-                        String::from("Bake for 35 minutes"),
-                    ],
-                ),
-            ]),
-            keywords: vec![String::from("vegetarian"), String::from("tofu")],
-            nutrition: Some(NutritionForCreate {
-                calories_kcal: Some(300),
-                total_carbohydrates: Some(55),
-                sugars_g: Some(43),
-                protein_g: Some(7),
-                total_fat_g: Some(6),
-                saturated_fat_g: Some(1),
-                unsaturated_fat_g: Some(2),
-                cholesterol_mg: Some(5),
-                sodium_mg: Some(12),
-                fiber_g: Some(10),
-                trans_fat_g: Some(3),
-                serving_size: Some(String::from("100g")),
-            }),
-            times: Some(TimesForCreate {
-                prep_seconds: 120,
-                cook_seconds: 3600,
-            }),
-            tools: vec![
-                ToolForCreate {
-                    name: String::from("wok"),
-                    quantity: 1,
-                },
-                ToolForCreate {
-                    name: String::from("frying pan"),
-                    quantity: 1,
-                },
-            ],
-        }
-    }
 
     fn a_bare_minimum_recipe() -> RecipeForCreate {
         RecipeForCreate {
