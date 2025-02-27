@@ -1,6 +1,7 @@
-pub(crate) mod auth;
-pub(crate) mod context;
-pub(crate) mod general;
-pub(crate) mod static_files;
+pub(super) mod auth;
+pub(super) mod context;
+pub(super) mod general;
+pub(super) mod recipes;
+pub(super) mod static_files;
 
 mod message;

@@ -70,11 +70,17 @@ impl AppState {
 pub mod test_utils {
     use axum::Router;
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
+    use diesel::internal::derives::multiconnection::chrono;
     use diesel::{sql_query, Connection};
     use tower_cookies::{Cookie, CookieManagerLayer};
+    use uuid::Uuid;
 
     use crate::core::auth::token::{generate_web_token, Token};
     use crate::core::config::Config;
+    use crate::core::model::recipe::{
+        NutritionForCreate, RecipeForCreate, Sections, TimesForCreate, ToolForCreate,
+        VideoForCreate,
+    };
     use crate::core::model::user::{User, UserForCreate};
     use crate::core::repository::pool::make_db_pool;
     use crate::core::repository::ModelManager;
@@ -91,13 +97,16 @@ pub mod test_utils {
     pub const TEST_USER_PASSWORD: &str = "12345678";
 
     /// The database URL used for connecting to the database in test environments.
-    pub(crate) const RECIPYA_DATABASE_URL: &'static str =
-        "postgres://postgres:postgres@localhost:5432/recipya_test";
+    pub(crate) fn test_database_url() -> String {
+        std::env::var("RECIPYA_DATABASE_TEST_URL").unwrap_or(String::from(
+            "postgres://postgres:postgres@localhost:5432/recipya_test",
+        ))
+    }
 
     pub fn default_config() -> Config {
         Config {
             base_url: String::from("http://localhost:8078"),
-            database_url: RECIPYA_DATABASE_URL.to_string(),
+            database_url: test_database_url(),
             is_autologin: false,
             is_demo: false,
             is_no_signups: false,
@@ -118,12 +127,12 @@ pub mod test_utils {
 
             let (db_name, db_url) = generate_db().await?;
 
-            let conn = make_db_pool(RECIPYA_DATABASE_URL).await?;
+            let conn = make_db_pool(&test_database_url()).await?;
             sql_query(format!("CREATE DATABASE \"{db_name}\";"))
                 .execute(&mut conn.get().await?)
                 .await?;
 
-            let mut config = config.unwrap_or(Config::default());
+            let mut config = config.unwrap_or_default();
             config.database_url = db_url.clone();
 
             Ok((
@@ -140,15 +149,17 @@ pub mod test_utils {
         fn drop(&mut self) {
             use diesel::RunQueryDsl;
 
-            let mut conn = diesel::PgConnection::establish(RECIPYA_DATABASE_URL)
-                .unwrap_or_else(|_| panic!("Error connecting to {RECIPYA_DATABASE_URL}"));
+            let url = test_database_url();
+
+            let mut conn = diesel::PgConnection::establish(&url)
+                .unwrap_or_else(|_| panic!("Error connecting to {url}"));
 
             sql_query(format!(
                 "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}'",
                 self.db_name
             ))
-            .execute(&mut conn)
-            .expect("Error executing pg_terminate_backend query");
+                .execute(&mut conn)
+                .expect("Error executing pg_terminate_backend query");
 
             sql_query(format!("DROP DATABASE \"{}\"", self.db_name))
                 .execute(&mut conn)
@@ -230,7 +241,7 @@ pub mod test_utils {
                 password_clear: "12345678".to_string(),
             },
         )
-        .await?;
+            .await?;
 
         let user = User::get_user_by_email(&mm, &email)
             .await?
@@ -241,7 +252,7 @@ pub mod test_utils {
 
     /// Generates a unique test database name and URL.
     pub async fn generate_db() -> Result<(String, String)> {
-        let mut db_url = RECIPYA_DATABASE_URL.to_string();
+        let mut db_url = test_database_url();
         let mut db_name = String::from("recipya_test");
         let db_id = uuid::Uuid::new_v4().to_string();
         db_url.push_str(db_id.as_str());
@@ -268,7 +279,7 @@ pub mod test_utils {
                 password_clear: String::from("12345678"),
             },
         )
-        .await?;
+            .await?;
         Ok(app)
     }
 
@@ -281,9 +292,91 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-        .await?;
+            .await?;
 
         Ok(user)
+    }
+
+    /// Prepares a recipe with all its components filled out.
+    pub fn a_complete_recipe() -> RecipeForCreate {
+        let main_image = Uuid::new_v4();
+        let secondary_image = Uuid::new_v4();
+        let video = Uuid::new_v4();
+
+        RecipeForCreate {
+            name: String::from("Best Chinese Kale"),
+            description: Some(String::from("This is the most delicious recipe!")),
+            images: Some(vec![main_image, secondary_image]),
+            yield_: Some(4),
+            source: Some(String::from("https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/")),
+            videos: vec![VideoForCreate {
+                video,
+                duration: Some(chrono::Duration::minutes(7)),
+                content_url: Some(String::from("https://example.com/best-food.mp4")),
+                embed_url: Some(String::from("https://example.com/embed/j43yfe3.mp4")),
+            }],
+            category: Some(String::from("dinner")),
+            cuisine: Some(String::from("thai")),
+            ingredients: Sections::from([
+                (
+                    String::from("Sauce"),
+                    vec![
+                        String::from("1 cup blue spinach"),
+                        String::from("1/2 tbsp cinnamon"),
+                    ],
+                ),
+                (
+                    String::from("Main"),
+                    vec![
+                        String::from("4 pounds top quality chicken filet"),
+                        String::from("1/8 cup lemon juice"),
+                    ],
+                ),
+            ]),
+            instructions: Sections::from([
+                (
+                    String::from("Sauce"),
+                    vec![String::from("Mix all these ingredients")],
+                ),
+                (
+                    String::from("Chicken"),
+                    vec![
+                        String::from("Turn the oven at 300 F"),
+                        String::from("Soak the chicken in the lemon juice"),
+                        String::from("Bake for 35 minutes"),
+                    ],
+                ),
+            ]),
+            keywords: vec![String::from("vegetarian"), String::from("tofu")],
+            nutrition: Some(NutritionForCreate {
+                calories_kcal: Some(300),
+                total_carbohydrates: Some(55),
+                sugars_g: Some(43),
+                protein_g: Some(7),
+                total_fat_g: Some(6),
+                saturated_fat_g: Some(1),
+                unsaturated_fat_g: Some(2),
+                cholesterol_mg: Some(5),
+                sodium_mg: Some(12),
+                fiber_g: Some(10),
+                trans_fat_g: Some(3),
+                serving_size: Some(String::from("100g")),
+            }),
+            times: Some(TimesForCreate {
+                prep_seconds: 120,
+                cook_seconds: 3600,
+            }),
+            tools: vec![
+                ToolForCreate {
+                    name: String::from("wok"),
+                    quantity: 1,
+                },
+                ToolForCreate {
+                    name: String::from("frying pan"),
+                    quantity: 1,
+                },
+            ],
+        }
     }
 
     /// Asserts that the response HTML contains all of the expected strings.

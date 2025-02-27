@@ -21,6 +21,7 @@ pub enum Error {
     NoToken,
 
     Form,
+    BadTimeFormat,
     NoUser,
 
     LoginFailUsernameNotFound,
@@ -37,6 +38,8 @@ pub enum Error {
     CtxExt(crate::server::router::middleware::mw_auth::CtxExtError),
     #[from]
     Config(crate::core::config::Error),
+    #[from]
+    HumanTime(humantime::DurationError),
     #[from]
     Email(crate::core::email::Error),
     #[from]
@@ -56,6 +59,7 @@ impl Error {
 
         #[allow(unreachable_patterns)]
         match self {
+            BadTimeFormat => (StatusCode::BAD_REQUEST, ClientError::BAD_TIME_FORMAT),
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
             NoUser => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -76,7 +80,7 @@ impl Error {
             NoToken => (StatusCode::BAD_REQUEST, ClientError::MISSING_PARAMS),
 
             Model(crate::core::model::Error::EntityNotFound { entity, id }) => (
-                StatusCode::BAD_REQUEST,
+                StatusCode::NOT_FOUND,
                 ClientError::ENTITY_NOT_FOUND { entity, id: *id },
             ),
 
@@ -108,6 +112,7 @@ impl std::error::Error for Error {}
 pub enum ClientError {
     CONFIRM_FAIL,
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
+    BAD_TIME_FORMAT,
     FORM_ERROR,
     LOGIN_FAIL,
     LOGOUT_FAIL,

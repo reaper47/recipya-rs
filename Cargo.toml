@@ -17,9 +17,9 @@ async-trait = "0.1.86"
 axum = { version = "0.8.1", features = ["ws"] }
 axum-htmx = "0.7.0"
 base64 = "0.22.1"
-clap = { version = "4.5.28", features = ["derive"] }
+clap = { version = "4.5.31", features = ["derive"] }
 derive_more = { version = "2.0.1", features = ["from", "display"] }
-diesel = { version = "2.2", features = ["postgres", "chrono", "serde_json", "uuid"] }
+diesel = { version = "2.2.7", features = ["postgres", "chrono", "serde_json", "uuid"] }
 diesel-async = { version = "0.5.2", features = ["postgres", "bb8", "async-connection-wrapper"] }
 diesel_migrations = { version = "2.2", features = ["postgres"] }
 directories = "6.0.0"
@@ -27,32 +27,34 @@ dotenvy = "0.15.7"
 enum_dispatch = "0.3.13"
 futures-util = "0.3.31"
 hmac = "0.12.1"
+humantime = "2.1.0"
 iso8601 = { version = "0.6.2", features = ["serde"] }
+iso8601-duration = "0.2.0"
 lazy-regex = "3.4.1"
-lettre = { version = "0.11.12", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
+lettre = { version = "0.11.14", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
 maud = { version = "0.27.0", features = ["axum"] }
 mime_guess = "2.0.5"
 mrml = "4.0.1"
-native-tls = "0.2.13"
+native-tls = "0.2.14"
 paste = "1.0.15"
 postgres-native-tls = "0.5.1"
 reqwest = { version = "0.12.12", features = ["blocking"] }
-rust-embed = { version = "8.5.0", features = ["axum-ex"] }
-scraper = "0.22.0"
+rust-embed = { version = "8.6.0", features = ["axum-ex"] }
+scraper = "0.23.1"
 sendgrid = { version = "0.23.0", features = ["rustls"] }
-serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.138"
+serde = { version = "1.0.218", features = ["derive"] }
+serde_json = "1.0.139"
 sha2 = "0.10.8"
-strum_macros = "0.27.0"
+strum_macros = "0.27.1"
 time = "0.3.37"
 tokio = { version = "1.43", features = ["full"] }
 tokio-postgres = { version = "0.7.13", features = ["with-serde_json-1", "with-time-0_3", "with-uuid-1"] }
 tower-cookies = "0.11.0"
-tower-http = {  version = "0.6.2", features = ["fs"] }
+tower-http = { version = "0.6.2", features = ["fs"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 url = { version = "2.5.4", features = ["serde"] }
-uuid = { version = "1.13.1", features = ["fast-rng", "serde", "v4"] }
+uuid = { version = "1.14.0", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 whatlang = "0.16.4"
 

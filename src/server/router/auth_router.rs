@@ -76,7 +76,7 @@ impl RegisterForm {
 }
 
 /// Defines the authentication-related routes for the web application.
-pub(crate) fn auth_routes(state: AppState) -> Router<AppState> {
+pub(super) fn auth_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route(
             "/change-password",
@@ -276,7 +276,7 @@ mod tests {
                 .get(format!("{BASE_URI}?token={}", &token).as_str())
                 .await;
 
-            res.assert_status_bad_request();
+            res.assert_status_not_found();
             Ok(())
         }
 
@@ -454,7 +454,7 @@ mod tests {
             res.assert_status_bad_request();
             res.assert_header(
                 axum_htmx::headers::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Operation Successful"}}"#
+                r#"{"showMessageHtmx":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Operation Successful"}}"#,
             );
             Ok(())
         }
@@ -476,7 +476,7 @@ mod tests {
             res.assert_status_see_other();
             res.assert_header(
                 axum_htmx::headers::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#
+                r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#,
             );
             res.assert_header(axum_htmx::headers::HX_REDIRECT, "/auth/login");
             Ok(())
@@ -652,7 +652,7 @@ mod tests {
             res.assert_status_bad_request();
             res.assert_header(
                 axum_htmx::headers::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#
+                r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
             );
             Ok(())
         }
@@ -674,7 +674,7 @@ mod tests {
             res.assert_status_bad_request();
             res.assert_header(
                 axum_htmx::headers::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#
+                r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
             );
             Ok(())
         }
@@ -839,7 +839,7 @@ mod tests {
             res.assert_status_internal_server_error();
             res.assert_header(
                 axum_htmx::headers::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred during registration.","status":"alert-error","title":"Operation Failed"}}"#
+                r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred during registration.","status":"alert-error","title":"Operation Failed"}}"#,
             );
             Ok(())
         }

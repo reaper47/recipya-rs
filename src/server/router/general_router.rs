@@ -7,7 +7,7 @@ use crate::server::router::middleware::mw_auth::mw_redirect_if_authenticated;
 use crate::server::AppState;
 
 /// Defines the routes for general endpoints of the web application.
-pub(crate) fn general_routes(state: AppState) -> Router<AppState> {
+pub(super) fn general_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route(
             "/",

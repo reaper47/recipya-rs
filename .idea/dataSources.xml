@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="recipya@localhost" uuid="72e2adcc-dee4-410c-836e-0e819ce79799">
+    <data-source source="LOCAL" name="recipya_test@localhost" uuid="4ae824e5-5b3a-4675-8f69-a82501149603">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/recipya</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:5432/recipya_test</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

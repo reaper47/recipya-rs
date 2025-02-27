@@ -20,7 +20,10 @@ pub fn static_files_routes(state: AppState) -> Router<AppState> {
         .route("/site.webmanifest", get(static_files_handler))
         .route("/public/{*file}", get(static_files_handler))
         .nest_service("/data/images", ServeDir::new(state.data_dir.images))
-        .nest_service("/data/images/thumbnails", ServeDir::new(state.data_dir.thumbnails))
+        .nest_service(
+            "/data/images/thumbnails",
+            ServeDir::new(state.data_dir.thumbnails),
+        )
         .nest_service("/data/videos", ServeDir::new(state.data_dir.videos))
 }
 
@@ -33,14 +36,14 @@ mod tests {
     use tower::ServiceExt;
 
     use crate::core::config::Config;
-    use crate::server::test_utils::{default_config, RECIPYA_DATABASE_URL};
+    use crate::server::test_utils::{default_config, test_database_url};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     #[tokio::test]
     async fn test_static_files_routes_ok() -> Result<()> {
         let config = Config {
-            database_url: RECIPYA_DATABASE_URL.to_string(),
+            database_url: test_database_url(),
             ..default_config()
         };
         let state = AppState::new(config).await?;
