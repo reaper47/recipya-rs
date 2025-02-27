@@ -305,10 +305,10 @@ pub mod test_utils {
 
         RecipeForCreate {
             name: String::from("Best Chinese Kale"),
-            description: Some(String::from("dessert")),
+            description: Some(String::from("This is the most delicious recipe!")),
             images: Some(vec![main_image, secondary_image]),
             yield_: Some(4),
-            source: Some(String::from("The Best Traditional Canadian Dishes")),
+            source: Some(String::from("https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/")),
             videos: vec![VideoForCreate {
                 video,
                 duration: Some(chrono::Duration::minutes(7)),

@@ -16,7 +16,14 @@ pub async fn recipe_view_handler(
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
-    let recipe = Recipe::get(&state.mm, user_id, recipe_id).await?;
+
+    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+        Ok(recipe) => recipe,
+        Err(_) => {
+            return Ok(templates::general::simple("Recipe Not Found", "The recipe you requested to view is not found."));
+        }
+    };
+
     let formatted_times = FormattedTimes::from_times(&recipe.times)?;
 
     Ok(templates::recipes::view_recipe(
@@ -32,7 +39,10 @@ pub async fn recipe_view_handler(
             about: AboutData {
                 is_update_available: false,
             },
-            share: ShareData::default(),
+            share: ShareData {
+                is_from_host: true,
+                is_shared: false,
+            },
             view: ViewRecipe {
                 recipe_details: recipe,
                 formatted_times,

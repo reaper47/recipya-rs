@@ -72,7 +72,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
                                                     div class="label p-0" {
                                                         span class="label-text" { "Servings" }
                                                     }
-                                                    input #yield
+                                                    input id="yield"
                                                         type="number"
                                                         min="1"
                                                         name="yield"
@@ -102,7 +102,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
                                                 a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
                                                 p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
                                            } @else {
-                                               p class="text-center" { "Source: Unknown" }
+                                               p class="text-center" { "Source: " (source) }
                                            }
                                         } @else {
                                             p class="text-center" { "Source: Unknown" }
@@ -158,7 +158,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
                             }
                         }
                         div class="border-gray-700 md:border-t" {
-                            //(ingredients_instructions(data))
+                            (ingredients_instructions(&recipe_details))
                             div class="hidden print:grid col-span-6 ml-2 my-1" {
                                 @if !recipe_details.tools.is_empty() {
                                     h1 class="text-sm print:mb-1" {
@@ -176,7 +176,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
                                                     input type="checkbox";
                                                 }
                                                 span class="pl-2" {
-                                                    //(t.string_quantity())
+                                                    (t.quantity.to_string()) (t.name)
                                                 }
                                             }
                                         }
@@ -260,6 +260,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data) -> Markup {
                            end" {
                     (icon_bulb_on())
                 }
+
                 @if data.is_authenticated && data.share.is_from_host {
                     button class="ml-2 hidden sm:block"
                         title="Edit recipe"
@@ -403,11 +404,11 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                 1 => {
                     @if recipe_details.num_images() == 1 {
                         @if let Some(image) = recipe_details.recipe.image {
-                            img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80  md:max-h-[34rem]" src=(format!("/data/images/{image}.webp"));
+                            img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src=(format!("/data/images/{image}.webp"));
                         } @else {
-                           img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80  md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
+                           img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
                         }
-                    } @else if let Some(video) = recipe_details.videos.get(0) {
+                    } @else if let Some(video) = recipe_details.videos.first() {
                         @if let Some(url) = &video.embed_url {
                             iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                         } @else if let Some(url) = &video.content_url {
@@ -430,13 +431,11 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                                 @if is_file_exists(img, &data_dir.images) {
                                      img style="object-fit: cover"
                                     alt="Image of the recipe"
-                                    class="w-full max-h-80  md:max-h-[34rem]"
+                                    class="w-full max-h-80 md:max-h-[34rem]"
                                     src=(format!("/data/images/{img}.webp"));
                                 } @else {
-                                      img style="object-fit: cover"
-                                    alt="Image of the recipe"
-                                    class="w-full max-h-80  md:max-h-[34rem]"
-                                    src="/data/images/Placeholders/placeholder.recipe.webp";
+                                      img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]"
+                                          src="/data/images/Placeholders/placeholder.recipe.webp";
                                 }
                                 div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2" {
                                     a class="btn btn-circle"
@@ -474,7 +473,7 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                                     }
                                 }
                                 div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2" {
-                                    a class="btn btn-circle" href=(format!("#media-{}", idx+ recipe_details.num_images()-1)) { "❮" }
+                                    a class="btn btn-circle" href=(format!("#media-{}", idx.checked_add(recipe_details.num_images()).and_then(|val| val.checked_sub(1)).unwrap_or(1))) { "❮" }
                                     a class="btn btn-circle"
                                       href=(if idx == recipe_details.num_videos() - 1 {
                                             String::from("#media-0")
@@ -620,6 +619,53 @@ fn view_recipe_nutrition(recipe_details: &RecipeDetails) -> Markup {
                     }
                     p class="text-xs" {
                         (nutrition.to_line())
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
+    html! {
+        div id="ingredients-instructions-container" class="grid text-sm md:grid-flow-col md:col-span-6" {
+            div class="col-span-6 border-gray-700 px-4 py-2 border-y md:col-span-2 md:border-r md:border-y-0 print:hidden" {
+                @if !recipe.tools.is_empty() {
+                    h2 class="font-semibold text-center underline pb-1" { "Tools" }
+                    ul class="md:pb-2" {
+                        @for tool in recipe.tools.iter() {
+                            li class="form-control hover:bg-gray-100 dark:hover:bg-gray-700" {
+                                label class="label justify-start" {
+                                    input type="checkbox" class="checkbox";
+                                    span class="label-text pl-2" { (tool.quantity.to_string()) (tool.name) }
+                                }
+                            }
+                        }
+                    }
+                }
+                h2 class="font-semibold text-center underline pb-1" { "Ingredients" }
+                ul {
+                    @for (_section, ingredients) in recipe.ingredients.iter() {
+                        @for ingredient in ingredients.iter() {
+                             li class="form-control hover:bg-gray-100 dark:hover:bg-gray-700" {
+                                label class="label justify-start" {
+                                    input type="checkbox" class="checkbox";
+                                    span class="label-text pl-2" { (ingredient) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden" {
+                h2 class="font-semibold text-center underline pb-1" { "Instructions" }
+                ol class="grid list-decimal" {
+                    @for (_section, instruction) in recipe.instructions.iter() {
+                        @for instruction in instruction.iter() {
+                            li class="min-w-full py-2 select-none hover:bg-gray-100 dark:hover:bg-gray-700" _="on mousedown toggle .line-through" {
+                                span class="whitespace-pre-line" { (instruction) }
+                            }
+                        }
                     }
                 }
             }

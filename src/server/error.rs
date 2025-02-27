@@ -80,7 +80,7 @@ impl Error {
             NoToken => (StatusCode::BAD_REQUEST, ClientError::MISSING_PARAMS),
 
             Model(crate::core::model::Error::EntityNotFound { entity, id }) => (
-                StatusCode::BAD_REQUEST,
+                StatusCode::NOT_FOUND,
                 ClientError::ENTITY_NOT_FOUND { entity, id: *id },
             ),
 

@@ -5,7 +5,6 @@ use uuid::Uuid;
 
 use crate::core::model::recipe::Times;
 use crate::core::model::RecipeDetails;
-
 use crate::server::Result;
 
 /// Data holds data to pass on to the templates.
@@ -26,7 +25,6 @@ pub struct AboutData {
 }
 
 /// ShareData holds information on the entity being shared.
-#[derive(Default)]
 pub struct ShareData {
     pub is_from_host: bool,
     pub is_shared: bool,
@@ -117,9 +115,7 @@ fn duration_to_iso8601(duration: humantime::Duration) -> String {
 // TODO: Put this somewhere else because it might be used
 /// Checks whether the media file exists in the file system.
 pub(super) fn is_file_exists(media_file: Uuid, dir: &Path) -> bool {
-    Path::new(dir)
-        .join(media_file.to_string())
-        .exists()
+    Path::new(dir).join(media_file.to_string()).exists()
 }
 
 #[cfg(test)]
