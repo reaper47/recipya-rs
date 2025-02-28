@@ -1,11 +1,11 @@
 use serde::Deserialize;
 use url::Url;
 
+use crate::core::scraper::schema::AtType;
 use crate::core::scraper::schema::common::{
     Action, CreativeWorkOrUrl, DateOrDateTime, DefinedTermOrTextOrUrl, ImageObjectOrUrl,
     LanguageOrText, OrganizationOrPerson, OrganizationType,
 };
-use crate::core::scraper::schema::AtType;
 
 /// An article, such as a news article or piece of investigative report. Newspapers and magazines
 /// have articles of many different types and this is intended to cover them all.

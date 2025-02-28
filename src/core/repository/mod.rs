@@ -4,7 +4,7 @@ pub mod schema;
 
 pub use error::{Error, Result};
 
-use crate::core::repository::pool::{make_db_pool, DbPool};
+use crate::core::repository::pool::{DbPool, make_db_pool};
 
 /// `ModelManager` is a structure responsible for managing database interactions.
 #[derive(Clone)]

@@ -1,4 +1,4 @@
-use base64::engine::{general_purpose, Engine};
+use base64::engine::{Engine, general_purpose};
 
 use crate::impl_display_as_debug;
 

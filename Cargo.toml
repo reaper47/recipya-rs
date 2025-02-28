@@ -1,7 +1,7 @@
 [package]
 name = "recipya-rs"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "A clean, simple and powerful recipe manager your whole family will enjoy."
 readme = "README.md"
 homepage = "https://recipya.musicavis.ca"

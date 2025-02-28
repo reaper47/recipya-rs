@@ -1,9 +1,8 @@
 use std::{collections::HashMap, fmt::Formatter, str::FromStr, vec::Vec};
 
 use serde::{
-    de,
+    Deserialize, Deserializer, de,
     de::{Error, MapAccess, SeqAccess},
-    Deserialize, Deserializer,
 };
 use url::Url;
 

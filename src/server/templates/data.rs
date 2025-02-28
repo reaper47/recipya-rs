@@ -3,8 +3,8 @@ use std::path::Path;
 use diesel::internal::derives::multiconnection::chrono::NaiveTime;
 use uuid::Uuid;
 
-use crate::core::model::recipe::Times;
 use crate::core::model::RecipeDetails;
+use crate::core::model::recipe::Times;
 use crate::server::Result;
 
 /// Data holds data to pass on to the templates.

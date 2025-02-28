@@ -1,4 +1,4 @@
-use maud::{html, Markup};
+use maud::{Markup, html};
 
 /// Renders the <head> section of the HTML.
 pub(super) fn head(title: &str) -> Markup {

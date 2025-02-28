@@ -1,7 +1,7 @@
 use diesel::{Connection, ConnectionError, ConnectionResult};
-use diesel_async::pooled_connection::{bb8, AsyncDieselConnectionManager, ManagerConfig};
 use diesel_async::AsyncPgConnection;
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_async::pooled_connection::{AsyncDieselConnectionManager, ManagerConfig, bb8};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use futures_util::FutureExt;
 use native_tls::Certificate;
 use tokio_postgres::NoTls;

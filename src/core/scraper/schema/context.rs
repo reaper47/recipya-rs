@@ -1,5 +1,5 @@
 use serde::de::SeqAccess;
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de};
 
 /// Enumeration of all possible @context values.
 #[derive(Debug, Default, PartialEq)]

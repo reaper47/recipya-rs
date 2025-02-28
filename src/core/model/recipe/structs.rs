@@ -639,7 +639,10 @@ mod tests {
 
             let got = nutrition.to_line();
 
-            assert_eq!(got, "Per 100g: calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g");
+            assert_eq!(
+                got,
+                "Per 100g: calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g"
+            );
         }
 
         #[test]

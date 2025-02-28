@@ -14,7 +14,7 @@ impl Recipe {
     pub async fn get(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<RecipeDetails> {
         use crate::core::repository::schema;
 
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         let (recipe, category, cuisine, keywords, nutrition, times) = schema::recipes::table
             .inner_join(
