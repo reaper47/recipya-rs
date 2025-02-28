@@ -1,4 +1,4 @@
-use maud::{html, Markup, DOCTYPE};
+use maud::{DOCTYPE, Markup, html};
 
 use crate::server::templates::core::{head, toast, toast_ws};
 use crate::server::templates::data::Data;

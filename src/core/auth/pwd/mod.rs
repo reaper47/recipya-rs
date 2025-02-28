@@ -9,7 +9,7 @@ use std::str::FromStr;
 use lazy_regex::regex_captures;
 use uuid::Uuid;
 
-use scheme::{get_scheme, Scheme, SchemeStatus, DEFAULT_SCHEME};
+use scheme::{DEFAULT_SCHEME, Scheme, SchemeStatus, get_scheme};
 
 pub use self::error::{Error, Result};
 

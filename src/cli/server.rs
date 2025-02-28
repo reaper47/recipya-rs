@@ -9,7 +9,7 @@ use tracing::info;
 use crate::core::config::Config;
 use crate::error::{Error, Result};
 use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
-use crate::server::{router, AppState};
+use crate::server::{AppState, router};
 
 /// Initializes and starts Recipya's web server.
 pub async fn server() -> Result<()> {

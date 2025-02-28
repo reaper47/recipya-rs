@@ -4,10 +4,10 @@ use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::core::auth::pwd::{hash_pwd, ContentToHash};
+use crate::core::auth::pwd::{ContentToHash, hash_pwd};
 use crate::core::model::error::{Error, Result};
-use crate::core::repository::schema::users;
 use crate::core::repository::ModelManager;
+use crate::core::repository::schema::users;
 
 /// Represents a user in the system.
 #[derive(Clone, Debug, Queryable, Selectable, Serialize)]
@@ -223,8 +223,8 @@ impl User {
 mod tests {
     use super::*;
 
-    use crate::server::test_utils::{insert_user, TestDb, TEST_USER_EMAIL};
     use crate::server::AppState;
+    use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

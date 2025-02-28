@@ -1,5 +1,5 @@
-use crate::core::scraper::websites::Website;
 use crate::core::scraper::Result;
+use crate::core::scraper::websites::Website;
 
 /// A trait defining HTTP client functionality for synchronous and asynchronous requests.
 #[async_trait::async_trait]

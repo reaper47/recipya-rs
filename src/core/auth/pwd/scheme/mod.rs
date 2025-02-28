@@ -34,7 +34,7 @@ enum SchemeDispatcher {
 }
 
 /// Gets the current Scheme based on the scheme's name.
-pub fn get_scheme(scheme_name: &str) -> Result<impl Scheme> {
+pub fn get_scheme(scheme_name: &str) -> Result<impl Scheme + use<>> {
     match scheme_name {
         "01" => Ok(SchemeDispatcher::Scheme01(scheme_01::Scheme01)),
         "02" => Ok(SchemeDispatcher::Scheme02(scheme_02::Scheme02)),

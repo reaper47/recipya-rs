@@ -1,6 +1,6 @@
 use std::fmt::Formatter;
 
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de};
 
 use crate::core::scraper::schema::AtType;
 

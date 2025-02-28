@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 
 use super::{Error, Result, Scheme};
 use crate::core::auth::config::auth_config;

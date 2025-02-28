@@ -29,7 +29,7 @@ impl Recipe {
     ) -> Result<i64> {
         use crate::core::repository::schema;
 
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         let recipe_id = conn
             .transaction::<i64, Error, _>(|mut conn| {
@@ -366,10 +366,10 @@ impl Recipe {
 mod tests {
     use super::*;
 
-    use crate::server::test_utils::{a_complete_recipe, insert_user, TestDb};
     use crate::server::AppState;
+    use crate::server::test_utils::{TestDb, a_complete_recipe, insert_user};
 
-    pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     fn a_bare_minimum_recipe() -> RecipeForCreate {
         RecipeForCreate {
@@ -557,8 +557,11 @@ mod tests {
 
         let got = Recipe::create(&state.mm, user.id, &recipe).await;
 
-        pretty_assertions::assert_eq!(got, Err(Error::DuplicateEntity));
-        Ok(())
+        match got {
+            Ok(_) => Err("Should have returned an error".into()),
+            Err(Error::DuplicateEntity) => Ok(()),
+            Err(err) => Err(format!("Wrong error occurred: {err}").into()),
+        }
     }
 
     #[tokio::test]

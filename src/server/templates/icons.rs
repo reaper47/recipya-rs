@@ -1,4 +1,4 @@
-use maud::{html, Markup};
+use maud::{Markup, html};
 
 /// Renders the 'arrow-right-start-on-rectangle' hero icon.
 pub(super) fn icon_arrow_right_start_on_rectangle() -> Markup {

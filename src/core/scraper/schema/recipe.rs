@@ -1,7 +1,7 @@
 use std::fmt::Formatter;
 
 use reqwest::Url;
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de};
 
 use crate::core::scraper::schema::common::*;
 use crate::core::scraper::schema::nutrition::{NutritionInformationSchema, RestrictedDiet};

@@ -1,5 +1,7 @@
 use derive_more::From;
 
+use diesel_async::pooled_connection::bb8::RunError;
+
 use crate::core::auth::pwd;
 use crate::impl_display_as_debug;
 
@@ -7,7 +9,7 @@ use crate::impl_display_as_debug;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Enumeration of errors related to the models.
-#[derive(Debug, From, PartialEq)]
+#[derive(Debug, From)]
 pub enum Error {
     DuplicateEntity,
     EntityNotFound {
@@ -21,6 +23,8 @@ pub enum Error {
 
     // Externals
     Diesel(String),
+    #[from]
+    Run(RunError),
 }
 
 impl From<diesel::result::Error> for Error {

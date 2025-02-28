@@ -2,8 +2,8 @@ use axum::extract::ws::WebSocket;
 use axum::extract::{State, WebSocketUpgrade};
 use axum::response::{IntoResponse, Redirect};
 
-use crate::server::router::middleware::mw_auth::CtxW;
 use crate::server::AppState;
+use crate::server::router::middleware::mw_auth::CtxW;
 
 /// Handles the index page.
 pub async fn index_handler() -> Redirect {

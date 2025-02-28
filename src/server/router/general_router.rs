@@ -1,10 +1,10 @@
 use axum::routing::get;
-use axum::{middleware, Router};
+use axum::{Router, middleware};
 
+use crate::server::AppState;
 use crate::server::router::handlers::general::{index_handler, ws_handler};
 use crate::server::router::middleware::mw_auth;
 use crate::server::router::middleware::mw_auth::mw_redirect_if_authenticated;
-use crate::server::AppState;
 
 /// Defines the routes for general endpoints of the web application.
 pub(super) fn general_routes(state: AppState) -> Router<AppState> {
@@ -31,7 +31,7 @@ mod tests {
     mod index {
         use super::*;
         use crate::core::config::Config;
-        use crate::server::test_utils::{build_server_logged_in, TestDb};
+        use crate::server::test_utils::{TestDb, build_server_logged_in};
 
         const BASE_URI: &str = "/";
 
