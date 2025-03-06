@@ -1,17 +1,17 @@
-use axum::routing::{get, post};
-use axum::{Router, middleware};
+use axum::routing::{delete, get, post};
+use axum::{middleware, Router};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::core::model::user::UserForCreate;
-use crate::server::AppState;
 use crate::server::router::handlers::auth::{
     change_password_post_handler, confirm_handler, forgot_password_handler,
     forgot_password_post_handler, forgot_password_reset_handler,
     forgot_password_reset_post_handler, login_handler, login_post_handler, logout_post_handler,
-    register_handler, register_post_handler,
+    register_handler, register_post_handler, user_delete_handler,
 };
 use crate::server::router::middleware::mw_auth;
+use crate::server::AppState;
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct ChangePasswordForm {
@@ -115,6 +115,10 @@ pub(super) fn auth_routes(state: AppState) -> Router<AppState> {
                 ),
             ),
         )
+        .route(
+            "/user",
+            delete(user_delete_handler).layer(middleware::from_fn(mw_auth::mw_ctx_require)),
+        )
 }
 
 #[cfg(test)]
@@ -130,7 +134,7 @@ mod tests {
         use axum::http::StatusCode;
 
         use crate::server::test_utils::{
-            TestDb, build_server_anonymous, build_server_logged_in, build_server_ws,
+            build_server_anonymous, build_server_logged_in, build_server_ws, TestDb,
         };
 
         const BASE_URI: &str = "/auth/change-password";
@@ -233,7 +237,7 @@ mod tests {
     mod tests_confirm {
         use super::*;
         use crate::core::support::time::now_utc_plus_sec_str;
-        use crate::server::test_utils::{TestDb, assert_html, build_server_anonymous, get_token};
+        use crate::server::test_utils::{assert_html, build_server_anonymous, get_token, TestDb};
 
         const BASE_URI: &str = "/auth/confirm";
 
@@ -303,12 +307,82 @@ mod tests {
         }
     }
 
+    mod tests_delete_user {
+        use super::*;
+
+        use crate::core::model::user::User;
+        use crate::server::test_utils::{build_server_anonymous, build_server_logged_in, build_server_ws, build_server_ws_other_user, TestDb, TEST_USER_EMAIL};
+        use axum::http::StatusCode;
+
+        const BASE_URI: &str = "/auth/user";
+
+        #[tokio::test]
+        async fn test_delete_user_must_be_logged_in_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_anonymous(config).await?;
+
+            let res = server.delete(BASE_URI).await;
+
+            res.assert_status_see_other();
+            res.assert_header("Location", "/auth/login");
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_user_demo_cannot_be_deleted_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(Some(Config {
+                is_demo: true,
+                ..Config::default()
+            })).await?;
+            let (server, mut ws_server) = build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+
+            let res = server.delete(BASE_URI).await;
+
+            res.assert_status(StatusCode::FORBIDDEN);
+            let _ = ws_server.receive_message().await;
+            ws_server
+                .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-info","title":"Operation Failed"}}"#).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_user_cannot_delete_if_autologin_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(Some(Config {
+                is_autologin: true,
+                ..Config::default()
+            })).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+
+            let res = server.delete(BASE_URI).await;
+
+            res.assert_status(StatusCode::FORBIDDEN);
+            let _ = ws_server.receive_message().await;
+            ws_server
+                .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"This account cannot be deleted.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_user_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = AppState::new(config).await?;
+
+            let res = server.delete(BASE_URI).await;
+
+            res.assert_status_see_other();
+            res.assert_header(axum_htmx::headers::HX_REDIRECT, "/");
+            pretty_assertions::assert_eq!(User::get_user_by_email(&state.mm, TEST_USER_EMAIL).await?.is_none(), true, "user should have been deleted");
+            Ok(())
+        }
+    }
+
     mod tests_forgot_password {
         use super::*;
 
         use crate::core::support::time::now_utc_plus_sec_str;
         use crate::server::test_utils::{
-            TestDb, assert_html, build_server_anonymous, build_server_logged_in, get_token,
+            assert_html, build_server_anonymous, build_server_logged_in, get_token, TestDb,
         };
 
         const BASE_URI: &str = "/auth/forgot-password";
@@ -326,7 +400,7 @@ mod tests {
                 res,
                 vec![
                     r#"<title hx-swap-oob="true">Forgot Password | Recipya</title>"#,
-                    r#"<input required type="email" placeholder="Enter your email address" class="input input-bordered w-full" name="email">"#,
+                    r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email"></fieldset>"#,
                     r#"<button class="btn btn-primary btn-block btn-sm">Reset password</button>"#,
                 ],
             );
@@ -428,9 +502,9 @@ mod tests {
                 res,
                 vec![
                     r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
-                    r#"<input name="user-id" type="hidden" value="2">"#,
-                    r#"<input required type="password" placeholder="Enter your new password" class="input input-bordered w-full" name="password">"#,
-                    r#"<input required type="password" placeholder="Retype your password" class="input input-bordered w-full" name="password-confirm">"#,
+                    r#"<input name="user-id" type="hidden" value="3">"#,
+                    r#"<fieldset class="fieldset"><label class="label" for="password">New password</label><input id="password" type="password" required placeholder="Enter your new password" class="input" name="password"></fieldset>"#,
+                    r#"<fieldset class="fieldset"><label class="label" for="confirm-password">Confirm password</label><input id="confirm-password" type="password" required placeholder="Retype your password" class="input" name="password-confirm"></fieldset>"#,
                     r#"<button class="btn btn-primary btn-block btn-sm">Change</button>"#,
                 ],
             );
@@ -487,14 +561,14 @@ mod tests {
         use super::*;
 
         use std::default::Default;
-        use time::OffsetDateTime;
         use time::format_description::well_known::Rfc3339;
+        use time::OffsetDateTime;
 
         use crate::core::auth::token::Token;
         use crate::core::support::token::AUTH_TOKEN;
         use crate::server::test_utils::{
-            TEST_USER_EMAIL, TEST_USER_PASSWORD, TestDb, assert_html, assert_not_in_html,
-            build_server_anonymous, build_server_logged_in,
+            assert_html, assert_not_in_html, build_server_anonymous, build_server_logged_in, TestDb,
+            TEST_USER_EMAIL, TEST_USER_PASSWORD,
         };
 
         const BASE_URI: &str = "/auth/login";
@@ -520,10 +594,10 @@ mod tests {
                 vec![
                     r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login" action="/auth/login" method="post"><div class="card-body">"#,
                     r#"<h2 class="card-title underline self-center">Log In</h2>"#,
-                    r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Email</span></div><input class="input input-bordered w-full" required type="email" placeholder="Enter your email address" name="email" value=""></label>"#,
-                    r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Password</span></div><input class="input input-bordered w-full" required type="password" placeholder="Enter your password" name="password" value=""></label>"#,
-                    r#"<div class="form-control grid place-content-center"><label class="label cursor-pointer gap-2"><span class="label-text">Remember me</span><input class="checkbox checkbox-primary" type="checkbox" name="remember_me" value="true"></label>"#,
-                    r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log In</button></div><div class="grid place-content-center text-center gap-2"><div><p class="text-center">Don't have an account?</p><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a></div><a class="btn btn-sm btn-ghost" href="/auth/forgot-password">Forgot your password?</a></div>"#,
+                    r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value=""></fieldset>"#,
+                    r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value=""></fieldset>"#,
+                    r#"<fieldset class="fieldset p-4 bg-base-100 border border-base-300 rounded-box w-64 grid self-center mb-2"><legend class="fieldset-legend">Login options</legend><label class="fieldset-label"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label></fieldset>"#,
+                    r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log In</button></div><div class="grid place-content-center text-center gap-2"><div><p class="text-center">Don't have an account?</p><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a></div></div>"#,
                 ],
             );
             Ok(())
@@ -544,8 +618,9 @@ mod tests {
             assert_html(
                 res,
                 vec![
-                    r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Email</span></div><input class="input input-bordered w-full" required type="email" placeholder="Enter your email address" name="email" value="demo@demo.com"></label>"#,
-                    r#"<label class="form-control w-full"><div class="label"><span class="label-text font-semibold">Password</span></div><input class="input input-bordered w-full" required type="password" placeholder="Enter your password" name="password" value="demo"></label>"#,
+                    r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value="demo@demo.com"></fieldset>"#,
+                    r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demo"></fieldset>"#,
+                    r#"<fieldset class="fieldset p-4 bg-base-100 border border-base-300 rounded-box w-64 grid self-center mb-2"><legend class="fieldset-legend">Login options</legend><label class="fieldset-label"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label></fieldset>"#,
                 ],
             );
             Ok(())
@@ -712,7 +787,7 @@ mod tests {
         use crate::core::auth::token::Token;
         use crate::core::model::user::User;
         use crate::core::support::token::AUTH_TOKEN;
-        use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, build_server_logged_in};
+        use crate::server::test_utils::{build_server_logged_in, TestDb, TEST_USER_EMAIL};
 
         const BASE_URI: &str = "/auth/logout";
 
@@ -725,12 +800,12 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header("Location", "/");
-            assert_eq!(res.cookie(AUTH_TOKEN).value(), "");
+            pretty_assertions::assert_eq!(res.cookie(AUTH_TOKEN).value(), "");
             let state = AppState::new(config).await?;
             let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
                 .await?
                 .expect("Expected user");
-            assert_eq!(user.is_remember_me, false);
+            pretty_assertions::assert_eq!(user.is_remember_me, false);
             Ok(())
         }
 
@@ -773,7 +848,7 @@ mod tests {
         use super::*;
         use crate::core::model::user::User;
 
-        use crate::server::test_utils::{TestDb, build_server_logged_in};
+        use crate::server::test_utils::{build_server_anonymous, build_server_logged_in, TestDb};
 
         const BASE_URI: &str = "/auth/register";
 
@@ -793,7 +868,7 @@ mod tests {
             let res = server.get(BASE_URI).await;
 
             res.assert_status_see_other();
-            res.assert_header("Location", "/");
+            res.assert_header("Location", "/recipes");
             Ok(())
         }
 
@@ -809,14 +884,14 @@ mod tests {
             let res = server.get(BASE_URI).await;
 
             res.assert_status_see_other();
-            res.assert_header("Location", "/auth/login");
+            res.assert_header("Location", "/recipes");
             Ok(())
         }
 
         #[tokio::test]
         async fn test_post_register_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let server = build_server_anonymous(config.clone()).await?;
             let form = a_register_form();
 
             let res = server.post(BASE_URI).form(&form).await;
@@ -831,16 +906,19 @@ mod tests {
         #[tokio::test]
         async fn test_post_register_when_user_already_registered_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let server = build_server_anonymous(config).await?;
+            let form = a_register_form();
 
-            let _res = server.post(BASE_URI).form(&a_register_form()).await;
-            let res = server.post(BASE_URI).form(&a_register_form()).await;
+            let _res = server.post(BASE_URI).form(&form).await;
+            let _res = server.post("/auth/login").form(&LoginForm {
+                email: form.email.clone(),
+                password: form.password.clone(),
+                remember_me: Some(false),
+            }).await;
+            let res = server.post(BASE_URI).form(&form).await;
 
-            res.assert_status_internal_server_error();
-            res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred during registration.","status":"alert-error","title":"Operation Failed"}}"#,
-            );
+            res.assert_status_see_other();
+            res.assert_header("Location", "/recipes");
             Ok(())
         }
 
@@ -874,7 +952,7 @@ mod tests {
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let server = build_server_anonymous(config.clone()).await?;
             let a_form = a_register_form();
 
             let res_get = server.post(BASE_URI).form(&a_form).await;

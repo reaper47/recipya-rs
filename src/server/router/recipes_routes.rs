@@ -1,9 +1,9 @@
 use axum::routing::get;
-use axum::{Router, middleware};
+use axum::{middleware, Router};
 
-use crate::server::AppState;
 use crate::server::router::handlers::recipes::{delete_recipe_handler, recipe_view_handler};
 use crate::server::router::middleware::mw_auth;
+use crate::server::AppState;
 
 /// Defines the routes for endpoints related to recipes.
 pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
@@ -21,7 +21,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
 #[cfg(test)]
 mod tests {
     use crate::core::config::Config;
-    use crate::server::test_utils::{TestDb, build_server_logged_in};
+    use crate::server::test_utils::{build_server_logged_in, TestDb};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -32,12 +32,12 @@ mod tests {
         use axum_test::TestResponse;
         use uuid::Uuid;
 
-        use crate::core::model::Recipe;
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
-        use crate::server::AppState;
+        use crate::core::model::Recipe;
         use crate::server::test_utils::{
             a_complete_recipe, assert_html, build_server_anonymous, build_server_ws,
         };
+        use crate::server::AppState;
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}")
@@ -355,7 +355,7 @@ mod tests {
                     r#"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp">"#,
                     r#"<div class="badge badge-primary badge-outline">dinner</div>"#,
                     r#"<div class="badge badge-sm badge-neutral m-1 flex-auto">vegetarian</div><div class="badge badge-sm badge-neutral m-1 flex-auto">tofu</div>"#,
-                    r##"<div class="label p-0"><span class="label-text">Servings</span></div><input id="yield" type="number" min="1" name="yield" value="4" class="input input-bordered input-sm w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></label></form>"##,
+                    r##"<fieldset class="fieldset"><legend>Servings</legend><label class="label" for="yield">Servings</label><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
                     r#"<a class="btn btn-sm btn-outline no-underline print:hidden" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Source</a>"#,
                     r#"<textarea class="textarea w-full h-full resize-none" readonly>This is the most delicious recipe!</textarea>"#,
                     r#"<p class="text-xs">Per 100g: calories 300 kcal; total carbohydrates 55g; sugar 43g; protein 7g; total fat 6g; saturated fat 1g; unsaturated fat 2g; trans fat 3g; cholesterol 5mg; sodium 12mg; fiber 10g</p>"#,

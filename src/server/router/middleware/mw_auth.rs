@@ -1,18 +1,18 @@
 use axum::body::Body;
-use axum::extract::{FromRequestParts, State};
-use axum::http::Request;
+use axum::extract::{FromRequestParts, OriginalUri, State};
 use axum::http::request::Parts;
+use axum::http::{Request, Uri};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::core::auth::token::{Token, validate_web_token};
+use crate::core::auth::token::{validate_web_token, Token};
 use crate::core::model::user::{User, UserForAuth};
-use crate::core::support::token::{AUTH_TOKEN, set_token_cookie};
-use crate::server::AppState;
+use crate::core::support::token::{set_token_cookie, AUTH_TOKEN};
 use crate::server::error::{Error, Result};
 use crate::server::router::handlers::context::Ctx;
+use crate::server::AppState;
 
 /// A wrapper around the `Ctx` type for use in request extraction.
 #[derive(Debug, Clone)]
@@ -77,10 +77,11 @@ pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -
 pub async fn mw_ctx_resolver(
     state: State<AppState>,
     cookies: Cookies,
+    OriginalUri(uri): OriginalUri,
     mut req: Request<Body>,
     next: Next,
 ) -> Response {
-    let ctx_ext_result = ctx_resolve(state, &cookies).await;
+    let ctx_ext_result = ctx_resolve(state, &cookies, uri).await;
 
     if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie)) {
         cookies.remove(Cookie::from(AUTH_TOKEN))
@@ -93,7 +94,7 @@ pub async fn mw_ctx_resolver(
 }
 
 /// Resolves the context (user authentication) from cookies and the application state.
-async fn ctx_resolve(state: State<AppState>, cookies: &Cookies) -> CtxExtResult {
+async fn ctx_resolve(state: State<AppState>, cookies: &Cookies, uri: Uri) -> CtxExtResult {
     if state.config.is_autologin {
         return Ctx::new(1)
             .map(CtxW)
@@ -150,5 +151,5 @@ pub async fn mw_redirect_if_authenticated(
 }
 
 fn is_path_to_redirect(path: &str) -> bool {
-    path.eq("/") || path.eq("/login") || path.eq("/forgot-password")
+    path.eq("/") || path.eq("/login") || path.eq("/forgot-password") || path.eq("/register")
 }

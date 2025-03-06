@@ -1,4 +1,4 @@
-use maud::{DOCTYPE, Markup, html};
+use maud::{html, Markup, DOCTYPE};
 
 use crate::server::templates::core::{head, toast, toast_ws};
 use crate::server::templates::data::Data;
@@ -190,7 +190,7 @@ pub fn main(title: &str, data: &Data, content: Markup) -> Markup {
                     main class="inline-flex w-full" {
                         @if data.is_authenticated {
                             aside id="desktop_nav" class="hidden md:block" {
-                                ul class="menu menu-sm bg-base-300 rounded-box h-full" style="border-radius: 0" {
+                                ul class="menu w-full menu-sm bg-base-300 rounded-box h-full" style="border-radius: 0" {
                                     li id="recipes_sidebar_recipes" hx-get="/recipes" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap-oob="true" hx-swap="innerHTML transition:true" {
                                         a class="tooltip tooltip-right active" data-tip="Recipes" {
                                             (icon_pencil())
@@ -209,7 +209,7 @@ pub fn main(title: &str, data: &Data, content: Markup) -> Markup {
                                     }
                                 }
                             }
-                            aside id="mobile_nav" class="btm-nav btm-nav-sm md:hidden z-20" {
+                            aside id="mobile_nav" class="dock dock-sm md:hidden z-20" {
                                 button hx-get="/recipes" hx-target="#content" hx-push-url="true" hx-swap-oob="true" hx-swap="innerHTML transition:true" {
                                     "Recipes"
                                 }

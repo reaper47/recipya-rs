@@ -58,6 +58,25 @@ pub struct UserForAuth {
 }
 
 impl User {
+    /// Deletes a user from the database.
+    pub async fn delete(mm: &ModelManager, user_id: i64) -> Result<()> {
+        use crate::core::repository::schema::users::dsl::*;
+
+        let mut conn = mm.pool.get().await?;
+
+        let num_deleted = diesel::delete(users.filter(id.eq(user_id)))
+            .execute(&mut conn)
+            .await?;
+
+        match num_deleted {
+            0 => Err(Error::EntityNotFound {
+                entity: "user",
+                id: user_id,
+            }),
+            _ => Ok(()),
+        }
+    }
+
     /// Finds a user by their email address.
     pub async fn get_user_by_email(
         mm: &ModelManager,
@@ -65,7 +84,7 @@ impl User {
     ) -> Result<Option<User>> {
         use crate::core::repository::schema::users::dsl::*;
 
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         let user = users
             .filter(email.eq(user_email.into()))
@@ -81,7 +100,7 @@ impl User {
     pub async fn get_user_by_id(mm: &ModelManager, user_id: i64) -> Result<Option<User>> {
         use crate::core::repository::schema::users::dsl::*;
 
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         let user = users
             .filter(id.eq(user_id))
@@ -123,7 +142,7 @@ impl User {
         })
         .await?;
 
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         let user = diesel::insert_into(users)
             .values(&UserForInsert {
@@ -142,7 +161,7 @@ impl User {
     pub async fn set_is_confirmed(&self, mm: &ModelManager) -> Result<()> {
         use crate::core::repository::schema::users::dsl::*;
 
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         diesel::update(users.find(self.id))
             .set(is_confirmed.eq(true))
@@ -174,7 +193,7 @@ impl User {
         })
         .await?;
 
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         diesel::update(users.find(id))
             .set(password.eq(hashed_password))
@@ -208,7 +227,7 @@ impl User {
         use crate::core::repository::schema::users::dsl::*;
 
         // TODO: Remove .unwrap()
-        let mut conn = mm.pool.get().await.unwrap();
+        let mut conn = mm.pool.get().await?;
 
         diesel::update(users.find(user_id))
             .set(is_remember_me.eq(new_value))
@@ -251,6 +270,31 @@ mod tests {
 
         assert!(res.is_err());
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_user_not_exist_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = AppState::new(config.clone()).await?;
+
+        match User::delete(&state.mm, 999).await {
+            Ok(_) => Err("An error was supposed to be thrown".into()),
+            Err(_) => Ok(()),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_delete_user_exists_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = AppState::new(config.clone()).await?;
+        let user = insert_user(config.clone()).await?;
+
+        User::delete(&state.mm, user.id).await?;
+
+        match User::get_user_by_email(&state.mm, TEST_USER_EMAIL).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(err.into()),
+        }
     }
 
     #[tokio::test]

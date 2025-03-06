@@ -92,7 +92,7 @@ impl EmailSender for EmailService {
 
             if let Some(data) = &email.data {
                 email_to_send.body = match mrml::parse(template) {
-                    Ok(file) => match file.render(&RenderOptions::default()) {
+                    Ok(file) => match file.element.render(&RenderOptions::default()) {
                         Ok(content) => content
                             .replace("[[.Token]]", &data.token)
                             .replace("[[.URL]]", &data.url)

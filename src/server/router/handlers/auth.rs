@@ -1,28 +1,28 @@
 use std::collections::HashMap;
 
-use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{Query, State};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
+use axum::Form;
 use tower_cookies::Cookies;
 use tracing::{debug, error};
 use validator::Validate;
 
 use crate::core::auth::pwd::scheme::SchemeStatus;
-use crate::core::auth::pwd::{ContentToHash, validate_pwd};
-use crate::core::auth::token::{Token, generate_web_token, validate_web_token};
+use crate::core::auth::pwd::{validate_pwd, ContentToHash};
+use crate::core::auth::token::{generate_web_token, validate_web_token, Token};
 use crate::core::email::{Data, Email, Template};
-use crate::core::model::Error::EntityNotFound;
 use crate::core::model::user::User;
+use crate::core::model::Error::EntityNotFound;
 use crate::core::support::token::{remove_token_cookie, set_token_cookie};
 use crate::server::error::{Error, Result};
 use crate::server::router::auth_router::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
 };
-use crate::server::router::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message};
+use crate::server::router::handlers::message::{add_hx_message, IMessage, MessageHtmx, MessageWs};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::{AppState, templates};
+use crate::server::{templates, AppState};
 
 /// Handles a user's update password request.
 pub async fn change_password_post_handler(
@@ -100,7 +100,7 @@ pub async fn confirm_handler(
                     entity: "user",
                     id: -1,
                 })
-                .into_response();
+                    .into_response();
             }
         },
         Err(err) => return Error::Model(err).into_response(),
@@ -139,7 +139,7 @@ pub async fn forgot_password_post_handler(
         return Error::Form.into_response();
     }
 
-    let user_email = String::from(form.email);
+    let user_email = form.email;
 
     if let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await {
         if let Ok(token) = generate_web_token(&user_email, user.token_salt) {
@@ -269,7 +269,7 @@ pub async fn login_post_handler(
         },
         &user.password,
     )
-    .await
+        .await
     {
         Ok(status) => status,
         Err(_err) => {
@@ -335,22 +335,21 @@ pub async fn logout_post_handler(
                 error!("Could not logout user with id {}: {err}", ctx.0.user_id());
                 return Error::LogoutFail.into_response();
             }
-            Redirect::to("/").into_response()
+
+            let mut res = Redirect::to("/").into_response();
+            res.headers_mut().insert(axum_htmx::headers::HX_REDIRECT, HeaderValue::from_static("/"));
+            res
         }
         Err(_) => Error::LogoutFail.into_response(),
     }
 }
 
 /// Renders the user registration page.
-pub async fn register_handler(ctx: CtxW, State(state): State<AppState>) -> impl IntoResponse {
+pub async fn register_handler(State(state): State<AppState>) -> impl IntoResponse {
     if state.config.is_no_signups {
         return Redirect::to("/auth/login").into_response();
     }
-
-    if ctx.0.user_id() > 0 {
-        return Redirect::to("/").into_response();
-    }
-
+    
     templates::auth::register().into_response()
 }
 
@@ -403,11 +402,60 @@ pub async fn register_post_handler(
                 data: Some(Data {
                     token: token.to_string(),
                     username: String::from(&form.email),
-                    url: String::from(state.config.base_url),
+                    url: state.config.base_url,
                 }),
             })
         });
     }
 
     Redirect::to("/auth/login").into_response()
+}
+
+/// Handles user deletion.
+pub async fn user_delete_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    cookies: Cookies,
+) -> impl IntoResponse {
+    if state.config.is_autologin {
+        let toast = MessageWs::error("This account cannot be deleted.");
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state
+                .broadcast(ctx.0.user_id(), Message::Text(json.into()))
+                .await;
+        }
+
+        return Error::DeleteForbidden.into_response();
+    }
+
+    let user_id = ctx.0.user_id();
+    if state.config.is_demo && is_demo_user(&state, user_id).await {
+        let toast = MessageWs::error("Trump is Putin's lap dog. Remove him from office!");
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state
+                .broadcast(user_id, Message::Text(json.into()))
+                .await;
+        }
+
+        return Error::DeleteForbidden.into_response();
+    }
+
+    match User::delete(&state.mm, user_id).await {
+        Ok(_) => logout_post_handler(ctx, State(state), cookies)
+            .await
+            .into_response(),
+        Err(err) => {
+            error!("Could not delete user with id {user_id}: {err}");
+            Error::DeleteUser.into_response()
+        }
+    }
+}
+
+async fn is_demo_user(state: &AppState, user_id: i64) -> bool {
+    match User::get_user_by_email(&state.mm, "demo@demo.com").await {
+        Ok(Some(user)) => user.id == user_id,
+        _ => false,
+    }
 }
