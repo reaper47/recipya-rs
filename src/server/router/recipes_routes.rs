@@ -1,9 +1,9 @@
 use axum::routing::get;
-use axum::{middleware, Router};
+use axum::{Router, middleware};
 
+use crate::server::AppState;
 use crate::server::router::handlers::recipes::{delete_recipe_handler, recipe_view_handler};
 use crate::server::router::middleware::mw_auth;
-use crate::server::AppState;
 
 /// Defines the routes for endpoints related to recipes.
 pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
@@ -21,7 +21,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
 #[cfg(test)]
 mod tests {
     use crate::core::config::Config;
-    use crate::server::test_utils::{build_server_logged_in, TestDb};
+    use crate::server::test_utils::{TestDb, build_server_logged_in};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -32,12 +32,12 @@ mod tests {
         use axum_test::TestResponse;
         use uuid::Uuid;
 
-        use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
         use crate::core::model::Recipe;
+        use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
+        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe, assert_html, build_server_anonymous, build_server_ws,
         };
-        use crate::server::AppState;
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}")

@@ -9,24 +9,6 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/email/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/email/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/delete.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/delete.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/auth_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/auth_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/middleware/mw_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/middleware/mw_auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/layouts.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/layouts.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/tailwind.config.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind-custom.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/tailwind-custom.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -184,7 +166,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "28-implement-delete-user",
+    "git-widget-placeholder": "32-implement-get-recipes",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/server/templates",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",

@@ -1,4 +1,4 @@
-use maud::{html, Markup};
+use maud::{Markup, html};
 
 use crate::server::templates::layouts;
 
@@ -80,7 +80,7 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                         input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value=@if is_demo { "demo@demo.com" };
                     }
                     fieldset class="fieldset" {
-                        label class="label block" for="password" { 
+                        label class="label block" for="password" {
                             "Password"
                             a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password" {
                                 "Forgot your password?"

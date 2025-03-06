@@ -1,9 +1,9 @@
-use maud::{html, Markup};
+use maud::{Markup, html};
 use url::Url;
 
 use crate::core::config::DataDir;
 use crate::core::model::RecipeDetails;
-use crate::server::templates::data::{is_file_exists, Data};
+use crate::server::templates::data::{Data, is_file_exists};
 use crate::server::templates::icons::{
     icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
     icon_ellipsis_vertical, icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,

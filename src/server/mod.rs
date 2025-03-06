@@ -71,22 +71,22 @@ pub mod test_utils {
     use axum::Router;
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
-    use diesel::{sql_query, Connection};
+    use diesel::{Connection, sql_query};
     use tower_cookies::{Cookie, CookieManagerLayer};
     use uuid::Uuid;
 
-    use crate::core::auth::token::{generate_web_token, Token};
+    use crate::core::auth::token::{Token, generate_web_token};
     use crate::core::config::Config;
     use crate::core::model::recipe::{
         NutritionForCreate, RecipeForCreate, Sections, TimesForCreate, ToolForCreate,
         VideoForCreate,
     };
     use crate::core::model::user::{User, UserForCreate};
-    use crate::core::repository::pool::make_db_pool;
     use crate::core::repository::ModelManager;
+    use crate::core::repository::pool::make_db_pool;
     use crate::core::support::token::AUTH_TOKEN;
-    use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
     use crate::server::AppState;
+    use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -158,8 +158,8 @@ pub mod test_utils {
                 "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}'",
                 self.db_name
             ))
-                .execute(&mut conn)
-                .expect("Error executing pg_terminate_backend query");
+            .execute(&mut conn)
+            .expect("Error executing pg_terminate_backend query");
 
             sql_query(format!("DROP DATABASE \"{}\"", self.db_name))
                 .execute(&mut conn)
@@ -208,13 +208,19 @@ pub mod test_utils {
         build_server_ws_helper(app_config, TEST_USER_EMAIL).await
     }
 
-    /// Builds and initializes a test server with WebSocket support  for a user other 
+    /// Builds and initializes a test server with WebSocket support  for a user other
     /// than the test one.
-    pub async fn build_server_ws_other_user(app_config: Config, auth_email: &str) -> Result<(TestServer, TestWebSocket)> {
+    pub async fn build_server_ws_other_user(
+        app_config: Config,
+        auth_email: &str,
+    ) -> Result<(TestServer, TestWebSocket)> {
         build_server_ws_helper(app_config, auth_email).await
     }
 
-    async fn build_server_ws_helper(app_config: Config, auth_email: &str) -> Result<(TestServer, TestWebSocket)> {
+    async fn build_server_ws_helper(
+        app_config: Config,
+        auth_email: &str,
+    ) -> Result<(TestServer, TestWebSocket)> {
         let routes = prepare_router(app_config.clone()).await?;
         let config = TestServerConfig {
             save_cookies: true,
@@ -251,7 +257,7 @@ pub mod test_utils {
                 password_clear: "12345678".to_string(),
             },
         )
-            .await?;
+        .await?;
 
         let user = User::get_user_by_email(&mm, &email)
             .await?
@@ -289,7 +295,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-            .await?;
+        .await?;
 
         User::new(
             &state.mm,
@@ -298,7 +304,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-            .await?;
+        .await?;
         Ok(app)
     }
 
@@ -311,7 +317,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-            .await?;
+        .await?;
 
         Ok(user)
     }
