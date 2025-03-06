@@ -1,9 +1,9 @@
-use maud::{Markup, html};
+use maud::{html, Markup};
 use url::Url;
 
 use crate::core::config::DataDir;
 use crate::core::model::RecipeDetails;
-use crate::server::templates::data::{Data, is_file_exists};
+use crate::server::templates::data::{is_file_exists, Data};
 use crate::server::templates::icons::{
     icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
     icon_ellipsis_vertical, icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,
@@ -53,7 +53,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
 
         section class="p-2" {
             div class="flex justify-center" {
-                div class="card card-bordered bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
+                div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
                     div class="card-body" style="padding: 0" {
                         (view_recipe_header(recipe_id, &data))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
@@ -68,10 +68,9 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
                                     div class="grid col-span-2 border-gray-700 place-items-center text-sm border-x p-2 md:p-2 md:col-span-1 print:hidden" {
                                         @if data.is_authenticated {
                                             form autocomplete="off" _="on submit halt the event" class="print:hidden" {
-                                                label class="form-control w-full" {
-                                                    div class="label p-0" {
-                                                        span class="label-text" { "Servings" }
-                                                    }
+                                                fieldset class="fieldset" {
+                                                    legend { "Servings" }
+                                                    label class="label" for="yield" { "Servings" }
                                                     input id="yield"
                                                         type="number"
                                                         min="1"
@@ -81,7 +80,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
                                                         } else {
                                                             recipe.yield_.to_string()
                                                         })
-                                                        class="input input-bordered input-sm w-24"
+                                                        class="input"
                                                         hx-get=(format!("/recipes/{recipe_id}/scale"))
                                                         hx-trigger="input"
                                                         hx-target="#ingredients-instructions-container";
@@ -284,7 +283,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data) -> Markup {
                     style="inset: unset; top: 3.5rem; right: 0.5rem;"
                     class="rounded-box z-10 shadow bg-base-100"
                     _="on click if me.matches(':popover-open') then me.hidePopover()" {
-                    ul tabindex="0" class="menu" {
+                    ul tabindex="0" class="menu w-full" {
                         li {
                             a title="Edit recipe"
                                 hx-get=(format!("/recipes/{recipe_id}/edit"))
@@ -634,10 +633,10 @@ fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                     h2 class="font-semibold text-center underline pb-1" { "Tools" }
                     ul class="md:pb-2" {
                         @for tool in recipe.tools.iter() {
-                            li class="form-control hover:bg-gray-100 dark:hover:bg-gray-700" {
+                            li class="hover:bg-gray-100 dark:hover:bg-gray-700" {
                                 label class="label justify-start" {
                                     input type="checkbox" class="checkbox";
-                                    span class="label-text pl-2" { (tool.quantity.to_string()) (tool.name) }
+                                    span class="pl-2" { (tool.quantity.to_string()) (tool.name) }
                                 }
                             }
                         }
@@ -647,10 +646,10 @@ fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 ul {
                     @for (_section, ingredients) in recipe.ingredients.iter() {
                         @for ingredient in ingredients.iter() {
-                             li class="form-control hover:bg-gray-100 dark:hover:bg-gray-700" {
+                             li class="hover:bg-gray-100 dark:hover:bg-gray-700" {
                                 label class="label justify-start" {
                                     input type="checkbox" class="checkbox";
-                                    span class="label-text pl-2" { (ingredient) }
+                                    span class="pl-2" { (ingredient) }
                                 }
                             }
                         }

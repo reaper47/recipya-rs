@@ -13,7 +13,7 @@ build = "build.rs"
 
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
-async-trait = "0.1.86"
+async-trait = "0.1.87"
 axum = { version = "0.8.1", features = ["ws"] }
 axum-htmx = "0.7.0"
 base64 = "0.22.1"
@@ -34,7 +34,7 @@ lazy-regex = "3.4.1"
 lettre = { version = "0.11.14", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
 maud = { version = "0.27.0", features = ["axum"] }
 mime_guess = "2.0.5"
-mrml = "4.0.1"
+mrml = "5.0.0"
 native-tls = "0.2.14"
 paste = "1.0.15"
 postgres-native-tls = "0.5.1"
@@ -43,10 +43,10 @@ rust-embed = { version = "8.6.0", features = ["axum-ex"] }
 scraper = "0.23.1"
 sendgrid = { version = "0.23.0", features = ["rustls"] }
 serde = { version = "1.0.218", features = ["derive"] }
-serde_json = "1.0.139"
+serde_json = "1.0.140"
 sha2 = "0.10.8"
 strum_macros = "0.27.1"
-time = "0.3.37"
+time = "0.3.38"
 tokio = { version = "1.43", features = ["full"] }
 tokio-postgres = { version = "0.7.13", features = ["with-serde_json-1", "with-time-0_3", "with-uuid-1"] }
 tower-cookies = "0.11.0"
@@ -54,7 +54,7 @@ tower-http = { version = "0.6.2", features = ["fs"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 url = { version = "2.5.4", features = ["serde"] }
-uuid = { version = "1.14.0", features = ["fast-rng", "serde", "v4"] }
+uuid = { version = "1.15.1", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 whatlang = "0.16.4"
 

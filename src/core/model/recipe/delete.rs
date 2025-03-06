@@ -8,6 +8,7 @@ use crate::core::model::{Error, Result};
 use crate::core::repository::ModelManager;
 
 impl Recipe {
+    /// Deletes a user's recipe from the database.
     pub async fn delete(mm: &ModelManager, recipe_id: i64, user_id: i64) -> Result<()> {
         use crate::core::repository::schema;
 

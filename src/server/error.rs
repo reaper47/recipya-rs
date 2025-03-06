@@ -20,10 +20,12 @@ pub enum Error {
     GenerateToken,
     NoToken,
 
+    DeleteForbidden,
     Form,
     BadTimeFormat,
     NoUser,
 
+    DeleteUser,
     LoginFailUsernameNotFound,
     LogoutFail,
     LogoutForbidden,
@@ -60,6 +62,7 @@ impl Error {
         #[allow(unreachable_patterns)]
         match self {
             BadTimeFormat => (StatusCode::BAD_REQUEST, ClientError::BAD_TIME_FORMAT),
+            DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DELETE_FORBIDDEN),
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
             NoUser => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -111,6 +114,7 @@ impl std::error::Error for Error {}
 #[allow(non_camel_case_types)]
 pub enum ClientError {
     CONFIRM_FAIL,
+    DELETE_FORBIDDEN,
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     BAD_TIME_FORMAT,
     FORM_ERROR,
