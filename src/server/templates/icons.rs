@@ -13,6 +13,15 @@ pub(super) fn icon_arrow_right_start_on_rectangle() -> Markup {
     }
 }
 
+/// Renders the 'bars-3-bottom-left' hero icon.
+pub(super) fn icon_bars_3_bottom_left() -> Markup {
+    html! {
+        svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6" {
+            path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" {}
+        }
+    }
+}
+
 /// Renders the 'book-open' hero icon.
 pub(super) fn icon_book_open() -> Markup {
     html! {
@@ -161,6 +170,24 @@ pub(super) fn icon_flag() -> Markup {
     }
 }
 
+/// Renders the 'information-circle' hero icon.
+pub(super) fn icon_information_circle() -> Markup {
+    html! {
+        svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 self-center" fill="none" viewBox="0 0 24 24" stroke="currentColor" {
+            path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" {}
+        }
+    }
+}
+
+/// Renders the 'magnifying-glass' hero icon.
+pub(super) fn icon_magnifying_glass() -> Markup {
+    html! {
+        svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" {
+            path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" {}
+        }
+    }
+}
+
 /// Renders the 'pencil' hero icon.
 pub(super) fn icon_pencil() -> Markup {
     html! {
@@ -204,6 +231,15 @@ pub(super) fn icon_trash() -> Markup {
     html! {
         svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" {
             path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" {}
+        }
+    }
+}
+
+/// Renders the 'x-mark' hero icon.
+pub(super) fn icon_x_mark() -> Markup {
+    html! {
+        svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {
+            path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" {}
         }
     }
 }

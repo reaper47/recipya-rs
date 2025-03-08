@@ -8,7 +8,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/helpers.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/params.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/server/templates/helpers.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/server/templates/pagination.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/server/templates/search.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/icons.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/layouts.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/layouts.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,6 +94,8 @@
     "Cargo.Test core::model::recipe::create::tests::test_create_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_found_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_not_found_err.executor": "Run",
+    "Cargo.Test core::model::recipe::get::tests::tests_count::test_count_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::get::tests::tests_get_page::test_get_page_no_recipes_ok.executor": "Run",
     "Cargo.Test core::model::recipe::structs::tests::tests_nutrition::test_empty_nutrition.executor": "Run",
     "Cargo.Test core::model::recipe::structs::tests::tests_nutrition::test_multiple_nutrition_values.executor": "Run",
     "Cargo.Test core::model::recipe::structs::tests::tests_recipe_details::test_num_media_ok.executor": "Run",
@@ -150,17 +173,31 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_no_media_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_not_exist_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok.executor": "Run",
     "Cargo.Test server::router::static_files_router::tests::test_static_files_routes_ok.executor": "Run",
     "Cargo.Test server::templates::data::tests::tests_formatted_times::test_with_hours_and_minutes_ok.executor": "Run",
     "Cargo.Test server::templates::data::tests::tests_formatted_times::test_with_minutes_ok.executor": "Run",
+    "Cargo.Test server::templates::data::tests::tests_pagination::test_pagination_new_couple_results_ok.executor": "Run",
+    "Cargo.Test server::templates::data::tests::tests_pagination::test_pagination_new_hundreds_results_middle_ok.executor": "Run",
+    "Cargo.Test server::templates::data::tests::tests_pagination::test_pagination_new_hundreds_results_ok.executor": "Run",
+    "Cargo.Test server::templates::data::tests::tests_pagination::test_pagination_new_hundreds_results_right_ok.executor": "Run",
+    "Cargo.Test server::templates::data::tests::tests_pagination::test_pagination_new_no_results_ok.executor": "Run",
+    "Cargo.Test server::templates::data::tests::tests_pagination::test_pagination_new_some_results_ok.executor": "Run",
+    "Cargo.Test server::templates::data::tests::tests_searchbar::test_searchbar_data_from_query_none_ok.executor": "Run",
     "Cargo.Test structs::tests.executor": "Run",
     "Cargo.Test tests_change_password.executor": "Run",
     "Cargo.Test tests_confirm.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
     "Cargo.Test tests_forgot_password.executor": "Run",
+    "Cargo.Test tests_get_page.executor": "Run",
     "Cargo.Test tests_login.executor": "Run",
     "Cargo.Test tests_nutrition.executor": "Run",
+    "Cargo.Test tests_pagination.executor": "Run",
+    "Cargo.Test tests_recipes.executor": "Run",
     "Cargo.Test tests_register.executor": "Run",
+    "Cargo.Test tests_searchbar.executor": "Run",
     "Cargo.Test user::tests.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -177,7 +214,7 @@
     "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
     "org.rust.first.attach.projects": "true",
     "rearrange.code.on.save": "true",
-    "settings.editor.selected.configurable": "language.rust.rustfmt",
+    "settings.editor.selected.configurable": "actions.on.save",
     "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external"
   },
   "keyToStringList": {
@@ -206,7 +243,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok">
+  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -225,8 +262,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::auth_router::tests::tests_register::test_post_register_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::auth_router::tests::tests_register::test_post_register_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -242,8 +279,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::auth_router::tests::tests_register::test_post_register_when_user_already_registered_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::auth_router::tests::tests_register::test_post_register_when_user_already_registered_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -259,8 +296,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::auth_router::tests::tests_register::test_register_cannot_register_when_no_signups_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::auth_router::tests::tests_register::test_register_cannot_register_when_no_signups_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -276,8 +313,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok -- --exact" />
+    <configuration name="Test tests_get_page" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::get::tests::tests_get_page" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -293,8 +330,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok -- --exact" />
+    <configuration name="Test tests_recipes" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipes" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -312,19 +349,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_ok" />
-      <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_when_user_already_registered_ok" />
-      <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_register::test_register_cannot_register_when_no_signups_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok" />
+      <item itemvalue="Cargo.Test tests_get_page" />
+      <item itemvalue="Cargo.Test tests_recipes" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
-        <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_register::test_register_cannot_register_when_no_signups_ok" />
-        <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_when_user_already_registered_ok" />
-        <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_register::test_post_register_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok" />
+        <item itemvalue="Cargo.Test tests_recipes" />
+        <item itemvalue="Cargo.Test tests_get_page" />
       </list>
     </recent_temporary>
   </component>

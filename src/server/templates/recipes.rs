@@ -1,41 +1,234 @@
-use maud::{Markup, html};
-use url::Url;
-
 use crate::core::config::DataDir;
 use crate::core::model::RecipeDetails;
-use crate::server::templates::data::{Data, is_file_exists};
+use crate::server::templates::data::{is_file_exists, Data};
+use crate::server::templates::helpers::cut_string;
 use crate::server::templates::icons::{
     icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
     icon_ellipsis_vertical, icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,
 };
 use crate::server::templates::layouts;
+use crate::server::templates::pagination::pagination;
+use crate::server::templates::search::{search_help, searchbar};
+use crate::server::{Error, Result};
+use maud::{html, Markup, PreEscaped};
+use url::Url;
 
-/// Renders the details of a recipe.
-pub fn view_recipe(data_dir: DataDir, data: Data) -> Markup {
+/// Renders the index page of recipes.
+pub fn index(data: Data, data_dir: DataDir) -> Markup {
     if data.is_hx_request {
         html! {
-            title hx-swap-oob="true" {
-                 (data.view.recipe_details.recipe.name) " | Recipya"
+            title hx-swap-oob="true" { "Recipes | Recipya" }
+            (render_index(&data, &data_dir))
+        }
+    } else {
+        layouts::main("Recipes", &data, render_index(&data, &data_dir))
+    }
+}
+
+fn render_index(data: &Data, data_dir: &DataDir) -> Markup {
+    if data.recipes.is_empty() {
+        html! {
+            div class="grid place-content-center text-sm h-full text-center md:text-base" {
+                div class="p-4 md:p-0" {
+                    p class="pb-2" {
+                        "Your recipe collection looks a bit empty at the moment."
+                    }
+                    p {
+                        "Why not start adding recipes by clicking the "
+                        a class="underline font-semibold cursor-pointer" hx-get="/recipes/add" hx-target="#content" hx-push-url="true" { "Add recipe" }
+                        " button at the top?"
+                    }
+                }
             }
-            (view_recipe_helper(data_dir, &data))
         }
     } else {
         html! {
-            (layouts::main(
-                &data.view.recipe_details.recipe.name,
-                &data,
-                view_recipe_helper(data_dir, &data)
-            ))
+            div class="flex flex-col" {
+                    section class="grid justify-center px-4 pt-4" {
+                        search {
+                            form
+                                class="w-72 flex md:w-96"
+                                hx-get="/recipes/search"
+                                hx-vals=(PreEscaped(format!("{{\"page\": {}}}", data.pagination.search.current_page)))
+                                hx-target="#list-recipes"
+                                hx-push-url="true"
+                                hx-trigger="submit, change target:.sort-option" {
+                                (searchbar(&data.searchbar))
+                            }
+                        }
+                    }
+                }
+                (search_help())
+                div id="list-recipes" class="min-h-[79vh]" {
+                    (list_recipes(&data, &data_dir))
+                }
+                (pagination(&data.pagination))
         }
     }
 }
 
-fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
-    let recipe_id = data.view.recipe_details.recipe.id;
-    let recipe_details = &data.view.recipe_details;
+/// Renders a list of recipes.
+pub fn list_recipes(data: &Data, data_dir: &DataDir) -> Markup {
+    html! {
+        @if data.is_hx_request {
+            input #search-recipes .w-full type="search" hx-swap-oob="true" name="q"
+                 placeholder="Search for recipes..."
+                 value=(data.searchbar.term)
+                 _=(PreEscaped("on keyup
+                       if event.target.value !== '' then
+                           remove .md:block from #search_shortcut
+                       else
+                           add .md:block to #search_shortcut then
+                           if (event.key is not 'Delete' and not event.key.startsWith('Arrow')) then
+                               send submit to closest <form/> then
+                           end
+                       end"));
+        }
+        article class="grid gap-4 p-4 text-sm place-items-center grid-cols-1 sm:grid-cols-2 md:m-auto md:max-w-7xl md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:text-base" {
+            @for view in data.recipes.iter() {
+                section class="card-side sm:card card-compact card-bordered bg-base-100 shadow-lg indicator w-full" {
+                    span class="hidden sm:block" {
+                        (category_badge(&view.recipe_details.category, false))
+                    }
+                    figure class="relative cursor-pointer" hx-get=(format!("/recipes/{}", view.recipe_details.recipe.id)) hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true" {
+                        img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full"
+                            src=(match view.recipe_details.all_images().first() {
+                                Some(&first_image) => {
+                                    if !view.recipe_details.all_images().is_empty() && is_file_exists(first_image, &data_dir.images) {
+                                        let s = format!("/data/images/thumbnails/{}.webp", first_image);
+                                        s
+                                    } else {
+                                        String::from("/data/images/Placeholders/placeholder.recipe.webp")
+                                    }
+                                },
+                                None => {
+                                    String::from("/data/images/Placeholders/placeholder.recipe.webp")
+                                }
+                            })
+                            alt=(format!("Image for the {} recipe", view.recipe_details.recipe.name));
+
+                        div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex" {
+                            p class="p-2 text-sm" {
+                                @match &view.recipe_details.recipe.description {
+                                    Some(description) => (cut_string(description, 127)),
+                                    None => "No recipe description."
+                                }
+
+                            }
+                        }
+                    }
+                    div class="card-body justify-between" {
+                        h2 class={
+                            "sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14"
+                            @if view.recipe_details.keywords.is_empty() { " sm:min-h-28" }
+                        } {
+                            (view.recipe_details.recipe.name)
+                        }
+                        div class={
+                            "sm:max-h-14 sm:overflow-y-auto sm:content-end"
+                            @if !view.recipe_details.keywords.is_empty() { " sm:min-h-14" }
+                        } {
+                            div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row" {
+                                span class="sm:hidden" {
+                                    (category_badge(&view.recipe_details.category, true))
+                                }
+                                @for kw in view.recipe_details.keywords.iter() {
+                                    span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer"
+                                        hx-get="/recipes/search" hx-target="#list-recipes"
+                                        hx-push-url="true" hx-swap="innerHTML show:window:top transition:true"
+                                        hx-vals=(PreEscaped(format!("{{\"q\": \"tag\":{}}}", kw)))
+                                        _=(format!("on click put \"tag:{}\" into #search-recipes.value", kw)) {
+                                        (kw)
+                                    }
+                                }
+                            }
+                        }
+                        div class="card-actions flex-col-reverse h-fit" {
+                            button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get=(format!("/recipes/{}", view.recipe_details.recipe.id))
+                            hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
+                                "View"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn category_badge(category: &str, is_inside_card: bool) -> Markup {
+    html! {
+        @if !category.contains(":") {
+            span class={
+                    "badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral"
+                    @if !is_inside_card { " indicator-item indicator-center" }
+                }
+                hx-get="/recipes/search"
+                hx-target="#list-recipes"
+                hx-push-url="true"
+                hx-swap="innerHTML show:window:top transition:true"
+                hx-vals=(PreEscaped(format!("{{\"q\": \"cat:{category}\"}}")))
+                _=(format!("on click put \"cat:{category}\" into #search_recipes.value")) {
+                (category)
+            }
+        } @else {
+            span class={
+                "badge badge-primary select-none cursor-pointer"
+                @if !is_inside_card { " indicator-item indicator-center" }
+            } {
+                @for (i, sub_cat) in category.split(":").enumerate() {
+                    @if i > 0 {
+                        ":"
+                    }
+                    span class="hover:bg-neutral"
+                        hx-get="/recipes/search" hx-target="#list-recipes"
+                        hx-push-url="true" hx-swap="innerHTML show:window:top transition:true"
+                        hx-vals=(PreEscaped(format!("{{\"q\": \"cat:{sub_cat}\"}}")))
+                        _=(format!("on click put 'cat:{sub_cat}' into #search_recipes.value")) {
+                        (sub_cat)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Renders the details of a recipe.
+pub fn view_recipe(data_dir: DataDir, data: Data) -> Result<Markup> {
+    let view = data
+        .recipes
+        .first()
+        .ok_or("Must have at least one recipe.")
+        .map_err(|_| Error::NoRecipe)?;
+
+    Ok(html! {
+        @if data.is_hx_request {
+            title hx-swap-oob="true" {
+                 (view.recipe_details.recipe.name) " | Recipya"
+            }
+            (view_recipe_helper(data_dir, &data)?)
+        } @else {
+            (layouts::main(
+                &view.recipe_details.recipe.name,
+                &data,
+                view_recipe_helper(data_dir, &data)?
+            ))
+        }
+    })
+}
+
+fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
+    let view = data
+        .recipes
+        .first()
+        .ok_or("Must have at least one recipe.")
+        .map_err(|_| Error::NoRecipe)?;
+
+    let recipe_id = view.recipe_details.recipe.id;
+    let recipe_details = &view.recipe_details;
     let recipe = &recipe_details.recipe;
 
-    html! {
+    Ok(html! {
         @if data.share.is_shared {
             dialog #share-dialog .modal {
                 div class="modal-box w-4/5 sm:w-96" {
@@ -55,14 +248,14 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
                     div class="card-body" style="padding: 0" {
-                        (view_recipe_header(recipe_id, &data))
+                        (view_recipe_header(recipe_id, &data, recipe_details))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
-                            (view_recipe_media(&recipe_details, &data_dir))
+                            (view_recipe_media(&view.recipe_details, &data_dir))
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
                                 div class="grid grid-flow-col col-span-6 md:row-span-1 md:border-y md:border-gray-700 print:row-span-1 print:grid-cols-2 print:border-b-black print:border" {
                                     div class="col-span-2 grid place-items-center md:col-span-1 print:col-span-1 print:float-left print:ml-2 print:border-r print:border-black" {
                                         div class="badge badge-primary badge-outline" {
-                                            (recipe_details.category)
+                                            (view.recipe_details.category)
                                         }
                                     }
                                     div class="grid col-span-2 border-gray-700 place-items-center text-sm border-x p-2 md:p-2 md:col-span-1 print:hidden" {
@@ -123,15 +316,15 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
                                     } {
                                     div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
                                         (icon_cutting_board())
-                                        time datetime=(data.view.formatted_times.prep_datetime) { (data.view.formatted_times.prep) }
+                                        time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }
                                     }
                                     div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
                                         (icon_cooking_pot())
-                                        time datetime=(data.view.formatted_times.cook_datetime) { (data.view.formatted_times.cook) }
+                                        time datetime=(view.formatted_times.cook_datetime) { (view.formatted_times.cook) }
                                     }
                                     div class="flex justify-self-center items-center gap-1 cursor-default" title="Total time" {
                                         (icon_clock())
-                                        time datetime=(data.view.formatted_times.total_datetime) { (data.view.formatted_times.total) }
+                                        time datetime=(view.formatted_times.total_datetime) { (view.formatted_times.total) }
                                     }
                                 }
                                 (view_recipe_nutrition(&recipe_details))
@@ -241,10 +434,10 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Markup {
         }
 
         script defer src="/public/js/wakelock.min.js" {}
-    }
+    })
 }
 
-fn view_recipe_header(recipe_id: i64, data: &Data) -> Markup {
+fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetails) -> Markup {
     html! {
         h2 class="card-title bg-base-200 px-2 pt-2 place-content-center rounded-t-2xl print:border-b print:border-black" style="justify-content: space-between" {
             span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
@@ -272,7 +465,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data) -> Markup {
                 }
             }
             span class="text-center pb-2 print:w-full" itemprop="name" {
-                    (data.view.recipe_details.recipe.name)
+                    (recipe_details.recipe.name)
             }
             span class="md:hidden" {
                 button title="Open recipe options menu" popovertarget="recipe_menu" popovertargetaction="toggle" {

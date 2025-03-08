@@ -5,6 +5,8 @@ pub(crate) mod middleware;
 mod recipes_routes;
 mod static_files_router;
 
+pub use handlers::params::SearchParams;
+
 use axum::Router;
 
 use crate::error::Result;

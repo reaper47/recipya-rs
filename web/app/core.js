@@ -42,11 +42,11 @@ function showAddRecipeButton() {
 }
 
 function showAddCookbookButton() {
-    const el = document.querySelector("#add_cookbook");
+    const el = document.querySelector("#add-cookbook");
     if (el) {
-        add_cookbook.setAttribute("hx-target", "#content");
-        add_cookbook.setAttribute("hx-swap", "innerHTML")
-        htmx.process(add_cookbook);
+        el.setAttribute("hx-target", "#content");
+        el.setAttribute("hx-swap", "innerHTML")
+        htmx.process(el);
     }
 
     if (location.pathname === "/cookbooks") {
@@ -130,21 +130,21 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("htmx:beforeProcessNode", () => {
-    const el = document.querySelector("#add_cookbook");
+    const el = document.querySelector("#add-cookbook");
     if (el) {
         if (document.querySelector(".cookbooks-display") === null) {
-            add_cookbook.setAttribute("hx-target", "#content");
-            add_cookbook.setAttribute("hx-swap", "innerHTML");
+            el.setAttribute("hx-target", "#content");
+            el.setAttribute("hx-swap", "innerHTML");
         } else {
-            add_cookbook.setAttribute("hx-target", ".cookbooks-display");
-            add_cookbook.setAttribute("hx-swap", "beforeend");
+            el.setAttribute("hx-target", ".cookbooks-display");
+            el.setAttribute("hx-swap", "beforeend");
 
             const p = document.querySelector("#pagination");
             if (p && !p.querySelector("button:nth-last-child(2)").classList.contains('btn-active')) {
-                add_cookbook.setAttribute("hx-swap", "none");
+                el.setAttribute("hx-swap", "none");
             }
         }
-        htmx.process(add_cookbook);
+        htmx.process(el);
     }
 });
 
@@ -175,3 +175,11 @@ document.addEventListener("htmx:wsBeforeMessage", (event) => {
     } catch (_) {
     }
 });
+
+function updateAddCookbookUrl(selectedPage) {
+    const el = document.querySelector("#add-cookbook");
+    if (el) {
+        el.setAttribute("hx-post", `/cookbooks?page=${selectedPage}`);
+        htmx.process(el);
+    }
+}

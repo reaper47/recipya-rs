@@ -1,4 +1,4 @@
-use maud::{DOCTYPE, Markup, html};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
 
 use crate::server::templates::core::{head, toast, toast_ws};
 use crate::server::templates::data::Data;
@@ -25,7 +25,7 @@ pub fn auth(title: &str, content: Markup) -> Markup {
 pub fn main(title: &str, data: &Data, content: Markup) -> Markup {
     html! {
         (DOCTYPE)
-        html lang="en" class="h-full" _="on htmx:afterSwap
+        html lang="en" class="h-full" _=(PreEscaped("on htmx:afterSwap
 		        if location.pathname is '/recipes' or location.pathname is '/' then
                     add .active to first <button/> in mobile_nav then
                     remove .active from last <button/> in mobile_nav then
@@ -43,7 +43,7 @@ pub fn main(title: &str, data: &Data, content: Markup) -> Markup {
                 else if location.pathname is '/settings' or location.pathname.startsWith('/recipes/add') then
                     add .md:hidden to desktop_nav then
                     add .hidden to mobile_nav
-                end" {
+                end")) {
             (head(title))
             body class="min-h-full" hx-ext="ws" ws-connect="/ws" {
                 header class="navbar bg-base-200 shadow-sm print:hidden" {
@@ -72,7 +72,7 @@ pub fn main(title: &str, data: &Data, content: Markup) -> Markup {
                                 "Add recipe"
                             }
                             button
-                                id="add_cookbook"
+                                #addcookbook
                                 class="btn btn-primary btn-sm hover:btn-accent"
                                 hx-post="/cookbooks"
                                 hx-prompt="Enter the name of your cookbook"

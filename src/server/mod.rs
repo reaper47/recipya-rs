@@ -3,7 +3,7 @@ mod error;
 pub mod router;
 pub(super) mod templates;
 
-pub use error::Result;
+pub use error::{Error, Result};
 pub use router::router;
 
 use std::sync::Arc;
