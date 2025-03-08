@@ -10,11 +10,11 @@
 }
 
 dialog::backdrop,
-#avatar_menu::backdrop {
+#avatar-menu::backdrop {
     background: rgba(0, 0, 0, 0.5);
 }
 
-#avatar_menu:popover-open {
+#avatar-menu:popover-open {
     display: block;
 }
 

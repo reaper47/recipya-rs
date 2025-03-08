@@ -1,28 +1,28 @@
 use std::collections::HashMap;
 
+use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{Query, State};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
-use axum::Form;
 use tower_cookies::Cookies;
 use tracing::{debug, error};
 use validator::Validate;
 
 use crate::core::auth::pwd::scheme::SchemeStatus;
-use crate::core::auth::pwd::{validate_pwd, ContentToHash};
-use crate::core::auth::token::{generate_web_token, validate_web_token, Token};
+use crate::core::auth::pwd::{ContentToHash, validate_pwd};
+use crate::core::auth::token::{Token, generate_web_token, validate_web_token};
 use crate::core::email::{Data, Email, Template};
-use crate::core::model::user::User;
 use crate::core::model::Error::EntityNotFound;
+use crate::core::model::user::User;
 use crate::core::support::token::{remove_token_cookie, set_token_cookie};
 use crate::server::error::{Error, Result};
 use crate::server::router::auth_router::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
 };
-use crate::server::router::handlers::message::{add_hx_message, IMessage, MessageHtmx, MessageWs};
+use crate::server::router::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::{templates, AppState};
+use crate::server::{AppState, templates};
 
 /// Handles a user's update password request.
 pub async fn change_password_post_handler(
@@ -100,7 +100,7 @@ pub async fn confirm_handler(
                     entity: "user",
                     id: -1,
                 })
-                    .into_response();
+                .into_response();
             }
         },
         Err(err) => return Error::Model(err).into_response(),
@@ -269,7 +269,7 @@ pub async fn login_post_handler(
         },
         &user.password,
     )
-        .await
+    .await
     {
         Ok(status) => status,
         Err(_err) => {
@@ -337,7 +337,10 @@ pub async fn logout_post_handler(
             }
 
             let mut res = Redirect::to("/").into_response();
-            res.headers_mut().insert(axum_htmx::headers::HX_REDIRECT, HeaderValue::from_static("/"));
+            res.headers_mut().insert(
+                axum_htmx::headers::HX_REDIRECT,
+                HeaderValue::from_static("/"),
+            );
             res
         }
         Err(_) => Error::LogoutFail.into_response(),
@@ -349,7 +352,7 @@ pub async fn register_handler(State(state): State<AppState>) -> impl IntoRespons
     if state.config.is_no_signups {
         return Redirect::to("/auth/login").into_response();
     }
-    
+
     templates::auth::register().into_response()
 }
 
@@ -434,9 +437,7 @@ pub async fn user_delete_handler(
         let toast = MessageWs::error("Trump is Putin's lap dog. Remove him from office!");
 
         if let Ok(json) = serde_json::to_string(&toast) {
-            state
-                .broadcast(user_id, Message::Text(json.into()))
-                .await;
+            state.broadcast(user_id, Message::Text(json.into())).await;
         }
 
         return Error::DeleteForbidden.into_response();

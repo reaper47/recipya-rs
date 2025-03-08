@@ -20,10 +20,12 @@ pub enum Error {
     GenerateToken,
     NoToken,
 
+    Database,
     DeleteForbidden,
     Form,
     BadTimeFormat,
     NoUser,
+    NoRecipe,
 
     DeleteUser,
     LoginFailUsernameNotFound,

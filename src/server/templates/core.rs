@@ -1,4 +1,4 @@
-use maud::{Markup, html};
+use maud::{html, Markup};
 
 /// Renders the <head> section of the HTML.
 pub(super) fn head(title: &str) -> Markup {
@@ -43,8 +43,8 @@ pub(super) fn toast() -> Markup {
             div #toast_alert .alert.shadow-lg.hidden role="alert" {
                 svg #toast_icon .stroke-current.shrink-0.w-6.h-6 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {}
                 div .text-left {
-                    h3 #toast_title .font-bold {}
-                    div #toast_message .text-xs {}
+                    h3 #toast-title .font-bold {}
+                    div #toast-message .text-xs {}
                 }
                 button #toast_button .btn.btn-sm {
                     "See"

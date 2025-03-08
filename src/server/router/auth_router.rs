@@ -1,9 +1,10 @@
 use axum::routing::{delete, get, post};
-use axum::{middleware, Router};
+use axum::{Router, middleware};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::core::model::user::UserForCreate;
+use crate::server::AppState;
 use crate::server::router::handlers::auth::{
     change_password_post_handler, confirm_handler, forgot_password_handler,
     forgot_password_post_handler, forgot_password_reset_handler,
@@ -11,7 +12,6 @@ use crate::server::router::handlers::auth::{
     register_handler, register_post_handler, user_delete_handler,
 };
 use crate::server::router::middleware::mw_auth;
-use crate::server::AppState;
 
 #[derive(Default, Validate, Deserialize, Serialize)]
 pub struct ChangePasswordForm {
@@ -134,7 +134,7 @@ mod tests {
         use axum::http::StatusCode;
 
         use crate::server::test_utils::{
-            build_server_anonymous, build_server_logged_in, build_server_ws, TestDb,
+            TestDb, build_server_anonymous, build_server_logged_in, build_server_ws,
         };
 
         const BASE_URI: &str = "/auth/change-password";
@@ -237,7 +237,7 @@ mod tests {
     mod tests_confirm {
         use super::*;
         use crate::core::support::time::now_utc_plus_sec_str;
-        use crate::server::test_utils::{assert_html, build_server_anonymous, get_token, TestDb};
+        use crate::server::test_utils::{TestDb, assert_html, build_server_anonymous, get_token};
 
         const BASE_URI: &str = "/auth/confirm";
 
@@ -311,7 +311,10 @@ mod tests {
         use super::*;
 
         use crate::core::model::user::User;
-        use crate::server::test_utils::{build_server_anonymous, build_server_logged_in, build_server_ws, build_server_ws_other_user, TestDb, TEST_USER_EMAIL};
+        use crate::server::test_utils::{
+            TEST_USER_EMAIL, TestDb, build_server_anonymous, build_server_logged_in,
+            build_server_ws, build_server_ws_other_user,
+        };
         use axum::http::StatusCode;
 
         const BASE_URI: &str = "/auth/user";
@@ -333,8 +336,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(Some(Config {
                 is_demo: true,
                 ..Config::default()
-            })).await?;
-            let (server, mut ws_server) = build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+            }))
+            .await?;
+            let (server, mut ws_server) =
+                build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
 
             let res = server.delete(BASE_URI).await;
 
@@ -350,7 +355,8 @@ mod tests {
             let (_test_db, config) = TestDb::new(Some(Config {
                 is_autologin: true,
                 ..Config::default()
-            })).await?;
+            }))
+            .await?;
             let (server, mut ws_server) = build_server_ws(config.clone()).await?;
 
             let res = server.delete(BASE_URI).await;
@@ -372,7 +378,13 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header(axum_htmx::headers::HX_REDIRECT, "/");
-            pretty_assertions::assert_eq!(User::get_user_by_email(&state.mm, TEST_USER_EMAIL).await?.is_none(), true, "user should have been deleted");
+            pretty_assertions::assert_eq!(
+                User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
+                    .await?
+                    .is_none(),
+                true,
+                "user should have been deleted"
+            );
             Ok(())
         }
     }
@@ -382,7 +394,7 @@ mod tests {
 
         use crate::core::support::time::now_utc_plus_sec_str;
         use crate::server::test_utils::{
-            assert_html, build_server_anonymous, build_server_logged_in, get_token, TestDb,
+            TestDb, assert_html, build_server_anonymous, build_server_logged_in, get_token,
         };
 
         const BASE_URI: &str = "/auth/forgot-password";
@@ -561,14 +573,14 @@ mod tests {
         use super::*;
 
         use std::default::Default;
-        use time::format_description::well_known::Rfc3339;
         use time::OffsetDateTime;
+        use time::format_description::well_known::Rfc3339;
 
         use crate::core::auth::token::Token;
         use crate::core::support::token::AUTH_TOKEN;
         use crate::server::test_utils::{
-            assert_html, assert_not_in_html, build_server_anonymous, build_server_logged_in, TestDb,
-            TEST_USER_EMAIL, TEST_USER_PASSWORD,
+            TEST_USER_EMAIL, TEST_USER_PASSWORD, TestDb, assert_html, assert_not_in_html,
+            build_server_anonymous, build_server_logged_in,
         };
 
         const BASE_URI: &str = "/auth/login";
@@ -787,7 +799,7 @@ mod tests {
         use crate::core::auth::token::Token;
         use crate::core::model::user::User;
         use crate::core::support::token::AUTH_TOKEN;
-        use crate::server::test_utils::{build_server_logged_in, TestDb, TEST_USER_EMAIL};
+        use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, build_server_logged_in};
 
         const BASE_URI: &str = "/auth/logout";
 
@@ -848,7 +860,7 @@ mod tests {
         use super::*;
         use crate::core::model::user::User;
 
-        use crate::server::test_utils::{build_server_anonymous, build_server_logged_in, TestDb};
+        use crate::server::test_utils::{TestDb, build_server_anonymous, build_server_logged_in};
 
         const BASE_URI: &str = "/auth/register";
 
@@ -910,11 +922,14 @@ mod tests {
             let form = a_register_form();
 
             let _res = server.post(BASE_URI).form(&form).await;
-            let _res = server.post("/auth/login").form(&LoginForm {
-                email: form.email.clone(),
-                password: form.password.clone(),
-                remember_me: Some(false),
-            }).await;
+            let _res = server
+                .post("/auth/login")
+                .form(&LoginForm {
+                    email: form.email.clone(),
+                    password: form.password.clone(),
+                    remember_me: Some(false),
+                })
+                .await;
             let res = server.post(BASE_URI).form(&form).await;
 
             res.assert_status_see_other();

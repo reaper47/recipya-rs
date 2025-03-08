@@ -7,9 +7,26 @@ use uuid::Uuid;
 
 use crate::core::model::recipe::{Nutrition, RecipeDetails, Times, ToolRecipe, Video, VideoRecipe};
 use crate::core::model::{Error, Recipe, Result};
-use crate::core::repository::ModelManager;
+use crate::core::repository::pool::PgPooledConn;
+use crate::core::repository::{schema, ModelManager};
+use crate::server::router::SearchParams;
 
 impl Recipe {
+    /// Retrieves the total number of recipes belonging to a given user.
+    pub async fn count(mm: &ModelManager, user_id: i64) -> Result<i64> {
+        use crate::core::repository::schema;
+
+        let mut conn = mm.pool.get().await?;
+
+        let count = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .select(diesel::dsl::count(schema::recipes::id))
+            .first(&mut conn)
+            .await?;
+
+        Ok(count)
+    }
+
     /// Retrieves the details of a specific recipe for a given user.
     pub async fn get(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<RecipeDetails> {
         use crate::core::repository::schema;
@@ -56,129 +73,305 @@ impl Recipe {
                 id: recipe_id,
             })?;
 
-        let additional_images = schema::additional_images_recipe::table
-            .select(schema::additional_images_recipe::image)
-            .filter(schema::additional_images_recipe::recipe_id.eq(recipe_id))
-            .load::<Uuid>(&mut conn)
+        fetch_recipe_details(
+            &mut conn, recipe, category, cuisine, keywords, nutrition, times,
+        )
+            .await
+    }
+
+    /// Gets a page of recipes belonging to the user.
+    pub async fn get_page(
+        mm: &ModelManager,
+        user_id: i64,
+        search_params: &SearchParams,
+    ) -> Result<Vec<RecipeDetails>> {
+        use crate::core::repository::schema;
+
+        let mut conn = mm.pool.get().await?;
+
+        let fetched_recipes = schema::recipes::table
+            .inner_join(
+                schema::users_recipes::table
+                    .on(schema::users_recipes::recipe_id.eq(schema::recipes::id)),
+            )
+            .filter(schema::users_recipes::user_id.eq(user_id))
+            .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
+            .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
+            .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
+            .left_join(
+                schema::nutrition::table.on(schema::nutrition::recipe_id.eq(schema::recipes::id)),
+            )
+            .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
+            .select((
+                schema::recipes::all_columns,
+                schema::categories::name,
+                schema::cuisines::name.nullable(),
+                schema::keywords::name.nullable(),
+                schema::nutrition::all_columns.nullable(),
+                schema::times::all_columns,
+            ))
+            .distinct_on(schema::recipes::id)
+            .load::<(
+                Recipe,
+                String,
+                Option<String>,
+                Option<String>,
+                Option<Nutrition>,
+                Times,
+            )>(&mut conn)
             .await?;
 
-        let ingredients = schema::ingredients_recipes::table
-            .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
-            .inner_join(schema::ingredients::table)
-            .inner_join(schema::sections::table)
-            .order(schema::ingredients_recipes::item_order)
-            .select((
-                schema::ingredients::name,
-                schema::sections::name,
-                schema::ingredients_recipes::section_id,
-            ))
-            .load::<(String, String, i64)>(&mut conn)
+        let mut recipes = Vec::with_capacity(fetched_recipes.len());
+        for (recipe, category, cuisine, keywords, nutrition, times) in fetched_recipes {
+            recipes.push(
+                fetch_recipe_details(
+                    &mut conn, recipe, category, cuisine, keywords, nutrition, times,
+                )
+                    .await?,
+            );
+        }
+        Ok(recipes)
+    }
+}
+
+async fn fetch_recipe_details(
+    conn: &mut PgPooledConn<'_>,
+    recipe: Recipe,
+    category: String,
+    cuisine: Option<String>,
+    keywords: Option<String>,
+    nutrition: Option<Nutrition>,
+    times: Times,
+) -> Result<RecipeDetails> {
+    let recipe_id = recipe.id;
+
+    let additional_images = schema::additional_images_recipe::table
+        .select(schema::additional_images_recipe::image)
+        .filter(schema::additional_images_recipe::recipe_id.eq(recipe_id))
+        .load::<Uuid>(conn)
+        .await?;
+
+    let ingredients = schema::ingredients_recipes::table
+        .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
+        .inner_join(schema::ingredients::table)
+        .inner_join(schema::sections::table)
+        .order(schema::ingredients_recipes::item_order)
+        .select((
+            schema::ingredients::name,
+            schema::sections::name,
+            schema::ingredients_recipes::section_id,
+        ))
+        .load::<(String, String, i64)>(conn)
+        .await?
+        .into_iter()
+        .fold(
+            BTreeMap::new(),
+            |mut acc, (ingredient, section, section_id)| {
+                acc.entry(section_id)
+                    .and_modify(|entry: &mut (String, Vec<String>)| {
+                        entry.1.push(ingredient.clone())
+                    })
+                    .or_insert_with(|| (section, vec![ingredient]));
+                acc
+            },
+        )
+        .into_values()
+        .collect();
+
+    let instructions = schema::instructions_recipes::table
+        .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
+        .inner_join(schema::instructions::table)
+        .inner_join(schema::sections::table)
+        .order(schema::instructions_recipes::item_order)
+        .select((
+            schema::instructions::name,
+            schema::sections::name,
+            schema::instructions_recipes::section_id,
+        ))
+        .load::<(String, String, i64)>(conn)
+        .await?
+        .into_iter()
+        .fold(
+            BTreeMap::new(),
+            |mut acc, (instruction, section, section_id)| {
+                acc.entry(section_id)
+                    .and_modify(|entry: &mut (String, Vec<String>)| {
+                        entry.1.push(instruction.clone())
+                    })
+                    .or_insert_with(|| (section, vec![instruction]));
+                acc
+            },
+        )
+        .into_values()
+        .collect();
+
+    let keywords = if keywords.is_some() {
+        schema::keywords_recipes::table
+            .filter(schema::keywords_recipes::recipe_id.eq(recipe_id))
+            .inner_join(schema::keywords::table)
+            .select(schema::keywords::name)
+            .load::<String>(conn)
             .await?
-            .into_iter()
-            .fold(
-                BTreeMap::new(),
-                |mut acc, (ingredient, section, section_id)| {
-                    acc.entry(section_id)
-                        .and_modify(|entry: &mut (String, Vec<String>)| {
-                            entry.1.push(ingredient.clone())
-                        })
-                        .or_insert_with(|| (section, vec![ingredient]));
-                    acc
-                },
-            )
-            .into_values()
-            .collect();
+    } else {
+        Vec::new()
+    };
 
-        let instructions = schema::instructions_recipes::table
-            .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
-            .inner_join(schema::instructions::table)
-            .inner_join(schema::sections::table)
-            .order(schema::instructions_recipes::item_order)
-            .select((
-                schema::instructions::name,
-                schema::sections::name,
-                schema::instructions_recipes::section_id,
-            ))
-            .load::<(String, String, i64)>(&mut conn)
-            .await?
-            .into_iter()
-            .fold(
-                BTreeMap::new(),
-                |mut acc, (instruction, section, section_id)| {
-                    acc.entry(section_id)
-                        .and_modify(|entry: &mut (String, Vec<String>)| {
-                            entry.1.push(instruction.clone())
-                        })
-                        .or_insert_with(|| (section, vec![instruction]));
-                    acc
-                },
-            )
-            .into_values()
-            .collect();
-
-        let keywords = if keywords.is_some() {
-            schema::keywords_recipes::table
-                .filter(schema::keywords_recipes::recipe_id.eq(recipe_id))
-                .inner_join(schema::keywords::table)
-                .select(schema::keywords::name)
-                .load::<String>(&mut conn)
-                .await?
-        } else {
-            Vec::new()
-        };
-
-        let tools = schema::tools_recipes::table
-            .inner_join(schema::tools::table)
-            .filter(schema::tools_recipes::recipe_id.eq(recipe_id))
-            .select((
-                schema::tools::name,
-                schema::tools_recipes::quantity,
-                schema::tools_recipes::tool_order,
-            ))
-            .load::<(String, i16, i16)>(&mut conn)
-            .await?
-            .into_iter()
-            .map(|(name, quantity, tool_order)| ToolRecipe {
-                name,
-                quantity,
-                tool_order: tool_order + 1,
-            })
-            .collect::<Vec<_>>();
-
-        let videos = schema::videos_recipes::table
-            .filter(schema::videos_recipes::recipe_id.eq(recipe_id))
-            .select(VideoRecipe::as_select())
-            .load::<VideoRecipe>(&mut conn)
-            .await?
-            .into_iter()
-            .map(|v| Video {
-                video: v.video,
-                duration: match v.duration {
-                    None => None,
-                    Some(d) => {
-                        let ms = chrono::Duration::milliseconds(d.microseconds / 1000);
-                        let days = chrono::Duration::days(d.days as i64);
-                        Some(ms + days)
-                    }
-                },
-                content_url: v.content_url,
-                embed_url: v.embed_url,
-                created_at: v.created_at,
-            })
-            .collect::<Vec<_>>();
-
-        Ok(RecipeDetails {
-            recipe,
-            additional_images,
-            category,
-            cuisine,
-            ingredients,
-            instructions,
-            keywords,
-            nutrition,
-            times,
-            tools,
-            videos,
+    let tools = schema::tools_recipes::table
+        .inner_join(schema::tools::table)
+        .filter(schema::tools_recipes::recipe_id.eq(recipe_id))
+        .select((
+            schema::tools::name,
+            schema::tools_recipes::quantity,
+            schema::tools_recipes::tool_order,
+        ))
+        .load::<(String, i16, i16)>(conn)
+        .await?
+        .into_iter()
+        .map(|(name, quantity, tool_order)| ToolRecipe {
+            name,
+            quantity,
+            tool_order: tool_order + 1,
         })
+        .collect::<Vec<_>>();
+
+    let videos = schema::videos_recipes::table
+        .filter(schema::videos_recipes::recipe_id.eq(recipe_id))
+        .select(VideoRecipe::as_select())
+        .load::<VideoRecipe>(conn)
+        .await?
+        .into_iter()
+        .map(|v| Video {
+            video: v.video,
+            duration: match v.duration {
+                None => None,
+                Some(d) => {
+                    let ms = chrono::Duration::milliseconds(d.microseconds / 1000);
+                    let days = chrono::Duration::days(d.days as i64);
+                    Some(ms + days)
+                }
+            },
+            content_url: v.content_url,
+            embed_url: v.embed_url,
+            created_at: v.created_at,
+        })
+        .collect::<Vec<_>>();
+
+    Ok(RecipeDetails {
+        recipe,
+        additional_images,
+        category,
+        cuisine,
+        ingredients,
+        instructions,
+        keywords,
+        nutrition,
+        times,
+        tools,
+        videos,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::server::test_utils::TestDb;
+    use crate::server::AppState;
+
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod tests_count {
+        use super::*;
+
+        use crate::core::model::user::User;
+        use crate::server::test_utils::{a_complete_recipe, build_server_anonymous};
+
+        #[tokio::test]
+        async fn test_count_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            let _ = build_server_anonymous(config.clone()).await?;
+            let user = User::get_user_by_id(&state.mm, 1)
+                .await?
+                .expect("no such user");
+            let user2 = User::get_user_by_id(&state.mm, 2)
+                .await?
+                .expect("no such user");
+            for i in 0..5 {
+                let mut recipe = a_complete_recipe();
+                recipe.name.push_str(i.to_string().as_str());
+                let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+            }
+            for i in 0..10 {
+                let mut recipe = a_complete_recipe();
+                recipe.name.push_str((i + 1002).to_string().as_str());
+                let _ = Recipe::create(&state.mm, user2.id, &recipe).await?;
+            }
+            
+            let count_user1 = Recipe::count(&state.mm, user.id).await?;
+            let count_user2 = Recipe::count(&state.mm, user2.id).await?;
+
+            assert_eq!(count_user1, 5);
+            assert_eq!(count_user2, 10);
+            Ok(())
+        }
+    }
+
+    mod tests_get_page {
+        use super::*;
+
+        use crate::server::test_utils::{a_complete_recipe, build_server_anonymous};
+
+        #[tokio::test]
+        async fn test_get_page_no_recipes_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+
+            let recipes = Recipe::get_page(
+                &state.mm,
+                1,
+                &SearchParams {
+                    q: None,
+                    page: Some(1),
+                    sort: None,
+                },
+            )
+                .await?;
+
+            pretty_assertions::assert_eq!(recipes, Vec::new());
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_get_page_first_page_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            let _ = build_server_anonymous(config.clone()).await?;
+            let mut expected = Vec::with_capacity(15);
+            for i in 0..15 {
+                let mut recipe = a_complete_recipe();
+                recipe.name.push_str(i.to_string().as_str());
+                let _ = Recipe::create(&state.mm, 1, &recipe).await?;
+                expected.push(recipe.name);
+            }
+
+            let recipes = Recipe::get_page(
+                &state.mm,
+                1,
+                &SearchParams {
+                    q: None,
+                    page: Some(1),
+                    sort: None,
+                },
+            )
+                .await?;
+
+            let got = recipes
+                .into_iter()
+                .map(|r| r.recipe.name)
+                .collect::<Vec<_>>();
+            pretty_assertions::assert_eq!(got, expected);
+            Ok(())
+        }
     }
 }

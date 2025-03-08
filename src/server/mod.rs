@@ -3,7 +3,7 @@ mod error;
 pub mod router;
 pub(super) mod templates;
 
-pub use error::Result;
+pub use error::{Error, Result};
 pub use router::router;
 
 use std::sync::Arc;
@@ -208,13 +208,19 @@ pub mod test_utils {
         build_server_ws_helper(app_config, TEST_USER_EMAIL).await
     }
 
-    /// Builds and initializes a test server with WebSocket support  for a user other 
+    /// Builds and initializes a test server with WebSocket support for a user other
     /// than the test one.
-    pub async fn build_server_ws_other_user(app_config: Config, auth_email: &str) -> Result<(TestServer, TestWebSocket)> {
+    pub async fn build_server_ws_other_user(
+        app_config: Config,
+        auth_email: &str,
+    ) -> Result<(TestServer, TestWebSocket)> {
         build_server_ws_helper(app_config, auth_email).await
     }
 
-    async fn build_server_ws_helper(app_config: Config, auth_email: &str) -> Result<(TestServer, TestWebSocket)> {
+    async fn build_server_ws_helper(
+        app_config: Config,
+        auth_email: &str,
+    ) -> Result<(TestServer, TestWebSocket)> {
         let routes = prepare_router(app_config.clone()).await?;
         let config = TestServerConfig {
             save_cookies: true,
