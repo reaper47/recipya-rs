@@ -9,11 +9,11 @@ pub(super) fn searchbar(data: &SearchbarData) -> Markup {
     html! {
         div class="w-full" {
             label class="input input-sm flex justify-between px-0 gap-2 z-20" {
-                button id="search-shortcut" type="button" class="pl-2" popovertarget="search-help" _="on click toggle .hidden on #search-help" {
+                button #search-shortcut type="button" class="pl-2" popovertarget="search-help" _="on click toggle .hidden on #search-help" {
                     (icon_information_circle())
                 }
 
-                input id="search_recipes" class="w-full" type="search" name="q" placeholder="Search for recipes..." value=(data.term)
+                input #search_recipes class="w-full" type="search" name="q" placeholder="Search for recipes..." value=(data.term)
                         _=(PreEscaped("on keyup
                              if event.target.value !== '' then
                                  remove .md:block from #search-shortcut
@@ -107,11 +107,11 @@ pub(super) fn search_help() -> Markup {
     ];
 
     html! {
-        div id="search_help" popover class="hidden card p-0 w-80 bg-base-100 shadow-xl max-h-[28rem] z-20 sm:w-[30rem] " style="position: fixed; inset: unset; bottom: 0.5rem; right: 0.5rem;" {
+        div #search-help popover class="hidden card p-0 w-80 bg-base-100 shadow-xl max-h-[28rem] z-20 sm:w-[30rem] " style="position: fixed; inset: unset; bottom: 0.5rem; right: 0.5rem;" {
             div class="card-body max-h-96 p-4" {
                 div class="card-actions justify-between" {
                     h2 class="card-title " { "Search Help" }
-                    button class="btn btn-square btn-sm" _="on click toggle .hidden on #search_help" {
+                    button class="btn btn-square btn-sm" _="on click toggle .hidden on #search-help" {
                         (icon_x_mark())
                     }
                 }

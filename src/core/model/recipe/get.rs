@@ -307,6 +307,7 @@ mod tests {
                 recipe.name.push_str((i + 1002).to_string().as_str());
                 let _ = Recipe::create(&state.mm, user2.id, &recipe).await?;
             }
+            
             let count_user1 = Recipe::count(&state.mm, user.id).await?;
             let count_user2 = Recipe::count(&state.mm, user2.id).await?;
 

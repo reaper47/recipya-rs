@@ -1,7 +1,7 @@
 var timeoutToast = timeoutToast || null;
 
 function receiveToastMessage(event) {
-    const { title, message, background, action } = JSON.parse(event.detail.value);
+    const {title, message, background, action} = JSON.parse(event.detail.value);
     showToast(title, message, background, action);
 
     if (title === "Software updated") {
@@ -15,8 +15,8 @@ function showToast(title, message, background, action) {
     toast.classList.add(background, "toast-displayed");
     toast.id = "";
 
-    toast.querySelector("#toast_title").innerHTML = title;
-    toast.querySelector("#toast_message").innerText = message;
+    toast.querySelector("#toast-title").innerHTML = title;
+    toast.querySelector("#toast-message").innerText = message;
     switch (background) {
         case "alert-error":
             toast.querySelector("#toast_icon").innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>`;

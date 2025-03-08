@@ -1,4 +1,4 @@
-use maud::{Markup, html};
+use maud::{html, Markup};
 
 use crate::server::templates::layouts;
 
@@ -20,7 +20,7 @@ pub fn forgot_password() -> Markup {
                         }
                         fieldset class="fieldset" {
                             label class="label" for="email" { "Email" }
-                            input id="email" type="email" required placeholder="Enter your email address" class="input" name="email";
+                            input #email type="email" required placeholder="Enter your email address" class="input" name="email";
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" {
@@ -47,11 +47,11 @@ pub fn forgot_password_reset(user_id: i64) -> Markup {
                         input name="user-id" type="hidden" value=(user_id);
                         fieldset class="fieldset" {
                             label class="label" for="password" { "New password" }
-                            input id="password" type="password" required placeholder="Enter your new password" class="input" name="password";
+                            input #password type="password" required placeholder="Enter your new password" class="input" name="password";
                         }
                         fieldset class="fieldset" {
                             label class="label" for="confirm-password" { "Confirm password" }
-                            input id="confirm-password" type="password" required placeholder="Retype your password" class="input" name="password-confirm";
+                            input #confirm-password type="password" required placeholder="Retype your password" class="input" name="password-confirm";
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" {
@@ -77,7 +77,7 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                     }
                     fieldset class="fieldset" {
                         label class="label" for="email" { "Email" }
-                        input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value=@if is_demo { "demo@demo.com" };
+                        input #email type="email" required placeholder="Enter your email address" class="input" name="email" value=@if is_demo { "demo@demo.com" };
                     }
                     fieldset class="fieldset" {
                         label class="label block" for="password" {
@@ -86,7 +86,7 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                                 "Forgot your password?"
                             }
                         }
-                        input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value=@if is_demo { "demo" };
+                        input #password type="password" required placeholder="Enter your password" class="input" name="password" value=@if is_demo { "demo" };
                     }
                     fieldset class="fieldset p-4 bg-base-100 border border-base-300 rounded-box w-64 grid self-center mb-2" {
                       legend class="fieldset-legend" { "Login options" }
@@ -130,15 +130,15 @@ pub fn register() -> Markup {
                     }
                     fieldset class="fieldset" {
                         label class="label" for="email" { "Email" }
-                        input id="email" type="email" required placeholder="Enter your email address" class="input" name="email";
+                        input #email type="email" required placeholder="Enter your email address" class="input" name="email";
                     }
                     fieldset class="fieldset" {
                         label class="label" for="email" { "Password" }
-                        input id="password" type="password" required placeholder="Enter your password" class="input" name="password";
+                        input #password type="password" required placeholder="Enter your password" class="input" name="password";
                     }
                     fieldset class="fieldset" {
                         label class="label" for="password-confirm" { "Confirm password" }
-                        input id="password-confirm" type="password" required  placeholder="Retype your password" class="input" name="password-confirm";
+                        input #password-confirm type="password" required  placeholder="Retype your password" class="input" name="password-confirm";
                     }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {

@@ -1,6 +1,6 @@
 use axum::extract::ws::Message;
 use axum::extract::{Path, Query, State};
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, Uri};
 use axum::response::IntoResponse;
 use reqwest::StatusCode;
 use tracing::error;
@@ -49,6 +49,7 @@ pub async fn recipes_handler(
     ctx: CtxW,
     headers: HeaderMap,
     Query(search_params): Query<SearchParams>,
+    uri: Uri,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
@@ -101,6 +102,7 @@ pub async fn recipes_handler(
     };
 
     templates::recipes::index(
+        uri.path(),
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
@@ -127,6 +129,7 @@ pub async fn recipe_view_handler(
     ctx: CtxW,
     headers: HeaderMap,
     Path(recipe_id): Path<i64>,
+    uri: Uri,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
@@ -148,6 +151,7 @@ pub async fn recipe_view_handler(
     }];
 
     templates::recipes::view_recipe(
+        uri.path(),
         state.data_dir,
         Data {
             is_admin: user_id == 1,

@@ -12,13 +12,6 @@ const pathsShowRecipesSidebar = [
     "/recipes",
 ];
 
-const pathsHideAddRecipeButton = [
-    "/admin",
-    "/cookbooks",
-    "/recipes/add",
-    "/recipes/add/manual",
-];
-
 function showAll() {
     showAddRecipeButton();
     showAddCookbookButton();
@@ -26,12 +19,12 @@ function showAll() {
     showRecipesSidebar();
 }
 
+// TODO: Move this logic to Maud templates.
 function showAddRecipeButton() {
     const isRecipe = recipesPattern.test(location.pathname) || recipesSharePattern.test(location.pathname);
-    const el = document.querySelector("#add_recipe");
+    const el = document.querySelector("#add-recipe");
 
     if (isRecipe ||
-        pathsHideAddRecipeButton.some(path => path === location.pathname) ||
         cookbooksPattern.test(location.pathname) ||
         cookbooksSharePattern.test(location.pathname) ||
         reportsPattern.test(location.pathname)) {
@@ -41,6 +34,7 @@ function showAddRecipeButton() {
     }
 }
 
+// TODO: Move this logic to Maud templates.
 function showAddCookbookButton() {
     const el = document.querySelector("#add-cookbook");
     if (el) {
@@ -67,8 +61,8 @@ function showCookbookTitle() {
 }
 
 function showRecipesSidebar() {
-    const desktop = document.querySelector("#desktop_nav");
-    const mobile = document.querySelector("#mobile_nav");
+    const desktop = document.querySelector("#desktop-nav");
+    const mobile = document.querySelector("#mobile-nav");
 
     if (pathsShowRecipesSidebar.includes(location.pathname) || cookbooksPattern.test(location.pathname)) {
         desktop?.firstElementChild.classList.remove("hidden");

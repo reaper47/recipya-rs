@@ -14,14 +14,14 @@ use maud::{html, Markup, PreEscaped};
 use url::Url;
 
 /// Renders the index page of recipes.
-pub fn index(data: Data, data_dir: DataDir) -> Markup {
+pub fn index(path: &str, data: Data, data_dir: DataDir) -> Markup {
     if data.is_hx_request {
         html! {
             title hx-swap-oob="true" { "Recipes | Recipya" }
             (render_index(&data, &data_dir))
         }
     } else {
-        layouts::main("Recipes", &data, render_index(&data, &data_dir))
+        layouts::main("Recipes", path, &data, render_index(&data, &data_dir))
     }
 }
 
@@ -59,7 +59,7 @@ fn render_index(data: &Data, data_dir: &DataDir) -> Markup {
                     }
                 }
                 (search_help())
-                div id="list-recipes" class="min-h-[79vh]" {
+                div #list-recipes class="min-h-[79vh]" {
                     (list_recipes(&data, &data_dir))
                 }
                 (pagination(&data.pagination))
@@ -194,7 +194,7 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
 }
 
 /// Renders the details of a recipe.
-pub fn view_recipe(data_dir: DataDir, data: Data) -> Result<Markup> {
+pub fn view_recipe(path: &str, data_dir: DataDir, data: Data) -> Result<Markup> {
     let view = data
         .recipes
         .first()
@@ -210,6 +210,7 @@ pub fn view_recipe(data_dir: DataDir, data: Data) -> Result<Markup> {
         } @else {
             (layouts::main(
                 &view.recipe_details.recipe.name,
+                path,
                 &data,
                 view_recipe_helper(data_dir, &data)?
             ))
@@ -264,7 +265,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
                                                 fieldset class="fieldset" {
                                                     legend { "Servings" }
                                                     label class="label" for="yield" { "Servings" }
-                                                    input id="yield"
+                                                    input #yield
                                                         type="number"
                                                         min="1"
                                                         name="yield"
@@ -460,7 +461,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                         hx-push-url="true"
                         hx-target="#content"
                         hx-swap="innerHTML transition:true" {
-                        (icon_pencil())
+                        (icon_pencil(false))
                     }
                 }
             }
@@ -483,7 +484,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                                 hx-push-url="true"
                                 hx-target="#content"
                                 hx-swap="innerHTML transition:true" {
-                                (icon_pencil())
+                                (icon_pencil(false))
                                 "Edit"
                             }
                         }
@@ -820,7 +821,7 @@ fn view_recipe_nutrition(recipe_details: &RecipeDetails) -> Markup {
 
 fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
     html! {
-        div id="ingredients-instructions-container" class="grid text-sm md:grid-flow-col md:col-span-6" {
+        div #ingredients-instructions-container class="grid text-sm md:grid-flow-col md:col-span-6" {
             div class="col-span-6 border-gray-700 px-4 py-2 border-y md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
                     h2 class="font-semibold text-center underline pb-1" { "Tools" }
