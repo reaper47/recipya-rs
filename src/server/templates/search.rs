@@ -1,8 +1,9 @@
+use maud::{Markup, PreEscaped, html};
+
 use crate::server::templates::data::SearchbarData;
 use crate::server::templates::icons::{
     icon_bars_3_bottom_left, icon_information_circle, icon_magnifying_glass, icon_x_mark,
 };
-use maud::{html, Markup, PreEscaped};
 
 /// Renders the searchbar.
 pub(super) fn searchbar(data: &SearchbarData) -> Markup {

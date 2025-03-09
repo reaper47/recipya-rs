@@ -12,9 +12,9 @@ pub(super) fn cut_string(s: &str, num_chars: usize) -> String {
 }
 
 /// Multiplies all values in the iterable and returns the product.
-pub(super) fn mul_all<T>(vals: impl IntoIterator<Item=T>) -> T
+pub(super) fn mul_all<T>(vals: impl IntoIterator<Item = T>) -> T
 where
-    T: Mul<Output=T> + Product + From<u8>,
+    T: Mul<Output = T> + Product + From<u8>,
 {
     vals.into_iter().product()
 }

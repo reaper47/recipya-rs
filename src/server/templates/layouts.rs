@@ -1,4 +1,4 @@
-use maud::{html, Markup, PreEscaped, DOCTYPE};
+use maud::{DOCTYPE, Markup, html};
 
 use crate::server::templates::core::{head, toast, toast_ws};
 use crate::server::templates::data::Data;
@@ -25,31 +25,13 @@ pub fn auth(title: &str, content: Markup) -> Markup {
 pub fn main(title: &str, path: &str, data: &Data, content: Markup) -> Markup {
     html! {
         (DOCTYPE)
-        html lang="en" class="h-full" _=(PreEscaped("on htmx:afterSwap
-		        if location.pathname is '/recipes' or location.pathname is '/' then
-                    add .active to first <button/> in #mobile-nav then
-                    remove .active from last <button/> in #mobile-nav then
-                    remove .md:hidden from #desktop-nav then
-                    remove .hidden from #mobile-nav then
-                    remove .active from first <a/> in #recipes-sidebar-cookbooks then
-                    add .active to first <a/> in #recipes-sidebar-recipes
-                else if location.pathname.startsWith('/cookbooks') then
-                    add .active to last <button/> in #mobile-nav then
-                    remove .active from first <button/> in #mobile-nav then
-                    remove .md:hidden from #desktop-nav then
-                    remove .hidden from #mobile-nav then
-                    remove .active from first <a/> in #recipes-sidebar-recipes then
-                    add .active to first <a/> in #recipes-sidebar-cookbooks
-                else if location.pathname is '/settings' or location.pathname.startsWith('/recipes/add') then
-                    add .md:hidden to #desktop-nav then
-                    add .hidden to #mobile-nav
-                end")) {
+        html lang="en" class="h-full" {
             (head(title))
             body class="min-h-full" hx-ext="ws" ws-connect="/ws" {
                 header class="navbar bg-base-200 shadow-sm print:hidden" {
                     div class="navbar-start" {
                         a class="btn btn-ghost text-lg" style="padding-left: 0"
-                         hx-get=@if data.is_authenticated { "/" }
+                          hx-get=@if data.is_authenticated { "/" }
                           hx-push-url=@if data.is_authenticated { "true" }
                           hx-target=@if data.is_authenticated { "#content" }
                           href=@if !data.is_authenticated { "/" } {
@@ -66,15 +48,9 @@ pub fn main(title: &str, path: &str, data: &Data, content: Markup) -> Markup {
 
                             @if path != "/admin" || path != "/cookbooks" || path != "/recipes/add" || path != "/recipes/add/manual" {
                                 @if path == "/" || path == "/recipes" {
-                                    button
-                                        #add-recipe
-                                        class="btn btn-primary btn-sm hover:btn-accent"
-                                        hx-get="/recipes/add"
-                                        hx-target="#content"
-                                        hx-trigger="mousedown"
-                                        hx-push-url="true" {
-                                        "Add recipe"
-                                    }
+                                    (render_recipe_button(false, true))
+                                } @else {
+                                    (render_recipe_button(false, false))
                                 }
 
                                 @if path == "/cookbooks" {
@@ -197,36 +173,7 @@ pub fn main(title: &str, path: &str, data: &Data, content: Markup) -> Markup {
                 div #fullscreen-loader class="htmx-indicator" {}
                 main class="inline-flex w-full" {
                     @if data.is_authenticated {
-                        aside #desktop-nav class="hidden md:block" {
-                            ul class="menu w-full menu-sm bg-base-300 rounded-box h-full" style="border-radius: 0" {
-                                li #recipes-sidebar-recipes
-                                    class={
-                                        "rounded-lg"
-                                        @if path == "/recipes" || path == "/" { " bg-secondary" }
-                                    }
-                                    hx-get="/recipes"
-                                    hx-target="#content"
-                                    hx-trigger="mousedown"
-                                    hx-push-url="true"
-                                    hx-swap-oob="true"
-                                    hx-swap="innerHTML transition:true" {
-                                    a class="tooltip tooltip-right active" data-tip="Recipes" {
-                                        (icon_pencil(false))
-                                    }
-                                }
-                                li #recipes-sidebar-cookbooks
-                                   hx-get="/cookbooks"
-                                   hx-target="#content"
-                                   hx-trigger="mousedown"
-                                   hx-push-url="true"
-                                   hx-swap-oob="true"
-                                   hx-swap="innerHTML transition:true" {
-                                     a class="tooltip tooltip-right" data-tip="Cookbooks" {
-                                        (icon_book_open())
-                                    }
-                                }
-                            }
-                        }
+                        (render_desktop_nav(path, false))
                         aside #mobile-nav class="dock dock-sm md:hidden z-20" {
                             button hx-get="/recipes" hx-target="#content" hx-push-url="true" hx-swap-oob="true" hx-swap="innerHTML transition:true" {
                                 "Recipes"
@@ -242,6 +189,67 @@ pub fn main(title: &str, path: &str, data: &Data, content: Markup) -> Markup {
                 }
                 (toast())
                 (toast_ws("", "", false))
+            }
+        }
+    }
+}
+
+/// Renders the button to go the add recipe page.
+pub(super) fn render_recipe_button(is_hx_swap_oob: bool, is_visible: bool) -> Markup {
+    html! {
+        button
+            #add-recipe
+            class={
+                "btn btn-primary btn-sm hover:btn-accent"
+                @if !is_visible { " hidden" } @else { "" }
+
+            }
+            hx-get="/recipes/add"
+            hx-target="#content"
+            hx-trigger="mousedown"
+            hx-push-url="true"
+            hx-swap-oob=(is_hx_swap_oob) {
+            "Add recipe"
+        }
+    }
+}
+
+/// Renders the desktop navigation sidebar.
+pub(super) fn render_desktop_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
+    let is_visible = path == "/" || path == "/recipes";
+
+    html! {
+        aside #desktop-nav class={
+                @if is_visible { "hidden md:block" } @else { " hidden" }
+            }
+            hx-swap-oob=(is_hx_swap_oob) {
+            ul class="menu w-full menu-sm bg-base-300 rounded-box h-full" style="border-radius: 0" {
+                li #recipes-sidebar-recipes
+                    class={
+                        "rounded-lg"
+                        @if path == "/recipes" || path == "/" { " bg-secondary" }
+                    }
+                    hx-get="/recipes"
+                    hx-target="#content"
+                    hx-trigger="mousedown"
+                    hx-push-url="true"
+                    hx-swap-oob=(is_hx_swap_oob)
+                    hx-swap="innerHTML transition:true" {
+                    a class="tooltip tooltip-right active" data-tip="Recipes" {
+                        (icon_pencil(false))
+                    }
+                }
+                li #recipes-sidebar-cookbooks
+                   hx-get="/cookbooks"
+                   hx-target="#content"
+                   hx-trigger="mousedown"
+                   hx-push-url="true"
+                   hx-swap-oob=(is_hx_swap_oob)
+                   hx-swap="innerHTML transition:true" {
+                     a class="tooltip tooltip-right" data-tip="Cookbooks" {
+                        (icon_book_open())
+                    }
+                }
             }
         }
     }

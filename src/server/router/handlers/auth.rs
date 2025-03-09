@@ -302,14 +302,7 @@ pub async fn login_post_handler(
         user.token_salt,
         form.is_remember_me(),
     ) {
-        Ok(_) => {
-            let redirect_to = query
-                .get("redirect_to")
-                .map(|v| v.to_string())
-                .unwrap_or(String::from("/"));
-
-            Redirect::to(&redirect_to).into_response()
-        }
+        Ok(_) => Redirect::to("/").into_response(),
         Err(err) => {
             let mut res = (StatusCode::BAD_REQUEST, "Login failed").into_response();
             add_hx_message(&mut res, MessageHtmx::error("Failed to log you in."));

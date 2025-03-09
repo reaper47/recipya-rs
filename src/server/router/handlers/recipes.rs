@@ -1,20 +1,20 @@
 use axum::extract::ws::Message;
-use axum::extract::{Path, Query, State};
+use axum::extract::{OriginalUri, Path, Query, State};
 use axum::http::{HeaderMap, Uri};
 use axum::response::IntoResponse;
 use reqwest::StatusCode;
 use tracing::error;
 
 use crate::core::model::Recipe;
+use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::router::SearchParams;
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
 };
-use crate::server::{templates, AppState};
+use crate::server::{AppState, templates};
 use crate::server::{Error, Result};
 
 /// Handles deleting a user's recipe.
@@ -49,7 +49,7 @@ pub async fn recipes_handler(
     ctx: CtxW,
     headers: HeaderMap,
     Query(search_params): Query<SearchParams>,
-    uri: Uri,
+    OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
@@ -72,19 +72,26 @@ pub async fn recipes_handler(
 
     let recipes = match Recipe::get_page(&state.mm, user_id, &search_params).await {
         Ok(recipes) => {
-            let mapped_recipes: std::result::Result<Vec<ViewRecipe>, _> = recipes.into_iter().map(|recipe| {
-                FormattedTimes::from_times(&recipe.times).map(|formatted_times| ViewRecipe {
-                    recipe_details: recipe,
-                    formatted_times,
-                }).map_err(async |err| {
-                    error!("Error formatting times for recipe: {err}");
-                    let toast = MessageHtmx::error("Error formatting recipe times.");
-                    if let Ok(json) = serde_json::to_string(&toast) {
-                        state.broadcast(ctx.0.user_id(), Message::Text(json.into())).await;
-                    }
-                    Error::Database
+            let mapped_recipes: std::result::Result<Vec<ViewRecipe>, _> = recipes
+                .into_iter()
+                .map(|recipe| {
+                    FormattedTimes::from_times(&recipe.times)
+                        .map(|formatted_times| ViewRecipe {
+                            recipe_details: recipe,
+                            formatted_times,
+                        })
+                        .map_err(async |err| {
+                            error!("Error formatting times for recipe: {err}");
+                            let toast = MessageHtmx::error("Error formatting recipe times.");
+                            if let Ok(json) = serde_json::to_string(&toast) {
+                                state
+                                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
+                                    .await;
+                            }
+                            Error::Database
+                        })
                 })
-            }).collect();
+                .collect();
 
             match mapped_recipes {
                 Ok(mapped) => mapped,
@@ -92,10 +99,15 @@ pub async fn recipes_handler(
             }
         }
         Err(err) => {
-            error!("Error fetching recipes for user '{user_id}' with search params '{:?}': {err}", search_params);
+            error!(
+                "Error fetching recipes for user '{user_id}' with search params '{:?}': {err}",
+                search_params
+            );
             let toast = MessageHtmx::error("Error fetching recipes.");
             if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(ctx.0.user_id(), Message::Text(json.into())).await;
+                state
+                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
+                    .await;
             }
             return Error::Database.into_response();
         }
@@ -107,29 +119,55 @@ pub async fn recipes_handler(
             is_admin: user_id == 1,
             is_authenticated: true,
             is_autologin: state.config.is_autologin,
-            is_hx_request: is_hx_request(headers),
+            is_hx_request: is_hx_request(&headers),
             about: AboutData {
                 is_update_available: false,
             },
-            pagination: PaginationData::new_for_recipes(&search_params, num_recipes, false),
-            searchbar: SearchbarData::from_params(search_params),
-            share: ShareData {
-                is_from_host: false,
-                is_shared: false,
-            },
+            pagination: Some(PaginationData::new_for_recipes(
+                &search_params,
+                num_recipes,
+                false,
+            )),
+            searchbar: Some(SearchbarData::from_params(search_params)),
+            share: None,
             recipes,
         },
         state.data_dir,
     )
-        .into_response()
+    .into_response()
+}
+
+/// Handles the add recipe page.
+pub async fn recipes_add_handler(
+    ctx: CtxW,
+    header_map: HeaderMap,
+    OriginalUri(uri): OriginalUri,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    templates::recipes::add_page(
+        uri.path(),
+        Data {
+            is_admin: ctx.0.user_id() == 1,
+            is_authenticated: true,
+            is_autologin: state.config.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            about: AboutData {
+                is_update_available: false,
+            },
+            pagination: None,
+            searchbar: None,
+            share: None,
+            recipes: vec![],
+        },
+    )
 }
 
 /// Handles viewing a recipe.
 pub async fn recipe_view_handler(
     ctx: CtxW,
-    headers: HeaderMap,
+    header_map: HeaderMap,
     Path(recipe_id): Path<i64>,
-    uri: Uri,
+    OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
@@ -157,11 +195,11 @@ pub async fn recipe_view_handler(
             is_admin: user_id == 1,
             is_authenticated: true,
             is_autologin: state.config.is_autologin,
-            is_hx_request: is_hx_request(headers),
+            is_hx_request: is_hx_request(&header_map),
             about: AboutData {
                 is_update_available: false,
             },
-            pagination: PaginationData {
+            pagination: Some(PaginationData {
                 left: vec![],
                 middle: vec![],
                 right: vec![],
@@ -179,15 +217,15 @@ pub async fn recipe_view_handler(
                 results_per_page: 0,
                 url: "".to_string(),
                 url_queries: "".to_string(),
-            },
-            searchbar: SearchbarData {
+            }),
+            searchbar: Some(SearchbarData {
                 sort: String::from("a-z"),
                 term: String::from("a-z"),
-            },
-            share: ShareData {
+            }),
+            share: Some(ShareData {
                 is_from_host: true,
                 is_shared: false,
-            },
+            }),
             recipes: view,
         },
     )

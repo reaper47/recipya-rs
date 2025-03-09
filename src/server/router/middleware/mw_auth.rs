@@ -1,7 +1,7 @@
 use axum::body::Body;
-use axum::extract::{FromRequestParts, OriginalUri, State};
+use axum::extract::{FromRequestParts, State};
+use axum::http::Request;
 use axum::http::request::Parts;
-use axum::http::{Request, Uri};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::Serialize;
@@ -55,19 +55,7 @@ pub enum CtxExtError {
 /// Middleware that ensures a valid authentication context.
 pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -> Result<Response> {
     if ctx.is_err() {
-        let intended_url = req
-            .uri()
-            .path_and_query()
-            .map(|pq| pq.as_str())
-            .unwrap_or("/");
-
-        let redirect_to = if req.method().is_safe() {
-            format!("/auth/login?redirect_to={}", intended_url)
-        } else {
-            "/auth/login".to_string()
-        };
-
-        return Ok(Redirect::to(&redirect_to).into_response());
+        return Ok(Redirect::to("/auth/login").into_response());
     }
 
     Ok(next.run(req).await)
@@ -77,11 +65,10 @@ pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -
 pub async fn mw_ctx_resolver(
     state: State<AppState>,
     cookies: Cookies,
-    OriginalUri(uri): OriginalUri,
     mut req: Request<Body>,
     next: Next,
 ) -> Response {
-    let ctx_ext_result = ctx_resolve(state, &cookies, uri).await;
+    let ctx_ext_result = ctx_resolve(state, &cookies).await;
 
     if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie)) {
         cookies.remove(Cookie::from(AUTH_TOKEN))
@@ -94,7 +81,7 @@ pub async fn mw_ctx_resolver(
 }
 
 /// Resolves the context (user authentication) from cookies and the application state.
-async fn ctx_resolve(state: State<AppState>, cookies: &Cookies, uri: Uri) -> CtxExtResult {
+async fn ctx_resolve(state: State<AppState>, cookies: &Cookies) -> CtxExtResult {
     if state.config.is_autologin {
         return Ctx::new(1)
             .map(CtxW)

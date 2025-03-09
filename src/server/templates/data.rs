@@ -15,9 +15,9 @@ pub struct Data {
     pub is_hx_request: bool,
 
     pub about: AboutData,
-    pub pagination: PaginationData,
-    pub searchbar: SearchbarData,
-    pub share: ShareData,
+    pub pagination: Option<PaginationData>,
+    pub searchbar: Option<SearchbarData>,
+    pub share: Option<ShareData>,
     pub recipes: Vec<ViewRecipe>,
 }
 

@@ -1,23 +1,282 @@
+use maud::{Markup, PreEscaped, html};
+use url::Url;
+
 use crate::core::config::DataDir;
 use crate::core::model::RecipeDetails;
-use crate::server::templates::data::{is_file_exists, Data};
+use crate::server::templates::data::{Data, is_file_exists};
 use crate::server::templates::helpers::cut_string;
 use crate::server::templates::icons::{
     icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
     icon_ellipsis_vertical, icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,
 };
 use crate::server::templates::layouts;
+use crate::server::templates::layouts::{render_desktop_nav, render_recipe_button};
 use crate::server::templates::pagination::pagination;
 use crate::server::templates::search::{search_help, searchbar};
 use crate::server::{Error, Result};
-use maud::{html, Markup, PreEscaped};
-use url::Url;
+
+/// Renders the add recipe page.
+pub fn add_page(path: &str, data: Data) -> Markup {
+    html! {
+        @if data.is_hx_request {
+            title hx-swap-oob="true" { "Add Recipe | Recipya" }
+            (render_recipe_button(true, false))
+            (render_desktop_nav(path, true))
+            (render_add_page())
+        } @else {
+            (layouts::main("Add Recipe", path, &data, render_add_page()))
+        }
+    }
+}
+
+fn render_add_page() -> Markup {
+    html! {
+        div class="grid w-full h-full grid-cols-1 gap-4 p-4 md:grid-cols-2 md:grid-rows-[auto_1fr] xl:m-auto xl:max-w-6xl md:grid-flow-col" {
+            div class="card card-border bg-base-200 h-96 shadow-sm rounded-xl" {
+                figure {
+                    img class="object-cover w-full h-40 rounded-t-xl"
+                        src="/public/img/recipes/new/manual.webp"
+                        alt="Writing on a piece of paper with a traditional pen.";
+                }
+                div class="card-body" {
+                    h2 class="card-title" { "Manual" }
+                    p { "Add a new recipe by filling out its content manually." }
+                    div class="card-actions justify-end" {
+                        button
+                            class="btn btn-outline btn-sm btn-block"
+                            hx-get="/recipes/add/manual"
+                            hx-target="#content"
+                            hx-push-url="true" {
+                            "Fill In"
+                        }
+                    }
+                }
+            }
+            div class="card card-border bg-base-200 h-96 shadow-sm rounded-xl" {
+                figure {
+                    img class="object-cover w-full h-40 rounded-t-xl"
+                        src="/public/img/recipes/new/import.webp"
+                        alt="Earth connected from end-to-end by telecommunications.";
+                }
+                div class="card-body" {
+                    h2 class="card-title" { "Website" }
+                    p {
+                        "Fetch a recipe or recipes from "
+                        button
+                            class="underline"
+                            hx-get="/recipes/supported-websites"
+                            hx-target="#search-results"
+                            onclick="document.querySelector('#supported-websites-dialog').showModal()" {
+                            "supported"
+                        }
+                        " websites. If the website is unsupported, the software will try to extract "
+                        "the recipe, but there is no guarantee of success."
+                    }
+                    div class="card-actions justify-end" {
+                        button class="btn btn-outline btn-sm btn-block" onclick="document.querySelector('#websites-dialog').showModal()" {
+                            "Fetch"
+                        }
+                    }
+                }
+            }
+            div class="card card-border bg-base-200 h-96 shadow-sm rounded-xl" {
+                figure {
+                    img class="object-cover w-full h-40 rounded-t-xl"
+                        src="/public/img/recipes/new/camera.webp"
+                        alt="A cellphone used as a camera.";
+                }
+                div class="card-body" {
+                    h2 class="card-title" { "Scan" }
+                    p { "Upload the image files or PDF of the recipe you want to add or take a picture using your device's camera." }
+                    div class="card-actions" {
+                        button class="btn btn-outline btn-sm btn-block" type="button" onclick="document.querySelector('#add-ocr-dialog').showModal()" {
+                            "Upload"
+                        }
+                    }
+                }
+            }
+            div class="card card-border bg-base-200 h-96 shadow-sm rounded-xl" {
+                figure {
+                    img class="object-cover w-full h-40 rounded-t-xl"
+                        src="/public/img/recipes/new/schema.webp"
+                        alt="A bunch of shipping containers on a cargo boat.";
+                }
+                div class="card-body" {
+                    h2 class="card-title" { "Import" }
+                    p {
+                        "Import exported recipes from "
+                        button class="underline cursor-pointer"
+                            hx-get="/recipes/supported-applications"
+                            hx-target="#application-results"
+                            onclick="document.querySelector('#supported-apps-import-dialog').showModal()" {
+                            "various apps,"
+                        }
+                        " plain text files or files that adhere to the "
+                        a href="https://schema.org/Recipe" target="_blank" class="link" { "recipe schema " }
+                        "standard. You may import all your Mealie or Tandoor recipes from the "
+                        b { "Data" }
+                        " tab in the settings."
+                    }
+                    p {
+                        "You may also download recipe schema files directly using the "
+                        a class="link tooltip"
+                          data-tip="Simply drag this link to your bookmarks bar, and click the bookmark while on a recipe website. If a recipe schema downloads successfully, you can import it here."
+                          href="javascript:(function(){
+                                let recipeCount = 0;
+                                const jsonSchemaScripts = ([...document.querySelectorAll('script[type=%22application/ld+json%22]')]);
+                                for (const jsonSchemaScript of jsonSchemaScripts) {
+                                    let data = JSON.parse(jsonSchemaScript.innerHTML);
+                                    if (Array.isArray(data) && data.length > 0) {
+                                        data = data[0];
+                                    }
+                                    if (data['@type'] !== 'Recipe') {
+                                        continue;
+                                    }
+                                    const blob = new Blob([JSON.stringify(data)]);
+                                    const url = URL.createObjectURL(blob, { type: 'application/json' });
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = data.name ? data.name + '.json' : 'recipe.json';
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                    recipeCount++;
+                                } if (recipeCount === 0) {
+                                    alert('Unable to find a Recipe schema on this site!');
+                                }
+                            })()" {
+                            "Recipya Bookmarklet"
+                        }
+                        "."
+                    }
+                    div class="card-actions" {
+                        button class="btn btn-outline btn-sm btn-block" onclick="document.querySelector('#import-recipes-dialog').showModal()" {
+                            "Import"
+                        }
+                    }
+                }
+            }
+            dialog #websites-dialog class="modal" {
+                div class="modal-box" {
+                    form method="dialog" {
+                        button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
+                    }
+                    h3 class="font-bold text-lg" { "Fetch recipes from websites" }
+                    form class="py-4" hx-post="/recipes/add/website" hx-swap="none" _=(PreEscaped("on submit call #websites-dialog.close() then set me.querySelector('textarea').value to ''")) {
+                        div class="grid mb-4" {
+                            // TODO: Validate whether we need floating-label.
+                            label class="floating-label" {
+                                span { "Enter one or more URLs, each on a new line." }
+                                // TODO: Validate whether we can inline the placeholder line breaks.
+                                textarea class="textarea whitespace-pre-line" name="urls" rows="5" placeholder="URL 1
+    URL 2
+    URL 3
+    URL 4
+    etc..." {}
+                            }
+                        }
+                        button class="btn btn-block btn-primary btn-sm" { "Submit" }
+                    }
+                }
+            }
+            dialog #supported-websites-dialog class="modal" {
+                div class="modal-box h-2/3" {
+                    form method="dialog" {
+                        button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
+                    }
+                    h3 class="mb-1" {
+                        label class="floating-label" {
+                            input type="search" placeholder="Search a website" class="input input-sm w-11/12"
+                                  _=(PreEscaped("on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"));
+                        }
+                    }
+                    div class="overflow-x-auto" {
+                        table class="table table-zebra table-sm" {
+                            thead {
+                                tr class="text-center" {
+                                    th class="py-1" { "Number" }
+                                    th class="py-1" { "Website" }
+                                }
+                            }
+                            tbody #search-results {}
+                        }
+                    }
+                }
+            }
+            dialog #supported-apps-import-dialog .modal {
+                div class="modal-box h-2/3" {
+                    form method="dialog" {
+                        button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
+                    }
+                    h3 class="mb-1" {
+                        label class="floating-label" {
+                            input type="search" placeholder="Search an application" class=(PreEscaped("input input-bordered input-sm w-11/12"))
+                                _=(PreEscaped("on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"));
+                        }
+                    }
+                    div class="overflow-x-auto" {
+                        table class="table table-zebra table-sm" {
+                            thead {
+                                tr class="text-center" {
+                                    th class="py-1" { "Number" }
+                                    th class="py-1" { "Application" }
+                                }
+                            }
+                            tbody #application-results {}
+                        }
+                    }
+                }
+            }
+            dialog #add-ocr-dialog .modal {
+                div class="modal-box" {
+                    form method="dialog" {
+                        button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
+                    }
+                    h3 class="font-bold text-lg" { "Scan Recipe" }
+                    form .py-4 hx-post="/recipes/add/ocr" hx-encoding="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" _="on submit call document.querySelector('#add-ocr-dialog').close()" {
+                        div class="grid mb-4" {
+                            label for="add-ocr-files-input" class="floating-label text-sm font-medium mb-1" {
+                                "Select your recipe's images ordered by page or a recipe document in the PDF format."
+                            }
+                            input #add-ocr-files-input type="file" name="files" accept=".jpg, .jpeg, .png, .bmp, .tiff, .heif, .pdf" multiple
+                                class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none";
+                        }
+                        button class="btn btn-block btn-primary btn-sm" {
+                            "Submit"
+                        }
+                    }
+                }
+            }
+            dialog #import-recipes-dialog .modal {
+                div .modal-box {
+                    form method="dialog" {
+                        button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
+                    }
+                    h3 class="font-bold text-lg" { "Import Recipes" }
+                    form .py-4 hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" {
+                        div class="grid mb-4" {
+                            label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1" {
+                                "Choose files in the .json, .txt, .zip or other application format."
+                            }
+                            input #import-dialog-file type="file" name="files" accept=".cml,.crumb,.json,.mxp,.paprikarecipes,.txt,.zip" multiple
+                                  class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none";
+                        }
+                        button type="submit" class="btn btn-block btn-primary btn-sm" onclick="document.querySelector('#import-recipes-dialog').close()" {
+                            "Submit"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 /// Renders the index page of recipes.
 pub fn index(path: &str, data: Data, data_dir: DataDir) -> Markup {
     if data.is_hx_request {
         html! {
             title hx-swap-oob="true" { "Recipes | Recipya" }
+            (render_recipe_button(true, true))
+            (render_desktop_nav(path, true))
             (render_index(&data, &data_dir))
         }
     } else {
@@ -49,11 +308,19 @@ fn render_index(data: &Data, data_dir: &DataDir) -> Markup {
                             form
                                 class="w-72 flex md:w-96"
                                 hx-get="/recipes/search"
-                                hx-vals=(PreEscaped(format!("{{\"page\": {}}}", data.pagination.search.current_page)))
+                                hx-vals=(
+                                    if let Some(p) = &data.pagination {
+                                        PreEscaped(format!("{{\"page\": {}}}", p.search.current_page))
+                                    } else {
+                                        PreEscaped(String::new())
+                                    }
+                                )
                                 hx-target="#list-recipes"
                                 hx-push-url="true"
                                 hx-trigger="submit, change target:.sort-option" {
-                                (searchbar(&data.searchbar))
+                                @if let Some(s) = &data.searchbar {
+                                    (searchbar(s))
+                                }
                             }
                         }
                     }
@@ -62,7 +329,9 @@ fn render_index(data: &Data, data_dir: &DataDir) -> Markup {
                 div #list-recipes class="min-h-[79vh]" {
                     (list_recipes(&data, &data_dir))
                 }
-                (pagination(&data.pagination))
+                @if let Some(p) = &data.pagination {
+                    (pagination(p))
+                }
         }
     }
 }
@@ -73,7 +342,13 @@ pub fn list_recipes(data: &Data, data_dir: &DataDir) -> Markup {
         @if data.is_hx_request {
             input #search-recipes .w-full type="search" hx-swap-oob="true" name="q"
                  placeholder="Search for recipes..."
-                 value=(data.searchbar.term)
+                 value=(
+                    if let Some(search) = &data.searchbar {
+                        &search.term
+                    } else {
+                        ""
+                    }
+                 )
                  _=(PreEscaped("on keyup
                        if event.target.value !== '' then
                            remove .md:block from #search_shortcut
@@ -230,8 +505,8 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
     let recipe = &recipe_details.recipe;
 
     Ok(html! {
-        @if data.share.is_shared {
-            dialog #share-dialog .modal {
+        @if matches!(&data.share, Some(share) if share.is_shared) {
+             dialog #share-dialog .modal {
                 div class="modal-box w-4/5 sm:w-96" {
                     div #share-dialog-result {}
                     div class="modal-action block mt-4" {
@@ -454,7 +729,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                     (icon_bulb_on())
                 }
 
-                @if data.is_authenticated && data.share.is_from_host {
+                @if data.is_authenticated && matches!(&data.share, Some(share) if share.is_from_host) {
                     button class="ml-2 hidden sm:block"
                         title="Edit recipe"
                         hx-get=(format!("/recipes/{recipe_id}/edit"))
@@ -488,7 +763,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                                 "Edit"
                             }
                         }
-                        @if !data.share.is_shared {
+                        @if !matches!(&data.share, Some(share) if share.is_shared) {
                             li {
                                 a title="Share recipe"
                                     hx-post=(format!("/recipes/{recipe_id}/share"))
@@ -522,7 +797,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                                 "Print"
                             }
                         }
-                        @if data.share.is_from_host {
+                        @if matches!(&data.share, Some(share) if share.is_from_host) {
                             li {
                                 a title="Delete recipe"
                                     hx-delete=(format!("/recipes/{recipe_id}"))
@@ -538,14 +813,13 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                 }
             }
             span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
-                @if data.share.is_shared {
-                    @if !data.share.is_from_host {
-                        button class="mr-2"
-                            title="Add recipe to collection"
-                            hx-get=(format!("/recipes/{recipe_id}/share/add"))
-                            hx-push-url="true" {
-                            (icon_plus_circle())
-                        }
+                @if matches!(&data.share, Some(share) if share.is_shared) &&
+                    !matches!(&data.share, Some(share) if share.is_from_host) {
+                    button class="mr-2"
+                        title="Add recipe to collection"
+                        hx-get=(format!("/recipes/{recipe_id}/share/add"))
+                        hx-push-url="true" {
+                        (icon_plus_circle())
                     }
                 } @else {
                     button title="Share recipe" class="mr-2 hidden sm:block"
@@ -569,7 +843,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                 button class="mr-2 hidden sm:block" title="Print recipe" _="on click print()" {
                     (icon_printer())
                 }
-                @if data.share.is_from_host {
+                @if matches!(&data.share, Some(share) if share.is_from_host) {
                     button title="Delete recipe"
                         class="mr-2 hidden sm:block"
                         hx-delete=(format!("/recipes/{recipe_id}"))

@@ -152,6 +152,7 @@ This project was mainly coded to blasting the following albums:
 - [Beast In Black - Dark Connection](https://www.youtube.com/watch?v=7NyON-NzBr4)
 - [Cattle Decapitation - Terrasite](https://www.youtube.com/watch?v=x6rEDMqM36I)
 - [Ensiferum - From Afar](https://www.youtube.com/watch?v=6r8OPu3SRSM)
+- [Kahlmah - Swamplord](https://www.youtube.com/watch?v=FhMsOB88dfo&list=PLkROH3Eqs0T9b5E2WDDOS0JgYLf24_dNs)
 - [Lofi Girl - lofi hip hop radio](https://www.youtube.com/watch?v=jfKfPfyJRdk)
 - [Lofi Girl - synthwave radio](https://www.youtube.com/watch?v=4xDzrJKXOOY)
 - [Mozart - Requiem Dm](https://www.youtube.com/watch?v=pBGVfwOLU1w0)
@@ -159,4 +160,4 @@ This project was mainly coded to blasting the following albums:
 - [Pain - You Only Live Twice](https://www.youtube.com/watch?v=obgCEoLzLs4)
 - [Sonata Arctica - Talviyö](https://www.youtube.com/watch?v=x6rEDMqM36I)
 - [Wintersun - Wintersun](https://www.youtube.com/watch?v=W0M3HAMus7g&pp=ygUPd2ludGVyc3VuIGFsYnVt)
-- [Wintersun - Time II](https://www.youtube.com/watch?v=MoK4Cb0TRw8)
+- [Wintersun - Time I & II](https://www.youtube.com/watch?v=dl3pkdAzHrw)
