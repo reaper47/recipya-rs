@@ -8,27 +8,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/auth.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/handlers/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/middleware/mw_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/middleware/mw_auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/core.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/data.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/icons.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/layouts.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/layouts.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/pagination.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/pagination.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

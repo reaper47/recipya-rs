@@ -12,8 +12,8 @@ pub fn is_hx_request(header_map: &HeaderMap) -> bool {
 mod tests {
     use super::*;
 
-    use axum::http::HeaderMap;
     use axum::http::header::HeaderValue;
+    use axum::http::HeaderMap;
 
     #[test]
     fn test_hx_request_present_and_true() {
@@ -52,7 +52,7 @@ mod tests {
             HeaderValue::from_static("TRUE"),
         );
 
-        assert!(!is_hx_request(&headers)); // Should be case-sensitive
+        assert!(!is_hx_request(&headers));
     }
 
     #[test]
@@ -63,6 +63,6 @@ mod tests {
             HeaderValue::from_static(" true "),
         );
 
-        assert!(!is_hx_request(&headers)); // Whitespace-sensitive
+        assert!(!is_hx_request(&headers));
     }
 }
