@@ -2,10 +2,10 @@ use diesel::internal::derives::multiconnection::chrono::NaiveTime;
 use std::path::Path;
 use uuid::Uuid;
 
-use crate::core::model::RecipeDetails;
 use crate::core::model::recipe::Times;
-use crate::server::Result;
+use crate::core::model::RecipeDetails;
 use crate::server::router::SearchParams;
+use crate::server::Result;
 
 /// Data holds data to pass on to the templates.
 pub struct Data {
@@ -15,9 +15,9 @@ pub struct Data {
     pub is_hx_request: bool,
 
     pub about: AboutData,
-    pub pagination: PaginationData,
-    pub searchbar: SearchbarData,
-    pub share: ShareData,
+    pub pagination: Option<PaginationData>,
+    pub searchbar: Option<SearchbarData>,
+    pub share: Option<ShareData>,
     pub recipes: Vec<ViewRecipe>,
 }
 

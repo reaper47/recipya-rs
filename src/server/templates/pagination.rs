@@ -1,6 +1,6 @@
 use crate::server::templates::data::PaginationData;
 use crate::server::templates::helpers::mul_all;
-use maud::{html, Markup};
+use maud::{Markup, html};
 
 /// Renders the pagination strip.
 pub(super) fn pagination(p: &PaginationData) -> Markup {

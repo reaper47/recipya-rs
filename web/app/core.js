@@ -13,41 +13,8 @@ const pathsShowRecipesSidebar = [
 ];
 
 function showAll() {
-    showAddRecipeButton();
-    showAddCookbookButton();
-    showCookbookTitle();
-    showRecipesSidebar();
-}
-
-// TODO: Move this logic to Maud templates.
-function showAddRecipeButton() {
-    const isRecipe = recipesPattern.test(location.pathname) || recipesSharePattern.test(location.pathname);
-    const el = document.querySelector("#add-recipe");
-
-    if (isRecipe ||
-        cookbooksPattern.test(location.pathname) ||
-        cookbooksSharePattern.test(location.pathname) ||
-        reportsPattern.test(location.pathname)) {
-        el?.classList.add("hidden");
-    } else {
-        el?.classList.remove("hidden");
-    }
-}
-
-// TODO: Move this logic to Maud templates.
-function showAddCookbookButton() {
-    const el = document.querySelector("#add-cookbook");
-    if (el) {
-        el.setAttribute("hx-target", "#content");
-        el.setAttribute("hx-swap", "innerHTML")
-        htmx.process(el);
-    }
-
-    if (location.pathname === "/cookbooks") {
-        el?.classList.remove("hidden");
-    } else {
-        el?.classList.add("hidden");
-    }
+    //showCookbookTitle();
+    //showRecipesSidebar();
 }
 
 function showCookbookTitle() {
