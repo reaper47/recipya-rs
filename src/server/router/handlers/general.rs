@@ -1,6 +1,6 @@
 use crate::core::model::user::User;
-use crate::server::router::middleware::mw_auth::CtxW;
 use crate::server::AppState;
+use crate::server::router::middleware::mw_auth::CtxW;
 use axum::extract::ws::WebSocket;
 use axum::extract::{State, WebSocketUpgrade};
 use axum::response::{IntoResponse, Redirect};

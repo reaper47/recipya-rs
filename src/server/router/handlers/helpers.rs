@@ -12,8 +12,8 @@ pub fn is_hx_request(header_map: &HeaderMap) -> bool {
 mod tests {
     use super::*;
 
-    use axum::http::header::HeaderValue;
     use axum::http::HeaderMap;
+    use axum::http::header::HeaderValue;
 
     #[test]
     fn test_hx_request_present_and_true() {

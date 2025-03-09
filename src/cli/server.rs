@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 
 use axum::middleware::from_fn_with_state;
-use rand::distr::Alphanumeric;
 use rand::Rng;
+use rand::distr::Alphanumeric;
 use tokio::net::TcpListener;
 use tokio::signal;
 use tower_cookies::CookieManagerLayer;
@@ -13,7 +13,7 @@ use crate::core::model::user::{User, UserForCreate};
 use crate::core::repository::ModelManager;
 use crate::error::{Error, Result};
 use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
-use crate::server::{router, AppState};
+use crate::server::{AppState, router};
 
 /// Initializes and starts Recipya's web server.
 pub async fn server() -> Result<()> {
@@ -59,22 +59,29 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
                 .map(char::from)
                 .collect::<String>();
 
-            match User::new(mm, UserForCreate {
-                email: admin_email.clone(),
-                password_clear: password.clone(),
-            }).await {
+            match User::new(
+                mm,
+                UserForCreate {
+                    email: admin_email.clone(),
+                    password_clear: password.clone(),
+                },
+            )
+            .await
+            {
                 Ok(user) => {
-                    info!("Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again.");
+                    info!(
+                        "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
+                    );
                     if let Err(err) = user.set_is_confirmed(mm).await {
                         error!("Error confirming autologin user: {err}");
                         return Err(Error::Server(err.to_string()));
                     }
                     Ok(())
                 }
-                Err(err) => Err(Error::Server(err.to_string()))
+                Err(err) => Err(Error::Server(err.to_string())),
             }
         }
-        Err(err) => Err(Error::Server(err.to_string()))
+        Err(err) => Err(Error::Server(err.to_string())),
     }
 }
 
