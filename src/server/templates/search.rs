@@ -1,4 +1,4 @@
-use maud::{html, Markup, PreEscaped};
+use maud::{Markup, PreEscaped, html};
 
 use crate::server::templates::data::SearchbarData;
 use crate::server::templates::icons::{

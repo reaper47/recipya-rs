@@ -1,4 +1,4 @@
-use maud::{html, Markup, DOCTYPE};
+use maud::{DOCTYPE, Markup, html};
 
 use crate::server::templates::core::{head, toast, toast_ws};
 use crate::server::templates::data::Data;
@@ -34,7 +34,7 @@ pub fn main(title: &str, path: &str, data: &Data, content: Markup) -> Markup {
                           hx-get=@if data.is_authenticated { "/" }
                           hx-push-url=@if data.is_authenticated { "true" }
                           hx-target=@if data.is_authenticated { "#content" }
-                          href=@if !data.is_authenticated { "/" } {  
+                          href=@if !data.is_authenticated { "/" } {
                             img src="/public/android-chrome-192x192.png" alt="Logo" style="width: 2rem";
                             "Recipya"
                         }
@@ -221,7 +221,7 @@ pub(super) fn render_desktop_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
     html! {
         aside #desktop-nav class={
                 @if is_visible { "hidden md:block" } @else { " hidden" }
-            } 
+            }
             hx-swap-oob=(is_hx_swap_oob) {
             ul class="menu w-full menu-sm bg-base-300 rounded-box h-full" style="border-radius: 0" {
                 li #recipes-sidebar-recipes

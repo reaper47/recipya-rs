@@ -1,18 +1,18 @@
 use axum::body::Body;
 use axum::extract::{FromRequestParts, State};
-use axum::http::request::Parts;
 use axum::http::Request;
+use axum::http::request::Parts;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::core::auth::token::{validate_web_token, Token};
+use crate::core::auth::token::{Token, validate_web_token};
 use crate::core::model::user::{User, UserForAuth};
-use crate::core::support::token::{set_token_cookie, AUTH_TOKEN};
+use crate::core::support::token::{AUTH_TOKEN, set_token_cookie};
+use crate::server::AppState;
 use crate::server::error::{Error, Result};
 use crate::server::router::handlers::context::Ctx;
-use crate::server::AppState;
 
 /// A wrapper around the `Ctx` type for use in request extraction.
 #[derive(Debug, Clone)]
@@ -57,7 +57,7 @@ pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -
     if ctx.is_err() {
         return Ok(Redirect::to("/auth/login").into_response());
     }
-    
+
     Ok(next.run(req).await)
 }
 

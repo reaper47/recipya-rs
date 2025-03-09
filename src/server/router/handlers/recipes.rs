@@ -6,15 +6,15 @@ use reqwest::StatusCode;
 use tracing::error;
 
 use crate::core::model::Recipe;
+use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::router::SearchParams;
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
 };
-use crate::server::{templates, AppState};
+use crate::server::{AppState, templates};
 use crate::server::{Error, Result};
 
 /// Handles deleting a user's recipe.
@@ -134,24 +134,32 @@ pub async fn recipes_handler(
         },
         state.data_dir,
     )
-        .into_response()
+    .into_response()
 }
 
 /// Handles the add recipe page.
-pub async fn recipes_add_handler(ctx: CtxW, header_map: HeaderMap, OriginalUri(uri): OriginalUri, State(state): State<AppState>) -> impl IntoResponse {
-    templates::recipes::add_page(uri.path(), Data {
-        is_admin: ctx.0.user_id() == 1,
-        is_authenticated: true,
-        is_autologin: state.config.is_autologin,
-        is_hx_request: is_hx_request(&header_map),
-        about: AboutData {
-            is_update_available: false,
+pub async fn recipes_add_handler(
+    ctx: CtxW,
+    header_map: HeaderMap,
+    OriginalUri(uri): OriginalUri,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    templates::recipes::add_page(
+        uri.path(),
+        Data {
+            is_admin: ctx.0.user_id() == 1,
+            is_authenticated: true,
+            is_autologin: state.config.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            about: AboutData {
+                is_update_available: false,
+            },
+            pagination: None,
+            searchbar: None,
+            share: None,
+            recipes: vec![],
         },
-        pagination: None,
-        searchbar: None,
-        share: None,
-        recipes: vec![],
-    })
+    )
 }
 
 /// Handles viewing a recipe.

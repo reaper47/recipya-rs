@@ -2,10 +2,10 @@ use diesel::internal::derives::multiconnection::chrono::NaiveTime;
 use std::path::Path;
 use uuid::Uuid;
 
-use crate::core::model::recipe::Times;
 use crate::core::model::RecipeDetails;
-use crate::server::router::SearchParams;
+use crate::core::model::recipe::Times;
 use crate::server::Result;
+use crate::server::router::SearchParams;
 
 /// Data holds data to pass on to the templates.
 pub struct Data {
