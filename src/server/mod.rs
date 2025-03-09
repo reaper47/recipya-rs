@@ -103,6 +103,7 @@ pub mod test_utils {
         ))
     }
 
+    /// Provides a default config for the tests.
     pub fn default_config() -> Config {
         Config {
             base_url: String::from("http://localhost:8078"),
@@ -420,6 +421,18 @@ pub mod test_utils {
             assert!(!text.contains(s), "expected `{s}` not to be in html");
         }
 
+        Ok(())
+    }
+
+    /// Asserts that the user cannot access the specified URI.
+    pub async fn assert_must_be_logged_in(uri: &str) -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let server = build_server_anonymous(config).await?;
+
+        let res = server.get(uri).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/auth/login");
         Ok(())
     }
 }
