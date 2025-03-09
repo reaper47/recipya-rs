@@ -71,22 +71,22 @@ pub mod test_utils {
     use axum::Router;
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
-    use diesel::{Connection, sql_query};
+    use diesel::{sql_query, Connection};
     use tower_cookies::{Cookie, CookieManagerLayer};
     use uuid::Uuid;
 
-    use crate::core::auth::token::{Token, generate_web_token};
+    use crate::core::auth::token::{generate_web_token, Token};
     use crate::core::config::Config;
     use crate::core::model::recipe::{
         NutritionForCreate, RecipeForCreate, Sections, TimesForCreate, ToolForCreate,
         VideoForCreate,
     };
     use crate::core::model::user::{User, UserForCreate};
-    use crate::core::repository::ModelManager;
     use crate::core::repository::pool::make_db_pool;
+    use crate::core::repository::ModelManager;
     use crate::core::support::token::AUTH_TOKEN;
-    use crate::server::AppState;
     use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
+    use crate::server::AppState;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -103,6 +103,7 @@ pub mod test_utils {
         ))
     }
 
+    /// Provides a default config for the tests.
     pub fn default_config() -> Config {
         Config {
             base_url: String::from("http://localhost:8078"),
@@ -158,8 +159,8 @@ pub mod test_utils {
                 "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}'",
                 self.db_name
             ))
-            .execute(&mut conn)
-            .expect("Error executing pg_terminate_backend query");
+                .execute(&mut conn)
+                .expect("Error executing pg_terminate_backend query");
 
             sql_query(format!("DROP DATABASE \"{}\"", self.db_name))
                 .execute(&mut conn)
@@ -257,7 +258,7 @@ pub mod test_utils {
                 password_clear: "12345678".to_string(),
             },
         )
-        .await?;
+            .await?;
 
         let user = User::get_user_by_email(&mm, &email)
             .await?
@@ -295,7 +296,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-        .await?;
+            .await?;
 
         User::new(
             &state.mm,
@@ -304,7 +305,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-        .await?;
+            .await?;
         Ok(app)
     }
 
@@ -317,7 +318,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-        .await?;
+            .await?;
 
         Ok(user)
     }
@@ -420,6 +421,18 @@ pub mod test_utils {
             assert!(!text.contains(s), "expected `{s}` not to be in html");
         }
 
+        Ok(())
+    }
+
+    /// Asserts that the user cannot access the specified URI.
+    pub async fn assert_must_be_logged_in(uri: &str) -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let server = build_server_anonymous(config).await?;
+
+        let res = server.get(uri).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/auth/login");
         Ok(())
     }
 }

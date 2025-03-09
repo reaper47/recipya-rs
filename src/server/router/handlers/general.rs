@@ -1,13 +1,36 @@
+use crate::core::model::user::User;
+use crate::server::router::middleware::mw_auth::CtxW;
+use crate::server::AppState;
 use axum::extract::ws::WebSocket;
 use axum::extract::{State, WebSocketUpgrade};
 use axum::response::{IntoResponse, Redirect};
-
-use crate::server::AppState;
-use crate::server::router::middleware::mw_auth::CtxW;
+use tracing::error;
 
 /// Handles the index page.
 pub async fn index_handler() -> Redirect {
     Redirect::to("/auth/login")
+}
+
+/// Handlers the handler to retrieve the user's initials.
+pub async fn user_initials_handler(ctx: CtxW, State(state): State<AppState>) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+    match User::get_user_by_id(&state.mm, user_id).await {
+        Ok(Some(user)) => {
+            if let Some(first) = user.email.to_uppercase().chars().next() {
+                first.to_string()
+            } else {
+                String::from("A")
+            }
+        }
+        Ok(None) => {
+            error!("User {user_id} does not exist");
+            String::from("A")
+        }
+        Err(err) => {
+            error!("Error getting user: {err}");
+            String::from("A")
+        }
+    }
 }
 
 /// WebSocket connection handler.

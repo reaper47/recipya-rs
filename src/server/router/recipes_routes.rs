@@ -1,11 +1,11 @@
 use axum::routing::get;
-use axum::{Router, middleware};
+use axum::{middleware, Router};
 
-use crate::server::AppState;
 use crate::server::router::handlers::recipes::{
     delete_recipe_handler, recipe_view_handler, recipes_add_handler, recipes_handler,
 };
 use crate::server::router::middleware::mw_auth;
+use crate::server::AppState;
 
 /// Defines the routes for endpoints related to recipes.
 pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
@@ -25,7 +25,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
 #[cfg(test)]
 mod tests {
     use crate::core::config::Config;
-    use crate::server::test_utils::{TestDb, build_server_logged_in};
+    use crate::server::test_utils::{build_server_logged_in, TestDb};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -33,20 +33,13 @@ mod tests {
         use super::*;
         use axum_test::TestResponse;
 
-        use crate::server::test_utils::{assert_html, build_server_anonymous};
+        use crate::server::test_utils::{assert_html, assert_must_be_logged_in};
 
         const BASE_URI: &str = "/recipes/add";
 
         #[tokio::test]
         async fn test_add_recipe_must_be_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
-
-            let res = server.get(BASE_URI).await;
-
-            res.assert_status_see_other();
-            res.assert_header("Location", "/auth/login");
-            Ok(())
+            assert_must_be_logged_in(BASE_URI).await
         }
 
         #[tokio::test]
@@ -96,21 +89,14 @@ mod tests {
     mod tests_recipes {
         use super::*;
         use crate::core::model::Recipe;
+        use crate::server::test_utils::{a_complete_recipe, assert_html, assert_must_be_logged_in};
         use crate::server::AppState;
-        use crate::server::test_utils::{a_complete_recipe, assert_html, build_server_anonymous};
 
         const BASE_URI: &str = "/recipes";
 
         #[tokio::test]
         async fn test_get_recipes_must_be_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
-
-            let res = server.get(BASE_URI).await;
-
-            res.assert_status_see_other();
-            res.assert_header("Location", "/auth/login");
-            Ok(())
+            assert_must_be_logged_in(BASE_URI).await
         }
 
         #[tokio::test]
@@ -168,12 +154,10 @@ mod tests {
         use axum_test::TestResponse;
         use uuid::Uuid;
 
-        use crate::core::model::Recipe;
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
+        use crate::core::model::Recipe;
+        use crate::server::test_utils::{a_complete_recipe, assert_html, assert_must_be_logged_in, build_server_ws};
         use crate::server::AppState;
-        use crate::server::test_utils::{
-            a_complete_recipe, assert_html, build_server_anonymous, build_server_ws,
-        };
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}")
@@ -182,14 +166,7 @@ mod tests {
         // region GET /recipes/{id}
         #[tokio::test]
         async fn test_get_recipe_must_be_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
-
-            let res = server.post(&base_uri(1)).await;
-
-            res.assert_status_see_other();
-            res.assert_header("Location", "/auth/login");
-            Ok(())
+            assert_must_be_logged_in(&base_uri(1)).await
         }
 
         #[tokio::test]
@@ -427,14 +404,7 @@ mod tests {
         // region DELETE /recipes/{id}
         #[tokio::test]
         async fn test_delete_recipe_must_be_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
-
-            let res = server.delete(&base_uri(1)).await;
-
-            res.assert_status_see_other();
-            res.assert_header("Location", "/auth/login");
-            Ok(())
+            assert_must_be_logged_in(&base_uri(1)).await
         }
 
         #[tokio::test]
