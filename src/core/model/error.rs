@@ -16,6 +16,7 @@ pub enum Error {
         entity: &'static str,
         id: i64,
     },
+    Time,
 
     // Modules
     #[from]
@@ -23,6 +24,8 @@ pub enum Error {
 
     // Externals
     Diesel(String),
+    #[from]
+    Fmt(std::fmt::Error),
     #[from]
     Run(RunError),
 }

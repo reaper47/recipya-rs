@@ -284,7 +284,7 @@ mod tests {
         use super::*;
 
         use crate::core::model::user::User;
-        use crate::server::test_utils::{a_complete_recipe, build_server_anonymous};
+        use crate::server::test_utils::{a_complete_recipe_for_create, build_server_anonymous};
 
         #[tokio::test]
         async fn test_count_ok() -> Result<()> {
@@ -298,12 +298,12 @@ mod tests {
                 .await?
                 .expect("no such user");
             for i in 0..5 {
-                let mut recipe = a_complete_recipe();
+                let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
                 let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
             }
             for i in 0..10 {
-                let mut recipe = a_complete_recipe();
+                let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str((i + 1002).to_string().as_str());
                 let _ = Recipe::create(&state.mm, user2.id, &recipe).await?;
             }
@@ -320,7 +320,7 @@ mod tests {
     mod tests_get_page {
         use super::*;
 
-        use crate::server::test_utils::{a_complete_recipe, build_server_anonymous};
+        use crate::server::test_utils::{a_complete_recipe_for_create, build_server_anonymous};
 
         #[tokio::test]
         async fn test_get_page_no_recipes_ok() -> Result<()> {
@@ -349,7 +349,7 @@ mod tests {
             let _ = build_server_anonymous(config.clone()).await?;
             let mut expected = Vec::with_capacity(15);
             for i in 0..15 {
-                let mut recipe = a_complete_recipe();
+                let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
                 let _ = Recipe::create(&state.mm, 1, &recipe).await?;
                 expected.push(recipe.name);

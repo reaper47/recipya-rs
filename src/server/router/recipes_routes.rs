@@ -90,7 +90,9 @@ mod tests {
         use super::*;
         use crate::core::model::Recipe;
         use crate::server::AppState;
-        use crate::server::test_utils::{a_complete_recipe, assert_html, assert_must_be_logged_in};
+        use crate::server::test_utils::{
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in,
+        };
 
         const BASE_URI: &str = "/recipes";
 
@@ -122,7 +124,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
             for i in 0..3 {
-                let mut recipe = a_complete_recipe();
+                let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
                 let _ = Recipe::create(&state.mm, 1, &recipe).await?;
             }
@@ -158,7 +160,7 @@ mod tests {
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
         use crate::server::AppState;
         use crate::server::test_utils::{
-            a_complete_recipe, assert_html, assert_must_be_logged_in, build_server_ws,
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, build_server_ws,
         };
 
         fn base_uri(recipe_id: i64) -> String {
@@ -177,7 +179,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let recipe = a_complete_recipe();
+            let recipe = a_complete_recipe_for_create();
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -197,7 +199,7 @@ mod tests {
                 HeaderValue::from_static("true"),
             );
             let state = AppState::new(config).await?;
-            let recipe = a_complete_recipe();
+            let recipe = a_complete_recipe_for_create();
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -233,7 +235,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let mut recipe = a_complete_recipe();
+            let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = None;
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
@@ -256,7 +258,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let mut recipe = a_complete_recipe();
+            let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             let img1 = Uuid::new_v4();
             recipe.images = Some(vec![img1]);
@@ -280,7 +282,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let mut recipe = a_complete_recipe();
+            let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = Some(vec![Uuid::new_v4(), Uuid::new_v4()]);
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
@@ -304,7 +306,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let mut recipe = a_complete_recipe();
+            let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![VideoForCreate {
                 video: Uuid::new_v4(),
                 duration: None,
@@ -332,7 +334,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let mut recipe = a_complete_recipe();
+            let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
                     video: Uuid::new_v4(),
@@ -369,7 +371,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let mut recipe = a_complete_recipe();
+            let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
                     video: Uuid::new_v4(),
@@ -431,7 +433,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = AppState::new(config).await?;
-            let _recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe()).await?;
+            let _recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
 
             let res = server.delete(&base_uri(1)).await;
 
