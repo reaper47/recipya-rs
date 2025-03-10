@@ -367,7 +367,7 @@ mod tests {
     use super::*;
 
     use crate::server::AppState;
-    use crate::server::test_utils::{TestDb, a_complete_recipe, insert_user};
+    use crate::server::test_utils::{TestDb, a_complete_recipe_for_create, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -520,7 +520,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = AppState::new(config.clone()).await?;
         let user = insert_user(config.clone()).await?;
-        let recipe = a_complete_recipe();
+        let recipe = a_complete_recipe_for_create();
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
@@ -535,7 +535,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = AppState::new(config.clone()).await?;
         let user = insert_user(config.clone()).await?;
-        let mut recipe = a_complete_recipe();
+        let mut recipe = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
         recipe.name = String::from("Duplicate");
 
@@ -552,7 +552,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = AppState::new(config.clone()).await?;
         let user = insert_user(config.clone()).await?;
-        let recipe = a_complete_recipe();
+        let recipe = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
 
         let got = Recipe::create(&state.mm, user.id, &recipe).await;

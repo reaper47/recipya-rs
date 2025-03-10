@@ -71,6 +71,7 @@ pub mod test_utils {
     use axum::Router;
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
+    use diesel::internal::derives::multiconnection::chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use diesel::{Connection, sql_query};
     use tower_cookies::{Cookie, CookieManagerLayer};
     use uuid::Uuid;
@@ -78,10 +79,11 @@ pub mod test_utils {
     use crate::core::auth::token::{Token, generate_web_token};
     use crate::core::config::Config;
     use crate::core::model::recipe::{
-        NutritionForCreate, RecipeForCreate, Sections, TimesForCreate, ToolForCreate,
-        VideoForCreate,
+        Nutrition, NutritionForCreate, RecipeForCreate, Sections, Times, TimesForCreate,
+        ToolForCreate, ToolRecipe, VideoForCreate,
     };
     use crate::core::model::user::{User, UserForCreate};
+    use crate::core::model::{Recipe, RecipeDetails};
     use crate::core::repository::ModelManager;
     use crate::core::repository::pool::make_db_pool;
     use crate::core::support::token::AUTH_TOKEN;
@@ -323,8 +325,9 @@ pub mod test_utils {
         Ok(user)
     }
 
-    /// Prepares a recipe with all its components filled out.
-    pub fn a_complete_recipe() -> RecipeForCreate {
+    /// Constructs a `RecipeForCreate` instance with all components populated, preparing
+    /// it for database insertion.
+    pub fn a_complete_recipe_for_create() -> RecipeForCreate {
         let main_image = Uuid::new_v4();
         let secondary_image = Uuid::new_v4();
         let video = Uuid::new_v4();
@@ -404,6 +407,73 @@ pub mod test_utils {
                     quantity: 1,
                 },
             ],
+        }
+    }
+
+    /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.
+    pub fn a_complete_recipe() -> RecipeDetails {
+        let recipe_c = a_complete_recipe_for_create();
+
+        let images = recipe_c.images.expect("some images");
+        let additional_images = images.last().iter().cloned().cloned().collect::<Vec<_>>();
+
+        let created_date = NaiveDate::from_ymd_opt(2012, 12, 31).expect("end of the world");
+        let updated_date = NaiveDate::from_ymd_opt(2022, 2, 24).expect("russia invaded Ukraine");
+        let time = NaiveTime::from_hms_opt(0, 0, 0).expect("invalid time");
+
+        RecipeDetails {
+            recipe: Recipe {
+                id: 1,
+                name: recipe_c.name,
+                description: recipe_c.description,
+                image: images.first().cloned().or(None),
+                yield_: recipe_c.yield_.ok_or(4).expect("a yield found"),
+                language: String::from("en"),
+                source: recipe_c.source,
+                created_at: NaiveDateTime::new(created_date, time),
+                updated_at: NaiveDateTime::new(updated_date, time),
+                user_id: 1,
+            },
+            additional_images,
+            category: recipe_c.category.expect("a category"),
+            cuisine: recipe_c.cuisine,
+            ingredients: recipe_c.ingredients,
+            instructions: recipe_c.instructions,
+            keywords: recipe_c.keywords,
+            nutrition: recipe_c.nutrition.map(|n| Nutrition {
+                id: 1,
+                recipe_id: 1,
+                calories_kcal: n.calories_kcal,
+                total_carbohydrates: n.total_carbohydrates,
+                sugars_g: n.sugars_g,
+                protein_g: n.protein_g,
+                total_fat_g: n.total_fat_g,
+                saturated_fat_g: n.saturated_fat_g,
+                unsaturated_fat_g: n.unsaturated_fat_g,
+                cholesterol_mg: n.cholesterol_mg,
+                sodium_mg: n.sodium_mg,
+                fiber_g: n.fiber_g,
+                trans_fat_g: n.trans_fat_g,
+                serving_size: n.serving_size,
+            }),
+            times: Times {
+                id: 1,
+                recipe_id: 1,
+                prep_seconds: 3600,
+                cook_seconds: 900,
+                total_seconds: 4500,
+            },
+            tools: recipe_c
+                .tools
+                .iter()
+                .enumerate()
+                .map(|(i, t)| ToolRecipe {
+                    name: t.name.clone(),
+                    quantity: t.quantity,
+                    tool_order: i as i16,
+                })
+                .collect(),
+            videos: vec![],
         }
     }
 

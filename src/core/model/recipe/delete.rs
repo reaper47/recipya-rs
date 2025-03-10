@@ -41,7 +41,7 @@ mod tests {
 
     use crate::core::repository::schema;
     use crate::server::AppState;
-    use crate::server::test_utils::{TestDb, a_complete_recipe, insert_user};
+    use crate::server::test_utils::{TestDb, a_complete_recipe_for_create, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -50,7 +50,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let user = insert_user(config.clone()).await?;
         let state = AppState::new(config.clone()).await?;
-        let recipe_id = Recipe::create(&state.mm, user.id, &a_complete_recipe()).await?;
+        let recipe_id = Recipe::create(&state.mm, user.id, &a_complete_recipe_for_create()).await?;
 
         Recipe::delete(&state.mm, recipe_id, user.id).await?;
 
