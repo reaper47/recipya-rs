@@ -24,6 +24,8 @@ pub enum Error {
     #[from]
     Io(std::io::Error),
     #[from]
+    Jobs(tokio_cron_scheduler::JobSchedulerError),
+    #[from]
     SetGlobalDefault(tracing::subscriber::SetGlobalDefaultError),
     #[from]
     Token(crate::core::auth::token::Error),

@@ -1,6 +1,4 @@
 use diesel::internal::derives::multiconnection::chrono::NaiveTime;
-use std::path::Path;
-use uuid::Uuid;
 
 use crate::core::model::RecipeDetails;
 use crate::core::model::recipe::Times;
@@ -254,12 +252,6 @@ fn duration_to_iso8601(duration: humantime::Duration) -> String {
     }
 
     iso_duration
-}
-
-// TODO: Put this somewhere else because it might be used
-/// Checks whether the media file exists in the file system.
-pub(super) fn is_file_exists(media_file: Uuid, dir: &Path) -> bool {
-    Path::new(dir).join(media_file.to_string()).exists()
 }
 
 #[cfg(test)]

@@ -5,6 +5,7 @@ mod server;
 
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
+use tracing_subscriber::EnvFilter;
 
 use crate::cli::server::server;
 use crate::cli::sponsors::generate_sponsors_image;
@@ -35,6 +36,7 @@ async fn main() -> Result<()> {
         .with_line_number(true)
         .with_thread_ids(true)
         .with_target(false)
+        .with_env_filter(EnvFilter::from_default_env())
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
 
