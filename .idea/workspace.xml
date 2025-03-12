@@ -8,22 +8,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/export.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/jobs/clean_media.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/jobs/error.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/jobs/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/support/fs.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/delete.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/delete.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/support/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -80,7 +87,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Cargo.Run.executor": "Debug",
+    "Cargo.Run.executor": "Run",
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
@@ -214,8 +221,8 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "26-export-recipes-to-markdown",
-    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/server/templates",
+    "git-widget-placeholder": "21-implement-clean-media-job",
+    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -236,25 +243,25 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/core/jobs" />
       <recent name="$PROJECT_DIR$/src/core/scraper" />
       <recent name="$PROJECT_DIR$/src/core/email" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/src/core/support" />
-      <recent name="$PROJECT_DIR$/src/core/auth" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/core/support" />
       <recent name="$PROJECT_DIR$/web/app" />
       <recent name="$PROJECT_DIR$/src/core/model/recipe" />
       <recent name="$PROJECT_DIR$/src/server/router/handlers" />
       <recent name="$PROJECT_DIR$/src/core/repository" />
-      <recent name="$PROJECT_DIR$/src/server/router" />
     </key>
   </component>
   <component name="RsExternalLinterProjectSettings">
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test core::model::recipe::export::tests::test_to_markdown_complete_recipe_ok">
+  <component name="RunManager" selected="Cargo.Run">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />

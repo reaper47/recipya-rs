@@ -1,14 +1,17 @@
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use axum::middleware::from_fn_with_state;
 use rand::Rng;
 use rand::distr::Alphanumeric;
 use tokio::net::TcpListener;
 use tokio::signal;
+use tokio_cron_scheduler::{Job, JobScheduler};
 use tower_cookies::CookieManagerLayer;
 use tracing::{error, info};
 
-use crate::core::config::Config;
+use crate::core::config::{Config, DataDir};
+use crate::core::jobs::clean_media;
 use crate::core::model::user::{User, UserForCreate};
 use crate::core::repository::ModelManager;
 use crate::error::{Error, Result};
@@ -28,6 +31,8 @@ pub async fn server() -> Result<()> {
             error!("Autologin enabled. Error initializing autologin user: {err}");
         }
     }
+
+    start_cron_jobs(Arc::new(state.clone().mm), Arc::new(state.clone().data_dir)).await?;
 
     let router = router(state.clone())
         .await?
@@ -83,6 +88,29 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
         }
         Err(err) => Err(Error::Server(err.to_string())),
     }
+}
+
+async fn start_cron_jobs(mm: Arc<ModelManager>, data_dir: Arc<DataDir>) -> Result<()> {
+    let sched = JobScheduler::new().await?;
+
+    info!("Started CleanMedia job to clean dangling media resources");
+    sched
+        .add(Job::new_async("0 0 0 * * 7", move |_uuid, _l| {
+            info!("Running CleanMedia job");
+
+            let mm = Arc::clone(&mm);
+            let data_dir = Arc::clone(&data_dir);
+
+            Box::pin(async move {
+                if let Err(err) = clean_media(mm, data_dir).await {
+                    error!("CleanMedia: Failed to run job: {err}");
+                }
+            })
+        })?)
+        .await?;
+
+    sched.start().await?;
+    Ok(())
 }
 
 async fn shutdown_signal() {

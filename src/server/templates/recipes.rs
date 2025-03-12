@@ -3,7 +3,8 @@ use url::Url;
 
 use crate::core::config::DataDir;
 use crate::core::model::RecipeDetails;
-use crate::server::templates::data::{Data, is_file_exists};
+use crate::core::support::fs::is_file_exists;
+use crate::server::templates::data::Data;
 use crate::server::templates::helpers::cut_string;
 use crate::server::templates::icons::{
     icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
