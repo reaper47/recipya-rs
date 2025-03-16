@@ -1,11 +1,12 @@
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum::http::{HeaderMap, Uri};
-use axum::response::IntoResponse;
+use axum::response::{Html, IntoResponse};
 use reqwest::StatusCode;
 use tracing::error;
 
 use crate::core::model::Recipe;
+use crate::core::model::website::{ToHtmlTable, Website};
 use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
@@ -229,4 +230,24 @@ pub async fn recipe_view_handler(
             recipes: view,
         },
     )
+}
+
+/// Handles the supported websites endpoint.
+pub async fn supported_websites_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match Website::supported_websites(&state.mm).await {
+        Ok(websites) => Html(websites.to_html_table_rows()).into_response(),
+        Err(err) => {
+            error!("Error fetching supported websites: {err}");
+            let toast = MessageHtmx::error("Error fetching supported websites.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state
+                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
+                    .await;
+            }
+            Error::Database.into_response()
+        }
+    }
 }
