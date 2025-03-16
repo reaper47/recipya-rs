@@ -93,7 +93,7 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
 async fn start_cron_jobs(mm: Arc<ModelManager>, data_dir: Arc<DataDir>) -> Result<()> {
     let sched = JobScheduler::new().await?;
 
-    info!("Started CleanMedia job to clean dangling media resources");
+    info!("Added CleanMedia cron job to clean dangling media resources");
     sched
         .add(Job::new_async("0 0 0 * * 7", move |_uuid, _l| {
             info!("Running CleanMedia job");
