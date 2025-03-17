@@ -1,21 +1,23 @@
+use std::fmt::Write;
+
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
-use axum::http::{HeaderMap, Uri};
+use axum::http::HeaderMap;
 use axum::response::{Html, IntoResponse};
 use reqwest::StatusCode;
 use tracing::error;
 
-use crate::core::model::Recipe;
 use crate::core::model::website::{ToHtmlTable, Website};
-use crate::server::router::SearchParams;
+use crate::core::model::Recipe;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
+use crate::server::router::SearchParams;
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
 };
-use crate::server::{AppState, templates};
+use crate::server::{templates, AppState};
 use crate::server::{Error, Result};
 
 /// Handles deleting a user's recipe.
@@ -135,7 +137,7 @@ pub async fn recipes_handler(
         },
         state.data_dir,
     )
-    .into_response()
+        .into_response()
 }
 
 /// Handles the add recipe page.
@@ -230,6 +232,36 @@ pub async fn recipe_view_handler(
             recipes: view,
         },
     )
+}
+
+/// Handles the supported applications endpoint.
+pub async fn supported_applications_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let applications = [
+        ("AccuChef", "https://www.accuchef.com"),
+        ("ChefTap", "https://cheftap.com"),
+        ("Crouton", "https://crouton.app"),
+        ("Easy Recipe Deluxe", "https://easy-recipe-deluxe.software.informer.com"),
+        ("Kalorio", "https://www.kalorio.de"),
+        ("MasterCook", "https://www.mastercook.com"),
+        ("Paprika", "https://www.paprikaapp.com"),
+        ("Recipe Keeper", "https://recipekeeperonline.com"),
+        ("RecipeSage", "https://recipesage.com"),
+        ("Saffron", "https://www.mysaffronapp.com"),
+    ];
+
+    let mut html = String::new();
+
+    for (i, (name, url)) in applications.into_iter().enumerate() {
+        html.push_str(r#"<tr class="text-center">"#);
+        let _ = write!(html, "<td>{}</td>", i + 1);
+        let _ = write!(html, r#"<td><a class="underline" href="{url}" target="_blank">{name}</a></td>"#);
+        html.push_str("</tr>");
+    }
+
+    Html(html)
 }
 
 /// Handles the supported websites endpoint.
