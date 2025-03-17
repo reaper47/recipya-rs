@@ -8,10 +8,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/model/website.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
     </list>
@@ -186,6 +183,8 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_supported_applications::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_supported_applications::test_returns_list_of_apps_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_supported_websites::test_fetch_websites_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_supported_websites::test_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::static_files_router::tests::test_static_files_routes_ok.executor": "Run",
@@ -220,7 +219,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "51-implement-get-recipessupported-websites",
+    "git-widget-placeholder": "50-implement-get-recipessupported-applications",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -260,7 +259,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test website::tests">
+  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_supported_applications::test_returns_list_of_apps_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -279,8 +278,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::model::website::tests::test_supported_websites_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::website::tests::test_supported_websites_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_supported_applications::test_must_be_logged_in_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_supported_applications::test_must_be_logged_in_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -296,8 +295,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::model::website::tests::test_website_to_html_table_rows" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::website::tests::test_website_to_html_table_rows -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_supported_applications::test_returns_list_of_apps_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_supported_applications::test_returns_list_of_apps_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -348,6 +347,7 @@
       </method>
     </configuration>
     <configuration name="Test website::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
       <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::website::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
@@ -366,19 +366,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test core::model::website::tests::test_supported_websites_ok" />
-      <item itemvalue="Cargo.Test core::model::website::tests::test_website_to_html_table_rows" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_supported_applications::test_must_be_logged_in_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_supported_applications::test_returns_list_of_apps_ok" />
       <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_supported_websites::test_fetch_websites_ok" />
       <item itemvalue="Cargo.Test tests_supported_websites" />
       <item itemvalue="Cargo.Test website::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_supported_applications::test_returns_list_of_apps_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_supported_applications::test_must_be_logged_in_ok" />
         <item itemvalue="Cargo.Test website::tests" />
         <item itemvalue="Cargo.Test tests_supported_websites" />
         <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_supported_websites::test_fetch_websites_ok" />
-        <item itemvalue="Cargo.Test core::model::website::tests::test_website_to_html_table_rows" />
-        <item itemvalue="Cargo.Test core::model::website::tests::test_supported_websites_ok" />
       </list>
     </recent_temporary>
   </component>
