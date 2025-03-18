@@ -37,9 +37,8 @@ diesel::table! {
 }
 
 diesel::table! {
-    categories_recipes (id) {
-        id -> Int8,
-        category_id -> Nullable<Int8>,
+    categories_recipes (category_id, recipe_id) {
+        category_id -> Int8,
         recipe_id -> Int8,
     }
 }
@@ -80,9 +79,8 @@ diesel::table! {
 }
 
 diesel::table! {
-    cuisines_recipes (id) {
-        id -> Int8,
-        cuisine_id -> Nullable<Int8>,
+    cuisines_recipes (cuisine_id, recipe_id) {
+        cuisine_id -> Int8,
         recipe_id -> Int8,
     }
 }
@@ -129,8 +127,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    keywords_recipes (id) {
-        id -> Int8,
+    keywords_recipes (keyword_id, recipe_id) {
         keyword_id -> Int8,
         recipe_id -> Int8,
     }
@@ -287,10 +284,16 @@ diesel::table! {
 }
 
 diesel::table! {
-    users_categories (id) {
-        id -> Int8,
+    users_categories (user_id, category_id) {
         user_id -> Int8,
         category_id -> Int8,
+    }
+}
+
+diesel::table! {
+    users_keywords (user_id, keyword_id) {
+        user_id -> Int8,
+        keyword_id -> Int8,
     }
 }
 
@@ -356,6 +359,8 @@ diesel::joinable!(user_settings -> measurement_systems (measurement_system_id));
 diesel::joinable!(user_settings -> users (user_id));
 diesel::joinable!(users_categories -> categories (category_id));
 diesel::joinable!(users_categories -> users (user_id));
+diesel::joinable!(users_keywords -> keywords (keyword_id));
+diesel::joinable!(users_keywords -> users (user_id));
 diesel::joinable!(users_recipes -> recipes (recipe_id));
 diesel::joinable!(users_recipes -> users (user_id));
 diesel::joinable!(videos_recipes -> recipes (recipe_id));
@@ -392,6 +397,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     user_settings,
     users,
     users_categories,
+    users_keywords,
     users_recipes,
     videos_recipes,
     websites,

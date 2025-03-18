@@ -12,10 +12,8 @@ use crate::core::repository::{ModelManager, schema};
 use crate::server::router::SearchParams;
 
 impl Recipe {
-    /// Retrieves the total number of recipes belonging to a given user.
+    /// Retrieves the total number of recipes that belong to a given user.
     pub async fn count(mm: &ModelManager, user_id: i64) -> Result<i64> {
-        use crate::core::repository::schema;
-
         let mut conn = mm.pool.get().await?;
 
         let count = schema::recipes::table
@@ -29,8 +27,6 @@ impl Recipe {
 
     /// Retrieves the details of a specific recipe for a given user.
     pub async fn get(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<RecipeDetails> {
-        use crate::core::repository::schema;
-
         let mut conn = mm.pool.get().await?;
 
         let (recipe, category, cuisine, keywords, nutrition, times) = schema::recipes::table
@@ -85,8 +81,6 @@ impl Recipe {
         user_id: i64,
         search_params: &SearchParams,
     ) -> Result<Vec<RecipeDetails>> {
-        use crate::core::repository::schema;
-
         let mut conn = mm.pool.get().await?;
 
         let fetched_recipes = schema::recipes::table

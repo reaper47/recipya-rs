@@ -6,6 +6,7 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 
 use super::structs::*;
+use crate::core::model::user::{UserCategory, UserKeyword};
 use crate::core::model::{Error, Result};
 use crate::core::repository::ModelManager;
 
@@ -94,6 +95,15 @@ impl Recipe {
                             category_id,
                             recipe_id,
                         })
+                        .execute(&mut conn)
+                        .await?;
+
+                    diesel::insert_into(schema::users_categories::table)
+                        .values(&UserCategory {
+                            user_id,
+                            category_id,
+                        })
+                        .on_conflict_do_nothing()
                         .execute(&mut conn)
                         .await?;
 
@@ -236,6 +246,15 @@ impl Recipe {
                                 keyword_id,
                                 recipe_id,
                             })
+                            .execute(&mut conn)
+                            .await?;
+
+                        diesel::insert_into(schema::users_keywords::table)
+                            .values(&UserKeyword {
+                                user_id,
+                                keyword_id,
+                            })
+                            .on_conflict_do_nothing()
                             .execute(&mut conn)
                             .await?;
                     }

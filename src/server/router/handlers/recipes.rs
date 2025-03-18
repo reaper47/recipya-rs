@@ -7,17 +7,18 @@ use axum::response::{Html, IntoResponse};
 use reqwest::StatusCode;
 use tracing::error;
 
-use crate::core::model::website::{ToHtmlTable, Website};
 use crate::core::model::Recipe;
+use crate::core::model::user::User;
+use crate::core::model::website::{ToHtmlTable, Website};
+use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::router::SearchParams;
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
 };
-use crate::server::{templates, AppState};
+use crate::server::{AppState, templates};
 use crate::server::{Error, Result};
 
 /// Handles deleting a user's recipe.
@@ -137,7 +138,7 @@ pub async fn recipes_handler(
         },
         state.data_dir,
     )
-        .into_response()
+    .into_response()
 }
 
 /// Handles the add recipe page.
@@ -163,6 +164,62 @@ pub async fn recipes_add_handler(
             recipes: vec![],
         },
     )
+}
+
+/// Handles rendering the form to add a recipe manually.
+pub async fn recipes_add_manual_handler(
+    ctx: CtxW,
+    header_map: HeaderMap,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let categories = match User::categories(&state.mm, user_id).await {
+        Ok(categories) => categories,
+        Err(err) => {
+            error!("Error fetching recipe categories: {err}");
+            let toast = MessageHtmx::error("Error fetching recipe categories.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state
+                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
+                    .await;
+            }
+            return Error::Database.into_response();
+        }
+    };
+
+    let keywords = match User::keywords(&state.mm, user_id).await {
+        Ok(keywords) => keywords,
+        Err(err) => {
+            error!("Error fetching recipe keywords: {err}");
+            let toast = MessageHtmx::error("Error fetching recipe keywords.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state
+                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
+                    .await;
+            }
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::recipes::add_recipe_manual(
+        Data {
+            is_admin: user_id == 1,
+            is_authenticated: true,
+            is_autologin: state.config.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            about: AboutData {
+                is_update_available: false,
+            },
+            pagination: None,
+            searchbar: None,
+            share: None,
+            recipes: vec![],
+        },
+        categories,
+        keywords,
+    )
+    .into_response()
 }
 
 /// Handles viewing a recipe.
@@ -243,7 +300,10 @@ pub async fn supported_applications_handler(
         ("AccuChef", "https://www.accuchef.com"),
         ("ChefTap", "https://cheftap.com"),
         ("Crouton", "https://crouton.app"),
-        ("Easy Recipe Deluxe", "https://easy-recipe-deluxe.software.informer.com"),
+        (
+            "Easy Recipe Deluxe",
+            "https://easy-recipe-deluxe.software.informer.com",
+        ),
         ("Kalorio", "https://www.kalorio.de"),
         ("MasterCook", "https://www.mastercook.com"),
         ("Paprika", "https://www.paprikaapp.com"),
@@ -257,7 +317,10 @@ pub async fn supported_applications_handler(
     for (i, (name, url)) in applications.into_iter().enumerate() {
         html.push_str(r#"<tr class="text-center">"#);
         let _ = write!(html, "<td>{}</td>", i + 1);
-        let _ = write!(html, r#"<td><a class="underline" href="{url}" target="_blank">{name}</a></td>"#);
+        let _ = write!(
+            html,
+            r#"<td><a class="underline" href="{url}" target="_blank">{name}</a></td>"#
+        );
         html.push_str("</tr>");
     }
 

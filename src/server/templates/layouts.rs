@@ -173,15 +173,7 @@ pub fn main(title: &str, path: &str, data: &Data, content: Markup) -> Markup {
                 div #fullscreen-loader class="htmx-indicator" {}
                 main class="inline-flex w-full" {
                     @if data.is_authenticated {
-                        (render_desktop_nav(path, false))
-                        aside #mobile-nav class="dock dock-sm md:hidden z-20" {
-                            button hx-get="/recipes" hx-target="#content" hx-push-url="true" hx-swap-oob="true" hx-swap="innerHTML transition:true" {
-                                "Recipes"
-                            }
-                            button hx-get="/cookbooks" hx-target="#content" hx-push-url="true" hx-swap-oob="true" hx-swap="innerHTML transition:true" {
-                                "Cookbooks"
-                            }
-                        }
+                        (render_nav(path, false))
                     }
                     div #content class="min-h-[92.5vh] w-full" {
                         (content)
@@ -215,7 +207,7 @@ pub(super) fn render_recipe_button(is_hx_swap_oob: bool, is_visible: bool) -> Ma
 }
 
 /// Renders the desktop navigation sidebar.
-pub(super) fn render_desktop_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
+pub(super) fn render_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
     let is_visible = path == "/" || path == "/recipes";
 
     html! {
@@ -250,6 +242,18 @@ pub(super) fn render_desktop_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
                         (icon_book_open())
                     }
                 }
+            }
+        }
+
+        aside #mobile-nav class={
+            "dock dock-sm md:hidden z-20"
+            @if is_visible { "hidden md:block" } @else { " hidden" }
+        } hx-swap-oob=(is_hx_swap_oob) {
+            button hx-get="/recipes" hx-target="#content" hx-push-url="true" hx-swap-oob=(is_hx_swap_oob) hx-swap="innerHTML transition:true" {
+                "Recipes"
+            }
+            button hx-get="/cookbooks" hx-target="#content" hx-push-url="true" hx-swap-oob=(is_hx_swap_oob) hx-swap="innerHTML transition:true" {
+                "Cookbooks"
             }
         }
     }
