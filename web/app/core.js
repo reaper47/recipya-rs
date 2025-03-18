@@ -1,55 +1,244 @@
-const cookbooksPattern = new RegExp("^/cookbooks/\\d+(/recipes/search.*)?$");
-const cookbooksSharePattern = new RegExp("^/c/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
-
-const recipesPattern = new RegExp("^/recipes/\\d+(/edit)?$");
-const recipesSharePattern = new RegExp("^/r/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
-
-const reportsPattern = new RegExp("^/reports(/\\d+)?$");
-
-const pathsShowRecipesSidebar = [
-    "/",
-    "/cookbooks",
-    "/recipes",
-];
-
-function showAll() {
-    //showCookbookTitle();
-    //showRecipesSidebar();
-}
-
-function showCookbookTitle() {
-    const cookbookTitleDiv = document.querySelector("#content-title");
-    if (cookbooksPattern.test(location.pathname) ||
-        cookbooksSharePattern.test(location.pathname)) {
-        cookbookTitleDiv?.classList.add("md:block");
-    } else {
-        cookbookTitleDiv?.classList.remove("md:block");
-    }
-}
-
-function showRecipesSidebar() {
-    const desktop = document.querySelector("#desktop-nav");
-    const mobile = document.querySelector("#mobile-nav");
-
-    if (pathsShowRecipesSidebar.includes(location.pathname) || cookbooksPattern.test(location.pathname)) {
-        desktop?.firstElementChild.classList.remove("hidden");
-        mobile?.classList.remove("hidden");
-    } else {
-        desktop?.firstElementChild.classList.add("hidden");
-        mobile?.classList.add("hidden");
-    }
-
-    if (recipesPattern.test(location.pathname) || recipesSharePattern.test(location.pathname) || location.pathname === "/admin" || reportsPattern.test(location.pathname)) {
-        desktop?.firstElementChild.classList.add("hidden");
-        mobile?.classList.add("hidden");
-    } else {
-        desktop?.firstElementChild.classList.remove("hidden");
-        mobile?.classList.remove("hidden");
-    }
-}
-
 function loadSortableJS() {
     return loadScript("https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js")
+}
+
+function loadRecipesManualScripts() {
+    loadScript("https://cdn.jsdelivr.net/npm/html-duration-picker@latest/dist/html-duration-picker.min.js")
+        .then(() => HtmlDurationPicker.init())
+
+    loadScript("https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js")
+        .then(() => {
+            const inputs = [
+                {name: 'tool', type: 'input'},
+                {name: 'ingredient', type: 'input'},
+                {name: 'instruction', type: 'textarea'},
+            ];
+            inputs.forEach(({name, type}) => {
+                const list = document.querySelector(`#${name}s-list`);
+                if (list) {
+                    new Sortable.create(list, {
+                        handle: '.handle',
+                        animation: 150,
+                    });
+                }
+            });
+        });
+}
+
+function addMedia(event) {
+    let media = document.querySelectorAll("#media label");
+    for (let i = 0; i < media.length; i++) {
+        if (media[i].querySelector('input[type="file"]').files.length === 0) {
+            alert(`Please select an image or video for 'Media ${i + 1}'`);
+            return;
+        }
+    }
+
+    const buttons = document.querySelectorAll(".buttons-container button");
+    buttons.forEach(el => el.classList.remove("btn-active"));
+
+    const cloneMedia = media[media.length - 1].cloneNode(true);
+    media.forEach(label => label.classList.add("hidden"));
+    cloneMedia.querySelector("input").value = '';
+    cloneMedia.id = `media-${media.length + 1}`;
+
+    let n = cloneMedia.querySelector("img");
+    if (n) {
+        n.src = '';
+    } else {
+        n = cloneMedia.querySelector("video");
+        n.src = '';
+    }
+
+    cloneMedia.querySelector("div").classList.remove("hidden");
+    cloneMedia.querySelector("input[type='url']").value = '';
+    const subButtons = cloneMedia.querySelectorAll("button");
+    subButtons[subButtons.length - 1].classList.add("hidden");
+    document.querySelector("#media").appendChild(cloneMedia);
+    const video = cloneMedia.querySelector('video');
+    if (video) {
+        n.classList.remove("hidden");
+        video.parentNode.removeChild(video);
+    }
+    media = document.querySelectorAll("#media label");
+    media[media.length - 1].classList.remove("hidden");
+    _hyperscript.processNode(cloneMedia);
+
+    let target = event.target;
+    if (["svg", "circle"].includes(target.tagName)) {
+        target = event.target.parentElement;
+    }
+
+    const cloneButton = target.previousElementSibling.cloneNode(true);
+    cloneButton.id = `media-button-${buttons.length}`;
+    cloneButton.classList.add("btn-active");
+    cloneButton.textContent = `Media ${buttons.length}`;
+    cloneButton.setAttribute("onclick", "switchMedia(event)");
+    target.previousElementSibling.parentNode.insertBefore(cloneButton, target);
+    _hyperscript.processNode(cloneButton);
+    htmx.process(cloneMedia);
+}
+
+function deleteMedia(event) {
+    let parent = event.target.parentElement;
+    if (parent.tagName === "SPAN") {
+        parent = parent.parentElement;
+    }
+
+    const img = parent.querySelector("img");
+    img.src = "";
+    img.value = "";
+
+    if (img.nextElementSibling.tagName === "VIDEO") {
+        img.parentElement.removeChild(img.nextElementSibling);
+        img.classList.remove("hidden");
+    }
+
+    const span = parent.querySelector("span");
+    span.querySelector("input[type=file]").value = null;
+    span.querySelector("input[type=file]").files = (new DataTransfer()).files;
+    span.children[0].classList.remove("hidden");
+    event.target.classList.add("hidden");
+}
+
+function addKeyword(event) {
+    const input = document.querySelector("#new-keyword")
+    const keyword = input.value.trim();
+    if (keyword === "") {
+        return;
+    }
+
+    const div = document.querySelector("#hidden-keyword").cloneNode(true);
+    div.classList.remove("hidden");
+    div.querySelector("input").value = keyword;
+    div.querySelector("span").textContent = keyword;
+    _hyperscript.processNode(div);
+    htmx.process(div);
+
+    const container = document.querySelector("#empty-keyword");
+    container.parentNode.insertBefore(div, container);
+
+    input.value = '';
+    input.focus();
+}
+
+function switchMedia(event) {
+    let target = event.target;
+    if (target.tagName === "svg") {
+        target = event.target.parentElement;
+    }
+
+    const media = document.querySelectorAll("#media label");
+    for (let i = 0; i < media.length; i++) {
+        if (media[i].id === target.id.replace("button-", "")) {
+            media.forEach(label => label.classList.add("hidden"));
+            media[i].classList.remove("hidden");
+            document.querySelectorAll(".buttons-container button").forEach(el => el.classList.remove("btn-active"));
+            document.getElementById(event.target.id).classList.add("btn-active");
+            return;
+        }
+    }
+}
+
+function isUrl(event) {
+    let url;
+    try {
+        url = new URL(event.target.previousElementSibling.value);
+    } catch (_) {
+        return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
+}
+
+function updateMediaFromFetch(input, url) {
+    if (url === window.location.href) {
+        input.value = '';
+        return;
+    }
+
+    const pathRegexImage = /^\/data\/images\/([\da-z]{8}-([\da-z]{4}-){3}[\da-z]{12}).webp$/;
+    const pathRegexVideo = /^\/data\/videos\/([\da-z]{8}-([\da-z]{4}-){3}[\da-z]{12}).webm$/;
+    const urlObject = new URL(url);
+
+    let uuid;
+    if (pathRegexImage.test(urlObject.pathname)) {
+        uuid = urlObject.pathname.match(pathRegexImage)[1];
+    } else if (pathRegexVideo.test(urlObject.pathname)) {
+        uuid = urlObject.pathname.match(pathRegexVideo)[1];
+    } else {
+        uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const file = new File([blob], uuid, {type: blob.type});
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        });
+}
+
+function addItem(event) {
+    const ol = event.target.closest('ol');
+    const items = ol.querySelectorAll('li');
+
+    for (let i = 0; i < items.length; i++) {
+        let input = items[i].querySelector('input');
+        if (!input) {
+            input = items[i].querySelector('textarea');
+        }
+
+        if (input.value === '') {
+            return;
+        }
+    }
+
+    const clone = event.target.closest('li').cloneNode(true);
+    let el = 'input';
+
+    try {
+        clone.querySelector(el).value = '';
+    } catch {
+        el = 'textarea';
+        clone.querySelector(el).value = '';
+    }
+
+    _hyperscript.processNode(clone);
+    htmx.process(clone);
+    ol.appendChild(clone);
+
+    clone.querySelector(el).focus();
+}
+
+async function pasteImage(event) {
+    try {
+        const clipboardItems = await navigator.clipboard.read();
+        clipboardItems.forEach(async (item) => {
+            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+
+            const blob = await item.getType(item.types.find(t => t.startsWith("image/")));
+            const file = new File([blob], uuid, {type: blob.type});
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+
+            const input = event.target.parentElement.parentElement.querySelector("input[type=file]");
+            input.files = dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        })
+    } catch (err) {
+        console.error(err.name, err.message);
+        alert("No image in clipboard or ould not paste image.");
+    }
 }
 
 function loadScript(url) {

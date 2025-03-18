@@ -9,7 +9,7 @@
 macro_rules! name_entity_with_relations {
     ($struct_name:ident, $table_name:ident, $relation_table:ident) => {
         /// Represents an entity with an `id` and a `name`, mapped to a database table.
-        #[derive(Queryable, Identifiable, Selectable)]
+        #[derive(Queryable, Identifiable, Selectable, Debug, PartialEq)]
         #[diesel(table_name = schema::$table_name)]
         #[diesel(check_for_backend(diesel::pg::Pg))]
         pub struct $struct_name {

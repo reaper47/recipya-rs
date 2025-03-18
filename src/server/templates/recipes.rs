@@ -3,18 +3,543 @@ use url::Url;
 
 use crate::core::config::DataDir;
 use crate::core::model::RecipeDetails;
+use crate::core::model::recipe::{Category, Keyword, ToolRecipe};
 use crate::core::support::fs::is_file_exists;
-use crate::server::templates::data::Data;
+use crate::server::templates::data::{Data, ViewRecipe};
 use crate::server::templates::helpers::cut_string;
 use crate::server::templates::icons::{
-    icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
-    icon_ellipsis_vertical, icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,
+    icon_arrows_up_down, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
+    icon_document_duplicate, icon_ellipsis_vertical, icon_information_circle, icon_pencil,
+    icon_plus_circle, icon_printer, icon_share, icon_trash,
 };
 use crate::server::templates::layouts;
-use crate::server::templates::layouts::{render_desktop_nav, render_recipe_button};
+use crate::server::templates::layouts::{render_nav, render_recipe_button};
 use crate::server::templates::pagination::pagination;
 use crate::server::templates::search::{search_help, searchbar};
 use crate::server::{Error, Result};
+
+/// Renders the add recipe manually page.
+pub fn add_recipe_manual(data: Data, categories: Vec<Category>, keywords: Vec<Keyword>) -> Markup {
+    let path = "/add/manual";
+    let view = data.recipes.first();
+
+    html! {
+        @if data.is_hx_request {
+            title hx-swap-oob="true" { "Add Recipe Manually | Recipya" }
+            (render_recipe_button(true, false))
+            (render_nav(path, true))
+            (render_add_recipe_manual(view, categories, keywords))
+        } @else {
+            (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords)))
+        }
+    }
+}
+
+fn render_add_recipe_manual(
+    view: Option<&ViewRecipe>,
+    categories: Vec<Category>,
+    keywords: Vec<Keyword>,
+) -> Markup {
+    html! {
+        section .p-2 {
+            div class="flex justify-center" {
+                div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
+                    form .card-body style="padding: 0" enctype="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader" {
+                        h2 class="card-title place-content-center rounded-t-2xl" {
+                            label .w-full {
+                                input required type="text" name="title" placeholder="Title of the recipe*"
+                                    autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200"
+                                    value=[view.map(|v| v.recipe_details.recipe.name.to_string())];
+                            }
+                        }
+                        div {
+                            div class="grid md:grid-flow-col md:grid-cols-6" {
+                                div #media-container class="grid grid-flow-col w-full text-center grid-cols-7 md:col-span-3 md:border-r dark:border-gray-700" {
+                                    div class="buttons-container flex flex-col gap-1 p-1" {
+                                        button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event)" {
+                                            "Media 1"
+                                        }
+                                        button #add-media-button type="button" class="btn btn-sm btn-ghost" onclick="addMedia(event)" {
+                                            (icon_plus_circle())
+                                            "Add"
+                                        }
+                                    }
+                                    div #media class="col-span-6" {
+                                        label #media-1 {
+                                            img src="" alt="" class="object-cover mb-2 w-full max-h-[39rem]";
+                                            span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;" {
+                                                div class="mr-1" {
+                                                    input type="file" accept="image/*,video/*" name="images"
+                                                        class="file-input file-input-sm file-input-bordered w-full max-w-sm"
+                                                        _="on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
+                                                              on dragleave or drop set the target's style.background to ''
+                                                              on drop or change
+                                                                make an FileReader called reader then
+                                                                if event.dataTransfer
+                                                                    get event.dataTransfer.files[0]
+                                                                else
+                                                                    get event.target.files[0]
+                                                                end then
+                                                                if it.type.startsWith('video')
+                                                                    put `<video controls class='object-cover mb-2 w-full max-h-[39rem]' src='${window.URL.createObjectURL(it)}'></video>` after previous <img/> then
+                                                                    add .hidden to previous <img/>
+                                                                else
+                                                                    set {src: window.URL.createObjectURL(it)} on previous <img/>
+                                                                end then
+                                                                remove .hidden from me.parentElement.parentElement.querySelectorAll('button') then
+                                                                add .hidden to the parentElement of me";
+                                                    div .divider { "OR" }
+                                                    span class="hidden input-error" {}
+                                                    div .flex.join {
+                                                        div .w-full {
+                                                            input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
+                                                        }
+                                                        button type="button" class="btn btn-sm join-item"
+                                                            hx-get="/fetch"
+                                                            hx-vals="js:{url: event.target.previousElementSibling.value}"
+                                                            hx-swap="none"
+                                                            _="on htmx:afterRequest
+                                                                if event.detail.successful then
+                                                                    set a to first in event.target.parentElement.parentElement.children then
+                                                                    call updateMediaFromFetch(a, event.detail.xhr.responseURL)
+                                                                end" { "Fetch" }
+                                                    }
+                                                    div _="on load if not navigator.clipboard hide me" {
+                                                        div .divider { "OR" }
+                                                        button type="button" class="btn btn-sm" onclick="pasteImage(event)" {
+                                                            "Paste copied image"
+                                                        }
+                                                    }
+                                                }
+                                                button type="button" class="hidden btn btn-sm btn-error btn-outline" onclick="deleteMedia(event)" {
+                                                    "Delete"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
+                                    div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
+                                        div class="grid grid-flow-col grid-cols-3 gap-2 border-b border-t border-gray-700 px-2 md:col-span-2 md:border-b-0 md:border-r md:border-t-0 md:px-0" {
+                                            div class="col-span-2 border-r border-gray-700 pb-2 px-2" {
+                                                fieldset .fieldset {
+                                                    label .label for="category" { "Category" }
+                                                    input #category type="text" list="categories" name="category"
+                                                        class="input input-sm w-11/12" placeholder="Breakfast"
+                                                        autocomplete="off"
+                                                        value=(
+                                                            if let Some(v) = view {
+                                                                v.recipe_details.category.to_string()
+                                                            } else {
+                                                                String::new()
+                                                            }
+                                                        );
+                                                    datalist id="categories" {
+                                                        @for c in categories {
+                                                            option { (c.name) }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            div class="col-span-1 pb-2" {
+                                                fieldset .fieldset {
+                                                    label .label for="servings" { "Servings" }
+                                                    input #servings type="number" min="1" name="yield"
+                                                        value=(
+                                                            view.map(|v| {
+                                                                if v.recipe_details.recipe.yield_ == 0 {
+                                                                    String::from("1")
+                                                                } else {
+                                                                     v.recipe_details.recipe.yield_.to_string()
+                                                                }
+                                                            })
+                                                            .unwrap_or(String::from("1"))
+                                                        )
+                                                        class="input input-sm w-11/12";
+                                                }
+                                            }
+                                        }
+                                        div class="relative px-2 pb-2 md:pr-0" {
+                                            fieldset .fieldset {
+                                                label .label for="source" { "Source" }
+                                                input #source type="text" placeholder="Source" name="source"
+                                                    class="input input-sm w-11/12"
+                                                    value=(
+                                                        if let Some(v) = view {
+                                                            if let Some(src) = &v.recipe_details.recipe.source {
+                                                                src.to_string()
+                                                            } else {
+                                                                String::new()
+                                                            }
+                                                        } else {
+                                                            String::new()
+                                                        }
+                                                    );
+                                            }
+                                            button type="button" class="tooltip tooltip-left absolute top-1 right-1"
+                                                _="on click toggle .tooltip-open"
+                                                data-tip="The source can be a website, name of a cookbook, from a relative or friend, a magazine, etc." {
+                                                (icon_information_circle())
+                                            }
+                                        }
+                                    }
+                                    div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
+                                        div class="p-4 flex gap-2 flex-wrap" {
+                                            @for kw in keywords.iter() {
+                                                div class="badge badge-sm badge-neutral p-3 pr-0" {
+                                                    input type="hidden" name="keywords" value=(kw.name);
+                                                    span class="select-none" { (kw.name) }
+                                                    button type="button" class="btn btn-xs btn-ghost" _="on click remove closest <div/>" { "X" }
+                                                }
+                                            }
+                                            (recipe_keyword_empty(keywords))
+                                        }
+                                    }
+                                    div class="grid grid-flow-col col-span-6 py-1 md:grid-cols-2 md:row-span-1" {
+                                        div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
+                                            span data-tip="Prep time" class="tooltip tooltip-left" {
+                                                (icon_cutting_board())
+                                            }
+                                            label {
+                                                input type="text" name="time-preparation"
+                                                    value=(
+                                                        view
+                                                            .map(|v| v.formatted_times.prep_edit.as_str())
+                                                            .filter(|s| !s.is_empty())
+                                                            .unwrap_or("00:15:00")
+                                                    )
+                                                    class="input input-xs max-w-24 html-duration-picker";
+                                            }
+                                        }
+                                        div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
+                                            span data-tip="Cook time" class="tooltip tooltip-left" {
+                                                (icon_cooking_pot())
+                                            }
+                                            label {
+                                                input type="text" name="time-cooking"
+                                                    value=(
+                                                        view
+                                                            .map(|v| v.formatted_times.cook_edit.as_str())
+                                                            .filter(|s| !s.is_empty())
+                                                            .unwrap_or("00:30:00")
+                                                    )
+                                                    class="input input-xs max-w-24 html-duration-picker";
+                                            }
+                                        }
+                                    }
+                                    div class="grid grid-flow-col col-span-6 border-gray-700 border-y overflow-x-auto md:row-span-2" {
+                                        table class="table table-zebra table-xs" {
+                                            thead {
+                                                tr {
+                                                    th { "Nutrition (per 100g)" }
+                                                    th { "Amount" }
+                                                }
+                                            }
+                                            tbody {
+                                                tr {
+                                                    td { "Calories" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="calories" autocomplete="off" placeholder="368kcal" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Total carbs" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="total-carbohydrates" autocomplete="off" placeholder="35g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Sugars" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="sugars" autocomplete="off" placeholder="3g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Protein" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="protein" autocomplete="off" placeholder="21g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Total fat" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="total-fat" autocomplete="off" placeholder="15g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Saturated fat" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="saturated-fat" autocomplete="off" placeholder="1.8g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Unsaturated fat" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="unsaturated-fat" autocomplete="off" placeholder="1.8g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Trans fat" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="trans-fat" autocomplete="off" placeholder="1.8g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Cholesterol" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="cholesterol" autocomplete="off" placeholder="1.1mg" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Sodium" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="sodium" autocomplete="off" placeholder="100mg" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                                tr {
+                                                    td { "Fiber" }
+                                                    td {
+                                                        label {
+                                                            input type="text" name="fiber" autocomplete="off" placeholder="8g" class="input input-xs max-w-24";
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    div class="col-span-3 min-h-40 md:h-full md:row-span-1" {
+                                        label {
+                                            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none" {
+                                                (
+                                                    if let Some(v) = view {
+                                                        if let Some(description) = &v.recipe_details.recipe.description {
+                                                            description.to_string()
+                                                        } else {
+                                                            String::new()
+                                                        }
+                                                    } else {
+                                                        String::new()
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        div #ingredients-instructions-container class="md:border-t grid text-sm md:grid-flow-col md:col-span-6 dark:border-gray-700" {
+                            div class="col-span-6 px-2 py-2 border-y md:col-span-2 md:border-r md:border-y-0 dark:border-gray-700" {
+                                h2 class="font-semibold text-center pb-2" {
+                                    span .underline { "Tools" }
+                                }
+                                ol #tools-list class="pl-4 list-decimal" {
+                                    @if let Some(v) = view {
+                                        @if !v.recipe_details.tools.is_empty() {
+                                            @for tool in &v.recipe_details.tools {
+                                                (add_tool(Some(tool)))
+                                            }
+                                        } @else {
+                                            (add_tool(None))
+                                        }
+                                    } @else {
+                                        (add_tool(None))
+                                    }
+                                }
+                                div .divider {}
+                                h2 class="font-semibold text-center pb-2" {
+                                    span .underline { "Ingredients" }
+                                    sup .text-red-600 { "*" }
+                                }
+                                ol #ingredients-list class="pl-4 list-decimal" {
+                                    @if let Some(v) = view {
+                                         @if !v.recipe_details.ingredients.is_empty() {
+                                            @for (section, ingredients) in &v.recipe_details.ingredients {
+                                                @for ing in ingredients.iter() {
+                                                    (add_ingredient(&ing))
+                                                }
+                                            }
+                                        } @else {
+                                            (add_ingredient(""))
+                                        }
+                                    } @else {
+                                        (add_ingredient(""))
+                                    }
+                                }
+                            }
+                            div class="col-span-6 px-6 py-2 border-gray-700 md:rounded-bl-none md:col-span-4" {
+                                h2 class="font-semibold text-center pb-2" {
+                                    span .underline { "Instructions" }
+                                    sup .text-red-600 { "*" }
+                                }
+                                ol #instructions-list class="grid list-decimal" {
+                                    @if let Some(v) = view {
+                                         @if !v.recipe_details.instructions.is_empty() {
+                                            @for (section, instructions) in &v.recipe_details.instructions {
+                                                @for ins in instructions.iter() {
+                                                    (add_instruction(&ins))
+                                                }
+                                            }
+                                        } @else {
+                                            (add_instruction(""))
+                                        }
+                                    } @else {
+                                        (add_instruction(""))
+                                    }
+                                }
+                            }
+                        }
+                        div class="card-actions justify-end" {
+                            button class="btn btn-primary btn-block btn-sm" { "Submit" }
+                        }
+                    }
+                }
+            }
+        }
+        (PreEscaped("<script defer>window.onload = () => loadRecipesManualScripts()</script>"))
+    }
+}
+
+fn recipe_keyword_empty(keywords: Vec<Keyword>) -> Markup {
+    html! {
+        div #hidden-keyword class="hidden badge badge-sm badge-soft p-3 pr-0" {
+            input type="hidden" name="keywords" value="";
+            span class="select-none" {}
+            button type="button" class="btn btn-xs btn-ghost" _="on click remove closest <div/>" { "X" }
+        }
+        div #empty-keyword class="badge badge-sm badge-soft p-3 pr-0"
+            _="on keydown if event.key is 'Enter' halt the event then addKeyword(event)" {
+            label {
+                input #new-keyword type="text" placeholder="New keyword" class="input input-ghost input-xs w-[16ch] focus:outline-none" autocomplete="off" list="keywords";
+                datalist #keywords {
+                    @for k in keywords {
+                        option { (k.name) }
+                    }
+                }
+            }
+            button type="button" class="btn btn-xs btn-ghost" _="on click addKeyword(event)" {
+                (PreEscaped("&#10003;"))
+            }
+        }
+    }
+}
+
+fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
+    html! {
+        li class="pb-2" {
+            div class="grid grid-flow-col items-center" {
+                label {
+                    input type="text" name="tools" placeholder="1 frying pan" class="input input-bordered input-sm w-full"
+                        value=(
+                            tool
+                                .map(|t| format!("{} {}", t.quantity, t.name))
+                                .unwrap_or_default()
+                        )
+                        _="on keydown if event.key is 'Enter' halt the event then call addItem(event)";
+                }
+                div class="ml-2 flex gap-2" {
+                    button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)" {
+                        "+"
+                    }
+                    button type="button"
+                        class="delete-button btn btn-square btn-sm btn-outline btn-error"
+                        _="on click
+                            if (closest <ol/>).childElementCount > 1
+                                remove closest <li/>
+                            else
+                                set input to (closest <li/>).querySelector('input') then
+                                set input.value to '' then
+                                input.focus()" { "-" }
+                    div class="inline-block h-4 cursor-move handle" {
+                        (icon_arrows_up_down())
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn add_ingredient(name: &str) -> Markup {
+    html! {
+        li .pb-2 {
+            div class="grid grid-flow-col items-center" {
+                label {
+                    input required type="text" name="ingredients" value=(name)
+                        placeholder="1 cup of chopped onions"
+                        class="input input-bordered input-sm w-full"
+                        _="on keydown if event.key is 'Enter' halt the event then call addItem(event)";
+                }
+                div class="ml-2 flex gap-2" {
+                    button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)" {
+                        "+"
+                    }
+                    button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
+                        _="on click
+                            if (closest <ol/>).childElementCount > 1
+                                remove closest <li/>
+                            else
+                                set input to (closest <li/>).querySelector('input') then
+                                set input.value to '' then
+                                input.focus()" { "-" }
+                    div class="inline-block h-4 cursor-move handle" {
+                        (icon_arrows_up_down())
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn add_instruction(name: &str) -> Markup {
+    html! {
+        li class="pt-2 md:pl-0" {
+            div .flex {
+                label class="w-11/12" {
+                    textarea required name="instructions" rows="4" class="textarea textarea-bordered w-full"
+                        placeholder="Mix all ingredients together"
+                        _="on keydown if event.key is 'Enter' halt the event then call addItem(event)" {
+                        (name)
+                    }
+                }
+                div class="grid gap-2 ml-2" {
+                    button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)" {
+                        "+"
+                    }
+                    button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
+                        _="on click
+                            if (closest <ol/>).childElementCount > 1
+                                remove closest <li/>
+                            else
+                                set input to (closest <li/>).querySelector('textarea') then
+                                set input.value to '' then
+                                input.focus()" { "-" }
+                    div class="h-4 cursor-move handle grid place-content-center" {
+                        (icon_arrows_up_down())
+                    }
+                }
+            }
+        }
+    }
+}
 
 /// Renders the add recipe page.
 pub fn add_page(path: &str, data: Data) -> Markup {
@@ -22,7 +547,7 @@ pub fn add_page(path: &str, data: Data) -> Markup {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
             (render_recipe_button(true, false))
-            (render_desktop_nav(path, true))
+            (render_nav(path, true))
             (render_add_page())
         } @else {
             (layouts::main("Add Recipe", path, &data, render_add_page()))
@@ -210,7 +735,7 @@ fn render_add_page() -> Markup {
                     }
                     h3 class="mb-1" {
                         label class="floating-label" {
-                            input type="search" placeholder="Search an application" class=(PreEscaped("input input-bordered input-sm w-11/12"))
+                            input type="search" placeholder="Search an application" class=(PreEscaped("input input-sm w-11/12"))
                                 _=(PreEscaped("on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"));
                         }
                     }
@@ -277,7 +802,7 @@ pub fn index(path: &str, data: Data, data_dir: DataDir) -> Markup {
         html! {
             title hx-swap-oob="true" { "Recipes | Recipya" }
             (render_recipe_button(true, true))
-            (render_desktop_nav(path, true))
+            (render_nav(path, true))
             (render_index(&data, &data_dir))
         }
     } else {
@@ -362,7 +887,7 @@ pub fn list_recipes(data: &Data, data_dir: &DataDir) -> Markup {
         }
         article class="grid gap-4 p-4 text-sm place-items-center grid-cols-1 sm:grid-cols-2 md:m-auto md:max-w-7xl md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:text-base" {
             @for view in data.recipes.iter() {
-                section class="card-side sm:card card-compact card-bordered bg-base-100 shadow-lg indicator w-full" {
+                section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full" {
                     span class="hidden sm:block" {
                         (category_badge(&view.recipe_details.category, false))
                     }

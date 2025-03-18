@@ -6,12 +6,13 @@ use uuid::Uuid;
 
 use crate::core::auth::pwd::{ContentToHash, hash_pwd};
 use crate::core::model::error::{Error, Result};
+use crate::core::model::recipe::{Category, Keyword};
 use crate::core::repository::ModelManager;
-use crate::core::repository::schema::users;
+use crate::core::repository::schema;
 
 /// Represents a user in the system.
-#[derive(Clone, Debug, Queryable, Selectable, Serialize)]
-#[diesel(table_name = users)]
+#[derive(Clone, Debug, Queryable, Identifiable, Selectable, Serialize)]
+#[diesel(table_name = schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
     pub id: i64,
@@ -42,11 +43,35 @@ pub struct UserForCreate {
 
 /// A struct for inserting a new user into the database.
 #[derive(Insertable)]
-#[diesel(table_name = users)]
-pub(crate) struct UserForInsert {
-    pub(crate) email: String,
-    pub(crate) password: String,
-    pub(crate) password_salt: Uuid,
+#[diesel(table_name = schema::users)]
+pub(super) struct UserForInsert {
+    pub email: String,
+    pub password: String,
+    pub password_salt: Uuid,
+}
+
+/// Represents an entry in the user categories table.
+#[derive(Identifiable, Insertable, Selectable, Queryable, Associations, Debug)]
+#[diesel(belongs_to(User))]
+#[diesel(belongs_to(Category))]
+#[diesel(table_name = schema::users_categories)]
+#[diesel(primary_key(user_id, category_id))]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub(super) struct UserCategory {
+    pub user_id: i64,
+    pub category_id: i64,
+}
+
+/// Represents an entry in the user keywords table.
+#[derive(Identifiable, Insertable, Selectable, Queryable, Associations, Debug)]
+#[diesel(belongs_to(User))]
+#[diesel(belongs_to(Keyword))]
+#[diesel(table_name = schema::users_keywords)]
+#[diesel(primary_key(user_id, keyword_id))]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub(super) struct UserKeyword {
+    pub user_id: i64,
+    pub keyword_id: i64,
 }
 
 /// A struct representing a user with authentication-related data.
@@ -58,6 +83,25 @@ pub struct UserForAuth {
 }
 
 impl User {
+    /// Retrieves all of a user's recipe categories.
+    pub async fn categories(mm: &ModelManager, user_id: i64) -> Result<Vec<Category>> {
+        let mut conn = mm.pool.get().await?;
+
+        let user = schema::users::table
+            .filter(schema::users::id.eq(user_id))
+            .select(User::as_select())
+            .get_result(&mut conn)
+            .await?;
+
+        let categories = UserCategory::belonging_to(&user)
+            .inner_join(schema::categories::table)
+            .select(Category::as_select())
+            .load(&mut conn)
+            .await?;
+
+        Ok(categories)
+    }
+
     /// Deletes a user from the database.
     pub async fn delete(mm: &ModelManager, user_id: i64) -> Result<()> {
         use crate::core::repository::schema::users::dsl::*;
@@ -129,6 +173,25 @@ impl User {
                 entity: "user for auth",
             }),
         }
+    }
+
+    /// Retrieves all of a user's recipe keywords.
+    pub async fn keywords(mm: &ModelManager, user_id: i64) -> Result<Vec<Keyword>> {
+        let mut conn = mm.pool.get().await?;
+
+        let user = schema::users::table
+            .filter(schema::users::id.eq(user_id))
+            .select(User::as_select())
+            .get_result(&mut conn)
+            .await?;
+
+        let keywords = UserKeyword::belonging_to(&user)
+            .inner_join(schema::keywords::table)
+            .select(Keyword::as_select())
+            .load(&mut conn)
+            .await?;
+
+        Ok(keywords)
     }
 
     /// Creates a new user from the provided user creation data.
@@ -246,6 +309,155 @@ mod tests {
     use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod test_categories {
+        use super::*;
+
+        use diesel_async::RunQueryDsl;
+
+        use crate::core::repository::schema;
+        use crate::server::test_utils::build_server_logged_in;
+
+        #[derive(Insertable)]
+        #[diesel(table_name = schema::users_categories)]
+        struct NewUserCategory {
+            user_id: i64,
+            category_id: i64,
+        }
+
+        #[tokio::test]
+        async fn test_categories_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            let _ = build_server_logged_in(config.clone()).await?;
+            let mut conn = state.mm.pool.get().await?;
+            let (id, _name) = diesel::insert_into(schema::categories::table)
+                .values(schema::categories::name.eq("date"))
+                .get_result::<(i64, String)>(&mut conn)
+                .await?;
+            diesel::insert_into(schema::users_categories::table)
+                .values(&NewUserCategory {
+                    category_id: id,
+                    user_id: 1,
+                })
+                .execute(&mut conn)
+                .await?;
+
+            let categories = User::categories(&state.mm, 1).await?;
+
+            let want = vec![
+                Category {
+                    id: 1,
+                    name: String::from("uncategorized"),
+                },
+                Category {
+                    id: 2,
+                    name: String::from("appetizers"),
+                },
+                Category {
+                    id: 3,
+                    name: String::from("bread"),
+                },
+                Category {
+                    id: 4,
+                    name: String::from("breakfasts"),
+                },
+                Category {
+                    id: 5,
+                    name: String::from("condiments"),
+                },
+                Category {
+                    id: 6,
+                    name: String::from("dessert"),
+                },
+                Category {
+                    id: 7,
+                    name: String::from("lunch"),
+                },
+                Category {
+                    id: 8,
+                    name: String::from("main dish"),
+                },
+                Category {
+                    id: 9,
+                    name: String::from("salad"),
+                },
+                Category {
+                    id: 10,
+                    name: String::from("side dish"),
+                },
+                Category {
+                    id: 11,
+                    name: String::from("snacks"),
+                },
+                Category {
+                    id: 12,
+                    name: String::from("soups"),
+                },
+                Category {
+                    id: 13,
+                    name: String::from("stews"),
+                },
+                Category {
+                    id: 14,
+                    name: String::from("date"),
+                },
+            ];
+            pretty_assertions::assert_eq!(want, categories);
+            Ok(())
+        }
+    }
+
+    mod test_keywords {
+        use super::*;
+
+        use diesel_async::RunQueryDsl;
+
+        use crate::core::repository::schema;
+        use crate::server::test_utils::build_server_logged_in;
+
+        #[derive(Insertable)]
+        #[diesel(table_name = schema::users_keywords)]
+        struct NewUserKeyword {
+            user_id: i64,
+            keyword_id: i64,
+        }
+
+        #[tokio::test]
+        async fn test_keywords_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            let _ = build_server_logged_in(config.clone()).await?;
+            let mut conn = state.mm.pool.get().await?;
+            let want_keywords = ["main:cheeses", "main:meat"];
+            for kw in want_keywords {
+                let (id, _name) = diesel::insert_into(schema::keywords::table)
+                    .values(schema::keywords::name.eq(kw))
+                    .get_result::<(i64, String)>(&mut conn)
+                    .await?;
+                diesel::insert_into(schema::users_keywords::table)
+                    .values(&NewUserKeyword {
+                        keyword_id: id,
+                        user_id: 1,
+                    })
+                    .execute(&mut conn)
+                    .await?;
+            }
+
+            let keywords = User::keywords(&state.mm, 1).await?;
+
+            let want = want_keywords
+                .into_iter()
+                .enumerate()
+                .map(|((id, name))| Keyword {
+                    id: id as i64 + 1,
+                    name: name.to_string(),
+                })
+                .collect::<Vec<_>>();
+            pretty_assertions::assert_eq!(want, keywords);
+            Ok(())
+        }
+    }
 
     #[tokio::test]
     async fn test_user_new_ok() -> Result<()> {
