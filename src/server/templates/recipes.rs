@@ -71,7 +71,7 @@ fn render_add_recipe_manual(
                                                 div class="mr-1" {
                                                     input type="file" accept="image/*,video/*" name="images"
                                                         class="file-input file-input-sm file-input-bordered w-full max-w-sm"
-                                                        _="on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
+                                                        _=(PreEscaped("on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
                                                               on dragleave or drop set the target's style.background to ''
                                                               on drop or change
                                                                 make an FileReader called reader then
@@ -87,7 +87,7 @@ fn render_add_recipe_manual(
                                                                     set {src: window.URL.createObjectURL(it)} on previous <img/>
                                                                 end then
                                                                 remove .hidden from me.parentElement.parentElement.querySelectorAll('button') then
-                                                                add .hidden to the parentElement of me";
+                                                                add .hidden to the parentElement of me"));
                                                     div .divider { "OR" }
                                                     span class="hidden input-error" {}
                                                     div .flex.join {
@@ -189,7 +189,7 @@ fn render_add_recipe_manual(
                                                 div class="badge badge-sm badge-neutral p-3 pr-0" {
                                                     input type="hidden" name="keywords" value=(kw.name);
                                                     span class="select-none" { (kw.name) }
-                                                    button type="button" class="btn btn-xs btn-ghost" _="on click remove closest <div/>" { "X" }
+                                                    button type="button" class="btn btn-xs btn-ghost" _=(PreEscaped("on click remove closest <div/>")) { "X" }
                                                 }
                                             }
                                             (recipe_keyword_empty(keywords))
@@ -424,7 +424,7 @@ fn recipe_keyword_empty(keywords: Vec<Keyword>) -> Markup {
         div #hidden-keyword class="hidden badge badge-sm badge-soft p-3 pr-0" {
             input type="hidden" name="keywords" value="";
             span class="select-none" {}
-            button type="button" class="btn btn-xs btn-ghost" _="on click remove closest <div/>" { "X" }
+            button type="button" class="btn btn-xs btn-ghost" _=(PreEscaped("on click remove closest <div/>")) { "X" }
         }
         div #empty-keyword class="badge badge-sm badge-soft p-3 pr-0"
             _="on keydown if event.key is 'Enter' halt the event then addKeyword(event)" {
@@ -462,13 +462,13 @@ fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
                     }
                     button type="button"
                         class="delete-button btn btn-square btn-sm btn-outline btn-error"
-                        _="on click
+                        _=(PreEscaped("on click
                             if (closest <ol/>).childElementCount > 1
                                 remove closest <li/>
                             else
                                 set input to (closest <li/>).querySelector('input') then
                                 set input.value to '' then
-                                input.focus()" { "-" }
+                                input.focus()")) { "-" }
                     div class="inline-block h-4 cursor-move handle" {
                         (icon_arrows_up_down())
                     }
@@ -493,13 +493,13 @@ fn add_ingredient(name: &str) -> Markup {
                         "+"
                     }
                     button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
-                        _="on click
+                        _=(PreEscaped("on click
                             if (closest <ol/>).childElementCount > 1
                                 remove closest <li/>
                             else
                                 set input to (closest <li/>).querySelector('input') then
                                 set input.value to '' then
-                                input.focus()" { "-" }
+                                input.focus()")) { "-" }
                     div class="inline-block h-4 cursor-move handle" {
                         (icon_arrows_up_down())
                     }
@@ -525,13 +525,13 @@ fn add_instruction(name: &str) -> Markup {
                         "+"
                     }
                     button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
-                        _="on click
+                        _=(PreEscaped("on click
                             if (closest <ol/>).childElementCount > 1
                                 remove closest <li/>
                             else
                                 set input to (closest <li/>).querySelector('textarea') then
                                 set input.value to '' then
-                                input.focus()" { "-" }
+                                input.focus()")) { "-" }
                     div class="h-4 cursor-move handle grid place-content-center" {
                         (icon_arrows_up_down())
                     }

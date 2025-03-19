@@ -449,7 +449,7 @@ mod tests {
             let want = want_keywords
                 .into_iter()
                 .enumerate()
-                .map(|((id, name))| Keyword {
+                .map(|(id, name)| Keyword {
                     id: id as i64 + 1,
                     name: name.to_string(),
                 })
