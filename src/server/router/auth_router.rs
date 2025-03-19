@@ -134,7 +134,7 @@ mod tests {
         use axum::http::StatusCode;
 
         use crate::server::test_utils::{
-            TestDb, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
+            TestDb, assert_must_be_logged_in_get, build_server_logged_in, build_server_ws,
         };
 
         const BASE_URI: &str = "/auth/change-password";
@@ -149,7 +149,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_change_password_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in(BASE_URI).await
+            assert_must_be_logged_in_get(BASE_URI).await
         }
 
         #[tokio::test]
@@ -305,7 +305,7 @@ mod tests {
 
         use crate::core::model::user::User;
         use crate::server::test_utils::{
-            TEST_USER_EMAIL, TestDb, assert_must_be_logged_in, build_server_logged_in,
+            TEST_USER_EMAIL, TestDb, assert_must_be_logged_in_get, build_server_logged_in,
             build_server_ws, build_server_ws_other_user,
         };
         use axum::http::StatusCode;
@@ -314,7 +314,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_user_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in(BASE_URI).await
+            assert_must_be_logged_in_get(BASE_URI).await
         }
 
         #[tokio::test]

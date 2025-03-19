@@ -7,18 +7,20 @@ use axum::response::{Html, IntoResponse};
 use reqwest::StatusCode;
 use tracing::error;
 
-use crate::core::model::Recipe;
+use crate::core::model::recipe::{Category, Keyword};
 use crate::core::model::user::User;
 use crate::core::model::website::{ToHtmlTable, Website};
-use crate::server::router::SearchParams;
+use crate::core::model::Error::EntityNotFound;
+use crate::core::model::Recipe;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
+use crate::server::router::SearchParams;
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
 };
-use crate::server::{AppState, templates};
+use crate::server::{templates, AppState};
 use crate::server::{Error, Result};
 
 /// Handles deleting a user's recipe.
@@ -138,11 +140,81 @@ pub async fn recipes_handler(
         },
         state.data_dir,
     )
-    .into_response()
+        .into_response()
+}
+
+/// Handles the duplicate recipe endpoint.
+pub async fn duplicate_recipe_handler(
+    ctx: CtxW,
+    Path(recipe_id): Path<i64>,
+    header_map: HeaderMap,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+        Ok(recipe) => recipe,
+        Err(err) => {
+            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
+            let toast = MessageHtmx::error("Recipe not found.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state
+                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
+                    .await;
+            }
+            return Error::Model(EntityNotFound {
+                id: recipe_id,
+                entity: "recipe",
+            })
+                .into_response();
+        }
+    };
+
+    let (categories, keywords) = match fetch_categories_keywords(&state, user_id).await {
+        Ok(res) => res,
+        Err(err) => {
+            error!("Error fetching recipe categories or keywords: {err}");
+            let toast = MessageHtmx::error("Error fetching recipe categories.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json.into())).await;
+            }
+            return err.into_response();
+        }
+    };
+
+    let formatted_times = match FormattedTimes::from_times(&recipe.times) {
+        Ok(formatted_times) => formatted_times,
+        Err(err) => {
+            error!("Failed to format times for recipe '{recipe_id}': {err}");
+            return Error::BadTimeFormat.into_response();
+        }
+    };
+
+    templates::recipes::add_recipe_manual(
+        Data {
+            is_admin: user_id == 1,
+            is_authenticated: true,
+            is_autologin: state.config.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            about: AboutData {
+                is_update_available: false,
+            },
+            pagination: None,
+            searchbar: None,
+            share: None,
+            recipes: vec![ViewRecipe {
+                recipe_details: recipe,
+                formatted_times,
+            }],
+        },
+        categories,
+        keywords,
+    )
+        .into_response()
 }
 
 /// Handles the add recipe page.
-pub async fn recipes_add_handler(
+pub async fn add_recipes_handler(
     ctx: CtxW,
     header_map: HeaderMap,
     OriginalUri(uri): OriginalUri,
@@ -167,38 +239,17 @@ pub async fn recipes_add_handler(
 }
 
 /// Handles rendering the form to add a recipe manually.
-pub async fn recipes_add_manual_handler(
+pub async fn add_manual_recipe_handler(
     ctx: CtxW,
     header_map: HeaderMap,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let categories = match User::categories(&state.mm, user_id).await {
-        Ok(categories) => categories,
+    let (categories, keywords) = match fetch_categories_keywords(&state, user_id).await {
+        Ok(res) => res,
         Err(err) => {
-            error!("Error fetching recipe categories: {err}");
-            let toast = MessageHtmx::error("Error fetching recipe categories.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state
-                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                    .await;
-            }
-            return Error::Database.into_response();
-        }
-    };
-
-    let keywords = match User::keywords(&state.mm, user_id).await {
-        Ok(keywords) => keywords,
-        Err(err) => {
-            error!("Error fetching recipe keywords: {err}");
-            let toast = MessageHtmx::error("Error fetching recipe keywords.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state
-                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                    .await;
-            }
-            return Error::Database.into_response();
+            return err.into_response();
         }
     };
 
@@ -219,11 +270,42 @@ pub async fn recipes_add_manual_handler(
         categories,
         keywords,
     )
-    .into_response()
+        .into_response()
+}
+
+async fn fetch_categories_keywords(
+    state: &AppState,
+    user_id: i64,
+) -> Result<(Vec<Category>, Vec<Keyword>)> {
+    let categories = match User::categories(&state.mm, user_id).await {
+        Ok(categories) => categories,
+        Err(err) => {
+            error!("Error fetching recipe categories: {err}");
+            let toast = MessageHtmx::error("Error fetching recipe categories.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json.into())).await;
+            }
+            return Err(Error::Database);
+        }
+    };
+
+    let keywords = match User::keywords(&state.mm, user_id).await {
+        Ok(keywords) => keywords,
+        Err(err) => {
+            error!("Error fetching recipe keywords: {err}");
+            let toast = MessageHtmx::error("Error fetching recipe keywords.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json.into())).await;
+            }
+            return Err(Error::Database);
+        }
+    };
+
+    Ok((categories, keywords))
 }
 
 /// Handles viewing a recipe.
-pub async fn recipe_view_handler(
+pub async fn view_recipe_handler(
     ctx: CtxW,
     header_map: HeaderMap,
     Path(recipe_id): Path<i64>,
