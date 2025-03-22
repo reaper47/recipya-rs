@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::core::model::recipe::{Nutrition, RecipeDetails, Times, ToolRecipe, Video, VideoRecipe};
 use crate::core::model::{Error, Recipe, Result};
 use crate::core::repository::pool::PgPooledConn;
-use crate::core::repository::{schema, ModelManager};
+use crate::core::repository::{ModelManager, schema};
 use crate::server::router::SearchParams;
 
 impl Recipe {
@@ -72,9 +72,9 @@ impl Recipe {
         fetch_recipe_details(
             &mut conn, recipe, category, cuisine, keywords, nutrition, times,
         )
-            .await
+        .await
     }
-    
+
     /// Gets a page of recipes belonging to the user.
     pub async fn get_page(
         mm: &ModelManager,
@@ -121,7 +121,7 @@ impl Recipe {
                 fetch_recipe_details(
                     &mut conn, recipe, category, cuisine, keywords, nutrition, times,
                 )
-                    .await?,
+                .await?,
             );
         }
         Ok(recipes)
@@ -269,8 +269,8 @@ async fn fetch_recipe_details(
 mod tests {
     use super::*;
 
-    use crate::server::test_utils::TestDb;
     use crate::server::AppState;
+    use crate::server::test_utils::TestDb;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -330,7 +330,7 @@ mod tests {
                     sort: None,
                 },
             )
-                .await?;
+            .await?;
 
             pretty_assertions::assert_eq!(recipes, Vec::new());
             Ok(())
@@ -358,7 +358,7 @@ mod tests {
                     sort: None,
                 },
             )
-                .await?;
+            .await?;
 
             let got = recipes
                 .into_iter()

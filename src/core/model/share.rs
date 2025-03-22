@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::core::model::error::Result;
 use crate::core::model::{Error, Recipe, RecipeDetails};
-use crate::core::repository::{schema, ModelManager};
+use crate::core::repository::{ModelManager, schema};
 
 /// Represents a shared recipe
 #[derive(Debug, PartialEq, Queryable, Identifiable, Selectable)]
@@ -67,7 +67,10 @@ impl ShareRecipe {
     }
 
     /// Retrieves a shared recipe by its link UUID.
-    pub async fn get_by_link(mm: &ModelManager, link: Uuid) -> Result<(ShareRecipe, RecipeDetails)> {
+    pub async fn get_by_link(
+        mm: &ModelManager,
+        link: Uuid,
+    ) -> Result<(ShareRecipe, RecipeDetails)> {
         let mut conn = mm.pool.get().await?;
 
         let share = schema::shares_recipes::table
@@ -88,8 +91,8 @@ mod tests {
 
     use crate::core::config::Config;
     use crate::core::model::Recipe;
-    use crate::server::test_utils::{a_complete_recipe_for_create, build_server_logged_in};
     use crate::server::AppState;
+    use crate::server::test_utils::{a_complete_recipe_for_create, build_server_logged_in};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -97,8 +100,8 @@ mod tests {
         use super::*;
         use diesel::internal::derives::multiconnection::chrono;
 
-        use crate::server::test_utils::TestDb;
         use crate::server::AppState;
+        use crate::server::test_utils::TestDb;
 
         #[tokio::test]
         async fn test_generate_shared_default_expiration_recipe_ok() -> Result<()> {
@@ -131,8 +134,7 @@ mod tests {
             insert_recipe(&config, &state).await?;
             let expires_at = chrono::Utc::now() + chrono::Duration::days(14);
 
-            let got = ShareRecipe::new(&state.mm, 1, 1, Some(expires_at.naive_local()))
-                .await?;
+            let got = ShareRecipe::new(&state.mm, 1, 1, Some(expires_at.naive_local())).await?;
 
             assert_share_recipe(
                 &got,
@@ -161,7 +163,7 @@ mod tests {
 
             match res {
                 Ok(_) => panic!("Should not have inserted an entry in the database"),
-                Err(_) => Ok(())
+                Err(_) => Ok(()),
             }
         }
 
@@ -191,8 +193,8 @@ mod tests {
 
     mod tests_fetch_by_link {
         use super::*;
-        use crate::server::test_utils::TestDb;
         use crate::server::AppState;
+        use crate::server::test_utils::TestDb;
 
         #[tokio::test]
         async fn test_exists_ok() -> Result<()> {
@@ -217,7 +219,7 @@ mod tests {
 
             match res {
                 Ok(_) => panic!("Entry should not have been found"),
-                Err(_) => Ok(())
+                Err(_) => Ok(()),
             }
         }
     }

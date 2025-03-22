@@ -72,11 +72,11 @@ pub mod test_utils {
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
     use diesel::internal::derives::multiconnection::chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-    use diesel::{sql_query, Connection};
+    use diesel::{Connection, sql_query};
     use tower_cookies::{Cookie, CookieManagerLayer};
     use uuid::Uuid;
 
-    use crate::core::auth::token::{generate_web_token, Token};
+    use crate::core::auth::token::{Token, generate_web_token};
     use crate::core::config::Config;
     use crate::core::model::recipe::{
         Nutrition, NutritionForCreate, RecipeForCreate, Sections, Times, TimesForCreate,
@@ -84,11 +84,11 @@ pub mod test_utils {
     };
     use crate::core::model::user::{User, UserForCreate};
     use crate::core::model::{Recipe, RecipeDetails};
-    use crate::core::repository::pool::make_db_pool;
     use crate::core::repository::ModelManager;
+    use crate::core::repository::pool::make_db_pool;
     use crate::core::support::token::AUTH_TOKEN;
-    use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
     use crate::server::AppState;
+    use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -161,8 +161,8 @@ pub mod test_utils {
                 "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}'",
                 self.db_name
             ))
-                .execute(&mut conn)
-                .expect("Error executing pg_terminate_backend query");
+            .execute(&mut conn)
+            .expect("Error executing pg_terminate_backend query");
 
             sql_query(format!("DROP DATABASE \"{}\"", self.db_name))
                 .execute(&mut conn)
@@ -260,7 +260,7 @@ pub mod test_utils {
                 password_clear: "12345678".to_string(),
             },
         )
-            .await?;
+        .await?;
 
         let user = User::get_user_by_email(&mm, &email)
             .await?
@@ -298,7 +298,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-            .await?;
+        .await?;
 
         User::new(
             &state.mm,
@@ -307,7 +307,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-            .await?;
+        .await?;
         Ok(app)
     }
 
@@ -320,7 +320,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-            .await?;
+        .await?;
 
         Ok(user)
     }
@@ -334,7 +334,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-            .await?;
+        .await?;
 
         Ok(user)
     }
@@ -502,7 +502,11 @@ pub mod test_utils {
     pub fn assert_not_in_html(got: TestResponse, not_want: Vec<&str>) -> Result<()> {
         let text = got.text();
         for s in not_want {
-            assert!(!text.contains(s), "expected `{s}` not to be in html: {}", got.text());
+            assert!(
+                !text.contains(s),
+                "expected `{s}` not to be in html: {}",
+                got.text()
+            );
         }
 
         Ok(())
@@ -519,7 +523,7 @@ pub mod test_utils {
             axum::http::Method::DELETE => server.delete(uri),
             _ => unimplemented!(),
         }
-            .await;
+        .await;
 
         res.assert_status_see_other();
         res.assert_header("Location", "/auth/login");

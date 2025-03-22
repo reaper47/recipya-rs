@@ -1,9 +1,9 @@
-use maud::{html, Markup, PreEscaped};
+use maud::{Markup, PreEscaped, html};
 use url::Url;
 
 use crate::core::config::DataDir;
-use crate::core::model::recipe::{Category, Keyword, ToolRecipe};
 use crate::core::model::RecipeDetails;
+use crate::core::model::recipe::{Category, Keyword, ToolRecipe};
 use crate::core::support::fs::is_file_exists;
 use crate::server::templates::data::{Data, ViewRecipe};
 use crate::server::templates::helpers::cut_string;

@@ -7,20 +7,7 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/server/router/handlers/shared.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/server/router/shared_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/share.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/share.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/auth_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/auth_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/middleware/mw_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/middleware/mw_auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
-    </list>
+    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

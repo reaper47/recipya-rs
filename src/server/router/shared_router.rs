@@ -1,22 +1,24 @@
-use axum::routing::get;
 use axum::Router;
+use axum::routing::get;
 
-use crate::server::router::handlers::shared::share_recipe_handler;
 use crate::server::AppState;
+use crate::server::router::handlers::shared::share_recipe_handler;
 
 /// Defines the routes for shared resources.
 pub(super) fn shared_routes() -> Router<AppState> {
-    Router::new()
-        .route("/r/{:link}", get(share_recipe_handler))
+    Router::new().route("/r/{:link}", get(share_recipe_handler))
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::core::model::Recipe;
     use crate::core::model::recipe::RecipeForCreate;
     use crate::core::model::share::ShareRecipe;
-    use crate::core::model::Recipe;
-    use crate::server::test_utils::{a_complete_recipe_for_create, assert_html, assert_not_in_html, build_server_anonymous, build_server_logged_in, insert_other_user, TestDb};
     use crate::server::AppState;
+    use crate::server::test_utils::{
+        TestDb, a_complete_recipe_for_create, assert_html, assert_not_in_html,
+        build_server_anonymous, build_server_logged_in, insert_other_user,
+    };
     use axum_test::TestResponse;
     use uuid::Uuid;
 
@@ -49,16 +51,22 @@ mod tests {
 
         res.assert_status_ok();
         assert_complete_recipe(res.clone(), a_complete_recipe_for_create());
-        assert_html(res.clone(), vec![
-            r##"<fieldset class="fieldset"><legend>Servings</legend><label class="label" for="yield">Servings</label><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
-        ]);
-        assert_not_in_html(res, vec![
-            r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
-            r##"<a title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
-            r##"#<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
-            r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/1/share" hx-target="#share-dialog-result""##,
-            r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/1" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##,
-        ])?;
+        assert_html(
+            res.clone(),
+            vec![
+                r##"<fieldset class="fieldset"><legend>Servings</legend><label class="label" for="yield">Servings</label><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
+            ],
+        );
+        assert_not_in_html(
+            res,
+            vec![
+                r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
+                r##"<a title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
+                r##"#<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
+                r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/1/share" hx-target="#share-dialog-result""##,
+                r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/1" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##,
+            ],
+        )?;
         Ok(())
     }
 
@@ -74,10 +82,13 @@ mod tests {
         let res = server.get(&base_uri(share.link)).await;
 
         res.assert_status_ok();
-        assert_html(res, vec![
-            r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
-            r##"<fieldset class="fieldset"><legend>Servings</legend><label class="label" for="yield">Servings</label><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
-        ]);
+        assert_html(
+            res,
+            vec![
+                r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
+                r##"<fieldset class="fieldset"><legend>Servings</legend><label class="label" for="yield">Servings</label><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
+            ],
+        );
         Ok(())
     }
 
@@ -93,16 +104,22 @@ mod tests {
 
         res.assert_status_ok();
         assert_complete_recipe(res.clone(), a_complete_recipe_for_create());
-        assert_html(res.clone(), vec![
-            r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
-            r#"<p class="text-sm text-center">4 servings</p>"#,
-        ]);
-        assert_not_in_html(res, vec![
-            r##"<a title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
-            r##"<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
-            r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/1/share" hx-target="#share-dialog-result""##,
-            r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/1" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##,
-        ])?;
+        assert_html(
+            res.clone(),
+            vec![
+                r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
+                r#"<p class="text-sm text-center">4 servings</p>"#,
+            ],
+        );
+        assert_not_in_html(
+            res,
+            vec![
+                r##"<a title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
+                r##"<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
+                r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/1/share" hx-target="#share-dialog-result""##,
+                r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/1" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##,
+            ],
+        )?;
         Ok(())
     }
 
