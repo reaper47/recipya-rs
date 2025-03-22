@@ -333,3 +333,16 @@ function updateAddCookbookUrl(selectedPage) {
         htmx.process(el);
     }
 }
+
+function copyToClipboard(text) {
+    if (window.navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+        });
+        const el = document.querySelector("#copy-button");
+        el.textContent = "Copied!";
+        el.setAttribute("disabled", "true");
+        el.classList.toggle(".btn-disabled");
+    } else {
+        alert('Your browser does not support the clipboard feature. Please copy the link manually.');
+    }
+}

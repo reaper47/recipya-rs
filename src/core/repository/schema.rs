@@ -223,10 +223,13 @@ diesel::table! {
 diesel::table! {
     shares_recipes (id) {
         id -> Int8,
-        link -> Text,
-        user_id -> Nullable<Int8>,
-        recipe_id -> Nullable<Int8>,
-        created_at -> Nullable<Timestamp>,
+        link -> Uuid,
+        user_id -> Int8,
+        recipe_id -> Int8,
+        created_at -> Timestamp,
+        expires_at -> Timestamp,
+        last_accessed -> Timestamp,
+        click_count -> Int4,
     }
 }
 

@@ -1,13 +1,20 @@
-use axum::routing::get;
-use axum::{Router, middleware};
+use axum::routing::{get, post};
+use axum::{middleware, Router};
+use serde::{Deserialize, Serialize};
 
-use crate::server::AppState;
 use crate::server::router::handlers::recipes::{
     add_manual_recipe_handler, add_recipes_handler, delete_recipe_handler,
-    duplicate_recipe_handler, recipes_handler, supported_applications_handler,
-    supported_websites_handler, view_recipe_handler,
+    duplicate_recipe_handler, recipes_handler, share_recipe_post_handler,
+    supported_applications_handler, supported_websites_handler, view_recipe_handler,
 };
 use crate::server::router::middleware::mw_auth;
+use crate::server::AppState;
+
+/// Represents the content of the share recipe form.
+#[derive(Deserialize, Serialize)]
+pub struct ShareRecipeForm {
+    pub datetime: Option<String>,
+}
 
 /// Defines the routes for endpoints related to recipes.
 pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
@@ -18,6 +25,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
             get(view_recipe_handler).delete(delete_recipe_handler),
         )
         .route("/{:recipe_id}/duplicate", get(duplicate_recipe_handler))
+        .route("/{:recipe_id}/share", post(share_recipe_post_handler))
         .route("/add", get(add_recipes_handler))
         .route("/add/manual", get(add_manual_recipe_handler))
         .route(
@@ -33,13 +41,16 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
+    use axum::http::Method;
+
     use crate::core::config::Config;
-    use crate::server::test_utils::{TestDb, build_server_logged_in};
+    use crate::server::test_utils::{build_server_logged_in, TestDb};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_add {
         use super::*;
+
         use axum_test::TestResponse;
 
         use crate::server::test_utils::{assert_html, assert_must_be_logged_in_get};
@@ -48,7 +59,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_add_recipe_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -101,10 +112,10 @@ mod tests {
         use axum_test::TestResponse;
 
         use crate::core::model::Recipe;
-        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_must_be_logged_in_get, build_server_ws,
         };
+        use crate::server::AppState;
 
         fn base_uri(id: i64) -> String {
             format!("/recipes/{id}/duplicate")
@@ -112,7 +123,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(&base_uri(1)).await
+            assert_must_be_logged_in_get(Method::GET, &base_uri(1)).await
         }
 
         #[tokio::test]
@@ -177,20 +188,152 @@ mod tests {
         }
     }
 
+    mod tests_share_recipe {
+        use super::*;
+
+        use diesel::internal::derives::multiconnection::chrono;
+        use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
+
+        use crate::core::model::share::ShareRecipe;
+        use crate::core::model::Recipe;
+        use crate::core::repository::schema;
+        use crate::server::router::recipes_routes::ShareRecipeForm;
+        use crate::server::test_utils::{
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
+        };
+        use crate::server::AppState;
+
+        fn base_uri(recipe_id: i64) -> String {
+            format!("/recipes/{recipe_id}/share")
+        }
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in_get(Method::POST, &base_uri(1)).await
+        }
+
+        #[tokio::test]
+        async fn test_default_expires_at_time_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = AppState::new(config).await?;
+            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+
+            let res = server
+                .post(&base_uri(1))
+                .form(&ShareRecipeForm { datetime: None })
+                .await;
+
+            let share = get_first_shared_recipe(state).await;
+            res.assert_status_ok();
+            assert_html(
+                res,
+                vec![
+                    &format!(
+                        r#"<label><input class="input" type="url" value="http://localhost:8078/r/{}" readonly="readonly"></label>"#,
+                        share.link
+                    ),
+                    &format!(
+                        r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/r/{})">Copy</button>"#,
+                        share.link
+                    ),
+                ],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_custom_expires_at_time_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = AppState::new(config).await?;
+            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+            let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
+
+            let res = server
+                .post(&base_uri(1))
+                .form(&ShareRecipeForm {
+                    datetime: Some(expires_at.to_string()),
+                })
+                .await;
+
+            let share = get_first_shared_recipe(state).await;
+            res.assert_status_ok();
+            assert_html(
+                res,
+                vec![
+                    &format!(
+                        r#"<label><input class="input" type="url" value="http://localhost:8078/r/{}" readonly="readonly"></label>"#,
+                        share.link
+                    ),
+                    &format!(
+                        r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/r/{})">Copy</button>"#,
+                        share.link
+                    ),
+                ],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_invalid_expires_at_time_defaults_to_7_days_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = AppState::new(config).await?;
+            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+            let now = chrono::Utc::now().naive_utc();
+
+            let res = server
+                .post(&base_uri(1))
+                .form(&ShareRecipeForm {
+                    datetime: Some(String::from("hello")),
+                })
+                .await;
+
+            let share = get_first_shared_recipe(state).await;
+            res.assert_status_ok();
+            pretty_assertions::assert_eq!(
+                share.expires_at.signed_duration_since(now).num_days(),
+                7
+            );
+            Ok(())
+        }
+
+        async fn get_first_shared_recipe(state: AppState) -> ShareRecipe {
+            let mut conn = state
+                .mm
+                .pool
+                .get()
+                .await
+                .expect("a connection from the pool");
+
+            schema::shares_recipes::table
+                .filter(
+                    schema::shares_recipes::recipe_id
+                        .eq(1)
+                        .and(schema::shares_recipes::user_id.eq(1)),
+                )
+                .first::<ShareRecipe>(&mut conn)
+                .await
+                .expect("a share recipe must have been fetched")
+        }
+    }
+
     mod tests_recipes {
         use super::*;
 
         use crate::core::model::Recipe;
-        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
         };
+        use crate::server::AppState;
 
         const BASE_URI: &str = "/recipes";
 
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -248,13 +391,13 @@ mod tests {
         use axum_test::TestResponse;
         use uuid::Uuid;
 
-        use crate::core::model::Recipe;
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
-        use crate::server::AppState;
+        use crate::core::model::Recipe;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
             build_server_ws,
         };
+        use crate::server::AppState;
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}")
@@ -263,7 +406,7 @@ mod tests {
         // region GET /recipes/{id}
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(&base_uri(1)).await
+            assert_must_be_logged_in_get(Method::GET, &base_uri(1)).await
         }
 
         #[tokio::test]
@@ -501,7 +644,7 @@ mod tests {
         // region DELETE /recipes/{id}
         #[tokio::test]
         async fn test_delete_recipe_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(&base_uri(1)).await
+            assert_must_be_logged_in_get(Method::DELETE, &base_uri(1)).await
         }
 
         #[tokio::test]
@@ -582,7 +725,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -680,7 +823,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -708,7 +851,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]

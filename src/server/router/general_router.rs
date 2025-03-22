@@ -56,6 +56,9 @@ mod tests {
 
     mod tests_user_initials {
         use super::*;
+
+        use axum::http::Method;
+
         use crate::server::test_utils::{
             TestDb, assert_must_be_logged_in_get, build_server_logged_in,
         };
@@ -64,7 +67,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_user_initials_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]

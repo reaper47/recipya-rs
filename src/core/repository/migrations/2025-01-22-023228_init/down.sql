@@ -23,6 +23,7 @@ DROP FUNCTION IF EXISTS trig_users_ai_func;
 DROP TABLE IF EXISTS videos_recipes;
 DROP TABLE IF EXISTS users_recipes;
 DROP TABLE IF EXISTS users_categories;
+DROP TABLE IF EXISTS users_keywords;
 DROP TABLE IF EXISTS tools_recipes;
 DROP TABLE IF EXISTS times_recipes;
 DROP TABLE IF EXISTS shares_recipes;
