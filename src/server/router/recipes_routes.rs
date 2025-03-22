@@ -231,11 +231,11 @@ mod tests {
                 res,
                 vec![
                     &format!(
-                        r#"<label><input class="input" type="url" value="http://localhost:8078/share/r/{}" readonly="readonly"></label>"#,
+                        r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
                         share.link
                     ),
                     &format!(
-                        r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/r/{})">Copy</button>"#,
+                        r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/shared/r/{})">Copy</button>"#,
                         share.link
                     ),
                 ],
@@ -264,11 +264,11 @@ mod tests {
                 res,
                 vec![
                     &format!(
-                        r#"<label><input class="input" type="url" value="http://localhost:8078/share/r/{}" readonly="readonly"></label>"#,
+                        r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
                         share.link
                     ),
                     &format!(
-                        r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/r/{})">Copy</button>"#,
+                        r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/shared/r/{})">Copy</button>"#,
                         share.link
                     ),
                 ],

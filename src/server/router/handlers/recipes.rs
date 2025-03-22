@@ -238,7 +238,7 @@ pub async fn share_recipe_post_handler(
 
     match ShareRecipe::fetch_or_create(&state.mm, user_id, recipe_id, expires_at).await {
         Ok(share) => {
-            let url = format!("{}/share/r/{}", state.config.base_url, share.link);
+            let url = format!("{}/shared/r/{}", state.config.base_url, share.link);
             templates::general::share_link(&url).into_response()
         }
         Err(err) => {
