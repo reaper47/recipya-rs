@@ -1,9 +1,9 @@
-use maud::{Markup, PreEscaped, html};
+use maud::{html, Markup, PreEscaped};
 use url::Url;
 
 use crate::core::config::DataDir;
-use crate::core::model::RecipeDetails;
 use crate::core::model::recipe::{Category, Keyword, ToolRecipe};
+use crate::core::model::RecipeDetails;
 use crate::core::support::fs::is_file_exists;
 use crate::server::templates::data::{Data, ViewRecipe};
 use crate::server::templates::helpers::cut_string;
@@ -1307,14 +1307,14 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                                     "Share"
                                 }
                             }
-                        }
-                        li {
-                            a title="Duplicate recipe"
-                                hx-push-url="/recipes/add/manual"
-                                hx-get=(format!("/recipes/{recipe_id}/duplicate"))
-                                hx-target="#content" {
-                                (icon_document_duplicate())
-                                "Duplicate"
+                            li {
+                                a title="Duplicate recipe"
+                                    hx-push-url="/recipes/add/manual"
+                                    hx-get=(format!("/recipes/{recipe_id}/duplicate"))
+                                    hx-target="#content" {
+                                    (icon_document_duplicate())
+                                    "Duplicate"
+                                }
                             }
                         }
                         li title="Print recipe" _="on click print()" {
@@ -1339,13 +1339,14 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                 }
             }
             span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
-                @if matches!(&data.share, Some(share) if share.is_shared) &&
-                    !matches!(&data.share, Some(share) if share.is_from_host) {
-                    button class="mr-2"
-                        title="Add recipe to collection"
-                        hx-get=(format!("/recipes/{recipe_id}/share"))
-                        hx-push-url="true" {
-                        (icon_plus_circle())
+                @if matches!(&data.share, Some(share) if share.is_shared) {
+                    @if !matches!(&data.share, Some(share) if share.is_from_host) {
+                        button class="mr-2"
+                            title="Add recipe to collection"
+                            hx-get=(format!("/recipes/{recipe_id}/share"))
+                            hx-push-url="true" {
+                            (icon_plus_circle())
+                        }
                     }
                 } @else {
                     button title="Share recipe" class="mr-2 hidden sm:block"
@@ -1369,7 +1370,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                 button class="mr-2 hidden sm:block" title="Print recipe" _="on click print()" {
                     (icon_printer())
                 }
-                @if matches!(&data.share, Some(share) if share.is_from_host) {
+                @if !matches!(&data.share, Some(share) if share.is_shared) {
                     button title="Delete recipe"
                         class="mr-2 hidden sm:block"
                         hx-delete=(format!("/recipes/{recipe_id}"))

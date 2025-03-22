@@ -72,11 +72,11 @@ pub mod test_utils {
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
     use diesel::internal::derives::multiconnection::chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-    use diesel::{Connection, sql_query};
+    use diesel::{sql_query, Connection};
     use tower_cookies::{Cookie, CookieManagerLayer};
     use uuid::Uuid;
 
-    use crate::core::auth::token::{Token, generate_web_token};
+    use crate::core::auth::token::{generate_web_token, Token};
     use crate::core::config::Config;
     use crate::core::model::recipe::{
         Nutrition, NutritionForCreate, RecipeForCreate, Sections, Times, TimesForCreate,
@@ -84,11 +84,11 @@ pub mod test_utils {
     };
     use crate::core::model::user::{User, UserForCreate};
     use crate::core::model::{Recipe, RecipeDetails};
-    use crate::core::repository::ModelManager;
     use crate::core::repository::pool::make_db_pool;
+    use crate::core::repository::ModelManager;
     use crate::core::support::token::AUTH_TOKEN;
-    use crate::server::AppState;
     use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
+    use crate::server::AppState;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -161,8 +161,8 @@ pub mod test_utils {
                 "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}'",
                 self.db_name
             ))
-            .execute(&mut conn)
-            .expect("Error executing pg_terminate_backend query");
+                .execute(&mut conn)
+                .expect("Error executing pg_terminate_backend query");
 
             sql_query(format!("DROP DATABASE \"{}\"", self.db_name))
                 .execute(&mut conn)
@@ -193,7 +193,7 @@ pub mod test_utils {
 
         let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
-            .expect("Should be an user");
+            .expect("User should be in database");
 
         let token = generate_web_token(TEST_USER_EMAIL, user.token_salt)?;
 
@@ -234,7 +234,7 @@ pub mod test_utils {
         let state = AppState::new(app_config).await?;
         let user = User::get_user_by_email(&state.mm, auth_email)
             .await?
-            .expect("Should be an user");
+            .expect("User should be in database");
 
         let mut server = TestServer::new_with_config(routes, config)?;
 
@@ -260,7 +260,7 @@ pub mod test_utils {
                 password_clear: "12345678".to_string(),
             },
         )
-        .await?;
+            .await?;
 
         let user = User::get_user_by_email(&mm, &email)
             .await?
@@ -298,7 +298,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-        .await?;
+            .await?;
 
         User::new(
             &state.mm,
@@ -307,7 +307,7 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-        .await?;
+            .await?;
         Ok(app)
     }
 
@@ -320,7 +320,21 @@ pub mod test_utils {
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
-        .await?;
+            .await?;
+
+        Ok(user)
+    }
+
+    /// Inserts another test user in the database.
+    pub async fn insert_other_user(config: Config, email: &str) -> Result<User> {
+        let user = User::new(
+            &AppState::new(config.clone()).await?.mm,
+            UserForCreate {
+                email: email.into(),
+                password_clear: String::from(TEST_USER_PASSWORD),
+            },
+        )
+            .await?;
 
         Ok(user)
     }
@@ -485,10 +499,10 @@ pub mod test_utils {
     }
 
     /// Asserts that the response HTML does not contain any of the unwanted strings.
-    pub async fn assert_not_in_html(got: TestResponse, not_want: Vec<&str>) -> Result<()> {
+    pub fn assert_not_in_html(got: TestResponse, not_want: Vec<&str>) -> Result<()> {
         let text = got.text();
         for s in not_want {
-            assert!(!text.contains(s), "expected `{s}` not to be in html");
+            assert!(!text.contains(s), "expected `{s}` not to be in html: {}", got.text());
         }
 
         Ok(())
@@ -505,7 +519,7 @@ pub mod test_utils {
             axum::http::Method::DELETE => server.delete(uri),
             _ => unimplemented!(),
         }
-        .await;
+            .await;
 
         res.assert_status_see_other();
         res.assert_header("Location", "/auth/login");

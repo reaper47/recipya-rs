@@ -1,18 +1,18 @@
 use axum::body::Body;
 use axum::extract::{FromRequestParts, State};
-use axum::http::Request;
 use axum::http::request::Parts;
+use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::core::auth::token::{Token, validate_web_token};
+use crate::core::auth::token::{validate_web_token, Token};
 use crate::core::model::user::{User, UserForAuth};
-use crate::core::support::token::{AUTH_TOKEN, set_token_cookie};
-use crate::server::AppState;
+use crate::core::support::token::{set_token_cookie, AUTH_TOKEN};
 use crate::server::error::{Error, Result};
 use crate::server::router::handlers::context::Ctx;
+use crate::server::AppState;
 
 /// A wrapper around the `Ctx` type for use in request extraction.
 #[derive(Debug, Clone)]
@@ -68,11 +68,15 @@ pub async fn mw_ctx_resolver(
     mut req: Request<Body>,
     next: Next,
 ) -> Response {
-    let ctx_ext_result = ctx_resolve(state, &cookies).await;
+    let ctx_ext_result = match ctx_resolve(state, &cookies).await {
+        Err(_) if req.uri().path().starts_with("/shared") => Ok(CtxW(Ctx::root_ctx())),
+        Err(CtxExtError::TokenNotInCookie) => {
+            cookies.remove(Cookie::from(AUTH_TOKEN));
+            Err(CtxExtError::TokenNotInCookie)
+        }
+        ok => ok,
+    };
 
-    if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie)) {
-        cookies.remove(Cookie::from(AUTH_TOKEN))
-    }
 
     // Store the ctx_ext_result in the request extension (for Ctx extractor).
     req.extensions_mut().insert(ctx_ext_result);
