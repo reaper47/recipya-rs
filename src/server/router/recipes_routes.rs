@@ -1,14 +1,14 @@
 use axum::routing::{get, post};
-use axum::{middleware, Router};
+use axum::{Router, middleware};
 use serde::{Deserialize, Serialize};
 
+use crate::server::AppState;
 use crate::server::router::handlers::recipes::{
     add_manual_recipe_handler, add_recipes_handler, delete_recipe_handler,
     duplicate_recipe_handler, recipes_handler, share_recipe_post_handler,
     supported_applications_handler, supported_websites_handler, view_recipe_handler,
 };
 use crate::server::router::middleware::mw_auth;
-use crate::server::AppState;
 
 /// Represents the content of the share recipe form.
 #[derive(Deserialize, Serialize)]
@@ -44,7 +44,7 @@ mod tests {
     use axum::http::Method;
 
     use crate::core::config::Config;
-    use crate::server::test_utils::{build_server_logged_in, TestDb};
+    use crate::server::test_utils::{TestDb, build_server_logged_in};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -112,10 +112,10 @@ mod tests {
         use axum_test::TestResponse;
 
         use crate::core::model::Recipe;
+        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_must_be_logged_in_get, build_server_ws,
         };
-        use crate::server::AppState;
 
         fn base_uri(id: i64) -> String {
             format!("/recipes/{id}/duplicate")
@@ -195,14 +195,14 @@ mod tests {
         use diesel::prelude::*;
         use diesel_async::RunQueryDsl;
 
-        use crate::core::model::share::ShareRecipe;
         use crate::core::model::Recipe;
+        use crate::core::model::share::ShareRecipe;
         use crate::core::repository::schema;
+        use crate::server::AppState;
         use crate::server::router::recipes_routes::ShareRecipeForm;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
         };
-        use crate::server::AppState;
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}/share")
@@ -324,10 +324,10 @@ mod tests {
         use super::*;
 
         use crate::core::model::Recipe;
+        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
         };
-        use crate::server::AppState;
 
         const BASE_URI: &str = "/recipes";
 
@@ -391,13 +391,13 @@ mod tests {
         use axum_test::TestResponse;
         use uuid::Uuid;
 
-        use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
         use crate::core::model::Recipe;
+        use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
+        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
             build_server_ws,
         };
-        use crate::server::AppState;
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}")
