@@ -236,16 +236,16 @@ pub async fn share_recipe_post_handler(
         }
     });
 
-    match ShareRecipe::fetch_or_create(&state.mm, user_id, recipe_id, expires_at).await {
+    match ShareRecipe::new(&state.mm, user_id, recipe_id, expires_at).await {
         Ok(share) => {
             let url = format!("{}/shared/r/{}", state.config.base_url, share.link);
             templates::general::share_link(&url).into_response()
         }
         Err(err) => {
             error!(
-                "Error generating shared recipe link for recipe '{recipe_id}' and user '{user_id}' for shared recipe: {err}"
+                "Error generating shared recipe link for recipe '{recipe_id}' and user '{user_id}': {err}"
             );
-            let toast = MessageHtmx::error("Error parsing datetime for shared recipe.");
+            let toast = MessageHtmx::error("Error parsing datetime.");
             if let Ok(json) = serde_json::to_string(&toast) {
                 state.broadcast(user_id, Message::Text(json.into())).await;
             }

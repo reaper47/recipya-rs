@@ -193,7 +193,7 @@ pub mod test_utils {
 
         let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
-            .expect("Should be an user");
+            .expect("User should be in database");
 
         let token = generate_web_token(TEST_USER_EMAIL, user.token_salt)?;
 
@@ -234,7 +234,7 @@ pub mod test_utils {
         let state = AppState::new(app_config).await?;
         let user = User::get_user_by_email(&state.mm, auth_email)
             .await?
-            .expect("Should be an user");
+            .expect("User should be in database");
 
         let mut server = TestServer::new_with_config(routes, config)?;
 
@@ -317,6 +317,20 @@ pub mod test_utils {
             &AppState::new(config.clone()).await?.mm,
             UserForCreate {
                 email: String::from(TEST_USER_EMAIL),
+                password_clear: String::from(TEST_USER_PASSWORD),
+            },
+        )
+        .await?;
+
+        Ok(user)
+    }
+
+    /// Inserts another test user in the database.
+    pub async fn insert_other_user(config: Config, email: &str) -> Result<User> {
+        let user = User::new(
+            &AppState::new(config.clone()).await?.mm,
+            UserForCreate {
+                email: email.into(),
                 password_clear: String::from(TEST_USER_PASSWORD),
             },
         )
@@ -485,10 +499,14 @@ pub mod test_utils {
     }
 
     /// Asserts that the response HTML does not contain any of the unwanted strings.
-    pub async fn assert_not_in_html(got: TestResponse, not_want: Vec<&str>) -> Result<()> {
+    pub fn assert_not_in_html(got: TestResponse, not_want: Vec<&str>) -> Result<()> {
         let text = got.text();
         for s in not_want {
-            assert!(!text.contains(s), "expected `{s}` not to be in html");
+            assert!(
+                !text.contains(s),
+                "expected `{s}` not to be in html: {}",
+                got.text()
+            );
         }
 
         Ok(())

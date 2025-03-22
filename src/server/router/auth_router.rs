@@ -640,8 +640,10 @@ mod tests {
             res.assert_status_ok();
             assert_not_in_html(
                 res,
-                vec![r#"<a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a>"#],
-            ).await?;
+                vec![
+                    r#"<a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a>"#,
+                ],
+            )?;
             Ok(())
         }
 

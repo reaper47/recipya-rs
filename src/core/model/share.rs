@@ -2,11 +2,10 @@ use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::{Queryable, Selectable};
 use diesel_async::RunQueryDsl;
-use tracing::error;
 use uuid::Uuid;
 
-use crate::core::model::Error;
 use crate::core::model::error::Result;
+use crate::core::model::{Error, Recipe, RecipeDetails};
 use crate::core::repository::{ModelManager, schema};
 
 /// Represents a shared recipe
@@ -46,7 +45,7 @@ pub(super) struct SharedRecipeForInsert {
 impl ShareRecipe {
     /// Generates a shared recipe from the given recipe for the given user.
     /// Returns the corresponding shared recipe if it already exists in the database.
-    pub async fn fetch_or_create(
+    pub async fn new(
         mm: &ModelManager,
         recipe_id: i64,
         user_id: i64,
@@ -54,7 +53,7 @@ impl ShareRecipe {
     ) -> Result<ShareRecipe> {
         let mut conn = mm.pool.get().await?;
 
-        match diesel::insert_into(schema::shares_recipes::table)
+        diesel::insert_into(schema::shares_recipes::table)
             .values(&SharedRecipeForInsert {
                 recipe_id,
                 user_id,
@@ -64,21 +63,25 @@ impl ShareRecipe {
             .returning(ShareRecipe::as_returning())
             .get_result(&mut conn)
             .await
-        {
-            Ok(shared_recipe) => Ok(shared_recipe),
-            Err(err) => {
-                error!("Could not insert shared recipe: {err}");
-                schema::shares_recipes::table
-                    .filter(
-                        schema::shares_recipes::recipe_id
-                            .eq(recipe_id)
-                            .and(schema::shares_recipes::user_id.eq(user_id)),
-                    )
-                    .first::<ShareRecipe>(&mut conn)
-                    .await
-                    .map_err(|err| Error::Diesel(err.to_string()))
-            }
-        }
+            .map_err(Error::from)
+    }
+
+    /// Retrieves a shared recipe by its link UUID.
+    pub async fn get_by_link(
+        mm: &ModelManager,
+        link: Uuid,
+    ) -> Result<(ShareRecipe, RecipeDetails)> {
+        let mut conn = mm.pool.get().await?;
+
+        let share = schema::shares_recipes::table
+            .filter(schema::shares_recipes::link.eq(link))
+            .first::<ShareRecipe>(&mut conn)
+            .await
+            .map_err(Error::from)?;
+
+        let recipe = Recipe::get(mm, share.user_id, share.recipe_id).await?;
+
+        Ok((share, recipe))
     }
 }
 
@@ -86,26 +89,27 @@ impl ShareRecipe {
 mod tests {
     use super::*;
 
+    use crate::core::config::Config;
+    use crate::core::model::Recipe;
+    use crate::server::AppState;
+    use crate::server::test_utils::{a_complete_recipe_for_create, build_server_logged_in};
+
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-    mod test_fetch_or_create {
+    mod test_new {
         use super::*;
         use diesel::internal::derives::multiconnection::chrono;
 
-        use crate::core::model::Recipe;
         use crate::server::AppState;
-        use crate::server::test_utils::{
-            TestDb, a_complete_recipe_for_create, build_server_logged_in,
-        };
+        use crate::server::test_utils::TestDb;
 
         #[tokio::test]
         async fn test_generate_shared_default_expiration_recipe_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = AppState::new(config.clone()).await?;
-            let _ = build_server_logged_in(config.clone()).await?;
-            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+            insert_recipe(&config, &state).await?;
 
-            let got = ShareRecipe::fetch_or_create(&state.mm, 1, 1, None).await?;
+            let got = ShareRecipe::new(&state.mm, 1, 1, None).await?;
 
             assert_share_recipe(
                 &got,
@@ -127,12 +131,10 @@ mod tests {
         async fn test_generate_shared_recipe_custom_expiration_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = AppState::new(config.clone()).await?;
-            let _ = build_server_logged_in(config.clone()).await?;
-            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+            insert_recipe(&config, &state).await?;
             let expires_at = chrono::Utc::now() + chrono::Duration::days(14);
 
-            let got = ShareRecipe::fetch_or_create(&state.mm, 1, 1, Some(expires_at.naive_local()))
-                .await?;
+            let got = ShareRecipe::new(&state.mm, 1, 1, Some(expires_at.naive_local())).await?;
 
             assert_share_recipe(
                 &got,
@@ -151,29 +153,18 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_shared_recipe_already_generated_ok() -> Result<()> {
+        async fn test_shared_recipe_already_generated_err() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = AppState::new(config.clone()).await?;
-            let _ = build_server_logged_in(config.clone()).await?;
-            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
-            let _ = ShareRecipe::fetch_or_create(&state.mm, 1, 1, None).await?;
+            insert_recipe(&config, &state).await?;
+            let _ = ShareRecipe::new(&state.mm, 1, 1, None).await?;
 
-            let got = ShareRecipe::fetch_or_create(&state.mm, 1, 1, None).await?;
+            let res = ShareRecipe::new(&state.mm, 1, 1, None).await;
 
-            assert_share_recipe(
-                &got,
-                &ShareRecipe {
-                    id: 1,
-                    link: got.link,
-                    user_id: 1,
-                    recipe_id: 1,
-                    created_at: got.created_at,
-                    expires_at: got.expires_at,
-                    last_accessed: got.last_accessed,
-                    click_count: 0,
-                },
-            );
-            Ok(())
+            match res {
+                Ok(_) => panic!("Should not have inserted an entry in the database"),
+                Err(_) => Ok(()),
+            }
         }
 
         fn assert_share_recipe(got: &ShareRecipe, want: &ShareRecipe) {
@@ -198,5 +189,44 @@ mod tests {
                 .unwrap_or(i64::MAX);
             assert!(diff.abs() <= 1000, "Last accessed at");
         }
+    }
+
+    mod tests_fetch_by_link {
+        use super::*;
+        use crate::server::AppState;
+        use crate::server::test_utils::TestDb;
+
+        #[tokio::test]
+        async fn test_exists_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            insert_recipe(&config, &state).await?;
+            let shared = ShareRecipe::new(&state.mm, 1, 1, None).await?;
+
+            let (got, _) = ShareRecipe::get_by_link(&state.mm, shared.link).await?;
+
+            pretty_assertions::assert_eq!(got.id, shared.id);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_exists_err() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            insert_recipe(&config, &state).await?;
+
+            let res = ShareRecipe::get_by_link(&state.mm, Uuid::new_v4()).await;
+
+            match res {
+                Ok(_) => panic!("Entry should not have been found"),
+                Err(_) => Ok(()),
+            }
+        }
+    }
+
+    async fn insert_recipe(config: &Config, state: &AppState) -> Result<()> {
+        let _ = build_server_logged_in(config.clone()).await?;
+        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        Ok(())
     }
 }

@@ -68,11 +68,14 @@ pub async fn mw_ctx_resolver(
     mut req: Request<Body>,
     next: Next,
 ) -> Response {
-    let ctx_ext_result = ctx_resolve(state, &cookies).await;
-
-    if ctx_ext_result.is_err() && !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie)) {
-        cookies.remove(Cookie::from(AUTH_TOKEN))
-    }
+    let ctx_ext_result = match ctx_resolve(state, &cookies).await {
+        Err(_) if req.uri().path().starts_with("/shared") => Ok(CtxW(Ctx::root_ctx())),
+        Err(CtxExtError::TokenNotInCookie) => {
+            cookies.remove(Cookie::from(AUTH_TOKEN));
+            Err(CtxExtError::TokenNotInCookie)
+        }
+        ok => ok,
+    };
 
     // Store the ctx_ext_result in the request extension (for Ctx extractor).
     req.extensions_mut().insert(ctx_ext_result);
