@@ -1,30 +1,30 @@
 use std::fmt::Write;
 
-use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum::http::HeaderMap;
 use axum::response::{Html, IntoResponse};
+use axum::Form;
 use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use reqwest::StatusCode;
 use tracing::error;
 
-use crate::core::model::Error::EntityNotFound;
-use crate::core::model::Recipe;
 use crate::core::model::recipe::{Category, Keyword};
 use crate::core::model::share::ShareRecipe;
 use crate::core::model::user::User;
 use crate::core::model::website::{ToHtmlTable, Website};
-use crate::server::router::SearchParams;
+use crate::core::model::Error::EntityNotFound;
+use crate::core::model::Recipe;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
 use crate::server::router::recipes_routes::ShareRecipeForm;
+use crate::server::router::SearchParams;
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
 };
-use crate::server::{AppState, templates};
+use crate::server::{templates, AppState};
 use crate::server::{Error, Result};
 
 /// Handles deleting a user's recipe.
@@ -144,7 +144,7 @@ pub async fn recipes_handler(
         },
         state.data_dir,
     )
-    .into_response()
+        .into_response()
 }
 
 /// Handles the duplicate recipe endpoint.
@@ -170,7 +170,7 @@ pub async fn duplicate_recipe_handler(
                 id: recipe_id,
                 entity: "recipe",
             })
-            .into_response();
+                .into_response();
         }
     };
 
@@ -214,7 +214,7 @@ pub async fn duplicate_recipe_handler(
         categories,
         keywords,
     )
-    .into_response()
+        .into_response()
 }
 
 /// Handles generating a link for the recipe to share.
@@ -238,7 +238,7 @@ pub async fn share_recipe_post_handler(
 
     match ShareRecipe::fetch_or_create(&state.mm, user_id, recipe_id, expires_at).await {
         Ok(share) => {
-            let url = format!("{}/r/{}", state.config.base_url, share.link);
+            let url = format!("{}/share/r/{}", state.config.base_url, share.link);
             templates::general::share_link(&url).into_response()
         }
         Err(err) => {
@@ -311,7 +311,7 @@ pub async fn add_manual_recipe_handler(
         categories,
         keywords,
     )
-    .into_response()
+        .into_response()
 }
 
 async fn fetch_categories_keywords(

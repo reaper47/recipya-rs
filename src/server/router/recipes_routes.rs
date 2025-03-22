@@ -231,7 +231,7 @@ mod tests {
                 res,
                 vec![
                     &format!(
-                        r#"<label><input class="input" type="url" value="http://localhost:8078/r/{}" readonly="readonly"></label>"#,
+                        r#"<label><input class="input" type="url" value="http://localhost:8078/share/r/{}" readonly="readonly"></label>"#,
                         share.link
                     ),
                     &format!(
@@ -264,7 +264,7 @@ mod tests {
                 res,
                 vec![
                     &format!(
-                        r#"<label><input class="input" type="url" value="http://localhost:8078/r/{}" readonly="readonly"></label>"#,
+                        r#"<label><input class="input" type="url" value="http://localhost:8078/share/r/{}" readonly="readonly"></label>"#,
                         share.link
                     ),
                     &format!(
