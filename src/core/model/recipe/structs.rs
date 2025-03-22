@@ -16,7 +16,7 @@ pub type Sections = Vec<(String, Vec<String>)>;
 #[diesel(table_name = schema::recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Recipe {
-    /// The unique identifier for the recipe.
+    /// The unique identifier of the recipe.
     pub id: i64,
     /// The name of the recipe.
     pub name: String,

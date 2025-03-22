@@ -79,25 +79,27 @@ the [installation section](https://recipes.musicavis.ca/guide/docs/installation/
 
 Dependencies:
 
-1. Install rust: https://www.rust-lang.org/
-2. Install nodejs to build the frontend: https://nodejs.org/en/download/package-manager
-3. Install Task: https://taskfile.dev/installation/
-4. Install hugo extended to build the documentation website: https://gohugo.io/installation/
-5. PostgreSQL: https://www.postgresql.org/download/
-6. Diesel: `cargo install diesel_cli`
+1. Rust: https://www.rust-lang.org/
+2. Nodejs: https://nodejs.org/en/download/package-manager
+3. PostgreSQL: https://www.postgresql.org/download/ and the [pg_cron extension](https://github.com/citusdata/pg_cron)
+4. Diesel: `cargo install diesel_cli --no-default-features --features postgres`
+
+PostgreSQL extensions:
+
+Add the following to `/var/lib/pgsql/data/postgresql.conf` once `pg_cron` is installed:
+
+- `shared_preload_libraries = 'pg_cron'` <- Uncomment this line
+- `cron.database_name = 'recipya'` <- New line
 
 To build:
 
-1. Build the docs: `task build-docs`
-2. Build the frontend: `task build-web`
-3. Set the environment variables in `.cargo/config.toml`
-3. Run recipya: `cargo run -p recipya`
+1. Set the environment variables in `.cargo/config.toml`
+2. Run recipya: `cargo run -p recipya`
 
 #### Development Container
 
 You may use the devcontainer to help develop Recipya. The `RECIPYA_DATABASE_URL` environment variable in your
-`.cargo/config.toml` file
-would be `RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432/recipya"`.
+`.cargo/config.toml` file would be `RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432/recipya"`.
 
 #### Once recipya-rs becomes the defacto Recipya:
 

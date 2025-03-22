@@ -1343,7 +1343,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                     !matches!(&data.share, Some(share) if share.is_from_host) {
                     button class="mr-2"
                         title="Add recipe to collection"
-                        hx-get=(format!("/recipes/{recipe_id}/share/add"))
+                        hx-get=(format!("/recipes/{recipe_id}/share"))
                         hx-push-url="true" {
                         (icon_plus_circle())
                     }

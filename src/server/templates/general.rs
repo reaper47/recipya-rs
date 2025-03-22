@@ -2,6 +2,19 @@ use maud::{Markup, html};
 
 use super::layouts;
 
+/// Renders a share link component.
+pub fn share_link(url: &str) -> Markup {
+    html! {
+        div class="grid grid-flow-col gap-2" {
+            label {
+                input type="url" value=(url) .input readonly="readonly";
+            }
+            button #copy-button .btn.btn-neutral title="Copy to clipboard" onClick=(format!("copyToClipboard({url})")) { "Copy" }
+        }
+    }
+}
+
+/// Renders a simple page that displays a message.
 pub fn simple(title: &str, content: &str) -> Markup {
     layouts::auth(
         title,

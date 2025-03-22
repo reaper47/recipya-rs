@@ -125,6 +125,8 @@ pub(super) fn auth_routes(state: AppState) -> Router<AppState> {
 mod tests {
     use super::*;
 
+    use axum::http::Method;
+
     use crate::core::config::Config;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -149,7 +151,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_change_password_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::POST, BASE_URI).await
         }
 
         #[tokio::test]
@@ -314,7 +316,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_user_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(BASE_URI).await
+            assert_must_be_logged_in_get(Method::DELETE, BASE_URI).await
         }
 
         #[tokio::test]

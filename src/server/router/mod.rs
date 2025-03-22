@@ -1,9 +1,10 @@
 mod auth_router;
 mod general_router;
 mod handlers;
-pub(crate) mod middleware;
 mod recipes_routes;
 mod static_files_router;
+
+pub mod middleware;
 
 pub use handlers::params::SearchParams;
 
