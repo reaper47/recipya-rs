@@ -9,14 +9,36 @@ use super::structs::*;
 use crate::core::model::user::{UserCategory, UserKeyword};
 use crate::core::model::{Error, Result};
 use crate::core::repository::ModelManager;
+use crate::core::repository::schema;
 
 impl Recipe {
+    /// Adds a recipe category into the database.
+    pub async fn add_category(mm: &ModelManager, category: &str, user_id: i64) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        let category_id = diesel::insert_into(schema::categories::table)
+            .values(&CategoryForInsert {
+                name: Some(category.to_string()),
+            })
+            .on_conflict(schema::categories::name)
+            .do_update()
+            .set(schema::categories::name.eq(category.to_string()))
+            .returning(schema::categories::id)
+            .get_result(&mut conn)
+            .await?;
+
+        diesel::insert_into(schema::users_categories::table)
+            .values(&UserCategory {
+                user_id,
+                category_id,
+            })
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
     /// Creates a new recipe in the database for a given user.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(i64)` with the ID of the newly created recipe on success, or an `Err(Error)`
-    /// if the operation fails.
     ///
     /// # Notes
     ///
@@ -28,8 +50,6 @@ impl Recipe {
         user_id: i64,
         recipe_c: &RecipeForCreate,
     ) -> Result<i64> {
-        use crate::core::repository::schema;
-
         let mut conn = mm.pool.get().await?;
 
         let recipe_id = conn
@@ -389,6 +409,60 @@ mod tests {
     use crate::server::test_utils::{TestDb, a_complete_recipe_for_create, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod tests_add_category {
+        use super::*;
+        use crate::server::test_utils::build_server_logged_in;
+
+        #[tokio::test]
+        async fn test_create_new_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            let _ = build_server_logged_in(config.clone()).await?;
+            let category = "fish";
+
+            Recipe::add_category(&state.mm, category, 1).await?;
+
+            assert_category(state, category).await?;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_create_new_duplicate_err() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = AppState::new(config.clone()).await?;
+            let _ = build_server_logged_in(config.clone()).await?;
+            let category = "fish";
+            Recipe::add_category(&state.mm, category, 1).await?;
+
+            let res = Recipe::add_category(&state.mm, category, 1).await;
+
+            match res {
+                Ok(_) => panic!("Should not succeed"),
+                Err(_) => {
+                    assert_category(state, category).await?;
+                    Ok(())
+                }
+            }
+        }
+
+        async fn assert_category(state: AppState, category: &str) -> Result<()> {
+            let mut conn = state.mm.pool.get().await?;
+            let category_id = schema::categories::table
+                .filter(schema::categories::name.eq(category))
+                .select(schema::categories::id)
+                .first::<i64>(&mut conn)
+                .await?;
+            assert!(category_id > 0);
+            let count = schema::users_categories::table
+                .filter(schema::users_categories::category_id.eq(category_id))
+                .count()
+                .get_result::<i64>(&mut conn)
+                .await?;
+            pretty_assertions::assert_eq!(count, 1);
+            Ok(())
+        }
+    }
 
     fn a_bare_minimum_recipe() -> RecipeForCreate {
         RecipeForCreate {

@@ -19,7 +19,7 @@ use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::router::recipes_routes::ShareRecipeForm;
+use crate::server::router::recipes_routes::{RecipeCategoryForm, ShareRecipeForm};
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
@@ -343,6 +343,31 @@ async fn fetch_categories_keywords(
     };
 
     Ok((categories, keywords))
+}
+
+/// Handles adding a recipe category into the database.
+pub async fn post_recipe_categories_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<RecipeCategoryForm>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let category = form.category;
+    if category.is_empty() {
+        return Error::InvalidPayload.into_response();
+    }
+
+    if let Err(err) = Recipe::add_category(&state.mm, &category, user_id).await {
+        error!("Error adding recipe category: {err}");
+        let toast = MessageHtmx::error("Failed to add recipe category.");
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(user_id, Message::Text(json.into())).await;
+        }
+        return Error::Database.into_response();
+    }
+
+    templates::settings::new_recipe_category(&category).into_response()
 }
 
 /// Handles viewing a recipe.
