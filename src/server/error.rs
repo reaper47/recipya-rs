@@ -20,10 +20,11 @@ pub enum Error {
     GenerateToken,
     NoToken,
 
+    BadTimeFormat,
     Database,
     DeleteForbidden,
     Form,
-    BadTimeFormat,
+    InvalidPayload,
     NoUser,
     NoRecipe,
 
@@ -66,6 +67,7 @@ impl Error {
             BadTimeFormat => (StatusCode::BAD_REQUEST, ClientError::BAD_TIME_FORMAT),
             DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DELETE_FORBIDDEN),
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
+            InvalidPayload => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
             NoUser => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::ENTITY_NOT_FOUND {
@@ -120,6 +122,7 @@ pub enum ClientError {
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     BAD_TIME_FORMAT,
     FORM_ERROR,
+    INVALID_PAYLOAD,
     LOGIN_FAIL,
     LOGOUT_FAIL,
     MISSING_PARAMS,

@@ -7,7 +7,18 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="" />
+    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/server/templates/settings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/auth_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/auth_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/general_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/general_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/mod.rs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -87,6 +98,8 @@
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::test_create_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_found_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_not_found_err.executor": "Run",
     "Cargo.Test core::model::recipe::export::tests::test_to_markdown_complete_recipe_ok.executor": "Run",
@@ -189,6 +202,9 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_not_exist_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_category_cannot_be_empty_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok.executor": "Run",
@@ -226,6 +242,7 @@
     "Cargo.Test test_fetch_or_create.executor": "Run",
     "Cargo.Test test_new.executor": "Run",
     "Cargo.Test tests_add.executor": "Run",
+    "Cargo.Test tests_add_category.executor": "Run",
     "Cargo.Test tests_change_password.executor": "Run",
     "Cargo.Test tests_confirm.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
@@ -246,7 +263,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "37-implement-get-recipesidshareadd",
+    "git-widget-placeholder": "48-implement-post-recipescategories",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -289,7 +306,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test shared_router::tests">
+  <component name="RunManager" selected="Cargo.Test tests_recipe_categories">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -308,8 +325,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::shared_router::tests::test_recipe_not_shared_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::shared_router::tests::test_recipe_not_shared_ok -- --exact" />
+    <configuration name="Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -325,8 +342,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::shared_router::tests::test_shared_anonymous_ok -- --exact" />
+    <configuration name="Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::create::tests::tests_add_category::test_create_new_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -342,8 +359,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::shared_router::tests::test_shared_logged_in_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::shared_router::tests::test_shared_logged_in_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test__ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -359,8 +376,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::shared_router::tests::test_shared_logged_in_other_user_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::shared_router::tests::test_shared_logged_in_other_user_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -376,8 +393,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test shared_router::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::shared_router::tests" />
+    <configuration name="Test tests_recipe_categories" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -395,19 +412,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test server::router::shared_router::tests::test_recipe_not_shared_ok" />
-      <item itemvalue="Cargo.Test server::router::shared_router::tests::test_shared_anonymous_ok" />
-      <item itemvalue="Cargo.Test server::router::shared_router::tests::test_shared_logged_in_ok" />
-      <item itemvalue="Cargo.Test server::router::shared_router::tests::test_shared_logged_in_other_user_ok" />
-      <item itemvalue="Cargo.Test shared_router::tests" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok" />
+      <item itemvalue="Cargo.Test tests_recipe_categories" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test shared_router::tests" />
-        <item itemvalue="Cargo.Test server::router::shared_router::tests::test_recipe_not_shared_ok" />
-        <item itemvalue="Cargo.Test server::router::shared_router::tests::test_shared_anonymous_ok" />
-        <item itemvalue="Cargo.Test server::router::shared_router::tests::test_shared_logged_in_other_user_ok" />
-        <item itemvalue="Cargo.Test server::router::shared_router::tests::test_shared_logged_in_ok" />
+        <item itemvalue="Cargo.Test tests_recipe_categories" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok" />
       </list>
     </recent_temporary>
   </component>

@@ -513,7 +513,7 @@ pub mod test_utils {
     }
 
     /// Asserts that the user cannot access the specified URI.
-    pub async fn assert_must_be_logged_in_get(method: axum::http::Method, uri: &str) -> Result<()> {
+    pub async fn assert_must_be_logged_in(method: axum::http::Method, uri: &str) -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_anonymous(config).await?;
 

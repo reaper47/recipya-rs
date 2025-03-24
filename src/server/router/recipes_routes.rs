@@ -5,8 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::server::AppState;
 use crate::server::router::handlers::recipes::{
     add_manual_recipe_handler, add_recipes_handler, delete_recipe_handler,
-    duplicate_recipe_handler, recipes_handler, share_recipe_post_handler,
-    supported_applications_handler, supported_websites_handler, view_recipe_handler,
+    duplicate_recipe_handler, post_recipe_categories_handler, recipes_handler,
+    share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
+    view_recipe_handler,
 };
 use crate::server::router::middleware::mw_auth;
 
@@ -14,6 +15,12 @@ use crate::server::router::middleware::mw_auth;
 #[derive(Deserialize, Serialize)]
 pub struct ShareRecipeForm {
     pub datetime: Option<String>,
+}
+
+/// Represents the content of a recipe category form.
+#[derive(Deserialize, Serialize)]
+pub struct RecipeCategoryForm {
+    pub category: String,
 }
 
 /// Defines the routes for endpoints related to recipes.
@@ -28,6 +35,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
         .route("/{:recipe_id}/share", post(share_recipe_post_handler))
         .route("/add", get(add_recipes_handler))
         .route("/add/manual", get(add_manual_recipe_handler))
+        .route("/categories", post(post_recipe_categories_handler))
         .route(
             "/supported-applications",
             get(supported_applications_handler),
@@ -44,7 +52,7 @@ mod tests {
     use axum::http::Method;
 
     use crate::core::config::Config;
-    use crate::server::test_utils::{TestDb, build_server_logged_in};
+    use crate::server::test_utils::{TestDb, assert_must_be_logged_in, build_server_logged_in};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -53,13 +61,13 @@ mod tests {
 
         use axum_test::TestResponse;
 
-        use crate::server::test_utils::{assert_html, assert_must_be_logged_in_get};
+        use crate::server::test_utils::{assert_html, assert_must_be_logged_in};
 
         const BASE_URI: &str = "/recipes/add";
 
         #[tokio::test]
         async fn test_add_recipe_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
+            assert_must_be_logged_in(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -114,7 +122,7 @@ mod tests {
         use crate::core::model::Recipe;
         use crate::server::AppState;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_must_be_logged_in_get, build_server_ws,
+            a_complete_recipe_for_create, assert_must_be_logged_in, build_server_ws,
         };
 
         fn base_uri(id: i64) -> String {
@@ -123,7 +131,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::GET, &base_uri(1)).await
+            assert_must_be_logged_in(Method::GET, &base_uri(1)).await
         }
 
         #[tokio::test]
@@ -201,7 +209,7 @@ mod tests {
         use crate::server::AppState;
         use crate::server::router::recipes_routes::ShareRecipeForm;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in,
         };
 
         fn base_uri(recipe_id: i64) -> String {
@@ -210,7 +218,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::POST, &base_uri(1)).await
+            assert_must_be_logged_in(Method::POST, &base_uri(1)).await
         }
 
         #[tokio::test]
@@ -326,14 +334,14 @@ mod tests {
         use crate::core::model::Recipe;
         use crate::server::AppState;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in,
         };
 
         const BASE_URI: &str = "/recipes";
 
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
+            assert_must_be_logged_in(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -395,8 +403,7 @@ mod tests {
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
         use crate::server::AppState;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in_get,
-            build_server_ws,
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, build_server_ws,
         };
 
         fn base_uri(recipe_id: i64) -> String {
@@ -406,7 +413,7 @@ mod tests {
         // region GET /recipes/{id}
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::GET, &base_uri(1)).await
+            assert_must_be_logged_in(Method::GET, &base_uri(1)).await
         }
 
         #[tokio::test]
@@ -644,7 +651,7 @@ mod tests {
         // region DELETE /recipes/{id}
         #[tokio::test]
         async fn test_delete_recipe_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::DELETE, &base_uri(1)).await
+            assert_must_be_logged_in(Method::DELETE, &base_uri(1)).await
         }
 
         #[tokio::test]
@@ -717,7 +724,7 @@ mod tests {
 
     mod tests_recipe_add_manual {
         use super::*;
-        use crate::server::test_utils::assert_must_be_logged_in_get;
+        use crate::server::test_utils::assert_must_be_logged_in;
         use axum::http::HeaderValue;
         use axum_test::TestResponse;
 
@@ -725,7 +732,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
+            assert_must_be_logged_in(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -812,18 +819,85 @@ mod tests {
         }
     }
 
+    mod tests_recipe_categories {
+        use super::*;
+
+        use crate::server::router::recipes_routes::RecipeCategoryForm;
+        use crate::server::test_utils::build_server_ws;
+
+        const BASE_URI: &str = "/recipes/categories";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_category_cannot_be_empty_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeCategoryForm {
+                    category: String::new(),
+                })
+                .await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_user_already_has_category_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws) = build_server_ws(config).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeCategoryForm {
+                    category: String::from("uncategorized"),
+                })
+                .await;
+
+            res.assert_status_internal_server_error();
+            let _ = ws.receive_message().await;
+            ws
+                .assert_receive_text_contains(r#"{"showMessageHtmx":{"type":"toast","message":"Failed to add recipe category.","status":"alert-error","title":"Operation Failed"}}"#)
+                .await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_add_category_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeCategoryForm {
+                    category: String::from("fish"),
+                })
+                .await;
+
+            res.assert_status_ok();
+            res.assert_text_contains(r#"<div class="badge badge-outline p-3 pr-0"><form class="inline-flex" hx-delete="/recipes/categories" hx-target="closest <div/>" hx-swap="delete"><input type="hidden" name="category" value="fish"><span class="select-none">fish</span><button class="btn btn-xs btn-ghost" type="submit">X</button></form></div><div class="badge badge-outline p-3 pr-0"><form class="inline-flex" hx-post="/recipes/categories" hx-target="closest <div/>" hx-swap="outerHTML"><label class="input"><input required type="text" placeholder="New category" class="input input-ghost input-xs w-[16ch] focus:outline-none" name="category" autocomplete="off"></label><button class="btn btn-xs btn-ghost">&#10003;</button></form></div>"#);
+            Ok(())
+        }
+    }
+
     mod tests_supported_applications {
         use super::*;
 
         use axum::http::header::CONTENT_TYPE;
 
-        use crate::server::test_utils::assert_must_be_logged_in_get;
+        use crate::server::test_utils::assert_must_be_logged_in;
 
         const BASE_URI: &str = "/recipes/supported-applications";
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
+            assert_must_be_logged_in(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]
@@ -845,13 +919,13 @@ mod tests {
 
         use axum_test::http::header::CONTENT_TYPE;
 
-        use crate::server::test_utils::assert_must_be_logged_in_get;
+        use crate::server::test_utils::assert_must_be_logged_in;
 
         const BASE_URI: &str = "/recipes/supported-websites";
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in_get(Method::GET, BASE_URI).await
+            assert_must_be_logged_in(Method::GET, BASE_URI).await
         }
 
         #[tokio::test]

@@ -9,3 +9,4 @@ mod helpers;
 mod pagination;
 pub(super) mod recipes;
 mod search;
+pub(super) mod settings;
