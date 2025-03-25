@@ -101,10 +101,8 @@ impl Recipe {
                         .on_conflict(schema::categories::name)
                         .do_update()
                         .set(
-                            schema::categories::name.eq(recipe_c
-                                .category
-                                .clone()
-                                .unwrap_or(String::from("uncategorized"))),
+                            schema::categories::name
+                                .eq(recipe_c.category.clone().unwrap_or("uncategorized".into())),
                         )
                         .returning(schema::categories::id)
                         .get_result::<i64>(&mut conn)
@@ -218,9 +216,7 @@ impl Recipe {
                                 .values(
                                     instructions
                                         .iter()
-                                        .map(|name| InstructionForInsert {
-                                            name: String::from(name),
-                                        })
+                                        .map(|name| InstructionForInsert { name: name.into() })
                                         .collect::<Vec<_>>(),
                                 )
                                 .on_conflict(schema::instructions::name)
@@ -466,42 +462,39 @@ mod tests {
 
     fn a_bare_minimum_recipe() -> RecipeForCreate {
         RecipeForCreate {
-            name: String::from("Best Chinese Kale"),
+            name: "Best Chinese Kale".into(),
             description: None,
             images: None,
             yield_: Some(4),
             source: None,
             videos: vec![],
-            category: Some(String::from("uncategorized")),
+            category: Some("uncategorized".into()),
             cuisine: None,
             ingredients: Sections::from([
                 (
-                    String::from("Sauce"),
-                    vec![
-                        String::from("1 cup blue spinach"),
-                        String::from("1/2 tbsp cinnamon"),
-                    ],
+                    "Sauce".into(),
+                    Vec::<String>::from(["1 cup blue spinach".into(), "1/2 tbsp cinnamon".into()]),
                 ),
                 (
-                    String::from("Main"),
-                    vec![
-                        String::from("4 pounds top quality chicken filet"),
-                        String::from("1/8 cup lemon juice"),
-                    ],
+                    "Main".into(),
+                    Vec::<String>::from([
+                        "4 pounds top quality chicken filet".into(),
+                        "1/8 cup lemon juice".into(),
+                    ]),
                 ),
             ]),
             instructions: Sections::from([
                 (
-                    String::from("Sauce"),
-                    vec![String::from("Mix all these ingredients")],
+                    "Sauce".into(),
+                    Vec::<String>::from(["Mix all these ingredients".into()]),
                 ),
                 (
-                    String::from("Chicken"),
-                    vec![
-                        String::from("Turn the oven at 300 F"),
-                        String::from("Soak the chicken in the lemon juice"),
-                        String::from("Bake for 35 minutes"),
-                    ],
+                    "Chicken".into(),
+                    Vec::<String>::from([
+                        "Turn the oven at 300 F".into(),
+                        "Soak the chicken in the lemon juice".into(),
+                        "Bake for 35 minutes".into(),
+                    ]),
                 ),
             ]),
             keywords: vec![],
@@ -553,14 +546,14 @@ mod tests {
                 description: recipe.description,
                 image: main_image,
                 yield_: recipe.yield_.unwrap_or(4),
-                language: String::from("eng"),
+                language: "eng".into(),
                 source: recipe.source,
                 user_id: 1,
                 created_at: got.recipe.created_at,
                 updated_at: got.recipe.updated_at,
             },
             additional_images,
-            category: recipe.category.unwrap_or(String::from("uncategorized")),
+            category: recipe.category.unwrap_or("uncategorized".into()),
             cuisine: recipe.cuisine,
             ingredients: recipe.ingredients,
             instructions: recipe.instructions,
@@ -630,7 +623,7 @@ mod tests {
         let user = insert_user(config.clone()).await?;
         let mut recipe = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
-        recipe.name = String::from("Duplicate");
+        recipe.name = "Duplicate".into();
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 

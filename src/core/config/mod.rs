@@ -19,8 +19,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            base_url: String::from("http://localhost:8078"),
-            database_url: String::from("postgres://postgres:postgres@localhost:5432/recipya"),
+            base_url: "http://localhost:8078".into(),
+            database_url: "postgres://postgres:postgres@localhost:5432/recipya".into(),
             is_autologin: false,
             is_demo: false,
             is_no_signups: false,

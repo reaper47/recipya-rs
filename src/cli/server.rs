@@ -50,7 +50,7 @@ pub async fn server() -> Result<()> {
 }
 
 async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
-    let admin_email = String::from("admin@autologin.com");
+    let admin_email: String = "admin@autologin.com".into();
 
     match User::get_user_by_email(mm, &admin_email).await {
         Ok(Some(_)) => {

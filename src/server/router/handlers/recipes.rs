@@ -370,6 +370,35 @@ pub async fn post_recipe_categories_handler(
     templates::settings::new_recipe_category(&category).into_response()
 }
 
+/// Handles deleting a recipe category from the database.
+pub async fn delete_recipe_categories_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<RecipeCategoryForm>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let category = form.category;
+    if category.is_empty() || category == "uncategorized" {
+        let toast = MessageHtmx::error("Category cannot be empty or uncategorized.");
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(user_id, Message::Text(json.into())).await;
+        }
+        return Error::InvalidPayload.into_response();
+    }
+
+    if let Err(err) = Recipe::delete_recipe_category(&state.mm, &category, user_id).await {
+        error!("Error deleting recipe category: {err}");
+        let toast = MessageHtmx::error("Failed to delete recipe category.");
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(user_id, Message::Text(json.into())).await;
+        }
+        return Error::Database.into_response();
+    }
+
+    (StatusCode::NO_CONTENT, "").into_response()
+}
+
 /// Handles viewing a recipe.
 pub async fn view_recipe_handler(
     ctx: CtxW,
@@ -427,8 +456,8 @@ pub async fn view_recipe_handler(
                 url_queries: "".to_string(),
             }),
             searchbar: Some(SearchbarData {
-                sort: String::from("a-z"),
-                term: String::from("a-z"),
+                sort: "a-z".into(),
+                term: "a-z".into(),
             }),
             share: Some(ShareData {
                 is_from_host: true,

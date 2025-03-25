@@ -100,15 +100,14 @@ pub mod test_utils {
 
     /// The database URL used for connecting to the database in test environments.
     pub(crate) fn test_database_url() -> String {
-        std::env::var("RECIPYA_DATABASE_TEST_URL").unwrap_or(String::from(
-            "postgres://postgres:postgres@localhost:5432/recipya_test",
-        ))
+        std::env::var("RECIPYA_DATABASE_TEST_URL")
+            .unwrap_or("postgres://postgres:postgres@localhost:5432/recipya_test".into())
     }
 
     /// Provides a default config for the tests.
     pub fn default_config() -> Config {
         Config {
-            base_url: String::from("http://localhost:8078"),
+            base_url: "http://localhost:8078".into(),
             database_url: test_database_url(),
             is_autologin: false,
             is_demo: false,
@@ -294,8 +293,8 @@ pub mod test_utils {
         User::new(
             &state.mm,
             UserForCreate {
-                email: String::from(TEST_USER_EMAIL),
-                password_clear: String::from(TEST_USER_PASSWORD),
+                email: TEST_USER_EMAIL.into(),
+                password_clear: TEST_USER_PASSWORD.into(),
             },
         )
         .await?;
@@ -303,8 +302,8 @@ pub mod test_utils {
         User::new(
             &state.mm,
             UserForCreate {
-                email: String::from("demo@demo.com"),
-                password_clear: String::from(TEST_USER_PASSWORD),
+                email: "demo@demo.com".into(),
+                password_clear: TEST_USER_PASSWORD.into(),
             },
         )
         .await?;
@@ -316,8 +315,8 @@ pub mod test_utils {
         let user = User::new(
             &AppState::new(config.clone()).await?.mm,
             UserForCreate {
-                email: String::from(TEST_USER_EMAIL),
-                password_clear: String::from(TEST_USER_PASSWORD),
+                email: TEST_USER_EMAIL.into(),
+                password_clear: TEST_USER_PASSWORD.into(),
             },
         )
         .await?;
@@ -331,7 +330,7 @@ pub mod test_utils {
             &AppState::new(config.clone()).await?.mm,
             UserForCreate {
                 email: email.into(),
-                password_clear: String::from(TEST_USER_PASSWORD),
+                password_clear: TEST_USER_PASSWORD.into(),
             },
         )
         .await?;
@@ -347,52 +346,49 @@ pub mod test_utils {
         let video = Uuid::new_v4();
 
         RecipeForCreate {
-            name: String::from("Best Chinese Kale"),
-            description: Some(String::from("This is the most delicious recipe!")),
+            name: "Best Chinese Kale".into(),
+            description: Some("This is the most delicious recipe!".into()),
             images: Some(vec![main_image, secondary_image]),
             yield_: Some(4),
-            source: Some(String::from(
-                "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
-            )),
+            source: Some(
+                "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
+            ),
             videos: vec![VideoForCreate {
                 video,
                 duration: Some(chrono::Duration::minutes(7)),
-                content_url: Some(String::from("https://example.com/best-food.mp4")),
-                embed_url: Some(String::from("https://example.com/embed/j43yfe3.mp4")),
+                content_url: Some("https://example.com/best-food.mp4".into()),
+                embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
             }],
-            category: Some(String::from("dinner")),
-            cuisine: Some(String::from("thai")),
+            category: Some("dinner".into()),
+            cuisine: Some("thai".into()),
             ingredients: Sections::from([
                 (
-                    String::from("Sauce"),
-                    vec![
-                        String::from("1 cup blue spinach"),
-                        String::from("1/2 tbsp cinnamon"),
-                    ],
+                    "Sauce".into(),
+                    Vec::<String>::from(["1 cup blue spinach".into(), "1/2 tbsp cinnamon".into()]),
                 ),
                 (
-                    String::from("Main"),
-                    vec![
-                        String::from("4 pounds top quality chicken filet"),
-                        String::from("1/8 cup lemon juice"),
-                    ],
+                    "Main".into(),
+                    Vec::<String>::from([
+                        "4 pounds top quality chicken filet".into(),
+                        "1/8 cup lemon juice".into(),
+                    ]),
                 ),
             ]),
             instructions: Sections::from([
                 (
-                    String::from("Sauce"),
-                    vec![String::from("Mix all these ingredients")],
+                    "Sauce".into(),
+                    Vec::<String>::from(["Mix all these ingredients".into()]),
                 ),
                 (
-                    String::from("Chicken"),
-                    vec![
-                        String::from("Turn the oven at 300 F"),
-                        String::from("Soak the chicken in the lemon juice"),
-                        String::from("Bake for 35 minutes"),
-                    ],
+                    "Chicken".into(),
+                    Vec::<String>::from([
+                        "Turn the oven at 300 F".into(),
+                        "Soak the chicken in the lemon juice".into(),
+                        "Bake for 35 minutes".into(),
+                    ]),
                 ),
             ]),
-            keywords: vec![String::from("vegetarian"), String::from("tofu")],
+            keywords: Vec::<String>::from(["vegetarian".into(), "tofu".into()]),
             nutrition: Some(NutritionForCreate {
                 calories_kcal: Some(300),
                 total_carbohydrates: Some(55),
@@ -405,7 +401,7 @@ pub mod test_utils {
                 sodium_mg: Some(12),
                 fiber_g: Some(10),
                 trans_fat_g: Some(3),
-                serving_size: Some(String::from("100g")),
+                serving_size: Some("100g".into()),
             }),
             times: Some(TimesForCreate {
                 prep_seconds: 120,
@@ -413,11 +409,11 @@ pub mod test_utils {
             }),
             tools: vec![
                 ToolForCreate {
-                    name: String::from("wok"),
+                    name: "wok".into(),
                     quantity: 1,
                 },
                 ToolForCreate {
-                    name: String::from("frying pan"),
+                    name: "frying pan".into(),
                     quantity: 1,
                 },
             ],
@@ -442,7 +438,7 @@ pub mod test_utils {
                 description: recipe_c.description,
                 image: images.first().cloned().or(None),
                 yield_: recipe_c.yield_.ok_or(4).expect("a yield found"),
-                language: String::from("en"),
+                language: "en".into(),
                 source: recipe_c.source,
                 created_at: NaiveDateTime::new(created_date, time),
                 updated_at: NaiveDateTime::new(updated_date, time),

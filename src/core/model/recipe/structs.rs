@@ -159,14 +159,15 @@ impl Nutrition {
     /// Formats the nutrition as a sentence.
     pub fn to_line(&self) -> String {
         if self == &Nutrition::default() {
-            return String::from("No nutrition available.");
+            return "No nutrition available.".into();
         }
 
-        let mut result = if self.serving_size.as_deref() == Some("100g") {
-            String::from("Per 100g: ")
+        let mut result: String = if self.serving_size.as_deref() == Some("100g") {
+            "Per 100g: "
         } else {
-            String::from("Per serving: ")
-        };
+            "Per serving: "
+        }
+        .into();
 
         let parts: Vec<String> = [
             self.calories_kcal
@@ -633,7 +634,7 @@ mod tests {
                 sugars_g: Some(20),
                 protein_g: Some(10),
                 total_fat_g: Some(5),
-                serving_size: Some(String::from("100g")),
+                serving_size: Some("100g".into()),
                 ..Default::default()
             };
 
@@ -672,7 +673,7 @@ mod tests {
                 cholesterol_mg: Some(30),
                 sodium_mg: Some(300),
                 fiber_g: Some(5),
-                serving_size: Some(String::from("100g")),
+                serving_size: Some("100g".into()),
                 ..Default::default()
             };
 

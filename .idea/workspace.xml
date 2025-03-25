@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_INJECTED_CODE" value="false" />
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="ALL" />
   </component>
@@ -8,16 +11,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/server/templates/settings.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/config/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/delete.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/delete.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/user.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/website.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/website.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/websites.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/websites.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/auth_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/auth_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/general_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/general_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/auth.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/general.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/general.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/sponsors/out/sponsors.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/out/sponsors.svg" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,7 +83,7 @@
     <option name="myRunOnSave" value="true" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
@@ -102,6 +113,8 @@
     "Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_found_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_not_found_err.executor": "Run",
+    "Cargo.Test core::model::recipe::delete::tests::tests_delete_recipe_category::test_category_found_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::delete::tests::tests_delete_recipe_category::test_category_not_found_ok.executor": "Run",
     "Cargo.Test core::model::recipe::export::tests::test_to_markdown_complete_recipe_ok.executor": "Run",
     "Cargo.Test core::model::recipe::get::tests::test_categories::test_categories_ok.executor": "Run",
     "Cargo.Test core::model::recipe::get::tests::tests_count::test_count_ok.executor": "Run",
@@ -204,6 +217,10 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_category_cannot_be_empty_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_cannot_delete_uncategorized_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_empty_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_nonexistent_category_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok.executor": "Run",
@@ -245,6 +262,7 @@
     "Cargo.Test tests_add_category.executor": "Run",
     "Cargo.Test tests_change_password.executor": "Run",
     "Cargo.Test tests_confirm.executor": "Run",
+    "Cargo.Test tests_delete_recipe_category.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
     "Cargo.Test tests_forgot_password.executor": "Run",
     "Cargo.Test tests_get_page.executor": "Run",
@@ -263,7 +281,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "48-implement-post-recipescategories",
+    "git-widget-placeholder": "47-implement-delete-recipescategories",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -274,6 +292,7 @@
     "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
     "org.rust.first.attach.projects": "true",
     "rearrange.code.on.save": "true",
+    "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "actions.on.save",
     "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external"
   },
@@ -306,7 +325,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test tests_recipe_categories">
+  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -325,8 +344,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok -- --exact" />
+    <configuration name="Test core::model::recipe::delete::tests::tests_delete_recipe_category::test_category_not_found_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::delete::tests::tests_delete_recipe_category::test_category_not_found_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -342,8 +361,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::create::tests::tests_add_category::test_create_new_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_cannot_delete_uncategorized_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test_delete_cannot_delete_uncategorized_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -359,8 +378,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test__ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_empty_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_empty_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -376,8 +395,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -393,8 +412,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_recipe_categories" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_nonexistent_category_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_categories::test_delete_nonexistent_category_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -412,19 +431,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok" />
-      <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok" />
-      <item itemvalue="Cargo.Test tests_recipe_categories" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_cannot_delete_uncategorized_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_empty_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_nonexistent_category_ok" />
+      <item itemvalue="Cargo.Test core::model::recipe::delete::tests::tests_delete_recipe_category::test_category_not_found_ok" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test tests_recipe_categories" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test__ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_user_already_has_category_ok" />
-        <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok" />
-        <item itemvalue="Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_nonexistent_category_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_cannot_delete_uncategorized_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_categories::test_delete_category_empty_ok" />
+        <item itemvalue="Cargo.Test core::model::recipe::delete::tests::tests_delete_recipe_category::test_category_not_found_ok" />
       </list>
     </recent_temporary>
   </component>

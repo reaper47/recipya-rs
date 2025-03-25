@@ -348,59 +348,59 @@ mod tests {
             let want = vec![
                 Category {
                     id: 1,
-                    name: String::from("uncategorized"),
+                    name: "uncategorized".into(),
                 },
                 Category {
                     id: 2,
-                    name: String::from("appetizers"),
+                    name: "appetizers".into(),
                 },
                 Category {
                     id: 3,
-                    name: String::from("bread"),
+                    name: "bread".into(),
                 },
                 Category {
                     id: 4,
-                    name: String::from("breakfasts"),
+                    name: "breakfasts".into(),
                 },
                 Category {
                     id: 5,
-                    name: String::from("condiments"),
+                    name: "condiments".into(),
                 },
                 Category {
                     id: 6,
-                    name: String::from("dessert"),
+                    name: "dessert".into(),
                 },
                 Category {
                     id: 7,
-                    name: String::from("lunch"),
+                    name: "lunch".into(),
                 },
                 Category {
                     id: 8,
-                    name: String::from("main dish"),
+                    name: "main dish".into(),
                 },
                 Category {
                     id: 9,
-                    name: String::from("salad"),
+                    name: "salad".into(),
                 },
                 Category {
                     id: 10,
-                    name: String::from("side dish"),
+                    name: "side dish".into(),
                 },
                 Category {
                     id: 11,
-                    name: String::from("snacks"),
+                    name: "snacks".into(),
                 },
                 Category {
                     id: 12,
-                    name: String::from("soups"),
+                    name: "soups".into(),
                 },
                 Category {
                     id: 13,
-                    name: String::from("stews"),
+                    name: "stews".into(),
                 },
                 Category {
                     id: 14,
-                    name: String::from("date"),
+                    name: "date".into(),
                 },
             ];
             pretty_assertions::assert_eq!(want, categories);

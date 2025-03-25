@@ -92,18 +92,18 @@ mod tests {
         vec![
             Website {
                 id: 1,
-                url: String::from("https://15gram.be/recepten"),
-                host: String::from("15gram.be"),
+                url: "https://15gram.be/recepten".into(),
+                host: "15gram.be".into(),
             },
             Website {
                 id: 2,
-                url: String::from("https://www.750g.com"),
-                host: String::from("750g.com"),
+                url: "https://www.750g.com".into(),
+                host: "750g.com".into(),
             },
             Website {
                 id: 3,
-                url: String::from("https://101cookbooks.com"),
-                host: String::from("101cookbooks.com"),
+                url: "https://101cookbooks.com".into(),
+                host: "101cookbooks.com".into(),
             },
         ]
     }
