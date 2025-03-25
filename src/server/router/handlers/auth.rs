@@ -146,7 +146,7 @@ pub async fn forgot_password_post_handler(
             if let Some(email) = state.email_service {
                 let payload = Email {
                     to: user_email.clone(),
-                    subject: String::from("Reset your password"),
+                    subject: "Reset your password".into(),
                     body: "".to_string(),
                     template: Some(Template::ForgotPassword),
                     data: Some(Data {
@@ -240,7 +240,6 @@ pub async fn login_handler(State(state): State<AppState>) -> impl IntoResponse {
 pub async fn login_post_handler(
     State(state): State<AppState>,
     cookies: Cookies,
-    Query(query): Query<HashMap<String, String>>,
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
     if form.validate().is_err() {
@@ -392,12 +391,12 @@ pub async fn register_post_handler(
         tokio::spawn(async move {
             service.send(&Email {
                 to: user.email,
-                subject: String::from("Confirm Account"),
-                body: String::from(""),
+                subject: "Confirm Account".into(),
+                body: "".into(),
                 template: Some(Template::Intro),
                 data: Some(Data {
                     token: token.to_string(),
-                    username: String::from(&form.email),
+                    username: form.email.into(),
                     url: state.config.base_url,
                 }),
             })

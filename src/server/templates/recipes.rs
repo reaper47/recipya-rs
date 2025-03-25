@@ -148,12 +148,12 @@ fn render_add_recipe_manual(
                                                         value=(
                                                             view.map(|v| {
                                                                 if v.recipe_details.recipe.yield_ == 0 {
-                                                                    String::from("1")
+                                                                    "1".into()
                                                                 } else {
                                                                      v.recipe_details.recipe.yield_.to_string()
                                                                 }
                                                             })
-                                                            .unwrap_or(String::from("1"))
+                                                            .unwrap_or("1".into())
                                                         )
                                                         class="input input-sm w-11/12";
                                                 }
@@ -896,14 +896,13 @@ pub fn list_recipes(data: &Data, data_dir: &DataDir) -> Markup {
                             src=(match view.recipe_details.all_images().first() {
                                 Some(&first_image) => {
                                     if !view.recipe_details.all_images().is_empty() && is_file_exists(first_image, &data_dir.images) {
-                                        let s = format!("/data/images/thumbnails/{}.webp", first_image);
-                                        s
+                                        format!("/data/images/thumbnails/{}.webp", first_image)
                                     } else {
-                                        String::from("/data/images/Placeholders/placeholder.recipe.webp")
+                                        "/data/images/Placeholders/placeholder.recipe.webp".into()
                                     }
                                 },
                                 None => {
-                                    String::from("/data/images/Placeholders/placeholder.recipe.webp")
+                                    "/data/images/Placeholders/placeholder.recipe.webp".into()
                                 }
                             })
                             alt=(format!("Image for the {} recipe", view.recipe_details.recipe.name));
@@ -1071,7 +1070,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
                                                         min="1"
                                                         name="yield"
                                                         value=(if recipe.yield_ == 0 {
-                                                            String::from("1")
+                                                            "1".into()
                                                         } else {
                                                             recipe.yield_.to_string()
                                                         })
@@ -1442,7 +1441,7 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                                     }
                                     a class="btn btn-circle"
                                       href=(if idx == recipe_details.num_media() - 1 {
-                                            String::from("#media-0")
+                                            "#media-0".into()
                                       } else {
                                             format!("#media-{}", idx+1)
                                         }) {
@@ -1470,7 +1469,7 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                                     a class="btn btn-circle" href=(format!("#media-{}", idx.checked_add(recipe_details.num_images()).and_then(|val| val.checked_sub(1)).unwrap_or(1))) { "❮" }
                                     a class="btn btn-circle"
                                       href=(if idx == recipe_details.num_videos() - 1 {
-                                            String::from("#media-0")
+                                            "#media-0".into()
                                         } else {
                                             format!("#media-{}", idx+recipe_details.num_images() +1)
                                         }) {
@@ -1516,47 +1515,47 @@ fn view_recipe_nutrition(recipe_details: &RecipeDetails) -> Markup {
                     @if let Some(nutrition) = &recipe_details.nutrition {
                         tr {
                             td { "Calories:" }
-                            td { (nutrition.calories_kcal.map(|v| format!("{v} kcal")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.calories_kcal.map(|v| format!("{v} kcal")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Total carbs:" }
-                            td { (nutrition.total_carbohydrates.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.total_carbohydrates.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Sugars:" }
-                            td { (nutrition.sugars_g.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.sugars_g.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Protein:" }
-                            td { (nutrition.protein_g.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.protein_g.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Total fat:" }
-                            td { (nutrition.total_fat_g.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.total_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Saturated fat:" }
-                            td { (nutrition.saturated_fat_g.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.saturated_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Unsaturated fat:" }
-                            td { (nutrition.unsaturated_fat_g.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.unsaturated_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Trans fat:" }
-                            td { (nutrition.trans_fat_g.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.trans_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Cholesterol:" }
-                            td { (nutrition.cholesterol_mg.map(|v| format!("{v} mg")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.cholesterol_mg.map(|v| format!("{v} mg")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Sodium:" }
-                            td { (nutrition.sodium_mg.map(|v| format!("{v} mg")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.sodium_mg.map(|v| format!("{v} mg")).unwrap_or("-".into())) }
                         }
                         tr {
                             td { "Fiber:" }
-                            td { (nutrition.fiber_g.map(|v| format!("{v} g")).unwrap_or(String::from("-"))) }
+                            td { (nutrition.fiber_g.map(|v| format!("{v} g")).unwrap_or("-".into())) }
                         }
                     } @else {
                         tr {

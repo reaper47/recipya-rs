@@ -64,7 +64,7 @@ impl PaginationData {
     pub fn new_for_recipes(params: &SearchParams, num_recipes: i64, is_htmx_swap: bool) -> Self {
         let htmx = PaginationHtmxData {
             is_swap: is_htmx_swap,
-            target: String::from("#content"),
+            target: "#content".into(),
         };
 
         let queries = match &params.sort {
@@ -199,16 +199,10 @@ impl FormattedTimes {
         let total = humantime::parse_duration(&format!("{}s", times.total_seconds))?;
 
         let prep_edit = NaiveTime::from_num_seconds_from_midnight_opt(prep.as_secs() as u32, 0)
-            .map_or_else(
-                || String::from("00:15:00"),
-                |t| t.format("%H:%M:%S").to_string(),
-            );
+            .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
 
         let cook_edit = NaiveTime::from_num_seconds_from_midnight_opt(cook.as_secs() as u32, 0)
-            .map_or_else(
-                || String::from("00:15:00"),
-                |t| t.format("%H:%M:%S").to_string(),
-            );
+            .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
 
         Ok(Self {
             cook: humantime::format_duration(cook).to_string(),
@@ -278,14 +272,14 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got,
                 FormattedTimes {
-                    cook: String::from("3h"),
-                    cook_datetime: String::from("PT3H"),
-                    cook_edit: String::from("03:00:00"),
-                    prep: String::from("15m"),
-                    prep_datetime: String::from("PT15M"),
-                    prep_edit: String::from("00:15:00"),
-                    total: String::from("3h 15m"),
-                    total_datetime: String::from("PT3H15M"),
+                    cook: "3h".into(),
+                    cook_datetime: "PT3H".into(),
+                    cook_edit: "03:00:00".into(),
+                    prep: "15m".into(),
+                    prep_datetime: "PT15M".into(),
+                    prep_edit: "00:15:00".into(),
+                    total: "3h 15m".into(),
+                    total_datetime: "PT3H15M".into(),
                 }
             );
             Ok(())
@@ -306,14 +300,14 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got,
                 FormattedTimes {
-                    cook: String::from("16m"),
-                    cook_datetime: String::from("PT16M"),
-                    cook_edit: String::from("00:16:00"),
-                    prep: String::from("15m"),
-                    prep_datetime: String::from("PT15M"),
-                    prep_edit: String::from("00:15:00"),
-                    total: String::from("31m"),
-                    total_datetime: String::from("PT31M"),
+                    cook: "16m".into(),
+                    cook_datetime: "PT16M".into(),
+                    cook_edit: "00:16:00".into(),
+                    prep: "15m".into(),
+                    prep_datetime: "PT15M".into(),
+                    prep_edit: "00:15:00".into(),
+                    total: "31m".into(),
+                    total_datetime: "PT31M".into(),
                 }
             );
             Ok(())
@@ -336,8 +330,8 @@ mod tests {
             let got = SearchbarData::from_params(query);
 
             let expected = SearchbarData {
-                sort: String::from(""),
-                term: String::from(""),
+                sort: "".into(),
+                term: "".into(),
             };
             pretty_assertions::assert_eq!(expected, got);
         }
@@ -345,16 +339,16 @@ mod tests {
         #[test]
         fn test_searchbar_data_from_query_ok() {
             let query = SearchParams {
-                q: Some(String::from("hamburger")),
-                sort: Some(String::from("z-a")),
+                q: Some("hamburger".into()),
+                sort: Some("z-a".into()),
                 page: Some(4),
             };
 
             let got = SearchbarData::from_params(query);
 
             let expected = SearchbarData {
-                sort: String::from("z-a"),
-                term: String::from("hamburger"),
+                sort: "z-a".into(),
+                term: "hamburger".into(),
             };
             pretty_assertions::assert_eq!(expected, got);
         }
@@ -369,12 +363,12 @@ mod tests {
         fn test_pagination_new_some_results_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                String::from(""),
+                "".into(),
                 1,
                 20,
                 PaginationHtmxData {
                     is_swap: false,
-                    target: String::from("#content"),
+                    target: "#content".into(),
                 },
             );
 
@@ -389,14 +383,14 @@ mod tests {
                     next: 2,
                     htmx: PaginationHtmxData {
                         is_swap: false,
-                        target: String::from("#content")
+                        target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
                     is_hidden: false,
                     num_pages: 2,
                     num_results: 20,
                     results_per_page: 15,
-                    url: String::from("/recipes"),
+                    url: "/recipes".into(),
                     url_queries: String::new()
                 }
             );
@@ -406,12 +400,12 @@ mod tests {
         fn test_pagination_new_no_results_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                String::from(""),
+                "".into(),
                 2,
                 12,
                 PaginationHtmxData {
                     is_swap: false,
-                    target: String::from("#content"),
+                    target: "#content".into(),
                 },
             );
 
@@ -426,14 +420,14 @@ mod tests {
                     next: 2,
                     htmx: PaginationHtmxData {
                         is_swap: false,
-                        target: String::from("#content")
+                        target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
                     is_hidden: false,
                     num_pages: 1,
                     num_results: 12,
                     results_per_page: 15,
-                    url: String::from("/recipes"),
+                    url: "/recipes".into(),
                     url_queries: String::new()
                 }
             );
@@ -443,12 +437,12 @@ mod tests {
         fn test_pagination_new_hundreds_results_left_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                String::from(""),
+                "".into(),
                 4,
                 258,
                 PaginationHtmxData {
                     is_swap: false,
-                    target: String::from("#content"),
+                    target: "#content".into(),
                 },
             );
 
@@ -463,14 +457,14 @@ mod tests {
                     next: 5,
                     htmx: PaginationHtmxData {
                         is_swap: false,
-                        target: String::from("#content")
+                        target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
                     is_hidden: false,
                     num_pages: 18,
                     num_results: 258,
                     results_per_page: 15,
-                    url: String::from("/recipes"),
+                    url: "/recipes".into(),
                     url_queries: String::new()
                 }
             );
@@ -480,12 +474,12 @@ mod tests {
         fn test_pagination_new_hundreds_results_middle_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                String::from(""),
+                "".into(),
                 11,
                 258,
                 PaginationHtmxData {
                     is_swap: false,
-                    target: String::from("#content"),
+                    target: "#content".into(),
                 },
             );
 
@@ -500,14 +494,14 @@ mod tests {
                     next: 12,
                     htmx: PaginationHtmxData {
                         is_swap: false,
-                        target: String::from("#content")
+                        target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
                     is_hidden: false,
                     num_pages: 18,
                     num_results: 258,
                     results_per_page: 15,
-                    url: String::from("/recipes"),
+                    url: "/recipes".into(),
                     url_queries: String::new()
                 }
             );
@@ -517,12 +511,12 @@ mod tests {
         fn test_pagination_new_hundreds_results_right_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                String::from(""),
+                "".into(),
                 16,
                 258,
                 PaginationHtmxData {
                     is_swap: false,
-                    target: String::from("#content"),
+                    target: "#content".into(),
                 },
             );
 
@@ -537,14 +531,14 @@ mod tests {
                     next: 17,
                     htmx: PaginationHtmxData {
                         is_swap: false,
-                        target: String::from("#content")
+                        target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
                     is_hidden: false,
                     num_pages: 18,
                     num_results: 258,
                     results_per_page: 15,
-                    url: String::from("/recipes"),
+                    url: "/recipes".into(),
                     url_queries: String::new()
                 }
             );

@@ -1,10 +1,11 @@
-use crate::core::model::user::User;
-use crate::server::AppState;
-use crate::server::router::middleware::mw_auth::CtxW;
 use axum::extract::ws::WebSocket;
 use axum::extract::{State, WebSocketUpgrade};
 use axum::response::{IntoResponse, Redirect};
 use tracing::error;
+
+use crate::core::model::user::User;
+use crate::server::AppState;
+use crate::server::router::middleware::mw_auth::CtxW;
 
 /// Handles the index page.
 pub async fn index_handler() -> Redirect {
@@ -19,16 +20,16 @@ pub async fn user_initials_handler(ctx: CtxW, State(state): State<AppState>) -> 
             if let Some(first) = user.email.to_uppercase().chars().next() {
                 first.to_string()
             } else {
-                String::from("A")
+                "A".into()
             }
         }
         Ok(None) => {
             error!("User {user_id} does not exist");
-            String::from("A")
+            "A".into()
         }
         Err(err) => {
             error!("Error getting user: {err}");
-            String::from("A")
+            "A".into()
         }
     }
 }

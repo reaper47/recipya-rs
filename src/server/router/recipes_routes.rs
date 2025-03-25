@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::server::AppState;
 use crate::server::router::handlers::recipes::{
-    add_manual_recipe_handler, add_recipes_handler, delete_recipe_handler,
-    duplicate_recipe_handler, post_recipe_categories_handler, recipes_handler,
-    share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
-    view_recipe_handler,
+    add_manual_recipe_handler, add_recipes_handler, delete_recipe_categories_handler,
+    delete_recipe_handler, duplicate_recipe_handler, post_recipe_categories_handler,
+    recipes_handler, share_recipe_post_handler, supported_applications_handler,
+    supported_websites_handler, view_recipe_handler,
 };
 use crate::server::router::middleware::mw_auth;
 
@@ -35,7 +35,10 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
         .route("/{:recipe_id}/share", post(share_recipe_post_handler))
         .route("/add", get(add_recipes_handler))
         .route("/add/manual", get(add_manual_recipe_handler))
-        .route("/categories", post(post_recipe_categories_handler))
+        .route(
+            "/categories",
+            post(post_recipe_categories_handler).delete(delete_recipe_categories_handler),
+        )
         .route(
             "/supported-applications",
             get(supported_applications_handler),
@@ -295,7 +298,7 @@ mod tests {
             let res = server
                 .post(&base_uri(1))
                 .form(&ShareRecipeForm {
-                    datetime: Some(String::from("hello")),
+                    datetime: Some("hello".into()),
                 })
                 .await;
 
@@ -553,7 +556,7 @@ mod tests {
             recipe.videos = vec![VideoForCreate {
                 video: Uuid::new_v4(),
                 duration: None,
-                content_url: Some(String::from("https://example.com/embed/yg8FG4")),
+                content_url: Some("https://example.com/embed/yg8FG4".into()),
                 embed_url: None,
             }];
             recipe.images = None;
@@ -582,14 +585,14 @@ mod tests {
                 VideoForCreate {
                     video: Uuid::new_v4(),
                     duration: None,
-                    content_url: Some(String::from("https://example.com/embed/yg8FG4")),
+                    content_url: Some("https://example.com/embed/yg8FG4".into()),
                     embed_url: None,
                 },
                 VideoForCreate {
                     video: Uuid::new_v4(),
                     duration: None,
                     content_url: None,
-                    embed_url: Some(String::from("https://example.com/embed/yg8FG4")),
+                    embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
             recipe.images = None;
@@ -619,14 +622,14 @@ mod tests {
                 VideoForCreate {
                     video: Uuid::new_v4(),
                     duration: None,
-                    content_url: Some(String::from("https://example.com/embed/yg8FG4")),
+                    content_url: Some("https://example.com/embed/yg8FG4".into()),
                     embed_url: None,
                 },
                 VideoForCreate {
                     video: Uuid::new_v4(),
                     duration: None,
                     content_url: None,
-                    embed_url: Some(String::from("https://example.com/embed/yg8FG4")),
+                    embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
             recipe.images = Some(vec![Uuid::new_v4(), Uuid::new_v4()]);
@@ -821,19 +824,23 @@ mod tests {
 
     mod tests_recipe_categories {
         use super::*;
-
+        use crate::core::model::Recipe;
+        use crate::server::AppState;
         use crate::server::router::recipes_routes::RecipeCategoryForm;
-        use crate::server::test_utils::build_server_ws;
+        use crate::server::test_utils::{a_complete_recipe_for_create, build_server_ws};
+        use axum_test::http::StatusCode;
 
         const BASE_URI: &str = "/recipes/categories";
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in(Method::POST, BASE_URI).await
+            assert_must_be_logged_in(Method::POST, BASE_URI).await?;
+            assert_must_be_logged_in(Method::DELETE, BASE_URI).await?;
+            Ok(())
         }
 
         #[tokio::test]
-        async fn test_category_cannot_be_empty_ok() -> Result<()> {
+        async fn test_post_category_cannot_be_empty_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config).await?;
 
@@ -849,14 +856,14 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_user_already_has_category_ok() -> Result<()> {
+        async fn test_post_user_already_has_category_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let (server, mut ws) = build_server_ws(config).await?;
 
             let res = server
                 .post(BASE_URI)
                 .form(&RecipeCategoryForm {
-                    category: String::from("uncategorized"),
+                    category: "uncategorized".into(),
                 })
                 .await;
 
@@ -869,19 +876,82 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_add_category_ok() -> Result<()> {
+        async fn test_post_add_category_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config).await?;
 
             let res = server
                 .post(BASE_URI)
                 .form(&RecipeCategoryForm {
-                    category: String::from("fish"),
+                    category: "fish".into(),
                 })
                 .await;
 
             res.assert_status_ok();
             res.assert_text_contains(r#"<div class="badge badge-outline p-3 pr-0"><form class="inline-flex" hx-delete="/recipes/categories" hx-target="closest <div/>" hx-swap="delete"><input type="hidden" name="category" value="fish"><span class="select-none">fish</span><button class="btn btn-xs btn-ghost" type="submit">X</button></form></div><div class="badge badge-outline p-3 pr-0"><form class="inline-flex" hx-post="/recipes/categories" hx-target="closest <div/>" hx-swap="outerHTML"><label class="input"><input required type="text" placeholder="New category" class="input input-ghost input-xs w-[16ch] focus:outline-none" name="category" autocomplete="off"></label><button class="btn btn-xs btn-ghost">&#10003;</button></form></div>"#);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_category_empty_ok() -> Result<()> {
+            send_delete_400(String::new()).await
+        }
+
+        #[tokio::test]
+        async fn test_delete_cannot_delete_uncategorized_ok() -> Result<()> {
+            send_delete_400("uncategorized".into()).await
+        }
+
+        #[tokio::test]
+        async fn test_delete_nonexistent_category_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server
+                .delete(BASE_URI)
+                .form(&RecipeCategoryForm {
+                    category: "ukraine".into(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::NO_CONTENT);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_category_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let category = String::from("midnight dinner");
+            let state = AppState::new(config.clone()).await?;
+            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+            Recipe::add_category(&state.mm, &category, 1).await?;
+
+            let res = server
+                .delete(BASE_URI)
+                .form(&RecipeCategoryForm { category })
+                .await;
+
+            res.assert_status(StatusCode::NO_CONTENT);
+            Ok(())
+        }
+
+        async fn send_delete_400(category: String) -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws) = build_server_ws(config).await?;
+
+            let res = server
+                .delete(BASE_URI)
+                .form(&RecipeCategoryForm {
+                    category: category.to_string(),
+                })
+                .await;
+
+            res.assert_status_bad_request();
+            let _ = ws.receive_message().await;
+            ws
+                .assert_receive_text_contains(r#"{"showMessageHtmx":{"type":"toast","message":"Category cannot be empty or uncategorized.","status":"alert-error","title":"Operation Failed"}}"#)
+                .await;
             Ok(())
         }
     }
