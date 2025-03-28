@@ -69,7 +69,7 @@ fn render_add_recipe_manual(
                                             img src="" alt="" class="object-cover mb-2 w-full max-h-[39rem]";
                                             span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;" {
                                                 div class="mr-1" {
-                                                    input type="file" accept="image/*,video/*" name="images"
+                                                    input type="file" accept="image/*,video/*" name="media"
                                                         class="file-input file-input-sm file-input-bordered w-full max-w-sm"
                                                         _=(PreEscaped("on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
                                                               on dragleave or drop set the target's style.background to ''
@@ -187,7 +187,7 @@ fn render_add_recipe_manual(
                                         div class="p-4 flex gap-2 flex-wrap" {
                                             @for kw in keywords.iter() {
                                                 div class="badge badge-sm badge-neutral p-3 pr-0" {
-                                                    input type="hidden" name="keywords" value=(kw.name);
+                                                    input type="hidden" name="keyword" value=(kw.name);
                                                     span class="select-none" { (kw.name) }
                                                     button type="button" class="btn btn-xs btn-ghost" _=(PreEscaped("on click remove closest <div/>")) { "X" }
                                                 }
@@ -201,7 +201,7 @@ fn render_add_recipe_manual(
                                                 (icon_cutting_board())
                                             }
                                             label {
-                                                input type="text" name="time-preparation"
+                                                input type="text" name="time-prep"
                                                     value=(
                                                         view
                                                             .map(|v| v.formatted_times.prep_edit.as_str())
@@ -373,7 +373,7 @@ fn render_add_recipe_manual(
                                 ol #ingredients-list class="pl-4 list-decimal" {
                                     @if let Some(v) = view {
                                          @if !v.recipe_details.ingredients.is_empty() {
-                                            @for (section, ingredients) in &v.recipe_details.ingredients {
+                                            @for (_section, ingredients) in &v.recipe_details.ingredients {
                                                 @for ing in ingredients.iter() {
                                                     (add_ingredient(&ing))
                                                 }
@@ -394,7 +394,7 @@ fn render_add_recipe_manual(
                                 ol #instructions-list class="grid list-decimal" {
                                     @if let Some(v) = view {
                                          @if !v.recipe_details.instructions.is_empty() {
-                                            @for (section, instructions) in &v.recipe_details.instructions {
+                                            @for (_section, instructions) in &v.recipe_details.instructions {
                                                 @for ins in instructions.iter() {
                                                     (add_instruction(&ins))
                                                 }
@@ -422,7 +422,7 @@ fn render_add_recipe_manual(
 fn recipe_keyword_empty(keywords: Vec<Keyword>) -> Markup {
     html! {
         div #hidden-keyword class="hidden badge badge-sm badge-soft p-3 pr-0" {
-            input type="hidden" name="keywords" value="";
+            input type="hidden" name="keyword" value="";
             span class="select-none" {}
             button type="button" class="btn btn-xs btn-ghost" _=(PreEscaped("on click remove closest <div/>")) { "X" }
         }
@@ -448,7 +448,7 @@ fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
         li class="pb-2" {
             div class="grid grid-flow-col items-center" {
                 label {
-                    input type="text" name="tools" placeholder="1 frying pan" class="input input-bordered input-sm w-full"
+                    input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full"
                         value=(
                             tool
                                 .map(|t| format!("{} {}", t.quantity, t.name))
@@ -483,7 +483,7 @@ fn add_ingredient(name: &str) -> Markup {
         li .pb-2 {
             div class="grid grid-flow-col items-center" {
                 label {
-                    input required type="text" name="ingredients" value=(name)
+                    input required type="text" name="ingredient" value=(name)
                         placeholder="1 cup of chopped onions"
                         class="input input-bordered input-sm w-full"
                         _="on keydown if event.key is 'Enter' halt the event then call addItem(event)";
@@ -1184,7 +1184,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
                                     } else {
                                         "column-count: 1"
                                     }) {
-                                    @for (section, ingredients) in recipe_details.ingredients.iter() {
+                                    @for (_section, ingredients) in recipe_details.ingredients.iter() {
                                         @for ing in ingredients.iter() {
                                             li class="text-sm" {
                                                 label {
@@ -1201,7 +1201,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
                                     b { "Instructions" }
                                 }
                                 ol class="col-span-6 list-decimal w-full ml-6" {
-                                    @for (section, instructions) in recipe_details.instructions.iter() {
+                                    @for (_section, instructions) in recipe_details.instructions.iter() {
                                         @for ins in instructions.iter() {
                                             li class="print:mr-4" {
                                                 span class="text-sm whitespace-pre-line" {

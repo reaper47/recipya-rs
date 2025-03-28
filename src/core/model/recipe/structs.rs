@@ -39,6 +39,7 @@ pub struct Recipe {
 }
 
 /// Represents the data required to create a new recipe.
+#[derive(Default)]
 pub struct RecipeForCreate {
     // For the recipe table
     pub name: String,
@@ -202,7 +203,7 @@ impl Nutrition {
 }
 
 /// Represents the nutritional information provided when creating a new recipe.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct NutritionForCreate {
     pub calories_kcal: Option<i16>,
     pub total_carbohydrates: Option<i16>,
@@ -216,6 +217,24 @@ pub struct NutritionForCreate {
     pub fiber_g: Option<i16>,
     pub trans_fat_g: Option<i16>,
     pub serving_size: Option<String>,
+}
+
+impl NutritionForCreate {
+    /// Verifies whether all fields are blank.
+    pub fn is_empty(&self) -> bool {
+        self.calories_kcal.is_none()
+            && self.total_carbohydrates.is_none()
+            && self.sugars_g.is_none()
+            && self.protein_g.is_none()
+            && self.total_fat_g.is_none()
+            && self.saturated_fat_g.is_none()
+            && self.unsaturated_fat_g.is_none()
+            && self.cholesterol_mg.is_none()
+            && self.sodium_mg.is_none()
+            && self.fiber_g.is_none()
+            && self.trans_fat_g.is_none()
+            && self.serving_size.is_none()
+    }
 }
 
 /// Represents the nutritional information associated with a recipe in the database.

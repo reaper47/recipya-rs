@@ -16,8 +16,8 @@ pub enum Error {
     RenderFail,
     SendFail(String),
 
-    #[from]
-    BuildMessage(lettre::error::Error),
+    #[from(lettre::error::Error)]
+    BuildMessage,
 }
 
 impl_display_as_debug!(Error);

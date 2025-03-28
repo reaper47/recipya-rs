@@ -5,10 +5,12 @@ mod server;
 
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
+use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
 
 use crate::cli::server::server;
 use crate::cli::sponsors::generate_sponsors_image;
+use crate::core::support::software;
 use crate::error::Result;
 
 #[derive(Parser)]
@@ -39,6 +41,22 @@ async fn main() -> Result<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
+
+    if software::is_ffmpeg_installed() {
+        info!("FFmpeg is installed");
+    } else {
+        let mut message = String::from("FFmpeg is not installed. ");
+
+        if cfg!(target_os = "macos") {
+            message.push_str("Please execute: brew install ffmpeg");
+        } else if cfg!(target_os = "linux") {
+            message.push_str("Please consult your package manager to install it.");
+        } else if cfg!(target_os = "windows") {
+            message.push_str("Please install from https://www.gyan.dev/ffmpeg/builds");
+        }
+
+        warn!(message);
+    }
 
     match Cli::parse().command {
         Commands::Server => {

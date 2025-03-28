@@ -17,10 +17,10 @@ pub enum Error {
     Parse(String),
     Select(String),
 
-    #[from]
-    Deserialize(serde_json::Error),
-    #[from]
-    Request(reqwest::Error),
+    #[from(serde_json::Error)]
+    Deserialize,
+    #[from(reqwest::Error)]
+    Request,
 }
 
 impl_display_as_debug!(Error);

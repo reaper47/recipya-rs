@@ -63,7 +63,7 @@ impl Scraper {
                     }
                 }),
             })
-            .ok_or_else(|| Error::DomainNotImplemented)
+            .ok_or(Error::DomainNotImplemented)
     }
 }
 
