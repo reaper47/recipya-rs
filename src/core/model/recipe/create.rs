@@ -96,7 +96,11 @@ impl Recipe {
                     // Category
                     let category_id = diesel::insert_into(schema::categories::table)
                         .values(&CategoryForInsert {
-                            name: recipe_c.category.clone(),
+                            name: recipe_c.category.clone().map(|c| {
+                                c.split_once([',', ';'])
+                                    .map(|(first, _)| first.into())
+                                    .unwrap_or(c)
+                            }),
                         })
                         .on_conflict(schema::categories::name)
                         .do_update()
@@ -298,7 +302,7 @@ impl Recipe {
                     }
 
                     // Times
-                    let times = recipe_c.times.clone().unwrap_or_else(|| TimesForCreate {
+                    let times = recipe_c.times.clone().unwrap_or(TimesForCreate {
                         prep_seconds: 15 * 60,
                         cook_seconds: 0,
                     });

@@ -1,25 +1,28 @@
-use std::fmt::Write;
-
 use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, HeaderValue};
 use axum::response::{Html, IntoResponse};
 use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
+use futures_util::future::join_all;
 use reqwest::StatusCode;
+use std::fmt::Write;
+use std::ops::Not;
 use tracing::error;
+use uuid::Uuid;
 
 use crate::core::model::Error::EntityNotFound;
 use crate::core::model::Recipe;
-use crate::core::model::recipe::{Category, Keyword};
+use crate::core::model::recipe::{Category, Keyword, RecipeForCreate, Sections, VideoForCreate};
 use crate::core::model::share::ShareRecipe;
 use crate::core::model::user::User;
 use crate::core::model::website::{ToHtmlTable, Website};
+use crate::core::support::fs::calc_video_duration;
 use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::router::recipes_routes::{RecipeCategoryForm, ShareRecipeForm};
+use crate::server::router::recipes_routes::{RecipeCategoryForm, RecipeForm, ShareRecipeForm};
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
@@ -312,6 +315,120 @@ pub async fn add_manual_recipe_handler(
         keywords,
     )
     .into_response()
+}
+
+/// Handles posting a submitted recipe form.
+pub async fn add_manual_recipe_post_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    form: RecipeForm,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let images = form
+        .images
+        .iter()
+        .map(|path| {
+            let file_name = path
+                .file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned()
+                .parse::<Uuid>()
+                .unwrap_or_default();
+
+            #[cfg(not(test))]
+            {
+                use crate::core::support::fs::convert_image;
+
+                if let Err(err) = convert_image(path, file_name.to_string(), &state.data_dir.images)
+                {
+                    error!("Error converting image '{file_name}' to WebP: {err}");
+                }
+            }
+
+            file_name
+        })
+        .collect::<Vec<_>>();
+
+    let videos = if form.videos.is_empty() {
+        Vec::new()
+    } else {
+        let videos = join_all(form.videos.iter().map(|path| async {
+            VideoForCreate {
+                video: path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .into_owned()
+                    .parse::<Uuid>()
+                    .unwrap_or_default(),
+                duration: calc_video_duration(path.to_str().unwrap_or_default())
+                    .await
+                    .ok(),
+                content_url: None,
+                embed_url: None,
+            }
+        }))
+        .await;
+
+        #[cfg(not(test))]
+        {
+            use tokio::task;
+
+            use crate::core::support::fs::convert_videos;
+
+            let state = state.clone();
+
+            task::spawn(async move {
+                if let Err(err) = convert_videos(form.videos, &state.data_dir.videos).await {
+                    error!("Error converting videos: {err}");
+                }
+            });
+        }
+
+        videos
+    };
+
+    let recipe_id = match Recipe::create(
+        &state.mm,
+        user_id,
+        &RecipeForCreate {
+            name: form.title,
+            description: form.description,
+            images: images.is_empty().not().then_some(images),
+            yield_: form.yield_,
+            source: form.source,
+            videos,
+            category: form.category.or(Some("uncategorized".into())),
+            cuisine: form.cuisine,
+            ingredients: Sections::from([("".into(), form.ingredients)]),
+            instructions: Sections::from([("".into(), form.instructions)]),
+            keywords: form.keywords,
+            nutrition: form.nutrition,
+            times: form.times,
+            tools: form.tools,
+        },
+    )
+    .await
+    {
+        Ok(id) => id,
+        Err(err) => {
+            error!("Failed to add recipe to collection for user '{user_id}': {err}");
+            let toast = MessageHtmx::error("Failed to add recipe to collection.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json.into())).await;
+            }
+            return Error::Database.into_response();
+        }
+    };
+
+    let mut res = (StatusCode::SEE_OTHER, "").into_response();
+    if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
+        res.headers_mut()
+            .insert(axum_htmx::headers::HX_REDIRECT, value);
+    }
+    res
 }
 
 async fn fetch_categories_keywords(
