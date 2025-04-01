@@ -1,18 +1,23 @@
-use diesel::data_types::PgInterval;
-use diesel::internal::derives::multiconnection::chrono;
-use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
+use std::path::Path;
 use uuid::Uuid;
 
+use diesel::data_types::PgInterval;
+use diesel::internal::derives::multiconnection::chrono;
+use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
+
+use crate::core::model::recipe::RecipeForm;
 use crate::core::model::user::User;
 use crate::core::repository::schema;
+use crate::core::support::fs::calc_video_duration;
 use crate::name_entity_with_relations;
 
 /// Represents a collection of sections, where each section has a title and a list of associated items.
 pub type Sections = Vec<(String, Vec<String>)>;
 
 /// Represents a recipe entity stored in the database.
-#[derive(Associations, Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(AsChangeset, Associations, Debug, Queryable, Identifiable, PartialEq, Selectable)]
 #[diesel(belongs_to(User))]
+#[diesel(treat_none_as_null = true)]
 #[diesel(table_name = schema::recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Recipe {
@@ -58,6 +63,37 @@ pub struct RecipeForCreate {
     pub nutrition: Option<NutritionForCreate>,
     pub times: Option<TimesForCreate>,
     pub tools: Vec<ToolForCreate>,
+}
+
+impl RecipeForCreate {
+    /// Returns the first image UUID if available and a vector of the remaining image UUIDs.
+    pub fn first_and_rest_images(&self) -> (Option<Uuid>, Vec<Uuid>) {
+        match self.images.as_deref() {
+            Some([first, rest @ ..]) => (Some(*first), rest.to_vec()),
+            _ => (None, Vec::new()),
+        }
+    }
+}
+
+impl From<RecipeForm> for RecipeForCreate {
+    fn from(form: RecipeForm) -> Self {
+        Self {
+            name: form.title,
+            description: form.description,
+            images: None,
+            yield_: form.yield_,
+            source: form.source,
+            videos: vec![],
+            category: form.category.or(Some("uncategorized".into())),
+            cuisine: form.cuisine,
+            ingredients: Sections::from([("".into(), form.ingredients)]),
+            instructions: Sections::from([("".into(), form.instructions)]),
+            keywords: form.keywords,
+            nutrition: form.nutrition,
+            times: form.times,
+            tools: form.tools,
+        }
+    }
 }
 
 /// Represents the data required to insert a new recipe into the database.
@@ -121,9 +157,12 @@ impl RecipeDetails {
 }
 
 /// Represents a nutrition entity stored in the database.
-#[derive(Associations, Debug, Default, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(
+    AsChangeset, Associations, Debug, Default, Queryable, Identifiable, PartialEq, Selectable,
+)]
 #[diesel(belongs_to(Recipe))]
 #[diesel(table_name = schema::nutrition)]
+#[diesel(treat_none_as_null = true)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Nutrition {
     /// Unique identifier for the nutrition entry.
@@ -277,11 +316,20 @@ pub struct TimesForCreate {
     pub cook_seconds: i32,
 }
 
+impl Default for TimesForCreate {
+    fn default() -> Self {
+        Self {
+            prep_seconds: 15 * 60,
+            cook_seconds: 30 * 60,
+        }
+    }
+}
+
 /// Represents the preparation and cooking times for a recipe stored in the database.
-#[derive(Associations, Insertable)]
+#[derive(AsChangeset, Associations, Insertable, PartialEq)]
 #[diesel(table_name = schema::times)]
 #[diesel(belongs_to(Recipe))]
-pub(super) struct TimesForInsert {
+pub struct TimesForInsert {
     pub recipe_id: i64,
     pub prep_seconds: i32,
     pub cook_seconds: i32,
@@ -407,7 +455,7 @@ pub(super) struct Section {
 #[derive(Insertable)]
 #[diesel(table_name = schema::sections)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub(super) struct SectionForInsert {
+pub(in crate::core::model::recipe) struct SectionForInsert {
     pub name: String,
 }
 
@@ -453,6 +501,26 @@ pub struct VideoForCreate {
     pub duration: Option<chrono::Duration>,
     pub content_url: Option<String>,
     pub embed_url: Option<String>,
+}
+
+impl VideoForCreate {
+    /// Creates the object from a Path.
+    pub async fn from_path(path: &Path) -> Self {
+        Self {
+            video: path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned()
+                .parse::<Uuid>()
+                .unwrap_or_default(),
+            duration: calc_video_duration(path.to_str().unwrap_or_default())
+                .await
+                .ok(),
+            content_url: None,
+            embed_url: None,
+        }
+    }
 }
 
 /// Represents the data required to insert a new video associated with a recipe into
@@ -702,6 +770,66 @@ mod tests {
                 got,
                 "Per 100g: calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g; saturated fat 2g; unsaturated fat 1g; trans fat 0g; cholesterol 30mg; sodium 300mg; fiber 5g"
             );
+        }
+    }
+
+    mod tests_recipe_for_create {
+        use super::*;
+
+        #[test]
+        fn test_first_and_rest_with_multiple_images() {
+            let uuid1 = Uuid::new_v4();
+            let uuid2 = Uuid::new_v4();
+            let uuid3 = Uuid::new_v4();
+            let recipe_c = RecipeForCreate {
+                images: Some(vec![uuid1, uuid2, uuid3]),
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, Some(uuid1));
+            pretty_assertions::assert_eq!(rest, vec![uuid2, uuid3]);
+        }
+
+        #[test]
+        fn test_first_and_rest_with_one_image() {
+            let uuid1 = Uuid::new_v4();
+            let recipe_c = RecipeForCreate {
+                images: Some(vec![uuid1]),
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, Some(uuid1));
+            assert!(rest.is_empty());
+        }
+
+        #[test]
+        fn test_first_and_rest_with_no_images() {
+            let recipe_c = RecipeForCreate {
+                images: None,
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, None);
+            assert!(rest.is_empty());
+        }
+
+        #[test]
+        fn test_first_and_rest_with_empty_vec() {
+            let recipe_c = RecipeForCreate {
+                images: Some(vec![]),
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, None);
+            assert!(rest.is_empty());
         }
     }
 }

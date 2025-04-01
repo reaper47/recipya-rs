@@ -174,6 +174,39 @@ where
     Ok(paths)
 }
 
+/// Uploads an image to the user's image directory. Only available outside testing.
+#[allow(unused)]
+pub fn upload_image(path: &Path, file_name: Uuid, output_path: &Path) {
+    #[cfg(not(test))]
+    {
+        use crate::core::support::fs::convert_image;
+
+        if let Err(err) = convert_image(path, file_name.to_string(), output_path) {
+            error!("Error converting image '{file_name}' to WebP: {err}");
+        }
+    }
+}
+
+/// Uploads a video to the user's video directory. Only available outside testing.
+#[allow(unused)]
+pub fn upload_videos(videos: Vec<PathBuf>, output_path: &Path) {
+    #[cfg(not(test))]
+    {
+        use tokio::task;
+
+        use crate::core::support::fs::convert_videos;
+
+        let output = output_path.to_path_buf();
+        let videos = videos.clone();
+
+        task::spawn(async move {
+            if let Err(err) = convert_videos(videos, &output).await {
+                error!("Error converting videos: {err}");
+            }
+        });
+    }
+}
+
 /// Result type for errors related to the file system.
 pub type Result<T> = core::result::Result<T, Error>;
 
