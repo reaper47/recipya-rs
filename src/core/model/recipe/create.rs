@@ -1,12 +1,13 @@
-use std::collections::{BTreeSet, HashMap};
-
-use diesel::data_types::PgInterval;
 use diesel::prelude::*;
-use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 
 use super::structs::*;
-use crate::core::model::user::{UserCategory, UserKeyword};
+use crate::core::model::recipe::helpers::{
+    get_category_id, get_cuisine_id, insert_additional_images, insert_ingredients,
+    insert_instructions, insert_keywords, insert_nutrition, insert_sections, insert_tools,
+    insert_videos,
+};
+use crate::core::model::user::UserCategory;
 use crate::core::model::{Error, Result};
 use crate::core::repository::ModelManager;
 use crate::core::repository::schema;
@@ -73,10 +74,7 @@ impl Recipe {
                     .unwrap_or(whatlang::Lang::Eng);
 
                     // Images
-                    let (main_image, additional_images) = match recipe_c.images.as_deref() {
-                        Some([first, rest @ ..]) => (Some(*first), rest.to_vec()),
-                        _ => (None, Vec::new()),
-                    };
+                    let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
                     let recipe_id = diesel::insert_into(schema::recipes::table)
                         .values(&RecipeForInsert {
@@ -93,24 +91,11 @@ impl Recipe {
                         .await
                         .map_err(|_| Error::DuplicateEntity)?;
 
+                    // Additional Images
+                    insert_additional_images(&mut conn, recipe_id, additional_images).await?;
+
                     // Category
-                    let category_id = diesel::insert_into(schema::categories::table)
-                        .values(&CategoryForInsert {
-                            name: recipe_c.category.clone().map(|c| {
-                                c.split_once([',', ';'])
-                                    .map(|(first, _)| first.into())
-                                    .unwrap_or(c)
-                            }),
-                        })
-                        .on_conflict(schema::categories::name)
-                        .do_update()
-                        .set(
-                            schema::categories::name
-                                .eq(recipe_c.category.clone().unwrap_or("uncategorized".into())),
-                        )
-                        .returning(schema::categories::id)
-                        .get_result::<i64>(&mut conn)
-                        .await?;
+                    let category_id = get_category_id(conn, &recipe_c.category).await?;
 
                     diesel::insert_into(schema::categories_recipes::table)
                         .values(&CategoryRecipe {
@@ -131,16 +116,7 @@ impl Recipe {
 
                     // Cuisine
                     if let Some(cuisine) = recipe_c.cuisine.as_ref() {
-                        let cuisine_id = diesel::insert_into(schema::cuisines::table)
-                            .values(&CuisineForInsert {
-                                name: Some(cuisine.clone()),
-                            })
-                            .on_conflict(schema::cuisines::name)
-                            .do_update()
-                            .set(schema::cuisines::name.eq(excluded(schema::cuisines::name)))
-                            .returning(schema::cuisines::id)
-                            .get_result::<i64>(&mut conn)
-                            .await?;
+                        let cuisine_id = get_cuisine_id(conn, cuisine.into()).await?;
 
                         diesel::insert_into(schema::cuisines_recipes::table)
                             .values(&CuisineRecipe {
@@ -152,160 +128,26 @@ impl Recipe {
                     }
 
                     // Sections for ingredients and instructions
-                    let values: Vec<SectionForInsert> = recipe_c
-                        .ingredients
-                        .iter()
-                        .chain(recipe_c.instructions.iter())
-                        .map(|(name, _)| name.clone())
-                        .collect::<BTreeSet<_>>()
-                        .into_iter()
-                        .rev()
-                        .map(|name| SectionForInsert { name })
-                        .collect();
-
-                    let sections_map: HashMap<String, i64> =
-                        diesel::insert_into(schema::sections::table)
-                            .values(&values)
-                            .on_conflict(schema::sections::name)
-                            .do_update()
-                            .set(schema::sections::name.eq(excluded(schema::sections::name)))
-                            .returning((schema::sections::id, schema::sections::name))
-                            .get_results::<(i64, String)>(&mut conn)
-                            .await?
-                            .into_iter()
-                            .map(|(id, name)| (name, id))
-                            .collect();
+                    let sections_map = insert_sections(conn, recipe_c).await?;
 
                     // Ingredients
-                    for (section, ingredients) in recipe_c.ingredients.iter() {
-                        let ingredient_recipes: Vec<_> =
-                            diesel::insert_into(schema::ingredients::table)
-                                .values(
-                                    ingredients
-                                        .iter()
-                                        .map(|name| IngredientForInsert {
-                                            name: name.to_string(),
-                                        })
-                                        .collect::<Vec<_>>(),
-                                )
-                                .on_conflict(schema::ingredients::name)
-                                .do_update()
-                                .set(
-                                    schema::ingredients::name
-                                        .eq(excluded(schema::ingredients::name)),
-                                )
-                                .returning((schema::ingredients::id, schema::ingredients::name))
-                                .get_results::<(i64, String)>(&mut conn)
-                                .await?
-                                .into_iter()
-                                .enumerate()
-                                .map(|(idx, (id, _))| IngredientRecipeForInsert {
-                                    ingredient_id: id,
-                                    recipe_id,
-                                    section_id: *sections_map.get(section).unwrap_or(&1),
-                                    item_order: idx as i16,
-                                })
-                                .collect::<Vec<_>>();
-
-                        diesel::insert_into(schema::ingredients_recipes::table)
-                            .values(&ingredient_recipes)
-                            .execute(&mut conn)
-                            .await?;
-                    }
+                    insert_ingredients(conn, &sections_map, &recipe_c.ingredients, recipe_id)
+                        .await?;
 
                     // Instructions
-                    for (section, instructions) in recipe_c.instructions.iter() {
-                        let instruction_recipes: Vec<InstructionRecipeForInsert> =
-                            diesel::insert_into(schema::instructions::table)
-                                .values(
-                                    instructions
-                                        .iter()
-                                        .map(|name| InstructionForInsert { name: name.into() })
-                                        .collect::<Vec<_>>(),
-                                )
-                                .on_conflict(schema::instructions::name)
-                                .do_update()
-                                .set(
-                                    schema::instructions::name
-                                        .eq(excluded(schema::instructions::name)),
-                                )
-                                .returning((schema::instructions::id, schema::instructions::name))
-                                .get_results::<(i64, String)>(&mut conn)
-                                .await?
-                                .into_iter()
-                                .enumerate()
-                                .map(|(idx, (id, _))| InstructionRecipeForInsert {
-                                    instruction_id: id,
-                                    recipe_id,
-                                    section_id: *sections_map.get(section).unwrap_or(&1),
-                                    item_order: idx as i16,
-                                })
-                                .collect::<Vec<_>>();
-
-                        diesel::insert_into(schema::instructions_recipes::table)
-                            .values(&instruction_recipes)
-                            .execute(&mut conn)
-                            .await?;
-                    }
+                    insert_instructions(conn, &sections_map, &recipe_c.instructions, recipe_id)
+                        .await?;
 
                     // Keywords
-                    for keyword in recipe_c.keywords.iter() {
-                        let keyword_id = diesel::insert_into(schema::keywords::table)
-                            .values(&KeywordForInsert {
-                                name: Some(keyword.clone()),
-                            })
-                            .on_conflict(schema::keywords::name)
-                            .do_update()
-                            .set(schema::keywords::name.eq(keyword.clone()))
-                            .returning(schema::keywords::id)
-                            .get_result(&mut conn)
-                            .await?;
-
-                        diesel::insert_into(schema::keywords_recipes::table)
-                            .values(&KeywordRecipe {
-                                keyword_id,
-                                recipe_id,
-                            })
-                            .execute(&mut conn)
-                            .await?;
-
-                        diesel::insert_into(schema::users_keywords::table)
-                            .values(&UserKeyword {
-                                user_id,
-                                keyword_id,
-                            })
-                            .on_conflict_do_nothing()
-                            .execute(&mut conn)
-                            .await?;
-                    }
+                    insert_keywords(&mut conn, &recipe_c.keywords, user_id, recipe_id).await?;
 
                     // Nutrition
                     if let Some(nutrition) = &recipe_c.nutrition {
-                        diesel::insert_into(schema::nutrition::table)
-                            .values(&NutritionForInsert {
-                                recipe_id,
-                                calories_kcal: nutrition.calories_kcal,
-                                total_carbohydrates: nutrition.total_carbohydrates,
-                                sugars_g: nutrition.sugars_g,
-                                protein_g: nutrition.protein_g,
-                                total_fat_g: nutrition.total_fat_g,
-                                saturated_fat_g: nutrition.saturated_fat_g,
-                                unsaturated_fat_g: nutrition.unsaturated_fat_g,
-                                cholesterol_mg: nutrition.cholesterol_mg,
-                                sodium_mg: nutrition.sodium_mg,
-                                fiber_g: nutrition.fiber_g,
-                                trans_fat_g: nutrition.trans_fat_g,
-                                serving_size: nutrition.serving_size.clone(),
-                            })
-                            .execute(&mut conn)
-                            .await?;
+                        insert_nutrition(conn, nutrition, recipe_id).await?;
                     }
 
                     // Times
-                    let times = recipe_c.times.clone().unwrap_or(TimesForCreate {
-                        prep_seconds: 15 * 60,
-                        cook_seconds: 0,
-                    });
+                    let times = recipe_c.times.clone().unwrap_or_default();
 
                     diesel::insert_into(schema::times::table)
                         .values(&TimesForInsert {
@@ -317,72 +159,10 @@ impl Recipe {
                         .await?;
 
                     // Tools
-                    if !recipe_c.tools.is_empty() {
-                        let tool_recipes: Vec<_> = diesel::insert_into(schema::tools::table)
-                            .values(
-                                recipe_c
-                                    .tools
-                                    .iter()
-                                    .map(|tool| ToolForInsert {
-                                        name: tool.name.as_str().into(),
-                                    })
-                                    .collect::<Vec<_>>(),
-                            )
-                            .on_conflict(schema::tools::name)
-                            .do_update()
-                            .set(schema::tools::name.eq(excluded(schema::tools::name)))
-                            .returning((schema::tools::id, schema::tools::name))
-                            .get_results::<(i64, String)>(&mut conn)
-                            .await?
-                            .into_iter()
-                            .enumerate()
-                            .map(|(idx, (id, _))| ToolRecipeForInsert {
-                                tool_id: id,
-                                recipe_id,
-                                quantity: recipe_c.tools.get(idx).map_or(1, |x| x.quantity),
-                                tool_order: idx as i16,
-                            })
-                            .collect::<Vec<_>>();
-
-                        diesel::insert_into(schema::tools_recipes::table)
-                            .values(&tool_recipes)
-                            .execute(&mut conn)
-                            .await?;
-                    }
-
-                    // Additional Images
-                    for image in additional_images.into_iter() {
-                        diesel::insert_into(schema::additional_images_recipe::table)
-                            .values(&AdditionalImageForInsert { recipe_id, image })
-                            .execute(&mut conn)
-                            .await?;
-                    }
+                    insert_tools(conn, &recipe_c.tools, recipe_id).await?;
 
                     // Videos
-                    if !recipe_c.videos.is_empty() {
-                        diesel::insert_into(schema::videos_recipes::table)
-                            .values(
-                                &recipe_c
-                                    .videos
-                                    .iter()
-                                    .map(|video| VideoForInsert {
-                                        video: video.video,
-                                        recipe_id,
-                                        duration: video.duration.map(|duration| {
-                                            PgInterval::new(
-                                                duration.num_microseconds().unwrap_or_default(),
-                                                duration.num_days() as i32,
-                                                (duration.num_weeks() as f64 / 4.34524) as i32,
-                                            )
-                                        }),
-                                        content_url: video.content_url.clone(),
-                                        embed_url: video.embed_url.clone(),
-                                    })
-                                    .collect::<Vec<_>>(),
-                            )
-                            .execute(&mut conn)
-                            .await?;
-                    }
+                    insert_videos(conn, &recipe_c.videos, recipe_id).await?;
 
                     Ok(recipe_id)
                 })
@@ -513,15 +293,12 @@ mod tests {
         recipe: RecipeForCreate,
         got: &RecipeDetails,
     ) -> RecipeDetails {
-        let (main_image, additional_images) = match recipe.images.as_deref() {
-            Some([first, rest @ ..]) => (Some(*first), rest.to_vec()),
-            _ => (None, Vec::new()),
-        };
+        let mut keywords = recipe.keywords.clone();
+        keywords.sort();
 
-        let times = recipe.times.unwrap_or(TimesForCreate {
-            prep_seconds: 15 * 60,
-            cook_seconds: 0,
-        });
+        let (main_image, additional_images) = recipe.first_and_rest_images();
+
+        let times = recipe.times.unwrap_or_default();
 
         let nutrition = match recipe.nutrition {
             None => None,
@@ -561,7 +338,7 @@ mod tests {
             cuisine: recipe.cuisine,
             ingredients: recipe.ingredients,
             instructions: recipe.instructions,
-            keywords: recipe.keywords,
+            keywords,
             nutrition,
             times: Times {
                 id: recipe_id,
@@ -671,6 +448,48 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_some_fields_are_lowercase_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = AppState::new(config.clone()).await?;
+        let user = insert_user(config.clone()).await?;
+        let mut recipe = a_bare_minimum_recipe();
+        recipe.keywords = vec!["CHICKEN".into(), "MEAT".into()];
+        recipe.category = Some("KVELDSMAT".into());
+        recipe.cuisine = Some("NORWEGIAN".into());
+        recipe.tools = vec![
+            ToolForCreate {
+                name: "FRYING PAN".into(),
+                quantity: 1,
+            },
+            ToolForCreate {
+                name: "WOK".into(),
+                quantity: 1,
+            },
+        ];
+
+        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
+        pretty_assertions::assert_eq!(
+            got.keywords,
+            vec!["chicken".to_string(), "meat".to_string()]
+        );
+        pretty_assertions::assert_eq!(got.category, "kveldsmat".to_string());
+        pretty_assertions::assert_eq!(got.cuisine, Some("norwegian".to_string()));
+        pretty_assertions::assert_eq!(
+            got.tools,
+            vec![
+                ToolRecipe {
+                    name: "frying pan".to_string(),
+                    quantity: 1,
+                    tool_order: 1
+                },
+                ToolRecipe {
+                    name: "wok".to_string(),
+                    quantity: 1,
+                    tool_order: 2
+                }
+            ]
+        );
         Ok(())
     }
 }

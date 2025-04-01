@@ -13,16 +13,18 @@ use uuid::Uuid;
 
 use crate::core::model::Error::EntityNotFound;
 use crate::core::model::Recipe;
-use crate::core::model::recipe::{Category, Keyword, RecipeForCreate, Sections, VideoForCreate};
+use crate::core::model::recipe::{
+    Category, Keyword, RecipeForCreate, RecipeForm, Sections, VideoForCreate,
+};
 use crate::core::model::share::ShareRecipe;
 use crate::core::model::user::User;
 use crate::core::model::website::{ToHtmlTable, Website};
-use crate::core::support::fs::calc_video_duration;
+use crate::core::support::fs::{calc_video_duration, is_file_exists, upload_image, upload_videos};
 use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::router::recipes_routes::{RecipeCategoryForm, RecipeForm, ShareRecipeForm};
+use crate::server::router::recipes_routes::{RecipeCategoryForm, ShareRecipeForm};
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
@@ -159,15 +161,13 @@ pub async fn duplicate_recipe_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
-        Ok(recipe) => recipe,
+    let (recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
+        Ok(res) => res,
         Err(err) => {
-            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
+            error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
             let toast = MessageHtmx::error("Recipe not found.");
             if let Ok(json) = serde_json::to_string(&toast) {
-                state
-                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                    .await;
+                state.broadcast(user_id, Message::Text(json.into())).await;
             }
             return Error::Model(EntityNotFound {
                 id: recipe_id,
@@ -177,15 +177,84 @@ pub async fn duplicate_recipe_handler(
         }
     };
 
-    let (categories, keywords) = match fetch_categories_keywords(&state, user_id).await {
+    templates::recipes::add_recipe_manual(
+        Data {
+            is_admin: user_id == 1,
+            is_authenticated: true,
+            is_autologin: state.config.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            recipes: vec![recipe],
+            ..Default::default()
+        },
+        categories,
+        keywords,
+    )
+    .into_response()
+}
+
+/// Handles a recipe's edit page.
+pub async fn edit_recipe_handler(
+    ctx: CtxW,
+    header_map: HeaderMap,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse> {
+    let user_id = ctx.0.user_id();
+
+    let (recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
         Ok(res) => res,
         Err(err) => {
-            error!("Error fetching recipe categories or keywords: {err}");
-            let toast = MessageHtmx::error("Error fetching recipe categories.");
+            error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
+            let toast = MessageHtmx::error("Recipe not found.");
             if let Ok(json) = serde_json::to_string(&toast) {
                 state.broadcast(user_id, Message::Text(json.into())).await;
             }
-            return err.into_response();
+            return Err(Error::Model(EntityNotFound {
+                id: recipe_id,
+                entity: "recipe",
+            }));
+        }
+    };
+
+    templates::recipes::edit_recipe(
+        Data {
+            is_admin: user_id == 1,
+            is_authenticated: true,
+            is_autologin: state.config.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            recipes: vec![recipe],
+            ..Default::default()
+        },
+        &state.data_dir,
+        categories,
+        keywords,
+    )
+}
+
+async fn fetch_view_recipe(
+    state: &AppState,
+    user_id: i64,
+    recipe_id: i64,
+) -> Result<(ViewRecipe, Vec<Category>, Vec<Keyword>)> {
+    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+        Ok(recipe) => recipe,
+        Err(err) => {
+            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
+            let toast = MessageHtmx::error("Recipe not found.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json.into())).await;
+            }
+            return Err(Error::Model(EntityNotFound {
+                id: recipe_id,
+                entity: "recipe",
+            }));
+        }
+    };
+
+    let (categories, keywords) = match fetch_categories_keywords(state, user_id).await {
+        Ok(res) => res,
+        Err(err) => {
+            return Err(err);
         }
     };
 
@@ -193,31 +262,102 @@ pub async fn duplicate_recipe_handler(
         Ok(formatted_times) => formatted_times,
         Err(err) => {
             error!("Failed to format times for recipe '{recipe_id}': {err}");
-            return Error::BadTimeFormat.into_response();
+            return Err(Error::BadTimeFormat);
         }
     };
 
-    templates::recipes::add_recipe_manual(
-        Data {
-            is_admin: user_id == 1,
-            is_authenticated: true,
-            is_autologin: state.config.is_autologin,
-            is_hx_request: is_hx_request(&header_map),
-            about: AboutData {
-                is_update_available: false,
-            },
-            pagination: None,
-            searchbar: None,
-            share: None,
-            recipes: vec![ViewRecipe {
-                recipe_details: recipe,
-                formatted_times,
-            }],
+    Ok((
+        ViewRecipe {
+            recipe_details: recipe,
+            formatted_times,
         },
         categories,
         keywords,
-    )
-    .into_response()
+    ))
+}
+
+/// Handles updating a recipe.
+pub async fn edit_recipe_put_handler(
+    ctx: CtxW,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+    form: RecipeForm,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let images = form
+        .images
+        .iter()
+        .map(
+            |(original_file_stem, path)| match Uuid::parse_str(original_file_stem) {
+                Ok(name) if is_file_exists(name, &state.data_dir.images) => name,
+                _ => {
+                    let file_name = path
+                        .file_stem()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .into_owned()
+                        .parse::<Uuid>()
+                        .unwrap_or_default();
+
+                    upload_image(path, file_name, &state.data_dir.images);
+                    file_name
+                }
+            },
+        )
+        .collect::<Vec<_>>();
+
+    let videos = if form.videos.is_empty() {
+        Vec::new()
+    } else {
+        let videos = join_all(form.videos.iter().map(|(original_file_stem, path)| {
+            let dir_videos = state.data_dir.videos.clone();
+
+            async move {
+                match Uuid::parse_str(original_file_stem) {
+                    Ok(name) if is_file_exists(name, &dir_videos) => VideoForCreate {
+                        video: name,
+                        duration: calc_video_duration(path.to_str().unwrap_or_default())
+                            .await
+                            .ok(),
+                        content_url: None,
+                        embed_url: None,
+                    },
+                    _ => VideoForCreate::from_path(path).await,
+                }
+            }
+        }))
+        .await;
+
+        upload_videos(
+            form.videos.values().cloned().collect(),
+            &state.data_dir.videos,
+        );
+        videos
+    };
+
+    let mut recipe_c = RecipeForCreate::from(form);
+    recipe_c.images = images.is_empty().not().then_some(images);
+    recipe_c.videos = videos;
+
+    match Recipe::update(&state.mm, user_id, recipe_id, &mut recipe_c).await {
+        Ok(id) => id,
+        Err(err) => {
+            error!("Failed to update recipe '{recipe_id}' user '{user_id}': {err}");
+            let toast = MessageHtmx::error("Failed to add recipe to collection.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json.into())).await;
+            }
+            return Error::Database.into_response();
+        }
+    };
+
+    let mut res = (StatusCode::SEE_OTHER, "").into_response();
+    if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
+        res.headers_mut()
+            .insert(axum_htmx::headers::HX_REDIRECT, value);
+    }
+    res
 }
 
 /// Handles generating a link for the recipe to share.
@@ -271,13 +411,7 @@ pub async fn add_recipes_handler(
             is_authenticated: true,
             is_autologin: state.config.is_autologin,
             is_hx_request: is_hx_request(&header_map),
-            about: AboutData {
-                is_update_available: false,
-            },
-            pagination: None,
-            searchbar: None,
-            share: None,
-            recipes: vec![],
+            ..Default::default()
         },
     )
 }
@@ -303,13 +437,7 @@ pub async fn add_manual_recipe_handler(
             is_authenticated: true,
             is_autologin: state.config.is_autologin,
             is_hx_request: is_hx_request(&header_map),
-            about: AboutData {
-                is_update_available: false,
-            },
-            pagination: None,
-            searchbar: None,
-            share: None,
-            recipes: vec![],
+            ..Default::default()
         },
         categories,
         keywords,
@@ -327,7 +455,7 @@ pub async fn add_manual_recipe_post_handler(
 
     let images = form
         .images
-        .iter()
+        .into_values()
         .map(|path| {
             let file_name = path
                 .file_stem()
@@ -337,16 +465,7 @@ pub async fn add_manual_recipe_post_handler(
                 .parse::<Uuid>()
                 .unwrap_or_default();
 
-            #[cfg(not(test))]
-            {
-                use crate::core::support::fs::convert_image;
-
-                if let Err(err) = convert_image(path, file_name.to_string(), &state.data_dir.images)
-                {
-                    error!("Error converting image '{file_name}' to WebP: {err}");
-                }
-            }
-
+            upload_image(&path, file_name, &state.data_dir.images);
             file_name
         })
         .collect::<Vec<_>>();
@@ -354,39 +473,17 @@ pub async fn add_manual_recipe_post_handler(
     let videos = if form.videos.is_empty() {
         Vec::new()
     } else {
-        let videos = join_all(form.videos.iter().map(|path| async {
-            VideoForCreate {
-                video: path
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .into_owned()
-                    .parse::<Uuid>()
-                    .unwrap_or_default(),
-                duration: calc_video_duration(path.to_str().unwrap_or_default())
-                    .await
-                    .ok(),
-                content_url: None,
-                embed_url: None,
-            }
-        }))
+        let videos = join_all(
+            form.videos
+                .values()
+                .map(|path| VideoForCreate::from_path(path)),
+        )
         .await;
 
-        #[cfg(not(test))]
-        {
-            use tokio::task;
-
-            use crate::core::support::fs::convert_videos;
-
-            let state = state.clone();
-
-            task::spawn(async move {
-                if let Err(err) = convert_videos(form.videos, &state.data_dir.videos).await {
-                    error!("Error converting videos: {err}");
-                }
-            });
-        }
-
+        upload_videos(
+            form.videos.values().cloned().collect(),
+            &state.data_dir.videos,
+        );
         videos
     };
 

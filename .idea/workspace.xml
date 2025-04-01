@@ -11,19 +11,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/support/software.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/form.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/helpers.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/model/recipe/update.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/email/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/email/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/repository/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/repository/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/support/fs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/fs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/support/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/shared_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/templates/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/data.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -73,7 +73,7 @@
     <option name="directoryName" value="m9rhMerX" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
@@ -99,6 +99,7 @@
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::test_create_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok.executor": "Debug",
     "Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_found_ok.executor": "Run",
@@ -120,6 +121,7 @@
     "Cargo.Test core::model::user::tests::test_delete_user_exists_ok.executor": "Run",
     "Cargo.Test core::model::user::tests::test_delete_user_not_exist_ok.executor": "Run",
     "Cargo.Test core::model::user::tests::test_keywords::test_keywords_ok.executor": "Run",
+    "Cargo.Test core::model::user::tests::test_update_password_ok.executor": "Run",
     "Cargo.Test core::model::website::tests::test_supported_websites_ok.executor": "Run",
     "Cargo.Test core::model::website::tests::test_website_to_html_table_rows.executor": "Run",
     "Cargo.Test core::models::user::tests::test_get_user_by_email_ok.executor": "Run",
@@ -189,6 +191,20 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_does_not_exist.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_duplicate_recipes::test_get_recipes_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_get_recipe_exists_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_get_recipe_not_exist_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_post_missing_required_title_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_can_only_be_one_category_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_duplicates_are_removed_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_missing_fields_defaults_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_missing_required_ingredients_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_missing_required_instructions_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_missing_required_title_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_subcategories_are_possible.executor": "Debug",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_submit_recipe_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_update_image_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_delete_recipe_does_not_exist.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_delete_recipe_exists_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_delete_recipe_must_be_logged_in_ok.executor": "Run",
@@ -207,6 +223,7 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_get_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_can_only_be_one_category_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_duplicates_are_removed_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_fields_defaults_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_required_ingredients_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_required_instructions_ok.executor": "Run",
@@ -223,6 +240,7 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_no_recipes_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_recipes_user_has_recipes_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_share_recipe::test_custom_expires_at_time_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_share_recipe::test_default_expires_at_time_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_share_recipe::test_invalid_expires_at_time_defaults_to_7_days_ok.executor": "Run",
@@ -262,12 +280,14 @@
     "Cargo.Test tests_confirm.executor": "Run",
     "Cargo.Test tests_delete_recipe_category.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
+    "Cargo.Test tests_edit.executor": "Run",
     "Cargo.Test tests_forgot_password.executor": "Run",
     "Cargo.Test tests_get_page.executor": "Run",
     "Cargo.Test tests_login.executor": "Run",
     "Cargo.Test tests_nutrition.executor": "Run",
     "Cargo.Test tests_pagination.executor": "Run",
     "Cargo.Test tests_recipe_add_manual.executor": "Run",
+    "Cargo.Test tests_recipe_for_create.executor": "Run",
     "Cargo.Test tests_recipes.executor": "Run",
     "Cargo.Test tests_register.executor": "Run",
     "Cargo.Test tests_searchbar.executor": "Run",
@@ -279,7 +299,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "44-implement-post-recipesaddmanual",
+    "git-widget-placeholder": "39-implement-get-recipesidedit",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -290,7 +310,7 @@
     "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
     "org.rust.first.attach.projects": "true",
     "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "actions.on.save",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external"
   },
   "keyToStringList": {
@@ -322,7 +342,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_subcategories_are_possible">
+  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_submit_recipe_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -341,8 +361,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_can_only_be_one_category_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_can_only_be_one_category_ok -- --exact" />
+    <configuration name="Test core::model::recipe::create::tests::test_create_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::create::tests::test_create_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -358,8 +378,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_fields_defaults_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_fields_defaults_ok -- --exact" />
+    <configuration name="Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_reset_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_reset_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -375,8 +395,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_required_title_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_required_title_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_edit::test_put_duplicates_are_removed_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_edit::test_put_duplicates_are_removed_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -392,8 +412,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_subcategories_are_possible" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_subcategories_are_possible -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_edit::test_put_submit_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_edit::test_put_submit_recipe_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -409,8 +429,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_submit_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_submit_recipe_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_edit::test_put_update_image_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_edit::test_put_update_image_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -428,19 +448,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_can_only_be_one_category_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_fields_defaults_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_subcategories_are_possible" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_submit_recipe_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_required_title_ok" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_ok" />
+      <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_reset_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_duplicates_are_removed_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_submit_recipe_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_update_image_ok" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_subcategories_are_possible" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_can_only_be_one_category_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_submit_recipe_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_fields_defaults_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_required_title_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_submit_recipe_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_update_image_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_put_duplicates_are_removed_ok" />
+        <item itemvalue="Cargo.Test server::router::auth_router::tests::tests_forgot_password::test_get_forgot_password_reset_ok" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_ok" />
       </list>
     </recent_temporary>
   </component>
@@ -489,9 +509,24 @@
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/server/router/handlers/recipes.rs</url>
-          <line>416</line>
-          <option name="timeStamp" value="17" />
+          <url>file://$PROJECT_DIR$/src/server/router/recipes_routes.rs</url>
+          <line>361</line>
+          <option name="timeStamp" value="174" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/core/model/recipe/update.rs</url>
+          <line>136</line>
+          <option name="timeStamp" value="175" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/core/model/recipe/helpers.rs</url>
+          <line>268</line>
+          <option name="timeStamp" value="176" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/core/model/recipe/update.rs</url>
+          <line>96</line>
+          <option name="timeStamp" value="177" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

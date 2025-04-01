@@ -6,6 +6,7 @@ use crate::server::Result;
 use crate::server::router::SearchParams;
 
 /// Data holds data to pass on to the templates.
+#[derive(Default)]
 pub struct Data {
     pub is_admin: bool,
     pub is_authenticated: bool,
@@ -20,6 +21,7 @@ pub struct Data {
 }
 
 /// NewAboutData creates a new instance of AboutData.
+#[derive(Default)]
 pub struct AboutData {
     pub(crate) is_update_available: bool,
 }
