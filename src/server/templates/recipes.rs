@@ -216,7 +216,7 @@ fn render_add_recipe_manual(
                                                 (icon_cooking_pot())
                                             }
                                             label {
-                                                input type="text" name="time-cooking"
+                                                input type="text" name="time-cook"
                                                     value=(
                                                         view
                                                             .map(|v| v.formatted_times.cook_edit.as_str())
@@ -514,7 +514,7 @@ fn add_instruction(name: &str) -> Markup {
         li class="pt-2 md:pl-0" {
             div .flex {
                 label class="w-11/12" {
-                    textarea required name="instructions" rows="4" class="textarea textarea-bordered w-full"
+                    textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full"
                         placeholder="Mix all ingredients together"
                         _="on keydown if event.key is 'Enter' halt the event then call addItem(event)" {
                         (name)
@@ -822,7 +822,7 @@ pub fn edit_recipe(
             (render_nav(&path, true))
             (render_edit_recipe(view, &data_dir, categories, keywords))
         } @else {
-            (layouts::main(&page_title, &path, &data, render_edit_recipe(view, &data_dir, categories, keywords)))
+            (layouts::main(&page_title, &path, &data, render_edit_recipe(view, data_dir, categories, keywords)))
         }
     })
 }
@@ -840,7 +840,7 @@ fn render_edit_recipe(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body style="padding: 0" enctype="multipart/form-data" hx-post=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
+                    form .card-body style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
                         h2 class="card-title place-content-center rounded-t-2xl" {
                             label .w-full {
                                 input required type="text" name="title" placeholder="Title of the recipe*"
@@ -1130,7 +1130,7 @@ fn render_edit_recipe(
                                                 (icon_cooking_pot())
                                             }
                                             label {
-                                                input type="text" name="time-cooking"
+                                                input type="text" name="time-cook"
                                                     value=(view.formatted_times.cook_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.cook_edit))
                                                     class="input input-xs max-w-24 html-duration-picker";
                                             }

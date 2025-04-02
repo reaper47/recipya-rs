@@ -175,13 +175,14 @@ pub struct ShareData {
 }
 
 /// ViewRecipeData holds template data related to viewing a recipe.
+#[derive(Clone)]
 pub struct ViewRecipe {
     pub recipe_details: RecipeDetails,
     pub formatted_times: FormattedTimes,
 }
 
 /// Stores recipe times formatted for display to the user.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FormattedTimes {
     pub cook: String,
     pub cook_datetime: String,

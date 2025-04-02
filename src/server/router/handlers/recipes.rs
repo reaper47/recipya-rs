@@ -1,3 +1,6 @@
+use std::fmt::Write;
+use std::ops::Not;
+
 use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
@@ -6,11 +9,8 @@ use axum::response::{Html, IntoResponse};
 use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
-use std::fmt::Write;
-use std::ops::Not;
 use tracing::error;
 use uuid::Uuid;
-
 use crate::core::model::Error::EntityNotFound;
 use crate::core::model::Recipe;
 use crate::core::model::recipe::{
@@ -41,11 +41,14 @@ pub async fn delete_recipe_handler(
     let user_id = ctx.0.user_id();
 
     match Recipe::delete(&state.mm, recipe_id, user_id).await {
-        Ok(_) => (
-            StatusCode::NO_CONTENT,
-            [(axum_htmx::headers::HX_REDIRECT, "/")],
-        )
-            .into_response(),
+        Ok(_) => {
+            state.remove_cached_recipe((user_id, recipe_id)).await;
+            (
+                StatusCode::NO_CONTENT,
+                [(axum_htmx::headers::HX_REDIRECT, "/")],
+            )
+                .into_response()
+        } ,
         Err(err) => {
             error!("Error deleting recipe {recipe_id} for user {user_id}: {err}");
 
@@ -341,7 +344,9 @@ pub async fn edit_recipe_put_handler(
     recipe_c.videos = videos;
 
     match Recipe::update(&state.mm, user_id, recipe_id, &mut recipe_c).await {
-        Ok(id) => id,
+        Ok(_) => {
+            state.remove_cached_recipe((user_id, recipe_id)).await;
+        },
         Err(err) => {
             error!("Failed to update recipe '{recipe_id}' user '{user_id}': {err}");
             let toast = MessageHtmx::error("Failed to add recipe to collection.");
@@ -623,21 +628,32 @@ pub async fn view_recipe_handler(
 ) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
 
-    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
-        Ok(recipe) => recipe,
-        Err(_) => {
-            return Ok(templates::general::simple(
-                "Recipe Not Found",
-                "The recipe you requested to view is not found.",
-            ));
+    let cache_key = (user_id, recipe_id);
+    let view_recipe = match state.get_cached_recipe(cache_key).await {
+        Some(recipe) => {
+            recipe
+        },
+        None => {
+            let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+                Ok(recipe) => recipe,
+                Err(_) => {
+                    return Ok(templates::general::simple(
+                        "Recipe Not Found",
+                        "The recipe you requested to view is not found.",
+                    ));
+                }
+            };
+
+            let formatted_times = FormattedTimes::from_times(&recipe.times)?;
+            let view_recipe = ViewRecipe {
+                recipe_details: recipe,
+                formatted_times,
+            };
+
+            state.cache_recipe(cache_key, &view_recipe).await;
+            view_recipe
         }
     };
-
-    let formatted_times = FormattedTimes::from_times(&recipe.times)?;
-    let view = vec![ViewRecipe {
-        recipe_details: recipe,
-        formatted_times,
-    }];
 
     templates::recipes::view_recipe(
         uri.path(),
@@ -677,7 +693,7 @@ pub async fn view_recipe_handler(
                 is_from_host: true,
                 is_shared: false,
             }),
-            recipes: view,
+            recipes: vec![view_recipe],
         },
     )
 }
