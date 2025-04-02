@@ -270,9 +270,6 @@ function downloadFile(data, filename, mime) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    showAll();
-    document.addEventListener("htmx:pushedIntoHistory", showAll);
-
     document.body.addEventListener("showMessageHtmx", function (event) {
         const {action, message, status, title} = event.detail;
         showToast(title, message, status, action);
@@ -296,11 +293,6 @@ document.addEventListener("htmx:beforeProcessNode", () => {
         }
         htmx.process(el);
     }
-});
-
-htmx.on('htmx:pushedIntoHistory', () => {
-    showAll();
-    document.addEventListener("htmx:pushedIntoHistory", showAll);
 });
 
 document.addEventListener("htmx:wsBeforeMessage", (event) => {

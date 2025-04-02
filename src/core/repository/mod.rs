@@ -1,6 +1,7 @@
 mod error;
 pub mod pool;
 pub mod schema;
+pub mod cache;
 
 pub use error::{Error, Result};
 

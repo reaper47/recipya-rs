@@ -10,11 +10,17 @@ use std::sync::Arc;
 
 use axum::extract::ws::{Message, WebSocket};
 use std::collections::HashMap;
+use std::num::NonZeroUsize;
+use diesel::PgJsonbExpressionMethods;
+use lru::LruCache;
 use tokio::sync::Mutex;
 
 use crate::core::config::{Config, DataDir};
 use crate::core::email::EmailClient;
+use crate::core::model::RecipeDetails;
+use crate::core::repository::cache::{RecipeCache, RecipeCacheKey};
 use crate::core::repository::ModelManager;
+use crate::server::templates::data::ViewRecipe;
 
 /// Shared application state for the Axum web server.
 #[derive(Clone)]
@@ -23,6 +29,7 @@ pub struct AppState {
     pub data_dir: DataDir,
     pub email_service: Option<EmailClient>,
     pub mm: ModelManager,
+    pub recipe_cache: Arc<Mutex<RecipeCache>>,
     pub subscribers: Arc<Mutex<HashMap<i64, Vec<WebSocket>>>>,
 }
 
@@ -43,6 +50,7 @@ impl AppState {
             data_dir,
             email_service,
             mm: ModelManager::new(config.database_url).await?,
+            recipe_cache: Arc::new(Mutex::new(LruCache::new(NonZeroUsize::new(1000).expect("LRU to be initialized")))),
             subscribers: Arc::new(Mutex::new(HashMap::new())),
         })
     }
@@ -63,6 +71,24 @@ impl AppState {
                 vec.remove(idx);
             }
         }
+    }
+
+    /// Gets a recipe from the cache if present.
+    pub async fn get_cached_recipe(&self, key: RecipeCacheKey) -> Option<ViewRecipe> {
+        let mut cache = self.recipe_cache.lock().await;
+        cache.get(&key).cloned()
+    }
+
+    /// Inserts the recipe into the cache.
+    pub async fn cache_recipe(&self, key: RecipeCacheKey, recipe: &ViewRecipe) {
+        let mut cache = self.recipe_cache.lock().await;
+        cache.put(key, recipe.clone());
+    }
+    
+    /// Removes an entry from the cache.
+    pub async fn remove_cached_recipe(&self, key: RecipeCacheKey) {
+        let mut cache = self.recipe_cache.lock().await;
+        cache.pop(&key);
     }
 }
 

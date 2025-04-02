@@ -15,7 +15,7 @@ use crate::name_entity_with_relations;
 pub type Sections = Vec<(String, Vec<String>)>;
 
 /// Represents a recipe entity stored in the database.
-#[derive(AsChangeset, Associations, Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(AsChangeset, Associations, Clone, Debug, Queryable, Identifiable, PartialEq, Selectable)]
 #[diesel(belongs_to(User))]
 #[diesel(treat_none_as_null = true)]
 #[diesel(table_name = schema::recipes)]
@@ -111,7 +111,7 @@ pub(super) struct RecipeForInsert {
 }
 
 /// Represents the full details of a recipe, including its metadata and related entities.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RecipeDetails {
     pub recipe: Recipe,
     pub additional_images: Vec<Uuid>,
@@ -158,7 +158,7 @@ impl RecipeDetails {
 
 /// Represents a nutrition entity stored in the database.
 #[derive(
-    AsChangeset, Associations, Debug, Default, Queryable, Identifiable, PartialEq, Selectable,
+    AsChangeset, Associations, Clone, Debug, Default, Queryable, Identifiable, PartialEq, Selectable,
 )]
 #[diesel(belongs_to(Recipe))]
 #[diesel(table_name = schema::nutrition)]
@@ -297,7 +297,7 @@ pub(super) struct NutritionForInsert {
 }
 
 /// Represents a time components of a recipe.
-#[derive(Associations, Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Associations, Clone, Debug, Queryable, Identifiable, PartialEq, Selectable)]
 #[diesel(belongs_to(Recipe))]
 #[diesel(table_name = schema::times)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -358,7 +358,7 @@ pub(super) struct ToolForInsert {
 }
 
 /// Represents the details of a tool used in a recipe.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ToolRecipe {
     pub name: String,
     pub quantity: i16,
@@ -470,7 +470,7 @@ pub(super) struct AdditionalImageForInsert {
 }
 
 /// Represents a video associated with a recipe.
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Video {
     pub video: Uuid,
     pub duration: Option<chrono::Duration>,
