@@ -101,12 +101,12 @@ mod tests {
         use diesel::internal::derives::multiconnection::chrono;
 
         use crate::server::AppState;
-        use crate::server::test_utils::TestDb;
+        use crate::server::test_utils::{TestDb, create_app_state};
 
         #[tokio::test]
         async fn test_generate_shared_default_expiration_recipe_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             insert_recipe(&config, &state).await?;
 
             let got = ShareRecipe::new(&state.mm, 1, 1, None).await?;
@@ -130,7 +130,7 @@ mod tests {
         #[tokio::test]
         async fn test_generate_shared_recipe_custom_expiration_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             insert_recipe(&config, &state).await?;
             let expires_at = chrono::Utc::now() + chrono::Duration::days(14);
 
@@ -155,7 +155,7 @@ mod tests {
         #[tokio::test]
         async fn test_shared_recipe_already_generated_err() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             insert_recipe(&config, &state).await?;
             let _ = ShareRecipe::new(&state.mm, 1, 1, None).await?;
 
@@ -194,12 +194,12 @@ mod tests {
     mod tests_fetch_by_link {
         use super::*;
         use crate::server::AppState;
-        use crate::server::test_utils::TestDb;
+        use crate::server::test_utils::{TestDb, create_app_state};
 
         #[tokio::test]
         async fn test_exists_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             insert_recipe(&config, &state).await?;
             let shared = ShareRecipe::new(&state.mm, 1, 1, None).await?;
 
@@ -212,7 +212,7 @@ mod tests {
         #[tokio::test]
         async fn test_exists_err() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             insert_recipe(&config, &state).await?;
 
             let res = ShareRecipe::get_by_link(&state.mm, Uuid::new_v4()).await;

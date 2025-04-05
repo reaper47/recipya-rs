@@ -9,8 +9,12 @@ use axum::response::{Html, IntoResponse};
 use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
+use tokio::sync::mpsc;
+use tokio::time::Instant;
 use tracing::error;
+use url::Url;
 use uuid::Uuid;
+
 use crate::core::model::Error::EntityNotFound;
 use crate::core::model::Recipe;
 use crate::core::model::recipe::{
@@ -24,7 +28,9 @@ use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
 use crate::server::router::middleware::mw_auth::CtxW;
-use crate::server::router::recipes_routes::{RecipeCategoryForm, ShareRecipeForm};
+use crate::server::router::recipes_routes::{
+    RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
+};
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
     SearchbarData, ShareData, ViewRecipe,
@@ -48,7 +54,7 @@ pub async fn delete_recipe_handler(
                 [(axum_htmx::headers::HX_REDIRECT, "/")],
             )
                 .into_response()
-        } ,
+        }
         Err(err) => {
             error!("Error deleting recipe {recipe_id} for user {user_id}: {err}");
 
@@ -346,7 +352,7 @@ pub async fn edit_recipe_put_handler(
     match Recipe::update(&state.mm, user_id, recipe_id, &mut recipe_c).await {
         Ok(_) => {
             state.remove_cached_recipe((user_id, recipe_id)).await;
-        },
+        }
         Err(err) => {
             error!("Failed to update recipe '{recipe_id}' user '{user_id}': {err}");
             let toast = MessageHtmx::error("Failed to add recipe to collection.");
@@ -564,6 +570,74 @@ async fn fetch_categories_keywords(
     Ok((categories, keywords))
 }
 
+/// Handles scraping recipes from websites.
+pub async fn add_website_post_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<RecipeScrapeForm>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let mut urls = form
+        .urls
+        .lines()
+        .filter_map(|line| Url::parse(line).ok())
+        .collect::<Vec<_>>();
+
+    if urls.is_empty() {
+        let toast = MessageHtmx::error("No valid URLs found.");
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(user_id, Message::Text(json.into())).await;
+        }
+        return Error::InvalidPayload.into_response();
+    }
+    urls.sort();
+    urls.dedup();
+
+    tokio::spawn(async move {
+        let num_websites = urls.len();
+        let (progress_tx, mut progress_rx) = mpsc::channel::<i64>(num_websites);
+        let now = Instant::now();
+
+        for url in urls {
+            let progress_tx = progress_tx.clone();
+            let mut ids: Vec<i64> = Vec::new();
+
+            tokio::spawn(async move {
+                match state.scrape(url) {
+                    Ok(schema) => {
+                        // TODO: Here and add method to scraper to fetch media
+                        let mut recipe_c = RecipeForCreate::from(schema);
+                        
+                        if let Some(Ok(image)) = schema.image.map(String::try_from) {
+                            
+                        }
+                        
+                        Recipe::create(&state.mm, user_id, &recipe_c)
+                    }
+                    Err(err) => {}
+                }
+            });
+        }
+
+        drop(progress_tx);
+
+        let mut processed = 0;
+        while let Some(p) = progress_rx.recv().await {
+            processed += 1;
+            state.broadcast(user_id, Message::Text(p.into())).await;
+        }
+
+        let exec_time = now.elapsed();
+    });
+
+    (StatusCode::ACCEPTED, "").into_response()
+}
+
+fn scrape_recipes() {
+    tokio::spawn(async move {});
+}
+
 /// Handles adding a recipe category into the database.
 pub async fn post_recipe_categories_handler(
     ctx: CtxW,
@@ -630,9 +704,7 @@ pub async fn view_recipe_handler(
 
     let cache_key = (user_id, recipe_id);
     let view_recipe = match state.get_cached_recipe(cache_key).await {
-        Some(recipe) => {
-            recipe
-        },
+        Some(recipe) => recipe,
         None => {
             let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
                 Ok(recipe) => recipe,

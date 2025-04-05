@@ -3,6 +3,7 @@ use std::fmt::Formatter;
 use serde::{Deserialize, Deserializer, de};
 
 use crate::core::scraper::schema::AtType;
+use crate::core::support::strings::extract_number;
 
 /// Nutritional information about the recipe as described in the [schema](https://schema.org/NutritionInformation).
 #[derive(Debug, Default, Deserialize, PartialEq)]
@@ -40,6 +41,16 @@ pub struct NutritionInformationSchema {
 #[derive(Debug, PartialEq)]
 pub enum Energy {
     Str(String),
+}
+
+impl TryFrom<Energy> for i16 {
+    type Error = String;
+
+    fn try_from(value: Energy) -> Result<Self, Self::Error> {
+        match value {
+            Energy::Str(s) => extract_number(s).map_err(|err| format!("Energy extraction error: {err}")),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for Energy {
@@ -81,6 +92,16 @@ impl<'de> Deserialize<'de> for Energy {
 #[derive(Debug, PartialEq)]
 pub enum Mass {
     Str(String),
+}
+
+impl TryFrom<Mass> for i16 {
+    type Error = String;
+
+    fn try_from(value: Mass) -> Result<Self, Self::Error> {
+        match value {
+            Mass::Str(s) => extract_number(s).map_err(|err| format!("Mass extraction error: {err}")),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for Mass {

@@ -5,7 +5,7 @@ use serde::{
     de::{Error, MapAccess, SeqAccess},
 };
 use url::Url;
-
+use uuid::Uuid;
 use crate::core::scraper::schema::AtType;
 
 /// Enumeration of all possible action values.
@@ -615,6 +615,16 @@ pub enum DefinedTermOrTextOrUrl {
     Url(Url),
 }
 
+impl From<DefinedTermOrTextOrUrl> for String {
+    fn from(value: DefinedTermOrTextOrUrl) -> Self {
+        match value {
+            DefinedTermOrTextOrUrl::DefinedTerm(term) => "".into(),
+            DefinedTermOrTextOrUrl::Text(text) => text,
+            DefinedTermOrTextOrUrl::Url(url) => url.to_string(),
+        }
+    }
+}
+
 /// A word, name, acronym, phrase, etc. with a formal definition. Often used in the context of
 /// category or subject classification, glossaries or dictionaries, product or creative work types,
 /// etc. Use the name property for the term being defined, use termCode if the term has an
@@ -880,6 +890,27 @@ impl<'de> Deserialize<'de> for HowToToolOrText {
 pub enum ImageObjectOrUrl {
     Url(Url),
     ImageObject(Box<ImageObjectType>),
+}
+
+impl TryFrom<ImageObjectOrUrl> for String {
+    type Error = String;
+
+    fn try_from(value: ImageObjectOrUrl) -> Result<Self, Self::Error> {
+        match value {
+            ImageObjectOrUrl::Url(url) => Ok(url.into()),
+            ImageObjectOrUrl::ImageObject(object) => {
+                if let Some(url) = object.url {
+                   return Ok(url.to_string());
+                } 
+                
+                if let Some(url) = object.content_url {
+                    return Ok(url.to_string());
+                }                
+                
+                Err("No URL in image".into())
+            }
+        }
+    }
 }
 
 /// An image file.
@@ -1520,6 +1551,22 @@ impl Default for QuantitativeValueOrText {
     }
 }
 
+impl TryFrom<QuantitativeValueOrText> for i16 {
+    type Error = String;
+
+    fn try_from(value: QuantitativeValueOrText) -> Result<Self, Self::Error> {
+        match value {
+            QuantitativeValueOrText::QuantitativeValue(qv) => {
+                i16::try_from(qv.value).map_err(|_| format!("Value {} out of i16 range", qv.value))
+            }
+            QuantitativeValueOrText::Text(s) => s
+                .trim()
+                .parse::<i16>()
+                .map_err(|err| format!("Failed to parse string: {err}")),
+        }
+    }
+}
+
 /// A point value or interval for product characteristics and other purposes.
 #[derive(Debug, PartialEq)]
 pub struct QuantitativeValueType {
@@ -1672,6 +1719,16 @@ pub struct ReviewRating {
 pub enum TextOrTextObject {
     Text(String),
     TextObject(TextObjectType),
+}
+
+impl From<TextOrTextObject> for String {
+    fn from(value: TextOrTextObject) -> Self {
+        match value {
+            TextOrTextObject::Text(s) if !s.trim().is_empty() => s,
+            TextOrTextObject::TextObject(obj) => String::new(),
+            _ => String::new(),
+        }
+    }
 }
 
 /// A text file. The text can be unformatted or contain markup, html, etc.

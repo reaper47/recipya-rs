@@ -36,7 +36,7 @@ mod tests {
     use tower::ServiceExt;
 
     use crate::core::config::Config;
-    use crate::server::test_utils::{default_config, test_database_url};
+    use crate::server::test_utils::{create_app_state, default_config, test_database_url};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -46,7 +46,7 @@ mod tests {
             database_url: test_database_url(),
             ..default_config()
         };
-        let state = AppState::new(config).await?;
+        let state = create_app_state(config).await;
         let app = static_files_routes(state.clone()).with_state(state);
         let test_cases = vec![
             ("/android-chrome-192x192.png", StatusCode::OK),

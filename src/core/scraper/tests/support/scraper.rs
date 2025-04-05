@@ -1,15 +1,17 @@
+use tracing::error;
+
 use super::websites::websites_for_tests;
+use crate::core::scraper::Result;
+use crate::core::scraper::Scraper;
+use crate::core::scraper::client::HttpClient;
 use crate::core::scraper::schema::RecipeSchema;
 use crate::core::scraper::websites::Website;
-use crate::core::scraper::Result;
-use crate::core::scraper::{HttpClient, Scraper};
 use std::{
     fs,
     io::Write,
     path::PathBuf,
     sync::{Arc, OnceLock},
 };
-use tracing::error;
 
 pub struct MockHttpClient;
 
@@ -32,9 +34,7 @@ impl HttpClient for MockHttpClient {
 fn mock_scraper() -> &'static Scraper {
     static INSTANCE: OnceLock<Scraper> = OnceLock::new();
 
-    INSTANCE.get_or_init(|| Scraper {
-        client: Arc::new(MockHttpClient),
-    })
+    INSTANCE.get_or_init(|| Scraper::with_client(Arc::new(MockHttpClient)))
 }
 
 pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {

@@ -4,18 +4,63 @@ use uuid::Uuid;
 use diesel::data_types::PgInterval;
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
-
+use tracing::warn;
 use crate::core::model::recipe::RecipeForm;
 use crate::core::model::user::User;
 use crate::core::repository::schema;
+use crate::core::scraper::schema::{CreativeWorkOrItemListOrText, HowToToolOrText, NutritionInformationSchema, RecipeSchema};
 use crate::core::support::fs::calc_video_duration;
+use crate::core::support::strings::extract_number;
 use crate::name_entity_with_relations;
 
 /// Represents a collection of sections, where each section has a title and a list of associated items.
 pub type Sections = Vec<(String, Vec<String>)>;
 
+impl From<CreativeWorkOrItemListOrText> for Sections {
+    fn from(value: CreativeWorkOrItemListOrText) -> Self {
+        match value {
+            CreativeWorkOrItemListOrText::CreativeWork(work) => {
+                let section_name = work.name.unwrap_or_default();
+                let item = if let Some(description) = work.description {
+                    String::from(description)
+                } else {
+                    String::new()
+                };
+                Sections::from([(section_name, vec![item])])
+            }
+            CreativeWorkOrItemListOrText::ItemList(items) => {
+                let mut section_names = items
+                    .iter()
+                    .map(|item| item.name.clone().unwrap_or_default())
+                    .collect::<Vec<_>>();
+                section_names.dedup();
+
+                let mut sections = Sections::from(
+                    section_names
+                        .iter()
+                        .map(|name| (name.clone(), Vec::<String>::new()))
+                        .collect::<Vec<_>>(),
+                );
+
+                for item in items {
+                    let name = item.name.clone().unwrap_or_default();
+
+                    if let Some((_name, texts)) = sections.iter_mut().find(|(n, _)| *n == name) {
+                        texts.push(item.text);
+                    }
+                }
+
+                sections
+            }
+            CreativeWorkOrItemListOrText::Text(s) => Self::from([("".into(), vec![s])]),
+        }
+    }
+}
+
 /// Represents a recipe entity stored in the database.
-#[derive(AsChangeset, Associations, Clone, Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(
+    AsChangeset, Associations, Clone, Debug, Queryable, Identifiable, PartialEq, Selectable,
+)]
 #[diesel(belongs_to(User))]
 #[diesel(treat_none_as_null = true)]
 #[diesel(table_name = schema::recipes)]
@@ -92,6 +137,30 @@ impl From<RecipeForm> for RecipeForCreate {
             nutrition: form.nutrition,
             times: form.times,
             tools: form.tools,
+        }
+    }
+}
+
+impl From<RecipeSchema> for RecipeForCreate {
+    fn from(schema: RecipeSchema) -> Self {
+        Self {
+            name: schema.name.unwrap_or_default(),
+            description: schema.description.map(String::from),
+            images: None,
+            yield_: i16::try_from(schema.recipe_yield).ok(),
+            source: schema.url.map(|s| s.into()),
+            videos: vec![],
+            category: String::try_from(schema.recipe_category).ok(),
+            cuisine: schema.recipe_cuisine.map(String::from),
+            ingredients: Sections::from([(
+                "".into(),
+                schema.recipe_ingredient.unwrap_or_default(),
+            )]),
+            instructions: Sections::from(schema.recipe_instructions.unwrap_or_default()),
+            keywords: schema.keywords.into_iter().map(String::from).collect(),
+            nutrition: schema.nutrition.map(NutritionForCreate::from),
+            times: Some(TimesForCreate::from_components(schema.prep_time, schema.cook_time)),
+            tools: schema.tool.map(ToolForCreate::from).into_iter().collect(),
         }
     }
 }
@@ -276,6 +345,25 @@ impl NutritionForCreate {
     }
 }
 
+impl From<NutritionInformationSchema> for NutritionForCreate {
+    fn from(schema: NutritionInformationSchema) -> Self {
+        Self {
+            calories_kcal: schema.calories.map(i16::try_from).and_then(|res| res.ok()),
+            total_carbohydrates: schema.carbohydrate_content.map(i16::try_from).and_then(|res| res.ok()),
+            sugars_g: schema.sugar_content.map(i16::try_from).and_then(|res| res.ok()),
+            protein_g: schema.protein_content.map(i16::try_from).and_then(|res| res.ok()),
+            total_fat_g: schema.fat_content.map(i16::try_from).and_then(|res| res.ok()),
+            saturated_fat_g: schema.saturated_fat_content.map(i16::try_from).and_then(|res| res.ok()),
+            unsaturated_fat_g: schema.unsaturated_fat_content.map(i16::try_from).and_then(|res| res.ok()),
+            cholesterol_mg: schema.cholesterol_content.map(i16::try_from).and_then(|res| res.ok()),
+            sodium_mg: schema.sodium_content.map(i16::try_from).and_then(|res| res.ok()),
+            fiber_g: schema.fiber_content.map(i16::try_from).and_then(|res| res.ok()),
+            trans_fat_g: schema.trans_fat_content.map(i16::try_from).and_then(|res| res.ok()),
+            serving_size: schema.serving_size,
+        }
+    }
+}
+
 /// Represents the nutritional information associated with a recipe in the database.
 #[derive(Associations, Insertable)]
 #[diesel(belongs_to(Recipe))]
@@ -325,6 +413,22 @@ impl Default for TimesForCreate {
     }
 }
 
+impl TimesForCreate {
+    /// Creates a TimesForCreate from its individual components.
+    pub fn from_components(prep: Option<iso8601::Duration>, cook: Option<iso8601::Duration>) -> Self {
+        Self {
+            prep_seconds: prep.map(|d| {
+                let duration: std::time::Duration = d.into();
+                duration.as_secs()
+            }).unwrap_or_else(|| 15 * 60) as i32,
+            cook_seconds: cook.map(|d| {
+                let duration: std::time::Duration = d.into();
+                duration.as_secs()
+            }).unwrap_or_else(|| 30 * 60) as i32,
+        }
+    }
+}
+
 /// Represents the preparation and cooking times for a recipe stored in the database.
 #[derive(AsChangeset, Associations, Insertable, PartialEq)]
 #[diesel(table_name = schema::times)]
@@ -348,6 +452,29 @@ pub struct Tool {
 pub struct ToolForCreate {
     pub name: String,
     pub quantity: i16,
+}
+
+impl From<HowToToolOrText> for ToolForCreate {
+    fn from(value: HowToToolOrText) -> Self {
+        match value {
+            HowToToolOrText::HowToTool(how) => {
+                warn!("From<HowToToolOrText> for ToolForCreate to be implemented");
+
+                Self {
+                    name: "Undetermined".to_string(),
+                    quantity: 1,
+                }
+            }
+            HowToToolOrText::Text(s) => {
+                let quantity = extract_number(s.clone()).unwrap_or(1);
+
+                Self {
+                    name: s.replace(&quantity.to_string(), "").trim().to_string(),
+                    quantity,
+                }
+            },
+        }
+    }
 }
 
 /// Represents a tool being inserted into the `tools` table.

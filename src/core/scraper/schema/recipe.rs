@@ -1,11 +1,13 @@
-use std::fmt::Formatter;
-
-use reqwest::Url;
-use serde::{Deserialize, Deserializer, de};
-
+use crate::core::model::Recipe;
+use crate::core::scraper::schema::NumberOrText::Text;
 use crate::core::scraper::schema::common::*;
 use crate::core::scraper::schema::nutrition::{NutritionInformationSchema, RestrictedDiet};
 use crate::core::scraper::schema::{AtContext, AtType};
+use clap::builder::Str;
+use reqwest::Url;
+use serde::{Deserialize, Deserializer, de};
+use std::fmt::Formatter;
+use std::ops::Not;
 
 /// Enumeration of possible values for the @graph field in JSON-LD used to group
 /// multiple related entities in a single document.
@@ -307,6 +309,16 @@ impl Default for RecipeCategory {
     }
 }
 
+impl TryFrom<RecipeCategory> for String {
+    type Error = String;
+
+    fn try_from(value: RecipeCategory) -> Result<Self, Self::Error> {
+        match value {
+            RecipeCategory::Text(text) => Ok(text),
+        }
+    }
+}
+
 impl<'de> Deserialize<'de> for RecipeCategory {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -362,6 +374,14 @@ impl<'de> Deserialize<'de> for RecipeCategory {
 #[derive(Debug, PartialEq)]
 pub enum RecipeCuisine {
     Text(String),
+}
+
+impl From<RecipeCuisine> for String {
+    fn from(s: RecipeCuisine) -> String {
+        match s {
+            RecipeCuisine::Text(text) => text,
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for RecipeCuisine {

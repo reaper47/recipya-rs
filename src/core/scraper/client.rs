@@ -1,9 +1,11 @@
+use async_trait::async_trait;
+
 use crate::core::scraper::Result;
 use crate::core::scraper::websites::Website;
 
 /// A trait defining HTTP client functionality for synchronous and asynchronous requests.
-#[async_trait::async_trait]
-pub(in crate::core::scraper) trait HttpClient {
+#[async_trait]
+pub trait HttpClient {
     /// Performs an asynchronous HTTP GET request.
     async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String>;
 
@@ -12,13 +14,13 @@ pub(in crate::core::scraper) trait HttpClient {
 }
 
 /// A wrapper around `reqwest::Client` for making HTTP requests.
-pub(in crate::core::scraper) struct AppHttpClient {
+pub struct AppHttpClient {
     client: reqwest::Client,
 }
 
 impl AppHttpClient {
     /// Creates a new instance of `AppHttpClient`.
-    pub(in crate::core::scraper) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             client: reqwest::Client::new(),
         }

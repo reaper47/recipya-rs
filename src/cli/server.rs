@@ -14,6 +14,7 @@ use crate::core::config::{Config, DataDir};
 use crate::core::jobs::clean_media;
 use crate::core::model::user::{User, UserForCreate};
 use crate::core::repository::ModelManager;
+use crate::core::scraper::Scraper;
 use crate::error::{Error, Result};
 use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
 use crate::server::{AppState, router};
@@ -22,7 +23,7 @@ use crate::server::{AppState, router};
 pub async fn server() -> Result<()> {
     let config = Config::load_from_env().unwrap();
 
-    let state = AppState::new(config.clone())
+    let state = AppState::new(config.clone(), Scraper::new())
         .await
         .map_err(|err| Error::Server(err.to_string()))?;
 

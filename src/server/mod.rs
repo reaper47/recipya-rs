@@ -6,21 +6,23 @@ pub(super) mod templates;
 pub use error::{Error, Result};
 pub use router::router;
 
+use std::collections::HashMap;
+use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 use axum::extract::ws::{Message, WebSocket};
-use std::collections::HashMap;
-use std::num::NonZeroUsize;
-use diesel::PgJsonbExpressionMethods;
 use lru::LruCache;
 use tokio::sync::Mutex;
+use url::Url;
 
 use crate::core::config::{Config, DataDir};
 use crate::core::email::EmailClient;
-use crate::core::model::RecipeDetails;
-use crate::core::repository::cache::{RecipeCache, RecipeCacheKey};
 use crate::core::repository::ModelManager;
+use crate::core::repository::cache::{RecipeCache, RecipeCacheKey};
+use crate::core::scraper::{HttpClient, Scraper};
+use crate::core::scraper::schema::RecipeSchema;
 use crate::server::templates::data::ViewRecipe;
+
 
 /// Shared application state for the Axum web server.
 #[derive(Clone)]
@@ -29,18 +31,16 @@ pub struct AppState {
     pub data_dir: DataDir,
     pub email_service: Option<EmailClient>,
     pub mm: ModelManager,
-    pub recipe_cache: Arc<Mutex<RecipeCache>>,
     pub subscribers: Arc<Mutex<HashMap<i64, Vec<WebSocket>>>>,
+    recipe_cache: Arc<Mutex<RecipeCache>>,
+    scraper: Scraper,
 }
 
 impl AppState {
     /// Creates a new instance of `AppState` by initializing the `ModelManager`
     /// with the provided database URL.
-    pub async fn new(config: Config) -> Result<Self> {
-        let email_service = match EmailClient::new() {
-            Ok(email_service) => Some(email_service),
-            Err(_) => None,
-        };
+    pub async fn new(config: Config, http_client: Arc<dyn HttpClient + Send + Sync>) -> Result<Self> {
+        let email_service = EmailClient::new().ok();
 
         let data_dir = DataDir::new()?;
         data_dir.log();
@@ -50,7 +50,10 @@ impl AppState {
             data_dir,
             email_service,
             mm: ModelManager::new(config.database_url).await?,
-            recipe_cache: Arc::new(Mutex::new(LruCache::new(NonZeroUsize::new(1000).expect("LRU to be initialized")))),
+            recipe_cache: Arc::new(Mutex::new(LruCache::new(
+                NonZeroUsize::new(1000).expect("LRU to be initialized"),
+            ))),
+            scraper: Scraper::with_client(http_client),
             subscribers: Arc::new(Mutex::new(HashMap::new())),
         })
     }
@@ -84,11 +87,17 @@ impl AppState {
         let mut cache = self.recipe_cache.lock().await;
         cache.put(key, recipe.clone());
     }
-    
+
     /// Removes an entry from the cache.
     pub async fn remove_cached_recipe(&self, key: RecipeCacheKey) {
         let mut cache = self.recipe_cache.lock().await;
         cache.pop(&key);
+    }
+
+    /// Scrapes a recipe from the specified website.
+    pub fn scrape(&self, url: Url) -> Result<RecipeSchema> {
+        let url = url.as_str();
+        Ok(self.scraper.scrape(url)?)
     }
 }
 
@@ -99,7 +108,9 @@ pub mod test_utils {
     use diesel::internal::derives::multiconnection::chrono;
     use diesel::internal::derives::multiconnection::chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use diesel::{Connection, sql_query};
+    use std::sync::Arc;
     use tower_cookies::{Cookie, CookieManagerLayer};
+    use tracing::error;
     use uuid::Uuid;
 
     use crate::core::auth::token::{Token, generate_web_token};
@@ -112,6 +123,8 @@ pub mod test_utils {
     use crate::core::model::{Recipe, RecipeDetails};
     use crate::core::repository::ModelManager;
     use crate::core::repository::pool::make_db_pool;
+    use crate::core::scraper::Scraper;
+    use crate::core::scraper::tests::MockHttpClient;
     use crate::core::support::token::AUTH_TOKEN;
     use crate::server::AppState;
     use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
@@ -195,6 +208,17 @@ pub mod test_utils {
         }
     }
 
+    /// Creates the AppState for testing.
+    pub async fn create_app_state(config: Config) -> AppState {
+        AppState::new(config, Arc::new(MockHttpClient))
+            .await
+            .map_err(|err| {
+                error!("Could not initialise app state: {err}");
+                err
+            })
+            .expect("Failed to initialise app state")
+    }
+
     /// Builds a test server with anonymous access (no user logged in).
     pub async fn build_server_anonymous(app_config: Config) -> Result<TestServer> {
         let routes = prepare_router(app_config).await?;
@@ -214,7 +238,7 @@ pub mod test_utils {
             ..TestServerConfig::default()
         };
 
-        let state = AppState::new(app_config).await?;
+        let state = create_app_state(app_config).await;
 
         let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
@@ -256,7 +280,7 @@ pub mod test_utils {
             ..TestServerConfig::default()
         };
 
-        let state = AppState::new(app_config).await?;
+        let state = create_app_state(app_config).await;
         let user = User::get_user_by_email(&state.mm, auth_email)
             .await?
             .expect("User should be in database");
@@ -306,7 +330,7 @@ pub mod test_utils {
 
     /// Prepares the router for the test server with the given database URL.
     async fn prepare_router(config: Config) -> Result<Router<()>> {
-        let state = AppState::new(config).await?;
+        let state = create_app_state(config).await;
         let app = crate::server::router(state.clone())
             .await?
             .layer(axum::middleware::from_fn_with_state(
@@ -338,29 +362,23 @@ pub mod test_utils {
 
     /// Inserts a test user in the database.
     pub async fn insert_user(config: Config) -> Result<User> {
-        let user = User::new(
-            &AppState::new(config.clone()).await?.mm,
-            UserForCreate {
-                email: TEST_USER_EMAIL.into(),
-                password_clear: TEST_USER_PASSWORD.into(),
-            },
-        )
-        .await?;
-
-        Ok(user)
+        insert_user_helper(config, TEST_USER_EMAIL).await
     }
 
     /// Inserts another test user in the database.
     pub async fn insert_other_user(config: Config, email: &str) -> Result<User> {
+        insert_user_helper(config, email).await
+    }
+
+    async fn insert_user_helper(config: Config, email: &str) -> Result<User> {
         let user = User::new(
-            &AppState::new(config.clone()).await?.mm,
+            &create_app_state(config.clone()).await.mm,
             UserForCreate {
                 email: email.into(),
                 password_clear: TEST_USER_PASSWORD.into(),
             },
         )
         .await?;
-
         Ok(user)
     }
 
@@ -532,6 +550,12 @@ pub mod test_utils {
         }
 
         Ok(())
+    }
+
+    /// Asserts that the websocket server sent the wanted message.
+    pub async fn assert_ws_message(mut server: TestWebSocket, want: &str) {
+        let _ = server.receive_message().await;
+        server.assert_receive_text_contains(want).await;
     }
 
     /// Asserts that the user cannot access the specified URI.

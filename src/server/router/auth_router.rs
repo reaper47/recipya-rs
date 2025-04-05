@@ -136,7 +136,8 @@ mod tests {
         use axum::http::StatusCode;
 
         use crate::server::test_utils::{
-            TestDb, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
+            TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
+            build_server_ws,
         };
 
         const BASE_URI: &str = "/auth/change-password";
@@ -157,7 +158,7 @@ mod tests {
         #[tokio::test]
         async fn test_post_change_password_form_invalid_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, ws_server) = build_server_ws(config).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -169,17 +170,14 @@ mod tests {
                 .await;
 
             res.assert_status_bad_request();
-            let _ = ws_server.receive_message().await;
-            ws_server
-                .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"Passwords do not match.","status":"alert-info","title":"Operation Failed"}}"#)
-                .await;
+            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"Passwords do not match.","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
         #[tokio::test]
         async fn test_post_change_password_password_same_as_new_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, ws_server) = build_server_ws(config).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -191,10 +189,7 @@ mod tests {
                 .await;
 
             res.assert_status_bad_request();
-            let _ = ws_server.receive_message().await;
-            ws_server
-                .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-info","title":"Operation Failed"}}"#)
-                .await;
+            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -216,15 +211,12 @@ mod tests {
         #[tokio::test]
         async fn test_post_change_password_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, ws_server) = build_server_ws(config).await?;
 
             let res = server.post(BASE_URI).form(&a_change_password_form()).await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            let _ = ws_server.receive_message().await;
-            ws_server
-                .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#)
-                .await;
+            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#).await;
             Ok(())
         }
     }
@@ -232,7 +224,9 @@ mod tests {
     mod tests_confirm {
         use super::*;
         use crate::core::support::time::now_utc_plus_sec_str;
-        use crate::server::test_utils::{TestDb, assert_html, build_server_anonymous, get_token};
+        use crate::server::test_utils::{
+            TestDb, assert_html, build_server_anonymous, create_app_state, get_token,
+        };
 
         const BASE_URI: &str = "/auth/confirm";
 
@@ -251,7 +245,7 @@ mod tests {
         async fn test_get_confirm_invalid_token_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut token = get_token(state.mm).await?;
             token.exp = now_utc_plus_sec_str(-100.);
 
@@ -267,7 +261,7 @@ mod tests {
         async fn test_get_confirm_user_not_exist_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut token = get_token(state.mm).await?;
             token.ident = "dont@exist.com".to_string();
 
@@ -283,7 +277,7 @@ mod tests {
         async fn test_get_confirm_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let token = get_token(state.mm).await?;
 
             let res = server
@@ -307,8 +301,8 @@ mod tests {
 
         use crate::core::model::user::User;
         use crate::server::test_utils::{
-            TEST_USER_EMAIL, TestDb, assert_must_be_logged_in, build_server_logged_in,
-            build_server_ws, build_server_ws_other_user,
+            TEST_USER_EMAIL, TestDb, assert_must_be_logged_in, assert_ws_message,
+            build_server_logged_in, build_server_ws, build_server_ws_other_user, create_app_state,
         };
         use axum::http::StatusCode;
 
@@ -326,15 +320,13 @@ mod tests {
                 ..Config::default()
             }))
             .await?;
-            let (server, mut ws_server) =
+            let (server, ws_server) =
                 build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
 
             let res = server.delete(BASE_URI).await;
 
             res.assert_status(StatusCode::FORBIDDEN);
-            let _ = ws_server.receive_message().await;
-            ws_server
-                .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -345,14 +337,12 @@ mod tests {
                 ..Config::default()
             }))
             .await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let (server, ws_server) = build_server_ws(config.clone()).await?;
 
             let res = server.delete(BASE_URI).await;
 
             res.assert_status(StatusCode::FORBIDDEN);
-            let _ = ws_server.receive_message().await;
-            ws_server
-                .assert_receive_text_contains(r#"{"showMessageWs":{"type":"toast","message":"This account cannot be deleted.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"This account cannot be deleted.","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -360,7 +350,7 @@ mod tests {
         async fn test_delete_user_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
 
             let res = server.delete(BASE_URI).await;
 
@@ -382,7 +372,8 @@ mod tests {
 
         use crate::core::support::time::now_utc_plus_sec_str;
         use crate::server::test_utils::{
-            TestDb, assert_html, build_server_anonymous, build_server_logged_in, get_token,
+            TestDb, assert_html, build_server_anonymous, build_server_logged_in, create_app_state,
+            get_token,
         };
 
         const BASE_URI: &str = "/auth/forgot-password";
@@ -471,7 +462,7 @@ mod tests {
         async fn test_get_forgot_password_reset_err_invalid_token() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut token = get_token(state.mm).await?;
             token.exp = now_utc_plus_sec_str(-100.);
 
@@ -492,7 +483,7 @@ mod tests {
         async fn test_get_forgot_password_reset_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let token = get_token(state.mm).await?;
 
             let res = server.get(&format!("{URI_RESET}?token={token}")).await;
@@ -789,7 +780,9 @@ mod tests {
         use crate::core::auth::token::Token;
         use crate::core::model::user::User;
         use crate::core::support::token::AUTH_TOKEN;
-        use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, build_server_logged_in};
+        use crate::server::test_utils::{
+            TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state,
+        };
 
         const BASE_URI: &str = "/auth/logout";
 
@@ -803,7 +796,7 @@ mod tests {
             res.assert_status_see_other();
             res.assert_header("Location", "/");
             pretty_assertions::assert_eq!(res.cookie(AUTH_TOKEN).value(), "");
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
                 .await?
                 .expect("Expected user");
@@ -850,7 +843,9 @@ mod tests {
         use super::*;
         use crate::core::model::user::User;
 
-        use crate::server::test_utils::{TestDb, build_server_anonymous, build_server_logged_in};
+        use crate::server::test_utils::{
+            TestDb, build_server_anonymous, build_server_logged_in, create_app_state,
+        };
 
         const BASE_URI: &str = "/auth/register";
 
@@ -899,7 +894,7 @@ mod tests {
             let res = server.post(BASE_URI).form(&form).await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, &form.email).await?;
             assert!(user.is_some(), "should have user in database");
             Ok(())
@@ -944,7 +939,7 @@ mod tests {
             res_post.assert_status_see_other();
             res_get.assert_header("Location", "/recipes");
             res_post.assert_header("Location", "/recipes");
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, &a_form.email).await?;
             assert!(user.is_none(), "user should not have been registered");
             Ok(())
@@ -967,7 +962,7 @@ mod tests {
             res_get.assert_status_see_other();
             res_get.assert_header("Location", "/auth/login");
             res_post.assert_header("Location", "/auth/login");
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, &a_form.email).await?;
             assert!(user.is_none(), "user should not have been registered");
             Ok(())

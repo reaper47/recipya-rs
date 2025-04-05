@@ -4,3 +4,4 @@ pub mod fs;
 pub mod software;
 pub mod time;
 pub mod token;
+pub mod strings;
