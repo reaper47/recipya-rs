@@ -186,10 +186,10 @@ diesel::table! {
 diesel::table! {
     reports (id) {
         id -> Int8,
-        report_type -> Int2,
+        report_type_id -> Int2,
         user_id -> Int8,
         exec_time_ms -> Int8,
-        created_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
     }
 }
 
@@ -199,6 +199,8 @@ diesel::table! {
         report_id -> Int8,
         title -> Text,
         is_success -> Bool,
+        is_warning -> Bool,
+        is_error -> Bool,
         error_reason -> Text,
     }
 }
@@ -348,7 +350,7 @@ diesel::joinable!(keywords_recipes -> keywords (keyword_id));
 diesel::joinable!(keywords_recipes -> recipes (recipe_id));
 diesel::joinable!(nutrition -> recipes (recipe_id));
 diesel::joinable!(recipes -> users (user_id));
-diesel::joinable!(reports -> report_types (report_type));
+diesel::joinable!(reports -> report_types (report_type_id));
 diesel::joinable!(reports -> users (user_id));
 diesel::joinable!(reports_logs -> reports (report_id));
 diesel::joinable!(shares_cookbooks -> cookbooks (cookbook_id));

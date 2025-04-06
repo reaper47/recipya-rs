@@ -4,7 +4,7 @@ use axum::response::Response;
 use serde::Serialize;
 
 /// A trait defining message creation methods for structured responses.
-pub(crate) trait IMessage {
+pub trait IMessage {
     fn builder(
         message_type: MessageType,
         title: impl Into<String>,
@@ -16,13 +16,13 @@ pub(crate) trait IMessage {
 
 /// Represents an HTMX-compatible message.
 #[derive(Serialize)]
-pub(crate) struct MessageHtmx {
+pub struct MessageHtmx {
     #[serde(rename = "showMessageHtmx")]
     content: Content,
 }
 
 #[derive(Serialize)]
-pub(crate) struct MessageWs {
+pub struct MessageWs {
     #[serde(rename = "showMessageWs")]
     content: Content,
 }
@@ -41,7 +41,7 @@ struct Content {
 
 /// Enum representing different message types.
 #[derive(Default, Serialize)]
-pub(crate) enum MessageType {
+pub enum MessageType {
     #[serde(rename = "toast")]
     #[default]
     Toast,
@@ -51,7 +51,7 @@ pub(crate) enum MessageType {
 
 /// Enum representing different message statuses.
 #[derive(Default, Serialize)]
-pub(crate) enum MessageStatus {
+pub enum MessageStatus {
     #[serde(rename = "alert-error")]
     Error,
     #[default]
@@ -63,7 +63,7 @@ pub(crate) enum MessageStatus {
 
 /// Builder for constructing `MessageHtmx` instances.
 #[derive(Default)]
-pub(crate) struct MessageBuilder {
+pub struct MessageBuilder {
     message_type: MessageType,
     action: Option<String>,
     message: String,
@@ -72,25 +72,26 @@ pub(crate) struct MessageBuilder {
 }
 
 impl MessageBuilder {
-    fn action(mut self, action: Option<String>) -> Self {
-        self.action = action;
+    /// Sets the action item.
+    pub fn action(mut self, action: Option<&str>) -> Self {
+        self.action = action.map(String::from);
         self
     }
 
     /// Sets the message status.
-    pub(crate) fn status(mut self, status: MessageStatus) -> Self {
+    pub fn status(mut self, status: MessageStatus) -> Self {
         self.status = status;
         self
     }
 
     /// Sets the message type.
-    pub(crate) fn message_type(mut self, message_type: MessageType) -> Self {
+    pub fn message_type(mut self, message_type: MessageType) -> Self {
         self.message_type = message_type;
         self
     }
 
     /// Builds and returns a `MessageHtmx` instance.
-    pub(crate) fn build(self) -> MessageHtmx {
+    pub fn build(self) -> MessageHtmx {
         MessageHtmx {
             content: Content {
                 _type: self.message_type,
@@ -177,7 +178,7 @@ impl IMessage for MessageWs {
 }
 
 /// Adds an HTMX message to a response's headers.
-pub(crate) fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
+pub fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
     if let Ok(toast) = serde_json::to_string(&message) {
         if let Ok(value) = HeaderValue::from_str(&toast) {
             res.headers_mut()

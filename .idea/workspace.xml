@@ -7,29 +7,30 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="CargoProjects">
-    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml">
+      <package file="$PROJECT_DIR$">
+        <enabledFeature name="default" />
+      </package>
+    </cargoProject>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/core/model/report.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/jobs/clean_media.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/jobs/clean_media.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/form.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/form.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/client.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/client.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/user.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/repository/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/repository/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/repository/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/repository/schema.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/scraper/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/tests/support/scraper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/tests/support/scraper.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/support/fs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/fs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/support/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/support/strings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/strings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/message.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/shared.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/shared.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/shared_router.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -121,6 +122,7 @@
     "Cargo.Test core::model::recipe::structs::tests::tests_nutrition::test_empty_nutrition.executor": "Run",
     "Cargo.Test core::model::recipe::structs::tests::tests_nutrition::test_multiple_nutrition_values.executor": "Run",
     "Cargo.Test core::model::recipe::structs::tests::tests_recipe_details::test_num_media_ok.executor": "Run",
+    "Cargo.Test core::model::report::tests::test_insert_report.executor": "Run",
     "Cargo.Test core::model::share::tests::test_fetch_or_create::test_generate_shared_default_expiration_recipe_ok.executor": "Run",
     "Cargo.Test core::model::share::tests::test_fetch_or_create::test_generate_shared_recipe_custom_expiration_ok.executor": "Run",
     "Cargo.Test core::model::share::tests::test_fetch_or_create::test_shared_recipe_already_generated_ok.executor": "Run",
@@ -151,6 +153,7 @@
     "Cargo.Test helpers::tests (1).executor": "Run",
     "Cargo.Test helpers::tests.executor": "Run",
     "Cargo.Test recipes_routes::tests.executor": "Run",
+    "Cargo.Test report::tests.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_cannot_update_if_autologin_ok.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_err_must_be_logged_in.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_form_invalid_ok.executor": "Run",
@@ -355,7 +358,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok">
+  <component name="RunManager" selected="Cargo.Test core::model::report::tests::test_insert_report">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -374,8 +377,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::support::strings::tests::tests_extract_number::test_no_number_err" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::support::strings::tests::tests_extract_number::test_no_number_err -- --exact" />
+    <configuration name="Test core::model::report::tests::test_insert_report" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::report::tests::test_insert_report -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -391,8 +394,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_edit::test_get_recipe_exists_ok -- --exact" />
+    <configuration name="Test report::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::report::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -461,19 +464,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test core::support::strings::tests::tests_extract_number::test_no_number_err" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
+      <item itemvalue="Cargo.Test core::model::report::tests::test_insert_report" />
+      <item itemvalue="Cargo.Test report::tests" />
       <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_0_video_ok" />
       <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok" />
       <item itemvalue="Cargo.Test strings::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::model::report::tests::test_insert_report" />
+        <item itemvalue="Cargo.Test report::tests" />
         <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok" />
         <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_0_video_ok" />
         <item itemvalue="Cargo.Test strings::tests" />
-        <item itemvalue="Cargo.Test core::support::strings::tests::tests_extract_number::test_no_number_err" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
       </list>
     </recent_temporary>
   </component>

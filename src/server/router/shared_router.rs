@@ -11,16 +11,16 @@ pub(super) fn shared_routes() -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
+    use uuid::Uuid;
+
     use crate::core::model::Recipe;
     use crate::core::model::recipe::RecipeForCreate;
     use crate::core::model::share::ShareRecipe;
-    use crate::server::AppState;
     use crate::server::test_utils::{
         TestDb, a_complete_recipe_for_create, assert_html, assert_not_in_html,
         build_server_anonymous, build_server_logged_in, create_app_state, insert_other_user,
     };
     use axum_test::TestResponse;
-    use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use diesel::{Queryable, Selectable};
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -289,7 +288,6 @@ impl User {
     ) -> Result<()> {
         use crate::core::repository::schema::users::dsl::*;
 
-        // TODO: Remove .unwrap()
         let mut conn = mm.pool.get().await?;
 
         diesel::update(users.find(user_id))

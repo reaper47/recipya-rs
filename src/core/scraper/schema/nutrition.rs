@@ -6,7 +6,7 @@ use crate::core::scraper::schema::AtType;
 use crate::core::support::strings::extract_number;
 
 /// Nutritional information about the recipe as described in the [schema](https://schema.org/NutritionInformation).
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct NutritionInformationSchema {
     #[serde(rename = "@type")]
@@ -38,7 +38,7 @@ pub struct NutritionInformationSchema {
 }
 
 /// Properties that take Energy as values are of the form '<Number> <Energy unit of measure>'.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Energy {
     Str(String),
 }
@@ -91,7 +91,7 @@ impl<'de> Deserialize<'de> for Energy {
 }
 
 /// Properties that take Mass as values are of the form '<Number> <Mass unit of measure>'. E.g., '7 kg'.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Mass {
     Str(String),
 }

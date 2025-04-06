@@ -65,7 +65,7 @@ impl Scraper {
     }
 
     /// Fetches the content of a URL and uploads it the temporary directory.
-    pub async fn fetch_and_upload(&self, url: &str) -> Result<PathBuf> {
+    pub async fn fetch_and_upload_to_temp(&self, url: &str) -> Result<PathBuf> {
         let content = self.client.get_bytes(url)?;
         let path = self
             .fs_support

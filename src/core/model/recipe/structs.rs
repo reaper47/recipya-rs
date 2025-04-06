@@ -145,29 +145,39 @@ impl From<RecipeForm> for RecipeForCreate {
     }
 }
 
-impl From<RecipeSchema> for RecipeForCreate {
-    fn from(schema: RecipeSchema) -> Self {
+impl From<&RecipeSchema> for RecipeForCreate {
+    fn from(schema: &RecipeSchema) -> Self {
         Self {
-            name: schema.name.unwrap_or_default(),
-            description: schema.description.map(String::from),
+            name: schema.name.clone().unwrap_or_default(),
+            description: schema.description.clone().map(String::from),
             images: None,
-            yield_: i16::try_from(schema.recipe_yield).ok(),
-            source: schema.url.map(|s| s.into()),
+            yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
+            source: schema.url.clone().map(|s| s.into()),
             videos: vec![],
-            category: String::try_from(schema.recipe_category).ok(),
-            cuisine: schema.recipe_cuisine.map(String::from),
+            category: String::try_from(schema.recipe_category.clone()).ok(),
+            cuisine: schema.recipe_cuisine.clone().map(String::from),
             ingredients: Sections::from([(
                 "".into(),
-                schema.recipe_ingredient.unwrap_or_default(),
+                schema.recipe_ingredient.clone().unwrap_or_default(),
             )]),
-            instructions: Sections::from(schema.recipe_instructions.unwrap_or_default()),
-            keywords: schema.keywords.into_iter().map(String::from).collect(),
-            nutrition: schema.nutrition.map(NutritionForCreate::from),
+            instructions: Sections::from(schema.recipe_instructions.clone().unwrap_or_default()),
+            keywords: schema
+                .keywords
+                .clone()
+                .into_iter()
+                .map(String::from)
+                .collect(),
+            nutrition: schema.nutrition.clone().map(NutritionForCreate::from),
             times: Some(TimesForCreate::from_components(
                 schema.prep_time,
                 schema.cook_time,
             )),
-            tools: schema.tool.map(ToolForCreate::from).into_iter().collect(),
+            tools: schema
+                .tool
+                .clone()
+                .map(ToolForCreate::from)
+                .into_iter()
+                .collect(),
         }
     }
 }
