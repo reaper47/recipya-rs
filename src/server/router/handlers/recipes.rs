@@ -1,5 +1,6 @@
 use std::fmt::Write;
 use std::ops::Not;
+use std::sync::Arc;
 
 use axum::Form;
 use axum::extract::ws::Message;
@@ -23,7 +24,6 @@ use crate::core::model::recipe::{
 use crate::core::model::share::ShareRecipe;
 use crate::core::model::user::User;
 use crate::core::model::website::{ToHtmlTable, Website};
-use crate::core::support::fs::{calc_video_duration, is_file_exists, upload_image, upload_videos};
 use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx};
@@ -138,6 +138,7 @@ pub async fn recipes_handler(
     };
 
     templates::recipes::index(
+        state.fs_support,
         uri.path(),
         Data {
             is_admin: user_id == 1,
@@ -226,6 +227,7 @@ pub async fn edit_recipe_handler(
     };
 
     templates::recipes::edit_recipe(
+        state.fs_support,
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
@@ -299,7 +301,13 @@ pub async fn edit_recipe_put_handler(
         .iter()
         .map(
             |(original_file_stem, path)| match Uuid::parse_str(original_file_stem) {
-                Ok(name) if is_file_exists(name, &state.data_dir.images) => name,
+                Ok(name)
+                    if state
+                        .fs_support
+                        .is_file_exists(name, &state.data_dir.images) =>
+                {
+                    name
+                }
                 _ => {
                     let file_name = path
                         .file_stem()
@@ -309,7 +317,9 @@ pub async fn edit_recipe_put_handler(
                         .parse::<Uuid>()
                         .unwrap_or_default();
 
-                    upload_image(path, file_name, &state.data_dir.images);
+                    state
+                        .fs_support
+                        .upload_image(path, file_name, &state.data_dir.images);
                     file_name
                 }
             },
@@ -321,24 +331,26 @@ pub async fn edit_recipe_put_handler(
     } else {
         let videos = join_all(form.videos.iter().map(|(original_file_stem, path)| {
             let dir_videos = state.data_dir.videos.clone();
+            let fs_support = Arc::clone(&state.fs_support);
 
             async move {
                 match Uuid::parse_str(original_file_stem) {
-                    Ok(name) if is_file_exists(name, &dir_videos) => VideoForCreate {
+                    Ok(name) if fs_support.is_file_exists(name, &dir_videos) => VideoForCreate {
                         video: name,
-                        duration: calc_video_duration(path.to_str().unwrap_or_default())
+                        duration: fs_support
+                            .calc_video_duration(path.to_str().unwrap_or_default())
                             .await
                             .ok(),
                         content_url: None,
                         embed_url: None,
                     },
-                    _ => VideoForCreate::from_path(path).await,
+                    _ => VideoForCreate::from_path(fs_support, path).await,
                 }
             }
         }))
         .await;
 
-        upload_videos(
+        Arc::clone(&state.fs_support).upload_videos(
             form.videos.values().cloned().collect(),
             &state.data_dir.videos,
         );
@@ -463,6 +475,7 @@ pub async fn add_manual_recipe_post_handler(
     form: RecipeForm,
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
+    let fs_support = Arc::clone(&state.fs_support);
 
     let images = form
         .images
@@ -476,7 +489,7 @@ pub async fn add_manual_recipe_post_handler(
                 .parse::<Uuid>()
                 .unwrap_or_default();
 
-            upload_image(&path, file_name, &state.data_dir.images);
+            fs_support.upload_image(&path, file_name, &state.data_dir.images);
             file_name
         })
         .collect::<Vec<_>>();
@@ -487,11 +500,11 @@ pub async fn add_manual_recipe_post_handler(
         let videos = join_all(
             form.videos
                 .values()
-                .map(|path| VideoForCreate::from_path(path)),
+                .map(|path| VideoForCreate::from_path(Arc::clone(&fs_support), path)),
         )
         .await;
 
-        upload_videos(
+        fs_support.upload_videos(
             form.videos.values().cloned().collect(),
             &state.data_dir.videos,
         );
@@ -595,7 +608,7 @@ pub async fn add_website_post_handler(
     urls.dedup();
 
     tokio::spawn(async move {
-        let num_websites = urls.len();
+        /*let num_websites = urls.len();
         let (progress_tx, mut progress_rx) = mpsc::channel::<i64>(num_websites);
         let now = Instant::now();
 
@@ -608,11 +621,11 @@ pub async fn add_website_post_handler(
                     Ok(schema) => {
                         // TODO: Here and add method to scraper to fetch media
                         let mut recipe_c = RecipeForCreate::from(schema);
-                        
+
                         if let Some(Ok(image)) = schema.image.map(String::try_from) {
-                            
+                            let path = state.scraper.fetch_and_upload(&image).await?;
                         }
-                        
+
                         Recipe::create(&state.mm, user_id, &recipe_c)
                     }
                     Err(err) => {}
@@ -628,7 +641,7 @@ pub async fn add_website_post_handler(
             state.broadcast(user_id, Message::Text(p.into())).await;
         }
 
-        let exec_time = now.elapsed();
+        let exec_time = now.elapsed();*/
     });
 
     (StatusCode::ACCEPTED, "").into_response()
@@ -728,6 +741,7 @@ pub async fn view_recipe_handler(
     };
 
     templates::recipes::view_recipe(
+        state.fs_support,
         uri.path(),
         state.data_dir,
         Data {

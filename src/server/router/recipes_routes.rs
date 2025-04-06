@@ -1023,7 +1023,7 @@ mod tests {
             let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
-            recipe.images = Some(vec![Uuid::new_v4(), Uuid::new_v4()]);
+            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1113,19 +1113,19 @@ mod tests {
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
-                    video: Uuid::new_v4(),
+                    video: Uuid::nil(),
                     duration: None,
                     content_url: Some("https://example.com/embed/yg8FG4".into()),
                     embed_url: None,
                 },
                 VideoForCreate {
-                    video: Uuid::new_v4(),
+                    video: Uuid::nil(),
                     duration: None,
                     content_url: None,
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            recipe.images = Some(vec![Uuid::new_v4(), Uuid::new_v4()]);
+            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;

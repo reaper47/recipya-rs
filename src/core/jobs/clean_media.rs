@@ -11,19 +11,23 @@ use super::Result;
 use crate::core::config::DataDir;
 use crate::core::repository::pool::PgPooledConn;
 use crate::core::repository::{ModelManager, schema};
-use crate::core::support::fs::files_in_directory;
+use crate::core::support::fs::FsSupport;
 
 /// Removes files from the Media folder that do not belong to any recipe or cookbook.
-pub async fn clean_media(mm: Arc<ModelManager>, data_dir: Arc<DataDir>) -> Result<()> {
+pub async fn clean_media(
+    mm: Arc<ModelManager>,
+    data_dir: Arc<DataDir>,
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+) -> Result<()> {
     let mut conn = mm.pool.get().await?;
     let videos = fetch_videos(&mut conn, &data_dir).await?;
     let images = fetch_images(&mut conn, &data_dir).await?;
 
     let (num_images_deleted, images_space_reclaimed_bytes) =
-        clean_files(&data_dir.images, &images, true).await?;
+        clean_files(&data_dir.images, &images, true, Arc::clone(&fs_support)).await?;
 
     let (num_videos_deleted, videos_space_reclaimed_bytes) =
-        clean_files(&data_dir.videos, &videos, false).await?;
+        clean_files(&data_dir.videos, &videos, false, fs_support).await?;
 
     info!(
         "CleanMedia: Removed {num_images_deleted} images and {num_videos_deleted} videos. Reclaimed {:.2} MB.",
@@ -86,11 +90,12 @@ async fn clean_files(
     dir: &PathBuf,
     files_to_keep: &HashSet<PathBuf>,
     is_delete_thumbnails: bool,
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
 ) -> Result<(u64, u64)> {
     let mut num_files_deleted = 0u64;
     let mut space_reclaimed_bytes = 0u64;
 
-    match files_in_directory(dir) {
+    match fs_support.files_in_directory(dir) {
         Ok(all_files) => {
             all_files
                 .difference(files_to_keep)

@@ -48,7 +48,9 @@ impl TryFrom<Energy> for i16 {
 
     fn try_from(value: Energy) -> Result<Self, Self::Error> {
         match value {
-            Energy::Str(s) => extract_number(s).map_err(|err| format!("Energy extraction error: {err}")),
+            Energy::Str(s) => {
+                extract_number(s).map_err(|err| format!("Energy extraction error: {err}"))
+            }
         }
     }
 }
@@ -99,7 +101,9 @@ impl TryFrom<Mass> for i16 {
 
     fn try_from(value: Mass) -> Result<Self, Self::Error> {
         match value {
-            Mass::Str(s) => extract_number(s).map_err(|err| format!("Mass extraction error: {err}")),
+            Mass::Str(s) => {
+                extract_number(s).map_err(|err| format!("Mass extraction error: {err}"))
+            }
         }
     }
 }

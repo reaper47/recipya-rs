@@ -5,9 +5,10 @@ pub(super) mod websites;
 mod client;
 mod error;
 
+pub use client::{AppHttpClient, HttpClient};
 pub use error::{Error, Result};
-pub use client::{HttpClient, AppHttpClient};
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use scraper::{Html, Selector};
@@ -15,24 +16,22 @@ use tracing::error;
 
 use crate::core::scraper::schema::{AtType, GraphObject, RecipeSchema};
 use crate::core::scraper::websites::Website;
+use crate::core::support::fs::FsSupport;
 
 /// Represents the object responsible for scraping recipes from websites.
 #[derive(Clone)]
 pub struct Scraper {
     client: Arc<dyn HttpClient + Send + Sync>,
+    fs_support: Arc<dyn FsSupport + Send + Sync>,
 }
 
 impl Scraper {
-    /// Creates a new Scraper with the default HTTP client.
-    pub fn new() -> Self {
-        Self {
-            client: Arc::new(AppHttpClient::new()),
-        }
-    }
-
     /// Create a new Scraper with the given HTTP client. Mainly used in tests.
-    pub fn with_client(client: Arc<dyn HttpClient + Send + Sync>) -> Self {
-        Self { client }
+    pub fn with_client(
+        client: Arc<dyn HttpClient + Send + Sync>,
+        fs_support: Arc<dyn FsSupport + Send + Sync>,
+    ) -> Self {
+        Self { client, fs_support }
     }
 
     /// Scrapes the given URL and returns a `RecipeSchema`.
@@ -63,6 +62,17 @@ impl Scraper {
                 })
             })
             .ok_or(Error::DomainNotImplemented)
+    }
+
+    /// Fetches the content of a URL and uploads it the temporary directory.
+    pub async fn fetch_and_upload(&self, url: &str) -> Result<PathBuf> {
+        let content = self.client.get_bytes(url)?;
+        let path = self
+            .fs_support
+            .upload_to_temp(content)
+            .await
+            .map_err(|_| Error::Filesystem)?;
+        Ok(path)
     }
 }
 

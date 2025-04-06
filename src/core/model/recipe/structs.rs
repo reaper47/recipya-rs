@@ -1,15 +1,19 @@
 use std::path::Path;
-use uuid::Uuid;
+use std::sync::Arc;
 
 use diesel::data_types::PgInterval;
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
 use tracing::warn;
+use uuid::Uuid;
+
 use crate::core::model::recipe::RecipeForm;
 use crate::core::model::user::User;
 use crate::core::repository::schema;
-use crate::core::scraper::schema::{CreativeWorkOrItemListOrText, HowToToolOrText, NutritionInformationSchema, RecipeSchema};
-use crate::core::support::fs::calc_video_duration;
+use crate::core::scraper::schema::{
+    CreativeWorkOrItemListOrText, HowToToolOrText, NutritionInformationSchema, RecipeSchema,
+};
+use crate::core::support::fs::FsSupport;
 use crate::core::support::strings::extract_number;
 use crate::name_entity_with_relations;
 
@@ -159,7 +163,10 @@ impl From<RecipeSchema> for RecipeForCreate {
             instructions: Sections::from(schema.recipe_instructions.unwrap_or_default()),
             keywords: schema.keywords.into_iter().map(String::from).collect(),
             nutrition: schema.nutrition.map(NutritionForCreate::from),
-            times: Some(TimesForCreate::from_components(schema.prep_time, schema.cook_time)),
+            times: Some(TimesForCreate::from_components(
+                schema.prep_time,
+                schema.cook_time,
+            )),
             tools: schema.tool.map(ToolForCreate::from).into_iter().collect(),
         }
     }
@@ -349,16 +356,46 @@ impl From<NutritionInformationSchema> for NutritionForCreate {
     fn from(schema: NutritionInformationSchema) -> Self {
         Self {
             calories_kcal: schema.calories.map(i16::try_from).and_then(|res| res.ok()),
-            total_carbohydrates: schema.carbohydrate_content.map(i16::try_from).and_then(|res| res.ok()),
-            sugars_g: schema.sugar_content.map(i16::try_from).and_then(|res| res.ok()),
-            protein_g: schema.protein_content.map(i16::try_from).and_then(|res| res.ok()),
-            total_fat_g: schema.fat_content.map(i16::try_from).and_then(|res| res.ok()),
-            saturated_fat_g: schema.saturated_fat_content.map(i16::try_from).and_then(|res| res.ok()),
-            unsaturated_fat_g: schema.unsaturated_fat_content.map(i16::try_from).and_then(|res| res.ok()),
-            cholesterol_mg: schema.cholesterol_content.map(i16::try_from).and_then(|res| res.ok()),
-            sodium_mg: schema.sodium_content.map(i16::try_from).and_then(|res| res.ok()),
-            fiber_g: schema.fiber_content.map(i16::try_from).and_then(|res| res.ok()),
-            trans_fat_g: schema.trans_fat_content.map(i16::try_from).and_then(|res| res.ok()),
+            total_carbohydrates: schema
+                .carbohydrate_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            sugars_g: schema
+                .sugar_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            protein_g: schema
+                .protein_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            total_fat_g: schema
+                .fat_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            saturated_fat_g: schema
+                .saturated_fat_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            unsaturated_fat_g: schema
+                .unsaturated_fat_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            cholesterol_mg: schema
+                .cholesterol_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            sodium_mg: schema
+                .sodium_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            fiber_g: schema
+                .fiber_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
+            trans_fat_g: schema
+                .trans_fat_content
+                .map(i16::try_from)
+                .and_then(|res| res.ok()),
             serving_size: schema.serving_size,
         }
     }
@@ -415,16 +452,23 @@ impl Default for TimesForCreate {
 
 impl TimesForCreate {
     /// Creates a TimesForCreate from its individual components.
-    pub fn from_components(prep: Option<iso8601::Duration>, cook: Option<iso8601::Duration>) -> Self {
+    pub fn from_components(
+        prep: Option<iso8601::Duration>,
+        cook: Option<iso8601::Duration>,
+    ) -> Self {
         Self {
-            prep_seconds: prep.map(|d| {
-                let duration: std::time::Duration = d.into();
-                duration.as_secs()
-            }).unwrap_or_else(|| 15 * 60) as i32,
-            cook_seconds: cook.map(|d| {
-                let duration: std::time::Duration = d.into();
-                duration.as_secs()
-            }).unwrap_or_else(|| 30 * 60) as i32,
+            prep_seconds: prep
+                .map(|d| {
+                    let duration: std::time::Duration = d.into();
+                    duration.as_secs()
+                })
+                .unwrap_or_else(|| 15 * 60) as i32,
+            cook_seconds: cook
+                .map(|d| {
+                    let duration: std::time::Duration = d.into();
+                    duration.as_secs()
+                })
+                .unwrap_or_else(|| 30 * 60) as i32,
         }
     }
 }
@@ -457,7 +501,7 @@ pub struct ToolForCreate {
 impl From<HowToToolOrText> for ToolForCreate {
     fn from(value: HowToToolOrText) -> Self {
         match value {
-            HowToToolOrText::HowToTool(how) => {
+            HowToToolOrText::HowToTool(_) => {
                 warn!("From<HowToToolOrText> for ToolForCreate to be implemented");
 
                 Self {
@@ -472,7 +516,7 @@ impl From<HowToToolOrText> for ToolForCreate {
                     name: s.replace(&quantity.to_string(), "").trim().to_string(),
                     quantity,
                 }
-            },
+            }
         }
     }
 }
@@ -632,7 +676,7 @@ pub struct VideoForCreate {
 
 impl VideoForCreate {
     /// Creates the object from a Path.
-    pub async fn from_path(path: &Path) -> Self {
+    pub async fn from_path(fs_support: Arc<dyn FsSupport + Sync + Send>, path: &Path) -> Self {
         Self {
             video: path
                 .file_name()
@@ -641,7 +685,8 @@ impl VideoForCreate {
                 .into_owned()
                 .parse::<Uuid>()
                 .unwrap_or_default(),
-            duration: calc_video_duration(path.to_str().unwrap_or_default())
+            duration: fs_support
+                .calc_video_duration(path.to_str().unwrap_or_default())
                 .await
                 .ok(),
             content_url: None,

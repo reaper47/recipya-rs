@@ -19,10 +19,10 @@ use crate::core::config::{Config, DataDir};
 use crate::core::email::EmailClient;
 use crate::core::repository::ModelManager;
 use crate::core::repository::cache::{RecipeCache, RecipeCacheKey};
-use crate::core::scraper::{HttpClient, Scraper};
 use crate::core::scraper::schema::RecipeSchema;
+use crate::core::scraper::{HttpClient, Scraper};
+use crate::core::support::fs::{AppFs, FsSupport};
 use crate::server::templates::data::ViewRecipe;
-
 
 /// Shared application state for the Axum web server.
 #[derive(Clone)]
@@ -30,8 +30,10 @@ pub struct AppState {
     pub config: Config,
     pub data_dir: DataDir,
     pub email_service: Option<EmailClient>,
+    pub fs_support: Arc<dyn FsSupport + Send + Sync>,
     pub mm: ModelManager,
     pub subscribers: Arc<Mutex<HashMap<i64, Vec<WebSocket>>>>,
+
     recipe_cache: Arc<Mutex<RecipeCache>>,
     scraper: Scraper,
 }
@@ -39,7 +41,11 @@ pub struct AppState {
 impl AppState {
     /// Creates a new instance of `AppState` by initializing the `ModelManager`
     /// with the provided database URL.
-    pub async fn new(config: Config, http_client: Arc<dyn HttpClient + Send + Sync>) -> Result<Self> {
+    pub async fn new(
+        config: Config,
+        http_client: Arc<dyn HttpClient + Send + Sync>,
+        fs_support: Arc<dyn FsSupport + Send + Sync>,
+    ) -> Result<Self> {
         let email_service = EmailClient::new().ok();
 
         let data_dir = DataDir::new()?;
@@ -49,11 +55,12 @@ impl AppState {
             config: config.clone(),
             data_dir,
             email_service,
+            fs_support,
             mm: ModelManager::new(config.database_url).await?,
             recipe_cache: Arc::new(Mutex::new(LruCache::new(
                 NonZeroUsize::new(1000).expect("LRU to be initialized"),
             ))),
-            scraper: Scraper::with_client(http_client),
+            scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
             subscribers: Arc::new(Mutex::new(HashMap::new())),
         })
     }
@@ -125,6 +132,7 @@ pub mod test_utils {
     use crate::core::repository::pool::make_db_pool;
     use crate::core::scraper::Scraper;
     use crate::core::scraper::tests::MockHttpClient;
+    use crate::core::support::fs::MockFs;
     use crate::core::support::token::AUTH_TOKEN;
     use crate::server::AppState;
     use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
@@ -210,7 +218,7 @@ pub mod test_utils {
 
     /// Creates the AppState for testing.
     pub async fn create_app_state(config: Config) -> AppState {
-        AppState::new(config, Arc::new(MockHttpClient))
+        AppState::new(config, Arc::new(MockHttpClient), Arc::new(MockFs))
             .await
             .map_err(|err| {
                 error!("Could not initialise app state: {err}");
@@ -385,9 +393,9 @@ pub mod test_utils {
     /// Constructs a `RecipeForCreate` instance with all components populated, preparing
     /// it for database insertion.
     pub fn a_complete_recipe_for_create() -> RecipeForCreate {
-        let main_image = Uuid::new_v4();
-        let secondary_image = Uuid::new_v4();
-        let video = Uuid::new_v4();
+        let main_image = Uuid::nil();
+        let secondary_image = Uuid::nil();
+        let video = Uuid::nil();
 
         RecipeForCreate {
             name: "Best Chinese Kale".into(),

@@ -43,6 +43,7 @@ pub async fn share_recipe_handler(
     };
 
     templates::recipes::view_recipe(
+        state.fs_support,
         uri.path(),
         state.data_dir,
         Data {

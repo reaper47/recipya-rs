@@ -5,7 +5,7 @@ use serde::{
     de::{Error, MapAccess, SeqAccess},
 };
 use url::Url;
-use uuid::Uuid;
+
 use crate::core::scraper::schema::AtType;
 
 /// Enumeration of all possible action values.
@@ -900,13 +900,13 @@ impl TryFrom<ImageObjectOrUrl> for String {
             ImageObjectOrUrl::Url(url) => Ok(url.into()),
             ImageObjectOrUrl::ImageObject(object) => {
                 if let Some(url) = object.url {
-                   return Ok(url.to_string());
-                } 
-                
+                    return Ok(url.to_string());
+                }
+
                 if let Some(url) = object.content_url {
                     return Ok(url.to_string());
-                }                
-                
+                }
+
                 Err("No URL in image".into())
             }
         }

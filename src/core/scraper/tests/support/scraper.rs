@@ -1,3 +1,11 @@
+use std::{
+    fs,
+    io::Write,
+    path::PathBuf,
+    sync::{Arc, OnceLock},
+};
+
+use axum::body::Bytes;
 use tracing::error;
 
 use super::websites::websites_for_tests;
@@ -6,12 +14,7 @@ use crate::core::scraper::Scraper;
 use crate::core::scraper::client::HttpClient;
 use crate::core::scraper::schema::RecipeSchema;
 use crate::core::scraper::websites::Website;
-use std::{
-    fs,
-    io::Write,
-    path::PathBuf,
-    sync::{Arc, OnceLock},
-};
+use crate::core::support::fs::MockFs;
 
 pub struct MockHttpClient;
 
@@ -29,12 +32,16 @@ impl HttpClient for MockHttpClient {
 
         Ok(content)
     }
+
+    fn get_bytes(&self, url: &str) -> Result<Bytes> {
+        Ok(Bytes::new())
+    }
 }
 
 fn mock_scraper() -> &'static Scraper {
     static INSTANCE: OnceLock<Scraper> = OnceLock::new();
 
-    INSTANCE.get_or_init(|| Scraper::with_client(Arc::new(MockHttpClient)))
+    INSTANCE.get_or_init(|| Scraper::with_client(Arc::new(MockHttpClient), Arc::new(MockFs)))
 }
 
 pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {
