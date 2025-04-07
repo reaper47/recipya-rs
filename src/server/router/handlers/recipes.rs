@@ -619,10 +619,10 @@ impl FetchWebsiteContext {
         let count_warning = self.count_warning.load(Ordering::SeqCst);
 
         let toast = if self.total == 1 {
-            let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
-            let view_recipe_link = format!("View /recipes/{recipe_id}");
-
             if count_warning == 1 {
+                let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
+                let view_recipe_link = format!("View /recipes/{recipe_id}");
+
                 MessageHtmx::builder(
                     MessageType::Toast,
                     "Operation Warning",
@@ -639,6 +639,9 @@ impl FetchWebsiteContext {
                 .action(Some("View /reports?view=latest"))
                 .build()
             } else if count_success == 1 {
+                let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
+                let view_recipe_link = format!("View /recipes/{recipe_id}");
+
                 MessageHtmx::builder(
                     MessageType::Toast,
                     "Operation Successful",
@@ -675,7 +678,7 @@ pub async fn add_website_post_handler(
     let mut urls = form
         .urls
         .lines()
-        .filter_map(|line| Url::parse(line).ok())
+        .filter_map(|line| Url::parse(line.trim_end_matches('/')).ok())
         .collect::<Vec<_>>();
 
     if urls.is_empty() {

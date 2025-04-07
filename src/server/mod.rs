@@ -95,7 +95,7 @@ impl AppState {
                 </div>
             </div>"#,
             if is_notification_visible { "" } else { "hidden" }
-        );
+        ).lines().map(str::trim).collect::<Vec<_>>().join("");
 
         self.broadcast(user_id, Message::Text(content.into())).await;
     }
@@ -189,6 +189,9 @@ pub mod test_utils {
 
     /// The password of the default user in the test database.
     pub const TEST_USER_PASSWORD: &str = "12345678";
+
+    /// The HTML returned when the websocket notification should be hidden.
+    pub const HIDDEN_WS_NOTIFICATION: &str = r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#;
 
     /// The database URL used for connecting to the database in test environments.
     pub(crate) fn test_database_url() -> String {
@@ -606,7 +609,7 @@ pub mod test_utils {
     }
 
     /// Asserts that the websocket server sent the wanted message.
-    pub async fn assert_ws_message(mut server: TestWebSocket, want: &str) {
+    pub async fn assert_ws_message(server: &mut TestWebSocket, want: &str) {
         let _ = server.receive_message().await;
         server.assert_receive_text_contains(want).await;
     }

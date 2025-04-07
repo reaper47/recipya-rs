@@ -90,8 +90,7 @@ struct ReportType {
 }
 
 /// Represents a collection of reports for the database.
-#[derive(Default)]
-#[derive(Associations, Identifiable, Queryable, Selectable)]
+#[derive(Default, Associations, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = schema::reports)]
 #[diesel(belongs_to(ReportType))]
 #[diesel(belongs_to(User))]
@@ -114,19 +113,18 @@ struct ReportForInsert {
 }
 
 /// Represents the details of a report.
-#[derive(Debug, PartialEq)]
-#[derive(Associations, Identifiable, Queryable, Selectable)]
+#[derive(Debug, PartialEq, Associations, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = schema::reports_logs)]
 #[diesel(belongs_to(Report))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-struct ReportLog {
-    id: i64,
-    report_id: i64,
-    title: String,
-    is_success: bool,
-    is_warning: bool,
-    is_error: bool,
-    error_reason: String,
+pub struct ReportLog {
+    pub id: i64,
+    pub report_id: i64,
+    pub title: String,
+    pub is_success: bool,
+    pub is_warning: bool,
+    pub is_error: bool,
+    pub error_reason: String,
 }
 
 /// Represents the details of a report to create in the database.
@@ -196,7 +194,8 @@ mod tests {
         let user = insert_user(config.clone()).await?;
         let mut report = ReportForCreate::new(ReportTypes::Import, user.id);
         let warning_report = ReportLogForCreate::new_warning("Warning".into(), String::new());
-        let error_report = ReportLogForCreate::new_error("Error".into(), "An error occurred".into());
+        let error_report =
+            ReportLogForCreate::new_error("Error".into(), "An error occurred".into());
         let success_report = ReportLogForCreate::new_success("Success".into());
         report.report_logs.push(warning_report);
         report.report_logs.push(error_report);
@@ -209,41 +208,51 @@ mod tests {
             .select(Report::as_select())
             .first(&mut conn)
             .await?;
-        assert_report(&got_report, Report {
-            id: 1,
-            report_type_id: ReportTypes::Import.to_id(),
-            user_id: user.id,
-            ..Default::default()
-        });
+        assert_report(
+            &got_report,
+            Report {
+                id: 1,
+                report_type_id: ReportTypes::Import.to_id(),
+                user_id: user.id,
+                ..Default::default()
+            },
+        );
         let got_logs = schema::reports_logs::table
             .select(ReportLog::as_select())
             .load(&mut conn)
             .await?;
-        pretty_assertions::assert_eq!(got_logs, vec![ReportLog {
-            id: 1,
-            report_id: got_report.id,
-            title: "Warning".into(),
-            is_success: false,
-            is_warning: true,
-            is_error: false,
-            error_reason: "".into(),
-        }, ReportLog {
-            id: 2,
-            report_id: got_report.id,
-            title: "Error".into(),
-            is_success: false,
-            is_warning: false,
-            is_error: true,
-            error_reason: "An error occurred".into(),
-        }, ReportLog {
-            id: 3,
-            report_id: got_report.id,
-            title: "Success".into(),
-            is_success: true,
-            is_warning: false,
-            is_error: false,
-            error_reason: "".into(),
-        }]);
+        pretty_assertions::assert_eq!(
+            got_logs,
+            vec![
+                ReportLog {
+                    id: 1,
+                    report_id: got_report.id,
+                    title: "Warning".into(),
+                    is_success: false,
+                    is_warning: true,
+                    is_error: false,
+                    error_reason: "".into(),
+                },
+                ReportLog {
+                    id: 2,
+                    report_id: got_report.id,
+                    title: "Error".into(),
+                    is_success: false,
+                    is_warning: false,
+                    is_error: true,
+                    error_reason: "An error occurred".into(),
+                },
+                ReportLog {
+                    id: 3,
+                    report_id: got_report.id,
+                    title: "Success".into(),
+                    is_success: true,
+                    is_warning: false,
+                    is_error: false,
+                    error_reason: "".into(),
+                }
+            ]
+        );
         Ok(())
     }
 

@@ -158,7 +158,7 @@ mod tests {
         #[tokio::test]
         async fn test_post_change_password_form_invalid_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -170,14 +170,14 @@ mod tests {
                 .await;
 
             res.assert_status_bad_request();
-            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"Passwords do not match.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"Passwords do not match.","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
         #[tokio::test]
         async fn test_post_change_password_password_same_as_new_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -189,7 +189,7 @@ mod tests {
                 .await;
 
             res.assert_status_bad_request();
-            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -211,12 +211,12 @@ mod tests {
         #[tokio::test]
         async fn test_post_change_password_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
 
             let res = server.post(BASE_URI).form(&a_change_password_form()).await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#).await;
             Ok(())
         }
     }
@@ -320,13 +320,13 @@ mod tests {
                 ..Config::default()
             }))
             .await?;
-            let (server, ws_server) =
+            let (server, mut ws_server) =
                 build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
 
             let res = server.delete(BASE_URI).await;
 
             res.assert_status(StatusCode::FORBIDDEN);
-            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -337,12 +337,12 @@ mod tests {
                 ..Config::default()
             }))
             .await?;
-            let (server, ws_server) = build_server_ws(config.clone()).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
 
             let res = server.delete(BASE_URI).await;
 
             res.assert_status(StatusCode::FORBIDDEN);
-            assert_ws_message(ws_server, r#"{"showMessageWs":{"type":"toast","message":"This account cannot be deleted.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"This account cannot be deleted.","status":"alert-info","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 

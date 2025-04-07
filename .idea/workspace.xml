@@ -15,22 +15,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/model/report.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/repository/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/repository/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/repository/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/repository/schema.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/report.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/report.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/tests/support/scraper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/tests/support/scraper.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/message.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/auth_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/auth_router.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/shared_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -242,6 +235,11 @@
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_missing_required_title_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_subcategories_are_possible.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_manual::test_post_submit_recipe_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_duplicates_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok.executor": "Run",
+    "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_no_input_ok.executor": "Run",
     "Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_no_valid_urls_ok.executor": "Run",
@@ -303,6 +301,7 @@
     "Cargo.Test tests_nutrition.executor": "Run",
     "Cargo.Test tests_pagination.executor": "Run",
     "Cargo.Test tests_recipe_add_manual.executor": "Run",
+    "Cargo.Test tests_recipe_add_website.executor": "Run",
     "Cargo.Test tests_recipe_for_create.executor": "Run",
     "Cargo.Test tests_recipes.executor": "Run",
     "Cargo.Test tests_register.executor": "Run",
@@ -358,7 +357,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test core::model::report::tests::test_insert_report">
+  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -377,8 +376,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::model::report::tests::test_insert_report" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::report::tests::test_insert_report -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -394,8 +393,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test report::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::report::tests" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -411,8 +410,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_0_video_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_0_video_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -428,8 +427,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok -- --exact" />
+    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -445,8 +444,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test strings::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::support::strings::tests" />
+    <configuration name="Test tests_recipe_add_website" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -464,19 +463,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test core::model::report::tests::test_insert_report" />
-      <item itemvalue="Cargo.Test report::tests" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_0_video_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok" />
-      <item itemvalue="Cargo.Test strings::tests" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok" />
+      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok" />
+      <item itemvalue="Cargo.Test tests_recipe_add_website" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test core::model::report::tests::test_insert_report" />
-        <item itemvalue="Cargo.Test report::tests" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe::test_get_recipe_2_images_0_video_ok" />
-        <item itemvalue="Cargo.Test strings::tests" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
+        <item itemvalue="Cargo.Test tests_recipe_add_website" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok" />
+        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok" />
       </list>
     </recent_temporary>
   </component>

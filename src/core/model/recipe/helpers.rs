@@ -23,22 +23,22 @@ where
 {
     let default = String::from("uncategorized");
 
+    let category = Option::from(
+        category
+            .clone()
+            .map(|c| {
+                c.split_once([',', ';'])
+                    .map(|(first, _)| first.to_lowercase())
+                    .unwrap_or_else(|| c.to_lowercase())
+            })
+            .unwrap_or(default.clone()),
+    );
+    
     Ok(diesel::insert_into(schema::categories::table)
-        .values(&CategoryForInsert {
-            name: Option::from(
-                category
-                    .clone()
-                    .map(|c| {
-                        c.split_once([',', ';'])
-                            .map(|(first, _)| first.to_lowercase())
-                            .unwrap_or_else(|| c.to_lowercase())
-                    })
-                    .unwrap_or(default.clone()),
-            ),
-        })
+        .values(&CategoryForInsert { name: category.clone() })
         .on_conflict(schema::categories::name)
         .do_update()
-        .set(schema::categories::name.eq(category.clone().unwrap_or(default)))
+        .set(schema::categories::name.eq(category.unwrap_or(default)))
         .returning(schema::categories::id)
         .get_result::<i64>(&mut conn)
         .await?)
