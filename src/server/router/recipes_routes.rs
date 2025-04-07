@@ -6,10 +6,10 @@ use serde::{Deserialize, Serialize};
 use crate::server::AppState;
 use crate::server::router::handlers::recipes::{
     add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipes_handler,
-    delete_recipe_categories_handler, delete_recipe_handler, duplicate_recipe_handler,
-    edit_recipe_handler, edit_recipe_put_handler, post_recipe_categories_handler, recipes_handler,
-    share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
-    view_recipe_handler,
+    add_website_post_handler, delete_recipe_categories_handler, delete_recipe_handler,
+    duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
+    post_recipe_categories_handler, recipes_handler, share_recipe_post_handler,
+    supported_applications_handler, supported_websites_handler, view_recipe_handler,
 };
 use crate::server::router::middleware::mw_auth;
 
@@ -23,6 +23,12 @@ pub struct ShareRecipeForm {
 #[derive(Deserialize, Serialize)]
 pub struct RecipeCategoryForm {
     pub category: String,
+}
+
+/// Represents the content of a fetch recipe from URLs form.
+#[derive(Deserialize, Serialize)]
+pub struct RecipeScrapeForm {
+    pub urls: String,
 }
 
 /// Defines the routes for endpoints related to recipes.
@@ -48,6 +54,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
                 .post(add_manual_recipe_post_handler)
                 .layer(DefaultBodyLimit::max(1024 * 512)),
         )
+        .route("/add/website", post(add_website_post_handler))
         .route(
             "/categories",
             post(post_recipe_categories_handler).delete(delete_recipe_categories_handler),
@@ -65,11 +72,12 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
+    use axum::http::Method;
+    use axum_test::multipart::{MultipartForm, Part};
+
     use crate::core::config::Config;
     use crate::core::model::recipe::RecipeForCreate;
     use crate::server::test_utils::{TestDb, assert_must_be_logged_in, build_server_logged_in};
-    use axum::http::Method;
-    use axum_test::multipart::{MultipartForm, Part};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -139,7 +147,8 @@ mod tests {
         use crate::core::model::Recipe;
         use crate::server::AppState;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_must_be_logged_in, build_server_ws,
+            a_complete_recipe_for_create, assert_must_be_logged_in, assert_ws_message,
+            build_server_ws, create_app_state,
         };
 
         fn base_uri(id: i64) -> String {
@@ -154,15 +163,12 @@ mod tests {
         #[tokio::test]
         async fn test_get_recipe_does_not_exist() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws) = build_server_ws(config.clone()).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
 
             let res = server.get(&base_uri(99)).await;
 
             res.assert_status_not_found();
-            let _ = ws.receive_message().await;
-            ws
-                .assert_receive_text_contains(r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"#)
-                .await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -170,7 +176,7 @@ mod tests {
         async fn test_get_recipe_exists() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -217,16 +223,18 @@ mod tests {
 
         use axum::http::HeaderValue;
         use axum_test::TestResponse;
-        use diesel::internal::derives::multiconnection::chrono::{Duration, NaiveDateTime};
+        use diesel::internal::derives::multiconnection::chrono::Duration;
+        use diesel_async::RunQueryDsl;
         use uuid::Uuid;
 
         use crate::core::model::recipe::{
             Nutrition, NutritionForCreate, RecipeForCreate, Sections, Times, TimesForCreate,
-            ToolForCreate, ToolRecipe, Video, VideoForCreate, VideoRecipe,
+            ToolForCreate, ToolRecipe, VideoForCreate,
         };
         use crate::core::model::{Recipe, RecipeDetails};
-        use crate::server::AppState;
-        use crate::server::test_utils::{a_complete_recipe_for_create, build_server_ws};
+        use crate::server::test_utils::{
+            a_complete_recipe_for_create, assert_ws_message, build_server_ws, create_app_state,
+        };
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}/edit")
@@ -241,15 +249,12 @@ mod tests {
         #[tokio::test]
         async fn test_get_recipe_not_exist_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws) = build_server_ws(config).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
 
             let res = server.get(&base_uri(1)).await;
 
             res.assert_status_not_found();
-            let _ = ws.receive_message().await;
-            ws
-                .assert_receive_text_contains(r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"#)
-                .await;
+            assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
             Ok(())
         }
 
@@ -257,7 +262,7 @@ mod tests {
         async fn test_get_recipe_exists_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -274,7 +279,7 @@ mod tests {
                 axum_htmx::headers::HX_REQUEST,
                 HeaderValue::from_static("true"),
             );
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -344,7 +349,7 @@ mod tests {
         async fn test_put_update_image_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
             Recipe::create(&state.mm, 1, &recipe).await?;
             recipe.images = None;
@@ -356,7 +361,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             let expected = recipe_for_create_to_details(recipe, &got);
             pretty_assertions::assert_eq!(got, expected);
@@ -369,7 +374,7 @@ mod tests {
         async fn test_put_missing_fields_defaults_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
             Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
             recipe.name = "Maple Syrup Korean Chicken".into();
@@ -382,7 +387,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             let expected = recipe_for_create_to_details(recipe, &got);
             pretty_assertions::assert_eq!(got, expected);
@@ -398,7 +403,7 @@ mod tests {
         async fn test_put_can_only_be_one_category_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
             Recipe::create(&state.mm, 1, &recipe).await?;
             recipe.category = Some("breakfast,dinner".into());
@@ -409,7 +414,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             pretty_assertions::assert_eq!(got.category, "breakfast");
             Ok(())
@@ -419,7 +424,7 @@ mod tests {
         async fn test_put_subcategories_are_possible() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let mut recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
                 instructions: Sections::from([("".into(), vec!["Mix the apples".to_string()])]),
@@ -429,10 +434,13 @@ mod tests {
             Recipe::create(&state.mm, 1, &recipe).await?;
             recipe.category = Some("drinks:vodka".into());
 
-            let res = server.put(&base_uri(1)).multipart(create_form(&recipe)).await;
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             pretty_assertions::assert_eq!(got.category, "drinks:vodka");
             Ok(())
@@ -442,7 +450,7 @@ mod tests {
         async fn test_put_submit_recipe_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
             Recipe::create(&state.mm, 1, &recipe).await?;
             recipe = RecipeForCreate {
@@ -504,7 +512,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             let mut expected = recipe_for_create_to_details(recipe, &got);
             expected.ingredients = got.ingredients.clone(); // TODO: Fix once sections are implemented.
@@ -517,33 +525,71 @@ mod tests {
         async fn test_put_duplicates_are_removed_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
             Recipe::create(&state.mm, 1, &recipe).await?;
-            recipe.instructions = Sections::from([("".into(), vec!["Mix the apples".to_string(), "Eat".to_string(), "Mix the apples".to_string()])]);
-            recipe.ingredients = Sections::from([("".into(), vec!["8 apples".to_string(), "4 oranges".to_string(), "8 apples".to_string()])]);
+            recipe.instructions = Sections::from([(
+                "".into(),
+                vec![
+                    "Mix the apples".to_string(),
+                    "Eat".to_string(),
+                    "Mix the apples".to_string(),
+                ],
+            )]);
+            recipe.ingredients = Sections::from([(
+                "".into(),
+                vec![
+                    "8 apples".to_string(),
+                    "4 oranges".to_string(),
+                    "8 apples".to_string(),
+                ],
+            )]);
             recipe.keywords = vec!["drinks".into(), "vodka".into(), "drinks".into()];
-            recipe.tools = vec![ToolForCreate {
-                quantity: 1,
-                name: "1 wok".into(),
-            }, ToolForCreate {
-                quantity: 1,
-                name: "1 wok".into(),
-            }];
+            recipe.tools = vec![
+                ToolForCreate {
+                    quantity: 1,
+                    name: "1 wok".into(),
+                },
+                ToolForCreate {
+                    quantity: 1,
+                    name: "1 wok".into(),
+                },
+            ];
 
-            let res = server.put(&base_uri(1)).multipart(create_form(&recipe)).await;
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
-            pretty_assertions::assert_eq!(got.keywords, vec!["drinks".to_string(), "vodka".to_string()]);
-            pretty_assertions::assert_eq!(got.ingredients, Sections::from([("".into(), vec!["8 apples".to_string(), "4 oranges".to_string()])]));
-            pretty_assertions::assert_eq!(got.instructions, Sections::from([("".into(), vec!["Mix the apples".to_string(), "Eat".to_string()])]));
-            pretty_assertions::assert_eq!(got.tools, vec![ToolRecipe {
-                name: "wok".into(),
-                tool_order: 1,
-                quantity: 1,
-            }]);
+            pretty_assertions::assert_eq!(
+                got.keywords,
+                vec!["drinks".to_string(), "vodka".to_string()]
+            );
+            pretty_assertions::assert_eq!(
+                got.ingredients,
+                Sections::from([(
+                    "".into(),
+                    vec!["8 apples".to_string(), "4 oranges".to_string()]
+                )])
+            );
+            pretty_assertions::assert_eq!(
+                got.instructions,
+                Sections::from([(
+                    "".into(),
+                    vec!["Mix the apples".to_string(), "Eat".to_string()]
+                )])
+            );
+            pretty_assertions::assert_eq!(
+                got.tools,
+                vec![ToolRecipe {
+                    name: "wok".into(),
+                    tool_order: 1,
+                    quantity: 1,
+                }]
+            );
             Ok(())
         }
 
@@ -659,7 +705,7 @@ mod tests {
         use crate::server::AppState;
         use crate::server::router::recipes_routes::ShareRecipeForm;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in,
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, create_app_state,
         };
 
         fn base_uri(recipe_id: i64) -> String {
@@ -675,7 +721,7 @@ mod tests {
         async fn test_default_expires_at_time_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
 
             let res = server
@@ -705,7 +751,7 @@ mod tests {
         async fn test_custom_expires_at_time_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
             let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
 
@@ -738,7 +784,7 @@ mod tests {
         async fn test_invalid_expires_at_time_defaults_to_7_days_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
             let now = chrono::Utc::now().naive_utc();
 
@@ -784,7 +830,7 @@ mod tests {
         use crate::core::model::Recipe;
         use crate::server::AppState;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in,
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, create_app_state,
         };
 
         const BASE_URI: &str = "/recipes";
@@ -815,7 +861,7 @@ mod tests {
         async fn test_get_user_has_recipes_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             for i in 0..3 {
                 let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
@@ -853,7 +899,8 @@ mod tests {
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
         use crate::server::AppState;
         use crate::server::test_utils::{
-            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, build_server_ws,
+            a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, assert_ws_message,
+            build_server_ws, create_app_state,
         };
 
         fn base_uri(recipe_id: i64) -> String {
@@ -871,7 +918,7 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let recipe = a_complete_recipe_for_create();
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
@@ -891,7 +938,7 @@ mod tests {
                 axum_htmx::headers::HX_REQUEST,
                 HeaderValue::from_static("true"),
             );
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let recipe = a_complete_recipe_for_create();
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
@@ -927,7 +974,7 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = None;
@@ -950,7 +997,7 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             let img1 = Uuid::new_v4();
@@ -974,10 +1021,10 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
-            recipe.images = Some(vec![Uuid::new_v4(), Uuid::new_v4()]);
+            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -998,7 +1045,7 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![VideoForCreate {
                 video: Uuid::new_v4(),
@@ -1026,7 +1073,7 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
@@ -1063,23 +1110,23 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
-                    video: Uuid::new_v4(),
+                    video: Uuid::nil(),
                     duration: None,
                     content_url: Some("https://example.com/embed/yg8FG4".into()),
                     embed_url: None,
                 },
                 VideoForCreate {
-                    video: Uuid::new_v4(),
+                    video: Uuid::nil(),
                     duration: None,
                     content_url: None,
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            recipe.images = Some(vec![Uuid::new_v4(), Uuid::new_v4()]);
+            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1108,15 +1155,12 @@ mod tests {
         async fn test_delete_recipe_does_not_exist() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
-            let (server, mut ws) = build_server_ws(config.clone()).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
 
             let res = server.delete(&base_uri(1)).await;
 
             res.assert_status_internal_server_error();
-            let _ = ws.receive_message().await;
-            ws
-                .assert_receive_text_contains(r#"{"showMessageHtmx":{"type":"toast","message":"Recipe could not be deleted.","status":"alert-error","title":"Operation Failed"}}"#)
-                .await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe could not be deleted.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -1125,7 +1169,7 @@ mod tests {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = AppState::new(config).await?;
+            let state = create_app_state(config).await;
             let _recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
 
             let res = server.delete(&base_uri(1)).await;
@@ -1180,10 +1224,13 @@ mod tests {
         use diesel::internal::derives::multiconnection::chrono::Duration;
         use uuid::Uuid;
 
-        use crate::core::model::recipe::{Nutrition, NutritionForCreate, RecipeForCreate, Sections, Times, TimesForCreate, ToolForCreate, ToolRecipe, VideoForCreate};
+        use crate::core::model::recipe::{
+            Nutrition, NutritionForCreate, RecipeForCreate, Sections, Times, TimesForCreate,
+            ToolForCreate, ToolRecipe, VideoForCreate,
+        };
         use crate::core::model::{Recipe, RecipeDetails};
         use crate::server::AppState;
-        use crate::server::test_utils::assert_must_be_logged_in;
+        use crate::server::test_utils::{assert_must_be_logged_in, create_app_state};
 
         const BASE_URI: &str = "/recipes/add/manual";
 
@@ -1287,7 +1334,7 @@ mod tests {
             let res = server.post(BASE_URI).multipart(form).await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             pretty_assertions::assert_eq!(got.category, "uncategorized");
             pretty_assertions::assert_eq!(got.recipe.yield_, 1);
@@ -1310,7 +1357,7 @@ mod tests {
             let res = server.post(BASE_URI).multipart(form).await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             pretty_assertions::assert_eq!(got.category, "breakfast");
             Ok(())
@@ -1322,16 +1369,33 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
-                instructions: Sections::from([("".into(), vec!["Mix the apples".to_string(), "Eat".to_string(), "Mix the apples".to_string()])]),
-                ingredients: Sections::from([("".into(), vec!["8 apples".to_string(), "4 oranges".to_string(), "8 apples".to_string()])]),
+                instructions: Sections::from([(
+                    "".into(),
+                    vec![
+                        "Mix the apples".to_string(),
+                        "Eat".to_string(),
+                        "Mix the apples".to_string(),
+                    ],
+                )]),
+                ingredients: Sections::from([(
+                    "".into(),
+                    vec![
+                        "8 apples".to_string(),
+                        "4 oranges".to_string(),
+                        "8 apples".to_string(),
+                    ],
+                )]),
                 keywords: vec!["drinks".into(), "vodka".into(), "drinks".into()],
-                tools: vec![ToolForCreate {
-                    quantity: 1, 
-                    name: "1 wok".into(),
-                }, ToolForCreate {
-                    quantity: 1,
-                    name: "1 wok".into(),
-                }],
+                tools: vec![
+                    ToolForCreate {
+                        quantity: 1,
+                        name: "1 wok".into(),
+                    },
+                    ToolForCreate {
+                        quantity: 1,
+                        name: "1 wok".into(),
+                    },
+                ],
                 ..Default::default()
             };
             let form = create_form(&recipe);
@@ -1339,16 +1403,34 @@ mod tests {
             let res = server.post(BASE_URI).multipart(form).await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
-            pretty_assertions::assert_eq!(got.keywords, vec!["drinks".to_string(), "vodka".to_string()]);
-            pretty_assertions::assert_eq!(got.ingredients, Sections::from([("".into(), vec!["8 apples".to_string(), "4 oranges".to_string()])]));
-            pretty_assertions::assert_eq!(got.instructions, Sections::from([("".into(), vec!["Mix the apples".to_string(), "Eat".to_string()])]));
-            pretty_assertions::assert_eq!(got.tools, vec![ToolRecipe {
-                name: "wok".into(),
-                tool_order: 1,
-                quantity: 1,
-            }]);
+            pretty_assertions::assert_eq!(
+                got.keywords,
+                vec!["drinks".to_string(), "vodka".to_string()]
+            );
+            pretty_assertions::assert_eq!(
+                got.ingredients,
+                Sections::from([(
+                    "".into(),
+                    vec!["8 apples".to_string(), "4 oranges".to_string()]
+                )])
+            );
+            pretty_assertions::assert_eq!(
+                got.instructions,
+                Sections::from([(
+                    "".into(),
+                    vec!["Mix the apples".to_string(), "Eat".to_string()]
+                )])
+            );
+            pretty_assertions::assert_eq!(
+                got.tools,
+                vec![ToolRecipe {
+                    name: "wok".into(),
+                    tool_order: 1,
+                    quantity: 1,
+                }]
+            );
             Ok(())
         }
 
@@ -1368,7 +1450,7 @@ mod tests {
             let res = server.post(BASE_URI).multipart(form).await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             pretty_assertions::assert_eq!(got.category, "drinks:vodka");
             Ok(())
@@ -1444,7 +1526,7 @@ mod tests {
             let res = server.post(BASE_URI).multipart(form).await;
 
             res.assert_status_see_other();
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             let times = recipe.times.expect("Should have times");
             pretty_assertions::assert_eq!(
@@ -1552,7 +1634,9 @@ mod tests {
         use crate::core::model::Recipe;
         use crate::server::AppState;
         use crate::server::router::recipes_routes::RecipeCategoryForm;
-        use crate::server::test_utils::{a_complete_recipe_for_create, build_server_ws};
+        use crate::server::test_utils::{
+            a_complete_recipe_for_create, assert_ws_message, build_server_ws, create_app_state,
+        };
         use axum_test::http::StatusCode;
 
         const BASE_URI: &str = "/recipes/categories";
@@ -1583,7 +1667,7 @@ mod tests {
         #[tokio::test]
         async fn test_post_user_already_has_category_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws) = build_server_ws(config).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -1593,10 +1677,7 @@ mod tests {
                 .await;
 
             res.assert_status_internal_server_error();
-            let _ = ws.receive_message().await;
-            ws
-                .assert_receive_text_contains(r#"{"showMessageHtmx":{"type":"toast","message":"Failed to add recipe category.","status":"alert-error","title":"Operation Failed"}}"#)
-                .await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Failed to add recipe category.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -1648,7 +1729,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let category = String::from("midnight dinner");
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
             Recipe::add_category(&state.mm, &category, 1).await?;
 
@@ -1663,7 +1744,7 @@ mod tests {
 
         async fn send_delete_400(category: String) -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws) = build_server_ws(config).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
 
             let res = server
                 .delete(BASE_URI)
@@ -1673,11 +1754,247 @@ mod tests {
                 .await;
 
             res.assert_status_bad_request();
-            let _ = ws.receive_message().await;
-            ws
-                .assert_receive_text_contains(r#"{"showMessageHtmx":{"type":"toast","message":"Category cannot be empty or uncategorized.","status":"alert-error","title":"Operation Failed"}}"#)
-                .await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Category cannot be empty or uncategorized.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
+        }
+    }
+
+    mod tests_recipe_add_website {
+        use super::*;
+
+        use std::time::Duration;
+
+        use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
+        use reqwest::StatusCode;
+
+        use crate::core::model::report::ReportLog;
+        use crate::core::repository::schema;
+        use crate::core::scraper::tests::support::scraper::{scrape, scrape_test_websites};
+        use crate::server::router::recipes_routes::RecipeScrapeForm;
+        use crate::server::test_utils::{
+            HIDDEN_WS_NOTIFICATION, assert_ws_message, build_server_ws, create_app_state,
+        };
+
+        const BASE_URI: &str = "/recipes/add/website";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_no_input_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeScrapeForm { urls: "".into() })
+                .await;
+
+            res.assert_status_bad_request();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"No valid URLs found.","status":"alert-error","title":"Operation Failed"}}"#).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_no_valid_urls_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeScrapeForm {
+                    urls: "I am a pig\noink oink".into(),
+                })
+                .await;
+
+            res.assert_status_bad_request();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"No valid URLs found.","status":"alert-error","title":"Operation Failed"}}"#).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_add_one_valid_url_from_unsupported_websites_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeScrapeForm {
+                    urls: "https://www.example.com".into(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            let got_logs = fetch_logs(config.clone()).await?;
+            pretty_assertions::assert_eq!(got_logs, vec![example_report_log()]);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_add_one_valid_url_from_supported_websites_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            scrape_test_websites(1).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeScrapeForm {
+                    urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"
+                        .into(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            let got_logs = fetch_logs(config.clone()).await?;
+            pretty_assertions::assert_eq!(got_logs, vec![all_recipes_report_log(1)]);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_add_duplicates_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            scrape_test_websites(1).await?;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&RecipeScrapeForm {
+                    urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies".into(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            let got_logs = fetch_logs(config.clone()).await?;
+            pretty_assertions::assert_eq!(got_logs, vec![all_recipes_report_log(1)]);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_add_a_website_that_has_already_been_added_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let form = RecipeScrapeForm {
+                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies".into(),
+            };
+            scrape_test_websites(1).await?;
+            let _ = server.post(BASE_URI).form(&form).await;
+
+            let res = server.post(BASE_URI).form(&form).await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            let got_logs = fetch_logs(config.clone()).await?;
+            pretty_assertions::assert_eq!(
+                got_logs,
+                vec![all_recipes_report_log(1), all_recipes_report_log(2)]
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_add_many_valid_urls_from_supported_websites_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            scrape_test_websites(1).await?;
+            scrape_test_websites(2).await?;
+            scrape_test_websites(3).await?;
+
+            let res = server.post(BASE_URI).form(&RecipeScrapeForm {
+                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.acouplecooks.com/chicken-meatballs-baked\nhttp://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs/".into(),
+            }).await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/3</p><div id="export-progress"><progress max="100" value="33.33"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 2/3</p><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 3/3</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 1. Skipped: 2","status":"alert-info","title":"Operation Successful"}}"#).await;
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            let got_logs = fetch_logs(config.clone()).await?;
+            pretty_assertions::assert_eq!(
+                got_logs,
+                vec![ReportLog {
+                    id: 1,
+                    report_id: 1,
+                    title: "http://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs".to_string(),
+                    is_success: false,
+                    is_warning: false,
+                    is_error: true,
+                    error_reason: "Scraper(DomainNotImplemented)".to_string(),
+                }, ReportLog {
+                    id: 2,
+                    report_id: 1,
+                    title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies"
+                        .to_string(),
+                    is_success: false,
+                    is_warning: false,
+                    is_error: true,
+                    error_reason: "Scraper(DomainNotImplemented)".to_string(),
+                }, ReportLog {
+                    id: 3,
+                    report_id: 1,
+                    title: "https://www.acouplecooks.com/chicken-meatballs-baked".to_string(),
+                    is_success: true,
+                    is_warning: false,
+                    is_error: false,
+                    error_reason: "".to_string(),
+                },  ]
+            );
+            Ok(())
+        }
+
+        async fn fetch_logs(config: Config) -> Result<Vec<ReportLog>> {
+            let state = create_app_state(config).await;
+            let mut conn = state.mm.pool.get().await?;
+            let logs = schema::reports_logs::table
+                .select(ReportLog::as_select())
+                .load(&mut conn)
+                .await?;
+            Ok(logs)
+        }
+
+        fn all_recipes_report_log(id: i64) -> ReportLog {
+            ReportLog {
+                id,
+                report_id: id,
+                title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies"
+                    .to_string(),
+                is_success: false,
+                is_warning: false,
+                is_error: true,
+                error_reason: "Scraper(DomainNotImplemented)".to_string(),
+            }
+        }
+
+        fn example_report_log() -> ReportLog {
+            ReportLog {
+                id: 1,
+                report_id: 1,
+                title: "https://www.example.com/".to_string(),
+                is_success: false,
+                is_warning: false,
+                is_error: true,
+                error_reason: "Scraper(UnknownWebsite)".to_string(),
+            }
         }
     }
 

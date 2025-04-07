@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use diesel::{Queryable, Selectable};
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -289,7 +288,6 @@ impl User {
     ) -> Result<()> {
         use crate::core::repository::schema::users::dsl::*;
 
-        // TODO: Remove .unwrap()
         let mut conn = mm.pool.get().await?;
 
         diesel::update(users.find(user_id))
@@ -306,7 +304,7 @@ mod tests {
     use super::*;
 
     use crate::server::AppState;
-    use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, insert_user};
+    use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -316,7 +314,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         use crate::core::repository::schema;
-        use crate::server::test_utils::build_server_logged_in;
+        use crate::server::test_utils::{build_server_logged_in, create_app_state};
 
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_categories)]
@@ -328,7 +326,7 @@ mod tests {
         #[tokio::test]
         async fn test_categories_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
             let mut conn = state.mm.pool.get().await?;
             let (id, _name) = diesel::insert_into(schema::categories::table)
@@ -414,7 +412,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         use crate::core::repository::schema;
-        use crate::server::test_utils::build_server_logged_in;
+        use crate::server::test_utils::{build_server_logged_in, create_app_state};
 
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_keywords)]
@@ -426,7 +424,7 @@ mod tests {
         #[tokio::test]
         async fn test_keywords_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
             let mut conn = state.mm.pool.get().await?;
             let want_keywords = ["main:cheeses", "main:meat"];
@@ -462,7 +460,7 @@ mod tests {
     #[tokio::test]
     async fn test_user_new_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
 
         insert_user(config.clone()).await?;
 
@@ -487,7 +485,7 @@ mod tests {
     #[tokio::test]
     async fn test_delete_user_not_exist_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
 
         match User::delete(&state.mm, 999).await {
             Ok(_) => Err("An error was supposed to be thrown".into()),
@@ -498,7 +496,7 @@ mod tests {
     #[tokio::test]
     async fn test_delete_user_exists_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
 
         User::delete(&state.mm, user.id).await?;
@@ -512,7 +510,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_user_by_id_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
 
         let got_user = User::get_user_by_id(&state.mm, user.id)
@@ -526,7 +524,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_user_auth_by_email_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
 
         let got_user = User::get_user_auth_by_email(&state.mm, TEST_USER_EMAIL)
@@ -540,7 +538,7 @@ mod tests {
     #[tokio::test]
     async fn test_set_is_confirmed_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
 
         user.set_is_confirmed(&state.mm).await?;
@@ -555,7 +553,7 @@ mod tests {
     #[tokio::test]
     async fn test_update_password_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let password_before = String::from(&user.password);
 
@@ -572,7 +570,7 @@ mod tests {
     #[tokio::test]
     async fn test_update_password_by_user_id_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let password_before = user.password;
 
@@ -589,7 +587,7 @@ mod tests {
     #[tokio::test]
     async fn test_update_remember_me_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
 
         User::update_remember_me(&state.mm, user.id, true).await?;

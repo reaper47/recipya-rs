@@ -9,6 +9,7 @@ use tracing::{error, warn};
 use uuid::Uuid;
 
 use crate::core::model::recipe::{NutritionForCreate, TimesForCreate, ToolForCreate};
+use crate::core::support::fs::new_fs_support;
 
 /// Represents a form used to create or update a recipe.
 pub struct RecipeForm {
@@ -128,13 +129,11 @@ where
                                 "application/octet-stream"
                             };
 
-                            #[cfg(not(test))]
-                            {
-                                if let Err(err) = tokio::fs::write(&temp, bytes).await {
-                                    error!("Failed to save file '{:?}': {err}", temp);
-                                    continue;
-                                }
-                            }
+                            let fs_support = new_fs_support();
+                            fs_support
+                                .upload_to_temp(bytes)
+                                .await
+                                .map_err(|_| InvalidBoundary::default())?;
 
                             if mime_type.starts_with("video/") {
                                 videos.insert(stem, temp.clone());

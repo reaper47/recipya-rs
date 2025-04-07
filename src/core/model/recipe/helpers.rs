@@ -22,18 +22,23 @@ where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
     let default = String::from("uncategorized");
-    
-    Ok(diesel::insert_into(schema::categories::table)
-        .values(&CategoryForInsert {
-            name: Option::from(category.clone().map(|c| {
+
+    let category = Option::from(
+        category
+            .clone()
+            .map(|c| {
                 c.split_once([',', ';'])
                     .map(|(first, _)| first.to_lowercase())
                     .unwrap_or_else(|| c.to_lowercase())
-            }).unwrap_or(default.clone())),
-        })
+            })
+            .unwrap_or(default.clone()),
+    );
+    
+    Ok(diesel::insert_into(schema::categories::table)
+        .values(&CategoryForInsert { name: category.clone() })
         .on_conflict(schema::categories::name)
         .do_update()
-        .set(schema::categories::name.eq(category.clone().unwrap_or(default)))
+        .set(schema::categories::name.eq(category.unwrap_or(default)))
         .returning(schema::categories::id)
         .get_result::<i64>(&mut conn)
         .await?)
@@ -291,7 +296,7 @@ where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
     let mut uniques = HashSet::new();
-    
+
     if !tools.is_empty() {
         let tool_recipes: Vec<_> = diesel::insert_into(schema::tools::table)
             .values(
@@ -381,7 +386,10 @@ where
         .await?;
 
     diesel::insert_into(schema::users_categories::table)
-        .values((schema::users_categories::user_id.eq(user_id), schema::users_categories::category_id.eq(category_id)))
+        .values((
+            schema::users_categories::user_id.eq(user_id),
+            schema::users_categories::category_id.eq(category_id),
+        ))
         .on_conflict_do_nothing()
         .execute(&mut conn)
         .await?;

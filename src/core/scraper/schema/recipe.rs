@@ -1,7 +1,7 @@
-use std::fmt::Formatter;
-
 use reqwest::Url;
 use serde::{Deserialize, Deserializer, de};
+use std::fmt::Formatter;
+use tracing::{error, warn};
 
 use crate::core::scraper::schema::common::*;
 use crate::core::scraper::schema::nutrition::{NutritionInformationSchema, RestrictedDiet};
@@ -257,6 +257,64 @@ pub struct RecipeSchema {
     pub work_translation: Option<CreativeWorkType>,
 }
 
+impl RecipeSchema {
+    /// Fetches the image's url, if it exists.
+    pub fn image_url(&self) -> Option<Url> {
+        match self.image.clone().map(Url::try_from) {
+            Some(Ok(image)) => Some(image),
+            Some(Err(err)) => {
+                error!("Failed to parse RecipeSchema image: {err}");
+                None
+            }
+            _ => None,
+        }
+    }
+
+    /// Fetches the video's url, if it exists.
+    pub fn video_url(&self) -> Option<Url> {
+        match self.video.clone().map(Url::try_from) {
+            Some(Ok(video)) => Some(video),
+            Some(Err(err)) => {
+                error!("Failed to parse RecipeSchema image: {err}");
+                None
+            }
+            _ => None,
+        }
+    }
+
+    /// Gets the content url of the video.
+    pub fn video_content_url(&self) -> Option<Url> {
+        match self.video.clone() {
+            None => None,
+            Some(v) => match v {
+                ClipOrVideoObject::Clip(_) => {
+                    warn!(
+                        "RecipeSchema video content url will be ignored because of a clip object"
+                    );
+                    None
+                }
+                ClipOrVideoObject::VideoObject(object) => Some(object.content_url),
+            },
+        }
+    }
+
+    /// Gets the embed url of the video.
+    pub fn video_embed_url(&self) -> Option<Url> {
+        match self.video.clone() {
+            None => None,
+            Some(v) => match v {
+                ClipOrVideoObject::Clip(_) => {
+                    warn!(
+                        "RecipeSchema video content url will be ignored because of a clip object"
+                    );
+                    None
+                }
+                ClipOrVideoObject::VideoObject(object) => Some(object.embed_url),
+            },
+        }
+    }
+}
+
 fn deserialize_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
 where
     D: Deserializer<'de>,
@@ -296,7 +354,7 @@ where
 }
 
 /// Enumeration of different containers used to store a category.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum RecipeCategory {
     Text(String),
 }
@@ -304,6 +362,16 @@ pub enum RecipeCategory {
 impl Default for RecipeCategory {
     fn default() -> Self {
         RecipeCategory::Text("uncategorized".to_string())
+    }
+}
+
+impl TryFrom<RecipeCategory> for String {
+    type Error = String;
+
+    fn try_from(value: RecipeCategory) -> Result<Self, Self::Error> {
+        match value {
+            RecipeCategory::Text(text) => Ok(text),
+        }
     }
 }
 
@@ -359,9 +427,17 @@ impl<'de> Deserialize<'de> for RecipeCategory {
 }
 
 /// Enumeration of different containers used to store a cuisine.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum RecipeCuisine {
     Text(String),
+}
+
+impl From<RecipeCuisine> for String {
+    fn from(s: RecipeCuisine) -> String {
+        match s {
+            RecipeCuisine::Text(text) => text,
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for RecipeCuisine {

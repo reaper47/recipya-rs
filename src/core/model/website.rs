@@ -61,7 +61,7 @@ impl ToHtmlTable for Vec<Website> {
 mod tests {
     use crate::core::model::website::{ToHtmlTable, Website};
     use crate::server::AppState;
-    use crate::server::test_utils::TestDb;
+    use crate::server::test_utils::{TestDb, create_app_state};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -80,7 +80,7 @@ mod tests {
     #[tokio::test]
     async fn test_supported_websites_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
 
         let got = Website::supported_websites(&state.mm).await?;
 

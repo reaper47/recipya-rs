@@ -6,20 +6,24 @@ pub(super) mod templates;
 pub use error::{Error, Result};
 pub use router::router;
 
+use std::collections::HashMap;
+use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 use axum::extract::ws::{Message, WebSocket};
-use std::collections::HashMap;
-use std::num::NonZeroUsize;
-use diesel::PgJsonbExpressionMethods;
 use lru::LruCache;
 use tokio::sync::Mutex;
+use tokio::time::{Duration, timeout};
+use tracing::error;
+use url::Url;
 
 use crate::core::config::{Config, DataDir};
 use crate::core::email::EmailClient;
-use crate::core::model::RecipeDetails;
-use crate::core::repository::cache::{RecipeCache, RecipeCacheKey};
 use crate::core::repository::ModelManager;
+use crate::core::repository::cache::{RecipeCache, RecipeCacheKey};
+use crate::core::scraper::schema::RecipeSchema;
+use crate::core::scraper::{HttpClient, Scraper};
+use crate::core::support::fs::{AppFs, FsSupport};
 use crate::server::templates::data::ViewRecipe;
 
 /// Shared application state for the Axum web server.
@@ -28,19 +32,23 @@ pub struct AppState {
     pub config: Config,
     pub data_dir: DataDir,
     pub email_service: Option<EmailClient>,
+    pub fs_support: Arc<dyn FsSupport + Send + Sync>,
     pub mm: ModelManager,
-    pub recipe_cache: Arc<Mutex<RecipeCache>>,
     pub subscribers: Arc<Mutex<HashMap<i64, Vec<WebSocket>>>>,
+
+    recipe_cache: Arc<Mutex<RecipeCache>>,
+    scraper: Scraper,
 }
 
 impl AppState {
     /// Creates a new instance of `AppState` by initializing the `ModelManager`
     /// with the provided database URL.
-    pub async fn new(config: Config) -> Result<Self> {
-        let email_service = match EmailClient::new() {
-            Ok(email_service) => Some(email_service),
-            Err(_) => None,
-        };
+    pub async fn new(
+        config: Config,
+        http_client: Arc<dyn HttpClient + Send + Sync>,
+        fs_support: Arc<dyn FsSupport + Send + Sync>,
+    ) -> Result<Self> {
+        let email_service = EmailClient::new().ok();
 
         let data_dir = DataDir::new()?;
         data_dir.log();
@@ -49,14 +57,53 @@ impl AppState {
             config: config.clone(),
             data_dir,
             email_service,
+            fs_support,
             mm: ModelManager::new(config.database_url).await?,
-            recipe_cache: Arc::new(Mutex::new(LruCache::new(NonZeroUsize::new(1000).expect("LRU to be initialized")))),
+            recipe_cache: Arc::new(Mutex::new(LruCache::new(
+                NonZeroUsize::new(1000).expect("LRU to be initialized"),
+            ))),
+            scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
             subscribers: Arc::new(Mutex::new(HashMap::new())),
         })
     }
 
+    /// Hides the websocket's frontend notification.
+    pub async fn hide_broadcast(&self, user_id: i64) {
+        self.broadcast_progress("", -1, -1, false, user_id).await;
+    }
+
+    /// Broadcasts a progress notification.
+    pub async fn broadcast_progress(
+        &self,
+        title: &str,
+        current_value: i64,
+        total: i64,
+        is_notification_visible: bool,
+        user_id: i64,
+    ) {
+        let percentage = total
+            .gt(&0)
+            .then_some((current_value as f64 / total as f64) * 100.0)
+            .unwrap_or_default();
+
+        let content = format!(
+            r#"
+            <div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default {}">
+                <div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md">
+                    <p class="font-medium text-center pb-1">{title}</p>
+                    <div id="export-progress"><progress max="100" value="{percentage:.2}"></progress></div>
+                </div>
+            </div>"#,
+            if is_notification_visible { "" } else { "hidden" }
+        ).lines().map(str::trim).collect::<Vec<_>>().join("");
+
+        self.broadcast(user_id, Message::Text(content.into())).await;
+    }
+
     /// Broadcasts a message to all active WebSocket subscribers of a given user.
     pub async fn broadcast(&self, user_id: i64, message: Message) {
+        let send_timeout = Duration::from_secs(10);
+
         if let Some(vec) = self.subscribers.lock().await.get_mut(&user_id) {
             let mut to_remove: Vec<usize> = Vec::new();
             for (idx, ws) in vec.iter_mut().enumerate() {
@@ -64,7 +111,15 @@ impl AppState {
                     to_remove.push(idx);
                 }
 
-                let _ = ws.send(message.clone()).await;
+                match timeout(send_timeout, ws.send(message.clone())).await {
+                    Ok(Ok(())) => {}
+                    Ok(Err(err)) => {
+                        error!("Failed to send broadcast message to user {user_id}: {err}");
+                    }
+                    Err(_) => {
+                        error!("Send broadcast message to user {user_id} timed out");
+                    }
+                }
             }
 
             for &idx in to_remove.iter().rev() {
@@ -84,11 +139,17 @@ impl AppState {
         let mut cache = self.recipe_cache.lock().await;
         cache.put(key, recipe.clone());
     }
-    
+
     /// Removes an entry from the cache.
     pub async fn remove_cached_recipe(&self, key: RecipeCacheKey) {
         let mut cache = self.recipe_cache.lock().await;
         cache.pop(&key);
+    }
+
+    /// Scrapes a recipe from the specified website.
+    pub fn scrape(&self, url: Url) -> Result<RecipeSchema> {
+        let url = url.as_str();
+        Ok(self.scraper.scrape(url)?)
     }
 }
 
@@ -99,7 +160,9 @@ pub mod test_utils {
     use diesel::internal::derives::multiconnection::chrono;
     use diesel::internal::derives::multiconnection::chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use diesel::{Connection, sql_query};
+    use std::sync::Arc;
     use tower_cookies::{Cookie, CookieManagerLayer};
+    use tracing::error;
     use uuid::Uuid;
 
     use crate::core::auth::token::{Token, generate_web_token};
@@ -112,6 +175,9 @@ pub mod test_utils {
     use crate::core::model::{Recipe, RecipeDetails};
     use crate::core::repository::ModelManager;
     use crate::core::repository::pool::make_db_pool;
+    use crate::core::scraper::Scraper;
+    use crate::core::scraper::tests::MockHttpClient;
+    use crate::core::support::fs::MockFs;
     use crate::core::support::token::AUTH_TOKEN;
     use crate::server::AppState;
     use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
@@ -123,6 +189,9 @@ pub mod test_utils {
 
     /// The password of the default user in the test database.
     pub const TEST_USER_PASSWORD: &str = "12345678";
+
+    /// The HTML returned when the websocket notification should be hidden.
+    pub const HIDDEN_WS_NOTIFICATION: &str = r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#;
 
     /// The database URL used for connecting to the database in test environments.
     pub(crate) fn test_database_url() -> String {
@@ -195,6 +264,17 @@ pub mod test_utils {
         }
     }
 
+    /// Creates the AppState for testing.
+    pub async fn create_app_state(config: Config) -> AppState {
+        AppState::new(config, Arc::new(MockHttpClient), Arc::new(MockFs))
+            .await
+            .map_err(|err| {
+                error!("Could not initialise app state: {err}");
+                err
+            })
+            .expect("Failed to initialise app state")
+    }
+
     /// Builds a test server with anonymous access (no user logged in).
     pub async fn build_server_anonymous(app_config: Config) -> Result<TestServer> {
         let routes = prepare_router(app_config).await?;
@@ -214,7 +294,7 @@ pub mod test_utils {
             ..TestServerConfig::default()
         };
 
-        let state = AppState::new(app_config).await?;
+        let state = create_app_state(app_config).await;
 
         let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
@@ -256,7 +336,7 @@ pub mod test_utils {
             ..TestServerConfig::default()
         };
 
-        let state = AppState::new(app_config).await?;
+        let state = create_app_state(app_config).await;
         let user = User::get_user_by_email(&state.mm, auth_email)
             .await?
             .expect("User should be in database");
@@ -306,7 +386,7 @@ pub mod test_utils {
 
     /// Prepares the router for the test server with the given database URL.
     async fn prepare_router(config: Config) -> Result<Router<()>> {
-        let state = AppState::new(config).await?;
+        let state = create_app_state(config).await;
         let app = crate::server::router(state.clone())
             .await?
             .layer(axum::middleware::from_fn_with_state(
@@ -338,38 +418,32 @@ pub mod test_utils {
 
     /// Inserts a test user in the database.
     pub async fn insert_user(config: Config) -> Result<User> {
-        let user = User::new(
-            &AppState::new(config.clone()).await?.mm,
-            UserForCreate {
-                email: TEST_USER_EMAIL.into(),
-                password_clear: TEST_USER_PASSWORD.into(),
-            },
-        )
-        .await?;
-
-        Ok(user)
+        insert_user_helper(config, TEST_USER_EMAIL).await
     }
 
     /// Inserts another test user in the database.
     pub async fn insert_other_user(config: Config, email: &str) -> Result<User> {
+        insert_user_helper(config, email).await
+    }
+
+    async fn insert_user_helper(config: Config, email: &str) -> Result<User> {
         let user = User::new(
-            &AppState::new(config.clone()).await?.mm,
+            &create_app_state(config.clone()).await.mm,
             UserForCreate {
                 email: email.into(),
                 password_clear: TEST_USER_PASSWORD.into(),
             },
         )
         .await?;
-
         Ok(user)
     }
 
     /// Constructs a `RecipeForCreate` instance with all components populated, preparing
     /// it for database insertion.
     pub fn a_complete_recipe_for_create() -> RecipeForCreate {
-        let main_image = Uuid::new_v4();
-        let secondary_image = Uuid::new_v4();
-        let video = Uuid::new_v4();
+        let main_image = Uuid::nil();
+        let secondary_image = Uuid::nil();
+        let video = Uuid::nil();
 
         RecipeForCreate {
             name: "Best Chinese Kale".into(),
@@ -532,6 +606,12 @@ pub mod test_utils {
         }
 
         Ok(())
+    }
+
+    /// Asserts that the websocket server sent the wanted message.
+    pub async fn assert_ws_message(server: &mut TestWebSocket, want: &str) {
+        let _ = server.receive_message().await;
+        server.assert_receive_text_contains(want).await;
     }
 
     /// Asserts that the user cannot access the specified URI.

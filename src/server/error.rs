@@ -52,6 +52,8 @@ pub enum Error {
     #[from]
     Repository(crate::core::repository::Error),
     #[from]
+    Scraper(crate::core::scraper::Error),
+    #[from]
     Token(crate::core::auth::token::Error),
     #[from]
     Var(std::env::VarError),

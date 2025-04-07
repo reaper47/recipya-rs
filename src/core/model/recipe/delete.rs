@@ -104,12 +104,13 @@ mod tests {
 
     mod tests_delete {
         use super::*;
+        use crate::server::test_utils::create_app_state;
 
         #[tokio::test]
         async fn test_delete_recipe_found_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let recipe_id =
                 Recipe::create(&state.mm, user.id, &a_complete_recipe_for_create()).await?;
 
@@ -217,7 +218,7 @@ mod tests {
         async fn test_delete_recipe_not_found_err() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
 
             match Recipe::delete(&state.mm, 1, user.id).await {
                 Ok(_) => panic!("Should not return error"),
@@ -237,6 +238,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         use crate::core::model::user::UserCategory;
+        use crate::server::test_utils::create_app_state;
 
         const A_CATEGORY: &str = "midnight crunchies";
 
@@ -244,7 +246,7 @@ mod tests {
         async fn test_category_not_found_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let mut conn = state.mm.pool.get().await?;
             let categories_before = schema::users_categories::table
                 .load::<UserCategory>(&mut conn)
@@ -263,7 +265,7 @@ mod tests {
         async fn test_category_found_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             Recipe::add_category(&state.mm, A_CATEGORY, user.id).await?;
             let mut a_recipe = a_complete_recipe_for_create();
             a_recipe.category = Some(A_CATEGORY.to_string());

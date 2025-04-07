@@ -11,16 +11,16 @@ pub(super) fn shared_routes() -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
+    use uuid::Uuid;
+
     use crate::core::model::Recipe;
     use crate::core::model::recipe::RecipeForCreate;
     use crate::core::model::share::ShareRecipe;
-    use crate::server::AppState;
     use crate::server::test_utils::{
         TestDb, a_complete_recipe_for_create, assert_html, assert_not_in_html,
-        build_server_anonymous, build_server_logged_in, insert_other_user,
+        build_server_anonymous, build_server_logged_in, create_app_state, insert_other_user,
     };
     use axum_test::TestResponse;
-    use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -43,7 +43,7 @@ mod tests {
     async fn test_shared_logged_in_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
-        let state = AppState::new(config).await?;
+        let state = create_app_state(config).await;
         let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
         let share = ShareRecipe::new(&state.mm, recipe_id, 1, None).await?;
 
@@ -75,7 +75,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let user = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
-        let state = AppState::new(config).await?;
+        let state = create_app_state(config).await;
         let recipe_id = Recipe::create(&state.mm, user.id, &a_complete_recipe_for_create()).await?;
         let share = ShareRecipe::new(&state.mm, recipe_id, user.id, None).await?;
 
@@ -96,7 +96,7 @@ mod tests {
     async fn test_shared_anonymous_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_anonymous(config.clone()).await?;
-        let state = AppState::new(config).await?;
+        let state = create_app_state(config).await;
         let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
         let share = ShareRecipe::new(&state.mm, recipe_id, 1, None).await?;
 

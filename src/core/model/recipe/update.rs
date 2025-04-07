@@ -46,7 +46,8 @@ impl Recipe {
 
         mm.pool
             .get()
-            .await?.transaction::<_, Error, _>(|conn| {
+            .await?
+            .transaction::<_, Error, _>(|conn| {
                 async move {
                     diesel::update(schema::recipes::table)
                         .filter(schema::recipes::id.eq(recipe_id))

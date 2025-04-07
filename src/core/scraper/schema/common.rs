@@ -4,6 +4,7 @@ use serde::{
     Deserialize, Deserializer, de,
     de::{Error, MapAccess, SeqAccess},
 };
+use tracing::warn;
 use url::Url;
 
 use crate::core::scraper::schema::AtType;
@@ -157,7 +158,7 @@ pub enum AudioObjectOrClipOrMusicRecording {
 pub struct AudioObjectType {}
 
 /// A short TV or radio program or a segment/part of a program.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct ClipType {}
 
@@ -219,10 +220,35 @@ impl<'de> Deserialize<'de> for AudioObjectOrClipOrMusicRecording {
 pub struct CommentType {}
 
 /// Enumeration of all possible values related to video.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ClipOrVideoObject {
     Clip(ClipType),
     VideoObject(Box<VideoObjectType>),
+}
+
+impl TryFrom<ClipOrVideoObject> for Url {
+    type Error = String;
+
+    fn try_from(value: ClipOrVideoObject) -> Result<Self, Self::Error> {
+        match value {
+            ClipOrVideoObject::Clip(_clip) => {
+                warn!("Clip objects are not supported yet");
+                Err("Clip objects are not supported yet".to_owned())
+            }
+            ClipOrVideoObject::VideoObject(object) => {
+                if !object.content_url.as_str().trim().is_empty() {
+                    return Ok(object.content_url);
+                }
+
+                if !object.embed_url.as_str().trim().is_empty() {
+                    return Ok(object.embed_url);
+                }
+
+                warn!("Video object has no url: {:?}", object);
+                Err("No url found in video object.".to_owned())
+            }
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for ClipOrVideoObject {
@@ -338,7 +364,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrHowToSectionOrHowToStepOrText {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CreativeWorkOrItemListOrText {
     CreativeWork(Box<CreativeWorkType>),
     ItemList(Vec<HowTo>),
@@ -521,7 +547,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrUrl {
 }
 
 /// The most generic kind of creative work, including books, movies, photographs, software programs, etc.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 pub struct CreativeWorkType {
     #[serde(rename = "@id")]
     pub at_id: Option<Url>,
@@ -608,18 +634,28 @@ impl<'de> Deserialize<'de> for DateOrDateTime {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DefinedTermOrTextOrUrl {
     DefinedTerm(DefinedTermType),
     Text(String),
     Url(Url),
 }
 
+impl From<DefinedTermOrTextOrUrl> for String {
+    fn from(value: DefinedTermOrTextOrUrl) -> Self {
+        match value {
+            DefinedTermOrTextOrUrl::DefinedTerm(term) => "".into(),
+            DefinedTermOrTextOrUrl::Text(text) => text,
+            DefinedTermOrTextOrUrl::Url(url) => url.to_string(),
+        }
+    }
+}
+
 /// A word, name, acronym, phrase, etc. with a formal definition. Often used in the context of
 /// category or subject classification, glossaries or dictionaries, product or creative work types,
 /// etc. Use the name property for the term being defined, use termCode if the term has an
 /// alpha-numeric code allocated, use description to provide the definition of the term.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct DefinedTermType {}
 
@@ -684,14 +720,14 @@ impl<'de> Deserialize<'de> for DefinedTermOrTextOrUrl {
 }
 
 /// Enumeration of values related to measurements..
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DistanceOrQuantitativeValue {
     Distance(DistanceType),
     QuantitativeValue(QuantitativeValueType),
 }
 
 /// Properties that take Distances as values are of the form '<Number> <Length unit of measure>'. E.g., '7 ft'.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct DistanceType {
     pub value: String,
@@ -755,7 +791,7 @@ impl<'de> Deserialize<'de> for DistanceOrQuantitativeValue {
 pub struct HowToSectionType {}
 
 /// Instructions that explain how to achieve a result by performing a sequence of steps.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct HowTo {
     #[serde(rename = "@type")]
@@ -821,14 +857,14 @@ impl<'de> Deserialize<'de> for HowToSupplyOrText {
 }
 
 /// Enumeration of containers to store tools.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HowToToolOrText {
     HowToTool(HowToToolType),
     Text(String),
 }
 
 /// A tool used (but not consumed) when performing instructions for how to achieve a result.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct HowToToolType {}
 
@@ -876,14 +912,35 @@ impl<'de> Deserialize<'de> for HowToToolOrText {
 }
 
 /// Enumeration of containers to store an image.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ImageObjectOrUrl {
     Url(Url),
     ImageObject(Box<ImageObjectType>),
 }
 
+impl TryFrom<ImageObjectOrUrl> for Url {
+    type Error = String;
+
+    fn try_from(value: ImageObjectOrUrl) -> Result<Self, Self::Error> {
+        match value {
+            ImageObjectOrUrl::Url(url) => Ok(url.into()),
+            ImageObjectOrUrl::ImageObject(object) => {
+                if let Some(url) = object.url {
+                    return Ok(url);
+                }
+
+                if let Some(url) = object.content_url {
+                    return Ok(url);
+                }
+
+                Err("No URL in image".into())
+            }
+        }
+    }
+}
+
 /// An image file.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ImageObjectType {
     #[serde(rename = "@type", default = "set_image_object")]
@@ -1128,7 +1185,7 @@ impl<'de> Deserialize<'de> for ListItemOrTextOrThing {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum LanguageOrText {
     Language(LanguageType),
     Text(String),
@@ -1138,7 +1195,7 @@ pub enum LanguageOrText {
 /// expressed in BCP 47 can be used via the alternateName property. The Language type previously
 /// also covered programming languages such as Scheme and Lisp, which are now best represented
 /// using ComputerLanguage.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct LanguageType {}
 
@@ -1185,7 +1242,7 @@ impl<'de> Deserialize<'de> for LanguageOrText {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum MediaObjectOrText {
     MediaObject(MediaObjectType),
     Text(String),
@@ -1195,7 +1252,7 @@ pub enum MediaObjectOrText {
 /// downloadable dataset i.e. DataDownload. Note that a creative work may have many media objects
 /// associated with it on the same web page. For example, a page about a single song (MusicRecording)
 /// may have a music video (VideoObject), and a high and low bandwidth audio stream (2 AudioObject's).
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct MediaObjectType {}
 
@@ -1508,7 +1565,7 @@ impl<'de> Deserialize<'de> for PropertyValueOrTextOrUrl {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum QuantitativeValueOrText {
     QuantitativeValue(QuantitativeValueType),
     Text(String),
@@ -1520,8 +1577,24 @@ impl Default for QuantitativeValueOrText {
     }
 }
 
+impl TryFrom<QuantitativeValueOrText> for i16 {
+    type Error = String;
+
+    fn try_from(value: QuantitativeValueOrText) -> Result<Self, Self::Error> {
+        match value {
+            QuantitativeValueOrText::QuantitativeValue(qv) => {
+                i16::try_from(qv.value).map_err(|_| format!("Value {} out of i16 range", qv.value))
+            }
+            QuantitativeValueOrText::Text(s) => s
+                .trim()
+                .parse::<i16>()
+                .map_err(|err| format!("Failed to parse string: {err}")),
+        }
+    }
+}
+
 /// A point value or interval for product characteristics and other purposes.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct QuantitativeValueType {
     pub value: i64,
 }
@@ -1668,14 +1741,24 @@ pub struct ReviewRating {
     pub rating_value: String,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TextOrTextObject {
     Text(String),
     TextObject(TextObjectType),
 }
 
+impl From<TextOrTextObject> for String {
+    fn from(value: TextOrTextObject) -> Self {
+        match value {
+            TextOrTextObject::Text(s) if !s.trim().is_empty() => s,
+            TextOrTextObject::TextObject(obj) => String::new(),
+            _ => String::new(),
+        }
+    }
+}
+
 /// A text file. The text can be unformatted or contain markup, html, etc.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct TextObjectType {}
 
@@ -1817,7 +1900,7 @@ impl<'de> Deserialize<'de> for Video {
 }
 
 /// A video file.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct VideoObjectType {
     #[serde(rename = "@type")]

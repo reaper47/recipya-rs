@@ -186,18 +186,20 @@ mod tests {
     use super::*;
 
     use crate::server::AppState;
-    use crate::server::test_utils::{TestDb, a_complete_recipe_for_create, insert_user};
+    use crate::server::test_utils::{
+        TestDb, a_complete_recipe_for_create, create_app_state, insert_user,
+    };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_add_category {
         use super::*;
-        use crate::server::test_utils::build_server_logged_in;
+        use crate::server::test_utils::{build_server_logged_in, create_app_state};
 
         #[tokio::test]
         async fn test_create_new_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
             let category = "fish";
 
@@ -210,7 +212,7 @@ mod tests {
         #[tokio::test]
         async fn test_create_new_duplicate_err() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
             let category = "fish";
             Recipe::add_category(&state.mm, category, 1).await?;
@@ -385,7 +387,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let recipe = a_complete_recipe_for_create();
 
@@ -400,7 +402,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_duplicates_err() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let mut recipe = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
@@ -417,7 +419,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_duplicate_name_err() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let recipe = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
@@ -434,7 +436,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_bare_minimum_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let recipe = a_bare_minimum_recipe();
 
@@ -449,7 +451,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_some_fields_are_lowercase_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
-        let state = AppState::new(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let mut recipe = a_bare_minimum_recipe();
         recipe.keywords = vec!["CHICKEN".into(), "MEAT".into()];

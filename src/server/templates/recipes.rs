@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use maud::{Markup, PreEscaped, html};
 use url::Url;
 
 use crate::core::config::DataDir;
 use crate::core::model::RecipeDetails;
 use crate::core::model::recipe::{Category, Keyword, ToolRecipe};
-use crate::core::support::fs::is_file_exists;
+use crate::core::support::fs::FsSupport;
 use crate::server::templates::data::{Data, ViewRecipe};
 use crate::server::templates::helpers::cut_string;
 use crate::server::templates::icons::{
@@ -798,6 +800,7 @@ fn render_add_page() -> Markup {
 
 /// Renders the edit recipe page.
 pub fn edit_recipe(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
     mut data: Data,
     data_dir: &DataDir,
     categories: Vec<Category>,
@@ -820,14 +823,15 @@ pub fn edit_recipe(
             }
             (render_recipe_button(true, false))
             (render_nav(&path, true))
-            (render_edit_recipe(view, &data_dir, categories, keywords))
+            (render_edit_recipe(fs_support, view, &data_dir, categories, keywords))
         } @else {
-            (layouts::main(&page_title, &path, &data, render_edit_recipe(view, data_dir, categories, keywords)))
+            (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords)))
         }
     })
 }
 
 fn render_edit_recipe(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
     view: ViewRecipe,
     data_dir: &DataDir,
     categories: Vec<Category>,
@@ -923,7 +927,7 @@ fn render_edit_recipe(
                                             }
                                         } @else {
                                             @for (idx, &image) in view.recipe_details.all_images().iter().enumerate() {
-                                                @let image_exists = is_file_exists(image, &data_dir.images);
+                                                @let image_exists = fs_support.is_file_exists(image, &data_dir.images);
                                                 @let image_url = format!("/data/images/{image}.webp");
 
                                                 label id=(format!("media-{}", idx+1)) class={
@@ -993,7 +997,7 @@ fn render_edit_recipe(
                                                 }
                                             }
                                             @for (idx, video) in view.recipe_details.videos.iter().enumerate() {
-                                                @let video_exists = is_file_exists(video.video, &data_dir.videos);
+                                                @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos);
                                                 @let video_url = format!("/data/videos/{}.webp", video.video);
                                                 @let num_images = view.recipe_details.num_images();
 
@@ -1352,20 +1356,34 @@ fn render_edit_recipe(
 }
 
 /// Renders the index page of recipes.
-pub fn index(path: &str, data: Data, data_dir: DataDir) -> Markup {
+pub fn index(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    path: &str,
+    data: Data,
+    data_dir: DataDir,
+) -> Markup {
     if data.is_hx_request {
         html! {
             title hx-swap-oob="true" { "Recipes | Recipya" }
             (render_recipe_button(true, true))
             (render_nav(path, true))
-            (render_index(&data, &data_dir))
+            (render_index(fs_support, &data, &data_dir))
         }
     } else {
-        layouts::main("Recipes", path, &data, render_index(&data, &data_dir))
+        layouts::main(
+            "Recipes",
+            path,
+            &data,
+            render_index(fs_support, &data, &data_dir),
+        )
     }
 }
 
-fn render_index(data: &Data, data_dir: &DataDir) -> Markup {
+fn render_index(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    data: &Data,
+    data_dir: &DataDir,
+) -> Markup {
     if data.recipes.is_empty() {
         html! {
             div class="grid place-content-center text-sm h-full text-center md:text-base" {
@@ -1408,7 +1426,7 @@ fn render_index(data: &Data, data_dir: &DataDir) -> Markup {
                 }
                 (search_help())
                 div #list-recipes class="min-h-[79vh]" {
-                    (list_recipes(&data, &data_dir))
+                    (list_recipes(fs_support, &data, &data_dir))
                 }
                 @if let Some(p) = &data.pagination {
                     (pagination(p))
@@ -1418,7 +1436,11 @@ fn render_index(data: &Data, data_dir: &DataDir) -> Markup {
 }
 
 /// Renders a list of recipes.
-pub fn list_recipes(data: &Data, data_dir: &DataDir) -> Markup {
+pub fn list_recipes(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    data: &Data,
+    data_dir: &DataDir,
+) -> Markup {
     html! {
         @if data.is_hx_request {
             input #search-recipes .w-full type="search" hx-swap-oob="true" name="q"
@@ -1450,7 +1472,7 @@ pub fn list_recipes(data: &Data, data_dir: &DataDir) -> Markup {
                         img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full"
                             src=(match view.recipe_details.all_images().first() {
                                 Some(&first_image) => {
-                                    if !view.recipe_details.all_images().is_empty() && is_file_exists(first_image, &data_dir.images) {
+                                    if !view.recipe_details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images) {
                                         format!("/data/images/thumbnails/{}.webp", first_image)
                                     } else {
                                         "/data/images/Placeholders/placeholder.recipe.webp".into()
@@ -1549,7 +1571,12 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
 }
 
 /// Renders the details of a recipe.
-pub fn view_recipe(path: &str, data_dir: DataDir, data: Data) -> Result<Markup> {
+pub fn view_recipe(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    path: &str,
+    data_dir: DataDir,
+    data: Data,
+) -> Result<Markup> {
     let view = data
         .recipes
         .first()
@@ -1561,19 +1588,23 @@ pub fn view_recipe(path: &str, data_dir: DataDir, data: Data) -> Result<Markup> 
             title hx-swap-oob="true" {
                  (view.recipe_details.recipe.name) " | Recipya"
             }
-            (view_recipe_helper(data_dir, &data)?)
+            (view_recipe_helper(fs_support, data_dir, &data)?)
         } @else {
             (layouts::main(
                 &view.recipe_details.recipe.name,
                 path,
                 &data,
-                view_recipe_helper(data_dir, &data)?
+                view_recipe_helper(fs_support, data_dir, &data)?
             ))
         }
     })
 }
 
-fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
+fn view_recipe_helper(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    data_dir: DataDir,
+    data: &Data,
+) -> Result<Markup> {
     let view = data
         .recipes
         .first()
@@ -1606,7 +1637,7 @@ fn view_recipe_helper(data_dir: DataDir, data: &Data) -> Result<Markup> {
                     div class="card-body" style="padding: 0" {
                         (view_recipe_header(recipe_id, &data, recipe_details))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
-                            (view_recipe_media(&view.recipe_details, &data_dir))
+                            (view_recipe_media(fs_support, &view.recipe_details, &data_dir))
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
                                 div class="grid grid-flow-col col-span-6 md:row-span-1 md:border-y md:border-gray-700 print:row-span-1 print:grid-cols-2 print:border-b-black print:border" {
                                     div class="col-span-2 grid place-items-center md:col-span-1 print:col-span-1 print:float-left print:ml-2 print:border-r print:border-black" {
@@ -1939,7 +1970,11 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
     }
 }
 
-fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Markup {
+fn view_recipe_media(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    recipe_details: &RecipeDetails,
+    data_dir: &DataDir,
+) -> Markup {
     html! {
         div class="w-[95vw] md:w-full text-center border-b border-gray-700 md:col-span-3 md:border-r md:border-b-0 flex items-center justify-center print:hidden" {
             @match recipe_details.num_media()  {
@@ -1961,7 +1996,7 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                             iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                         } @else if let Some(url) = &video.content_url {
                             video controls preload="metadata" src=(url) {}
-                        } @else if is_file_exists(video.video, &data_dir.videos) {
+                        } @else if fs_support.is_file_exists(video.video, &data_dir.videos) {
                             video controls preload="metadata" src=(format!("/data/videos/{}.webm",video.video)) type="video/webm" {}
                         } @else {
                             p {
@@ -1976,7 +2011,7 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                     div class="carousel w-full" {
                         @for (idx, &img) in recipe_details.all_images().iter().enumerate() {
                             div id=(format!("media-{idx}")) class="carousel-item relative w-full" {
-                                @if is_file_exists(img, &data_dir.images) {
+                                @if fs_support.is_file_exists(img, &data_dir.images) {
                                      img style="object-fit: cover"
                                     alt="Image of the recipe"
                                     class="w-full max-h-80 md:max-h-[34rem]"
@@ -2011,7 +2046,7 @@ fn view_recipe_media(recipe_details: &RecipeDetails, data_dir: &DataDir) -> Mark
                                     iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                                 } @else if let Some(url) = &v.content_url {
                                     video controls preload="metadata" src=(url) {}
-                                } @else if is_file_exists(v.video, &data_dir.videos) {
+                                } @else if fs_support.is_file_exists(v.video, &data_dir.videos) {
                                     video controls preload="metadata" src=(format!("/data/videos/{}.webm", v.video)) type="video/webm" {}
                                 } @else {
                                     p class="grid place-self-center" {

@@ -14,6 +14,8 @@ use crate::core::config::{Config, DataDir};
 use crate::core::jobs::clean_media;
 use crate::core::model::user::{User, UserForCreate};
 use crate::core::repository::ModelManager;
+use crate::core::scraper::AppHttpClient;
+use crate::core::support::fs::{AppFs, FsSupport};
 use crate::error::{Error, Result};
 use crate::server::router::middleware::mw_auth::mw_ctx_resolver;
 use crate::server::{AppState, router};
@@ -22,9 +24,13 @@ use crate::server::{AppState, router};
 pub async fn server() -> Result<()> {
     let config = Config::load_from_env().unwrap();
 
-    let state = AppState::new(config.clone())
-        .await
-        .map_err(|err| Error::Server(err.to_string()))?;
+    let state = AppState::new(
+        config.clone(),
+        Arc::new(AppHttpClient::new()),
+        Arc::new(AppFs),
+    )
+    .await
+    .map_err(|err| Error::Server(err.to_string()))?;
 
     if config.is_autologin {
         if let Err(err) = init_autologin_user(&state.mm).await {
@@ -32,7 +38,12 @@ pub async fn server() -> Result<()> {
         }
     }
 
-    start_cron_jobs(Arc::new(state.clone().mm), Arc::new(state.clone().data_dir)).await?;
+    start_cron_jobs(
+        Arc::new(state.clone().mm),
+        Arc::new(state.clone().data_dir),
+        Arc::clone(&state.fs_support),
+    )
+    .await?;
 
     let router = router(state.clone())
         .await?
@@ -90,7 +101,11 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
     }
 }
 
-async fn start_cron_jobs(mm: Arc<ModelManager>, data_dir: Arc<DataDir>) -> Result<()> {
+async fn start_cron_jobs(
+    mm: Arc<ModelManager>,
+    data_dir: Arc<DataDir>,
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+) -> Result<()> {
     let sched = JobScheduler::new().await?;
 
     info!("Added CleanMedia cron job to clean dangling media resources");
@@ -100,9 +115,10 @@ async fn start_cron_jobs(mm: Arc<ModelManager>, data_dir: Arc<DataDir>) -> Resul
 
             let mm = Arc::clone(&mm);
             let data_dir = Arc::clone(&data_dir);
+            let fs_support = Arc::clone(&fs_support);
 
             Box::pin(async move {
-                if let Err(err) = clean_media(mm, data_dir).await {
+                if let Err(err) = clean_media(mm, data_dir, fs_support).await {
                     error!("CleanMedia: Failed to run job: {err}");
                 }
             })

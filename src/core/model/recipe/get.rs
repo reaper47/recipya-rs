@@ -278,12 +278,14 @@ mod tests {
         use super::*;
 
         use crate::core::model::user::User;
-        use crate::server::test_utils::{a_complete_recipe_for_create, build_server_anonymous};
+        use crate::server::test_utils::{
+            a_complete_recipe_for_create, build_server_anonymous, create_app_state,
+        };
 
         #[tokio::test]
         async fn test_count_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let user = User::get_user_by_id(&state.mm, 1)
                 .await?
@@ -314,12 +316,14 @@ mod tests {
     mod tests_get_page {
         use super::*;
 
-        use crate::server::test_utils::{a_complete_recipe_for_create, build_server_anonymous};
+        use crate::server::test_utils::{
+            a_complete_recipe_for_create, build_server_anonymous, create_app_state,
+        };
 
         #[tokio::test]
         async fn test_get_page_no_recipes_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
 
             let recipes = Recipe::get_page(
                 &state.mm,
@@ -339,7 +343,7 @@ mod tests {
         #[tokio::test]
         async fn test_get_page_first_page_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let state = AppState::new(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let mut expected = Vec::with_capacity(15);
             for i in 0..15 {
