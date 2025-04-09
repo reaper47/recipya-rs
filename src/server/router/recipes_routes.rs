@@ -5,9 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::server::AppState;
 use crate::server::router::handlers::recipes::{
-    add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipes_handler,
-    add_website_post_handler, delete_recipe_categories_handler, delete_recipe_handler,
-    duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
+    add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipe_import_handler,
+    add_recipes_handler, add_website_post_handler, delete_recipe_categories_handler,
+    delete_recipe_handler, duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
     post_recipe_categories_handler, recipes_handler, share_recipe_post_handler,
     supported_applications_handler, supported_websites_handler, view_recipe_handler,
 };
@@ -48,6 +48,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
         )
         .route("/{:recipe_id}/share", post(share_recipe_post_handler))
         .route("/add", get(add_recipes_handler))
+        .route("/add/import", post(add_recipe_import_handler))
         .route(
             "/add/manual",
             get(add_manual_recipe_handler)
@@ -224,7 +225,6 @@ mod tests {
         use axum::http::HeaderValue;
         use axum_test::TestResponse;
         use diesel::internal::derives::multiconnection::chrono::Duration;
-        use diesel_async::RunQueryDsl;
         use uuid::Uuid;
 
         use crate::core::model::recipe::{
@@ -828,7 +828,6 @@ mod tests {
         use super::*;
 
         use crate::core::model::Recipe;
-        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, create_app_state,
         };
@@ -897,7 +896,6 @@ mod tests {
 
         use crate::core::model::Recipe;
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
-        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, assert_ws_message,
             build_server_ws, create_app_state,
@@ -1216,6 +1214,17 @@ mod tests {
         }
     }
 
+    mod tests_recipes_add_import {
+        use super::*;
+
+        const BASE_URI: &str = "/recipes/add/import";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+    }
+
     mod tests_recipe_add_manual {
         use super::*;
 
@@ -1229,7 +1238,6 @@ mod tests {
             ToolForCreate, ToolRecipe, VideoForCreate,
         };
         use crate::core::model::{Recipe, RecipeDetails};
-        use crate::server::AppState;
         use crate::server::test_utils::{assert_must_be_logged_in, create_app_state};
 
         const BASE_URI: &str = "/recipes/add/manual";
@@ -1632,7 +1640,6 @@ mod tests {
     mod tests_recipe_categories {
         use super::*;
         use crate::core::model::Recipe;
-        use crate::server::AppState;
         use crate::server::router::recipes_routes::RecipeCategoryForm;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_ws_message, build_server_ws, create_app_state,
@@ -1897,7 +1904,7 @@ mod tests {
             let res = server.post(BASE_URI).form(&form).await;
 
             res.assert_status(StatusCode::ACCEPTED);
-            
+
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;

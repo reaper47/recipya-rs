@@ -328,7 +328,7 @@ impl Nutrition {
 }
 
 /// Represents the nutritional information provided when creating a new recipe.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct NutritionForCreate {
     pub calories_kcal: Option<i16>,
     pub total_carbohydrates: Option<i16>,
@@ -445,7 +445,7 @@ pub struct Times {
 }
 
 /// Represents the preparation and cooking times for a recipe during creation.
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TimesForCreate {
     pub prep_seconds: i32,
     pub cook_seconds: i32,
@@ -503,6 +503,7 @@ pub struct Tool {
 }
 
 /// Represents a tool being created in the recipe management system.
+#[derive(Debug, PartialEq)]
 pub struct ToolForCreate {
     pub name: String,
     pub quantity: i16,

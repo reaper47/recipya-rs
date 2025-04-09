@@ -442,6 +442,13 @@ pub async fn add_recipes_handler(
     )
 }
 
+/// Handles the import recipes endpoint.
+pub async fn add_recipe_import_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+}
+
 /// Handles rendering the form to add a recipe manually.
 pub async fn add_manual_recipe_handler(
     ctx: CtxW,
