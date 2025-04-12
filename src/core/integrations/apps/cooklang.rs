@@ -1,16 +1,11 @@
 use std::io::Read;
 
 use cooklang::{Content, CooklangParser, Item, ScalableValue};
-use nom::branch::alt;
-use nom::bytes::tag;
-use nom::character::complete::{char, space0};
-use nom::combinator::opt;
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser, combinator::map_res};
 use tracing::{error, warn};
 
 use crate::core::integrations::error::Result;
 use crate::core::model::recipe::{Sections, TimesForCreate, ToolForCreate};
+use crate::core::support::time::parse_duration;
 
 /// A wrapper around the Cooklang parser that provides a consistent interface for parsing
 /// and executing Cooklang code.
@@ -297,41 +292,16 @@ pub struct CooklangRecipe {
     tools: Vec<ToolForCreate>,
 }
 
-fn parse_duration(input: &str) -> IResult<&str, (u32, u32)> {
-    let (input, hours) = opt(parse_hour).parse(input)?;
-    let (input, minutes) = opt(parse_minute).parse(input)?;
-    Ok((input, (hours.unwrap_or(0), minutes.unwrap_or(0))))
-}
-
-fn parse_hour(input: &str) -> IResult<&str, u32> {
-    let short = terminated(parse_number, char('h'));
-    let long = terminated(parse_number, delimited(space0, tag("hour"), space0));
-    let plural = terminated(parse_number, delimited(space0, tag("hours"), space0));
-    alt((short, long, plural)).parse(input)
-}
-
-fn parse_minute(input: &str) -> IResult<&str, u32> {
-    let short = terminated(parse_number, char('m'));
-    let long = terminated(parse_number, delimited(space0, tag("minute"), space0));
-    let plural = terminated(parse_number, delimited(space0, tag("minutes"), space0));
-    let spaced_short = preceded(space0, parse_number);
-    alt((short, long, plural, spaced_short)).parse(input)
-}
-
-fn parse_number(input: &str) -> IResult<&str, u32> {
-    let mut parse = map_res(nom::character::complete::digit1, |s: &str| s.parse::<u32>());
-    parse.parse(input)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use std::io::Cursor;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     #[test]
-    fn test_complete_recipe() -> Result<()> {
+    fn test_complete_recipe_ok() -> Result<()> {
         let file = r##">> title: Spaghetti Carbonara
 >> description: This is the best recipe!
 >> servings: 1

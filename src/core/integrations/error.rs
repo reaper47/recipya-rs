@@ -17,11 +17,16 @@ pub enum RequiredField {
 #[derive(Debug, From)]
 pub enum Error {
     MissingRequiredField(RequiredField),
+    Parse,
 
     #[from]
     Cooklang(cooklang::error::SourceReport),
     #[from]
     Io(std::io::Error),
+    #[from]
+    NomStr(nom::Err<nom::error::Error<&'static str>>),
+    #[from]
+    RecipeMD(recipemd::Error),
     #[from]
     Serde(serde_json::Error),
 }
