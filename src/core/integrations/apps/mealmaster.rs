@@ -307,7 +307,7 @@ fn servings(input: &str) -> IResult<&str, i16> {
             many1(eol),
             opt((space0, eol)),
         ),
-        |(_, _, _, digits, _, _, _)| digits.parse::<i16>(),
+        |(_, _, _, digits, _, _, _)| digits.parse(),
     )
     .parse(input)
 }
@@ -438,15 +438,15 @@ fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
 fn instruction(input: &str) -> IResult<&str, &str> {
     terminated(
         verify(take_while_m_n(0, 255, is_vchar_or_space), |line: &str| {
-            !line.trim_start().starts_with("MMMMM")
-                && !line.trim_start().starts_with("-----")
+            !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
         }),
         eol,
-    ).parse(input)
+    )
+    .parse(input)
 }
 
 fn is_vchar_or_space(c: char) -> bool {
-    !c.is_control()  && (c != '\n' && c != '\r')
+    !c.is_control() && (c != '\n' && c != '\r')
 }
 
 fn section(input: &str) -> IResult<&str, &str> {
@@ -741,7 +741,7 @@ Categories: Salads
 -----"##
         }
 
-        pub fn recipe_v7_01_file<'a>()->&'a str{
+        pub fn recipe_v7_01_file<'a>() -> &'a str {
             r##"MMMMM----- Recipe via Meal-Master (tm) v7.01
 
      Title: Old Style Enchiladas
@@ -1188,7 +1188,7 @@ MMMMM
             }
         }
 
-        pub fn recipe_v6_20()->MealMasterRecipe{
+        pub fn recipe_v6_20() -> MealMasterRecipe {
             MealMasterRecipe{
                 title: "Magic Pan Orange Almond Salad".into(),
                 category: Some("Salads".into()),
@@ -1225,7 +1225,7 @@ MMMMM
             }
         }
 
-        pub fn recipe_v7_01()->MealMasterRecipe{
+        pub fn recipe_v7_01() -> MealMasterRecipe {
             MealMasterRecipe {
                 title: "Old Style Enchiladas".into(),
                 category: Some("Chili".into()),

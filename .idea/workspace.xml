@@ -15,8 +15,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/accuchef.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,6 +99,7 @@
     "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
     "Cargo.Test core::config::tests::test_is_no_signups_err.executor": "Run",
     "Cargo.Test core::config::tests::test_is_no_signups_ok.executor": "Run",
+    "Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::cooklang::tests::test_complete_recipe.executor": "Run",
     "Cargo.Test core::integrations::apps::cooklang::tests::test_recipe_1.executor": "Run",
     "Cargo.Test core::integrations::apps::cooklang::tests::test_recipe_format1.executor": "Run",
@@ -389,7 +392,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test mealmaster::tests">
+  <component name="RunManager" selected="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -399,6 +402,23 @@
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="true" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::integrations::apps::accuchef::tests::test_recipe1_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::accuchef::tests::test_recipe1_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
@@ -427,23 +447,6 @@
     </configuration>
     <configuration name="Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v7_01_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mealmaster::tests::tests_recipes::test_v7_01_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v8_00_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mealmaster::tests::tests_recipes::test_v8_00_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -495,19 +498,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
       <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_20_ok" />
       <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v7_01_ok" />
-      <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v8_00_ok" />
       <item itemvalue="Cargo.Test mealmaster::tests" />
       <item itemvalue="Cargo.Test tests_recipes" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
         <item itemvalue="Cargo.Test mealmaster::tests" />
         <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_20_ok" />
         <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v7_01_ok" />
         <item itemvalue="Cargo.Test tests_recipes" />
-        <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v8_00_ok" />
       </list>
     </recent_temporary>
   </component>
@@ -560,7 +563,17 @@
           <line>106</line>
           <option name="timeStamp" value="188" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/core/integrations/apps/accuchef.rs</url>
+          <line>83</line>
+          <option name="timeStamp" value="190" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="CargoCommandRunConfiguration">
+        <watch expression="input" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>
