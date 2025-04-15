@@ -11,6 +11,7 @@
 //!     - Meal-Master v8.02
 //!     - Meal-Master v8.05
 //!     - Meal-Master v8.06
+//!     - COOKmate
 //!     - Now You're Cooking! v4.72 (Meal-Master Export Format)
 
 use std::io::Read;
@@ -18,7 +19,7 @@ use std::io::Read;
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until, take_while_m_n, take_while1};
 use nom::bytes::take_while;
-use nom::character::complete::{char, space0, space1};
+use nom::character::complete::{char, line_ending, space0, space1};
 use nom::combinator::{map, map_res, opt, recognize, verify};
 use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
@@ -59,10 +60,107 @@ struct RecipeComponents<'a> {
     header: (&'a str, &'a str),
     title: &'a str,
     categories: Vec<&'a str>,
+    tags: Option<Vec<&'a str>>,
     servings: i16,
     ingredients: Vec<Ingredient<'a>>,
     instructions: Vec<Instruction<'a>>,
-    footer: &'a str,
+}
+
+impl From<RecipeComponents<'_>> for MealMasterRecipe {
+    fn from(r: RecipeComponents<'_>) -> Self {
+        let items = r.categories.split_first();
+
+        Self {
+            title: r.title.to_string(),
+            category: items.map(|(a, _b)| a.to_string()),
+            keywords: items
+                .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect())
+                .unwrap_or_default(),
+            yield_: r.servings,
+            ingredients: r
+                .ingredients
+                .into_iter()
+                .fold(Sections::new(), |mut acc, ing| {
+                    match ing {
+                        Ingredient::Line(name) => {
+                            let name = name.trim().to_string();
+
+                            if let Some((_, lines)) = acc.last_mut() {
+                                lines.push(name);
+                            } else {
+                                acc.push(("".into(), vec![name]));
+                            }
+                        }
+                        Ingredient::Section(section) => {
+                            acc.push((section.to_string(), Vec::new()));
+                        }
+                    }
+                    acc
+                })
+                .into_iter()
+                .map(|(section, lines)| {
+                    let merged = (0..lines.len())
+                        .filter_map(|i| {
+                            let line = &lines[i];
+
+                            if line.ends_with(';') && i + 2 < lines.len() {
+                                Some((i, format!("{} {}", line, lines[i + 2])))
+                            } else if i > 1 && lines[i - 2].ends_with(';') {
+                                None
+                            } else {
+                                Some((i, line.clone()))
+                            }
+                        })
+                        .map(|(_, line)| line)
+                        .collect();
+
+                    (section, merged)
+                })
+                .collect(),
+            instructions: r
+                .instructions
+                .into_iter()
+                .fold(Sections::new(), |mut acc, ins| {
+                    match ins {
+                        Instruction::Section(section) => {
+                            acc.push((section.into(), Vec::new()));
+                        }
+                        Instruction::Line(line) => {
+                            let line = line.trim();
+
+                            if !line.is_empty() {
+                                if acc.is_empty() {
+                                    acc.push(("".into(), Vec::new()));
+                                }
+
+                                if let Some((_, lines)) = acc.last_mut() {
+                                    if let Some(last_line) = lines.last_mut() {
+                                        let merged = format!("{last_line} {line}").trim().into();
+                                        *last_line = merged;
+                                    } else {
+                                        lines.push(line.into());
+                                    }
+                                }
+                            } else if let Some((_, lines)) = acc.last_mut() {
+                                lines.push(line.into());
+                            }
+                        }
+                    }
+                    acc
+                })
+                .into_iter()
+                .map(|(section, mut lines)| {
+                    if let Some(l) = lines.last() {
+                        if l.is_empty() {
+                            lines.pop();
+                        }
+                    }
+                    (section, lines)
+                })
+                .collect(),
+            source: format!("{} {}", r.header.0, r.header.1.trim_end_matches('-').trim()),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -83,101 +181,7 @@ fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
             preceded(take_while_m_n(1, 10, is_vchar_or_space), eol),
             |_| None,
         ),
-        map(recipe, |r| {
-            let items = r.categories.split_first();
-
-            Some(MealMasterRecipe {
-                title: r.title.to_string(),
-                category: items.map(|(a, _b)| a.to_string()),
-                keywords: items
-                    .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect())
-                    .unwrap_or_default(),
-                yield_: r.servings,
-                ingredients: r
-                    .ingredients
-                    .into_iter()
-                    .fold(Sections::new(), |mut acc, ing| {
-                        match ing {
-                            Ingredient::Line(name) => {
-                                let name = name.trim().to_string();
-
-                                if let Some((_, lines)) = acc.last_mut() {
-                                    lines.push(name);
-                                } else {
-                                    acc.push(("".into(), vec![name]));
-                                }
-                            }
-                            Ingredient::Section(section) => {
-                                acc.push((section.to_string(), Vec::new()));
-                            }
-                        }
-                        acc
-                    })
-                    .into_iter()
-                    .map(|(section, lines)| {
-                        let merged = (0..lines.len())
-                            .filter_map(|i| {
-                                let line = &lines[i];
-
-                                if line.ends_with(';') && i + 2 < lines.len() {
-                                    Some((i, format!("{} {}", line, lines[i + 2])))
-                                } else if i > 1 && lines[i - 2].ends_with(';') {
-                                    None
-                                } else {
-                                    Some((i, line.clone()))
-                                }
-                            })
-                            .map(|(_, line)| line)
-                            .collect();
-
-                        (section, merged)
-                    })
-                    .collect(),
-                instructions: r
-                    .instructions
-                    .into_iter()
-                    .fold(Sections::new(), |mut acc, ins| {
-                        match ins {
-                            Instruction::Section(section) => {
-                                acc.push((section.into(), Vec::new()));
-                            }
-                            Instruction::Line(line) => {
-                                let line = line.trim();
-
-                                if !line.is_empty() {
-                                    if acc.is_empty() {
-                                        acc.push(("".into(), Vec::new()));
-                                    }
-
-                                    if let Some((_, lines)) = acc.last_mut() {
-                                        if let Some(last_line) = lines.last_mut() {
-                                            let merged =
-                                                format!("{last_line} {line}").trim().into();
-                                            *last_line = merged;
-                                        } else {
-                                            lines.push(line.into());
-                                        }
-                                    }
-                                } else if let Some((_, lines)) = acc.last_mut() {
-                                    lines.push(line.into());
-                                }
-                            }
-                        }
-                        acc
-                    })
-                    .into_iter()
-                    .map(|(section, mut lines)| {
-                        if let Some(l) = lines.last() {
-                            if l.is_empty() {
-                                lines.pop();
-                            }
-                        }
-                        (section, lines)
-                    })
-                    .collect(),
-                source: format!("{} {}", r.header.0, r.header.1.trim_end_matches('-').trim()),
-            })
-        }),
+        map(recipe, |r| Some(r.into())),
     )))
     .parse(input)
     {
@@ -197,6 +201,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
             header,
             title,
             categories,
+            opt(tags),
             servings,
             ingredients,
             instructions,
@@ -206,19 +211,20 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
             (header_tag, header_rest),
             title,
             categories,
+            tags,
             servings,
             ingredients,
             instructions,
-            footer,
+            _,
         )| {
             RecipeComponents {
                 header: (header_tag, header_rest),
                 title,
                 categories,
+                tags,
                 servings,
                 ingredients,
                 instructions,
-                footer,
             }
         },
     )
@@ -228,12 +234,17 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
 fn header(input: &str) -> IResult<&str, (&str, &str)> {
     let meal_master = "Meal-Master";
     let now_youre_cooking = "Now You're Cooking!";
+    let cookmate = "Cookmate";
 
     map(
         (
             separator,
-            alt((take_until(now_youre_cooking), take_until(meal_master))),
-            alt((tag(now_youre_cooking), tag(meal_master))),
+            alt((
+                take_until(now_youre_cooking),
+                take_until(cookmate),
+                take_until(meal_master),
+            )),
+            alt((tag(now_youre_cooking), tag(cookmate), tag(meal_master))),
             take_while(is_vchar_or_space),
             many1(eol),
         ),
@@ -270,6 +281,19 @@ fn categories(input: &str) -> IResult<&str, Vec<&str>> {
             (opt(char(' ')), opt(tag("       ")), tag("Categories: ")),
             terminated(categlist_spaces, many1(eol)),
         ),
+    ))
+    .parse(input)
+}
+
+fn tags(input: &str) -> IResult<&str, Vec<&str>> {
+    alt((
+        preceded(
+            (tag("Tags:"), alt((space0, line_ending))),
+            terminated(categlist, many1(eol)),
+        ),
+        map((tag("Tags:"), take_until("\n"), many1(line_ending)), |_| {
+            Vec::new()
+        }),
     ))
     .parse(input)
 }
@@ -629,6 +653,17 @@ mod tests {
         }
 
         #[test]
+        fn test_cookmate_ok() -> Result<()> {
+            let file = recipe_cookmate_file();
+            let buf = Cursor::new(file);
+
+            let got = MealMasterRecipe::parse(buf)?;
+
+            pretty_assertions::assert_eq!(got, vec![recipe_cookmate()]);
+            Ok(())
+        }
+
+        #[test]
         fn test_multiple_recipes_ok() -> Result<()> {
             let mut file = String::new();
             file.push_str(recipe_v8_01_file());
@@ -663,7 +698,7 @@ Categories: Chocolate Cakes Fruits Desserts
     1/2 c  Walnuts; Chopped
 
   Combine dates, baking soda, and boiling water in a small bowl.  Cool to
-  room terperature.  Sift together the flour, cocoa, and salt; set aside.
+  room temperature.  Sift together the flour, cocoa, and salt; set aside.
   Cream the shortening and sugar together in a mixing bowl until light and
   fluffy, using an electric mixer at medium speed.  Add eggs, one at a time,
   beating well after each addition.  Blend in date mixture.  Then stir in
@@ -1103,6 +1138,61 @@ MMMMM
 MMMMM
  "##
         }
+
+        pub fn recipe_cookmate_file<'a>() -> &'a str {
+            r##"----- Recipe via Cookmate [Meal-Master Export Format] -----
+
+      Title: Baklava with Cooky Filling
+Categories: Greek, Desserts
+Tags:
+      Yield: 36
+
+           Karen Mintzias
+      2    c Sweet butter 1 ts
+
+      1    c Confectioners' sugar 4 c
+           -Flour
+      1    Egg yolk
+      4    c Granulated sugar 1 c
+           -Honey
+      4    c Water Lemon juice to
+           -taste
+      1 lb Toasted blanched almonds *
+
+    1/2    c Zwieback crumbs 1 lb
+
+      4 tb Granulated sugar 1 1/2 c
+
+
+
+*Note: Either toasted blanched almonds, or walnut meats, or half of each,
+(finely chopped) may be used.
+Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat
+in the confectioners' sugar and continue to beat until mixture is fluffy.
+Add egg yolk and vanilla or almond extract and blend well. Work in about 4
+cups flour to make a medium-soft dough. Set aside and make syrup.
+Syrup: In a saucepan combine the granulated sugar and water. Bring to a
+boil and boil for 15 minutes or until syrup is slightly thick. Add honey
+and again bring to the boiling point. Add lemon juice to taste, and cool.
+Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T
+granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly
+with butter and sprinkle with nut mixture. Place 2 buttered sheets of
+phyllo on top and sprinkle with nut mixture. Shape a portion of cooky
+filling into a 1/2-inch-thick roll and place the roll along one edge of the
+pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices
+in a buttered cake pan. (Continue in this method until all phyllo pastry
+and/or cooky filling is used.) Brush tops of each slice with butter and
+bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot
+baklava slices, one at a time, in cold syrup, allowing each piece to remain
+in the syrup for a few minutes.
+From: "The Art of Greek Cookery" by The Women of St. Paul's Greek Orthodox
+Church (Hempstead, NY)
+Typed for you by Karen Mintzias
+
+
+-----
+"##
+        }
     }
 
     mod results {
@@ -1140,7 +1230,7 @@ MMMMM
                     (
                         "".into(),
                         vec![
-                            "Combine dates, baking soda, and boiling water in a small bowl.  Cool to room terperature.  Sift together the flour, cocoa, and salt; set aside. Cream the shortening and sugar together in a mixing bowl until light and fluffy, using an electric mixer at medium speed.  Add eggs, one at a time, beating well after each addition.  Blend in date mixture.  Then stir in dry ingredients.  Pour into a greased 13 x 9 x 2-inch baking pan.  Bake in preheated 350 degree F. oven for 35 minutes or until cake tests done. Cool in pan on rack.  Cut into squares and serve with a scoop of vanilla ice cream on top.".into(),
+                            "Combine dates, baking soda, and boiling water in a small bowl.  Cool to room temperature.  Sift together the flour, cocoa, and salt; set aside. Cream the shortening and sugar together in a mixing bowl until light and fluffy, using an electric mixer at medium speed.  Add eggs, one at a time, beating well after each addition.  Blend in date mixture.  Then stir in dry ingredients.  Pour into a greased 13 x 9 x 2-inch baking pan.  Bake in preheated 350 degree F. oven for 35 minutes or until cake tests done. Cool in pan on rack.  Cut into squares and serve with a scoop of vanilla ice cream on top.".into(),
                         ],
                     )
                 ]),
@@ -1650,6 +1740,38 @@ SOURCE: Gourmet, December 1992
                     ]
                 )]),
                 source: "Now You're Cooking! v4.72 [Meal-Master Export Format]".to_string(),
+            }
+        }
+
+        pub fn recipe_cookmate() -> MealMasterRecipe {
+            MealMasterRecipe {
+                title: "Baklava with Cooky Filling".into(),
+                category: Some("Greek".into()),
+                keywords: vec!["Desserts".into()],
+                yield_: 36,
+                ingredients: Sections::from([
+                    ("".into(), vec![
+                        "Karen Mintzias".into(),
+                        "2    c Sweet butter 1 ts".into(),
+                        "1    c Confectioners' sugar 4 c".into(),
+                        "-Flour".into(),
+                        "1    Egg yolk".into(),
+                        "4    c Granulated sugar 1 c".into(),
+                        "-Honey".into(),
+                        "4    c Water Lemon juice to".into(),
+                        "-taste".into(),
+                        "1 lb Toasted blanched almonds *".into(),
+                        "1/2    c Zwieback crumbs 1 lb".into(),
+                        "4 tb Granulated sugar 1 1/2 c".into(),
+                    ])
+                ]),
+                instructions: Sections::from([
+                    ("".into(), vec![
+                        "*Note: Either toasted blanched almonds, or walnut meats, or half of each, (finely chopped) may be used. Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat in the confectioners' sugar and continue to beat until mixture is fluffy. Add egg yolk and vanilla or almond extract and blend well. Work in about 4 cups flour to make a medium-soft dough. Set aside and make syrup. Syrup: In a saucepan combine the granulated sugar and water. Bring to a boil and boil for 15 minutes or until syrup is slightly thick. Add honey and again bring to the boiling point. Add lemon juice to taste, and cool. Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly with butter and sprinkle with nut mixture. Place 2 buttered sheets of phyllo on top and sprinkle with nut mixture. Shape a portion of cooky filling into a 1/2-inch-thick roll and place the roll along one edge of the pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices in a buttered cake pan. (Continue in this method until all phyllo pastry and/or cooky filling is used.) Brush tops of each slice with butter and bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot baklava slices, one at a time, in cold syrup, allowing each piece to remain in the syrup for a few minutes. From: \"The Art of Greek Cookery\" by The Women of St. Paul's Greek Orthodox Church (Hempstead, NY) Typed for you by Karen Mintzias".into(),
+                        "".into(),
+                    ])
+                ]),
+                source: "Cookmate [Meal-Master Export Format]".into(),
             }
         }
     }

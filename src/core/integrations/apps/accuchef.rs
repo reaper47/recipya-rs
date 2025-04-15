@@ -3,9 +3,8 @@ use std::io::Read;
 use humantime::parse_duration;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::bytes::take_till;
 use nom::character::char;
-use nom::character::complete::{digit1, space0};
+use nom::character::complete::{digit1, not_line_ending, space0};
 use nom::combinator::{map, opt, recognize};
 use nom::multi::{many0, many1};
 use nom::sequence::{delimited, preceded, terminated};
@@ -59,9 +58,9 @@ impl AccuChefRecipe {
     }
 }
 
-fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
-    let (_res, recipes) = match many0(map(recipe, |r| {
-        Some(AccuChefRecipe {
+impl From<RecipeComponents<'_>> for AccuChefRecipe {
+    fn from(r: RecipeComponents) -> Self {
+        Self {
             title: r.title.into(),
             category: r.category.map(String::from),
             keywords: vec![],
@@ -99,13 +98,15 @@ fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
                 r.instructions.into_iter().map(String::from).collect(),
             )]),
             source: r.header.into(),
-        })
-    }))
-    .parse(input)
-    {
+        }
+    }
+}
+
+fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
+    let (_res, recipes) = match many0(map(recipe, |r| Some(AccuChefRecipe::from(r)))).parse(input) {
         Ok((i, recipes)) => (i, recipes),
         Err(err) => {
-            error!("MealMaster parsing error: {err}");
+            error!("AccuChef parsing error: {err}");
             return Err(Error::Parse);
         }
     };
@@ -142,18 +143,18 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
 
 fn header(input: &str) -> IResult<&str, &str> {
     terminated(
-        delimited(separator, tag("AccuChef Import File"), take_till_eol),
+        delimited(separator, tag("AccuChef Import File"), not_line_ending),
         many1(eol),
     )
     .parse(input)
 }
 
 fn title(input: &str) -> IResult<&str, &str> {
-    terminated(preceded(char('A'), take_till_eol), eol).parse(input)
+    terminated(preceded(char('A'), not_line_ending), eol).parse(input)
 }
 
 fn category(input: &str) -> IResult<&str, Option<&str>> {
-    opt(terminated(preceded(char('B'), take_till_eol), eol)).parse(input)
+    opt(terminated(preceded(char('B'), not_line_ending), eol)).parse(input)
 }
 
 fn servings(input: &str) -> IResult<&str, Option<&str>> {
@@ -166,7 +167,7 @@ fn servings(input: &str) -> IResult<&str, Option<&str>> {
 fn prep_time(input: &str) -> IResult<&str, Option<&str>> {
     opt(preceded(
         (char('P'), space0, char(':')),
-        terminated(take_till_eol, eol),
+        terminated(not_line_ending, eol),
     ))
     .parse(input)
 }
@@ -178,9 +179,9 @@ fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
 fn ingredient(input: &str) -> IResult<&str, Ingredient> {
     map(
         (
-            preceded(char('H'), take_till_eol),
+            preceded(char('H'), not_line_ending),
             eol,
-            preceded(char('I'), take_till_eol),
+            preceded(char('I'), not_line_ending),
             eol,
         ),
         |(quantity, _, name, _)| Ingredient {
@@ -200,7 +201,7 @@ fn instructions(input: &str) -> IResult<&str, Vec<&str>> {
 }
 
 fn instruction(input: &str) -> IResult<&str, &str> {
-    preceded(char('J'), terminated(take_till_eol, eol)).parse(input)
+    preceded(char('J'), terminated(not_line_ending, eol)).parse(input)
 }
 
 fn footer(input: &str) -> IResult<&str, &str> {
@@ -209,10 +210,6 @@ fn footer(input: &str) -> IResult<&str, &str> {
 
 fn separator(input: &str) -> IResult<&str, &str> {
     recognize(tag("*****")).parse(input)
-}
-
-fn take_till_eol(input: &str) -> IResult<&str, &str> {
-    take_till(|c: char| c == '\n' || c == '\r').parse(input)
 }
 
 fn eol(input: &str) -> IResult<&str, &str> {
