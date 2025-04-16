@@ -65,13 +65,10 @@ impl From<RecipeComponents<'_>> for ChefTapRecipe {
 }
 
 fn parse_cheftap_recipe(input: &str) -> Result<ChefTapRecipe> {
-    match map(recipe, ChefTapRecipe::from).parse(input) {
-        Ok((_, r)) => Ok(r),
-        Err(err) => {
-            error!("MealMaster parsing error: {err}");
-            Err(Error::Parse)
-        }
-    }
+    map(recipe, ChefTapRecipe::from)
+        .parse(input)
+        .map(|(_, r)| r)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

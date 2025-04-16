@@ -83,13 +83,10 @@ impl SaffronRecipe {
 }
 
 fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
-    match map(recipe, SaffronRecipe::from).parse(input) {
-        Ok((_, r)) => Ok(r),
-        Err(err) => {
-            error!("Saffron parsing error: {err}");
-            Err(Error::Parse)
-        }
-    }
+    map(recipe, SaffronRecipe::from)
+        .parse(input)
+        .map(|(_, r)| r)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

@@ -17,7 +17,7 @@ pub enum RequiredField {
 #[derive(Debug, From)]
 pub enum Error {
     MissingRequiredField(RequiredField),
-    Parse,
+    Parse(String),
 
     #[from]
     Cooklang(cooklang::error::SourceReport),

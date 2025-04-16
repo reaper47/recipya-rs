@@ -42,17 +42,15 @@ struct List {
 }
 
 impl CookbookXML {
-    /// Parses a COOKmate XML recipes files.
+    /// Parses a COOKmate XML recipe file.
     pub fn parse_xml<R>(r: R) -> Result<CookbookXML>
     where
         R: Read,
     {
-        let cookbook: CookbookXML = serde_xml_rs::from_reader(r).map_err(|err| {
+        serde_xml_rs::from_reader(r).map_err(|err| {
             error!("Failed to read COOKmate XML cookbook: {err}");
-            Error::Parse
-        })?;
-
-        Ok(cookbook)
+            Error::Parse(err.to_string())
+        })
     }
 }
 

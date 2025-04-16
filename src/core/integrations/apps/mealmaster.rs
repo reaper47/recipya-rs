@@ -176,7 +176,7 @@ enum Ingredient<'a> {
 }
 
 fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
-    let (_res, recipes) = match many0(alt((
+    many0(alt((
         map(
             preceded(take_while_m_n(1, 10, is_vchar_or_space), eol),
             |_| None,
@@ -184,15 +184,8 @@ fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
         map(recipe, |r| Some(r.into())),
     )))
     .parse(input)
-    {
-        Ok((i, recipes)) => (i, recipes),
-        Err(err) => {
-            error!("MealMaster parsing error: {err}");
-            return Err(Error::Parse);
-        }
-    };
-
-    Ok(recipes.into_iter().flatten().collect())
+    .map(|(_, recipes)| recipes.into_iter().flatten().collect())
+    .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

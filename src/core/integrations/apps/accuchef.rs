@@ -103,15 +103,10 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
 }
 
 fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
-    let (_res, recipes) = match many0(map(recipe, |r| Some(AccuChefRecipe::from(r)))).parse(input) {
-        Ok((i, recipes)) => (i, recipes),
-        Err(err) => {
-            error!("AccuChef parsing error: {err}");
-            return Err(Error::Parse);
-        }
-    };
-
-    Ok(recipes.into_iter().flatten().collect())
+    many0(map(recipe, |r| Some(AccuChefRecipe::from(r))))
+        .parse(input)
+        .map(|(_, recipes)| recipes.into_iter().flatten().collect())
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
