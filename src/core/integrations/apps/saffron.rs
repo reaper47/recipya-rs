@@ -7,7 +7,6 @@ use nom::combinator::{eof, map, map_opt, opt};
 use nom::multi::many1;
 use nom::sequence::{preceded, terminated};
 use nom::{IResult, Parser};
-use tracing::error;
 use url::Url;
 
 use crate::core::integrations::error::{Error, Result};
@@ -76,9 +75,7 @@ impl SaffronRecipe {
     {
         let mut content = String::new();
         r.read_to_string(&mut content)?;
-
-        let recipe = parse_saffron_recipe(&content)?;
-        Ok(recipe)
+        Ok(parse_saffron_recipe(&content)?)
     }
 }
 

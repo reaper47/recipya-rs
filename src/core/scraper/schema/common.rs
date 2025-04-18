@@ -217,7 +217,12 @@ impl<'de> Deserialize<'de> for AudioObjectOrClipOrMusicRecording {
 /// via the text property, and its topic via about, properties shared with all CreativeWorks.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct CommentType {}
+pub struct CommentType {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    pub name: String,
+    pub text: String,
+}
 
 /// Enumeration of all possible values related to video.
 #[derive(Clone, Debug, PartialEq)]
@@ -504,7 +509,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrUrl {
     where
         D: Deserializer<'de>,
     {
-        use crate::core::scraper::schema::common::CreativeWorkOrUrl::*;
+        use super::CreativeWorkOrUrl::*;
 
         struct Visitor;
 
@@ -1028,7 +1033,7 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                 }
 
                 let v = match vec.pop() {
-                    None => return Err(Error::custom("sequence is empty")),
+                    None => return Ok(ImageObject(Box::default())),
                     Some(v) => v,
                 };
 

@@ -24,7 +24,6 @@ use nom::combinator::{map, map_res, opt, recognize, verify};
 use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
-use tracing::error;
 
 use crate::core::integrations::error::{Error, Result};
 use crate::core::model::recipe::Sections;

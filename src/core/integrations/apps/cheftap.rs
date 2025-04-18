@@ -8,7 +8,6 @@ use nom::character::complete::{digit1, line_ending, not_line_ending, space0};
 use nom::combinator::{map, map_res, opt};
 use nom::multi::{many_till, many1};
 use nom::sequence::{preceded, terminated};
-use tracing::error;
 
 use crate::core::integrations::error::{Error, Result};
 use crate::core::model::recipe::Sections;

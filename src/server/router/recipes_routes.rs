@@ -1934,7 +1934,7 @@ mod tests {
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 2/3</p><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 3/3</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 1. Skipped: 2","status":"alert-info","title":"Operation Successful"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 0. Skipped: 3","status":"alert-info","title":"Operation Successful"}}"#).await;
             tokio::time::sleep(Duration::from_millis(50)).await;
             let got_logs = fetch_logs(config.clone()).await?;
             pretty_assertions::assert_eq!(
@@ -1942,28 +1942,28 @@ mod tests {
                 vec![ReportLog {
                     id: 1,
                     report_id: 1,
-                    title: "http://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs".to_string(),
+                    title: "http://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs".to_owned(),
                     is_success: false,
                     is_warning: false,
                     is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_string(),
+                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
                 }, ReportLog {
                     id: 2,
                     report_id: 1,
-                    title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies"
-                        .to_string(),
+                    title: "https://www.acouplecooks.com/chicken-meatballs-baked"
+                        .to_owned(),
                     is_success: false,
                     is_warning: false,
                     is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_string(),
+                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
                 }, ReportLog {
                     id: 3,
                     report_id: 1,
-                    title: "https://www.acouplecooks.com/chicken-meatballs-baked".to_string(),
-                    is_success: true,
+                    title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies".to_owned(),
+                    is_success: false,
                     is_warning: false,
-                    is_error: false,
-                    error_reason: "".to_string(),
+                    is_error: true,
+                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
                 },  ]
             );
             Ok(())

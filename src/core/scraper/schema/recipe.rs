@@ -1,6 +1,7 @@
+use std::fmt::Formatter;
+
 use reqwest::Url;
 use serde::{Deserialize, Deserializer, de};
-use std::fmt::Formatter;
 use tracing::{error, warn};
 
 use crate::core::scraper::schema::common::*;
@@ -65,7 +66,7 @@ pub struct RecipeSchema {
     pub citation: Option<CreativeWorkOrText>,
 
     /// Comments, typically from users.
-    pub comment: Option<CommentType>,
+    pub comment: Option<Vec<CommentType>>,
 
     /// The number of comments this CreativeWork (e.g. Article, Question or Answer) has received.
     /// This is most applicable to works published in Web sites with commenting system; additional
@@ -136,8 +137,12 @@ pub struct RecipeSchema {
     #[serde(default, deserialize_with = "deserialize_bool")]
     pub is_accessible_for_free: bool,
 
+    /// A resource from which this work is derived or from which it is a modification or adaptation.
+    /// Supersedes isBasedOnUrl.
+    pub is_based_on: Option<CreativeWorkOrText>,
+
     /// Indicates an item or CreativeWork that this item, or CreativeWork (in some sense), is part of.
-    // Inverse property: hasPart
+    /// Inverse property: hasPart
     pub is_part_of: Option<CreativeWorkOrUrl>,
 
     /// Keywords or tags used to describe some item. Multiple textual entries in a keywords list
@@ -170,7 +175,7 @@ pub struct RecipeSchema {
 
     /// The length of time it takes to prepare the items to be used in instructions or a
     /// direction, in ISO 8601 duration format.
-    #[serde(alias = "PrepTime")]
+    #[serde(alias = "PrepTime", deserialize_with = "deserialize_iso8601_duration")]
     pub prep_time: Option<iso8601::Duration>,
 
     /// The publisher of the creative work.
@@ -224,6 +229,7 @@ pub struct RecipeSchema {
 
     /// The total time required to perform instructions or a direction (including time to prepare
     /// the supplies), in ISO 8601 duration format.
+    #[serde(deserialize_with = "deserialize_iso8601_duration")]
     pub total_time: Option<iso8601::Duration>,
 
     /// The quantity that results by performing instructions. For example, a paper airplane,
@@ -488,5 +494,26 @@ impl<'de> Deserialize<'de> for RecipeCuisine {
         }
 
         deserializer.deserialize_any(Visitor)
+    }
+}
+
+fn deserialize_iso8601_duration<'de, D>(
+    deserializer: D,
+) -> Result<Option<iso8601::Duration>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::Error;
+    use serde_json::Value;
+
+    let value: Value = Deserialize::deserialize(deserializer)?;
+
+    match value {
+        Value::Null => Ok(None),
+        Value::String(ref s) if s.trim().is_empty() => Ok(None),
+        Value::String(ref s) => iso8601::duration(s).map(Some).map_err(D::Error::custom),
+        other => Err(D::Error::custom(format!(
+            "Expected a string or null for ISO 8601 duration, got: {other}"
+        ))),
     }
 }
