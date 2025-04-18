@@ -10,11 +10,11 @@ use nom::{IResult, Parser};
 use url::Url;
 
 use crate::core::integrations::error::{Error, Result};
+use crate::core::integrations::IntegrationRecipe;
+use crate::core::model::recipe::{Sections, TimesForCreate};
 use crate::core::support::time::parse_duration;
 
-/// Represents the parsed components of a Saffron recipe.
-#[derive(Debug, PartialEq)]
-pub struct SaffronRecipe {
+struct SaffronRecipe {
     title: String,
     description: Option<String>,
     source: Option<String>,
@@ -30,7 +30,6 @@ pub struct SaffronRecipe {
     instructions: Vec<String>,
 }
 
-#[derive(Debug)]
 struct RecipeComponents<'a> {
     title: &'a str,
     description: Option<&'a str>,
@@ -67,16 +66,40 @@ impl From<RecipeComponents<'_>> for SaffronRecipe {
     }
 }
 
-impl SaffronRecipe {
-    /// Parses a Saffron recipe from the file's content.
-    pub fn parse<R>(mut r: R) -> Result<Self>
-    where
-        R: Read,
-    {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
-        Ok(parse_saffron_recipe(&content)?)
+impl From<SaffronRecipe> for IntegrationRecipe {
+    fn from(r: SaffronRecipe) -> Self {
+        Self {
+            cookbook: r.cookbook,
+            description: r.description,
+            images: vec![r.image.unwrap_or_default()].into_iter().filter(|s| !s.is_empty()).collect(),
+            ingredients: Sections::from([("".into(), r.ingredients)]),
+            instructions: Sections::from([("".into(), r.instructions)]),
+            source: r.original_url.map(|u| u.to_string()).or(r.source),
+            times: if r.prep_seconds.is_some() || r.cook_seconds.is_some() {
+                Some(TimesForCreate {
+                    prep_seconds: r.prep_seconds.unwrap_or_default(),
+                    cook_seconds: r.cook_seconds.unwrap_or_default(),
+                })
+            } else {
+                None
+            },
+            title: r.title,
+            yield_: r.servings,
+            ..Default::default()
+        }
     }
+}
+
+/// Parses a Saffron recipe from the file's content.
+pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let mut content = String::new();
+    r.read_to_string(&mut content)?;
+
+    let recipe = parse_saffron_recipe(&content)?;
+    Ok(vec![IntegrationRecipe::from(recipe)])
 }
 
 fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
@@ -222,39 +245,42 @@ mod tests {
         let file = recipe1_file();
         let buf = Cursor::new(file);
 
-        let got = SaffronRecipe::parse(buf)?;
+        let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, SaffronRecipe {
+        pretty_assertions::assert_eq!(got, vec![IntegrationRecipe {
             title: "Apple Puff Pancake".into(),
             description: Some("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into()),
-            source: Some("KMKIDMAN5".into()),
-            original_url: Some(Url::parse("https://www.allrecipes.com/recipe/50936/apple-puff-pancake/").expect("to be valid")),
-            servings: Some(9),
-            prep_seconds: Some(900),
-            cook_seconds: Some(1800),
-            total_seconds: Some(2700),
+            source: Some("https://www.allrecipes.com/recipe/50936/apple-puff-pancake/".into()),
+            yield_: Some(9),
+            times: Some(TimesForCreate {
+                prep_seconds: 900,
+                cook_seconds: 1800,
+            }),
             cookbook: Some("First Cookbook".into()),
-            section: Some("First Section".into()),
-            image: None,
-            ingredients: vec![
-                "6 eggs".into(),
-                "1.5 cups milk".into(),
-                "1 teaspoon vanilla extract".into(),
-                "1 cup all-purpose flour".into(),
-                "3 tablespoons sugar".into(),
-                "0.5 teaspoon salt".into(),
-                "0.25 teaspoon ground cinnamon".into(),
-                "2 tablespoons butter".into(),
-                "2 apples - peeled, cored and sliced".into(),
-                "3 tablespoons brown sugar".into(),
-            ],
-            instructions: vec![
-                "Preheat the oven to 425 degrees F (220 degrees C).".into(),
-                "Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.".into(),
-                "Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.".into(),
-                "Bake in the preheated oven until puffed and lightly browned, about 20 minutes.".into(),
-            ],
-        });
+            ingredients: Sections::from([
+                ("".into(), vec![
+                    "6 eggs".into(),
+                    "1.5 cups milk".into(),
+                    "1 teaspoon vanilla extract".into(),
+                    "1 cup all-purpose flour".into(),
+                    "3 tablespoons sugar".into(),
+                    "0.5 teaspoon salt".into(),
+                    "0.25 teaspoon ground cinnamon".into(),
+                    "2 tablespoons butter".into(),
+                    "2 apples - peeled, cored and sliced".into(),
+                    "3 tablespoons brown sugar".into(),
+                ])
+            ]),
+            instructions: Sections::from([
+                ("".into(), vec![
+                    "Preheat the oven to 425 degrees F (220 degrees C).".into(),
+                    "Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.".into(),
+                    "Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.".into(),
+                    "Bake in the preheated oven until puffed and lightly browned, about 20 minutes.".into(),
+                ])
+            ]),
+            ..Default::default()
+        }]);
         Ok(())
     }
 
@@ -263,25 +289,27 @@ mod tests {
         let file = recipe2_file();
         let buf = Cursor::new(file);
 
-        let got = SaffronRecipe::parse(buf)?;
+        let got = parse(buf)?;
 
         pretty_assertions::assert_eq!(
             got,
-            SaffronRecipe {
+            vec![IntegrationRecipe {
                 title: "Yay".into(),
                 description: None,
                 source: Some("Mom".into()),
-                original_url: None,
-                servings: None,
-                prep_seconds: Some(4500),
-                cook_seconds: None,
-                total_seconds: None,
+                times: Some(TimesForCreate {
+                    prep_seconds: 4500,
+                    cook_seconds: 0,
+                }),
                 cookbook: Some("First Cookbook".into()),
-                section: Some("First Section".into()),
-                image: None,
-                ingredients: vec!["1 kg chicken".into(), "1 egg".into(),],
-                instructions: vec!["Mix stuff".into(), "Eat a melon".into(), "Profit".into(),],
-            }
+                ingredients: Sections::from([
+                    ("".into(), vec!["1 kg chicken".into(), "1 egg".into()])
+                ]),
+                instructions: Sections::from([
+                    ("".into(), vec!["Mix stuff".into(), "Eat a melon".into(), "Profit".into()])
+                ]),
+                ..Default::default()           
+            }]
         );
         Ok(())
     }

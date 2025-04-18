@@ -1,18 +1,21 @@
 use std::io::Read;
 
+use humantime::parse_duration;
 use serde::Deserialize;
-use tracing::error;
+use tracing::{error, warn};
 
+use crate::core::integrations::IntegrationRecipe;
 use crate::core::integrations::error::{Error, Result};
+use crate::core::model::recipe::{Sections, TimesForCreate};
+use crate::core::support::strings::extract_number;
 
-/// Represents the parsed recipes from an XML COOKmate file.
-#[derive(Debug, Deserialize, PartialEq)]
-pub struct CookbookXML {
+#[derive(Deserialize)]
+struct CookbookXML {
     #[serde(rename = "recipe")]
     recipes: Vec<Recipe>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Deserialize)]
 struct Recipe {
     title: String,
     preptime: String,
@@ -35,23 +38,87 @@ struct Recipe {
     categories: Vec<String>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Deserialize)]
 struct List {
     #[serde(rename = "li")]
     items: Vec<String>,
 }
 
-impl CookbookXML {
-    /// Parses a COOKmate XML recipe file.
-    pub fn parse_xml<R>(r: R) -> Result<CookbookXML>
-    where
-        R: Read,
-    {
-        serde_xml_rs::from_reader(r).map_err(|err| {
-            error!("Failed to read COOKmate XML cookbook: {err}");
-            Error::Parse(err.to_string())
-        })
+impl From<Recipe> for IntegrationRecipe {
+    fn from(r: Recipe) -> Self {
+        let categories = r.categories.split_first();
+
+        Self {
+            category: categories.map(|(a, _b)| a.to_string()),
+            comments: vec![r.comments].into_iter().filter(|s| s != "").collect(),
+            description: Some(r.description).filter(|s| !s.is_empty()),
+            images: vec![r.imageurl].into_iter().filter(|s| s != "").collect(),
+            ingredients: Sections::from([("".into(), r.ingredient.items)]),
+            instructions: Sections::from([("".into(), r.recipetext.items)]),
+            keywords: categories
+                .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect())
+                .unwrap_or_default(),
+            nutrition: if !r.nutrition.is_empty() {
+                warn!("CookMate XML has nutrients: '{}'", r.nutrition);
+                None
+            } else {
+                None
+            },
+            rating: Some(r.rating as u8).filter(|v| *v != 0),
+            source: if !r.url.is_empty() {
+                Some(r.url)
+            } else if !r.source.is_empty() {
+                Some(r.source)
+            } else {
+                None
+            },
+            times: if r.preptime.is_empty() && r.cooktime.is_empty() {
+                None
+            } else {
+                Some(TimesForCreate {
+                    prep_seconds: match parse_duration(&r.preptime) {
+                        Ok(d) => d.as_secs() as i32,
+                        Err(err) => {
+                            error!(
+                                "Failed to parse prep time '{}' of a CookMate XML recipe: {err}",
+                                r.preptime
+                            );
+                            15 * 60
+                        }
+                    },
+                    cook_seconds: match parse_duration(&r.cooktime) {
+                        Ok(d) => d.as_secs() as i32,
+                        Err(err) => {
+                            error!(
+                                "Failed to parse cook time '{}' of an AccuChef recipe: {err}",
+                                r.cooktime
+                            );
+                            15 * 60
+                        }
+                    },
+                })
+            },
+            title: r.title,
+            tools: vec![],
+            yield_: extract_number(r.quantity).ok(),
+            videos: vec![r.video].into_iter().filter(|s| s != "").collect(),
+            ..Default::default()
+        }
     }
+}
+
+/// Parses a COOKmate XML recipe file.
+pub fn parse<R>(r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let root: CookbookXML =
+        serde_xml_rs::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
+    Ok(root
+        .recipes
+        .into_iter()
+        .map(IntegrationRecipe::from)
+        .collect())
 }
 
 #[cfg(test)]
@@ -73,7 +140,7 @@ mod tests {
             let file = xml_file();
             let buf = Cursor::new(file);
 
-            let got = CookbookXML::parse_xml(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, xml_recipes());
             Ok(())
@@ -219,161 +286,126 @@ mod tests {
     mod results {
         use super::*;
 
-        pub fn xml_recipes() -> CookbookXML {
-            CookbookXML {
-                    recipes: vec![
-                            Recipe{
-                                title: "Asparagus Soup (Zuppa Di Asparagi)".into(),
-                                preptime: "".into(),
-                                cooktime: "".into(),
-                                totaltime: "".into(),
-                                description: "".into(),
-                                ingredient: List {
-                                        items: Vec::from([
-                                                "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
-                                            "2 Cloves garlic, minced 4 Eggs".into(),
-                                            "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
-                                            "-and cut (1 inch pieces) -pecorino cheese".into(),
-                                            "Salt and pepper 6 sl Italian bread, toasted".into(),
-                                        ]),
-                                    },
-                                recipetext: List {
-                                        items: vec![
-                                                "Heat the oil and garlic in a soup pot until the garlic is golden. Add the".into(),
-                                            "asparagus and cook until they begin to color. Season with salt and pepper.".into(),
-                                            "Add the broth and bring to a boil; reduce the heat and simmer for 15".into(),
-                                            "minutes, or until the asparagus is tender.".into(),
-                                            "".into(),
-                                            "Beat the eggs and cheese together. When the asparagus is tender, reduce".into(),
-                                            "the heat so the soup is no longer simmering. Very slowly ladle some of the".into(),
-                                            "hot soup into the beaten eggs, stirring continuously. After adding about 2".into(),
-                                            "cups of the hot soup to the eggs, reverse the process and gradually stir".into(),
-                                            "the eggs mixture into the soup pot. The soup must not boil or the eggs".into(),
-                                            "will scramble. Heat until thickened.".into(),
-                                            "".into(),
-                                            "Put one slice of toasted bread into each soup dish. Ladle the hot soup on".into(),
-                                            "top and pass additional grated cheese.".into(),
-                                            "".into(),
-                                            "Serves 6.".into(),
-                                            "".into(),
-                                            "NOTE: To trim asparagus, hold the tip in one hand and the base of the".into(),
-                                            "stalk in the other. Bend gently. The asparagus will snap, leaving the".into(),
-                                            "tender part with the tip.".into(),
-                                            "".into(),
-                                            "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]".into(),
-                                            "".into(),
-                                            "Posted by Fred Peters.".into(),
-                                        ],
-                                    },
-                                url: "MMF".into(),
-                                imagepath: "".into(),
-                                imageurl: "".into(),
-                                quantity: "6 servings".into(),
-                                comments: "".into(),
-                                nutrition: "".into(),
-                                lang: "".into(),
-                                rating: 0,
-                                source: "".into(),
-                                video: "".into(),
-                                categories: vec![
-                                        "Italian".into(),
-                                    "Soups/stews".into(),
-                                    "Vegetables".into(),
-                                ],
-                            },
-                        Recipe {
-                            title: "Aubergine and Sesame Pate".into(),
-                            preptime: "".into(),
-                            cooktime: "".into(),
-                            totaltime: "".into(),
-                            description: "".into(),
-                            ingredient: List {
-                                items: vec![
-                                    "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
-                                    "1 Crushed garlic cloves 1 tb Olive oil".into(),
-                                    "1 1/2 tb Tahini Seasoning".into(),
-                                    "Toasted Sesame seeds Flatleaf Parsley".into(),
-                                    "Cayenne Pepper".into(),
-                                    "25-30 minutes until tender. Cool slightly , then peel and".into(),
-                                ],
-                            },
-                            recipetext: List {
-                                items: vec![
-                                    "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for".into(),
-                                    "puree the flesh in a blender or processor.".into(),
-                                    "".into(),
-                                    "Add the garlic, tahini and lemon juice and process until mixed.".into(),
-                                    "With the motor running, drizzle in the oil to make a smooth paste.".into(),
-                                    "Season to taste.".into(),
-                                    "".into(),
-                                    "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
-                                ],
-                            },
-                            url: "MMF".into(),
-                            imagepath: "".into(),
-                            imageurl: "".into(),
-                            quantity: "2 servings".into(),
-                            comments: "".into(),
-                            nutrition: "".into(),
-                            lang: "".into(),
-                            rating: 0,
-                            source: "".into(),
-                            video: "".into(),
-                            categories: vec![
-                                "Vegetarian".into(),
-                                "Appetizers".into(),
-                                "Greek".into(),
-                            ],
-                        },
-                        Recipe {
-                            title: "Aubergines a la Toulousaine (Eggplant A La Toulouse)".into(),
-                            preptime: "".into(),
-                            cooktime: "".into(),
-                            totaltime: "".into(),
-                            description: "".into(),
-                            ingredient: List {
-                                items: vec![
-                                    "1 md Eggplant 2 tb Snipped parsley".into(),
-                                    "1/4 c Salad oil 1 cl Galic, minced".into(),
-                                    "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
-                                    "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
-                                ],
-                            },
-                            recipetext: List {
-                                items: vec![
-                                    "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper".into(),
-                                    "towels; sprinkle each generously with salt. let stand for 30 minutes; then".into(),
-                                    "blot dry with paper towels. Start heating oven to 400 deg. F. Saute".into(),
-                                    "eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut".into(),
-                                    "tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2".into(),
-                                    "inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in".into(),
-                                    "all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper.".into(),
-                                    "Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and".into(),
-                                    "cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread".into(),
-                                    "cubes are golden and eggplant is tender.".into(),
-                                    "".into(),
-                                    "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book".into(),
-                                    "Publishers Chicago 1, Illinois 1958".into(),
-                                ],
-                            },
-                            url: "MMF".into(),
-                            imagepath: "".into(),
-                            imageurl: "".into(),
-                            quantity: "4 servings".into(),
-                            comments: "".into(),
-                            nutrition: "".into(),
-                            lang: "".into(),
-                            rating: 0,
-                            source: "".into(),
-                            video: "".into(),
-                            categories: vec![
-                                "Vegetables".into(),
-                                "Casseroles".into(),
-                                "French".into(),
-                            ],
-                        },
+        pub fn xml_recipes() -> Vec<IntegrationRecipe> {
+            vec![
+                IntegrationRecipe{
+                        title: "Asparagus Soup (Zuppa Di Asparagi)".into(),
+                        ingredients: Sections::from([
+                        ("".into(), vec![
+                            "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
+                            "2 Cloves garlic, minced 4 Eggs".into(),
+                            "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
+                            "-and cut (1 inch pieces) -pecorino cheese".into(),
+                            "Salt and pepper 6 sl Italian bread, toasted".into(),
+                        ])
+                    ]),
+                    instructions: Sections::from([
+                        ("".into(), vec![
+                            "Heat the oil and garlic in a soup pot until the garlic is golden. Add the".into(),
+                            "asparagus and cook until they begin to color. Season with salt and pepper.".into(),
+                            "Add the broth and bring to a boil; reduce the heat and simmer for 15".into(),
+                            "minutes, or until the asparagus is tender.".into(),
+                            "".into(),
+                            "Beat the eggs and cheese together. When the asparagus is tender, reduce".into(),
+                            "the heat so the soup is no longer simmering. Very slowly ladle some of the".into(),
+                            "hot soup into the beaten eggs, stirring continuously. After adding about 2".into(),
+                            "cups of the hot soup to the eggs, reverse the process and gradually stir".into(),
+                            "the eggs mixture into the soup pot. The soup must not boil or the eggs".into(),
+                            "will scramble. Heat until thickened.".into(),
+                            "".into(),
+                            "Put one slice of toasted bread into each soup dish. Ladle the hot soup on".into(),
+                            "top and pass additional grated cheese.".into(),
+                            "".into(),
+                            "Serves 6.".into(),
+                            "".into(),
+                            "NOTE: To trim asparagus, hold the tip in one hand and the base of the".into(),
+                            "stalk in the other. Bend gently. The asparagus will snap, leaving the".into(),
+                            "tender part with the tip.".into(),
+                            "".into(),
+                            "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]".into(),
+                            "".into(),
+                            "Posted by Fred Peters.".into(),
+                        ])
+                    ]),
+                    source: Some("MMF".into()),
+                    yield_: Some(6),
+                    category: Some("Italian".into()),
+                    keywords: vec![
+                        "Soups/stews".into(),
+                        "Vegetables".into(),
                     ],
-            }
+                    ..Default::default()
+                },
+                IntegrationRecipe {
+                    title: "Aubergine and Sesame Pate".into(),
+                    ingredients: Sections::from([
+                        ("".into(), vec![
+                            "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
+                            "1 Crushed garlic cloves 1 tb Olive oil".into(),
+                            "1 1/2 tb Tahini Seasoning".into(),
+                            "Toasted Sesame seeds Flatleaf Parsley".into(),
+                            "Cayenne Pepper".into(),
+                            "25-30 minutes until tender. Cool slightly , then peel and".into(),
+                        ])
+                    ]),
+                    instructions: Sections::from([
+                        ("".into(), vec![
+                            "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for".into(),
+                            "puree the flesh in a blender or processor.".into(),
+                            "".into(),
+                            "Add the garlic, tahini and lemon juice and process until mixed.".into(),
+                            "With the motor running, drizzle in the oil to make a smooth paste.".into(),
+                            "Season to taste.".into(),
+                            "".into(),
+                            "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
+                        ])
+                    ]),
+                    source: Some("MMF".into()),
+                    yield_: Some(2),
+                    category: Some("Vegetarian".into()),
+                    keywords: vec![
+                        "Appetizers".into(),
+                        "Greek".into(),
+                    ],
+                    ..Default::default()
+                },
+                IntegrationRecipe {
+                    title: "Aubergines a la Toulousaine (Eggplant A La Toulouse)".into(),
+                    ingredients: Sections::from([
+                        ("".into(), vec![
+                            "1 md Eggplant 2 tb Snipped parsley".into(),
+                            "1/4 c Salad oil 1 cl Galic, minced".into(),
+                            "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
+                            "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
+                        ])
+                    ]),
+                    instructions: Sections::from([
+                        ("".into(), vec![
+                            "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper".into(),
+                            "towels; sprinkle each generously with salt. let stand for 30 minutes; then".into(),
+                            "blot dry with paper towels. Start heating oven to 400 deg. F. Saute".into(),
+                            "eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut".into(),
+                            "tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2".into(),
+                            "inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in".into(),
+                            "all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper.".into(),
+                            "Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and".into(),
+                            "cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread".into(),
+                            "cubes are golden and eggplant is tender.".into(),
+                            "".into(),
+                            "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book".into(),
+                            "Publishers Chicago 1, Illinois 1958".into(),
+                        ])
+                    ]),
+                    source: Some("MMF".into()),
+                    yield_: Some(4),
+                    category: Some("Vegetables".into()),
+                    keywords: vec![
+                        "Casseroles".into(),
+                        "French".into(),
+                    ],
+                    ..Default::default()
+                },
+            ]
         }
     }
 }

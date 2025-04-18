@@ -18,6 +18,7 @@ pub enum RequiredField {
 pub enum Error {
     MissingRequiredField(RequiredField),
     Parse(String),
+    UnsupportedFileFormat,
 
     #[from]
     Cooklang(cooklang::error::SourceReport),

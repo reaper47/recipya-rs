@@ -3,7 +3,7 @@ use std::io::Read;
 use cooklang::{Content, CooklangParser, Item, ScalableValue};
 use tracing::{error, warn};
 
-use crate::core::integrations::error::Result;
+use crate::core::integrations::{IntegrationRecipe, Result};
 use crate::core::model::recipe::{Sections, TimesForCreate, ToolForCreate};
 use crate::core::support::time::parse_duration;
 
@@ -14,9 +14,52 @@ pub struct CookLang {
     parser: CooklangParser,
 }
 
+struct CooklangRecipe {
+    author: Option<String>,
+    category: Option<String>,
+    cuisine: Option<String>,
+    description: Option<String>,
+    diet: Option<Vec<String>>,
+    difficulty: Option<String>,
+    locale: Option<String>,
+    images: Vec<String>,
+    ingredients: Sections,
+    instructions: Sections,
+    name: String,
+    servings: Option<i16>,
+    source: Option<String>,
+    tags: Vec<String>,
+    times: TimesForCreate,
+    tools: Vec<ToolForCreate>,
+}
+
+impl From<CooklangRecipe> for IntegrationRecipe {
+    fn from(r: CooklangRecipe) -> Self {
+        Self {
+            author: r.author,
+            category: r.category,
+            cuisine: r.cuisine,
+            description: r.description,
+            diet: r.diet.unwrap_or_default(),
+            difficulty: r.difficulty,
+            images: r.images,
+            ingredients: r.ingredients,
+            instructions: r.instructions,
+            keywords: r.tags,
+            source: r.source,
+            taste_rating: None,
+            times: Option::from(r.times),
+            title: r.name,
+            tools: r.tools,
+            yield_: r.servings,
+            ..Default::default()
+        }
+    }
+}
+
 impl CookLang {
     /// Parses a Cooklang recipe from the file's content.
-    pub fn parse<R>(&self, mut r: R, file_name: &str) -> Result<CooklangRecipe>
+    pub fn parse<R>(&self, mut r: R, file_name: &str) -> Result<Vec<IntegrationRecipe>>
     where
         R: Read,
     {
@@ -37,6 +80,7 @@ impl CookLang {
             .get("category")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let course = metadata
             .get("course")
             .and_then(|c| c.as_str())
@@ -46,14 +90,17 @@ impl CookLang {
             .get("image")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let images = metadata
             .get("images")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let picture = metadata
             .get("picture")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let pictures = metadata
             .get("pictures")
             .and_then(|c| c.as_str())
@@ -63,14 +110,17 @@ impl CookLang {
             .get("time")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let time_required = metadata
             .get("time required")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let duration = metadata
             .get("duration")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let total_time = time
             .clone()
             .or(time.clone())
@@ -87,10 +137,12 @@ impl CookLang {
             .get("prep time")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let time_prep = metadata
             .get("time.prep")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let prep = prep_time
             .clone()
             .or(time_prep.clone())
@@ -105,10 +157,12 @@ impl CookLang {
             .get("cook time")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let time_cook = metadata
             .get("time.cook")
             .and_then(|c| c.as_str())
             .map(String::from);
+
         let cook = cook_time
             .clone()
             .or(time_cook.clone())
@@ -119,7 +173,7 @@ impl CookLang {
             })
             .unwrap_or((0, 30));
 
-        Ok(CooklangRecipe {
+        let cooklang_recipe = CooklangRecipe {
             author: recipe
                 .metadata
                 .author()
@@ -243,7 +297,9 @@ impl CookLang {
                     },
                 })
                 .collect(),
-        })
+        };
+
+        Ok(vec![cooklang_recipe.into()])
     }
 }
 
@@ -270,26 +326,6 @@ impl ParserBuilder {
             parser: self.parser.unwrap_or_default(),
         }
     }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct CooklangRecipe {
-    author: Option<String>,
-    name: String,
-    category: Option<String>,
-    cuisine: Option<String>,
-    description: Option<String>,
-    diet: Option<Vec<String>>,
-    difficulty: Option<String>,
-    locale: Option<String>,
-    images: Vec<String>,
-    ingredients: Sections,
-    instructions: Sections,
-    servings: Option<i16>,
-    source: Option<String>,
-    tags: Vec<String>,
-    times: TimesForCreate,
-    tools: Vec<ToolForCreate>,
 }
 
 #[cfg(test)]
@@ -338,15 +374,14 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
 
         pretty_assertions::assert_eq!(
             got,
-            CooklangRecipe {
+            vec![IntegrationRecipe {
                 author: Some("John Doe".into()),
-                name: "Spaghetti Carbonara".into(),
+                title: "Spaghetti Carbonara".into(),
                 category: Some("dinner".into()),
                 cuisine: Some("French".into()),
                 description: Some("This is the best recipe!".into()),
-                diet: Some(vec!["gluten-free".into()]),
+                diet: vec!["gluten-free".into()],
                 difficulty: Some("easy".into()),
-                locale: Some("es".into()),
                 images: vec!["https://example.org/recipe_image.jpg".into(), "https://example.org/recipe_image2.jpg".into()],
                 ingredients: Sections::from([(
                     "".into(),
@@ -371,13 +406,13 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                         "Remove the soup from the heat and blend with a , add the  and  to taste. Garnish with freshly cracked black pepper.".into(),
                     ],
                 ),]),
-                servings: Some(1),
+                yield_: Some(1),
                 source: Some("https://example.org/recipe".into()),
-                tags: vec!["2022".into(), "baking".into(), "summer".into()],
-                times: TimesForCreate {
+                keywords: vec!["2022".into(), "baking".into(), "summer".into()],
+                times: Some(TimesForCreate {
                     prep_seconds: 2*60*60+30*60,
                     cook_seconds: 60*60,
-                },
+                }),
                 tools: vec![
                     ToolForCreate {
                         name: "frying pan".into(),
@@ -388,8 +423,9 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                         quantity: 1,
                     },
                 ],
+                ..Default::default()
             }
-        );
+        ]);
         Ok(())
     }
 }

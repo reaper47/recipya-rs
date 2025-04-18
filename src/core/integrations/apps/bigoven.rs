@@ -8,12 +8,10 @@ use nom::multi::many1;
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 
-use crate::core::integrations::error::{Error, Result};
-use crate::core::model::recipe::Sections;
+use crate::core::integrations::{Error, IntegrationRecipe, Result};
+use crate::core::model::recipe::{Sections, TimesForCreate};
 
-/// Represents the parsed components of a BigOven recipe.
-#[derive(Debug, PartialEq)]
-pub struct BigOvenRecipe {
+struct BigOvenRecipe {
     title: String,
     servings: f32,
     source: Option<String>,
@@ -29,7 +27,6 @@ pub struct BigOvenRecipe {
     keywords: Vec<String>,
 }
 
-#[derive(Debug)]
 struct RecipeComponents<'a> {
     title: &'a str,
     servings: f32,
@@ -45,13 +42,11 @@ struct RecipeComponents<'a> {
     categories: Vec<&'a str>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
 enum IngredientType<'a> {
     Line(Ingredient<'a>),
     Section(Ingredient<'a>),
 }
 
-#[derive(Clone, Debug, PartialEq)]
 struct Ingredient<'a> {
     heading: u16,
     quantity: Option<&'a str>,
@@ -113,22 +108,54 @@ impl From<RecipeComponents<'_>> for BigOvenRecipe {
     }
 }
 
-impl BigOvenRecipe {
-    /// Parses a BigOven text file recipe.
-    pub fn parse<R>(mut r: R) -> Result<Self>
-    where
-        R: Read,
-    {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
-        Ok(parse_text_file(&content)?)
+impl From<BigOvenRecipe> for IntegrationRecipe {
+    fn from(r: BigOvenRecipe) -> Self {
+        IntegrationRecipe {
+            affordability_rating: to_option(r.affordability_rating),
+            appearance_rating: to_option(r.appearance_rating),
+            category: r.category,
+            effort_rating: to_option(r.effort_rating),
+            keywords: r.keywords,
+            yield_: to_option(r.servings.round() as i16),
+            times: if r.active_minutes == 0 && r.total_minutes == 0 {
+                None
+            } else {
+                Some(TimesForCreate {
+                    prep_seconds: r.active_minutes as i32,
+                    cook_seconds: (r.total_minutes - r.active_minutes) as i32,
+                })
+            },
+            ingredients: r.ingredients,
+            instructions: Sections::from([("".into(), r.instructions)]),
+            source: r.source,
+            taste_rating: to_option(r.taste_rating),
+            title: r.title,
+            ..Default::default()
+        }
     }
 }
 
-fn parse_text_file(input: &str) -> Result<BigOvenRecipe> {
+fn to_option<T>(v: T) -> Option<T>
+where
+    T: From<u8> + PartialEq,
+{
+    if v == 0.into() { None } else { Some(v) }
+}
+
+/// Parses a BigOven text file recipe.
+pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let mut content = String::new();
+    r.read_to_string(&mut content)?;
+    Ok(vec![parse_text_file(&content)?])
+}
+
+fn parse_text_file(input: &str) -> Result<IntegrationRecipe> {
     map(recipe, BigOvenRecipe::from)
         .parse(input)
-        .map(|(_, r)| r)
+        .map(|(_, r)| r.into())
         .map_err(|err| Error::Parse(err.to_string()))
 }
 
@@ -409,9 +436,9 @@ mod tests {
             let file = files::recipe1();
             let buf = Cursor::new(&file);
 
-            let got = BigOvenRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
-            pretty_assertions::assert_eq!(got, results::recipe1());
+            pretty_assertions::assert_eq!(got, vec![results::recipe1()]);
             Ok(())
         }
     }
@@ -746,15 +773,11 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
     mod results {
         use super::*;
 
-        pub fn recipe1() -> BigOvenRecipe {
-            BigOvenRecipe {
+        pub fn recipe1() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Applebee's Oriental Chicken Salad".into(),
-                servings: 4.00,
+                yield_: Some(4),
                 source: Some("http://www.food.com/recipe/tsr-version-of-applebees-oriental-chicken-salad-by-todd-wilbur-19253?ftab=reviews".into()),
-                taste_rating: 0,
-                effort_rating: 0,
-                appearance_rating: 0,
-                affordability_rating: 0,
                 ingredients: Sections::from([
                     (
                         "-- Salad Dressing --".into(),
@@ -779,27 +802,27 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
                         ],
                     ),
                 ]),
-                instructions: vec![
-                    "Below assumes you are making your own chicken tenders, whereas the recipe above uses pre-packaged chicken tenders.".into(),
-                    "Directions".into(),
-                    "Preheat oil in deep fryer or deep pan over medium heat.".into(),
-                    "You want the temperature of the oil to be around 350 degrees.".into(),
-                    "Blend together all ingredients for dressing in a small bowl with an electric mixer.".into(),
-                    "Put dressing in refrigerator to chill while you prepare the salad.".into(),
-                    "In a small, shallow bowl beat egg, add milk, and mix well.".into(),
-                    "In another bowl, combine flour with corn flake crumbs, salt and pepper.".into(),
-                    "Cut chicken breast into 4 or 5 long strips.".into(),
-                    "Dip each strip of chicken first into egg mixture then into the flour mixture, coating each piece completely.".into(),
-                    "Fry each chicken finger for 5 minutes or until coating has darkened to brown.".into(),
-                    "Prepare salad by tossing the chopped romaine with the chopped red cabbage, Napa cabbage, and carrots.".into(),
-                    "Sprinkle sliced green onion on top of the lettuce.".into(),
-                    "Sprinkle almonds over the salad, then the chow mein noodles.".into(),
-                    "Cut the chicken into small bite-size chunks.".into(),
-                    "Place the chicken onto the salad forming a pile in the middle.".into(),
-                    "Serve with salad dressing drizzled over it or on the side.".into(),
-                ],
-                active_minutes: 0,
-                total_minutes: 0,
+                instructions: Sections::from([
+                     ("".into(), vec![
+                        "Below assumes you are making your own chicken tenders, whereas the recipe above uses pre-packaged chicken tenders.".into(),
+                        "Directions".into(),
+                        "Preheat oil in deep fryer or deep pan over medium heat.".into(),
+                        "You want the temperature of the oil to be around 350 degrees.".into(),
+                        "Blend together all ingredients for dressing in a small bowl with an electric mixer.".into(),
+                        "Put dressing in refrigerator to chill while you prepare the salad.".into(),
+                        "In a small, shallow bowl beat egg, add milk, and mix well.".into(),
+                        "In another bowl, combine flour with corn flake crumbs, salt and pepper.".into(),
+                        "Cut chicken breast into 4 or 5 long strips.".into(),
+                        "Dip each strip of chicken first into egg mixture then into the flour mixture, coating each piece completely.".into(),
+                        "Fry each chicken finger for 5 minutes or until coating has darkened to brown.".into(),
+                        "Prepare salad by tossing the chopped romaine with the chopped red cabbage, Napa cabbage, and carrots.".into(),
+                        "Sprinkle sliced green onion on top of the lettuce.".into(),
+                        "Sprinkle almonds over the salad, then the chow mein noodles.".into(),
+                        "Cut the chicken into small bite-size chunks.".into(),
+                        "Place the chicken onto the salad forming a pile in the middle.".into(),
+                        "Serve with salad dressing drizzled over it or on the side.".into(),
+                    ])
+                 ]),
                 category: Some("Low Carb".into()),
                 keywords: vec![
                     "Low Fat".into(),
@@ -809,6 +832,7 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
                     "Salads".into(),
                     "Main Dish".into(),                    
                 ],
+                ..Default::default()
             }
         }
     }

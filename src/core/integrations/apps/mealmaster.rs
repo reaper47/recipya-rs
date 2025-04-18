@@ -26,11 +26,10 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 
 use crate::core::integrations::error::{Error, Result};
+use crate::core::integrations::IntegrationRecipe;
 use crate::core::model::recipe::Sections;
 
-/// Represents the parsed components of a MealMaster recipe.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct MealMasterRecipe {
+struct MealMasterRecipe {
     title: String,
     category: Option<String>,
     keywords: Vec<String>,
@@ -40,21 +39,6 @@ pub struct MealMasterRecipe {
     source: String,
 }
 
-impl MealMasterRecipe {
-    /// Parses a MealMaster recipe from the file's content.
-    pub fn parse<R>(mut r: R) -> Result<Vec<Self>>
-    where
-        R: Read,
-    {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
-
-        let recipes = parse_meal_master_recipe(&content)?;
-        Ok(recipes)
-    }
-}
-
-#[derive(Debug)]
 struct RecipeComponents<'a> {
     header: (&'a str, &'a str),
     title: &'a str,
@@ -162,16 +146,41 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
     }
 }
 
-#[derive(Debug, PartialEq)]
 enum Instruction<'a> {
     Line(&'a str),
     Section(&'a str),
 }
 
-#[derive(Clone, Debug, PartialEq)]
 enum Ingredient<'a> {
     Line(&'a str),
     Section(&'a str),
+}
+
+impl From<MealMasterRecipe> for IntegrationRecipe {
+    fn from(r: MealMasterRecipe) -> Self {
+        Self {
+            category: r.category,
+            ingredients: r.ingredients,
+            instructions: r.instructions,
+            keywords: r.keywords,
+            source: Some(r.source).filter(|s| !s.is_empty()),
+            title: r.title,
+            yield_: Some(r.yield_).filter(|v| v > &0) ,
+            ..Default::default()
+        }
+    }
+}
+
+/// Parses a MealMaster recipe from the file's content.
+pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let mut content = String::new();
+    r.read_to_string(&mut content)?;
+
+    let recipes = parse_meal_master_recipe(&content)?;
+    Ok(recipes.into_iter().map(IntegrationRecipe::from).collect())
 }
 
 fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
@@ -517,7 +526,7 @@ mod tests {
             let file = recipe_unspecified_version_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_unspecified_version()]);
             Ok(())
@@ -528,7 +537,7 @@ mod tests {
             let file = recipe_v6_14_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v6_14()]);
             Ok(())
@@ -539,7 +548,7 @@ mod tests {
             let file = recipe_v6_20_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v6_20()]);
             Ok(())
@@ -550,7 +559,7 @@ mod tests {
             let file = recipe_v7_01_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v7_01()]);
             Ok(())
@@ -561,7 +570,7 @@ mod tests {
             let file = recipe_v7_04_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v7_04()]);
             Ok(())
@@ -572,7 +581,7 @@ mod tests {
             let file = recipe_v7_07_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v7_07()]);
             Ok(())
@@ -583,7 +592,7 @@ mod tests {
             let file = recipe_v8_00_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v8_00()]);
             Ok(())
@@ -594,7 +603,7 @@ mod tests {
             let file = recipe_v8_01_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v8_01()]);
             Ok(())
@@ -605,7 +614,7 @@ mod tests {
             let file = recipe_v8_02_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v8_02()]);
             Ok(())
@@ -616,7 +625,7 @@ mod tests {
             let file = recipe_v8_05_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v8_05()]);
             Ok(())
@@ -627,7 +636,7 @@ mod tests {
             let file = recipe_v8_06_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v8_06()]);
             Ok(())
@@ -638,7 +647,7 @@ mod tests {
             let file = now_youre_cooking_v4_72_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![now_youre_cooking_v4_72()]);
             Ok(())
@@ -649,7 +658,7 @@ mod tests {
             let file = recipe_cookmate_file();
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_cookmate()]);
             Ok(())
@@ -662,7 +671,7 @@ mod tests {
             file.push_str(recipe_v8_05_file());
             let buf = Cursor::new(file);
 
-            let got = MealMasterRecipe::parse(buf)?;
+            let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_v8_01(), recipe_v8_05()]);
             Ok(())
@@ -1190,8 +1199,8 @@ Typed for you by Karen Mintzias
     mod results {
         use super::*;
 
-        pub fn recipe_unspecified_version() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_unspecified_version() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "West Haven Chocolate Cake".into(),
                 category: Some("Chocolate".into()),
                 keywords: vec![
@@ -1199,7 +1208,7 @@ Typed for you by Karen Mintzias
                     "Fruits".into(),
                     "Desserts".into(),
                 ],
-                yield_: 16,
+                yield_: Some(16),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1226,12 +1235,13 @@ Typed for you by Karen Mintzias
                         ],
                     )
                 ]),
-                source: "Meal-Master (tm) Database".into(),
+                source: Some("Meal-Master (tm) Database".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v6_14() -> MealMasterRecipe {
-            MealMasterRecipe{
+        pub fn recipe_v6_14() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Poppin' Fresh Barbe Cups".into(),
                 category: Some("Breads".into()),
                 keywords: vec![
@@ -1241,7 +1251,7 @@ Typed for you by Karen Mintzias
                     "Meats".into(),
                     "Sandwiches".into(),
                 ],
-                yield_: 6,
+                yield_: Some(6),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1266,16 +1276,17 @@ Typed for you by Karen Mintzias
                         ]
                     )
                 ]),
-                source: "Meal-Master (tm) v6.14".into(),
+                source: Some("Meal-Master (tm) v6.14".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v6_20() -> MealMasterRecipe {
-            MealMasterRecipe{
+        pub fn recipe_v6_20() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Magic Pan Orange Almond Salad".into(),
                 category: Some("Salads".into()),
                 keywords: vec![],
-                yield_: 6,
+                yield_: Some(6),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1303,16 +1314,17 @@ Typed for you by Karen Mintzias
                         ],
                     )
                 ]),
-                source: "Meal-Master v6.2 Importable Format".into(),
+                source: Some("Meal-Master v6.2 Importable Format".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v7_01() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_v7_01() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Old Style Enchiladas".into(),
                 category: Some("Chili".into()),
                 keywords: vec![],
-                yield_: 4,
+                yield_: Some(4),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1337,16 +1349,17 @@ Typed for you by Karen Mintzias
                         ],
                     )
                 ]),
-                source: "Meal-Master (tm) v7.01".into(),
+                source: Some("Meal-Master (tm) v7.01".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v7_04() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_v7_04() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Apple Pork Chops".into(),
                 category: Some("Meats".into()),
                 keywords: vec!["French can".into(), "Benoit".into()],
-                yield_: 1,
+                yield_: Some(1),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1370,16 +1383,17 @@ Typed for you by Karen Mintzias
                         ]
                     )
                 ]),
-                source: "Meal-Master (tm) v7.04".into(),
+                source: Some("Meal-Master (tm) v7.04".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v7_07() -> MealMasterRecipe {
-            MealMasterRecipe{
+        pub fn recipe_v7_07() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Zucchini Date Cake".into(),
                 category: Some("Cakes".into()),
                 keywords: vec![],
-                yield_: 10,
+                yield_: Some(10),
                 ingredients: Sections::from([(
                     "".into(),
                     vec![
@@ -1416,16 +1430,17 @@ Typed for you by Karen Mintzias
                         "Adapted from a rich recipe with sour cream and pecans created by the late Bert Greene.".into(),
                     ]
                 )]),
-                source: "Meal-Master (tm) v7.07".into(),
+                source: Some("Meal-Master (tm) v7.07".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v8_00() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_v8_00() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Chicken Avocado Melt".into(),
                 category: Some("Poultry".into()),
                 keywords: vec!["Main dish".into()],
-                yield_: 2,
+                yield_: Some(2),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1456,16 +1471,17 @@ Typed for you by Karen Mintzias
                         ],
                     )
                 ]),
-                source: "Meal-Master (tm) v8.00".into(),
+                source: Some("Meal-Master (tm) v8.00".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v8_01() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_v8_01() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Cannoli".into(),
                 category: Some("Italian".into()),
                 keywords: vec!["Desserts".into()],
-                yield_: 16,
+                yield_: Some(16),
                 ingredients: Sections::from([
                     (
                         "FILLING".into(),
@@ -1504,16 +1520,17 @@ Typed for you by Karen Mintzias
                         ],
                     ),
                 ]),
-                source: "Meal-Master (tm) v8.01".into(),
+                source: Some("Meal-Master (tm) v8.01".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v8_02() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_v8_02() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Ziti with Asparagus Peas & Lemon Cream".into(),
                 category: Some("Vegetables".into()),
                 keywords: vec![],
-                yield_: 4,
+                yield_: Some(4),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1552,16 +1569,17 @@ Typed for you by Karen Mintzias
                         ]
                     )
                 ]),
-                source: "Meal-Master (tm) v8.02".into(),
+                source: Some("Meal-Master (tm) v8.02".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v8_05() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_v8_05() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "South of the Border Stew".into(),
                 category: Some("Main dish".into()),
                 keywords: vec!["Stew".into(), "Beef".into()],
-                yield_: 6,
+                yield_: Some(6),
                 ingredients: Sections::from([(
                     "".into(),
                     vec![
@@ -1586,12 +1604,13 @@ Typed for you by Karen Mintzias
                         ],
                     ),
                 ]),
-                source: "Meal-Master (tm) v8.05".into(),
+                source: Some("Meal-Master (tm) v8.05".into()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_v8_06() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_v8_06() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Yellow Rice & Shrimp Casserole".into(),
                 category: Some("Seafood".into()),
                 keywords: vec![
@@ -1599,7 +1618,7 @@ Typed for you by Karen Mintzias
                     "Ethnic".into(),
                     "Vegetables".into(),
                 ],
-                yield_: 6,
+                yield_: Some(6),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1643,7 +1662,8 @@ Typed for you by Karen Mintzias
                         ]
                     )
                 ]),
-                source: "Meal-Master (tm) v8.06".into(),
+                source: Some("Meal-Master (tm) v8.06".into()),
+                ..Default::default()
             }
         }
 
@@ -1694,12 +1714,12 @@ SOURCE: Gourmet, December 1992
 "##
         }
 
-        pub fn now_youre_cooking_v4_72() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn now_youre_cooking_v4_72() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Biscotti Di Greve ( Orange Almond Biscotti)".into(),
                 category: Some("cookies".into()),
                 keywords: vec!["italian".into()],
-                yield_: 48,
+                yield_: Some(48),
                 ingredients: Sections::from([
                     (
                         "".into(),
@@ -1731,16 +1751,17 @@ SOURCE: Gourmet, December 1992
                         "SOURCE: Gourmet, December 1992".into(),
                     ]
                 )]),
-                source: "Now You're Cooking! v4.72 [Meal-Master Export Format]".to_string(),
+                source: Some("Now You're Cooking! v4.72 [Meal-Master Export Format]".to_string()),
+                ..Default::default()
             }
         }
 
-        pub fn recipe_cookmate() -> MealMasterRecipe {
-            MealMasterRecipe {
+        pub fn recipe_cookmate() -> IntegrationRecipe {
+            IntegrationRecipe {
                 title: "Baklava with Cooky Filling".into(),
                 category: Some("Greek".into()),
                 keywords: vec!["Desserts".into()],
-                yield_: 36,
+                yield_: Some(36),
                 ingredients: Sections::from([
                     ("".into(), vec![
                         "Karen Mintzias".into(),
@@ -1763,7 +1784,8 @@ SOURCE: Gourmet, December 1992
                         "".into(),
                     ])
                 ]),
-                source: "Cookmate [Meal-Master Export Format]".into(),
+                source: Some("Cookmate [Meal-Master Export Format]".into()),
+                ..Default::default()
             }
         }
     }

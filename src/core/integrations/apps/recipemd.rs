@@ -3,60 +3,51 @@ use std::io::Read;
 use recipemd::{Factor, Ingredient, Recipe};
 
 use crate::core::integrations::error::Result;
+use crate::core::integrations::IntegrationRecipe;
 use crate::core::model::recipe::Sections;
 
-/// Represents a RecipeMD recipe after parsing.
-#[derive(Debug, PartialEq)]
-pub struct RecipeMD {
-    title: String,
-    description: Option<String>,
-    keywords: Vec<String>,
-    yields: Option<i16>,
-    ingredients: Sections,
-    instructions: Vec<String>,
-}
+/// Parses a RecipeMD recipe from the file's content.
+pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let mut content = String::new();
+    r.read_to_string(&mut content)?;
 
-impl RecipeMD {
-    /// Parses a RecipeMD recipe from the file's content.
-    pub fn parse<R>(mut r: R) -> Result<Self>
-    where
-        R: Read,
-    {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
+    let recipe = Recipe::parse(content.as_str())?;
 
-        let recipe = Recipe::parse(content.as_str())?;
+    let ingredients = Sections::from([("".into(), ingredients_to_string(recipe.ingredients))]);
+    let ingredients_with_groups = recipe
+        .ingredient_groups
+        .into_iter()
+        .map(|group| (group.title, ingredients_to_string(group.ingredients)))
+        .collect::<Vec<_>>();
 
-        let ingredients = Sections::from([("".into(), ingredients_to_string(recipe.ingredients))]);
-        let ingredients_with_groups = recipe
-            .ingredient_groups
-            .into_iter()
-            .map(|group| (group.title, ingredients_to_string(group.ingredients)))
-            .collect::<Vec<_>>();
-
-        Ok(Self {
-            title: recipe.title,
-            description: recipe.description,
-            keywords: recipe.tags,
-            yields: recipe.yields.first().map(|amount| match amount.factor {
-                Factor::Integer(n) => n as i16,
-                Factor::Fraction(numerator, denominator) => (numerator / denominator) as i16,
-                Factor::Float(n) => n as i16,
-            }),
-            ingredients: if ingredients_with_groups.is_empty() {
-                ingredients
-            } else {
-                ingredients_with_groups
-            },
-            instructions: recipe
+    Ok(vec![IntegrationRecipe {
+        title: recipe.title,
+        description: recipe.description,
+        keywords: recipe.tags,
+        yield_: recipe.yields.first().map(|amount| match amount.factor {
+            Factor::Integer(n) => n as i16,
+            Factor::Fraction(numerator, denominator) => (numerator / denominator) as i16,
+            Factor::Float(n) => n as i16,
+        }),
+        ingredients: if ingredients_with_groups.is_empty() {
+            ingredients
+        } else {
+            ingredients_with_groups
+        },
+        instructions: Sections::from([
+            ("".into(), recipe
                 .instructions
                 .unwrap_or_default()
                 .replace("\r\n", "\n\n")
                 .split("\n\n")
                 .map(|s| s.replace("\n", " "))
-                .collect(),
-        })
-    }
+                .collect())
+        ]),
+        ..Default::default()
+    }])
 }
 
 fn ingredients_to_string(ingredients: Vec<Ingredient>) -> Vec<String> {
@@ -119,27 +110,30 @@ Eat, mix and sleep!
 "##;
         let buf = Cursor::new(data.as_bytes());
 
-        let got = RecipeMD::parse(buf)?;
+        let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, RecipeMD {
+        pretty_assertions::assert_eq!(got, vec![IntegrationRecipe {
             title: "Guacamole".into(),
             description: Some(
                         "Some people call it guac.".into(),
                     ),
             keywords: vec!["sauce".into(),
       "vegan".into(),],
-            yields: Some(4),
+            yield_: Some(4),
             ingredients: Sections::from([("".into(), vec![
                 "1 avocado".into(),
                 "0.5 teaspoon salt".into(),
                 "1.5 pinches red pepper flakes".into(),
                 "lemon juice".into(),
             ])]),
-            instructions: vec![
-                "Remove flesh from avocado and roughly mash with fork. Season to taste with salt, pepper and lemon juice.".into(),
-                "Eat, mix and sleep!".into(),
-            ],
-        });
+            instructions: Sections::from([
+                ("".into(), vec![
+                    "Remove flesh from avocado and roughly mash with fork. Season to taste with salt, pepper and lemon juice.".into(),
+                    "Eat, mix and sleep!".into(),
+                ])
+            ]),
+            ..Default::default()
+        }]);
         Ok(())
     }
 }

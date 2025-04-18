@@ -11,12 +11,10 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use tracing::error;
 
-use crate::core::integrations::error::{Error, Result};
+use crate::core::integrations::{Error, IntegrationRecipe, Result};
 use crate::core::model::recipe::{Sections, TimesForCreate};
 
-/// Represents the parsed components of an AccuChef recipe.
-#[derive(Debug, Default, PartialEq)]
-pub struct AccuChefRecipe {
+struct AccuChefRecipe {
     title: String,
     category: Option<String>,
     keywords: Vec<String>,
@@ -27,7 +25,6 @@ pub struct AccuChefRecipe {
     source: String,
 }
 
-#[derive(Debug)]
 struct RecipeComponents<'a> {
     header: &'a str,
     title: &'a str,
@@ -38,23 +35,24 @@ struct RecipeComponents<'a> {
     instructions: Vec<&'a str>,
 }
 
-#[derive(Debug)]
 struct Ingredient<'a> {
     name: &'a str,
     quantity: &'a str,
 }
 
-impl AccuChefRecipe {
-    /// Parses an AccuChefRecipe recipe from the file's content.
-    pub fn parse<R>(mut r: R) -> Result<Vec<Self>>
-    where
-        R: Read,
-    {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
-
-        let recipe = parse_accuchef_recipe(&content)?;
-        Ok(recipe)
+impl From<AccuChefRecipe> for IntegrationRecipe {
+    fn from(r: AccuChefRecipe) -> Self {
+        Self {
+            title: r.title,
+            category: r.category,
+            keywords: r.keywords,
+            yield_: r.yield_,
+            times: Some(r.times),
+            ingredients: r.ingredients,
+            instructions: r.instructions,
+            source: Some(r.source).filter(|s| !s.is_empty()),
+            ..Default::default()
+        }
     }
 }
 
@@ -100,6 +98,18 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             source: r.header.into(),
         }
     }
+}
+
+/// Represents the parsed components of an AccuChef recipe.
+pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let mut content = String::new();
+    r.read_to_string(&mut content)?;
+
+    let recipe = parse_accuchef_recipe(&content)?;
+    Ok(recipe.into_iter().map(IntegrationRecipe::from).collect())
 }
 
 fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
@@ -215,6 +225,7 @@ fn eol(input: &str) -> IResult<&str, &str> {
 mod tests {
     use super::*;
 
+    use std::default::Default;
     use std::io::Cursor;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -224,16 +235,21 @@ mod tests {
         let file = recipe1_file();
         let buf = Cursor::new(file);
 
-        let got = AccuChefRecipe::parse(buf)?;
+        let got = parse(buf)?;
 
         pretty_assertions::assert_eq!(
             got,
-            vec![AccuChefRecipe {
+            vec![IntegrationRecipe {
                 title: "24 Hour Fruit Salad".into(),
                 category: Some("Fruit".into()),
                 keywords: vec![],
                 yield_: None,
-                times: Default::default(),
+                times: Some(
+                   TimesForCreate {
+                       prep_seconds: 900,
+                       cook_seconds: 1800,
+                   },
+                ),
                 ingredients: Sections::from([
                     ("".into(), vec![
                         "Dressing: ".into(),
@@ -256,13 +272,19 @@ mod tests {
                         "cool whip. Drain the fruit and fold in dressing. Add marshmellows.".into(),
                     ])
                 ]),
-                source: "AccuChef Import File".into(),
-            }, AccuChefRecipe {
+                source: Some("AccuChef Import File".into()),
+                ..Default::default()
+            }, IntegrationRecipe {
                 title: "7 Layer Salad".into(),
                 category: Some("Salad".into()),
                 keywords: vec![],
                 yield_: None,
-                times: Default::default(),
+                times: Some(
+                    TimesForCreate {
+                        prep_seconds: 900,
+                        cook_seconds: 1800,
+                    },
+                ),
                 ingredients: Sections::from([
                     ("".into(), vec![
                         "1 Head Lettuce, Shredded".into(),
@@ -286,13 +308,19 @@ mod tests {
                         "night and then place eggs, bacon and tomatoes on top.".into(),
                     ])
                 ]),
-                source: "AccuChef Import File".into(),
-            }, AccuChefRecipe {
+                source: Some("AccuChef Import File".into()),
+                ..Default::default()
+            }, IntegrationRecipe {
                 title: "Aebleskiver".into(),
                 category: Some("Bread".into()),
                 keywords: vec![],
                 yield_: Some(24),
-                times: Default::default(),
+                times: Some(
+                    TimesForCreate {
+                        prep_seconds: 900,
+                        cook_seconds: 1800,
+                    },
+                ),
                 ingredients: Sections::from([
                     ("".into(), vec![
                        "3 C Jiffy Mix".into(),
@@ -314,16 +342,17 @@ mod tests {
                         "".into(),
                     ])
                 ]),
-                source: "AccuChef Import File".into(),
-            }, AccuChefRecipe {
+                source: Some("AccuChef Import File".into()),
+                ..Default::default()
+            }, IntegrationRecipe {
                 title: "Ambrosia Delight".into(),
                 category: Some("Dessert".into()),
                 keywords: vec![],
                 yield_: None,
-                times: TimesForCreate {
+                times: Some(TimesForCreate {
                     prep_seconds: 3600,
                     cook_seconds: 1800,
-                },
+                }),
                 ingredients: Sections::from([
                     ("".into(), vec![
                         "1 Lrg Can Fruit Cocktail".into(),
@@ -339,7 +368,8 @@ mod tests {
                         "orange sherbet on top.".into(),
                     ])
                 ]),
-                source: "AccuChef Import File".into(),
+                source: Some("AccuChef Import File".into()),
+                ..Default::default()
             }]
         );
         Ok(())

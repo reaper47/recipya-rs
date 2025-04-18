@@ -1,5 +1,7 @@
 use std::io::Read;
+use std::str::FromStr;
 
+use iso8601::DateTime;
 use nom::bytes::complete::{tag, take_till, take_until};
 use nom::character::complete::line_ending;
 use nom::combinator::{map, opt};
@@ -10,16 +12,15 @@ use serde::Deserialize;
 use tracing::{error, warn};
 
 use crate::core::integrations::error::{Error, Result};
-use crate::core::model::recipe::Sections;
+use crate::core::integrations::IntegrationRecipe;
+use crate::core::model::recipe::{Sections, TimesForCreate};
 use crate::core::scraper::schema::{
-    CreativeWorkOrItemListOrText, CreativeWorkOrText, QuantitativeValueOrText,
-    RecipeCategory, RecipeSchema, TextOrTextObject,
+    CreativeWorkOrItemListOrText, CreativeWorkOrText, QuantitativeValueOrText, RecipeCategory,
+    RecipeSchema, TextOrTextObject,
 };
 use crate::core::support::strings::extract_number;
 
-/// Represents the parsed components of a RecipeSage recipe.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct RecipeSage {
+struct RecipeSage {
     category: Option<String>,
     description: Option<String>,
     ingredients: Sections,
@@ -31,7 +32,6 @@ pub struct RecipeSage {
     yield_: i16,
 }
 
-#[derive(Debug)]
 struct RecipeComponents<'a> {
     category: Option<&'a str>,
     description: Option<&'a str>,
@@ -45,50 +45,50 @@ struct RecipeComponents<'a> {
     title: &'a str,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct RecipeSageXMLRoot {
     pub data: RecipeSageXMLData,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct RecipeSageXMLData {
     #[serde(rename = "recipe")]
     pub recipes: Vec<RecipeSageXMLRecipe>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RecipeSageXMLRecipe {
-    pub id: String,
-    pub title: String,
-    pub description: String,
+    id: String,
+    title: String,
+    description: String,
     #[serde(rename = "yield")]
-    pub r#yield: String,
-    pub active_time: String,
-    pub total_time: String,
-    pub source: String,
-    pub url: String,
-    pub notes: String,
-    pub ingredients: String,
-    pub instructions: String,
-    pub folder: String,
-    pub created_at: String,
-    pub updated_at: String,
-    pub user_id: String,
-    pub from_user: String,
-    pub labels: Option<Vec<Label>>,
-    pub images: Option<Images>,
+    r#yield: String,
+    active_time: String,
+    total_time: String,
+    source: String,
+    url: String,
+    notes: String,
+    ingredients: String,
+    instructions: String,
+    folder: String,
+    created_at: String,
+    updated_at: String,
+    user_id: String,
+    from_user: String,
+    labels: Option<Vec<Label>>,
+    images: Option<Images>,
 }
 
 #[derive(Debug, Deserialize)]
 struct Label {
-    pub title: String,
+    title: String,
 }
 
 #[derive(Debug, Deserialize)]
 struct Images {
-    pub id: String,
-    pub location: String,
+    id: String,
+    location: String,
 }
 
 impl From<RecipeComponents<'_>> for RecipeSage {
@@ -128,11 +128,7 @@ impl From<RecipeSageXMLRecipe> for RecipeSage {
 
         Self {
             category: items.map(|(a, _b)| a.title.clone()),
-            description: if r.description.is_empty() {
-                None
-            } else {
-                Some(r.description)
-            },
+            description: Some(r.description).filter(|s| !s.is_empty()),
             ingredients: Sections::from([(
                 "".into(),
                 r.ingredients.lines().map(String::from).collect(),
@@ -148,15 +144,11 @@ impl From<RecipeSageXMLRecipe> for RecipeSage {
                 .map(|(_a, b)| b.iter().map(|s| s.title.clone()).collect())
                 .unwrap_or_default(),
             source: if r.source.is_empty() {
-                if r.url.is_empty() { None } else { Some(r.url) }
+                Some(r.url).filter(|s| !s.is_empty())
             } else {
                 Some(r.source)
             },
-            notes: if r.notes.is_empty() {
-                None
-            } else {
-                Some(r.notes)
-            },
+            notes: Some(r.notes).filter(|s| !s.is_empty()),
             title: r.title,
             yield_: extract_number(r.r#yield).unwrap_or_default(),
         }
@@ -221,42 +213,128 @@ impl From<RecipeSchema> for RecipeSage {
     }
 }
 
-impl RecipeSage {
-    /// Parses a RecipeSage recipes text file.
-    pub fn parse_txt<R>(mut r: R) -> Result<Vec<Self>>
-    where
-        R: Read,
-    {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
-        Ok(parse_text_file(&content)?)
+impl From<RecipeSage> for IntegrationRecipe {
+    fn from(r: RecipeSage) -> Self {
+        Self {
+            category: r.category,
+            keywords: r.keywords,
+            comments: vec![r.notes.unwrap_or_default()].into_iter().filter(|s| !s.is_empty()).collect(),
+            description: r.description,
+            ingredients: r.ingredients,
+            instructions: r.instructions,
+            source: r.source,
+            title: r.title,
+            yield_: Some(r.yield_).filter(|v| *v > 0),
+            ..Default::default()
+        }
     }
+}
 
-    /// Parses a RecipeSage recipes XML file.
-    pub fn parse_xml<R>(r: R) -> Result<Vec<Self>>
-    where
-        R: Read,
-    {
-        let root: RecipeSageXMLData = serde_xml_rs::from_reader(r).map_err(|err| {
-            error!("Failed to read RecipeSage XML file: {err}");
-            Error::Parse(err.to_string())
-        })?;
+impl From<RecipeSageXMLRecipe> for IntegrationRecipe {
+    fn from(r: RecipeSageXMLRecipe) -> Self {
+        let categories = r.labels.unwrap_or_default();
+        let categories = categories.split_first();
+        
+        let active_time_secs = match humantime::parse_duration(&r.active_time) {
+            Ok(d) => d.as_secs() as i32,
+            Err(err) => {
+                error!("Failed to parse prep time of a RecipeSage recipe: {err}");
+                15 * 60
+            }
+        };
+        
+        let total_time_secs = match humantime::parse_duration(&r.total_time) {
+            Ok(d) => d.as_secs() as i32,
+            Err(err) => {
+                error!("Failed to total time of a RecipeSage recipe: {err}");
+                30 * 60
+            }
+        };
 
-        Ok(root.recipes.into_iter().map(RecipeSage::from).collect())
+        Self {
+            author: Some(r.from_user).filter(|s| !s.is_empty()),
+            category: categories.map(|(a, _b)| a.title.to_string()),
+            comments: vec![r.notes].into_iter().filter(|s| !s.is_empty()).collect(),
+            created_at: DateTime::from_str(&r.created_at).ok(),
+            description: Some(r.description).filter(|s| !s.is_empty()),
+            ingredients: Sections::from([(
+                "".into(),
+                r.ingredients.lines().map(String::from).collect(),
+            )]),
+            instructions: Sections::from([(
+                "".into(),
+                r.instructions
+                    .split_terminator("\n\n")
+                    .map(|s| s.trim().replace("\n", " ").to_string())
+                    .collect(),
+            )]),
+            keywords: categories
+                .map(|(_a, b)| b.iter().map(|s| s.title.to_string()).collect())
+                .unwrap_or_default(),
+            source: if !r.url.is_empty() {
+                Some(r.url)
+            } else {
+                Some(r.source).filter(|s| !s.is_empty())
+            },
+            times: if r.active_time.is_empty() && r.total_time.is_empty() {
+                None
+            } else {
+                Some(TimesForCreate {
+                    prep_seconds: active_time_secs,
+                    cook_seconds: total_time_secs - active_time_secs,
+                })
+            },
+            title: r.title,
+            updated_at: DateTime::from_str(&r.updated_at).ok(),
+            yield_: extract_number(r.r#yield).ok(),
+            ..Default::default()
+        }
     }
+}
 
-    /// Parses a RecipeSage recipes JSON file.
-    pub fn parse_json<R>(r: R) -> Result<Vec<Self>>
-    where
-        R: Read,
-    {
-        let res: Vec<RecipeSchema> = serde_json::from_reader(r).map_err(|err| {
-            error!("Failed to read RecipeSage JSON file: {err}");
-            Error::Parse(err.to_string())
-        })?;
-
-        Ok(res.into_iter().map(RecipeSage::from).collect())
+impl From<RecipeSchema> for IntegrationRecipe {
+    fn from(r: RecipeSchema) -> Self {
+        Self {
+            schema: Some(r),
+            ..Default::default()
+        }
     }
+}
+
+/// Parses a RecipeSage recipes text file.
+pub fn parse_txt<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let mut content = String::new();
+    r.read_to_string(&mut content)?;
+    Ok(parse_text_file(&content)?.into_iter().map(IntegrationRecipe::from).collect())
+}
+
+/// Parses a RecipeSage recipes XML file.
+pub fn parse_xml<R>(r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let root: RecipeSageXMLData = serde_xml_rs::from_reader(r).map_err(|err| {
+        error!("Failed to read RecipeSage XML file: {err}");
+        Error::Parse(err.to_string())
+    })?;
+
+    Ok(root.recipes.into_iter().map(IntegrationRecipe::from).collect())
+}
+
+/// Parses a RecipeSage recipes JSON file.
+pub fn parse_json<R>(r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let res: Vec<RecipeSchema> = serde_json::from_reader(r).map_err(|err| {
+        error!("Failed to read RecipeSage JSON file: {err}");
+        Error::Parse(err.to_string())
+    })?;
+
+    Ok(res.into_iter().map(IntegrationRecipe::from).collect())
 }
 
 fn parse_text_file(input: &str) -> Result<Vec<RecipeSage>> {
@@ -442,7 +520,7 @@ mod tests {
             let file = files::txt();
             let buf = Cursor::new(&file);
 
-            let got = RecipeSage::parse_txt(buf)?;
+            let got = parse_txt(buf)?;
 
             pretty_assertions::assert_eq!(got, results::all_recipes());
             Ok(())
@@ -453,7 +531,7 @@ mod tests {
             let file = files::xml();
             let buf = Cursor::new(&file);
 
-            let got = RecipeSage::parse_xml(buf)?;
+            let got = parse_xml(buf)?;
 
             pretty_assertions::assert_eq!(got, results::all_recipes());
             Ok(())
@@ -464,155 +542,9 @@ mod tests {
             let file = files::json();
             let buf = Cursor::new(&file);
 
-            let got = RecipeSage::parse_json(buf)?;
-
-            let mut expected = results::all_recipes();
-            expected[0].instructions = Sections::from([(
-                "".into(),
-                vec![
-                    "Heat the oil and garlic in a soup pot until the garlic is golden. Add the"
-                        .into(),
-                    "asparagus and cook until they begin to color. Season with salt and pepper."
-                        .into(),
-                    "Add the broth and bring to a boil; reduce the heat and simmer for 15".into(),
-                    "minutes, or until the asparagus is tender.".into(),
-                    "Beat the eggs and cheese together. When the asparagus is tender, reduce"
-                        .into(),
-                    "the heat so the soup is no longer simmering. Very slowly ladle some of the"
-                        .into(),
-                    "hot soup into the beaten eggs, stirring continuously. After adding about 2"
-                        .into(),
-                    "cups of the hot soup to the eggs, reverse the process and gradually stir"
-                        .into(),
-                    "the eggs mixture into the soup pot. The soup must not boil or the eggs".into(),
-                    "will scramble. Heat until thickened.".into(),
-                    "Put one slice of toasted bread into each soup dish. Ladle the hot soup on"
-                        .into(),
-                    "top and pass additional grated cheese.".into(),
-                    "Serves 6.".into(),
-                    "NOTE: To trim asparagus, hold the tip in one hand and the base of the".into(),
-                    "stalk in the other. Bend gently. The asparagus will snap, leaving the".into(),
-                    "tender part with the tip.".into(),
-                    "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]"
-                        .into(),
-                    "Posted by Fred Peters.".into(),
-                ],
-            )]);
-            expected[1].instructions = Sections::from([(
-                "".into(),
-                vec![
-                    "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for".into(),
-                    "puree the flesh in a blender or processor.".into(),
-                    "Add the garlic, tahini and lemon juice and process until mixed.".into(),
-                    "With the motor running, drizzle in the oil to make a smooth paste.".into(),
-                    "Season to taste.".into(),
-                    "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
-                ],
-            )]);
-            expected[2].instructions = Sections::from([(
-                "".into(),
-                vec![
-                    "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper".into(),
-                    "towels; sprinkle each generously with salt. let stand for 30 minutes; then"
-                        .into(),
-                    "blot dry with paper towels. Start heating oven to 400 deg. F. Saute".into(),
-                    "eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut"
-                        .into(),
-                    "tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2"
-                        .into(),
-                    "inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in"
-                        .into(),
-                    "all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper."
-                        .into(),
-                    "Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and".into(),
-                    "cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread"
-                        .into(),
-                    "cubes are golden and eggplant is tender.".into(),
-                    "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book"
-                        .into(),
-                    "Publishers Chicago 1, Illinois 1958".into(),
-                ],
-            )]);
-            expected[3].instructions = Sections::from([(
-                "".into(),
-                vec![
-                    "((Note: Per Horst Scharfenberg, this recipe originated in the town of".into(),
-                    "Idar-Oberstein in the 19 th century, when gemstone prospectors returning"
-                        .into(),
-                    "from South America created their own version of gaucho-grilled steaks. The"
-                        .into(),
-                    "dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))"
-                        .into(),
-                    "Per person: thick, trimmed".into(),
-                    "Mix together the shallot or onion with the pepper and mace. Insert a few"
-                        .into(),
-                    "shallot pieces into the steak using the point of a small knife. Coat the"
-                        .into(),
-                    "steak with the shallot mixture, pressing it in so it will adhere.".into(),
-                    "Remove the loose shallot pieces and grill the steak (over a fire of oak"
-                        .into(),
-                    "logs, says August Goerg, from which the bark has been removed).* Take the"
-                        .into(),
-                    "steaks off the grill while they are still pink inside. Sprinkle them with"
-                        .into(),
-                    "salt.".into(),
-                    "*Note: A special grill is used, suspended with 3 chains from an iron".into(),
-                    "tripod and constantly swinging through the flames.".into(),
-                    "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon &".into(),
-                    "Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking"
-                        .into(),
-                    "Echo, 8/92".into(),
-                ],
-            )]);
-            expected[4].instructions = Sections::from([(
-                "".into(),
-                vec![
-                    "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }".into(),
-                    "In a large electric skillet or paella pan, brown the chicken pieces (that"
-                        .into(),
-                    "have been seasoned with salt and pepper) in a little oil. Remove from the"
-                        .into(),
-                    "pan. Add the pork cubes to the drippinfs and brown for about 5 minutes."
-                        .into(),
-                    "Remove from the pan. To the pan drippings (add a little more oil if".into(),
-                    "necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry"
-                        .into(),
-                    "for 2 minutes.".into(),
-                    "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork."
-                        .into(),
-                    "Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the"
-                        .into(),
-                    "bouillon cubes and saffron. Let it stand for 5 minutes until dissolved."
-                        .into(),
-                    "Gently stir the rice into the skillet mixture. Slowly pour in enough of"
-                        .into(),
-                    "the bouillon mixture to cover the rice and chicken pieces. Cover and cook"
-                        .into(),
-                    "over low heat for about 20 minutes. Uncover and decoaratively arrange the"
-                        .into(),
-                    "egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary"
-                        .into(),
-                    "to keep the rice moist.".into(),
-                    "Cover and steam for another 10 minutes until the shrimp are cooked and the"
-                        .into(),
-                    "rice is tender. (Paella should be moist but not wet!) Place the pan on a"
-                        .into(),
-                    "hot pad on the serving table and let everyone help themselves.".into(),
-                    "Serve with a mixed green salad, red ripe tomatoes and some French bread."
-                        .into(),
-                    "Also mix up a pitcher of Sangria and enjoy!".into(),
-                    "Serves: 12.".into(),
-                    "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]"
-                        .into(),
-                    "Posted by Fred Peters".into(),
-                ],
-            )]);
-            expected[0].keywords.clear();
-            expected[1].keywords.clear();
-            expected[2].keywords.clear();
-            expected[3].keywords.clear();
-            expected[4].keywords.clear();
-            pretty_assertions::assert_eq!(got, expected);
+            let got = parse_json(buf)?;
+            
+            pretty_assertions::assert_eq!(got.iter().filter(|r| r.schema.is_some()).collect::<Vec<_>>().len(), got.len());
             Ok(())
         }
     }
@@ -1105,8 +1037,8 @@ Posted by Fred Peters</instructions>
     mod results {
         use super::*;
 
-        pub(crate) fn all_recipes() -> Vec<RecipeSage> {
-            vec![RecipeSage {
+        pub(crate) fn all_recipes() -> Vec<IntegrationRecipe> {
+            vec![IntegrationRecipe {
                 category: Some("italian".into()),
                 description: None,
                 ingredients: Sections::from([
@@ -1130,11 +1062,11 @@ Posted by Fred Peters</instructions>
                     ])
                 ]),
                 keywords: vec!["soups/stews".into(), "vegetables".into()],
-                notes: None,
                 source: Some("MMF".into()),
                 title: "Asparagus Soup (Zuppa Di Asparagi)".to_string(),
-                yield_: 6,
-            }, RecipeSage {
+                yield_: Some(6),
+                ..Default::default()
+            }, IntegrationRecipe {
                 category: Some("appetizers".into()),
                 description: None,
                 ingredients: Sections::from([
@@ -1155,11 +1087,11 @@ Posted by Fred Peters</instructions>
                     ])
                 ]),
                 keywords: vec!["greek".into(), "vegetarian".into()],
-                notes: None,
                 source: Some("MMF".into()),
                 title: "Aubergine and Sesame Pate".to_string(),
-                yield_: 2,
-            }, RecipeSage {
+                yield_: Some(2),
+                ..Default::default()
+            }, IntegrationRecipe {
                 category: Some("vegetables".into()),
                 description: None,
                 ingredients: Sections::from([
@@ -1177,11 +1109,11 @@ Posted by Fred Peters</instructions>
                     ])
                 ]),
                 keywords: vec!["french".into(), "casseroles".into()],
-                notes: None,
                 source: Some("MMF".into()),
                 title: "Aubergines a la Toulousaine (Eggplant A La Toulouse)".to_string(),
-                yield_: 4,
-            }, RecipeSage {
+                yield_: Some(4),
+                ..Default::default()
+            }, IntegrationRecipe {
                 category: Some("german".into()),
                 description: None,
                 ingredients: Sections::from([
@@ -1202,11 +1134,11 @@ Posted by Fred Peters</instructions>
                     ])
                 ]),
                 keywords: vec!["beef".into()],
-                notes: None,
                 source: Some("MMF".into()),
                 title: "August Goerg's Grilled Steak (Spiessbraten August Goerg)".to_string(),
-                yield_: 6,
-            }, RecipeSage {
+                yield_: Some(6),
+                ..Default::default()
+            }, IntegrationRecipe {
                 category: Some("fish/sea".into()),
                 description: None,
                 ingredients: Sections::from([
@@ -1245,10 +1177,10 @@ Posted by Fred Peters</instructions>
                     "poultry".into(),
                     "spanish".into(),
                 ],
-                notes: None,
                 source: Some("MMF".into()),
                 title: "Aunt Julia's Paella".to_string(),
-                yield_: 6,
+                yield_: Some(6),
+                ..Default::default()
             }]
         }
     }

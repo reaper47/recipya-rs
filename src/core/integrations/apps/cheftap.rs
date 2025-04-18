@@ -9,11 +9,9 @@ use nom::combinator::{map, map_res, opt};
 use nom::multi::{many_till, many1};
 use nom::sequence::{preceded, terminated};
 
-use crate::core::integrations::error::{Error, Result};
+use crate::core::integrations::{Error, IntegrationRecipe, Result};
 use crate::core::model::recipe::Sections;
 
-/// Represents the parsed components of a ChefTap recipe.
-#[derive(Debug, Default, PartialEq)]
 pub struct ChefTapRecipe {
     title: String,
     yield_: Option<i16>,
@@ -22,7 +20,6 @@ pub struct ChefTapRecipe {
     source: Option<String>,
 }
 
-#[derive(Debug)]
 struct RecipeComponents<'a> {
     title: &'a str,
     servings: Option<i16>,
@@ -31,17 +28,16 @@ struct RecipeComponents<'a> {
     source: Option<&'a str>,
 }
 
-impl ChefTapRecipe {
-    /// Parses a ChefTap recipe from the file's content.
-    pub fn parse<R>(mut r: R) -> Result<Self>
-    where
-        R: Read,
-    {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
-
-        let recipe = parse_cheftap_recipe(&content)?;
-        Ok(recipe)
+impl From<ChefTapRecipe> for IntegrationRecipe {
+    fn from(r: ChefTapRecipe) -> Self {
+        IntegrationRecipe {
+            ingredients: r.ingredients,
+            instructions: r.instructions,
+            source: r.source,
+            title: r.title,
+            yield_: r.yield_,
+            ..Default::default()
+        }
     }
 }
 
@@ -61,6 +57,18 @@ impl From<RecipeComponents<'_>> for ChefTapRecipe {
             source: c.source.map(String::from),
         }
     }
+}
+
+/// Parses a ChefTap recipe from the file's content.
+pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+where
+    R: Read,
+{
+    let mut content = String::new();
+    r.read_to_string(&mut content)?;
+
+    let recipe = parse_cheftap_recipe(&content)?;
+    Ok(vec![recipe.into()])
 }
 
 fn parse_cheftap_recipe(input: &str) -> Result<ChefTapRecipe> {
@@ -120,27 +128,21 @@ fn ingredient(input: &str) -> IResult<&str, &str> {
 }
 
 fn instructions(input: &str) -> IResult<&str, Vec<&str>> {
-    println!("{input}");
-    let a = many1(instruction).parse(input);
-    println!("{a:?}");
-    a
+    many1(instruction).parse(input)
 }
 
 fn instruction(input: &str) -> IResult<&str, &str> {
-    let a = map(
+    map(
         (not_line_ending, line_ending, opt(line_ending)),
         |(s, _, _)| s,
     )
-    .parse(input);
-    println!("{a:?}");
-    a
+    .parse(input)
 }
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
     use super::*;
+    use std::io::Cursor;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -149,9 +151,9 @@ mod tests {
         let file = recipe1_file();
         let buf = Cursor::new(file);
 
-        let got = ChefTapRecipe::parse(buf)?;
+        let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, ChefTapRecipe {
+        pretty_assertions::assert_eq!(got, vec![IntegrationRecipe {
             title: "Deviled Eggs".into(),
             yield_: Some(6),
             ingredients: Sections::from([
@@ -173,7 +175,8 @@ mod tests {
                 ])
             ]),
             source: Some("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()),
-        });
+            ..Default::default()
+        }]);
         Ok(())
     }
 
