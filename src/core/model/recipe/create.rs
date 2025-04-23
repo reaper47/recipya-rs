@@ -250,7 +250,7 @@ mod tests {
         RecipeForCreate {
             name: "Best Chinese Kale".into(),
             description: None,
-            images: None,
+            images: vec![],
             yield_: Some(4),
             source: None,
             videos: vec![],

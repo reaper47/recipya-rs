@@ -2,9 +2,18 @@ use std::io::Read;
 
 use cooklang::{Content, CooklangParser, Item, ScalableValue};
 use tracing::{error, warn};
+use url::Url;
 
-use crate::core::integrations::{IntegrationRecipe, Result};
+use crate::core::integrations::Result;
+use crate::core::integrations::helpers::{
+    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_is_based_on,
+    to_organization_type, to_text, to_yield,
+};
 use crate::core::model::recipe::{Sections, TimesForCreate, ToolForCreate};
+use crate::core::scraper::schema::{
+    AtType, DefinedTermOrTextOrUrl, HowToToolOrText, HowToToolType, ImageObjectOrUrl,
+    RecipeCategory, RecipeCuisine, RecipeSchema, RestrictedDiet,
+};
 use crate::core::support::time::parse_duration;
 
 /// A wrapper around the Cooklang parser that provides a consistent interface for parsing
@@ -33,25 +42,58 @@ struct CooklangRecipe {
     tools: Vec<ToolForCreate>,
 }
 
-impl From<CooklangRecipe> for IntegrationRecipe {
+impl From<CooklangRecipe> for RecipeSchema {
     fn from(r: CooklangRecipe) -> Self {
         Self {
-            author: r.author,
-            category: r.category,
-            cuisine: r.cuisine,
-            description: r.description,
-            diet: r.diet.unwrap_or_default(),
-            difficulty: r.difficulty,
-            images: r.images,
-            ingredients: r.ingredients,
-            instructions: r.instructions,
-            keywords: r.tags,
-            source: r.source,
-            taste_rating: None,
-            times: Option::from(r.times),
-            title: r.name,
-            tools: r.tools,
-            yield_: r.servings,
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            author: to_organization_type(r.author.unwrap_or_default()),
+            cook_time: seconds_to_duration(r.times.cook_seconds),
+            description: to_text(r.description.unwrap_or_default()),
+            is_based_on: to_is_based_on(r.source.to_owned().unwrap()),
+            keywords: Some(DefinedTermOrTextOrUrl::Text(r.tags.join(","))),
+            name: Some(r.name).filter(|s| !s.is_empty()),
+            prep_time: seconds_to_duration(r.times.prep_seconds),
+            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
+            recipe_cuisine: Some(RecipeCuisine::Text(r.cuisine.unwrap_or_default())).filter(|s| {
+                match s {
+                    RecipeCuisine::Text(s) => !s.is_empty(),
+                }
+            }),
+            image: Some(
+                r.images
+                    .into_iter()
+                    .filter_map(|image| Url::parse(&image).ok())
+                    .map(ImageObjectOrUrl::Url)
+                    .collect::<Vec<_>>(),
+            ),
+            recipe_ingredient: sections_to_vec(r.ingredients),
+            recipe_instructions: sections_to_itemlist(r.instructions),
+            recipe_yield: to_yield(r.servings.map(i64::from).unwrap_or_default()),
+            suitable_for_diet: r
+                .diet
+                .map(|diets| {
+                    diets
+                        .into_iter()
+                        .map(RestrictedDiet::from)
+                        .filter(|diet| diet != &RestrictedDiet::UnspecifiedDiet)
+                        .collect()
+                })
+                .unwrap_or_default(),
+            tool: Some(
+                r.tools
+                    .into_iter()
+                    .map(|t| {
+                        HowToToolOrText::HowToTool(HowToToolType {
+                            r#type: AtType::HowToTool,
+                            name: t.name,
+                            ..Default::default()
+                        })
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .filter(|v| !v.is_empty()),
+            url: Url::parse(&r.source.unwrap_or_default()).ok(),
             ..Default::default()
         }
     }
@@ -59,7 +101,7 @@ impl From<CooklangRecipe> for IntegrationRecipe {
 
 impl CookLang {
     /// Parses a Cooklang recipe from the file's content.
-    pub fn parse<R>(&self, mut r: R, file_name: &str) -> Result<Vec<IntegrationRecipe>>
+    pub fn parse<R>(&self, mut r: R, file_name: &str) -> Result<Vec<RecipeSchema>>
     where
         R: Read,
     {
@@ -331,7 +373,10 @@ impl ParserBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use crate::core::scraper::schema::{
+        OrganizationType, QuantitativeValueOrText, QuantitativeValueType, RecipeCuisine,
+        TextOrTextObject,
+    };
     use std::io::Cursor;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -374,55 +419,62 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
 
         pretty_assertions::assert_eq!(
             got,
-            vec![IntegrationRecipe {
-                author: Some("John Doe".into()),
-                title: "Spaghetti Carbonara".into(),
-                category: Some("dinner".into()),
-                cuisine: Some("French".into()),
-                description: Some("This is the best recipe!".into()),
-                diet: vec!["gluten-free".into()],
-                difficulty: Some("easy".into()),
-                images: vec!["https://example.org/recipe_image.jpg".into(), "https://example.org/recipe_image2.jpg".into()],
-                ingredients: Sections::from([(
-                    "".into(),
-                    vec![
-                        "100 g potatoes".into(),
-                        "50 g onions".into(),
-                        "200 g mushrooms".into(),
-                        "oil".into(),
-                        "4 g salt".into(),
-                        "1/4 tsp pepper".into(),
-                        "1/4 tsp rosemary".into(),
-                        "50 g double cream".into(),
-                        "salt".into(),
-                    ]
-                ),]),
-                instructions: Sections::from([(
-                    "".into(),
-                    vec![
+            vec![RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                author: Some(OrganizationType {
+                    name: Some("John Doe".into()),
+                    ..Default::default()
+                }),
+                cook_time: seconds_to_duration(60*60),
+                description: Some(TextOrTextObject::Text("This is the best recipe!".into())),
+                image: Some(vec![
+                    ImageObjectOrUrl::Url(Url::parse("https://example.org/recipe_image.jpg")?),
+                    ImageObjectOrUrl::Url(Url::parse("https://example.org/recipe_image2.jpg")?),
+                ]),
+                is_based_on: to_is_based_on("https://example.org/recipe".into()),
+                keywords: Some(DefinedTermOrTextOrUrl::Text(["2022", "baking", "summer"].join(","))),
+                name: Some("Spaghetti Carbonara".into()),
+                prep_time: seconds_to_duration(2*60*60+30*60),
+                recipe_category: RecipeCategory::Text("dinner".into()),
+                recipe_cuisine: Some(RecipeCuisine::Text("French".into())),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "100 g potatoes".into(),
+                    "50 g onions".into(),
+                    "200 g mushrooms".into(),
+                    "oil".into(),
+                    "4 g salt".into(),
+                    "1/4 tsp pepper".into(),
+                    "1/4 tsp rosemary".into(),
+                    "50 g double cream".into(),
+                    "salt".into(),
+                ]),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(), vec![
                         "Peel and chop the ,  and  into chunks. The potatoes will need to be cut a bit smaller.".into(),
                         "Heat a  over a medium heat with a little  and sauté the vegetables until golden. Season with ,  and chopped fresh .".into(),
                         "Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender.".into(),
                         "Remove the soup from the heat and blend with a , add the  and  to taste. Garnish with freshly cracked black pepper.".into(),
-                    ],
-                ),]),
-                yield_: Some(1),
-                source: Some("https://example.org/recipe".into()),
-                keywords: vec!["2022".into(), "baking".into(), "summer".into()],
-                times: Some(TimesForCreate {
-                    prep_seconds: 2*60*60+30*60,
-                    cook_seconds: 60*60,
+                    ]),
+                ])),
+                recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType {
+                    value: 1
                 }),
-                tools: vec![
-                    ToolForCreate {
+                suitable_for_diet: vec![RestrictedDiet::GlutenFreeDiet],
+                tool: Some(vec![
+                    HowToToolOrText::HowToTool(HowToToolType {
+                        r#type: AtType::HowToTool,
                         name: "frying pan".into(),
-                        quantity: 1,
-                    },
-                    ToolForCreate {
+                        ..Default::default()
+                    }),
+                    HowToToolOrText::HowToTool(HowToToolType {
+                        r#type: AtType::HowToTool,
                         name: "blender".into(),
-                        quantity: 1,
-                    },
-                ],
+                        ..Default::default()
+                    }),
+                ]),
+                url: Url::parse("https://example.org/recipe").ok(),
                 ..Default::default()
             }
         ]);

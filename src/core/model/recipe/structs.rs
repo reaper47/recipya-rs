@@ -98,7 +98,7 @@ pub struct RecipeForCreate {
     // For the recipe table
     pub name: String,
     pub description: Option<String>,
-    pub images: Option<Vec<Uuid>>,
+    pub images: Vec<Uuid>,
     pub yield_: Option<i16>,
     pub source: Option<String>,
     pub videos: Vec<VideoForCreate>,
@@ -117,9 +117,9 @@ pub struct RecipeForCreate {
 impl RecipeForCreate {
     /// Returns the first image UUID if available and a vector of the remaining image UUIDs.
     pub fn first_and_rest_images(&self) -> (Option<Uuid>, Vec<Uuid>) {
-        match self.images.as_deref() {
-            Some([first, rest @ ..]) => (Some(*first), rest.to_vec()),
-            _ => (None, Vec::new()),
+        match self.images.as_slice() {
+            [first, rest @ ..] => (Some(*first), rest.to_vec()),
+            [] => (None, Vec::new()),
         }
     }
 }
@@ -129,7 +129,7 @@ impl From<RecipeForm> for RecipeForCreate {
         Self {
             name: form.title,
             description: form.description,
-            images: None,
+            images: vec![],
             yield_: form.yield_,
             source: form.source,
             videos: vec![],
@@ -150,7 +150,7 @@ impl From<&RecipeSchema> for RecipeForCreate {
         Self {
             name: schema.name.clone().unwrap_or_default(),
             description: schema.description.clone().map(String::from),
-            images: None,
+            images: vec![],
             yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
             source: schema.url.clone().map(|s| s.into()),
             videos: vec![],
@@ -175,8 +175,9 @@ impl From<&RecipeSchema> for RecipeForCreate {
             tools: schema
                 .tool
                 .clone()
-                .map(ToolForCreate::from)
+                .unwrap_or_default()
                 .into_iter()
+                .map(ToolForCreate::from)
                 .collect(),
         }
     }
@@ -965,7 +966,7 @@ mod tests {
             let uuid2 = Uuid::new_v4();
             let uuid3 = Uuid::new_v4();
             let recipe_c = RecipeForCreate {
-                images: Some(vec![uuid1, uuid2, uuid3]),
+                images: vec![uuid1, uuid2, uuid3],
                 ..Default::default()
             };
 
@@ -979,7 +980,7 @@ mod tests {
         fn test_first_and_rest_with_one_image() {
             let uuid1 = Uuid::new_v4();
             let recipe_c = RecipeForCreate {
-                images: Some(vec![uuid1]),
+                images: vec![uuid1],
                 ..Default::default()
             };
 
@@ -992,7 +993,7 @@ mod tests {
         #[test]
         fn test_first_and_rest_with_no_images() {
             let recipe_c = RecipeForCreate {
-                images: None,
+                images: vec![],
                 ..Default::default()
             };
 
@@ -1005,7 +1006,7 @@ mod tests {
         #[test]
         fn test_first_and_rest_with_empty_vec() {
             let recipe_c = RecipeForCreate {
-                images: Some(vec![]),
+                images: vec![],
                 ..Default::default()
             };
 

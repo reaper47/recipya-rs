@@ -8,9 +8,14 @@ use nom::character::complete::{digit1, line_ending, not_line_ending, space0};
 use nom::combinator::{map, map_res, opt};
 use nom::multi::{many_till, many1};
 use nom::sequence::{preceded, terminated};
+use url::Url;
 
-use crate::core::integrations::{Error, IntegrationRecipe, Result};
+use crate::core::integrations::helpers::{
+    sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield,
+};
+use crate::core::integrations::{Error, Result};
 use crate::core::model::recipe::Sections;
+use crate::core::scraper::schema::{AtType, RecipeSchema};
 
 pub struct ChefTapRecipe {
     title: String,
@@ -28,14 +33,17 @@ struct RecipeComponents<'a> {
     source: Option<&'a str>,
 }
 
-impl From<ChefTapRecipe> for IntegrationRecipe {
+impl From<ChefTapRecipe> for RecipeSchema {
     fn from(r: ChefTapRecipe) -> Self {
-        IntegrationRecipe {
-            ingredients: r.ingredients,
-            instructions: r.instructions,
-            source: r.source,
-            title: r.title,
-            yield_: r.yield_,
+        RecipeSchema {
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            is_based_on: to_is_based_on(r.source.to_owned().unwrap_or_default()),
+            name: Some(r.title),
+            recipe_ingredient: sections_to_vec(r.ingredients),
+            recipe_instructions: sections_to_itemlist(r.instructions),
+            recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
+            url: Url::parse(r.source.unwrap_or_default().as_ref()).ok(),
             ..Default::default()
         }
     }
@@ -60,7 +68,7 @@ impl From<RecipeComponents<'_>> for ChefTapRecipe {
 }
 
 /// Parses a ChefTap recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
@@ -153,10 +161,12 @@ mod tests {
 
         let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, vec![IntegrationRecipe {
-            title: "Deviled Eggs".into(),
-            yield_: Some(6),
-            ingredients: Sections::from([
+        pretty_assertions::assert_eq!(got, vec![RecipeSchema {
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            is_based_on: to_is_based_on("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()),
+            name: Some("Deviled Eggs".into()),
+            recipe_ingredient: sections_to_vec(Sections::from([
                 ("".into(), vec![
                     "6 large eggs".into(),
                     "¼ cup mayonnaise".into(),
@@ -166,15 +176,16 @@ mod tests {
                     "1/4 teaspoon paprika, or as needed, for garnish".into(),
                     "salt and pepper to taste".into(),
                 ])
-            ]),
-            instructions: Sections::from([
+            ])),
+            recipe_instructions: sections_to_itemlist(Sections::from([
                 ("".into(), vec![
                     "Place eggs in a medium saucepan and cover with cold water. Bring water to a boil and immediately remove from heat. Cover and let eggs stand in hot water for 10 to 12 minutes. Remove from hot water, cool, and peel.".into(),
                     "Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined.".into(),
                     "Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving.".into(),
                 ])
-            ]),
-            source: Some("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()),
+            ])),
+            recipe_yield: to_yield(6),
+            url: Url::parse("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/").ok(),
             ..Default::default()
         }]);
         Ok(())

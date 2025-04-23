@@ -1,5 +1,5 @@
 use std::fmt::Write;
-use std::ops::Not;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 
@@ -13,7 +13,7 @@ use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
-use tracing::error;
+use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -26,7 +26,8 @@ use crate::core::model::report::{ReportForCreate, ReportLogForCreate, ReportType
 use crate::core::model::share::ShareRecipe;
 use crate::core::model::user::User;
 use crate::core::model::website::{ToHtmlTable, Website};
-use crate::core::scraper::schema::RecipeSchema;
+use crate::core::scraper::schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema};
+use crate::core::support::fs::FsSupport;
 use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx, MessageType};
@@ -361,7 +362,7 @@ pub async fn edit_recipe_put_handler(
     };
 
     let mut recipe_c = RecipeForCreate::from(form);
-    recipe_c.images = images.is_empty().not().then_some(images);
+    recipe_c.images = images;
     recipe_c.videos = videos;
 
     match Recipe::update(&state.mm, user_id, recipe_id, &mut recipe_c).await {
@@ -527,7 +528,7 @@ pub async fn add_manual_recipe_post_handler(
         &RecipeForCreate {
             name: form.title,
             description: form.description,
-            images: images.is_empty().not().then_some(images),
+            images,
             yield_: form.yield_,
             source: form.source,
             videos,
@@ -767,7 +768,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: i64) {
         drop(tx);
 
         let mut processed = 0;
-        while let Some(p) = rx.recv().await {
+        while rx.recv().await.is_some() {
             processed += 1;
             let title = format!("Fetched {processed}/{}", fetch_ctx.total);
             state
@@ -791,38 +792,96 @@ async fn schema_to_recipe_for_create(state: &AppState, schema: RecipeSchema) -> 
     let schema = Arc::new(schema);
     let mut recipe_c = RecipeForCreate::from(&*schema);
 
-    if let Some(url) = schema.image_url() {
-        if let Ok(path) = state.scraper.fetch_and_upload_to_temp(url.as_str()).await {
-            let file_name = Uuid::new_v4();
-            fs_support.upload_image(&path, file_name, &state.data_dir.images);
-            recipe_c.images = state
-                .fs_support
-                .is_file_exists(file_name, &state.data_dir.images)
-                .then_some(vec![file_name]);
-        }
-    }
+    recipe_c.images = extract_images(&schema, state, fs_support.clone()).await;
+    recipe_c.videos = extract_videos(&schema, state, fs_support).await;
 
-    if let Some(url) = schema.video_url() {
-        if let Ok(path) = state.scraper.fetch_and_upload_to_temp(url.as_str()).await {
-            let file_name = Uuid::new_v4();
-            fs_support
-                .clone()
-                .upload_videos(vec![path.clone()], &state.data_dir.images);
-            if fs_support.is_file_exists(file_name, &state.data_dir.videos) {
-                recipe_c.videos = vec![VideoForCreate {
-                    video: file_name,
-                    duration: fs_support
-                        .calc_video_duration(path.to_str().unwrap_or_default())
-                        .await
-                        .ok(),
-                    content_url: schema.video_content_url().map(String::from),
-                    embed_url: schema.video_embed_url().map(String::from),
-                }];
+    recipe_c
+}
+
+async fn extract_images(
+    schema: &Arc<RecipeSchema>,
+    state: &AppState,
+    fs_support: Arc<dyn FsSupport>,
+) -> Vec<Uuid> {
+    let mut vec = Vec::new();
+
+    for images in schema.image.iter() {
+        for image in images.iter() {
+            let url = match image {
+                ImageObjectOrUrl::Url(url) => Some(url),
+                ImageObjectOrUrl::ImageObject(obj) => {
+                    obj.url.as_ref().or(obj.content_url.as_ref())
+                }
+            };
+
+            if let Some(url) = url {
+                // TODO: Fetch the image using reqwest.
+                let path = PathBuf::new();
+
+                let file_name = Uuid::new_v4();
+                fs_support.upload_image(&path, file_name, &state.data_dir.images);
+                vec.push(
+                    state
+                        .fs_support
+                        .is_file_exists(file_name, &state.data_dir.images)
+                        .then_some(file_name),
+                );
             }
         }
     }
 
-    recipe_c
+    vec.into_iter()
+        .map(|img| img.unwrap_or_default())
+        .filter(|v| v != &Uuid::nil())
+        .collect()
+}
+
+async fn extract_videos(
+    schema: &Arc<RecipeSchema>,
+    state: &AppState,
+    fs_support: Arc<dyn FsSupport>,
+) -> Vec<VideoForCreate> {
+    let mut videos = Vec::new();
+
+    for v in schema.video.iter() {
+        for clip in v.iter() {
+            match clip {
+                ClipOrVideoObject::Clip(c) => {
+                    warn!("ClipType not implemented");
+                }
+                ClipOrVideoObject::VideoObject(obj) => {
+                    if let Ok(path) = state
+                        .scraper
+                        .fetch_and_upload_to_temp(obj.content_url.as_str())
+                        .await
+                    {
+                        let file_name = Uuid::new_v4();
+                        fs_support
+                            .clone()
+                            .upload_videos(vec![path.clone()], &state.data_dir.images);
+
+                        if fs_support.is_file_exists(file_name, &state.data_dir.videos) {
+                            videos.push(VideoForCreate {
+                                video: file_name,
+                                duration: fs_support
+                                    .calc_video_duration(path.to_str().unwrap_or_default())
+                                    .await
+                                    .ok(),
+                                content_url: schema
+                                    .extract_video_content_urls()
+                                    .map(|v| v.into_iter().map(String::from).collect()),
+                                embed_url: schema
+                                    .extract_video_embed_urls()
+                                    .map(|v| v.into_iter().map(String::from).collect()),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    videos
 }
 
 /// Handles adding a recipe category into the database.

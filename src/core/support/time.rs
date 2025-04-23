@@ -1,6 +1,6 @@
 use nom::branch::alt;
-use nom::bytes::complete::{tag, take_till, take_while};
-use nom::character::complete::{char, digit1, space0, space1};
+use nom::bytes::complete::{tag, take_till};
+use nom::character::complete::{char, digit1, space0};
 use nom::combinator::{map_res, opt};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};

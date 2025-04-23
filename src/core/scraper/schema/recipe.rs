@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 
 use reqwest::Url;
 use serde::{Deserialize, Deserializer, de};
-use tracing::{error, warn};
+use tracing::warn;
 
 use crate::core::scraper::schema::common::*;
 use crate::core::scraper::schema::nutrition::{NutritionInformationSchema, RestrictedDiet};
@@ -127,7 +127,7 @@ pub struct RecipeSchema {
     pub identifier: Option<PropertyValueOrTextOrUrl>,
 
     /// An image of the item. This can be a URL or a fully described ImageObject.
-    pub image: Option<ImageObjectOrUrl>,
+    pub image: Option<Vec<ImageObjectOrUrl>>,
 
     /// The language of the content or performance or used in an action. Please use one of the
     /// language codes from the IETF BCP 47 standard. See also availableLanguage. Supersedes language.
@@ -215,7 +215,7 @@ pub struct RecipeSchema {
     /// Indicates a dietary restriction or guideline for which this recipe or menu item
     /// is suitable, e.g. diabetic, halal etc.
     #[serde(default)]
-    pub suitable_for_diet: RestrictedDiet,
+    pub suitable_for_diet: Vec<RestrictedDiet>,
 
     /// A sub-property of instrument. A supply consumed when performing instructions or a direction.
     pub supply: Option<HowToSupplyOrText>,
@@ -225,7 +225,7 @@ pub struct RecipeSchema {
 
     /// A sub property of instrument. An object used (but not consumed) when performing
     /// instructions or a direction.
-    pub tool: Option<HowToToolOrText>,
+    pub tool: Option<Vec<HowToToolOrText>>,
 
     /// The total time required to perform instructions or a direction (including time to prepare
     /// the supplies), in ISO 8601 duration format.
@@ -251,7 +251,7 @@ pub struct RecipeSchema {
     pub url: Option<Url>,
 
     /// An embedded video object.
-    pub video: Option<ClipOrVideoObject>,
+    pub video: Option<Vec<ClipOrVideoObject>>,
 
     /// Example/instance/realization/derivation of the concept of this creative work. E.g.
     /// the paperback edition, first edition, or e-book.
@@ -264,60 +264,50 @@ pub struct RecipeSchema {
 }
 
 impl RecipeSchema {
-    /// Fetches the image's url, if it exists.
-    pub fn image_url(&self) -> Option<Url> {
-        match self.image.clone().map(Url::try_from) {
-            Some(Ok(image)) => Some(image),
-            Some(Err(err)) => {
-                error!("Failed to parse RecipeSchema image: {err}");
-                None
-            }
-            _ => None,
-        }
+    /// Extracts image URLs from image objects.
+    pub fn extract_image_urls(&self) -> Option<Vec<Url>> {
+        self.image.clone().map(|vec| {
+            vec.into_iter()
+                .filter_map(|img| match img {
+                    ImageObjectOrUrl::Url(url) => Some(url),
+                    ImageObjectOrUrl::ImageObject(obj) => obj.url,
+                })
+                .collect::<Vec<_>>()
+        })
     }
 
-    /// Fetches the video's url, if it exists.
-    pub fn video_url(&self) -> Option<Url> {
-        match self.video.clone().map(Url::try_from) {
-            Some(Ok(video)) => Some(video),
-            Some(Err(err)) => {
-                error!("Failed to parse RecipeSchema image: {err}");
-                None
-            }
-            _ => None,
-        }
+    /// Extracts content URLs from video objects, filtering out clip objects.
+    pub fn extract_video_content_urls(&self) -> Option<Vec<Url>> {
+        self.video.as_ref().map(|videos| {
+            videos
+                .iter()
+                .filter_map(|video| match video {
+                    ClipOrVideoObject::Clip(clip) => {
+                        warn!("Ignoring clip object in video URL extraction: {clip:?}");
+                        None
+                    }
+                    ClipOrVideoObject::VideoObject(video_obj) => {
+                        Some(video_obj.content_url.clone())
+                    }
+                })
+                .collect()
+        })
     }
 
-    /// Gets the content url of the video.
-    pub fn video_content_url(&self) -> Option<Url> {
-        match self.video.clone() {
-            None => None,
-            Some(v) => match v {
-                ClipOrVideoObject::Clip(_) => {
-                    warn!(
-                        "RecipeSchema video content url will be ignored because of a clip object"
-                    );
-                    None
-                }
-                ClipOrVideoObject::VideoObject(object) => Some(object.content_url),
-            },
-        }
-    }
-
-    /// Gets the embed url of the video.
-    pub fn video_embed_url(&self) -> Option<Url> {
-        match self.video.clone() {
-            None => None,
-            Some(v) => match v {
-                ClipOrVideoObject::Clip(_) => {
-                    warn!(
-                        "RecipeSchema video content url will be ignored because of a clip object"
-                    );
-                    None
-                }
-                ClipOrVideoObject::VideoObject(object) => Some(object.embed_url),
-            },
-        }
+    /// Extracts embedded URLs from video objects, filtering out clip objects.
+    pub fn extract_video_embed_urls(&self) -> Option<Vec<Url>> {
+        self.video.as_ref().map(|videos| {
+            videos
+                .iter()
+                .filter_map(|video| match video {
+                    ClipOrVideoObject::Clip(clip) => {
+                        warn!("Ignoring clip object in video URL extraction: {clip:?}");
+                        None
+                    }
+                    ClipOrVideoObject::VideoObject(video_obj) => Some(video_obj.embed_url.clone()),
+                })
+                .collect()
+        })
     }
 }
 

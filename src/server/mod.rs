@@ -448,7 +448,7 @@ pub mod test_utils {
         RecipeForCreate {
             name: "Best Chinese Kale".into(),
             description: Some("This is the most delicious recipe!".into()),
-            images: Some(vec![main_image, secondary_image]),
+            images: vec![main_image, secondary_image],
             yield_: Some(4),
             source: Some(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
@@ -524,7 +524,7 @@ pub mod test_utils {
     pub fn a_complete_recipe() -> RecipeDetails {
         let recipe_c = a_complete_recipe_for_create();
 
-        let images = recipe_c.images.expect("some images");
+        let images = recipe_c.images;
         let additional_images = images.last().iter().cloned().cloned().collect::<Vec<_>>();
 
         let created_date = NaiveDate::from_ymd_opt(2012, 12, 31).expect("end of the world");

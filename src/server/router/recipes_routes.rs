@@ -352,7 +352,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
             Recipe::create(&state.mm, 1, &recipe).await?;
-            recipe.images = None;
+            recipe.images = Vec::new();
             recipe.videos = Vec::new();
 
             let res = server
@@ -456,7 +456,7 @@ mod tests {
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
                 description: Some("Trust me. They're delicious.".into()),
-                images: Some(vec![Uuid::new_v4(), Uuid::new_v4()]),
+                images: vec![Uuid::new_v4(), Uuid::new_v4()],
                 yield_: Some(12),
                 source: Some("My father's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -975,7 +975,7 @@ mod tests {
             let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
-            recipe.images = None;
+            recipe.images = vec![];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -999,7 +999,7 @@ mod tests {
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             let img1 = Uuid::new_v4();
-            recipe.images = Some(vec![img1]);
+            recipe.images = vec![img1];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1022,7 +1022,7 @@ mod tests {
             let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
-            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
+            recipe.images = vec![Uuid::nil(), Uuid::nil()];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1051,7 +1051,7 @@ mod tests {
                 content_url: Some("https://example.com/embed/yg8FG4".into()),
                 embed_url: None,
             }];
-            recipe.images = None;
+            recipe.images = vec![];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1087,7 +1087,7 @@ mod tests {
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            recipe.images = None;
+            recipe.images = vec![];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1124,7 +1124,7 @@ mod tests {
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
+            recipe.images = vec![Uuid::nil(), Uuid::nil()];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1471,7 +1471,7 @@ mod tests {
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".into(),
                 description: Some("Your mouth will drool like never before".into()),
-                images: Some(vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()]),
+                images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
                 yield_: Some(6),
                 source: Some("My mother's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -2091,14 +2091,12 @@ mod tests {
             form = form.add_part("yield", Part::text(n.to_string()));
         }
 
-        if let Some(images) = &recipe.images {
-            for image in images {
-                let file_name = format!("{image}.jpg");
-                form = form.add_part(
-                    "media",
-                    Part::file_name(Part::text(image.to_string()), file_name),
-                );
-            }
+        for image in &recipe.images {
+            let file_name = format!("{image}.jpg");
+            form = form.add_part(
+                "media",
+                Part::file_name(Part::text(image.to_string()), file_name),
+            );
         }
 
         for video in &recipe.videos {

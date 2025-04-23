@@ -7,9 +7,16 @@ use nom::combinator::{map, map_res, opt};
 use nom::multi::many1;
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
+use url::Url;
 
-use crate::core::integrations::{Error, IntegrationRecipe, Result};
-use crate::core::model::recipe::{Sections, TimesForCreate};
+use crate::core::integrations::helpers::{
+    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield,
+};
+use crate::core::integrations::{Error, Result};
+use crate::core::model::recipe::Sections;
+use crate::core::scraper::schema::{
+    AggregateRating, AtType, DefinedTermOrTextOrUrl, NumberOrText, RecipeCategory, RecipeSchema,
+};
 
 struct BigOvenRecipe {
     title: String,
@@ -108,42 +115,46 @@ impl From<RecipeComponents<'_>> for BigOvenRecipe {
     }
 }
 
-impl From<BigOvenRecipe> for IntegrationRecipe {
+impl From<BigOvenRecipe> for RecipeSchema {
     fn from(r: BigOvenRecipe) -> Self {
-        IntegrationRecipe {
-            affordability_rating: to_option(r.affordability_rating),
-            appearance_rating: to_option(r.appearance_rating),
-            category: r.category,
-            effort_rating: to_option(r.effort_rating),
-            keywords: r.keywords,
-            yield_: to_option(r.servings.round() as i16),
-            times: if r.active_minutes == 0 && r.total_minutes == 0 {
+        let url = Url::parse(&r.source.clone().unwrap_or_default()).ok();
+
+        RecipeSchema {
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            aggregate_rating: if r.taste_rating > 0 {
+                Some(AggregateRating {
+                    at_type: AtType::AggregateRating,
+                    rating_value: Some(NumberOrText::Number(r.taste_rating as i64)),
+                    ..Default::default()
+                })
+            } else {
+                None
+            },
+            cook_time: seconds_to_duration((r.total_minutes - r.active_minutes) as i32),
+            is_based_on: if url.is_some() {
                 None
             } else {
-                Some(TimesForCreate {
-                    prep_seconds: r.active_minutes as i32,
-                    cook_seconds: (r.total_minutes - r.active_minutes) as i32,
-                })
+                to_is_based_on(r.source.to_owned().unwrap())
             },
-            ingredients: r.ingredients,
-            instructions: Sections::from([("".into(), r.instructions)]),
-            source: r.source,
-            taste_rating: to_option(r.taste_rating),
-            title: r.title,
+            keywords: Some(DefinedTermOrTextOrUrl::Text(r.keywords.join(","))),
+            name: Some(r.title).filter(|s| !s.is_empty()),
+            prep_time: seconds_to_duration(r.active_minutes as i32),
+            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
+            recipe_ingredient: sections_to_vec(r.ingredients),
+            recipe_instructions: sections_to_itemlist(Sections::from([(
+                "".into(),
+                r.instructions,
+            )])),
+            recipe_yield: to_yield(r.servings.round() as i64),
+            url,
             ..Default::default()
         }
     }
 }
 
-fn to_option<T>(v: T) -> Option<T>
-where
-    T: From<u8> + PartialEq,
-{
-    if v == 0.into() { None } else { Some(v) }
-}
-
 /// Parses a BigOven text file recipe.
-pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
@@ -152,7 +163,7 @@ where
     Ok(vec![parse_text_file(&content)?])
 }
 
-fn parse_text_file(input: &str) -> Result<IntegrationRecipe> {
+fn parse_text_file(input: &str) -> Result<RecipeSchema> {
     map(recipe, BigOvenRecipe::from)
         .parse(input)
         .map(|(_, r)| r.into())
@@ -773,37 +784,37 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
     mod results {
         use super::*;
 
-        pub fn recipe1() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Applebee's Oriental Chicken Salad".into(),
-                yield_: Some(4),
-                source: Some("http://www.food.com/recipe/tsr-version-of-applebees-oriental-chicken-salad-by-todd-wilbur-19253?ftab=reviews".into()),
-                ingredients: Sections::from([
-                    (
-                        "-- Salad Dressing --".into(),
-                        vec! [
-                             "6 tablespoon Honey".into(),
-                             "3 tablespoon Rice wine vinegar".into(),
-                             "1/2 cup Mayonnaise".into(),
-                             "2 teaspoon Grey Poupon Dijon Mustard".into(),
-                             "1/4 teaspoon Sesame Oil".into(),
-                        ],
-                    ),
-                    (
-                        "-- Salad --".into(),
-                        vec![
-                            "1 package Breaded Chicken Tenders".into(),
-                            "6 cups Romaine lettuce".into(),
-                            "2 cup Red cabbage".into(),
-                            "1 Carrot".into(),
-                            "2 Green Onion".into(),
-                            "2 tablespoon Sliced almonds".into(),
-                            "1 cup Chow mein noodles".into(),
-                        ],
-                    ),
+        pub fn recipe1() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                keywords: Some(DefinedTermOrTextOrUrl::Text(["Low Fat",
+                    "Summer",
+                    "Spring",
+                    "Vegetables",
+                    "Salads",
+                    "Main Dish"].join(","))),
+                is_based_on: None,
+                name: Some("Applebee's Oriental Chicken Salad".into()),
+                recipe_category: RecipeCategory::Text("Low Carb".into()),
+                recipe_ingredient: Some(vec![
+                    "<section>-- Salad Dressing --</section>".into(),
+                    "6 tablespoon Honey".into(),
+                    "3 tablespoon Rice wine vinegar".into(),
+                    "1/2 cup Mayonnaise".into(),
+                    "2 teaspoon Grey Poupon Dijon Mustard".into(),
+                    "1/4 teaspoon Sesame Oil".into(),
+                    "<section>-- Salad --</section>".into(),
+                    "1 package Breaded Chicken Tenders".into(),
+                    "6 cups Romaine lettuce".into(),
+                    "2 cup Red cabbage".into(),
+                    "1 Carrot".into(),
+                    "2 Green Onion".into(),
+                    "2 tablespoon Sliced almonds".into(),
+                    "1 cup Chow mein noodles".into(),
                 ]),
-                instructions: Sections::from([
-                     ("".into(), vec![
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
                         "Below assumes you are making your own chicken tenders, whereas the recipe above uses pre-packaged chicken tenders.".into(),
                         "Directions".into(),
                         "Preheat oil in deep fryer or deep pan over medium heat.".into(),
@@ -822,16 +833,9 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
                         "Place the chicken onto the salad forming a pile in the middle.".into(),
                         "Serve with salad dressing drizzled over it or on the side.".into(),
                     ])
-                 ]),
-                category: Some("Low Carb".into()),
-                keywords: vec![
-                    "Low Fat".into(),
-                    "Summer".into(),
-                    "Spring".into(),
-                    "Vegetables".into(),
-                    "Salads".into(),
-                    "Main Dish".into(),                    
-                ],
+                ])),
+                recipe_yield: to_yield(4),
+                url: Url::parse("http://www.food.com/recipe/tsr-version-of-applebees-oriental-chicken-salad-by-todd-wilbur-19253?ftab=reviews").ok(),
                 ..Default::default()
             }
         }

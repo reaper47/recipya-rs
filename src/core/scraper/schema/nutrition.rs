@@ -3,6 +3,10 @@ use std::fmt::Formatter;
 use serde::{Deserialize, Deserializer, de};
 
 use crate::core::scraper::schema::AtType;
+use crate::core::scraper::schema::RestrictedDiet::{
+    DiabeticDiet, GlutenFreeDiet, HalalDiet, HinduDiet, KosherDiet, LowCalorieDiet, LowFatDiet,
+    LowLactoseDiet, LowSaltDiet, UnspecifiedDiet, VeganDiet, VegetarianDiet,
+};
 use crate::core::support::strings::extract_number;
 
 /// Nutritional information about the recipe as described in the [schema](https://schema.org/NutritionInformation).
@@ -161,6 +165,40 @@ pub enum RestrictedDiet {
     UnspecifiedDiet,
 }
 
+impl From<String> for RestrictedDiet {
+    fn from(value: String) -> Self {
+        if value.contains("diabetic") {
+            DiabeticDiet
+        } else if value.contains("gluten") {
+            GlutenFreeDiet
+        } else if value.contains("halal") {
+            HalalDiet
+        } else if value.contains("hindu") {
+            HinduDiet
+        } else if value.contains("kosher") {
+            KosherDiet
+        } else if value.contains("low") {
+            if value.contains("calorie") {
+                LowCalorieDiet
+            } else if value.contains("fat") {
+                LowFatDiet
+            } else if value.contains("lactose") {
+                LowLactoseDiet
+            } else if value.contains("salt") {
+                LowSaltDiet
+            } else {
+                UnspecifiedDiet
+            }
+        } else if value.contains("vegan") {
+            VeganDiet
+        } else if value.contains("vegetarian") {
+            VegetarianDiet
+        } else {
+            UnspecifiedDiet
+        }
+    }
+}
+
 impl<'de> Deserialize<'de> for RestrictedDiet {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -181,19 +219,34 @@ impl<'de> Deserialize<'de> for RestrictedDiet {
             where
                 E: de::Error,
             {
-                match v.trim() {
-                    "DiabeticDiet" => Ok(DiabeticDiet),
-                    "GlutenFreeDiet" => Ok(GlutenFreeDiet),
-                    "HalalDiet" => Ok(HalalDiet),
-                    "HinduDiet" => Ok(HinduDiet),
-                    "KosherDiet" => Ok(KosherDiet),
-                    "LowCalorieDiet" => Ok(LowCalorieDiet),
-                    "LowFatDiet" => Ok(LowFatDiet),
-                    "LowLactoseDiet" => Ok(LowLactoseDiet),
-                    "LowSaltDiet" => Ok(LowSaltDiet),
-                    "VeganDiet" => Ok(VeganDiet),
-                    "VegetarianDiet" => Ok(VegetarianDiet),
-                    _ => Ok(UnspecifiedDiet),
+                if v.contains("diabetic") {
+                    Ok(DiabeticDiet)
+                } else if v.contains("gluten") {
+                    Ok(GlutenFreeDiet)
+                } else if v.contains("halal") {
+                    Ok(HalalDiet)
+                } else if v.contains("hindu") {
+                    Ok(HinduDiet)
+                } else if v.contains("kosher") {
+                    Ok(KosherDiet)
+                } else if v.contains("low") {
+                    if v.contains("calorie") {
+                        Ok(LowCalorieDiet)
+                    } else if v.contains("fat") {
+                        Ok(LowFatDiet)
+                    } else if v.contains("lactose") {
+                        Ok(LowLactoseDiet)
+                    } else if v.contains("salt") {
+                        Ok(LowSaltDiet)
+                    } else {
+                        Ok(UnspecifiedDiet)
+                    }
+                } else if v.contains("vegan") {
+                    Ok(VeganDiet)
+                } else if v.contains("vegetarian") {
+                    Ok(VegetarianDiet)
+                } else {
+                    Ok(UnspecifiedDiet)
                 }
             }
         }

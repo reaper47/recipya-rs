@@ -3,11 +3,14 @@ use std::io::Read;
 use recipemd::{Factor, Ingredient, Recipe};
 
 use crate::core::integrations::error::Result;
-use crate::core::integrations::IntegrationRecipe;
+use crate::core::integrations::helpers::{
+    sections_to_itemlist, sections_to_vec, to_defined_text, to_text, to_yield,
+};
 use crate::core::model::recipe::Sections;
+use crate::core::scraper::schema::{AtType, RecipeSchema};
 
 /// Parses a RecipeMD recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
@@ -23,29 +26,38 @@ where
         .map(|group| (group.title, ingredients_to_string(group.ingredients)))
         .collect::<Vec<_>>();
 
-    Ok(vec![IntegrationRecipe {
-        title: recipe.title,
-        description: recipe.description,
-        keywords: recipe.tags,
-        yield_: recipe.yields.first().map(|amount| match amount.factor {
-            Factor::Integer(n) => n as i16,
-            Factor::Fraction(numerator, denominator) => (numerator / denominator) as i16,
-            Factor::Float(n) => n as i16,
-        }),
-        ingredients: if ingredients_with_groups.is_empty() {
-            ingredients
+    Ok(vec![RecipeSchema {
+        at_context: Default::default(),
+        at_type: Some(AtType::Recipe),
+        description: to_text(recipe.description.unwrap_or_default()),
+        keywords: to_defined_text(recipe.tags.join(",")),
+        name: Some(recipe.title),
+        recipe_ingredient: if ingredients_with_groups.is_empty() {
+            sections_to_vec(ingredients)
         } else {
-            ingredients_with_groups
+            sections_to_vec(ingredients_with_groups)
         },
-        instructions: Sections::from([
-            ("".into(), recipe
+        recipe_instructions: sections_to_itemlist(Sections::from([(
+            "".into(),
+            recipe
                 .instructions
                 .unwrap_or_default()
                 .replace("\r\n", "\n\n")
                 .split("\n\n")
                 .map(|s| s.replace("\n", " "))
-                .collect())
-        ]),
+                .collect(),
+        )])),
+        recipe_yield: to_yield(
+            recipe
+                .yields
+                .first()
+                .map(|amount| match amount.factor {
+                    Factor::Integer(n) => n as i16,
+                    Factor::Fraction(numerator, denominator) => (numerator / denominator) as i16,
+                    Factor::Float(n) => n as i16,
+                })
+                .unwrap_or_default() as i64,
+        ),
         ..Default::default()
     }])
 }
@@ -112,26 +124,25 @@ Eat, mix and sleep!
 
         let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, vec![IntegrationRecipe {
-            title: "Guacamole".into(),
-            description: Some(
-                        "Some people call it guac.".into(),
-                    ),
-            keywords: vec!["sauce".into(),
-      "vegan".into(),],
-            yield_: Some(4),
-            ingredients: Sections::from([("".into(), vec![
+        pretty_assertions::assert_eq!(got, vec![RecipeSchema {
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            description: to_text("Some people call it guac.".into()),
+            keywords: to_defined_text(["sauce", "vegan"].join(",")),
+            name: Some("Guacamole".into()),
+            recipe_ingredient: sections_to_vec(Sections::from([("".into(), vec![
                 "1 avocado".into(),
                 "0.5 teaspoon salt".into(),
                 "1.5 pinches red pepper flakes".into(),
                 "lemon juice".into(),
-            ])]),
-            instructions: Sections::from([
+            ])])),
+            recipe_instructions: sections_to_itemlist(Sections::from([
                 ("".into(), vec![
                     "Remove flesh from avocado and roughly mash with fork. Season to taste with salt, pepper and lemon juice.".into(),
                     "Eat, mix and sleep!".into(),
                 ])
-            ]),
+            ])),
+            recipe_yield: to_yield(4),
             ..Default::default()
         }]);
         Ok(())

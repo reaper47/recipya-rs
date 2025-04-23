@@ -10,8 +10,11 @@ use nom::{IResult, Parser};
 use url::Url;
 
 use crate::core::integrations::error::{Error, Result};
-use crate::core::integrations::IntegrationRecipe;
-use crate::core::model::recipe::{Sections, TimesForCreate};
+use crate::core::integrations::helpers::{
+    seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
+};
+use crate::core::model::recipe::Sections;
+use crate::core::scraper::schema::{AtType, ImageObjectOrUrl, RecipeSchema};
 use crate::core::support::time::parse_duration;
 
 struct SaffronRecipe {
@@ -66,32 +69,39 @@ impl From<RecipeComponents<'_>> for SaffronRecipe {
     }
 }
 
-impl From<SaffronRecipe> for IntegrationRecipe {
+impl From<SaffronRecipe> for RecipeSchema {
     fn from(r: SaffronRecipe) -> Self {
         Self {
-            cookbook: r.cookbook,
-            description: r.description,
-            images: vec![r.image.unwrap_or_default()].into_iter().filter(|s| !s.is_empty()).collect(),
-            ingredients: Sections::from([("".into(), r.ingredients)]),
-            instructions: Sections::from([("".into(), r.instructions)]),
-            source: r.original_url.map(|u| u.to_string()).or(r.source),
-            times: if r.prep_seconds.is_some() || r.cook_seconds.is_some() {
-                Some(TimesForCreate {
-                    prep_seconds: r.prep_seconds.unwrap_or_default(),
-                    cook_seconds: r.cook_seconds.unwrap_or_default(),
-                })
-            } else {
-                None
-            },
-            title: r.title,
-            yield_: r.servings,
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            cook_time: seconds_to_duration(r.cook_seconds.unwrap_or_default()),
+            description: to_text(r.description.unwrap_or_default()),
+            headline: r.cookbook,
+            image: Some(
+                vec![r.image.unwrap_or_default()]
+                    .into_iter()
+                    .filter_map(|img| Url::parse(&img).ok())
+                    .map(ImageObjectOrUrl::Url)
+                    .collect::<Vec<_>>(),
+            )
+            .filter(|v| !v.is_empty()),
+            name: Some(r.title),
+            is_based_on: to_is_based_on(r.source.unwrap_or_default()),
+            prep_time: seconds_to_duration(r.prep_seconds.unwrap_or_default()),
+            recipe_ingredient: Some(r.ingredients).filter(|v| !v.is_empty()),
+            recipe_instructions: sections_to_itemlist(Sections::from([(
+                "".into(),
+                r.instructions,
+            )])),
+            recipe_yield: to_yield(r.servings.unwrap_or_default() as i64),
+            url: r.original_url,
             ..Default::default()
         }
     }
 }
 
 /// Parses a Saffron recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
@@ -99,7 +109,7 @@ where
     r.read_to_string(&mut content)?;
 
     let recipe = parse_saffron_recipe(&content)?;
-    Ok(vec![IntegrationRecipe::from(recipe)])
+    Ok(vec![RecipeSchema::from(recipe)])
 }
 
 fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
@@ -247,38 +257,37 @@ mod tests {
 
         let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, vec![IntegrationRecipe {
-            title: "Apple Puff Pancake".into(),
-            description: Some("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into()),
-            source: Some("https://www.allrecipes.com/recipe/50936/apple-puff-pancake/".into()),
-            yield_: Some(9),
-            times: Some(TimesForCreate {
-                prep_seconds: 900,
-                cook_seconds: 1800,
-            }),
-            cookbook: Some("First Cookbook".into()),
-            ingredients: Sections::from([
-                ("".into(), vec![
-                    "6 eggs".into(),
-                    "1.5 cups milk".into(),
-                    "1 teaspoon vanilla extract".into(),
-                    "1 cup all-purpose flour".into(),
-                    "3 tablespoons sugar".into(),
-                    "0.5 teaspoon salt".into(),
-                    "0.25 teaspoon ground cinnamon".into(),
-                    "2 tablespoons butter".into(),
-                    "2 apples - peeled, cored and sliced".into(),
-                    "3 tablespoons brown sugar".into(),
-                ])
+        pretty_assertions::assert_eq!(got, vec![RecipeSchema {
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            cook_time: seconds_to_duration(1800),
+            description: to_text("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into()),
+            headline: Some("First Cookbook".into()),
+            is_based_on: to_is_based_on("KMKIDMAN5".into()),
+            name: Some("Apple Puff Pancake".into()),
+            prep_time: seconds_to_duration(900),
+            recipe_ingredient: Some(vec![
+                "6 eggs".into(),
+                "1.5 cups milk".into(),
+                "1 teaspoon vanilla extract".into(),
+                "1 cup all-purpose flour".into(),
+                "3 tablespoons sugar".into(),
+                "0.5 teaspoon salt".into(),
+                "0.25 teaspoon ground cinnamon".into(),
+                "2 tablespoons butter".into(),
+                "2 apples - peeled, cored and sliced".into(),
+                "3 tablespoons brown sugar".into(),
             ]),
-            instructions: Sections::from([
+            recipe_instructions: sections_to_itemlist(Sections::from([
                 ("".into(), vec![
                     "Preheat the oven to 425 degrees F (220 degrees C).".into(),
                     "Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.".into(),
                     "Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.".into(),
                     "Bake in the preheated oven until puffed and lightly browned, about 20 minutes.".into(),
                 ])
-            ]),
+            ])),
+            recipe_yield: to_yield(9),
+            url: Url::parse("https://www.allrecipes.com/recipe/50936/apple-puff-pancake/").ok(),
             ..Default::default()
         }]);
         Ok(())
@@ -293,22 +302,21 @@ mod tests {
 
         pretty_assertions::assert_eq!(
             got,
-            vec![IntegrationRecipe {
-                title: "Yay".into(),
-                description: None,
-                source: Some("Mom".into()),
-                times: Some(TimesForCreate {
-                    prep_seconds: 4500,
-                    cook_seconds: 0,
-                }),
-                cookbook: Some("First Cookbook".into()),
-                ingredients: Sections::from([
-                    ("".into(), vec!["1 kg chicken".into(), "1 egg".into()])
-                ]),
-                instructions: Sections::from([
-                    ("".into(), vec!["Mix stuff".into(), "Eat a melon".into(), "Profit".into()])
-                ]),
-                ..Default::default()           
+            vec![RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                cook_time: seconds_to_duration(0),
+                headline: Some("First Cookbook".into()),
+                is_based_on: to_is_based_on("Mom".into()),
+                name: Some("Yay".into()),
+                prep_time: seconds_to_duration(4500),
+                recipe_ingredient: Some(vec!["1 kg chicken".into(), "1 egg".into()]),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec!["Mix stuff".into(), "Eat a melon".into(), "Profit".into()]
+                )])),
+                recipe_yield: to_yield(0),
+                ..Default::default()
             }]
         );
         Ok(())

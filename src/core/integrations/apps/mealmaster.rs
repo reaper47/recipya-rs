@@ -24,10 +24,14 @@ use nom::combinator::{map, map_res, opt, recognize, verify};
 use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
+use url::Url;
 
 use crate::core::integrations::error::{Error, Result};
-use crate::core::integrations::IntegrationRecipe;
+use crate::core::integrations::helpers::{
+    sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_yield,
+};
 use crate::core::model::recipe::Sections;
+use crate::core::scraper::schema::{AtType, RecipeCategory, RecipeSchema};
 
 struct MealMasterRecipe {
     title: String,
@@ -156,23 +160,26 @@ enum Ingredient<'a> {
     Section(&'a str),
 }
 
-impl From<MealMasterRecipe> for IntegrationRecipe {
+impl From<MealMasterRecipe> for RecipeSchema {
     fn from(r: MealMasterRecipe) -> Self {
         Self {
-            category: r.category,
-            ingredients: r.ingredients,
-            instructions: r.instructions,
-            keywords: r.keywords,
-            source: Some(r.source).filter(|s| !s.is_empty()),
-            title: r.title,
-            yield_: Some(r.yield_).filter(|v| v > &0) ,
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            is_based_on: to_is_based_on(r.source.clone()),
+            keywords: to_defined_text(r.keywords.join(",")),
+            name: Some(r.title).filter(|s| !s.is_empty()),
+            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
+            recipe_ingredient: sections_to_vec(r.ingredients),
+            recipe_instructions: sections_to_itemlist(r.instructions),
+            recipe_yield: to_yield(r.yield_ as i64),
+            url: Url::parse(&r.source).ok(),
             ..Default::default()
         }
     }
 }
 
 /// Parses a MealMaster recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
@@ -180,7 +187,7 @@ where
     r.read_to_string(&mut content)?;
 
     let recipes = parse_meal_master_recipe(&content)?;
-    Ok(recipes.into_iter().map(IntegrationRecipe::from).collect())
+    Ok(recipes.into_iter().map(RecipeSchema::from).collect())
 }
 
 fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
@@ -1198,74 +1205,65 @@ Typed for you by Karen Mintzias
 
     mod results {
         use super::*;
+        use crate::core::scraper::schema::RecipeSchema;
 
-        pub fn recipe_unspecified_version() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "West Haven Chocolate Cake".into(),
-                category: Some("Chocolate".into()),
-                keywords: vec![
-                    "Cakes".into(),
-                    "Fruits".into(),
-                    "Desserts".into(),
-                ],
-                yield_: Some(16),
-                ingredients: Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "8 oz Dates; Pitted, Chopped".into(),
-                            "1 t  Baking Soda".into(),
-                            "1 c  ;Boiling Water".into(),
-                            "1 3/4 c  Flour; Unbleached, Sifted".into(),
-                            "2 T  Cocoa; Baking".into(),
-                            "1/2 t  Salt".into(),
-                            "1 c  Shortening; Vegetable".into(),
-                            "1 c  Sugar".into(),
-                            "2 ea Eggs; Large".into(),
-                            "6 oz Semisweet Chocolate Chips".into(),
-                            "1/2 c  Walnuts; Chopped".into(),
-                        ],
-                    )
+        pub fn recipe_unspecified_version() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) Database".into()),
+                keywords: to_defined_text(["Cakes", "Fruits", "Desserts"].join(",")),
+                name: Some("West Haven Chocolate Cake".into()),
+                recipe_category: RecipeCategory::Text("Chocolate".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "8 oz Dates; Pitted, Chopped".into(),
+                    "1 t  Baking Soda".into(),
+                    "1 c  ;Boiling Water".into(),
+                    "1 3/4 c  Flour; Unbleached, Sifted".into(),
+                    "2 T  Cocoa; Baking".into(),
+                    "1/2 t  Salt".into(),
+                    "1 c  Shortening; Vegetable".into(),
+                    "1 c  Sugar".into(),
+                    "2 ea Eggs; Large".into(),
+                    "6 oz Semisweet Chocolate Chips".into(),
+                    "1/2 c  Walnuts; Chopped".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
                             "Combine dates, baking soda, and boiling water in a small bowl.  Cool to room temperature.  Sift together the flour, cocoa, and salt; set aside. Cream the shortening and sugar together in a mixing bowl until light and fluffy, using an electric mixer at medium speed.  Add eggs, one at a time, beating well after each addition.  Blend in date mixture.  Then stir in dry ingredients.  Pour into a greased 13 x 9 x 2-inch baking pan.  Bake in preheated 350 degree F. oven for 35 minutes or until cake tests done. Cool in pan on rack.  Cut into squares and serve with a scoop of vanilla ice cream on top.".into(),
                         ],
                     )
-                ]),
-                source: Some("Meal-Master (tm) Database".into()),
+                ])),
+                recipe_yield: to_yield(16),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v6_14() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Poppin' Fresh Barbe Cups".into(),
-                category: Some("Breads".into()),
-                keywords: vec![
-                    "Cheese".into(),
-                    "Main".into(),
-                    "dish".into(),
-                    "Meats".into(),
-                    "Sandwiches".into(),
-                ],
-                yield_: Some(6),
-                ingredients: Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "3/4 lb Ground Beef; Lean".into(),
-                            "1 tb Onion; Minced".into(),
-                            "2 tb Brown Sugar".into(),
-                            "12 ea Biscuits; *".into(),
-                            "1/2 c  Barbecue Sauce; **".into(),
-                            "3/4 c  Cheddar; Sharp, Shredded".into(),
-                        ]
-                    )
+        pub fn recipe_v6_14() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v6.14".into()),
+                keywords: to_defined_text(["Cheese",
+                    "Main",
+                    "dish",
+                    "Meats",
+                    "Sandwiches"].join(",")),
+                name: Some("Poppin' Fresh Barbe Cups".into()),
+                recipe_category: RecipeCategory::Text("Breads".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "3/4 lb Ground Beef; Lean".into(),
+                    "1 tb Onion; Minced".into(),
+                    "2 tb Brown Sugar".into(),
+                    "12 ea Biscuits; *".into(),
+                    "1/2 c  Barbecue Sauce; **".into(),
+                    "3/4 c  Cheddar; Sharp, Shredded".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
@@ -1273,216 +1271,209 @@ Typed for you by Karen Mintzias
                             "In a skillet brown the ground beef and then drain off the excess fat.  Add the bbq sauce, onion and brown sugar and set aside.  Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup.  Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese.  Bake in a preheated 400 degrees F. oven for 12 minutes.  Serve hot.".into(),
                             "VARIATIONS:".into(),
                             "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture.  You can also add green bell pepper or a hot pepper to the above recipe with good results.".into(),
-                        ]
+                        ],
                     )
-                ]),
-                source: Some("Meal-Master (tm) v6.14".into()),
+                ])),
+                recipe_yield: to_yield(6),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v6_20() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Magic Pan Orange Almond Salad".into(),
-                category: Some("Salads".into()),
-                keywords: vec![],
-                yield_: Some(6),
-                ingredients: Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "1/4 c  Almonds; slivered".into(),
-                            "2 ea Onions; green, chopped".into(),
-                            "1 ea Lettuce; romaine".into(),
-                            "1 c  Mandarin oranges; drained 1".into(),
-                            "1/2 c  Mushrooms; sliced (optional".into(),
-                            "1 x  Dressing:".into(),
-                            "1 ts Sugar".into(),
-                            "1/2 ts Tarragon; dried".into(),
-                            "1/3 c  Oil; vegetable".into(),
-                            "1 x  Salt & pepper".into(),
-                            "1/8 ts Tabasco sauce".into(),
-                            "1 ea Egg yolk".into(),
-                        ],
-                    )
+        pub fn recipe_v6_20() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master v6.2 Importable Format".into()),
+                name: Some("Magic Pan Orange Almond Salad".into()),
+                recipe_category: RecipeCategory::Text("Salads".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "1/4 c  Almonds; slivered".into(),
+                    "2 ea Onions; green, chopped".into(),
+                    "1 ea Lettuce; romaine".into(),
+                    "1 c  Mandarin oranges; drained 1".into(),
+                    "1/2 c  Mushrooms; sliced (optional".into(),
+                    "1 x  Dressing:".into(),
+                    "1 ts Sugar".into(),
+                    "1/2 ts Tarragon; dried".into(),
+                    "1/3 c  Oil; vegetable".into(),
+                    "1 x  Salt & pepper".into(),
+                    "1/8 ts Tabasco sauce".into(),
+                    "1 ea Egg yolk".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
                             "Shaking constantly, toast almonds in skillet over low heat till golden brown (about 5 minutes). Was and dry lettuce. Tear into bite size pieces. Place with green onions and mandarin oranges in large salad bowl.     Dressing: Combine all ingredients but egg and vinegar, add in thin stream and process till well blended. MAKES : 1 cup Just before serving, toss well. Leftover dressing keeps up to 1 week in fridge.               from Best Recipes Under the Sun".into(),
                         ],
                     )
-                ]),
-                source: Some("Meal-Master v6.2 Importable Format".into()),
+                ])),
+                recipe_yield: to_yield(6),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v7_01() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Old Style Enchiladas".into(),
-                category: Some("Chili".into()),
-                keywords: vec![],
-                yield_: Some(4),
-                ingredients: Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "2 lb Hamburger".into(),
-                            "16 oz Can tomatoes".into(),
-                            "2    Lg. onions, chopped separate".into(),
-                            "16 oz Can kidney beans, drained".into(),
-                            "4 tb Chili powder (adjust to tast".into(),
-                            "1 t  Sugar".into(),
-                            "1 t  Salt and pepper to taste".into(),
-                            "1    Pkg. corn tortillas".into(),
-                            "1 lb Cheese, grated".into(),
-                        ],
-                    )
+        pub fn recipe_v7_01() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v7.01".into()),
+                name: Some("Old Style Enchiladas".into()),
+                recipe_category: RecipeCategory::Text("Chili".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "2 lb Hamburger".into(),
+                    "16 oz Can tomatoes".into(),
+                    "2    Lg. onions, chopped separate".into(),
+                    "16 oz Can kidney beans, drained".into(),
+                    "4 tb Chili powder (adjust to tast".into(),
+                    "1 t  Sugar".into(),
+                    "1 t  Salt and pepper to taste".into(),
+                    "1    Pkg. corn tortillas".into(),
+                    "1 lb Cheese, grated".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
                             "1-2 c Oil for cooking corn tortillas Brown hamburger and 1 chopped onion (add 2 cloves garlic, chopped, if desired) and drain. Add tomatoes, crushed, kidney beans and spices. Simmer. Heat oil, and cook tortillas to desired degree. (Soft seems to work best) Drain on paper towels. Put 1 tortilla on plate, spoon \"sauce\" over it and sprinkle some of raw onion and cheese on sauce. Put on another tortilla and repeat untill large enough for you. Stop with layer of onion and cheese.".into(),
                         ],
                     )
-                ]),
-                source: Some("Meal-Master (tm) v7.01".into()),
+                ])),
+                recipe_yield: to_yield(4),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v7_04() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Apple Pork Chops".into(),
-                category: Some("Meats".into()),
-                keywords: vec!["French can".into(), "Benoit".into()],
-                yield_: Some(1),
-                ingredients: Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "6    Pork chops".into(),
-                            "Pork chop fat or oil".into(),
-                            "2 ts Butter".into(),
-                            "-salt and pepper to taste".into(),
-                            "3    Apples-unpeeled with cores".into(),
-                            "1 ts Sugar".into(),
-                            "Cinnamon".into(),
-                        ]
-                    )
+        pub fn recipe_v7_04() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v7.04".into()),
+                keywords: to_defined_text(["French can", "Benoit"].join(",")),
+                name: Some("Apple Pork Chops".into()),
+                recipe_category: RecipeCategory::Text("Meats".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "6    Pork chops".into(),
+                    "Pork chop fat or oil".into(),
+                    "2 ts Butter".into(),
+                    "-salt and pepper to taste".into(),
+                    "3    Apples-unpeeled with cores".into(),
+                    "1 ts Sugar".into(),
+                    "Cinnamon".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
                             "Cook the chops using melted fat trimmed from the meat and 1 tsp butter. (Note those concerned about their fat intake may chose to use corn oil or some other vegetable oil rather than the pork fat). Season to taste and set on hot platter. Keep warm. Slice the apples 1/2\" thick and add to the pan with 1 tsp butter, the sugar and a few pinches of cinnamon or cloves. Cook over medium heat for about 10 minutes, turning once or twice until some of apples are browned. Arrange them around the chops and serve. Serves: 4-6".into(),
                             "To quote Mme. Benoit, \"The apples keep the chops moist and tender. I sometimes use 6 to 7 apples, then I use 1 Tablespoon sugar. Serve very hot.\" Source\" _The Canadiana Cookbook_ by Mme. Jehane Benoit".into(),
-                        ]
+                        ],
                     )
+                ])),
+                recipe_yield: to_yield(1),
+                ..Default::default()
+            }
+        }
+
+        pub fn recipe_v7_07() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v7.07".into()),
+                name: Some("Zucchini Date Cake".into()),
+                recipe_category: RecipeCategory::Text("Cakes".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "1/2 lb Zucchini".into(),
+                    "1 c  Chopped dried dates".into(),
+                    "2 ts Grated orange zest".into(),
+                    "2 c  Flour".into(),
+                    "2 ts Baking powder".into(),
+                    "1 1/2 ts Soda".into(),
+                    "2    Egg whites".into(),
+                    "2    Eggs".into(),
+                    "1 tb Vanilla".into(),
+                    "1 1/4 c  Sugar".into(),
+                    "1 c  Plain, non-fat yogurt".into(),
+                    "1/4 c  Almonds (opt.)".into(),
+                    "1/2 ts Salt".into(),
+                    "Cinnamon Orange Icing".into(),
+                    "1 c  Powdered sugar".into(),
+                    "1 ts Ground cinnamon".into(),
+                    "2 tb Orange juice".into(),
+                    "1 tb Orange curacao".into(),
+                    "Orange Glaze (opt.)".into(),
+                    "3 tb Orange juice".into(),
+                    "2 tb Sugar".into(),
                 ]),
-                source: Some("Meal-Master (tm) v7.04".into()),
-                ..Default::default()
-            }
-        }
-
-        pub fn recipe_v7_07() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Zucchini Date Cake".into(),
-                category: Some("Cakes".into()),
-                keywords: vec![],
-                yield_: Some(10),
-                ingredients: Sections::from([(
-                    "".into(),
-                    vec![
-                        "1/2 lb Zucchini".into(),
-                        "1 c  Chopped dried dates".into(),
-                        "2 ts Grated orange zest".into(),
-                        "2 c  Flour".into(),
-                        "2 ts Baking powder".into(),
-                        "1 1/2 ts Soda".into(),
-                        "2    Egg whites".into(),
-                        "2    Eggs".into(),
-                        "1 tb Vanilla".into(),
-                        "1 1/4 c  Sugar".into(),
-                        "1 c  Plain, non-fat yogurt".into(),
-                        "1/4 c  Almonds (opt.)".into(),
-                        "1/2 ts Salt".into(),
-                        "Cinnamon Orange Icing".into(),
-                        "1 c  Powdered sugar".into(),
-                        "1 ts Ground cinnamon".into(),
-                        "2 tb Orange juice".into(),
-                        "1 tb Orange curacao".into(),
-                        "Orange Glaze (opt.)".into(),
-                        "3 tb Orange juice".into(),
-                        "2 tb Sugar".into(),
-                    ]
-                )]),
-                instructions: Sections::from([(
-                    "".into(),
-                    vec![
-                        "If dates are dry, soak to make them moist.  Chop squash in processor.  Add dates and orange zest.  Blend well.  Sift flour with baking powder, soda and salt.  Blend dry ingredients.  Beat egg. Add yogurt, sugar and vanilla. Add alternately dry mix and egg mix alternately to zucchini.  Pour batter into lightly greased and floured bundt pan.  Bake at 350 about 45 minutes, or til tests done.  Cool on wire rack 10 minutes.  Unmold onto serving platter.  If using glaze, peirce top and sides with with toothpicks.  Spoon glaze over cake, allowing to soak in until cake is moist but not wet.  Cool completely.  Drizzle icing over cake and sprinkle with almonds".into(),
-                        "Icing:  combine powdered sugar, cinnamon, orange juice and liqueur in bowl. Mix til smooth.  Use immediately.".into(),
-                        "Orange Glaze: Stir together til smooth.".into(),
-                        "Note: Avoid using dry old dates. For slightly softer cake texture, add 2 Tbsp melted butter to batter before folding into squash.  This will add 2 grams fat per serving. From: The Spectator....Aug 12/92 There is yellow squash hidden in this cake, but you'd never guess it. It's delicate, faintly sweet flavor blends right in. You can use crook neck, straight neck or even yellow zucchini, but be sure to select young squach with soft, thin skins. (why not green zucchini?) This cake, with its accent of chopped dates, needs only a simple icing to dress it up To add extra moistness and a sweet citrus flavour, poke all over the warm cake and pour optional glaze over the cake til it soaks in.".into(),
-                        "Adapted from a rich recipe with sour cream and pecans created by the late Bert Greene.".into(),
-                    ]
-                )]),
-                source: Some("Meal-Master (tm) v7.07".into()),
-                ..Default::default()
-            }
-        }
-
-        pub fn recipe_v8_00() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Chicken Avocado Melt".into(),
-                category: Some("Poultry".into()),
-                keywords: vec!["Main dish".into()],
-                yield_: Some(2),
-                ingredients: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
-                            "2    Chicken breast halves".into(),
-                            "1 tb Cornstarch".into(),
-                            "1/2 ts Cumin, ground".into(),
-                            "1/2 ts Garlic salt".into(),
-                            "1/2    Egg; lightly beaten".into(),
-                            "1/2 tb Water".into(),
-                            "3 tb Cornmeal".into(),
-                            "1 1/2 tb Oil".into(),
-                            "1/2    Avocado; peeled, sliced".into(),
-                            "3/4 c  Cheese, monterey jack; 1/4 c  Sour cream; divided".into(),
-                            "-shredded".into(),
-                            "1/8 c  Onion, green, tops only".into(),
-                            "1/8    Pepper, red bell; chopped".into(),
-                            "Tomatoes, cherry".into(),
-                            "Parsley sprigs".into(),
+                            "If dates are dry, soak to make them moist.  Chop squash in processor.  Add dates and orange zest.  Blend well.  Sift flour with baking powder, soda and salt.  Blend dry ingredients.  Beat egg. Add yogurt, sugar and vanilla. Add alternately dry mix and egg mix alternately to zucchini.  Pour batter into lightly greased and floured bundt pan.  Bake at 350 about 45 minutes, or til tests done.  Cool on wire rack 10 minutes.  Unmold onto serving platter.  If using glaze, peirce top and sides with with toothpicks.  Spoon glaze over cake, allowing to soak in until cake is moist but not wet.  Cool completely.  Drizzle icing over cake and sprinkle with almonds".into(),
+                            "Icing:  combine powdered sugar, cinnamon, orange juice and liqueur in bowl. Mix til smooth.  Use immediately.".into(),
+                            "Orange Glaze: Stir together til smooth.".into(),
+                            "Note: Avoid using dry old dates. For slightly softer cake texture, add 2 Tbsp melted butter to batter before folding into squash.  This will add 2 grams fat per serving. From: The Spectator....Aug 12/92 There is yellow squash hidden in this cake, but you'd never guess it. It's delicate, faintly sweet flavor blends right in. You can use crook neck, straight neck or even yellow zucchini, but be sure to select young squach with soft, thin skins. (why not green zucchini?) This cake, with its accent of chopped dates, needs only a simple icing to dress it up To add extra moistness and a sweet citrus flavour, poke all over the warm cake and pour optional glaze over the cake til it soaks in.".into(),
+                            "Adapted from a rich recipe with sour cream and pecans created by the late Bert Greene.".into(),
                         ],
                     )
+                ])),
+                recipe_yield: to_yield(10),
+                ..Default::default()
+            }
+        }
+
+        pub fn recipe_v8_00() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.00".into()),
+                keywords: to_defined_text("Main dish".into()),
+                name: Some("Chicken Avocado Melt".into()),
+                recipe_category: RecipeCategory::Text("Poultry".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "2    Chicken breast halves".into(),
+                    "1 tb Cornstarch".into(),
+                    "1/2 ts Cumin, ground".into(),
+                    "1/2 ts Garlic salt".into(),
+                    "1/2    Egg; lightly beaten".into(),
+                    "1/2 tb Water".into(),
+                    "3 tb Cornmeal".into(),
+                    "1 1/2 tb Oil".into(),
+                    "1/2    Avocado; peeled, sliced".into(),
+                    "3/4 c  Cheese, monterey jack; 1/4 c  Sour cream; divided".into(),
+                    "-shredded".into(),
+                    "1/8 c  Onion, green, tops only".into(),
+                    "1/8    Pepper, red bell; chopped".into(),
+                    "Tomatoes, cherry".into(),
+                    "Parsley sprigs".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
                             "Skin and bone chicken breasts. On hard surface, with meat mallet or similar flattening utensil, pound chicken to 1/4 in thickness. In shallow dish, mix together cornstarch, cumin and garlic salt. Add chicken on piece at a time, dredging to coat. In a small bowl, mix egg and water. Place cornmeal in another bowl. Dip chicken, first in egg and then in cornmeal turning to coat. In large frying pan, place oil and heat to medium temp.; add chicken and cook 2 minutes on each side. Remove chicken to shallow baking pan; place avocado slices over chicken and sprinkle with cheese. Bake in 350øF oven about 15 minutes or until fork can be inserted in chicken with ease and cheese melts. Top chicken with sour cream, dividing equally; sprinkle with chopped green onion and red pepper.".into(),
                         ],
-                    )
-                ]),
-                source: Some("Meal-Master (tm) v8.00".into()),
+                    ),
+                ])),
+                recipe_yield: to_yield(2),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v8_01() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Cannoli".into(),
-                category: Some("Italian".into()),
-                keywords: vec!["Desserts".into()],
-                yield_: Some(16),
-                ingredients: Sections::from([
+        pub fn recipe_v8_01() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.01".into()),
+                keywords: to_defined_text("Desserts".into()),
+                name: Some("Cannoli".into()),
+                recipe_category: RecipeCategory::Text("Italian".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
                     (
                         "FILLING".into(),
                         vec![
@@ -1505,8 +1496,8 @@ Typed for you by Karen Mintzias
                             "4 tb To 5 Tbl sweet Marsala wine".into(),
                         ],
                     ),
-                ]),
-                instructions: Sections::from([
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
@@ -1519,43 +1510,40 @@ Typed for you by Karen Mintzias
                             "This recipe from CIAO ITALIA by Mary Ann Esposito".into(),
                         ],
                     ),
-                ]),
-                source: Some("Meal-Master (tm) v8.01".into()),
+                ])),
+                recipe_yield: to_yield(16),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v8_02() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Ziti with Asparagus Peas & Lemon Cream".into(),
-                category: Some("Vegetables".into()),
-                keywords: vec![],
-                yield_: Some(4),
-                ingredients: Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "1/2 c  Shelled fresh peas (about".into(),
-                            "-1/2 lb unshelled)".into(),
-                            "1/2 lb Asparagus, trimmed, peeled".into(),
-                            "-and cut on the diagonal".into(),
-                            "-into 1-1/2\" pieces".into(),
-                            "8 tb Unsalted butter".into(),
-                            "1 1/4 c  Heavy cream".into(),
-                            "1    Juice of lemon".into(),
-                            "1 ts Finely grated lemon rind".into(),
-                            "Salt".into(),
-                            "Freshly ground white pepper".into(),
-                            "1/2 lb Ziti or tubular pasta".into(),
-                            "3    Hearts of Bibb or butter".into(),
-                            "-lettuce, separated into".into(),
-                            "-leaves".into(),
-                            "1/2 c  Freshly grated Parmesan".into(),
-                            "-cheese".into(),
-                        ],
-                    ),
+        pub fn recipe_v8_02() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.02".into()),
+                name: Some("Ziti with Asparagus Peas & Lemon Cream".into()),
+                recipe_category: RecipeCategory::Text("Vegetables".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "1/2 c  Shelled fresh peas (about".into(),
+                    "-1/2 lb unshelled)".into(),
+                    "1/2 lb Asparagus, trimmed, peeled".into(),
+                    "-and cut on the diagonal".into(),
+                    "-into 1-1/2\" pieces".into(),
+                    "8 tb Unsalted butter".into(),
+                    "1 1/4 c  Heavy cream".into(),
+                    "1    Juice of lemon".into(),
+                    "1 ts Finely grated lemon rind".into(),
+                    "Salt".into(),
+                    "Freshly ground white pepper".into(),
+                    "1/2 lb Ziti or tubular pasta".into(),
+                    "3    Hearts of Bibb or butter".into(),
+                    "-lettuce, separated into".into(),
+                    "-leaves".into(),
+                    "1/2 c  Freshly grated Parmesan".into(),
+                    "-cheese".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
@@ -1566,92 +1554,86 @@ Typed for you by Karen Mintzias
                             "In a large heavy skillet, melt the butter over medium heat and whisk in the cream. Bring to a boil, reduce the heat, and simmer until reduced by one-third. Add the lemon juice and rind. Season with salt and white pepper and keep warm.".into(),
                             "Bring plenty of salted water to a boil in a large casserole. Add the ziti and cook until just tender, al dente. Add 2 cups of cold water to stop further cooking. Drain thoroughly, and add to the lemon cream together with the peas, asparagus and Bibb lettuce and simmer until the sauce lightly coats the pasta and the lettuce has just wilted. Add the Parmesan and toss gently. Taste and correct the seasoning and serve at once.".into(),
                             "Nutritional analysis per serving: 642.3 calories; 52.6 grams total fat; (33.7 grams saturated fat); 10.9 grams protein; 26.5 grams carbohydrates; 179 milligrams cholesterol; 230.5 milligrams sodium.".into(),
-                        ]
+                        ],
                     )
-                ]),
-                source: Some("Meal-Master (tm) v8.02".into()),
+                ])),
+                recipe_yield: to_yield(4),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v8_05() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "South of the Border Stew".into(),
-                category: Some("Main dish".into()),
-                keywords: vec!["Stew".into(), "Beef".into()],
-                yield_: Some(6),
-                ingredients: Sections::from([(
-                    "".into(),
-                    vec![
-                        "1/4 c  butter".into(),
-                        "1 ts salt".into(),
-                        "2 lb boneless round steak, cubed".into(),
-                        "1/4 ts oregano".into(),
-                        "5 ea medium zucchini, sliced thin".into(),
-                        "1/4 ts cumin".into(),
-                        "3 c  corn".into(),
-                        "1 c  cheddar cheese, shredded".into(),
-                        "4 oz green chilies, chopped".into(),
-                        "1/4 c  chopped cilantro".into(),
-                        "2 ea cloves garlic, minced".into(),
-                    ],
-                )]),
-                instructions: Sections::from([
+        pub fn recipe_v8_05() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.05".into()),
+                keywords: to_defined_text(["Stew", "Beef"].join(",")),
+                name: Some("South of the Border Stew".into()),
+                recipe_category: RecipeCategory::Text("Main dish".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "1/4 c  butter".into(),
+                    "1 ts salt".into(),
+                    "2 lb boneless round steak, cubed".into(),
+                    "1/4 ts oregano".into(),
+                    "5 ea medium zucchini, sliced thin".into(),
+                    "1/4 ts cumin".into(),
+                    "3 c  corn".into(),
+                    "1 c  cheddar cheese, shredded".into(),
+                    "4 oz green chilies, chopped".into(),
+                    "1/4 c  chopped cilantro".into(),
+                    "2 ea cloves garlic, minced".into(),
+                ]),
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
                             "In a large skillet, melt butter.  Brown meat, a few pieces at a time. Remove from skillet as they brown.  Saute zucchini in skillet 7-10 minutes.  Return meat and add corn, chilies, garlic, salt, oregano and cumin.  Simmer, stirring occassionally, about 12-15 minutes or until meat is tender.  Stir in cheese until melted.  Garnish with chopped cilantro and serve.  Serves 6".into(),
                         ],
-                    ),
-                ]),
-                source: Some("Meal-Master (tm) v8.05".into()),
+                    )
+                ])),
+                recipe_yield: to_yield(6),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_v8_06() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Yellow Rice & Shrimp Casserole".into(),
-                category: Some("Seafood".into()),
-                keywords: vec![
-                    "Casseroles".into(),
-                    "Ethnic".into(),
-                    "Vegetables".into(),
-                ],
-                yield_: Some(6),
-                ingredients: Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "0.50 c  Olive oil".into(),
-                            "1.00 sm Onion; chopped".into(),
-                            "1.00 sm Green pepper; chopped".into(),
-                            "1.00    Garlic clove; minced".into(),
-                            "1.00    Parsley sprig".into(),
-                            "1.00 lg Ripe tomato".into(),
-                            "- peeled, seeded & chopped".into(),
-                            "1.00    Bay leaf".into(),
-                            "0.25 ts Nutmeg".into(),
-                            "0.25 ts Cumin".into(),
-                            "0.25 ts Thyme".into(),
-                            "1.00 pn Saffron; toasted".into(),
-                            "1.00 lb Shrimp, raw".into(),
-                            "- shelled, deveined".into(),
-                            "1.00 c  -Hot water".into(),
-                            "0.25 c  Dry white wine".into(),
-                            "1.00 tb Lemon juice".into(),
-                            "1.00 tb Salt".into(),
-                            "0.50 ts Hot sauce".into(),
-                            "2.00 c  Long grain white rice".into(),
-                            "2.50 c  -Water".into(),
-                            "0.50 c  Beer".into(),
-                            "Cooked peas".into(),
-                            "Pimiento strips".into(),
-                            "Parsley bouquets".into(),
-                        ]
-                    )
+        pub fn recipe_v8_06() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.06".into()),
+                keywords: to_defined_text(["Casseroles", "Ethnic", "Vegetables"].join(",")),
+                name: Some("Yellow Rice & Shrimp Casserole".into()),
+                recipe_category: RecipeCategory::Text("Seafood".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "0.50 c  Olive oil".into(),
+                    "1.00 sm Onion; chopped".into(),
+                    "1.00 sm Green pepper; chopped".into(),
+                    "1.00    Garlic clove; minced".into(),
+                    "1.00    Parsley sprig".into(),
+                    "1.00 lg Ripe tomato".into(),
+                    "- peeled, seeded & chopped".into(),
+                    "1.00    Bay leaf".into(),
+                    "0.25 ts Nutmeg".into(),
+                    "0.25 ts Cumin".into(),
+                    "0.25 ts Thyme".into(),
+                    "1.00 pn Saffron; toasted".into(),
+                    "1.00 lb Shrimp, raw".into(),
+                    "- shelled, deveined".into(),
+                    "1.00 c  -Hot water".into(),
+                    "0.25 c  Dry white wine".into(),
+                    "1.00 tb Lemon juice".into(),
+                    "1.00 tb Salt".into(),
+                    "0.50 ts Hot sauce".into(),
+                    "2.00 c  Long grain white rice".into(),
+                    "2.50 c  -Water".into(),
+                    "0.50 c  Beer".into(),
+                    "Cooked peas".into(),
+                    "Pimiento strips".into(),
+                    "Parsley bouquets".into(),
                 ]),
-                instructions: Sections::from([
+                recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
@@ -1659,10 +1641,10 @@ Typed for you by Karen Mintzias
                             "Heat oil in casserole.  Saute onion and pepper until transparent.  Add garlic, parsley, tomato, bay leaf, nutmeg, cumin and thyme.  Mix well, cover, and cook over low heat until mushy (about 15 minutes).  The saffron should be toasting on the lid in the little brown paper.".into(),
                             "Add the shrimp to the saute and cook until it turns pink.  Dissolve the saffron in the 1 cup hot water.  Combine with wine, lemon juice, salt and hot sauce.  Pour into casserole, stir to mix, and cook covered 10 minutes more.  Now add the rice and the 2 1/2 cups of water. Distribute ingredients well in casserole.  Bring to a quick boil, STIR ONCE, and place in preheated 325 degree F. oven for only 20 minutes - NI UN MINUTO MAS! Remove from oven, uncover, and garnish with peas, pimientos, and parsley. Pour beer over all.  Cover again and allow to stand 15 minutes longer, before serving.".into(),
                             "Source: Clarita's Cocina - by Clarita Garcia  (ISBN: 0-942084-74-8) Typos provided by: Karen Mintzias".into(),
-                        ]
+                        ],
                     )
-                ]),
-                source: Some("Meal-Master (tm) v8.06".into()),
+                ])),
+                recipe_yield: to_yield(6),
                 ..Default::default()
             }
         }
@@ -1714,13 +1696,15 @@ SOURCE: Gourmet, December 1992
 "##
         }
 
-        pub fn now_youre_cooking_v4_72() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Biscotti Di Greve ( Orange Almond Biscotti)".into(),
-                category: Some("cookies".into()),
-                keywords: vec!["italian".into()],
-                yield_: Some(48),
-                ingredients: Sections::from([
+        pub fn now_youre_cooking_v4_72() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Now You're Cooking! v4.72 [Meal-Master Export Format]".into()),
+                keywords: to_defined_text("italian".into()),
+                name: Some("Biscotti Di Greve ( Orange Almond Biscotti)".into()),
+                recipe_category: RecipeCategory::Text("cookies".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
                     (
                         "".into(),
                         vec![
@@ -1742,49 +1726,53 @@ SOURCE: Gourmet, December 1992
                             "-water".into(),
                         ],
                     ),
-                ]),
-                instructions: Sections::from([(
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
                     "".into(),
                     vec![
                         "From the bakery in Greve, in Chianti, Italy.".into(),
                         "In the bowl of an electric mixer, fitted with a paddle attachment, blend the flour, the sugar, the baking soda and the salt until the mixture is combined well. In a small bowl whisk together the whole eggs, the yolk, thevanilla and the zest, add the mixture to the flour mixture, beating until adough is formed and stir in the almonds. Turn the dough out onto a lightly floured surface, knead it several times  and halve it. Working on a large buttered and floured baking sheet, with   floured hands form each piece of dough into a flattish log 12 inches long  and 2 inches wide, arrange the logs at least 3 inches apart on the sheet,  and brush them with the egg wash. Bake the logs in the middle of a preheated 300F for 50 minutes and them cool on the baking rack for 10      minutes. On a cutting board, cut the logs crosswise on the diagonal into 1/2 inch   thick slices, arrange the biscotti, cut sides down, on the baking sheet andbake them, in the 300F oven for 15 minutes on each side. Transfer the      biscotti to racks to cool and store them in airtight containers. MAKES:    about 48 BISCOTTI".into(),
                         "SOURCE: Gourmet, December 1992".into(),
                     ]
-                )]),
-                source: Some("Now You're Cooking! v4.72 [Meal-Master Export Format]".to_string()),
+                )])),
+                recipe_yield: to_yield(48),
                 ..Default::default()
             }
         }
 
-        pub fn recipe_cookmate() -> IntegrationRecipe {
-            IntegrationRecipe {
-                title: "Baklava with Cooky Filling".into(),
-                category: Some("Greek".into()),
-                keywords: vec!["Desserts".into()],
-                yield_: Some(36),
-                ingredients: Sections::from([
-                    ("".into(), vec![
-                        "Karen Mintzias".into(),
-                        "2    c Sweet butter 1 ts".into(),
-                        "1    c Confectioners' sugar 4 c".into(),
-                        "-Flour".into(),
-                        "1    Egg yolk".into(),
-                        "4    c Granulated sugar 1 c".into(),
-                        "-Honey".into(),
-                        "4    c Water Lemon juice to".into(),
-                        "-taste".into(),
-                        "1 lb Toasted blanched almonds *".into(),
-                        "1/2    c Zwieback crumbs 1 lb".into(),
-                        "4 tb Granulated sugar 1 1/2 c".into(),
-                    ])
+        pub fn recipe_cookmate() -> RecipeSchema {
+            RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Cookmate [Meal-Master Export Format]".into()),
+                keywords: to_defined_text("Desserts".into()),
+                name: Some("Baklava with Cooky Filling".into()),
+                recipe_category: RecipeCategory::Text("Greek".into()),
+                recipe_ingredient: Some(vec![
+                    "<section></section>".into(),
+                    "Karen Mintzias".into(),
+                    "2    c Sweet butter 1 ts".into(),
+                    "1    c Confectioners' sugar 4 c".into(),
+                    "-Flour".into(),
+                    "1    Egg yolk".into(),
+                    "4    c Granulated sugar 1 c".into(),
+                    "-Honey".into(),
+                    "4    c Water Lemon juice to".into(),
+                    "-taste".into(),
+                    "1 lb Toasted blanched almonds *".into(),
+                    "1/2    c Zwieback crumbs 1 lb".into(),
+                    "4 tb Granulated sugar 1 1/2 c".into(),
                 ]),
-                instructions: Sections::from([
-                    ("".into(), vec![
-                        "*Note: Either toasted blanched almonds, or walnut meats, or half of each, (finely chopped) may be used. Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat in the confectioners' sugar and continue to beat until mixture is fluffy. Add egg yolk and vanilla or almond extract and blend well. Work in about 4 cups flour to make a medium-soft dough. Set aside and make syrup. Syrup: In a saucepan combine the granulated sugar and water. Bring to a boil and boil for 15 minutes or until syrup is slightly thick. Add honey and again bring to the boiling point. Add lemon juice to taste, and cool. Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly with butter and sprinkle with nut mixture. Place 2 buttered sheets of phyllo on top and sprinkle with nut mixture. Shape a portion of cooky filling into a 1/2-inch-thick roll and place the roll along one edge of the pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices in a buttered cake pan. (Continue in this method until all phyllo pastry and/or cooky filling is used.) Brush tops of each slice with butter and bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot baklava slices, one at a time, in cold syrup, allowing each piece to remain in the syrup for a few minutes. From: \"The Art of Greek Cookery\" by The Women of St. Paul's Greek Orthodox Church (Hempstead, NY) Typed for you by Karen Mintzias".into(),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    (
                         "".into(),
-                    ])
-                ]),
-                source: Some("Cookmate [Meal-Master Export Format]".into()),
+                        vec![
+                            "*Note: Either toasted blanched almonds, or walnut meats, or half of each, (finely chopped) may be used. Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat in the confectioners' sugar and continue to beat until mixture is fluffy. Add egg yolk and vanilla or almond extract and blend well. Work in about 4 cups flour to make a medium-soft dough. Set aside and make syrup. Syrup: In a saucepan combine the granulated sugar and water. Bring to a boil and boil for 15 minutes or until syrup is slightly thick. Add honey and again bring to the boiling point. Add lemon juice to taste, and cool. Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly with butter and sprinkle with nut mixture. Place 2 buttered sheets of phyllo on top and sprinkle with nut mixture. Shape a portion of cooky filling into a 1/2-inch-thick roll and place the roll along one edge of the pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices in a buttered cake pan. (Continue in this method until all phyllo pastry and/or cooky filling is used.) Brush tops of each slice with butter and bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot baklava slices, one at a time, in cold syrup, allowing each piece to remain in the syrup for a few minutes. From: \"The Art of Greek Cookery\" by The Women of St. Paul's Greek Orthodox Church (Hempstead, NY) Typed for you by Karen Mintzias".into(),
+                            "".into(),
+                        ],
+                    )
+                ])),
+                recipe_yield: to_yield(36),
                 ..Default::default()
             }
         }

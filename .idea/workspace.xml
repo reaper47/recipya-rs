@@ -15,6 +15,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/integrations/helpers.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/accuchef.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/accuchef.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/bigoven.rs" afterDir="false" />
@@ -27,8 +30,17 @@
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/recipemd.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/recipemd.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/recipesage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/recipesage.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/saffron.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/context.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/context.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/support/time.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/time.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,10 +119,11 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Cargo.Run.executor": "Run",
-    "Cargo.Test accuchef::tests.executor": "Debug",
+    "Cargo.Test accuchef::tests.executor": "Run",
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
-    "Cargo.Test bigoven::tests.executor": "Run",
+    "Cargo.Test bigoven::tests.executor": "Debug",
+    "Cargo.Test cheftap::tests.executor": "Debug",
     "Cargo.Test config::tests.executor": "Run",
     "Cargo.Test cooklang::tests.executor": "Debug",
     "Cargo.Test cookmate::tests.executor": "Debug",
@@ -206,7 +219,7 @@
     "Cargo.Test general_router::tests.executor": "Run",
     "Cargo.Test helpers::tests (1).executor": "Run",
     "Cargo.Test helpers::tests.executor": "Run",
-    "Cargo.Test mealmaster::tests.executor": "Debug",
+    "Cargo.Test mealmaster::tests.executor": "Run",
     "Cargo.Test recipemd::tests.executor": "Debug",
     "Cargo.Test recipes_routes::tests.executor": "Run",
     "Cargo.Test recipesage::tests.executor": "Debug",
@@ -383,7 +396,7 @@
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
     "git-widget-placeholder": "#120 on 42-implement-post-recipesaddimport",
-    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
+    "last_opened_file_path": "/home/macpoule/Documents/Levio/projects/session",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -425,7 +438,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test saffron::tests">
+  <component name="RunManager" selected="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -444,8 +457,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cookmate::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::cookmate::tests" />
+    <configuration name="Test accuchef::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::accuchef::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -461,8 +474,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::recipesage::tests::test_recipes::test_json_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::recipesage::tests::test_recipes::test_json_ok -- --exact" />
+    <configuration name="Test core::integrations::apps::accuchef::tests::test_recipe1_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::accuchef::tests::test_recipe1_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -478,8 +491,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipemd::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::recipemd::tests" />
+    <configuration name="Test core::integrations::apps::saffron::tests::test_recipe2_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::saffron::tests::test_recipe2_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -531,19 +544,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test cookmate::tests" />
-      <item itemvalue="Cargo.Test core::integrations::apps::recipesage::tests::test_recipes::test_json_ok" />
-      <item itemvalue="Cargo.Test recipemd::tests" />
-      <item itemvalue="Cargo.Test recipesage::tests" />
+      <item itemvalue="Cargo.Test accuchef::tests" />
+      <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
+      <item itemvalue="Cargo.Test core::integrations::apps::saffron::tests::test_recipe2_ok" />
       <item itemvalue="Cargo.Test saffron::tests" />
+      <item itemvalue="Cargo.Test recipesage::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
+        <item itemvalue="Cargo.Test accuchef::tests" />
+        <item itemvalue="Cargo.Test core::integrations::apps::saffron::tests::test_recipe2_ok" />
         <item itemvalue="Cargo.Test saffron::tests" />
         <item itemvalue="Cargo.Test recipesage::tests" />
-        <item itemvalue="Cargo.Test core::integrations::apps::recipesage::tests::test_recipes::test_json_ok" />
-        <item itemvalue="Cargo.Test recipemd::tests" />
-        <item itemvalue="Cargo.Test cookmate::tests" />
       </list>
     </recent_temporary>
   </component>
@@ -598,12 +611,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/core/scraper/schema/common.rs</url>
-          <line>929</line>
-          <option name="timeStamp" value="194" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/core/scraper/schema/common.rs</url>
-          <line>1942</line>
+          <line>2020</line>
           <option name="timeStamp" value="198" />
         </line-breakpoint>
       </breakpoints>

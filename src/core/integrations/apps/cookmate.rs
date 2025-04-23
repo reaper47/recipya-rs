@@ -3,10 +3,17 @@ use std::io::Read;
 use humantime::parse_duration;
 use serde::Deserialize;
 use tracing::{error, warn};
+use url::Url;
 
-use crate::core::integrations::IntegrationRecipe;
-use crate::core::integrations::error::{Error, Result};
-use crate::core::model::recipe::{Sections, TimesForCreate};
+use crate::core::integrations::helpers::{
+    seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
+};
+use crate::core::integrations::{Error, Result};
+use crate::core::model::recipe::Sections;
+use crate::core::scraper::schema::{
+    AggregateRating, AtType, ClipOrVideoObject, CommentType, DefinedTermOrTextOrUrl,
+    ImageObjectOrUrl, NumberOrText, RecipeCategory, RecipeSchema, VideoObjectType,
+};
 use crate::core::support::strings::extract_number;
 
 #[derive(Deserialize)]
@@ -44,81 +51,130 @@ struct List {
     items: Vec<String>,
 }
 
-impl From<Recipe> for IntegrationRecipe {
+impl From<Recipe> for RecipeSchema {
     fn from(r: Recipe) -> Self {
         let categories = r.categories.split_first();
+        let url = Url::parse(&r.url).ok();
+
+        let comments = vec![r.comments]
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>();
+        let num_comments = comments.len();
 
         Self {
-            category: categories.map(|(a, _b)| a.to_string()),
-            comments: vec![r.comments].into_iter().filter(|s| s != "").collect(),
-            description: Some(r.description).filter(|s| !s.is_empty()),
-            images: vec![r.imageurl].into_iter().filter(|s| s != "").collect(),
-            ingredients: Sections::from([("".into(), r.ingredient.items)]),
-            instructions: Sections::from([("".into(), r.recipetext.items)]),
-            keywords: categories
-                .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect())
-                .unwrap_or_default(),
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            aggregate_rating: if r.rating > 0 {
+                Some(AggregateRating {
+                    rating_value: Some(NumberOrText::Number(r.rating)),
+                    ..Default::default()
+                })
+            } else {
+                None
+            },
+            comment: Some(
+                comments
+                    .into_iter()
+                    .map(|c| CommentType {
+                        text: c,
+                        ..Default::default()
+                    })
+                    .collect(),
+            )
+            .filter(|v: &Vec<CommentType>| !v.is_empty()),
+            comment_count: Some(num_comments as i64).filter(|c| *c > 0),
+            cook_time: match parse_duration(&r.cooktime) {
+                Ok(d) => seconds_to_duration(d.as_secs() as i32),
+                Err(err) => {
+                    error!(
+                        "Failed to parse cook time '{}' of an AccuChef recipe: {err}",
+                        r.cooktime
+                    );
+                    None
+                }
+            },
+            description: to_text(r.description),
+            image: Some(
+                vec![r.imageurl]
+                    .into_iter()
+                    .filter_map(|img| match Url::parse(&img) {
+                        Ok(url) => Some(ImageObjectOrUrl::Url(url)),
+                        Err(_) => None,
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .filter(|v| !v.is_empty()),
+            is_based_on: if !r.source.is_empty() {
+                to_is_based_on(r.source)
+            } else {
+                to_is_based_on(r.url)
+            },
+            keywords: Some(DefinedTermOrTextOrUrl::Text(
+                categories
+                    .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+                    .unwrap_or_default()
+                    .join(","),
+            )),
+            name: Some(r.title),
             nutrition: if !r.nutrition.is_empty() {
                 warn!("CookMate XML has nutrients: '{}'", r.nutrition);
                 None
             } else {
                 None
             },
-            rating: Some(r.rating as u8).filter(|v| *v != 0),
-            source: if !r.url.is_empty() {
-                Some(r.url)
-            } else if !r.source.is_empty() {
-                Some(r.source)
-            } else {
-                None
+            prep_time: match parse_duration(&r.preptime) {
+                Ok(d) => seconds_to_duration(d.as_secs() as i32),
+                Err(err) => {
+                    error!(
+                        "Failed to parse prep time '{}' of a CookMate XML recipe: {err}",
+                        r.preptime
+                    );
+                    None
+                }
             },
-            times: if r.preptime.is_empty() && r.cooktime.is_empty() {
-                None
-            } else {
-                Some(TimesForCreate {
-                    prep_seconds: match parse_duration(&r.preptime) {
-                        Ok(d) => d.as_secs() as i32,
-                        Err(err) => {
-                            error!(
-                                "Failed to parse prep time '{}' of a CookMate XML recipe: {err}",
-                                r.preptime
-                            );
-                            15 * 60
-                        }
-                    },
-                    cook_seconds: match parse_duration(&r.cooktime) {
-                        Ok(d) => d.as_secs() as i32,
-                        Err(err) => {
-                            error!(
-                                "Failed to parse cook time '{}' of an AccuChef recipe: {err}",
-                                r.cooktime
-                            );
-                            15 * 60
-                        }
-                    },
-                })
-            },
-            title: r.title,
-            tools: vec![],
-            yield_: extract_number(r.quantity).ok(),
-            videos: vec![r.video].into_iter().filter(|s| s != "").collect(),
+            recipe_category: RecipeCategory::Text(
+                categories.map(|(a, _b)| a.to_string()).unwrap_or_default(),
+            ),
+            recipe_ingredient: Some(r.ingredient.items),
+            recipe_instructions: sections_to_itemlist(Sections::from([(
+                "".into(),
+                r.recipetext.items,
+            )])),
+            recipe_yield: to_yield(extract_number(r.quantity).unwrap_or_default()),
+            url,
+            video: Some(
+                vec![r.video]
+                    .into_iter()
+                    .filter_map(|s| Url::parse(&s).ok())
+                    .map(|url| {
+                        ClipOrVideoObject::VideoObject(Box::new(VideoObjectType {
+                            at_type: Default::default(),
+                            content_url: url.clone(),
+                            description: "".to_string(),
+                            duration: None,
+                            embed_url: url,
+                            name: "".to_string(),
+                            thumbnail_url: vec![],
+                            upload_date: None,
+                        }))
+                    })
+                    .collect::<Vec<_>>(),
+            )
+            .filter(|v| !v.is_empty()),
             ..Default::default()
         }
     }
 }
 
 /// Parses a COOKmate XML recipe file.
-pub fn parse<R>(r: R) -> Result<Vec<IntegrationRecipe>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
     let root: CookbookXML =
         serde_xml_rs::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
-    Ok(root
-        .recipes
-        .into_iter()
-        .map(IntegrationRecipe::from)
-        .collect())
+    Ok(root.recipes.into_iter().map(RecipeSchema::from).collect())
 }
 
 #[cfg(test)]
@@ -286,20 +342,27 @@ mod tests {
     mod results {
         use super::*;
 
-        pub fn xml_recipes() -> Vec<IntegrationRecipe> {
+        use crate::core::integrations::helpers::to_yield;
+        use crate::core::scraper::schema::CreativeWorkOrText;
+
+        pub fn xml_recipes() -> Vec<RecipeSchema> {
             vec![
-                IntegrationRecipe{
-                        title: "Asparagus Soup (Zuppa Di Asparagi)".into(),
-                        ingredients: Sections::from([
-                        ("".into(), vec![
-                            "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
-                            "2 Cloves garlic, minced 4 Eggs".into(),
-                            "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
-                            "-and cut (1 inch pieces) -pecorino cheese".into(),
-                            "Salt and pepper 6 sl Italian bread, toasted".into(),
-                        ])
+                RecipeSchema{
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_accessible_for_free: false,
+                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
+                    keywords: Some(DefinedTermOrTextOrUrl::Text(["Soups/stews", "Vegetables"].join(","))),
+                    name: Some("Asparagus Soup (Zuppa Di Asparagi)".into()),
+                    recipe_category: RecipeCategory::Text("Italian".into()),
+                    recipe_ingredient: Some(vec![
+                        "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
+                        "2 Cloves garlic, minced 4 Eggs".into(),
+                        "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
+                        "-and cut (1 inch pieces) -pecorino cheese".into(),
+                        "Salt and pepper 6 sl Italian bread, toasted".into(),
                     ]),
-                    instructions: Sections::from([
+                    recipe_instructions: sections_to_itemlist(Sections::from([
                         ("".into(), vec![
                             "Heat the oil and garlic in a soup pot until the garlic is golden. Add the".into(),
                             "asparagus and cook until they begin to color. Season with salt and pepper.".into(),
@@ -326,29 +389,27 @@ mod tests {
                             "".into(),
                             "Posted by Fred Peters.".into(),
                         ])
-                    ]),
-                    source: Some("MMF".into()),
-                    yield_: Some(6),
-                    category: Some("Italian".into()),
-                    keywords: vec![
-                        "Soups/stews".into(),
-                        "Vegetables".into(),
-                    ],
+                    ])),
+                    recipe_yield: to_yield(6),
                     ..Default::default()
                 },
-                IntegrationRecipe {
-                    title: "Aubergine and Sesame Pate".into(),
-                    ingredients: Sections::from([
-                        ("".into(), vec![
-                            "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
-                            "1 Crushed garlic cloves 1 tb Olive oil".into(),
-                            "1 1/2 tb Tahini Seasoning".into(),
-                            "Toasted Sesame seeds Flatleaf Parsley".into(),
-                            "Cayenne Pepper".into(),
-                            "25-30 minutes until tender. Cool slightly , then peel and".into(),
-                        ])
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_accessible_for_free: false,
+                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
+                    keywords: Some(DefinedTermOrTextOrUrl::Text(["Appetizers", "Greek"].join(","))),
+                    name: Some("Aubergine and Sesame Pate".into()),
+                    recipe_category: RecipeCategory::Text("Vegetarian".into()),
+                    recipe_ingredient: Some(vec![
+                        "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
+                        "1 Crushed garlic cloves 1 tb Olive oil".into(),
+                        "1 1/2 tb Tahini Seasoning".into(),
+                        "Toasted Sesame seeds Flatleaf Parsley".into(),
+                        "Cayenne Pepper".into(),
+                        "25-30 minutes until tender. Cool slightly , then peel and".into(),
                     ]),
-                    instructions: Sections::from([
+                    recipe_instructions: sections_to_itemlist(Sections::from([
                         ("".into(), vec![
                             "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for".into(),
                             "puree the flesh in a blender or processor.".into(),
@@ -359,27 +420,25 @@ mod tests {
                             "".into(),
                             "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
                         ])
-                    ]),
-                    source: Some("MMF".into()),
-                    yield_: Some(2),
-                    category: Some("Vegetarian".into()),
-                    keywords: vec![
-                        "Appetizers".into(),
-                        "Greek".into(),
-                    ],
+                    ])),
+                    recipe_yield: to_yield(2),
                     ..Default::default()
                 },
-                IntegrationRecipe {
-                    title: "Aubergines a la Toulousaine (Eggplant A La Toulouse)".into(),
-                    ingredients: Sections::from([
-                        ("".into(), vec![
-                            "1 md Eggplant 2 tb Snipped parsley".into(),
-                            "1/4 c Salad oil 1 cl Galic, minced".into(),
-                            "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
-                            "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
-                        ])
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_accessible_for_free: false,
+                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
+                    keywords: Some(DefinedTermOrTextOrUrl::Text(["Casseroles", "French"].join(","))),
+                    name: Some("Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()),
+                    recipe_category: RecipeCategory::Text("Vegetables".into()),
+                    recipe_ingredient: Some(vec![
+                        "1 md Eggplant 2 tb Snipped parsley".into(),
+                        "1/4 c Salad oil 1 cl Galic, minced".into(),
+                        "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
+                        "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
                     ]),
-                    instructions: Sections::from([
+                    recipe_instructions: sections_to_itemlist(Sections::from([
                         ("".into(), vec![
                             "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper".into(),
                             "towels; sprinkle each generously with salt. let stand for 30 minutes; then".into(),
@@ -395,14 +454,8 @@ mod tests {
                             "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book".into(),
                             "Publishers Chicago 1, Illinois 1958".into(),
                         ])
-                    ]),
-                    source: Some("MMF".into()),
-                    yield_: Some(4),
-                    category: Some("Vegetables".into()),
-                    keywords: vec![
-                        "Casseroles".into(),
-                        "French".into(),
-                    ],
+                    ])),
+                    recipe_yield: to_yield(4),
                     ..Default::default()
                 },
             ]

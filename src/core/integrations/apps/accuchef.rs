@@ -10,9 +10,15 @@ use nom::multi::{many0, many1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use tracing::error;
+use url::Url;
 
-use crate::core::integrations::{Error, IntegrationRecipe, Result};
+use crate::core::integrations::helpers::{
+    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
+    to_yield,
+};
+use crate::core::integrations::{Error, Result};
 use crate::core::model::recipe::{Sections, TimesForCreate};
+use crate::core::scraper::schema::{AtType, RecipeCategory, RecipeSchema};
 
 struct AccuChefRecipe {
     title: String,
@@ -40,17 +46,21 @@ struct Ingredient<'a> {
     quantity: &'a str,
 }
 
-impl From<AccuChefRecipe> for IntegrationRecipe {
+impl From<AccuChefRecipe> for RecipeSchema {
     fn from(r: AccuChefRecipe) -> Self {
         Self {
-            title: r.title,
-            category: r.category,
-            keywords: r.keywords,
-            yield_: r.yield_,
-            times: Some(r.times),
-            ingredients: r.ingredients,
-            instructions: r.instructions,
-            source: Some(r.source).filter(|s| !s.is_empty()),
+            at_context: Default::default(),
+            at_type: Some(AtType::Recipe),
+            cook_time: seconds_to_duration(r.times.cook_seconds),
+            is_based_on: to_is_based_on(r.source.to_owned()),
+            keywords: to_defined_text(r.keywords.join(",")),
+            name: Some(r.title),
+            prep_time: seconds_to_duration(r.times.prep_seconds),
+            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
+            recipe_ingredient: sections_to_vec(r.ingredients),
+            recipe_instructions: sections_to_itemlist(r.instructions),
+            recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
+            url: Url::parse(r.source.as_ref()).ok(),
             ..Default::default()
         }
     }
@@ -101,7 +111,7 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
 }
 
 /// Represents the parsed components of an AccuChef recipe.
-pub fn parse<R>(mut r: R) -> Result<Vec<IntegrationRecipe>>
+pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
@@ -109,7 +119,7 @@ where
     r.read_to_string(&mut content)?;
 
     let recipe = parse_accuchef_recipe(&content)?;
-    Ok(recipe.into_iter().map(IntegrationRecipe::from).collect())
+    Ok(recipe.into_iter().map(RecipeSchema::from).collect())
 }
 
 fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
@@ -225,6 +235,10 @@ fn eol(input: &str) -> IResult<&str, &str> {
 mod tests {
     use super::*;
 
+    use crate::core::integrations::helpers::vec_to_howto;
+    use crate::core::scraper::schema::{
+        AtType, CreativeWorkOrText, QuantitativeValueOrText, QuantitativeValueType,
+    };
     use std::default::Default;
     use std::io::Cursor;
 
@@ -239,19 +253,17 @@ mod tests {
 
         pretty_assertions::assert_eq!(
             got,
-            vec![IntegrationRecipe {
-                title: "24 Hour Fruit Salad".into(),
-                category: Some("Fruit".into()),
-                keywords: vec![],
-                yield_: None,
-                times: Some(
-                   TimesForCreate {
-                       prep_seconds: 900,
-                       cook_seconds: 1800,
-                   },
-                ),
-                ingredients: Sections::from([
-                    ("".into(), vec![
+            vec![
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    cook_time: seconds_to_duration(1800),
+                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
+                    name: Some("24 Hour Fruit Salad".into()),
+                    prep_time: seconds_to_duration(900),
+                    recipe_category: RecipeCategory::Text("Fruit".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
                         "Dressing: ".into(),
                         "3 Egg Yolks".into(),
                         "2 Tbls Sugar".into(),
@@ -263,30 +275,27 @@ mod tests {
                         "2 Cans Mandarin Oranges".into(),
                         "1 Can Royal Ann Cherries".into(),
                         "1 Package Small Colored Marshmellows".into(),
-                    ])
-                ]),
-                instructions: Sections::from([
-                    ("".into(), vec![
-                        "Mix egg yolks, sugar and butter by hand slightly. Mixture should not be".into(),
-                        "frothy. Microwave like scrambled eggs. Cool and blend in lemon juice and".into(),
-                        "cool whip. Drain the fruit and fold in dressing. Add marshmellows.".into(),
-                    ])
-                ]),
-                source: Some("AccuChef Import File".into()),
-                ..Default::default()
-            }, IntegrationRecipe {
-                title: "7 Layer Salad".into(),
-                category: Some("Salad".into()),
-                keywords: vec![],
-                yield_: None,
-                times: Some(
-                    TimesForCreate {
-                        prep_seconds: 900,
-                        cook_seconds: 1800,
-                    },
-                ),
-                ingredients: Sections::from([
-                    ("".into(), vec![
+                    ]),
+                    recipe_instructions: vec_to_howto(vec![
+                        "Mix egg yolks, sugar and butter by hand slightly. Mixture should not be",
+                        "frothy. Microwave like scrambled eggs. Cool and blend in lemon juice and",
+                        "cool whip. Drain the fruit and fold in dressing. Add marshmellows.",
+                    ]),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
+                        QuantitativeValueType { value: 0 }
+                    ),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    cook_time: seconds_to_duration(1800),
+                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
+                    name: Some("7 Layer Salad".into()),
+                    prep_time: seconds_to_duration(900),
+                    recipe_category: RecipeCategory::Text("Salad".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
                         "1 Head Lettuce, Shredded".into(),
                         "1 Cup Celery, Thinly Sliced".into(),
                         "1 Cup Green Onion, Sliced".into(),
@@ -299,78 +308,74 @@ mod tests {
                         " Hard Boiled Eggs, Chopped".into(),
                         " Bacon, Crinkled".into(),
                         " Tomtato Cubes".into(),
-                    ])
-                ]),
-                instructions: Sections::from([
-                    ("".into(), vec![
-                        "Mix sour cream and miracle whip. Layer all the ingredients down to water".into(),
-                        "chestnuts and then cover with miracle whip mixture. Refrigerate over".into(),
-                        "night and then place eggs, bacon and tomatoes on top.".into(),
-                    ])
-                ]),
-                source: Some("AccuChef Import File".into()),
-                ..Default::default()
-            }, IntegrationRecipe {
-                title: "Aebleskiver".into(),
-                category: Some("Bread".into()),
-                keywords: vec![],
-                yield_: Some(24),
-                times: Some(
-                    TimesForCreate {
-                        prep_seconds: 900,
-                        cook_seconds: 1800,
-                    },
-                ),
-                ingredients: Sections::from([
-                    ("".into(), vec![
-                       "3 C Jiffy Mix".into(),
-                       "2 Tbsp Shortening".into(),
-                       "3 Eggs".into(),
-                       " Milk".into(),
-                    ])
-                ]),
-                instructions: Sections::from([
-                    ("".into(), vec![
-                        "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fswiss\\fcharset0 Arial;".into(),
-                        "}{\\f1\\fnil Lucida Casual;}}~".into(),
-                        "\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs18\\par~".into(),
-                        "\\f1 Separate whites from yolks. Beat whites until stiff. Mix jiffy mix,".into(),
-                        "shortening and yolks. Add enough milk to make a thin batter. Fold in the".into(),
-                        "whites. Cook in aebleskiver pan with melted margarine or butter as".into(),
-                        "cooking fat. Cook on medium low heat until done.\\par~".into(),
-                        "}~".into(),
-                        "".into(),
-                    ])
-                ]),
-                source: Some("AccuChef Import File".into()),
-                ..Default::default()
-            }, IntegrationRecipe {
-                title: "Ambrosia Delight".into(),
-                category: Some("Dessert".into()),
-                keywords: vec![],
-                yield_: None,
-                times: Some(TimesForCreate {
-                    prep_seconds: 3600,
-                    cook_seconds: 1800,
-                }),
-                ingredients: Sections::from([
-                    ("".into(), vec![
+                    ]),
+                    recipe_instructions: vec_to_howto(vec![
+                        "Mix sour cream and miracle whip. Layer all the ingredients down to water",
+                        "chestnuts and then cover with miracle whip mixture. Refrigerate over",
+                        "night and then place eggs, bacon and tomatoes on top.",
+                    ]),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
+                        QuantitativeValueType { value: 0 }
+                    ),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    cook_time: seconds_to_duration(1800),
+                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
+                    name: Some("Aebleskiver".into()),
+                    prep_time: seconds_to_duration(900),
+                    recipe_category: RecipeCategory::Text("Bread".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
+                        "3 C Jiffy Mix".into(),
+                        "2 Tbsp Shortening".into(),
+                        "3 Eggs".into(),
+                        " Milk".into(),
+                    ]),
+                    recipe_instructions: vec_to_howto(vec![
+                        "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fswiss\\fcharset0 Arial;",
+                        "}{\\f1\\fnil Lucida Casual;}}~",
+                        "\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs18\\par~",
+                        "\\f1 Separate whites from yolks. Beat whites until stiff. Mix jiffy mix,",
+                        "shortening and yolks. Add enough milk to make a thin batter. Fold in the",
+                        "whites. Cook in aebleskiver pan with melted margarine or butter as",
+                        "cooking fat. Cook on medium low heat until done.\\par~",
+                        "}~",
+                        "",
+                    ]),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
+                        QuantitativeValueType { value: 24 }
+                    ),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    cook_time: seconds_to_duration(1800),
+                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
+                    name: Some("Ambrosia Delight".into()),
+                    prep_time: seconds_to_duration(3600),
+                    recipe_category: RecipeCategory::Text("Dessert".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
                         "1 Lrg Can Fruit Cocktail".into(),
                         "1 Lrg Can Crushed Pineapple".into(),
                         "2 Pkgs Frozen Strawberries".into(),
                         "2 Or 3 Bananas".into(),
                         " Orange Sherbet".into(),
-                    ])
-                ]),
-                instructions: Sections::from([
-                    ("".into(), vec![
-                        "Mix all together about 2 hours before serving. Serve a with a scoop of".into(),
-                        "orange sherbet on top.".into(),
-                    ])
-                ]),
-                source: Some("AccuChef Import File".into()),
-                ..Default::default()
-            }]
+                    ]),
+                    recipe_instructions: vec_to_howto(vec![
+                        "Mix all together about 2 hours before serving. Serve a with a scoop of",
+                        "orange sherbet on top.",
+                    ]),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
+                        QuantitativeValueType { value: 0 }
+                    ),
+                    ..Default::default()
+                }
+            ]
         );
         Ok(())
     }
