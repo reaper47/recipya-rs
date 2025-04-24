@@ -41,6 +41,24 @@ pub struct NutritionInformationSchema {
     pub unsaturated_fat_content: Option<Mass>,
 }
 
+impl NutritionInformationSchema {
+    /// Checks whether all fields of the schema are `None`.
+    pub fn is_empty(&self) -> bool {
+        self.calories.is_none()
+            && self.carbohydrate_content.is_none()
+            && self.cholesterol_content.is_none()
+            && self.fat_content.is_none()
+            && self.fiber_content.is_none()
+            && self.protein_content.is_none()
+            && self.saturated_fat_content.is_none()
+            && self.serving_size.is_none()
+            && self.sodium_content.is_none()
+            && self.sugar_content.is_none()
+            && self.trans_fat_content.is_none()
+            && self.unsaturated_fat_content.is_none()
+    }
+}
+
 /// Properties that take Energy as values are of the form '<Number> <Energy unit of measure>'.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Energy {

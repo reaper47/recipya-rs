@@ -809,9 +809,7 @@ async fn extract_images(
         for image in images.iter() {
             let url = match image {
                 ImageObjectOrUrl::Url(url) => Some(url),
-                ImageObjectOrUrl::ImageObject(obj) => {
-                    obj.url.as_ref().or(obj.content_url.as_ref())
-                }
+                ImageObjectOrUrl::ImageObject(obj) => obj.url.as_ref().or(obj.content_url.as_ref()),
             };
 
             if let Some(url) = url {

@@ -15,32 +15,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/integrations/helpers.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/accuchef.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/accuchef.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/bigoven.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cheftap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cheftap.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cooklang.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cooklang.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookmate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookmate.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/crouton.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/crouton.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/recipemd.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/recipemd.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/recipesage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/recipesage.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/saffron.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/context.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/context.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/recipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/support/time.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/support/time.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -139,6 +117,7 @@
     "Cargo.Test core::integrations::apps::cooklang::tests::test_recipe_1.executor": "Run",
     "Cargo.Test core::integrations::apps::cooklang::tests::test_recipe_format1.executor": "Run",
     "Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_xml_ok.executor": "Run",
+    "Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1.executor": "Debug",
     "Cargo.Test core::integrations::apps::crouton::tests::test_all_fields.executor": "Run",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_parser::test_eol_ok.executor": "Debug",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_parser::test_footer_ok.executor": "Run",
@@ -438,7 +417,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok">
+  <component name="RunManager" selected="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -491,8 +470,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::saffron::tests::test_recipe2_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::saffron::tests::test_recipe2_ok -- --exact" />
+    <configuration name="Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::cookml::tests::test_recipes::test_recipes1 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -508,8 +487,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipesage::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::recipesage::tests" />
+    <configuration name="Test core::integrations::apps::saffron::tests::test_recipe2_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::saffron::tests::test_recipe2_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -546,17 +525,17 @@
       <item itemvalue="Cargo.Run" />
       <item itemvalue="Cargo.Test accuchef::tests" />
       <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
+      <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
       <item itemvalue="Cargo.Test core::integrations::apps::saffron::tests::test_recipe2_ok" />
       <item itemvalue="Cargo.Test saffron::tests" />
-      <item itemvalue="Cargo.Test recipesage::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
         <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
         <item itemvalue="Cargo.Test accuchef::tests" />
         <item itemvalue="Cargo.Test core::integrations::apps::saffron::tests::test_recipe2_ok" />
         <item itemvalue="Cargo.Test saffron::tests" />
-        <item itemvalue="Cargo.Test recipesage::tests" />
       </list>
     </recent_temporary>
   </component>
