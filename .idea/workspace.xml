@@ -15,10 +15,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/helpers.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +100,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Cargo.Run.executor": "Run",
-    "Cargo.Test accuchef::tests.executor": "Run",
+    "Cargo.Test accuchef::tests.executor": "Debug",
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test bigoven::tests.executor": "Debug",
@@ -119,6 +122,7 @@
     "Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_xml_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1.executor": "Debug",
     "Cargo.Test core::integrations::apps::crouton::tests::test_all_fields.executor": "Run",
+    "Cargo.Test core::integrations::apps::kalorio::tests::test_recipes::test_recipe1.executor": "Debug",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_parser::test_eol_ok.executor": "Debug",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_parser::test_footer_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_parser::test_ingredone.executor": "Run",
@@ -129,7 +133,7 @@
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_now_youre_cooking_v4_72.executor": "Run",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_recipe1_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_unspecified_version.executor": "Run",
-    "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_14_ok.executor": "Run",
+    "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_14_ok.executor": "Debug",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_20_ok.executor": "Debug",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v7_01_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v7_04_ok.executor": "Run",
@@ -198,6 +202,7 @@
     "Cargo.Test general_router::tests.executor": "Run",
     "Cargo.Test helpers::tests (1).executor": "Run",
     "Cargo.Test helpers::tests.executor": "Run",
+    "Cargo.Test kalorio::tests.executor": "Run",
     "Cargo.Test mealmaster::tests.executor": "Run",
     "Cargo.Test recipemd::tests.executor": "Debug",
     "Cargo.Test recipes_routes::tests.executor": "Run",
@@ -362,7 +367,7 @@
     "Cargo.Test tests_recipe_add_manual.executor": "Run",
     "Cargo.Test tests_recipe_add_website.executor": "Run",
     "Cargo.Test tests_recipe_for_create.executor": "Run",
-    "Cargo.Test tests_recipes.executor": "Run",
+    "Cargo.Test tests_recipes.executor": "Debug",
     "Cargo.Test tests_register.executor": "Run",
     "Cargo.Test tests_searchbar.executor": "Run",
     "Cargo.Test tests_share_recipe.executor": "Run",
@@ -417,7 +422,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1">
+  <component name="RunManager" selected="Cargo.Test mealmaster::tests">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -436,8 +441,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test accuchef::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::accuchef::tests" />
+    <configuration name="Test core::integrations::apps::mealmaster::tests::tests_recipes::test_cookmate_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mealmaster::tests::tests_recipes::test_cookmate_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -453,8 +458,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::accuchef::tests::test_recipe1_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::accuchef::tests::test_recipe1_ok -- --exact" />
+    <configuration name="Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_14_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_14_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -470,8 +475,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::cookml::tests::test_recipes::test_recipes1 -- --exact" />
+    <configuration name="Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_20_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_20_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -487,8 +492,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::saffron::tests::test_recipe2_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::saffron::tests::test_recipe2_ok -- --exact" />
+    <configuration name="Test kalorio::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::kalorio::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -504,8 +509,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test saffron::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::saffron::tests" />
+    <configuration name="Test mealmaster::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mealmaster::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -523,19 +528,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test accuchef::tests" />
-      <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
-      <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
-      <item itemvalue="Cargo.Test core::integrations::apps::saffron::tests::test_recipe2_ok" />
-      <item itemvalue="Cargo.Test saffron::tests" />
+      <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_cookmate_ok" />
+      <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_14_ok" />
+      <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_20_ok" />
+      <item itemvalue="Cargo.Test kalorio::tests" />
+      <item itemvalue="Cargo.Test mealmaster::tests" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
-        <item itemvalue="Cargo.Test core::integrations::apps::accuchef::tests::test_recipe1_ok" />
-        <item itemvalue="Cargo.Test accuchef::tests" />
-        <item itemvalue="Cargo.Test core::integrations::apps::saffron::tests::test_recipe2_ok" />
-        <item itemvalue="Cargo.Test saffron::tests" />
+        <item itemvalue="Cargo.Test mealmaster::tests" />
+        <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_20_ok" />
+        <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_cookmate_ok" />
+        <item itemvalue="Cargo.Test core::integrations::apps::mealmaster::tests::tests_recipes::test_v6_14_ok" />
+        <item itemvalue="Cargo.Test kalorio::tests" />
       </list>
     </recent_temporary>
   </component>

@@ -8,7 +8,8 @@ use std::io::Read;
 
 use crate::core::integrations::apps::cooklang::CookLang;
 use crate::core::integrations::apps::{
-    accuchef, cheftap, cookmate, crouton, mealmaster, recipemd, recipesage, saffron,
+    accuchef, cheftap, cookmate, cookml, crouton, kalorio, mealmaster, recipemd, recipesage,
+    saffron,
 };
 use crate::core::scraper::schema::RecipeSchema;
 
@@ -21,6 +22,7 @@ pub enum App {
     Cooklang,
     CookMate,
     Crouton,
+    Kalorio,
     MealMaster,
     RecipeMD,
     RecipeSage,
@@ -29,6 +31,7 @@ pub enum App {
 
 /// Represents the supported file formats for some applications.
 pub enum FileFormat {
+    CookML,
     Json,
     MealMaster,
     Txt,
@@ -56,6 +59,11 @@ where
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::Crouton => crouton::parse(r),
+        App::Kalorio => match file_format {
+            FileFormat::CookML => cookml::parse(r),
+            FileFormat::Txt => kalorio::parse(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
         App::MealMaster => mealmaster::parse(r),
         App::RecipeMD => recipemd::parse(r),
         App::RecipeSage => match file_format {

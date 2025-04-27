@@ -449,7 +449,7 @@ fn deserialize_trim(mut s: String) -> String {
     s.trim().to_string()
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CreativeWorkOrText {
     CreativeWork(Box<CreativeWorkType>),
     Text(String),

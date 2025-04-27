@@ -14,6 +14,7 @@
 //!     - COOKmate
 //!     - Now You're Cooking! v4.72 (Meal-Master Export Format)
 
+use std::borrow::Cow;
 use std::io::Read;
 
 use nom::branch::alt;
@@ -26,10 +27,11 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use crate::core::integrations::error::{Error, Result};
+use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space};
 use crate::core::integrations::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_yield,
 };
+use crate::core::integrations::{Error, Result};
 use crate::core::model::recipe::Sections;
 use crate::core::scraper::schema::{AtType, RecipeCategory, RecipeSchema};
 
@@ -64,100 +66,11 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
                 .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect())
                 .unwrap_or_default(),
             yield_: r.servings,
-            ingredients: r
-                .ingredients
-                .into_iter()
-                .fold(Sections::new(), |mut acc, ing| {
-                    match ing {
-                        Ingredient::Line(name) => {
-                            let name = name.trim().to_string();
-
-                            if let Some((_, lines)) = acc.last_mut() {
-                                lines.push(name);
-                            } else {
-                                acc.push(("".into(), vec![name]));
-                            }
-                        }
-                        Ingredient::Section(section) => {
-                            acc.push((section.to_string(), Vec::new()));
-                        }
-                    }
-                    acc
-                })
-                .into_iter()
-                .map(|(section, lines)| {
-                    let merged = (0..lines.len())
-                        .filter_map(|i| {
-                            let line = &lines[i];
-
-                            if line.ends_with(';') && i + 2 < lines.len() {
-                                Some((i, format!("{} {}", line, lines[i + 2])))
-                            } else if i > 1 && lines[i - 2].ends_with(';') {
-                                None
-                            } else {
-                                Some((i, line.clone()))
-                            }
-                        })
-                        .map(|(_, line)| line)
-                        .collect();
-
-                    (section, merged)
-                })
-                .collect(),
-            instructions: r
-                .instructions
-                .into_iter()
-                .fold(Sections::new(), |mut acc, ins| {
-                    match ins {
-                        Instruction::Section(section) => {
-                            acc.push((section.into(), Vec::new()));
-                        }
-                        Instruction::Line(line) => {
-                            let line = line.trim();
-
-                            if !line.is_empty() {
-                                if acc.is_empty() {
-                                    acc.push(("".into(), Vec::new()));
-                                }
-
-                                if let Some((_, lines)) = acc.last_mut() {
-                                    if let Some(last_line) = lines.last_mut() {
-                                        let merged = format!("{last_line} {line}").trim().into();
-                                        *last_line = merged;
-                                    } else {
-                                        lines.push(line.into());
-                                    }
-                                }
-                            } else if let Some((_, lines)) = acc.last_mut() {
-                                lines.push(line.into());
-                            }
-                        }
-                    }
-                    acc
-                })
-                .into_iter()
-                .map(|(section, mut lines)| {
-                    if let Some(l) = lines.last() {
-                        if l.is_empty() {
-                            lines.pop();
-                        }
-                    }
-                    (section, lines)
-                })
-                .collect(),
+            ingredients: r.ingredients.to_sections(),
+            instructions: r.instructions.to_sections(),
             source: format!("{} {}", r.header.0, r.header.1.trim_end_matches('-').trim()),
         }
     }
-}
-
-enum Instruction<'a> {
-    Line(&'a str),
-    Section(&'a str),
-}
-
-enum Ingredient<'a> {
-    Line(&'a str),
-    Section(&'a str),
 }
 
 impl From<MealMasterRecipe> for RecipeSchema {
@@ -185,15 +98,16 @@ where
 {
     let mut content = String::new();
     r.read_to_string(&mut content)?;
-
-    let recipes = parse_meal_master_recipe(&content)?;
-    Ok(recipes.into_iter().map(RecipeSchema::from).collect())
+    Ok(parse_meal_master_recipe(&content)?
+        .into_iter()
+        .map(RecipeSchema::from)
+        .collect())
 }
 
 fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
     many0(alt((
         map(
-            preceded(take_while_m_n(1, 10, is_vchar_or_space), eol),
+            preceded(take_while_m_n(1, 10, is_vchar_or_space), line_ending),
             |_| None,
         ),
         map(recipe, |r| Some(r.into())),
@@ -350,16 +264,16 @@ fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
 
 fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
     many0(alt((
-        map(section, Ingredient::Section),
+        map(section, |s| Ingredient::Section(Cow::Borrowed(s))),
         terminated(ingredone, eol),
-        map((space0, eol), |_| Ingredient::Line("")),
+        map((space0, eol), |_| Ingredient::Line(Cow::Borrowed(""))),
     )))
     .parse(input)
 }
 
 fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
     many1(alt((
-        map(section, |s| vec![Ingredient::Section(s)]),
+        map(section, |s| vec![Ingredient::Section(Cow::Borrowed(s))]),
         map(
             (ingredtwo, char(' '), ingredone, many0(eol)),
             |(ing1, _, ing2, _)| vec![ing1, ing2],
@@ -379,7 +293,7 @@ fn ingredone(input: &str) -> IResult<&str, Ingredient> {
             space1,
             take_while_m_n(1, 28, is_vchar_or_space),
         )),
-        Ingredient::Line,
+        |s| Ingredient::Line(Cow::Borrowed(s)),
     )
     .parse(input)
 }
@@ -393,7 +307,7 @@ fn ingredtwo(input: &str) -> IResult<&str, Ingredient> {
             char(' '),
             take_while_m_n(29, 29, is_vchar_or_space),
         )),
-        Ingredient::Line,
+        |s| Ingredient::Line(Cow::Borrowed(s)),
     )
     .parse(input)
 }
@@ -468,17 +382,23 @@ fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
 }
 
 fn instruction(input: &str) -> IResult<&str, &str> {
-    terminated(
-        verify(take_while_m_n(0, 255, is_vchar_or_space), |line: &str| {
-            !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
-        }),
-        eol,
+    let a = terminated(
+        verify(
+            alt((take_until("\n\n"), take_until("\n-----"))),
+            |line: &str| {
+                !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
+            },
+        ),
+        (
+            line_ending,
+            opt(line_ending),
+            opt(line_ending),
+            opt(line_ending),
+        ),
     )
-    .parse(input)
-}
-
-fn is_vchar_or_space(c: char) -> bool {
-    !c.is_control() && (c != '\n' && c != '\r')
+    .parse(input);
+    println!("{:?}", a);
+    a
 }
 
 fn section(input: &str) -> IResult<&str, &str> {
@@ -780,7 +700,7 @@ Categories: Salads
   salad bowl.     Dressing: Combine all ingredients but egg and vinegar,
   add in thin stream and process till well blended. MAKES : 1 cup
   Just before serving, toss well. Leftover dressing keeps up to 1 week
-  in fridge.               from Best Recipes Under the Sun
+  in fridge. from Best Recipes Under the Sun
 -----"##
         }
 
@@ -1218,22 +1138,22 @@ Typed for you by Karen Mintzias
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
                     "8 oz Dates; Pitted, Chopped".into(),
-                    "1 t  Baking Soda".into(),
-                    "1 c  ;Boiling Water".into(),
-                    "1 3/4 c  Flour; Unbleached, Sifted".into(),
-                    "2 T  Cocoa; Baking".into(),
-                    "1/2 t  Salt".into(),
-                    "1 c  Shortening; Vegetable".into(),
-                    "1 c  Sugar".into(),
+                    "1 t Baking Soda".into(),
+                    "1 c ;Boiling Water".into(),
+                    "1 3/4 c Flour; Unbleached, Sifted".into(),
+                    "2 T Cocoa; Baking".into(),
+                    "1/2 t Salt".into(),
+                    "1 c Shortening; Vegetable".into(),
+                    "1 c Sugar".into(),
                     "2 ea Eggs; Large".into(),
                     "6 oz Semisweet Chocolate Chips".into(),
-                    "1/2 c  Walnuts; Chopped".into(),
+                    "1/2 c Walnuts; Chopped".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
-                            "Combine dates, baking soda, and boiling water in a small bowl.  Cool to room temperature.  Sift together the flour, cocoa, and salt; set aside. Cream the shortening and sugar together in a mixing bowl until light and fluffy, using an electric mixer at medium speed.  Add eggs, one at a time, beating well after each addition.  Blend in date mixture.  Then stir in dry ingredients.  Pour into a greased 13 x 9 x 2-inch baking pan.  Bake in preheated 350 degree F. oven for 35 minutes or until cake tests done. Cool in pan on rack.  Cut into squares and serve with a scoop of vanilla ice cream on top.".into(),
+                            "Combine dates, baking soda, and boiling water in a small bowl. Cool to room temperature. Sift together the flour, cocoa, and salt; set aside. Cream the shortening and sugar together in a mixing bowl until light and fluffy, using an electric mixer at medium speed. Add eggs, one at a time, beating well after each addition. Blend in date mixture. Then stir in dry ingredients. Pour into a greased 13 x 9 x 2-inch baking pan. Bake in preheated 350 degree F. oven for 35 minutes or until cake tests done. Cool in pan on rack. Cut into squares and serve with a scoop of vanilla ice cream on top.".into(),
                         ],
                     )
                 ])),
@@ -1260,17 +1180,17 @@ Typed for you by Karen Mintzias
                     "1 tb Onion; Minced".into(),
                     "2 tb Brown Sugar".into(),
                     "12 ea Biscuits; *".into(),
-                    "1/2 c  Barbecue Sauce; **".into(),
-                    "3/4 c  Cheddar; Sharp, Shredded".into(),
+                    "1/2 c Barbecue Sauce; **".into(),
+                    "3/4 c Cheddar; Sharp, Shredded".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
-                            "*    Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe. **   Use store bought sauce or your favorite recipe. ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++".into(),
-                            "In a skillet brown the ground beef and then drain off the excess fat.  Add the bbq sauce, onion and brown sugar and set aside.  Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup.  Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese.  Bake in a preheated 400 degrees F. oven for 12 minutes.  Serve hot.".into(),
+                            "* Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe. ** Use store bought sauce or your favorite recipe. ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++".into(),
+                            "In a skillet brown the ground beef and then drain off the excess fat. Add the bbq sauce, onion and brown sugar and set aside. Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup. Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese. Bake in a preheated 400 degrees F. oven for 12 minutes. Serve hot.".into(),
                             "VARIATIONS:".into(),
-                            "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture.  You can also add green bell pepper or a hot pepper to the above recipe with good results.".into(),
+                            "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture. You can also add green bell pepper or a hot pepper to the above recipe with good results.".into(),
                         ],
                     )
                 ])),
@@ -1288,16 +1208,16 @@ Typed for you by Karen Mintzias
                 recipe_category: RecipeCategory::Text("Salads".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
-                    "1/4 c  Almonds; slivered".into(),
+                    "1/4 c Almonds; slivered".into(),
                     "2 ea Onions; green, chopped".into(),
                     "1 ea Lettuce; romaine".into(),
-                    "1 c  Mandarin oranges; drained 1".into(),
-                    "1/2 c  Mushrooms; sliced (optional".into(),
-                    "1 x  Dressing:".into(),
+                    "1 c Mandarin oranges; drained 1".into(),
+                    "1/2 c Mushrooms; sliced (optional".into(),
+                    "1 x Dressing:".into(),
                     "1 ts Sugar".into(),
                     "1/2 ts Tarragon; dried".into(),
-                    "1/3 c  Oil; vegetable".into(),
-                    "1 x  Salt & pepper".into(),
+                    "1/3 c Oil; vegetable".into(),
+                    "1 x Salt & pepper".into(),
                     "1/8 ts Tabasco sauce".into(),
                     "1 ea Egg yolk".into(),
                 ]),
@@ -1305,7 +1225,7 @@ Typed for you by Karen Mintzias
                     (
                         "".into(),
                         vec![
-                            "Shaking constantly, toast almonds in skillet over low heat till golden brown (about 5 minutes). Was and dry lettuce. Tear into bite size pieces. Place with green onions and mandarin oranges in large salad bowl.     Dressing: Combine all ingredients but egg and vinegar, add in thin stream and process till well blended. MAKES : 1 cup Just before serving, toss well. Leftover dressing keeps up to 1 week in fridge.               from Best Recipes Under the Sun".into(),
+                            "Shaking constantly, toast almonds in skillet over low heat till golden brown (about 5 minutes). Was and dry lettuce. Tear into bite size pieces. Place with green onions and mandarin oranges in large salad bowl. Dressing: Combine all ingredients but egg and vinegar, add in thin stream and process till well blended. MAKES : 1 cup Just before serving, toss well. Leftover dressing keeps up to 1 week in fridge. from Best Recipes Under the Sun".into(),
                         ],
                     )
                 ])),
@@ -1325,12 +1245,12 @@ Typed for you by Karen Mintzias
                     "<section></section>".into(),
                     "2 lb Hamburger".into(),
                     "16 oz Can tomatoes".into(),
-                    "2    Lg. onions, chopped separate".into(),
+                    "2 Lg. onions, chopped separate".into(),
                     "16 oz Can kidney beans, drained".into(),
                     "4 tb Chili powder (adjust to tast".into(),
-                    "1 t  Sugar".into(),
-                    "1 t  Salt and pepper to taste".into(),
-                    "1    Pkg. corn tortillas".into(),
+                    "1 t Sugar".into(),
+                    "1 t Salt and pepper to taste".into(),
+                    "1 Pkg. corn tortillas".into(),
                     "1 lb Cheese, grated".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
@@ -1356,11 +1276,11 @@ Typed for you by Karen Mintzias
                 recipe_category: RecipeCategory::Text("Meats".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
-                    "6    Pork chops".into(),
+                    "6 Pork chops".into(),
                     "Pork chop fat or oil".into(),
                     "2 ts Butter".into(),
                     "-salt and pepper to taste".into(),
-                    "3    Apples-unpeeled with cores".into(),
+                    "3 Apples-unpeeled with cores".into(),
                     "1 ts Sugar".into(),
                     "Cinnamon".into(),
                 ]),
@@ -1388,20 +1308,20 @@ Typed for you by Karen Mintzias
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
                     "1/2 lb Zucchini".into(),
-                    "1 c  Chopped dried dates".into(),
+                    "1 c Chopped dried dates".into(),
                     "2 ts Grated orange zest".into(),
-                    "2 c  Flour".into(),
+                    "2 c Flour".into(),
                     "2 ts Baking powder".into(),
                     "1 1/2 ts Soda".into(),
-                    "2    Egg whites".into(),
-                    "2    Eggs".into(),
+                    "2 Egg whites".into(),
+                    "2 Eggs".into(),
                     "1 tb Vanilla".into(),
-                    "1 1/4 c  Sugar".into(),
-                    "1 c  Plain, non-fat yogurt".into(),
-                    "1/4 c  Almonds (opt.)".into(),
+                    "1 1/4 c Sugar".into(),
+                    "1 c Plain, non-fat yogurt".into(),
+                    "1/4 c Almonds (opt.)".into(),
                     "1/2 ts Salt".into(),
                     "Cinnamon Orange Icing".into(),
-                    "1 c  Powdered sugar".into(),
+                    "1 c Powdered sugar".into(),
                     "1 ts Ground cinnamon".into(),
                     "2 tb Orange juice".into(),
                     "1 tb Orange curacao".into(),
@@ -1413,10 +1333,10 @@ Typed for you by Karen Mintzias
                     (
                         "".into(),
                         vec![
-                            "If dates are dry, soak to make them moist.  Chop squash in processor.  Add dates and orange zest.  Blend well.  Sift flour with baking powder, soda and salt.  Blend dry ingredients.  Beat egg. Add yogurt, sugar and vanilla. Add alternately dry mix and egg mix alternately to zucchini.  Pour batter into lightly greased and floured bundt pan.  Bake at 350 about 45 minutes, or til tests done.  Cool on wire rack 10 minutes.  Unmold onto serving platter.  If using glaze, peirce top and sides with with toothpicks.  Spoon glaze over cake, allowing to soak in until cake is moist but not wet.  Cool completely.  Drizzle icing over cake and sprinkle with almonds".into(),
-                            "Icing:  combine powdered sugar, cinnamon, orange juice and liqueur in bowl. Mix til smooth.  Use immediately.".into(),
+                            "If dates are dry, soak to make them moist. Chop squash in processor. Add dates and orange zest. Blend well. Sift flour with baking powder, soda and salt. Blend dry ingredients. Beat egg. Add yogurt, sugar and vanilla. Add alternately dry mix and egg mix alternately to zucchini. Pour batter into lightly greased and floured bundt pan. Bake at 350 about 45 minutes, or til tests done. Cool on wire rack 10 minutes. Unmold onto serving platter. If using glaze, peirce top and sides with with toothpicks. Spoon glaze over cake, allowing to soak in until cake is moist but not wet. Cool completely. Drizzle icing over cake and sprinkle with almonds".into(),
+                            "Icing: combine powdered sugar, cinnamon, orange juice and liqueur in bowl. Mix til smooth. Use immediately.".into(),
                             "Orange Glaze: Stir together til smooth.".into(),
-                            "Note: Avoid using dry old dates. For slightly softer cake texture, add 2 Tbsp melted butter to batter before folding into squash.  This will add 2 grams fat per serving. From: The Spectator....Aug 12/92 There is yellow squash hidden in this cake, but you'd never guess it. It's delicate, faintly sweet flavor blends right in. You can use crook neck, straight neck or even yellow zucchini, but be sure to select young squach with soft, thin skins. (why not green zucchini?) This cake, with its accent of chopped dates, needs only a simple icing to dress it up To add extra moistness and a sweet citrus flavour, poke all over the warm cake and pour optional glaze over the cake til it soaks in.".into(),
+                            "Note: Avoid using dry old dates. For slightly softer cake texture, add 2 Tbsp melted butter to batter before folding into squash. This will add 2 grams fat per serving. From: The Spectator....Aug 12/92 There is yellow squash hidden in this cake, but you'd never guess it. It's delicate, faintly sweet flavor blends right in. You can use crook neck, straight neck or even yellow zucchini, but be sure to select young squach with soft, thin skins. (why not green zucchini?) This cake, with its accent of chopped dates, needs only a simple icing to dress it up To add extra moistness and a sweet citrus flavour, poke all over the warm cake and pour optional glaze over the cake til it soaks in.".into(),
                             "Adapted from a rich recipe with sour cream and pecans created by the late Bert Greene.".into(),
                         ],
                     )
@@ -1436,19 +1356,19 @@ Typed for you by Karen Mintzias
                 recipe_category: RecipeCategory::Text("Poultry".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
-                    "2    Chicken breast halves".into(),
+                    "2 Chicken breast halves".into(),
                     "1 tb Cornstarch".into(),
                     "1/2 ts Cumin, ground".into(),
                     "1/2 ts Garlic salt".into(),
-                    "1/2    Egg; lightly beaten".into(),
+                    "1/2 Egg; lightly beaten".into(),
                     "1/2 tb Water".into(),
                     "3 tb Cornmeal".into(),
                     "1 1/2 tb Oil".into(),
-                    "1/2    Avocado; peeled, sliced".into(),
-                    "3/4 c  Cheese, monterey jack; 1/4 c  Sour cream; divided".into(),
+                    "1/2 Avocado; peeled, sliced".into(),
+                    "3/4 c Cheese, monterey jack; 1/4 c Sour cream; divided".into(),
                     "-shredded".into(),
-                    "1/8 c  Onion, green, tops only".into(),
-                    "1/8    Pepper, red bell; chopped".into(),
+                    "1/8 c Onion, green, tops only".into(),
+                    "1/8 Pepper, red bell; chopped".into(),
                     "Tomatoes, cherry".into(),
                     "Parsley sprigs".into(),
                 ]),
@@ -1477,20 +1397,20 @@ Typed for you by Karen Mintzias
                     (
                         "FILLING".into(),
                         vec![
-                            "1 1/2 c  Whole-milk ricotta cheese; - well drained".into(),
-                            "1 1/2 c  Milk chocolate; - coarsely chopped".into(),
+                            "1 1/2 c Whole-milk ricotta cheese; - well drained".into(),
+                            "1 1/2 c Milk chocolate; - coarsely chopped".into(),
                             "3 tb Sugar".into(),
-                            "1/4 c  Pistachio nuts; - coarsely chopped".into(),
+                            "1/4 c Pistachio nuts; - coarsely chopped".into(),
                             "1 1/2 ts Cinnamon".into(),
                         ],
                     ),
                     (
                         "DOUGH".into(),
                         vec![
-                            "1 c  All-purpose flour".into(),
+                            "1 c All-purpose flour".into(),
                             "- or dry white wine".into(),
                             "1 tb Sugar".into(),
-                            "2 c  Vegetable oil".into(),
+                            "2 c Vegetable oil".into(),
                             "1 tb Butter or lard".into(),
                             "Colored sprinkles".into(),
                             "4 tb To 5 Tbl sweet Marsala wine".into(),
@@ -1502,11 +1422,11 @@ Typed for you by Karen Mintzias
                         "".into(),
                         vec![
                             "In a bowl, combine all the filling ingredients and mix well. Refreigerate, covered, until ready to fill the cannoli shells.".into(),
-                            "To make the dough, place the flour in a bowl or food processor. Add the butter or lard and sugar and mix with a fork, or pulse, until the mixture resembles coarse meal. Slowly add the 1/4 cup of wine and shape the mixture into a ball; add a little more wine if the dough appears too dry. It should be soft but not sticky. Knead the dough on a floured surface until smooth, about 10 minutes.  Wrap the dough and refrigerate for 45 minutes.".into(),
-                            "Place the chilled dough on a floured work surface. Divide the dough in half.  Work with 1 piece of dough at a time; keep the remaining dough refrigerated. Roll the dough out to a very thin long rectangle about 14 inches long and 3 inches wide, either by hand or using a pasta machine set to the finest setting.  Cut the dough into 3-inch squares. Place a cannoli form diagnoally across 1 square. Roll the dough up around the form so the points meet in the center.  Seal the points with a little water. Continue making cylinders until all the dough is used.".into(),
+                            "To make the dough, place the flour in a bowl or food processor. Add the butter or lard and sugar and mix with a fork, or pulse, until the mixture resembles coarse meal. Slowly add the 1/4 cup of wine and shape the mixture into a ball; add a little more wine if the dough appears too dry. It should be soft but not sticky. Knead the dough on a floured surface until smooth, about 10 minutes. Wrap the dough and refrigerate for 45 minutes.".into(),
+                            "Place the chilled dough on a floured work surface. Divide the dough in half. Work with 1 piece of dough at a time; keep the remaining dough refrigerated. Roll the dough out to a very thin long rectangle about 14 inches long and 3 inches wide, either by hand or using a pasta machine set to the finest setting. Cut the dough into 3-inch squares. Place a cannoli form diagnoally across 1 square. Roll the dough up around the form so the points meet in the center. Seal the points with a little water. Continue making cylinders until all the dough is used.".into(),
                             "In an electric skillet, heat the vegetable oil to 375F. Fry the cannoli 3 or 4 at a time, turning them as they brown and blister, until golden brown on all sides. Drain them on brown paper. When they are cool enough to handle, carefully slide the cannoli off the forms.".into(),
-                            "To serve, use a long iced tea spoon or a pastry bag without a tip to fill the cannoli with the ricotta cheese mixture. Dip the ends into colored sprinkles, arrange them on a tray, and sprinkle confectioner's sugar over fill the cannoli just before serving - any sooner will make the shells soggy. the tops.  Serve at once.".into(),
-                            "NOTE:  If you prefer, you can fry the cannoli in a deep fryer. Be sure to".into(),
+                            "To serve, use a long iced tea spoon or a pastry bag without a tip to fill the cannoli with the ricotta cheese mixture. Dip the ends into colored sprinkles, arrange them on a tray, and sprinkle confectioner's sugar over fill the cannoli just before serving - any sooner will make the shells soggy. the tops. Serve at once.".into(),
+                            "NOTE: If you prefer, you can fry the cannoli in a deep fryer. Be sure to".into(),
                             "This recipe from CIAO ITALIA by Mary Ann Esposito".into(),
                         ],
                     ),
@@ -1525,22 +1445,22 @@ Typed for you by Karen Mintzias
                 recipe_category: RecipeCategory::Text("Vegetables".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
-                    "1/2 c  Shelled fresh peas (about".into(),
+                    "1/2 c Shelled fresh peas (about".into(),
                     "-1/2 lb unshelled)".into(),
                     "1/2 lb Asparagus, trimmed, peeled".into(),
                     "-and cut on the diagonal".into(),
                     "-into 1-1/2\" pieces".into(),
                     "8 tb Unsalted butter".into(),
-                    "1 1/4 c  Heavy cream".into(),
-                    "1    Juice of lemon".into(),
+                    "1 1/4 c Heavy cream".into(),
+                    "1 Juice of lemon".into(),
                     "1 ts Finely grated lemon rind".into(),
                     "Salt".into(),
                     "Freshly ground white pepper".into(),
                     "1/2 lb Ziti or tubular pasta".into(),
-                    "3    Hearts of Bibb or butter".into(),
+                    "3 Hearts of Bibb or butter".into(),
                     "-lettuce, separated into".into(),
                     "-leaves".into(),
-                    "1/2 c  Freshly grated Parmesan".into(),
+                    "1/2 c Freshly grated Parmesan".into(),
                     "-cheese".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
@@ -1572,23 +1492,23 @@ Typed for you by Karen Mintzias
                 recipe_category: RecipeCategory::Text("Main dish".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
-                    "1/4 c  butter".into(),
+                    "1/4 c butter".into(),
                     "1 ts salt".into(),
                     "2 lb boneless round steak, cubed".into(),
                     "1/4 ts oregano".into(),
                     "5 ea medium zucchini, sliced thin".into(),
                     "1/4 ts cumin".into(),
-                    "3 c  corn".into(),
-                    "1 c  cheddar cheese, shredded".into(),
+                    "3 c corn".into(),
+                    "1 c cheddar cheese, shredded".into(),
                     "4 oz green chilies, chopped".into(),
-                    "1/4 c  chopped cilantro".into(),
+                    "1/4 c chopped cilantro".into(),
                     "2 ea cloves garlic, minced".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     (
                         "".into(),
                         vec![
-                            "In a large skillet, melt butter.  Brown meat, a few pieces at a time. Remove from skillet as they brown.  Saute zucchini in skillet 7-10 minutes.  Return meat and add corn, chilies, garlic, salt, oregano and cumin.  Simmer, stirring occassionally, about 12-15 minutes or until meat is tender.  Stir in cheese until melted.  Garnish with chopped cilantro and serve.  Serves 6".into(),
+                            "In a large skillet, melt butter. Brown meat, a few pieces at a time. Remove from skillet as they brown. Saute zucchini in skillet 7-10 minutes. Return meat and add corn, chilies, garlic, salt, oregano and cumin. Simmer, stirring occassionally, about 12-15 minutes or until meat is tender. Stir in cheese until melted. Garnish with chopped cilantro and serve. Serves 6".into(),
                         ],
                     )
                 ])),
@@ -1607,28 +1527,28 @@ Typed for you by Karen Mintzias
                 recipe_category: RecipeCategory::Text("Seafood".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
-                    "0.50 c  Olive oil".into(),
+                    "0.50 c Olive oil".into(),
                     "1.00 sm Onion; chopped".into(),
                     "1.00 sm Green pepper; chopped".into(),
-                    "1.00    Garlic clove; minced".into(),
-                    "1.00    Parsley sprig".into(),
+                    "1.00 Garlic clove; minced".into(),
+                    "1.00 Parsley sprig".into(),
                     "1.00 lg Ripe tomato".into(),
                     "- peeled, seeded & chopped".into(),
-                    "1.00    Bay leaf".into(),
+                    "1.00 Bay leaf".into(),
                     "0.25 ts Nutmeg".into(),
                     "0.25 ts Cumin".into(),
                     "0.25 ts Thyme".into(),
                     "1.00 pn Saffron; toasted".into(),
                     "1.00 lb Shrimp, raw".into(),
                     "- shelled, deveined".into(),
-                    "1.00 c  -Hot water".into(),
-                    "0.25 c  Dry white wine".into(),
+                    "1.00 c -Hot water".into(),
+                    "0.25 c Dry white wine".into(),
                     "1.00 tb Lemon juice".into(),
                     "1.00 tb Salt".into(),
                     "0.50 ts Hot sauce".into(),
-                    "2.00 c  Long grain white rice".into(),
-                    "2.50 c  -Water".into(),
-                    "0.50 c  Beer".into(),
+                    "2.00 c Long grain white rice".into(),
+                    "2.50 c -Water".into(),
+                    "0.50 c Beer".into(),
                     "Cooked peas".into(),
                     "Pimiento strips".into(),
                     "Parsley bouquets".into(),
@@ -1637,10 +1557,10 @@ Typed for you by Karen Mintzias
                     (
                         "".into(),
                         vec![
-                            "Use a 3-quart casserole with lid.  An earthenware casserole is preferable, especially if you wish to add a touch of Spain to a dinner party. However, I know that good earthenware is hard to find today. I have 2 casseroles that I've had for 15 years.".into(),
-                            "Heat oil in casserole.  Saute onion and pepper until transparent.  Add garlic, parsley, tomato, bay leaf, nutmeg, cumin and thyme.  Mix well, cover, and cook over low heat until mushy (about 15 minutes).  The saffron should be toasting on the lid in the little brown paper.".into(),
-                            "Add the shrimp to the saute and cook until it turns pink.  Dissolve the saffron in the 1 cup hot water.  Combine with wine, lemon juice, salt and hot sauce.  Pour into casserole, stir to mix, and cook covered 10 minutes more.  Now add the rice and the 2 1/2 cups of water. Distribute ingredients well in casserole.  Bring to a quick boil, STIR ONCE, and place in preheated 325 degree F. oven for only 20 minutes - NI UN MINUTO MAS! Remove from oven, uncover, and garnish with peas, pimientos, and parsley. Pour beer over all.  Cover again and allow to stand 15 minutes longer, before serving.".into(),
-                            "Source: Clarita's Cocina - by Clarita Garcia  (ISBN: 0-942084-74-8) Typos provided by: Karen Mintzias".into(),
+                            "Use a 3-quart casserole with lid. An earthenware casserole is preferable, especially if you wish to add a touch of Spain to a dinner party. However, I know that good earthenware is hard to find today. I have 2 casseroles that I've had for 15 years.".into(),
+                            "Heat oil in casserole. Saute onion and pepper until transparent. Add garlic, parsley, tomato, bay leaf, nutmeg, cumin and thyme. Mix well, cover, and cook over low heat until mushy (about 15 minutes). The saffron should be toasting on the lid in the little brown paper.".into(),
+                            "Add the shrimp to the saute and cook until it turns pink. Dissolve the saffron in the 1 cup hot water. Combine with wine, lemon juice, salt and hot sauce. Pour into casserole, stir to mix, and cook covered 10 minutes more. Now add the rice and the 2 1/2 cups of water. Distribute ingredients well in casserole. Bring to a quick boil, STIR ONCE, and place in preheated 325 degree F. oven for only 20 minutes - NI UN MINUTO MAS! Remove from oven, uncover, and garnish with peas, pimientos, and parsley. Pour beer over all. Cover again and allow to stand 15 minutes longer, before serving.".into(),
+                            "Source: Clarita's Cocina - by Clarita Garcia (ISBN: 0-942084-74-8) Typos provided by: Karen Mintzias".into(),
                         ],
                     )
                 ])),
@@ -1708,21 +1628,21 @@ SOURCE: Gourmet, December 1992
                     (
                         "".into(),
                         vec![
-                            "2 c  flour; unbleached, all purp".into(),
-                            "1 c  sugar".into(),
+                            "2 c flour; unbleached, all purp".into(),
+                            "1 c sugar".into(),
                             "1 ts baking soda salt".into(),
-                            "2    eggs, large".into(),
-                            "1    egg yolk, large".into(),
+                            "2 eggs, large".into(),
+                            "1 egg yolk, large".into(),
                             "1 ts vanilla".into(),
                             "1 tb orange zest; freshly grated".into(),
-                            "1 1/2 c  almonds, whole; toasted".into(),
+                            "1 1/2 c almonds, whole; toasted".into(),
                             "-lightly & chopped".into(),
                         ]
                     ),
                     (
                         "EGG WASH".into(),
                         vec![
-                            "1    egg, large; beaten with".into(),
+                            "1 egg, large; beaten with".into(),
                             "-water".into(),
                         ],
                     ),
@@ -1731,7 +1651,7 @@ SOURCE: Gourmet, December 1992
                     "".into(),
                     vec![
                         "From the bakery in Greve, in Chianti, Italy.".into(),
-                        "In the bowl of an electric mixer, fitted with a paddle attachment, blend the flour, the sugar, the baking soda and the salt until the mixture is combined well. In a small bowl whisk together the whole eggs, the yolk, thevanilla and the zest, add the mixture to the flour mixture, beating until adough is formed and stir in the almonds. Turn the dough out onto a lightly floured surface, knead it several times  and halve it. Working on a large buttered and floured baking sheet, with   floured hands form each piece of dough into a flattish log 12 inches long  and 2 inches wide, arrange the logs at least 3 inches apart on the sheet,  and brush them with the egg wash. Bake the logs in the middle of a preheated 300F for 50 minutes and them cool on the baking rack for 10      minutes. On a cutting board, cut the logs crosswise on the diagonal into 1/2 inch   thick slices, arrange the biscotti, cut sides down, on the baking sheet andbake them, in the 300F oven for 15 minutes on each side. Transfer the      biscotti to racks to cool and store them in airtight containers. MAKES:    about 48 BISCOTTI".into(),
+                        "In the bowl of an electric mixer, fitted with a paddle attachment, blend the flour, the sugar, the baking soda and the salt until the mixture is combined well. In a small bowl whisk together the whole eggs, the yolk, thevanilla and the zest, add the mixture to the flour mixture, beating until adough is formed and stir in the almonds. Turn the dough out onto a lightly floured surface, knead it several times and halve it. Working on a large buttered and floured baking sheet, with floured hands form each piece of dough into a flattish log 12 inches long and 2 inches wide, arrange the logs at least 3 inches apart on the sheet, and brush them with the egg wash. Bake the logs in the middle of a preheated 300F for 50 minutes and them cool on the baking rack for 10 minutes. On a cutting board, cut the logs crosswise on the diagonal into 1/2 inch thick slices, arrange the biscotti, cut sides down, on the baking sheet andbake them, in the 300F oven for 15 minutes on each side. Transfer the biscotti to racks to cool and store them in airtight containers. MAKES: about 48 BISCOTTI".into(),
                         "SOURCE: Gourmet, December 1992".into(),
                     ]
                 )])),
@@ -1751,16 +1671,16 @@ SOURCE: Gourmet, December 1992
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
                     "Karen Mintzias".into(),
-                    "2    c Sweet butter 1 ts".into(),
-                    "1    c Confectioners' sugar 4 c".into(),
+                    "2 c Sweet butter 1 ts".into(),
+                    "1 c Confectioners' sugar 4 c".into(),
                     "-Flour".into(),
-                    "1    Egg yolk".into(),
-                    "4    c Granulated sugar 1 c".into(),
+                    "1 Egg yolk".into(),
+                    "4 c Granulated sugar 1 c".into(),
                     "-Honey".into(),
-                    "4    c Water Lemon juice to".into(),
+                    "4 c Water Lemon juice to".into(),
                     "-taste".into(),
                     "1 lb Toasted blanched almonds *".into(),
-                    "1/2    c Zwieback crumbs 1 lb".into(),
+                    "1/2 c Zwieback crumbs 1 lb".into(),
                     "4 tb Granulated sugar 1 1/2 c".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
@@ -1768,7 +1688,6 @@ SOURCE: Gourmet, December 1992
                         "".into(),
                         vec![
                             "*Note: Either toasted blanched almonds, or walnut meats, or half of each, (finely chopped) may be used. Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat in the confectioners' sugar and continue to beat until mixture is fluffy. Add egg yolk and vanilla or almond extract and blend well. Work in about 4 cups flour to make a medium-soft dough. Set aside and make syrup. Syrup: In a saucepan combine the granulated sugar and water. Bring to a boil and boil for 15 minutes or until syrup is slightly thick. Add honey and again bring to the boiling point. Add lemon juice to taste, and cool. Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly with butter and sprinkle with nut mixture. Place 2 buttered sheets of phyllo on top and sprinkle with nut mixture. Shape a portion of cooky filling into a 1/2-inch-thick roll and place the roll along one edge of the pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices in a buttered cake pan. (Continue in this method until all phyllo pastry and/or cooky filling is used.) Brush tops of each slice with butter and bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot baklava slices, one at a time, in cold syrup, allowing each piece to remain in the syrup for a few minutes. From: \"The Art of Greek Cookery\" by The Women of St. Paul's Greek Orthodox Church (Hempstead, NY) Typed for you by Karen Mintzias".into(),
-                            "".into(),
                         ],
                     )
                 ])),
