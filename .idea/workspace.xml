@@ -15,13 +15,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/helpers.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/rezkonv.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -379,8 +374,9 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#120 on 42-implement-post-recipesaddimport",
-    "last_opened_file_path": "/home/macpoule/Documents/Levio/projects/session",
+    "git-widget-placeholder": "42-implement-post-recipesaddimport",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "//wsl.localhost/Ubuntu/home/macpoule/code/recipya-rs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -391,7 +387,8 @@
     "org.rust.first.attach.projects": "true",
     "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "editor.preferences.webOptions",
-    "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external"
+    "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external",
+    "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
     "DatabaseDriversLRU": [
@@ -402,6 +399,35 @@
     ]
   }
 }]]></component>
+  <component name="RdControllerToolWindowsLayoutState" isNewUi="true">
+    <layout>
+      <window_info id="Bookmarks" side_tool="true" />
+      <window_info id="Merge Requests" />
+      <window_info id="Commit_Guest" show_stripe_button="false" />
+      <window_info id="Pull Requests" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.32984102" />
+      <window_info id="Commit" order="1" weight="0.25" />
+      <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="Database Changes" />
+      <window_info anchor="bottom" id="TypeScript" />
+      <window_info anchor="bottom" id="TODO" />
+      <window_info anchor="bottom" id="File Transfer" />
+      <window_info anchor="bottom" id="Version Control" order="0" />
+      <window_info anchor="bottom" id="Problems" order="1" />
+      <window_info anchor="bottom" id="Problems View" order="2" />
+      <window_info anchor="bottom" id="Terminal" order="3" />
+      <window_info anchor="bottom" id="Services" order="4" />
+      <window_info anchor="bottom" id="Build" order="5" visible="true" weight="0.32977644" />
+      <window_info anchor="right" id="Coverage" side_tool="true" />
+      <window_info anchor="right" content_ui="combo" id="Notifications" order="0" weight="0.25" />
+      <window_info anchor="right" id="AIAssistant" order="1" weight="0.25" />
+      <window_info anchor="right" id="Database" order="2" weight="0.25" />
+      <window_info anchor="right" id="Gradle" order="3" weight="0.25" />
+      <window_info anchor="right" id="Maven" order="4" weight="0.25" />
+      <window_info anchor="right" id="Cargo" order="5" weight="0.2" />
+      <window_info anchor="right" id="RustCargo" order="6" weight="0.2" />
+    </layout>
+  </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/core/jobs" />
@@ -555,6 +581,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1737340488511</updated>
+      <workItem from="1746109305793" duration="188000" />
     </task>
     <servers />
   </component>
@@ -605,5 +632,9 @@
         <watch expression="input" />
       </configuration>
     </watches-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>
