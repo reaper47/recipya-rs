@@ -9,7 +9,6 @@ repository = "https://github.com/reaper47/recipya-rs"
 license = "AGPL-3.0-or-later"
 keywords = ["food", "recipes", "recipe-manager"]
 categories = ["web-programming"]
-build = "build.rs"
 
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
