@@ -50,7 +50,7 @@ jobs:
         run: cargo install cross
 
       - name: Build
-        run: cross build --target ${{ matrix.target }} --release
+        run: RUSTFLAGS="" cross build --target ${{ matrix.target }} --release
 
       - name: Rename and archive binary
         run: |
