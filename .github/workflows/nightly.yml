@@ -1,0 +1,97 @@
+name: Build and Release Nightly
+
+# on:
+#   schedule:
+#     - cron: '0 0 * * *'
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  commits:
+    name: Check Recent Commits
+    runs-on: ubuntu-latest
+    outputs:
+      recent_commits: ${{ steps.commits.outputs.num_commits }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get recent commits
+        id: commits
+        run: echo "num_commits=$(git log --oneline --since '24 hours ago' | wc -l)" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Cross-Compile Binaries
+    needs: commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: ${{ needs.commits.outputs.num_commits > 0 }}
+
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+          - x86_64-pc-windows-gnu
+          - x86_64-apple-darwin
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Install cross 
+        run: cargo install cross
+
+      - name: Build
+        run: cross build --target ${{ matrix.target }} --release
+
+      - name: Rename and archive binary
+        run: |
+          mkdir -p dist
+          BIN_NAME="recipya"
+          SUFFIX=""
+          [[ "${{ matrix.target }}" == *"windows"* ]] && SUFFIX=".exe"
+          cp target/${{ matrix.target }}/release/$BIN_NAME$SUFFIX dist/${BIN_NAME}-${{ matrix.target }}$SUFFIX
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: recipya-${{ matrix.target }}
+          path: dist/*
+
+  docker:
+    name: Docker Build and Push
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./deploy/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/recipya-rs:latest
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/recipya-rs:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/recipya-rs:cache,mode=max
