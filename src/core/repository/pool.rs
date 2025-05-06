@@ -1,10 +1,15 @@
+use std::sync::Arc;
+
 use diesel::{Connection, ConnectionError, ConnectionResult};
 use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::{AsyncDieselConnectionManager, ManagerConfig, bb8};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use futures_util::FutureExt;
-use native_tls::Certificate;
-use tokio_postgres::NoTls;
+use postgres_rustls::MakeTlsConnector;
+use rustls::{ClientConfig, RootCertStore};
+use rustls::pki_types::CertificateDer;
+use tokio_postgres::{Config, NoTls};
+use tokio_rustls::TlsConnector;
 
 pub type PgConn = AsyncPgConnection;
 pub type PgPooledConn<'a> = bb8::PooledConnection<'a, PgConn>;
@@ -60,17 +65,22 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
         AsyncPgConnection::try_from(client).await
     } else {
         let pg_cert = include_bytes!("../../../pg_cert.pem");
-        let certificate = Certificate::from_pem(pg_cert).map_err(|e| {
-            ConnectionError::BadConnection(format!("Error reading certificate: {}", e))
+
+        let mut root_cert_store = RootCertStore::empty();
+        root_cert_store.add_parsable_certificates([CertificateDer::from(pg_cert.as_ref())]);
+
+        let client_config = ClientConfig::builder()
+            .with_root_certificates(root_cert_store)
+            .with_no_client_auth();
+
+        let connector = TlsConnector::from(Arc::new(client_config));
+        let tls = MakeTlsConnector::new(connector);
+            
+        let config: Config = database_url.parse().map_err(|err| {
+            ConnectionError::BadConnection(format!("Invalid DB URL: {err}"))
         })?;
 
-        let tls_connector = native_tls::TlsConnector::builder()
-            .add_root_certificate(certificate)
-            .build()
-            .map_err(|err| ConnectionError::BadConnection(format!("Error building TLS: {err}")))?;
-        let pg_tls = postgres_native_tls::MakeTlsConnector::new(tls_connector);
-
-        let (client, connection) = tokio_postgres::connect(database_url, pg_tls)
+        let (client, connection) = config.connect(tls)
             .await
             .map_err(|err| {
                 ConnectionError::BadConnection(format!("Error connecting to Postgres: {err}"))
