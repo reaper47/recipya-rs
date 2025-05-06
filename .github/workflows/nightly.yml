@@ -50,6 +50,10 @@ jobs:
         run: cargo install cross
 
       - name: Build
+        env:
+          CROSS_CONTAINER_ENGINE: docker
+          CROSS_TARGET_x86_64-unknown-linux-gnu_IMAGE: ghcr.io/cross-rs/x86_64-unknown-linux-gnu:latest
+          CROSS_TARGET_aarch64-unknown-linux-gnu_IMAGE: ghcr.io/cross-rs/aarch64-unknown-linux-gnu:latest
         run: cross build --target ${{ matrix.target }} --release
 
       - name: Rename and archive binary
