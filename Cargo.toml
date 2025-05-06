@@ -9,12 +9,11 @@ repository = "https://github.com/reaper47/recipya-rs"
 license = "AGPL-3.0-or-later"
 keywords = ["food", "recipes", "recipe-manager"]
 categories = ["web-programming"]
-build = "build.rs"
 
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
 async-trait = "0.1.88"
-axum = { version = "0.8.3", features = ["multipart", "ws"] }
+axum = { version = "0.8.4", features = ["multipart", "ws"] }
 axum-htmx = "0.7.0"
 base64 = "0.22.1"
 clap = { version = "4.5.35", features = ["derive"] }
@@ -34,14 +33,14 @@ infer = "0.19.0"
 iso8601 = { version = "0.6.2", features = ["serde"] }
 lazy-regex = "3.4.1"
 lettre = { version = "0.11.15", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
-lru = "0.13.0"
+lru = "0.14.0"
 maud = { version = "0.27.0", features = ["axum"] }
 mime_guess = "2.0.5"
 mrml = "5.0.0"
 native-tls = "0.2.14"
 paste = "1.0.15"
 postgres-native-tls = "0.5.1"
-rand = "0.9.0"
+rand = "0.9.1"
 regex = "1.11.1"
 reqwest = { version = "0.12.15", features = ["blocking"] }
 rust-embed = { version = "8.6.0", features = ["axum-ex"] }
@@ -69,3 +68,7 @@ whatlang = "0.16.4"
 axum-test = { version = "17.2.0", features = ["ws"] }
 pretty_assertions = "1.4.1"
 tower = "0.5.2"
+
+[package.metadata.tasks]
+web-install-deps = "npm --prefix ./web/app install"
+web-build = "npm --prefix ./web/app run build"
