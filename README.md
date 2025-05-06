@@ -45,7 +45,7 @@
 A clean, simple and powerful recipe manager web application for unforgettable family recipes, empowering you to curate
 and share your favorite recipes. It is focused on simplicity for the whole family to enjoy.
 
-## Warning
+## :warning: Important Note 
 
 The [Recipya](https://github.com/reaper47/recipya) project is currently being rewritten in Go as
 announced [here](https://github.com/reaper47/recipya/discussions/422). The Rust project is not ready for production nor
@@ -83,6 +83,7 @@ Dependencies:
 2. Nodejs: https://nodejs.org/en/download/package-manager
 3. PostgreSQL: https://www.postgresql.org/download/ and the [pg_cron extension](https://github.com/citusdata/pg_cron)
 4. Diesel: `cargo install diesel_cli --no-default-features --features postgres`
+5. [Metask](https://crates.io/crates/cargo-metask): `cargo install cargo-metask`
 
 PostgreSQL extensions:
 
