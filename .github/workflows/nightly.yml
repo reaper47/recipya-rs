@@ -1,0 +1,249 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  commits:
+    name: Commits
+    runs-on: ubuntu-latest
+    outputs:
+      numCommits: ${{ steps.numCommits.outputs.commits }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get new commits
+        id: numCommits
+        run: echo "commits=$(git log --oneline --since '24 hours ago' | wc -l)" >> "$GITHUB_OUTPUT"
+
+  binaries:
+    timeout-minutes: 60
+    needs: commits
+    runs-on: ${{ matrix.os }}
+    if: ${{ needs.commits.outputs.numCommits > 0 }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - build: linux
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact: recipya-nightly-x86_64-unknown-linux-musl
+
+          - build: linux
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: recipya-nightly-x86_64-unknown-linux-gnu
+
+          - build: linux
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact: recipya-nightly-aarch64-unknown-linux-gnu
+
+          - build: linux
+            os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
+
+          - build: macos
+            os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: recipya-nightly-x86_64-apple-darwin
+
+          - build: macos
+            os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: recipya-nightly-aarch64-apple-darwin
+
+          - build: windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
+
+          - build: windows
+            os: windows-latest
+            target: x86_64-pc-windows-gnu
+            artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - if: ${{ runner.os == 'Linux' }}
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: |
+            musl-tools 
+            libsqlite3-dev 
+            gcc-13 
+            gcc-13-aarch64-linux-gnu 
+            gcc-aarch64-linux-gnu 
+            aarch64-linux-gnu-gcc 
+            gcc-arm-linux-gnueabihf
+            gcc-mingw-w64-x86-64-win32
+          version: 1.0
+
+      - name: Install Rustup targets
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build Archive
+        shell: bash
+        run: |         
+          OUTPUT_PATH=staging-directory
+          mkdir -p $OUTPUT_PATH
+          
+          export SKIP_BUILD_RS=1
+          cargo build --target ${{ matrix.target }} --release
+          cp target/${{ matrix.target }}/release/heavy-metal-notifier $OUTPUT_PATH/${{ matrix.artifact }}
+          cp ./deploy/.env.example $OUTPUT_PATH/.env
+          
+          if [ ${{ runner.os }} = "Windows" ]; then
+            sha256sum $OUTPUT_PATH/${{ matrix.artifact }} > $OUTPUT_PATH/${{ matrix.artifact }}.sha256
+          else
+            GENERATED_SHA_256=$(shasum -a 256 $OUTPUT_PATH/${{ matrix.artifact }} | awk '{print $1}')
+            echo $GENERATED_SHA_256 > $OUTPUT_PATH/${{ matrix.artifact }}.sha256    
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: staging-directory
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: binaries
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Nightly Build x86_64-unknown-linux-musl
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-x86_64-unknown-linux-musl
+          path: downloads
+
+      - name: Download Nightly Build x86_64-unknown-linux-gnu
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-x86_64-unknown-linux-gnu
+          path: downloads
+
+      - name: Download Nightly Build aarch64-unknown-linux-gnu
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-aarch64-unknown-linux-gnu
+          path: downloads
+
+      - name: Download Nightly Build armv7-unknown-linux-gnueabihf
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-armv7-unknown-linux-gnueabihf
+          path: downloads
+
+      - name: Download Nightly Build x86_64-apple-darwin
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-x86_64-apple-darwin
+          path: downloads
+
+      - name: Download Nightly Build aarch64-apple-darwin
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-aarch64-apple-darwin
+          path: downloads
+
+      - name: Download Nightly Build x86_64-pc-windows-msvc
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-x86_64-pc-windows-msvc.exe
+          path: downloads
+
+      - name: Download Nightly Build x86_64-pc-windows-gnu
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-x86_64-pc-windows-gnu.exe
+          path: downloads
+
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GH_TOKEN }}
+          automatic_release_tag: nightly
+          prerelease: false
+          title: "Nightly Build"
+          files: |
+            downloads/recipya-nightly-x86_64-unknown-linux-musl
+            downloads/recipya-nightly-x86_64-unknown-linux-musl.sha256
+            downloads/recipya-nightly-x86_64-unknown-linux-gnu
+            downloads/recipya-nightly-x86_64-unknown-linux-gnu.sha256
+            downloads/recipya-nightly-aarch64-unknown-linux-gnu
+            downloads/recipya-nightly-aarch64-unknown-linux-gnu.sha256
+            downloads/recipya-nightly-armv7-unknown-linux-gnueabihf
+            downloads/recipya-nightly-armv7-unknown-linux-gnueabihf.sha256
+            downloads/recipya-nightly-x86_64-apple-darwin
+            downloads/recipya-nightly-x86_64-apple-darwin.sha256
+            downloads/recipya-nightly-aarch64-apple-darwin
+            downloads/recipya-nightly-aarch64-apple-darwin.sha256
+            downloads/recipya-nightly-x86_64-pc-windows-msvc.exe
+            downloads/recipya-nightly-x86_64-pc-windows-msvc.exe.sha256
+            downloads/recipya-nightly-x86_64-pc-windows-gnu.exe
+            downloads/recipya-nightly-x86_64-pc-windows-gnu.exe.sha256
+            downloads/.env
+            LICENSE
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    needs: release
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      
+      - name: Download Nightly Build x86_64-unknown-linux-musl
+        uses: actions/download-artifact@v4
+        with:
+          name: recipya-nightly-x86_64-unknown-linux-musl
+          path: download
+          
+       - name: Copy binary into Docker context
+        run: |
+          cp downloads/recipya-nightly-x86_64-unknown-linux-musl recipya
+          cp downloads/.env .env
+
+      - name: Build docker images
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./deploy/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            reaper99/recipya-rs:latest 
+            ghcr.io/${{ github.repository_owner }}/recipya-rs:latest
