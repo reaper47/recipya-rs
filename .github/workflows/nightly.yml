@@ -98,7 +98,6 @@ jobs:
             aarch64-linux-gnu-gcc
             gcc-arm-linux-gnueabihf
             gcc-mingw-w64-x86-64-win32
-            armv7-unknown-linux-gnueabihf
           version: 1.0
 
       - name: Install Rustup targets
