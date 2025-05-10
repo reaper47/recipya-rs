@@ -1,0 +1,27 @@
+[env]
+RUST_LOG = "debug,tokio_cron_scheduler=off"
+
+RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432/recipya"
+RECIPYA_DATABASE_TEST_URL = "postgres://postgres:postgres@localhost/recipya_test"
+
+RECIPYA_BASE_URL = "http://localhost:8078"
+RECIPYA_IS_AUTOLOGIN = "true"
+RECIPYA_IS_DEMO = "false"
+RECIPYA_IS_NO_SIGNUPS = "false"
+
+RECIPYA_EMAIL_ADMIN = "example@gmail.com"
+RECIPYA_EMAIL_SMTP_HOST = "smtp.gmail.com"
+RECIPYA_EMAIL_SMTP_USERNAME = "example@gmail.com"
+RECIPYA_EMAIL_SMTP_PASSWORD = "abcd abcd bcd abcd"
+RECIPYA_EMAIL_SENDGRID_API_KEY = "YOUR_API_KEY"
+
+# Run cargo run -p recipya-genkey twice and paste the b64u encoded keys, once for the password and the other the token.
+RECIPYA_AUTH_PASSWORD_KEY = "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
+RECIPYA_AUTH_TOKEN_KEY = "MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w"
+RECIPYA_AUTH_TOKEN_DURATION_SEC = "1800"
+
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
