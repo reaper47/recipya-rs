@@ -124,7 +124,7 @@ jobs:
       - name: Set up libpq for ${{ matrix.target }}
         if: runner.os == 'macOS'
         run: |
-          brew install libpq
+          brew install pkg-config webp libpq zlib jpeg libpng
           if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
             echo "PKG_CONFIG_PATH=/usr/local/opt/libpq/lib/pkgconfig" >> $GITHUB_ENV
             echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
