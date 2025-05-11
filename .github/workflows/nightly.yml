@@ -144,29 +144,42 @@ jobs:
       - name: Install Rustup targets
         run: rustup target add ${{ matrix.target }}
 
+      - name: Determine Shell for Build
+        id: determine_shell
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" && "${{ matrix.target }}" == "x86_64-pc-windows-gnu" ]]; then
+            echo "SELECTED_SHELL=msys2 {0}" >> $GITHUB_OUTPUT
+          else
+            echo "SELECTED_SHELL=bash" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build Archive
-        shell: ${{ if(runner.os == 'Windows' && matrix.target == 'x86_64-pc-windows-gnu', 'msys2 {0}', 'bash') }}     
-        run: |         
+        shell: ${{ steps.determine_shell.outputs.SELECTED_SHELL }}
+        run: |
+          echo "Using shell: $SHELL" # For verifying which shell is active
+          echo "Building for target: ${{ matrix.target }} on OS: ${{ matrix.os }}"
+          
           OUTPUT_PATH=staging-directory
           mkdir -p $OUTPUT_PATH
           
           cargo build --target ${{ matrix.target }} --release
-
+          
           BINARY_NAME="recipya-rs"
           if [ "${{ runner.os }}" = "Windows" ]; then
             BINARY_NAME="recipya-rs.exe"
           fi
-
+          
           cp target/${{ matrix.target }}/release/$BINARY_NAME $OUTPUT_PATH/${{ matrix.artifact }}
           cp ./deploy/.env.example $OUTPUT_PATH/.env
-
-          if [ ${{ runner.os }} = "Windows" ]; then
-            if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+          
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            if [[ "$SHELL" == *"msys2"* ]]; then # Check if we are in msys2 shell
               sha256sum $OUTPUT_PATH/${{ matrix.artifact }} > $OUTPUT_PATH/${{ matrix.artifact }}.sha256
             else
-              certutil -hashfile $OUTPUT_PATH/${{ matrix.artifact }} SHA256 | findstr /v "hash" > $OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp
-              powershell -Command "(Get-Content $OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp).Trim() -replace ' ', '' | Set-Content $OUTPUT_PATH/${{ matrix.artifact }}.sha256"
-              del $OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp
+              certutil -hashfile "$OUTPUT_PATH/${{ matrix.artifact }}" SHA256 | findstr /v "hash" > "$OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp"
+              powershell -Command "(Get-Content '$OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp').Trim() -replace ' ', '' | Set-Content '$OUTPUT_PATH/${{ matrix.artifact }}.sha256'"
+              del "$OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp"
             fi
           else
             GENERATED_SHA_256=$(shasum -a 256 $OUTPUT_PATH/${{ matrix.artifact }} | awk '{print $1}')
