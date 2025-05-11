@@ -119,7 +119,7 @@ jobs:
           
           export SKIP_BUILD_RS=1
           cargo build --target ${{ matrix.target }} --release
-          cp target/${{ matrix.target }}/release/heavy-metal-notifier $OUTPUT_PATH/${{ matrix.artifact }}
+          cp target/${{ matrix.target }}/release/recipya-rs $OUTPUT_PATH/${{ matrix.artifact }}
           cp ./deploy/.env.example $OUTPUT_PATH/.env
           
           if [ ${{ runner.os }} = "Windows" ]; then
