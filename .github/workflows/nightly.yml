@@ -145,7 +145,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Build Archive
-        shell: ${{ matrix.target == 'x86_64-pc-windows-gnu' && 'msys2 {0}' || 'bash' }}
+        shell: ${{ if(runner.os == 'Windows' && matrix.target == 'x86_64-pc-windows-gnu', 'msys2 {0}', 'bash') }}     
         run: |         
           OUTPUT_PATH=staging-directory
           mkdir -p $OUTPUT_PATH
