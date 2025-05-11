@@ -53,10 +53,10 @@ jobs:
             target: aarch64-unknown-linux-gnu
             artifact: recipya-nightly-aarch64-unknown-linux-gnu
 
-          - build: linux
-            os: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
+          #- build: linux
+          #  os: ubuntu-latest
+          #  target: armv7-unknown-linux-gnueabihf
+          #  artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
 
           - build: macos
             os: macos-latest
@@ -154,11 +154,11 @@ jobs:
           name: recipya-nightly-aarch64-unknown-linux-gnu
           path: downloads
 
-      - name: Download Nightly Build armv7-unknown-linux-gnueabihf
-        uses: actions/download-artifact@v4
-        with:
-          name: recipya-nightly-armv7-unknown-linux-gnueabihf
-          path: downloads
+      #- name: Download Nightly Build armv7-unknown-linux-gnueabihf
+      #  uses: actions/download-artifact@v4
+      #  with:
+      #    name: recipya-nightly-armv7-unknown-linux-gnueabihf
+      #    path: downloads
 
       - name: Download Nightly Build x86_64-apple-darwin
         uses: actions/download-artifact@v4
@@ -190,6 +190,8 @@ jobs:
           automatic_release_tag: nightly
           prerelease: false
           title: "Nightly Build"
+          # downloads/recipya-nightly-armv7-unknown-linux-gnueabihf
+          # downloads/recipya-nightly-armv7-unknown-linux-gnueabihf.sha256
           files: |
             downloads/recipya-nightly-x86_64-unknown-linux-musl
             downloads/recipya-nightly-x86_64-unknown-linux-musl.sha256
@@ -197,8 +199,6 @@ jobs:
             downloads/recipya-nightly-x86_64-unknown-linux-gnu.sha256
             downloads/recipya-nightly-aarch64-unknown-linux-gnu
             downloads/recipya-nightly-aarch64-unknown-linux-gnu.sha256
-            downloads/recipya-nightly-armv7-unknown-linux-gnueabihf
-            downloads/recipya-nightly-armv7-unknown-linux-gnueabihf.sha256
             downloads/recipya-nightly-x86_64-apple-darwin
             downloads/recipya-nightly-x86_64-apple-darwin.sha256
             downloads/recipya-nightly-aarch64-apple-darwin
