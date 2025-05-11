@@ -103,10 +103,10 @@ jobs:
       - name: Install Xcode CLI tools
         if: runner.os == 'macOS'
         run: |
-          brew install libpq
-          echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> $GITHUB_ENV
-          echo 'export PKG_CONFIG_PATH="/opt/homebrew/opt/libpq/lib/pkgconfig"' >> $GITHUB_ENV
-          echo 'export LIBRARY_PATH="/opt/homebrew/opt/libpq/lib"' >> $GITHUB_ENV
+          echo "LIBRARY_PATH=$(brew --prefix libpq)/lib" >> $GITHUB_ENV
+          echo "C_INCLUDE_PATH=$(brew --prefix libpq)/include" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix libpq)/lib/pkgconfig" >> $GITHUB_ENV
+          echo "PATH=$(brew --prefix libpq)/bin:$PATH" >> $GITHUB_ENV
 
       - name: Install Rustup targets
         run: rustup target add ${{ matrix.target }}
