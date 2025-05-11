@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 60
     needs: commits
     runs-on: ${{ matrix.os }}
-    if: ${{ needs.commits.outputs.numCommits > 0 }}
+    #if: ${{ needs.commits.outputs.numCommits > 0 }}
 
     strategy:
       fail-fast: true
