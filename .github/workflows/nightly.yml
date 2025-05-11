@@ -100,13 +100,19 @@ jobs:
             gcc-mingw-w64-x86-64-win32
           version: 1.0
       
-      - name: Install Xcode CLI tools
-        if: runner.os == 'macOS'
+      - name: Set up libpq for ${{ matrix.target }}
         run: |
-          echo "LIBRARY_PATH=$(brew --prefix libpq)/lib" >> $GITHUB_ENV
-          echo "C_INCLUDE_PATH=$(brew --prefix libpq)/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix libpq)/lib/pkgconfig" >> $GITHUB_ENV
-          echo "PATH=$(brew --prefix libpq)/bin:$PATH" >> $GITHUB_ENV
+          if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
+            arch -x86_64 /usr/local/Homebrew/bin/brew install libpq
+            echo "LIBRARY_PATH=/usr/local/opt/libpq/lib" >> $GITHUB_ENV
+            echo "PKG_CONFIG_PATH=/usr/local/opt/libpq/lib/pkgconfig" >> $GITHUB_ENV
+            echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> $GITHUB_ENV
+          else
+            echo "LIBRARY_PATH=$(brew --prefix libpq)/lib" >> $GITHUB_ENV
+            echo "C_INCLUDE_PATH=$(brew --prefix libpq)/include" >> $GITHUB_ENV
+            echo "PKG_CONFIG_PATH=$(brew --prefix libpq)/lib/pkgconfig" >> $GITHUB_ENV
+            echo "PATH=$(brew --prefix libpq)/bin:$PATH" >> $GITHUB_ENV
+          fi
 
       - name: Install Rustup targets
         run: rustup target add ${{ matrix.target }}
