@@ -93,6 +93,15 @@ jobs:
           echo "CC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
           echo "CXX=x86_64-w64-mingw32-g++" >> $GITHUB_ENV
           echo "AR=x86_64-w64-mingw32-ar" >> $GITHUB_ENV
+
+      - name: Install OpenSSL for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install openssl -y
+          echo "OPENSSL_DIR=C:\\Program Files\\OpenSSL-Win64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "OPENSSL_NO_VENDOR=1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
          
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
