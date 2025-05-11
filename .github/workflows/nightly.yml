@@ -38,17 +38,17 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - build: linux
+          - build: linux-musl
             os: ubuntu-latest
             target: x86_64-unknown-linux-musl
             artifact: recipya-nightly-x86_64-unknown-linux-musl
 
-          - build: linux
+          - build: linux-gnu
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact: recipya-nightly-x86_64-unknown-linux-gnu
 
-          - build: linux
+          - build: linux-aarch64
             os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             artifact: recipya-nightly-aarch64-unknown-linux-gnu
@@ -58,28 +58,43 @@ jobs:
           #  target: armv7-unknown-linux-gnueabihf
           #  artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
 
-          - build: macos
+          - build: macos-x86
             os: macos-latest
             target: x86_64-apple-darwin
             artifact: recipya-nightly-x86_64-apple-darwin
 
-          - build: macos
+          - build: macos-arm
             os: macos-latest
             target: aarch64-apple-darwin
             artifact: recipya-nightly-aarch64-apple-darwin
 
-          - build: windows
+          - build: windows-mvsc
             os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
 
-          - build: windows
+          - build: windows-gnu
             os: windows-latest
             target: x86_64-pc-windows-gnu
             artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
+            msys2_packages: >-
+              make
+              mingw-w64-x86_64-toolchain
+              mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-nasm # Install NASM from MinGW repository
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: ${{ matrix.msys2_packages }}
+          pacman-update: true
+          update: true
+          path-type: inherit
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -130,21 +145,32 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Build Archive
-        shell: bash
+        shell: ${{ matrix.target == 'x86_64-pc-windows-gnu' && 'msys2 {0}' || 'bash' }}
         run: |         
           OUTPUT_PATH=staging-directory
           mkdir -p $OUTPUT_PATH
           
-          export SKIP_BUILD_RS=1
           cargo build --target ${{ matrix.target }} --release
-          cp target/${{ matrix.target }}/release/recipya-rs $OUTPUT_PATH/${{ matrix.artifact }}
+
+          BINARY_NAME="recipya-rs"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            BINARY_NAME="recipya-rs.exe"
+          fi
+
+          cp target/${{ matrix.target }}/release/$BINARY_NAME $OUTPUT_PATH/${{ matrix.artifact }}
           cp ./deploy/.env.example $OUTPUT_PATH/.env
-          
+
           if [ ${{ runner.os }} = "Windows" ]; then
-            sha256sum $OUTPUT_PATH/${{ matrix.artifact }} > $OUTPUT_PATH/${{ matrix.artifact }}.sha256
+            if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
+              sha256sum $OUTPUT_PATH/${{ matrix.artifact }} > $OUTPUT_PATH/${{ matrix.artifact }}.sha256
+            else
+              certutil -hashfile $OUTPUT_PATH/${{ matrix.artifact }} SHA256 | findstr /v "hash" > $OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp
+              powershell -Command "(Get-Content $OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp).Trim() -replace ' ', '' | Set-Content $OUTPUT_PATH/${{ matrix.artifact }}.sha256"
+              del $OUTPUT_PATH/${{ matrix.artifact }}.sha256.tmp
+            fi
           else
             GENERATED_SHA_256=$(shasum -a 256 $OUTPUT_PATH/${{ matrix.artifact }} | awk '{print $1}')
-            echo $GENERATED_SHA_256 > $OUTPUT_PATH/${{ matrix.artifact }}.sha256    
+            echo $GENERATED_SHA_256 > $OUTPUT_PATH/${{ matrix.artifact }}.sha256
           fi
       - uses: actions/upload-artifact@v4
         with:
