@@ -99,6 +99,11 @@ jobs:
             gcc-arm-linux-gnueabihf
             gcc-mingw-w64-x86-64-win32
           version: 1.0
+      
+      - name: Install Xcode CLI tools
+        if: runner.os == 'macOS'
+        run: |
+          xcode-select --install || echo "Xcode already installed"
 
       - name: Install Rustup targets
         run: rustup target add ${{ matrix.target }}
