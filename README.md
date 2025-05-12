@@ -47,7 +47,7 @@ and share your favorite recipes. It is focused on simplicity for the whole famil
 
 ## :warning: Important Note 
 
-The [Recipya](https://github.com/reaper47/recipya) project is currently being rewritten in Go as
+The [Recipya](https://github.com/reaper47/recipya) project is currently being rewritten in Rust as
 announced [here](https://github.com/reaper47/recipya/discussions/422). The Rust project is not ready for production nor
 to selfhost.
 The user interface should look exactly the same as the original.
@@ -130,10 +130,7 @@ Matrix is similar to Discord but is open source.
 
 ## Sponsors
 
-I am grateful for any support that helps me continue to develop this project and to host it reliably. Your sponsorship
-will
-help me pay for the SendGrid Essentials plan to increase the number of emails that can be sent. The free plan currently
-used allows sending up to 100 emails per day.
+I am grateful for any support that motivates me to continue developing this project and to host it reliably.
 
 You can sponsor me on
 [GitHub Sponsors](https://github.com/sponsors/reaper47) or
