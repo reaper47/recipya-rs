@@ -23,6 +23,9 @@ RECIPYA_AUTH_TOKEN_DURATION_SEC = "1800"
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
 
+[target.x86_64-unknown-linux-musl]
+rustflags = ["-C", "link-arg=-lm"]
+
 [target.armv7-unknown-linux-gnueabihf]
 linker = "arm-linux-gnueabihf-gcc"
 
