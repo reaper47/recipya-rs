@@ -50,9 +50,9 @@ jobs:
             target: aarch64-unknown-linux-gnu
             artifact: recipya-nightly-aarch64-unknown-linux-gnu
 
-          - os: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
+          #- os: ubuntu-latest
+          #  target: armv7-unknown-linux-gnueabihf
+          #  artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
 
           #- os: macos-latest
           #  target: x86_64-apple-darwin
@@ -79,7 +79,9 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install Cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        run: | 
+          cargo install cross --git https://github.com/cross-rs/cross
+          git clone https://github.com/cross-rs/cross
 
       - name: Build Archive
         shell: bash
