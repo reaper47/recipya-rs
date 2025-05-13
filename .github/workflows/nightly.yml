@@ -140,11 +140,14 @@ jobs:
           prerelease: false
           title: "Nightly Build"
           files: |
-            downloads/**/recipya-nightly-*
-            downloads/**/recipya-nightly-*.sha256
-            downloads/**/.env
-            LICENSE
-  
+            downloads/recipya-rs-nightly-x86_64-unknown-linux-musl
+            downloads/recipya-rs-x86_64-unknown-linux-musl.sha256
+            downloads/recipya-rs-x86_64-unknown-linux-gnu
+            downloads/recipya-rs-x86_64-unknown-linux-gnu.sha256
+            downloads/recipya-rs-aarch64-unknown-linux-gnu
+            downloads/recipya-rs-aarch64-unknown-linux-gnu.sha256
+            downloads/.env
+            LICENSE  
   docker:
     runs-on: ubuntu-latest
     timeout-minutes: 300
