@@ -1,13 +1,11 @@
 mod config;
 mod error;
-mod sendgrid;
 mod smtp;
 
 pub use error::{Error, Result};
 
 use mrml::prelude::render::RenderOptions;
 
-use crate::core::email::sendgrid::SendGridEmailSender;
 use crate::core::email::smtp::SmtpEmailSender;
 
 /// The payload of an email.
@@ -49,12 +47,6 @@ impl EmailClient {
             });
         }
 
-        if let Ok(service) = SendGridEmailSender::new() {
-            return Ok(Self {
-                service: EmailService::SendGrid(service),
-            });
-        }
-
         Err(Error::EmailNotSetup)
     }
 
@@ -67,7 +59,6 @@ impl EmailClient {
 #[derive(Clone)]
 enum EmailService {
     Smtp(SmtpEmailSender),
-    SendGrid(SendGridEmailSender),
 }
 
 trait EmailSender {
@@ -106,7 +97,6 @@ impl EmailSender for EmailService {
 
         match self {
             EmailService::Smtp(sender) => sender.send_email(&email_to_send),
-            EmailService::SendGrid(sender) => sender.send_email(&email_to_send),
         }
     }
 }
