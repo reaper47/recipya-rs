@@ -54,21 +54,21 @@ jobs:
           #  target: armv7-unknown-linux-gnueabihf
           #  artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
 
-          #- os: macos-latest
-          #  target: x86_64-apple-darwin
-          #  artifact: recipya-nightly-x86_64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: recipya-nightly-x86_64-apple-darwin
 
-          #- os: macos-latest
-          #  target: aarch64-apple-darwin
-          #  artifact: recipya-nightly-aarch64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: recipya-nightly-aarch64-apple-darwin
 
-          #- os: windows-latest
-          #  target: x86_64-pc-windows-msvc
-          #  artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
 
-          #- os: windows-latest
-          #  target: x86_64-pc-windows-gnu
-          #  artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
           
     steps:
       - uses: actions/checkout@v4
@@ -79,6 +79,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install Cross
+        if: runner.os == 'Linux'
         run: | 
           cargo install cross --git https://github.com/cross-rs/cross
           git clone https://github.com/cross-rs/cross
@@ -86,14 +87,25 @@ jobs:
       - name: Build Archive
         shell: bash
         run: |         
-          mkdir -p staging-directory
-          cross build --target ${{ matrix.target }} --release
+          BASE_DIR="staging-directory"
+          mkdir -p $BASE_DIR
+
+           if [ "${{ runner.os }}" = "Linux" ]; then
+            cross build --target ${{ matrix.target }} -r
+          else
+            # For macOS and Windows, use native cargo build
+            cargo build --target ${{ matrix.target }} -r
+          fi
 
           BINARY_NAME="recipya-rs"
           OUTPUT_PATH="staging-directory/${{ matrix.artifact }}"
 
-          cp "target/${{ matrix.target }}/release/${BINARY_NAME}" "${OUTPUT_PATH}"
-          cp ./deploy/.env.example $OUTPUT_PATH/.env
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp "target/${{ matrix.target }}/release/${BINARY_NAME}.exe" "${OUTPUT_PATH}"
+          else
+            cp "target/${{ matrix.target }}/release/${BINARY_NAME}" "${OUTPUT_PATH}"
+          fi
+          cp ./deploy/.env.example $BASE_DIR/.env
           
           if [ "${{ runner.os }}" = "Windows" ]; then
             sha256sum "${OUTPUT_PATH}" > "${OUTPUT_PATH}.sha256"
@@ -103,7 +115,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: staging-directory
+          path: staging-directory/*
           if-no-files-found: error
           retention-days: 1
           include-hidden-files: true
