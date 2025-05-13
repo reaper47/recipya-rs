@@ -54,21 +54,21 @@ jobs:
             target: armv7-unknown-linux-gnueabihf
             artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
 
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact: recipya-nightly-x86_64-apple-darwin
+          #- os: macos-latest
+          #  target: x86_64-apple-darwin
+          #  artifact: recipya-nightly-x86_64-apple-darwin
 
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            artifact: recipya-nightly-aarch64-apple-darwin
+          #- os: macos-latest
+          #  target: aarch64-apple-darwin
+          #  artifact: recipya-nightly-aarch64-apple-darwin
 
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
+          #- os: windows-latest
+          #  target: x86_64-pc-windows-msvc
+          #  artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
 
-          - os: windows-latest
-            target: x86_64-pc-windows-gnu
-            artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
+          #- os: windows-latest
+          #  target: x86_64-pc-windows-gnu
+          #  artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
           
     steps:
       - uses: actions/checkout@v4
