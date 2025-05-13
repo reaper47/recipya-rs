@@ -16,7 +16,7 @@ async-trait = "0.1.88"
 axum = { version = "0.8.4", features = ["multipart", "ws"] }
 axum-htmx = "0.7.0"
 base64 = "0.22.1"
-clap = { version = "4.5.35", features = ["derive"] }
+clap = { version = "4.5.38", features = ["derive"] }
 derive_more = { version = "2.0.1", features = ["from", "display"] }
 diesel = { version = "2.2.8", features = ["postgres", "chrono", "serde_json", "uuid"] }
 diesel-async = { version = "0.5.2", features = ["postgres", "bb8", "async-connection-wrapper"] }
@@ -36,10 +36,10 @@ lru = "0.14.0"
 maud = { version = "0.27.0", features = ["axum"] }
 mime_guess = "2.0.5"
 mrml = "5.0.0"
-openssl = { version = "0.10.72", features = ["vendored"] } # for musl
+#openssl = { version = "0.10.72", features = ["vendored"], not(target = "cfg(windows)") } # for musl
 paste = "1.0.15"
 postgres_rustls = "0.1.2"
-pq-sys = { version = "0.7.1", features = ["bundled"] } # for musl
+#pq-sys = { version = "0.7.1", features = ["bundled"] } # for musl
 rand = "0.9.1"
 regex = "1.11.1"
 reqwest = { version = "0.12.15", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
@@ -69,6 +69,18 @@ whatlang = "0.16.4"
 axum-test = { version = "17.2.0", features = ["ws"] }
 pretty_assertions = "1.4.1"
 tower = "0.5.2"
+
+[target.'x86_64-unknown-linux-musl'.dependencies]
+openssl = { version = "0.10.72", features = ["vendored"] }
+pq-sys = { version = "0.7.1", features = ["bundled"] }
+
+[target.'x86_64-unknown-linux-gnu'.dependencies]
+openssl = { version = "0.10.72", features = ["vendored"] }
+pq-sys = { version = "0.7.1", features = ["bundled"] }
+
+[target.'aarch64-unknown-linux-gnu'.dependencies]
+openssl = { version = "0.10.72", features = ["vendored"] }
+pq-sys = { version = "0.7.1", features = ["bundled"] }
 
 [package.metadata.tasks]
 web-install-deps = "npm --prefix ./web/app install"
