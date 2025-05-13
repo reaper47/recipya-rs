@@ -140,12 +140,12 @@ jobs:
           prerelease: false
           title: "Nightly Build"
           files: |
-            downloads/recipya-rs-nightly-x86_64-unknown-linux-musl
-            downloads/recipya-rs-x86_64-unknown-linux-musl.sha256
-            downloads/recipya-rs-x86_64-unknown-linux-gnu
-            downloads/recipya-rs-x86_64-unknown-linux-gnu.sha256
-            downloads/recipya-rs-aarch64-unknown-linux-gnu
-            downloads/recipya-rs-aarch64-unknown-linux-gnu.sha256
+            downloads/recipya-nightly-x86_64-unknown-linux-musl
+            downloads/recipya-x86_64-unknown-linux-musl.sha256
+            downloads/recipya-x86_64-unknown-linux-gnu
+            downloads/recipya-x86_64-unknown-linux-gnu.sha256
+            downloads/recipya-aarch64-unknown-linux-gnu
+            downloads/recipya-aarch64-unknown-linux-gnu.sha256
             downloads/.env
             LICENSE  
   docker:
@@ -169,7 +169,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GH_TOKEN }}
 
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
