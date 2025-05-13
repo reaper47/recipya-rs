@@ -11,7 +11,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: contents
   packages: write
 
 jobs:
@@ -135,7 +135,7 @@ jobs:
 
       - uses: marvinpinto/action-automatic-releases@latest
         with:
-          repo_token: ${{ secrets.GH_TOKEN  }}
+          repo_token: ${{ secrets.GITHUB_TOKEN  }}
           automatic_release_tag: nightly
           prerelease: false
           title: "Nightly Build"
