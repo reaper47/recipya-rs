@@ -9,7 +9,6 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     EmailNotSetup,
     MissingConfig,
-    SendGridNotInitialized,
     SmtpNotInitialized,
 
     General(String),
