@@ -149,12 +149,12 @@ jobs:
     needs: release
     
     strategy:
-  matrix:
-    include:
-      - platform: linux/amd64
-        arch: x86_64
-      - platform: linux/arm64
-        arch: aarch64
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: x86_64
+          - platform: linux/arm64
+            arch: aarch64
 
     steps:
       - name: Login to Docker Hub
