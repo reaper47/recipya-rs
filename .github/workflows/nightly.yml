@@ -90,12 +90,7 @@ jobs:
           BASE_DIR="staging-directory"
           mkdir -p $BASE_DIR
 
-           if [ "${{ runner.os }}" = "Linux" ]; then
-            cross build --target ${{ matrix.target }} -r
-          else
-            # For macOS and Windows, use native cargo build
-            cargo build --target ${{ matrix.target }} -r
-          fi
+          cross build --target ${{ matrix.target }} -r
 
           BINARY_NAME="recipya-rs"
           OUTPUT_PATH="staging-directory/${{ matrix.artifact }}"
@@ -105,7 +100,7 @@ jobs:
           else
             cp "target/${{ matrix.target }}/release/${BINARY_NAME}" "${OUTPUT_PATH}"
           fi
-          cp ./deploy/.env.example $BASE_DIR/.env
+          cp ./deploy/.env.example $BASE_DIR/.env.sample
           
           if [ "${{ runner.os }}" = "Windows" ]; then
             sha256sum "${OUTPUT_PATH}" > "${OUTPUT_PATH}.sha256"
@@ -142,20 +137,24 @@ jobs:
           files: |
             downloads/recipya-nightly-x86_64-unknown-linux-musl
             downloads/recipya-x86_64-unknown-linux-musl.sha256
-            downloads/recipya-x86_64-unknown-linux-gnu
-            downloads/recipya-x86_64-unknown-linux-gnu.sha256
-            downloads/recipya-aarch64-unknown-linux-gnu
-            downloads/recipya-aarch64-unknown-linux-gnu.sha256
-            downloads/.env
+            downloads/recipya-nightly-x86_64-unknown-linux-gnu
+            downloads/recipya-nightly-x86_64-unknown-linux-gnu.sha256
+            downloads/recipya-nightly-aarch64-unknown-linux-gnu
+            downloads/recipya-nightly-aarch64-unknown-linux-gnu.sha256
+            downloads/.env.sample
             LICENSE  
   docker:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 480
     needs: release
     
     strategy:
-      matrix:
-        platform: [linux/amd64, linux/arm64]
+  matrix:
+    include:
+      - platform: linux/amd64
+        arch: x86_64
+      - platform: linux/arm64
+        arch: aarch64
 
     steps:
       - name: Login to Docker Hub
@@ -183,7 +182,7 @@ jobs:
           push: true
           platforms: ${{ matrix.platform }}
           build-args: |
-            ARCH=${{ matrix.platform == 'linux/amd64' && 'x86_64' || 'arm64' }}
+            ARCH=${{ matrix.arch }}
           tags: |
             reaper99/recipya-rs:latest 
             ghcr.io/${{ github.repository_owner }}/recipya-rs:latest

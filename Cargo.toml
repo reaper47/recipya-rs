@@ -36,10 +36,8 @@ lru = "0.14.0"
 maud = { version = "0.27.0", features = ["axum"] }
 mime_guess = "2.0.5"
 mrml = "5.0.0"
-#openssl = { version = "0.10.72", features = ["vendored"], not(target = "cfg(windows)") } # for musl
 paste = "1.0.15"
 postgres_rustls = "0.1.2"
-#pq-sys = { version = "0.7.1", features = ["bundled"] } # for musl
 rand = "0.9.1"
 regex = "1.11.1"
 reqwest = { version = "0.12.15", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
