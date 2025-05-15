@@ -25,13 +25,11 @@ RUN for bin in /usr/bin/ffmpeg /usr/bin/ffprobe; do \
 RUN cargo install --path . --locked
 
 ARG TARGETARCH
-RUN case "$TARGETARCH" in \
-        amd64) echo "DEB_ARCH=x86_64" > /arch.txt ;; \
-        arm64) echo "DEB_ARCH=aarch64" > /arch.txt ;; \
-        *) echo "Unsupported arch: $TARGETARCH" && exit 1 ;; \
+RUN case "${TARGETARCH}" in \
+      amd64)  echo "ARCH=x86_64" > /deb-arch.env ;; \
+      arm64)  echo "ARCH=aarch64" > /deb-arch.env ;; \
+      *)      echo "Unsupported arch: ${TARGETARCH}" && exit 1 ;; \
     esac
-RUN cat /arch.txt
-ARG DEB_ARCH
 
 # ---------------------------------------------------
 # 2 - Deploy Stage
@@ -39,15 +37,11 @@ ARG DEB_ARCH
 FROM gcr.io/distroless/base-debian12
 
 ARG TARGETARCH
-RUN case "$TARGETARCH" in \
-        amd64) echo "DEB_ARCH=x86_64" > /arch.txt ;; \
-        arm64) echo "DEB_ARCH=aarch64" > /arch.txt ;; \
-        *) echo "Unsupported arch: $TARGETARCH" && exit 1 ;; \
-    esac
-RUN cat /arch.txt
-ARG DEB_ARCH
-ENV DEB_ARCH=${DEB_ARCH:-$(cat /arch.txt)}
-ENV ARCH=${DEB_ARCH}
+
+COPY --from=build /deb-arch.env /deb-arch.env
+RUN . /deb-arch.env && echo "Using ARCH=$ARCH" && echo "export ARCH=$ARCH" >> /etc/profile
+ENV ARCH="x86_64"
+RUN . /deb-arch.env && export ARCH=$DEB_ARCH && echo "Confirmed ARCH=$ARCH"
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
