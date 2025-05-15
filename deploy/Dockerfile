@@ -30,14 +30,14 @@ RUN cargo install --path . --locked
 FROM gcr.io/distroless/base-debian12
 
 ARG TARGETARCH
-RUN case "$TARGETARCH" in \
-      amd64) export ARCH=x86_64 ;; \
-      arm64) export ARCH=aarch64 ;; \
-      *) echo "Unsupported TARGETARCH=$TARGETARCH" && exit 1 ;; \
-    esac && \
+RUN ARCH=$( \
+      case "$TARGETARCH" in \
+        amd64) echo x86_64 ;; \
+        arm64) echo aarch64 ;; \
+        *) echo "Unsupported TARGETARCH=$TARGETARCH" && exit 1 ;; \
+      esac \
+    ) && \
     mkdir -p /usr/lib/${ARCH}-linux-gnu /lib/${ARCH}-linux-gnu
-
-ENV ARCH=${ARCH}
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
