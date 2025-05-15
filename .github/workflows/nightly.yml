@@ -100,7 +100,7 @@ jobs:
           else
             cp "target/${{ matrix.target }}/release/${BINARY_NAME}" "${OUTPUT_PATH}"
           fi
-          cp ./deploy/.env.example $BASE_DIR/.env.sample
+          cp ./deploy/.env.example $BASE_DIR/env
           
           if [ "${{ runner.os }}" = "Windows" ]; then
             sha256sum "${OUTPUT_PATH}" > "${OUTPUT_PATH}.sha256"
@@ -141,20 +141,12 @@ jobs:
             downloads/recipya-nightly-x86_64-unknown-linux-gnu.sha256
             downloads/recipya-nightly-aarch64-unknown-linux-gnu
             downloads/recipya-nightly-aarch64-unknown-linux-gnu.sha256
-            downloads/.env.sample
+            downloads/env
             LICENSE  
   docker:
     runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: release
-    
-    strategy:
-      matrix:
-        include:
-          - platform: linux/amd64
-            arch: x86_64
-          - platform: linux/arm64
-            arch: aarch64
 
     steps:
       - name: Login to Docker Hub
@@ -180,9 +172,7 @@ jobs:
           context: .
           file: ./deploy/Dockerfile
           push: true
-          platforms: ${{ matrix.platform }}
-          build-args: |
-            ARCH=${{ matrix.arch }}
+          platforms: linux/amd64,linux/arm64
           tags: |
             reaper99/recipya-rs:latest 
             ghcr.io/${{ github.repository_owner }}/recipya-rs:latest
