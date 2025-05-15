@@ -35,6 +35,8 @@ RUN if [ "${TARGETARCH}" = "arm64" ]; then \
 # ---------------------------------------------------
 FROM gcr.io/distroless/base-debian12
 
+ARG ARCH  
+
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
 
