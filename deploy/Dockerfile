@@ -32,14 +32,15 @@ RUN ARCH=$( \
         *) echo "Unsupported TARGETARCH=$TARGETARCH" && exit 1 ;; \
       esac \
     ) && \
-    mkdir -p /usr/lib/${ARCH}-linux-gnu /lib/${ARCH}-linux-gnu
+    echo "ARCH=$ARCH" > /arch.env
 
 # ---------------------------------------------------
 # 2 - Deploy Stage
 # ---------------------------------------------------
 FROM gcr.io/distroless/base-debian12
 
-ARG ARCH
+COPY --from=build /arch.env /arch.env
+ENV $(cat /arch.env)
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
