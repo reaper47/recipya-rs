@@ -25,16 +25,15 @@ RUN for bin in /usr/bin/ffmpeg /usr/bin/ffprobe; do \
 RUN cargo install --path . --locked
 
 ARG TARGETARCH
-ENV ARCH=${TARGETARCH}
-RUN echo "Building for architecture: ${ARCH}"
+RUN if [ "${TARGETARCH}" = "arm64" ]; then \
+        mkdir -p /usr/lib/arm64-linux-gnu/; \
+        cp -r /usr/lib/aarch64-linux-gnu/* /usr/lib/arm64-linux-gnu/; \
+    fi
 
 # ---------------------------------------------------
 # 2 - Deploy Stage
 # ---------------------------------------------------
 FROM gcr.io/distroless/base-debian12
-
-ARG TARGETARCH
-ENV ARCH=${TARGETARCH}
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
