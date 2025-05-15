@@ -24,11 +24,6 @@ RUN for bin in /usr/bin/ffmpeg /usr/bin/ffprobe; do \
 
 RUN cargo install --path . --locked
 
-# ---------------------------------------------------
-# 2 - Deploy Stage
-# ---------------------------------------------------
-FROM gcr.io/distroless/base-debian12
-
 ARG TARGETARCH
 RUN ARCH=$( \
       case "$TARGETARCH" in \
@@ -38,6 +33,13 @@ RUN ARCH=$( \
       esac \
     ) && \
     mkdir -p /usr/lib/${ARCH}-linux-gnu /lib/${ARCH}-linux-gnu
+
+# ---------------------------------------------------
+# 2 - Deploy Stage
+# ---------------------------------------------------
+FROM gcr.io/distroless/base-debian12
+
+ARG ARCH
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib

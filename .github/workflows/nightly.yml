@@ -107,9 +107,9 @@ jobs:
           cp LICENSE "${TARGET_DIR}/LICENSE"
           
           if [ "${{ runner.os }}" = "Windows" ]; then
-            sha256sum "${TARGET_DIR}/${BINARY_NAME}.exe" > "${TARGET_DIR}/${ARTIFACT_NAME}.sha256"
+            sha256sum "${TARGET_DIR}/${BINARY_NAME}.exe" > "${TARGET_DIR}/${BINARY_NAME}.sha256"
           else
-            shasum -a 256 "${TARGET_DIR}/${BINARY_NAME}" | awk '{ print $1 }' > "${TARGET_DIR}/${ARTIFACT_NAME}.sha256"
+            shasum -a 256 "${TARGET_DIR}/${BINARY_NAME}" | awk '{ print $1 }' > "${TARGET_DIR}/${BINARY_NAME}.sha256"
           fi
 
           ZIP_NAME="${BASE_DIR}/${ARTIFACT_NAME}.zip"
