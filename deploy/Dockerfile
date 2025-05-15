@@ -35,33 +35,33 @@ RUN if [ "${TARGETARCH}" = "arm64" ]; then \
 # ---------------------------------------------------
 FROM gcr.io/distroless/base-debian12
 
-ARG ARCH  
+ARG TARGETARCH  
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
 
 # libpq related (required by diesel)
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libpq.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libgssapi_krb5.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libldap_r-2.4.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libkrb5.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libk5crypto.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libkrb5support.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/liblber-2.4.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libsasl2.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libgnutls.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libp11-kit.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libidn2.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libunistring.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libtasn1.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libnettle.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libhogweed.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libgmp.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libffi.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /lib/${ARCH}-linux-gnu/libcom_err.so* /lib/${ARCH}-linux-gnu/
-COPY --from=build /lib/${ARCH}-linux-gnu/libkeyutils.so* /lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/libldap-2.5.so.* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /usr/lib/${ARCH}-linux-gnu/liblber-2.5.so.* /usr/lib/${ARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libpq.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libgssapi_krb5.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libldap_r-2.4.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libkrb5.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libk5crypto.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libkrb5support.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/liblber-2.4.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libsasl2.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libgnutls.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libp11-kit.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libidn2.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libunistring.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libtasn1.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libnettle.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libhogweed.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libgmp.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libffi.so* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /lib/${TARGETARCH}-linux-gnu/libcom_err.so* /lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /lib/${TARGETARCH}-linux-gnu/libkeyutils.so* /lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/libldap-2.5.so.* /usr/lib/${TARGETARCH}-linux-gnu/
+COPY --from=build /usr/lib/${TARGETARCH}-linux-gnu/liblber-2.5.so.* /usr/lib/${TARGETARCH}-linux-gnu/
 
 # Application files
 COPY --from=build /usr/local/cargo/bin/recipya-rs /usr/local/bin/recipya
