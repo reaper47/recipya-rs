@@ -200,8 +200,8 @@ jobs:
         uses: docker/build-push-action@v6 
         with: 
           plaforms: ${{ matrix.platform }}
-          build-args: 
-            - ARCH=${{ matrix.arch }}
+          build-args: |
+            ARCH=${{ matrix.arch }}
           labels: ${{ steps.meta.outputs.label }}
           tags: ${{ steps.meta.outputs.tags }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
