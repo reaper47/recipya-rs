@@ -24,13 +24,15 @@ RUN for bin in /usr/bin/ffmpeg /usr/bin/ffprobe; do \
 
 RUN cargo install --path . --locked
 
+RUN echo "=== /usr/lib ===" && ls -l /usr/lib && echo "=== uname -m ===" && uname -m
+RUN echo "${ARCH}"
+
 # ---------------------------------------------------
 # 2 - Deploy Stage
 # ---------------------------------------------------
 FROM gcr.io/distroless/cc-debian12
 
 ARG ARCH
-ARG DEB_ARCH
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
@@ -53,10 +55,10 @@ COPY --from=build /usr/lib/${ARCH}-linux-gnu/libnettle.so* /usr/lib/${ARCH}-linu
 COPY --from=build /usr/lib/${ARCH}-linux-gnu/libhogweed.so* /usr/lib/${ARCH}-linux-gnu/
 COPY --from=build /usr/lib/${ARCH}-linux-gnu/libgmp.so* /usr/lib/${ARCH}-linux-gnu/
 COPY --from=build /usr/lib/${ARCH}-linux-gnu/libffi.so* /usr/lib/${ARCH}-linux-gnu/
-COPY --from=build /lib/${ARCH}-linux-gnu/libcom_err.so* /lib/${ARCH}-linux-gnu/
-COPY --from=build /lib/${ARCH}-linux-gnu/libkeyutils.so* /lib/${ARCH}-linux-gnu/
 COPY --from=build /usr/lib/${ARCH}-linux-gnu/libldap-2.5.so.* /usr/lib/${ARCH}-linux-gnu/
 COPY --from=build /usr/lib/${ARCH}-linux-gnu/liblber-2.5.so.* /usr/lib/${ARCH}-linux-gnu/
+COPY --from=build /lib/${ARCH}-linux-gnu/libcom_err.so* /lib/${ARCH}-linux-gnu/
+COPY --from=build /lib/${ARCH}-linux-gnu/libkeyutils.so* /lib/${ARCH}-linux-gnu/
 
 # Application files
 COPY --from=build /usr/local/cargo/bin/recipya-rs /usr/local/bin/recipya
