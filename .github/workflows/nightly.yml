@@ -162,10 +162,8 @@ jobs:
         include:
           - platform: linux/amd64
             arch: x86_64
-            deb_arch: x86_64
           - os: linux/arm64
             arch: aarch64
-            deb_arch: arm64
 
     steps:
       - name: Prepare
@@ -207,7 +205,6 @@ jobs:
           plaforms: ${{ matrix.platform }}
           build-args: |
             ARCH=${{ matrix.arch }}
-            DEB_ARCH=${{ matrix.deb_arch }}
           labels: ${{ steps.meta.outputs.label }}
           tags: ${{ steps.meta.outputs.tags }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
