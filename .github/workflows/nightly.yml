@@ -220,7 +220,7 @@ jobs:
           file: ./deploy/Dockerfile
           platforms: linux/amd64
           build-args: |
-            ARCH=aarch64
+            ARCH=x86_64
           labels: ${{ steps.meta.outputs.labels }}
           tags: |
             ${{ env.REGISTRY_IMAGE }}:latest-amd64
