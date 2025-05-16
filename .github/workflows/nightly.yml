@@ -162,7 +162,7 @@ jobs:
         include:
           - platform: linux/amd64
             arch: x86_64
-          - os: linux/arm64
+          - platform: linux/arm64
             arch: aarch64
 
     steps:
