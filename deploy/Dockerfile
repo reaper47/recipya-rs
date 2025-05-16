@@ -24,24 +24,12 @@ RUN for bin in /usr/bin/ffmpeg /usr/bin/ffprobe; do \
 
 RUN cargo install --path . --locked
 
-ARG TARGETARCH
-RUN case "${TARGETARCH}" in \
-      amd64)  echo "ARCH=x86_64" > /deb-arch.env ;; \
-      arm64)  echo "ARCH=aarch64" > /deb-arch.env ;; \
-      *)      echo "Unsupported arch: ${TARGETARCH}" && exit 1 ;; \
-    esac
-
 # ---------------------------------------------------
 # 2 - Deploy Stage
 # ---------------------------------------------------
 FROM gcr.io/distroless/base-debian12
 
-ARG TARGETARCH
-
-COPY --from=build /deb-arch.env /deb-arch.env
-RUN . /deb-arch.env && echo "Using ARCH=$ARCH" && echo "export ARCH=$ARCH" >> /etc/profile
-ENV ARCH="x86_64"
-RUN . /deb-arch.env && export ARCH=$DEB_ARCH && echo "Confirmed ARCH=$ARCH"
+ARG ARCH
 
 COPY --from=build /ffmpeg-deps/usr /usr
 COPY --from=build /ffmpeg-deps/lib /lib
