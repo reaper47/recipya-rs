@@ -25,7 +25,6 @@ RUN for bin in /usr/bin/ffmpeg /usr/bin/ffprobe; do \
 RUN cargo install --path . --locked
 
 RUN echo "=== /usr/lib ===" && ls -l /usr/lib && echo "=== uname -m ===" && uname -m
-RUN echo "${ARCH}"
 
 # ---------------------------------------------------
 # 2 - Deploy Stage

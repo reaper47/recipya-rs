@@ -202,7 +202,7 @@ jobs:
         with: 
           context: .
           file: ./deploy/Dockerfile
-          plaforms: ${{ matrix.platform }}
+          platforms: ${{ matrix.platform }}
           build-args: |
             ARCH=${{ matrix.arch }}
           labels: ${{ steps.meta.outputs.label }}
