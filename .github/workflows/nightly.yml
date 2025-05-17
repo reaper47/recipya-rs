@@ -188,6 +188,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY_IMAGE }}:latest-arm64
             ${{ env.GHCR_IMAGE }}:latest-arm64
+          push: true
 
   build-push-amd64:
     runs-on: ubuntu-latest
@@ -225,6 +226,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY_IMAGE }}:latest-amd64
             ${{ env.GHCR_IMAGE }}:latest-amd64
+          push: true
 
   create-manifests:
     runs-on: ubuntu-latest
