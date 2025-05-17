@@ -1,8 +1,16 @@
 name: Nightly
 
+# on:
+#   schedule:
+#     - cron: "0 0 * * *"
+
 on:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -256,6 +264,12 @@ jobs:
             --amend ${{ env.GHCR_IMAGE }}:latest-amd64 \
             --amend ${{ env.GHCR_IMAGE }}:latest-arm64
 
+          docker manifest annotate ${GHCR_IMAGE}:latest \
+            --os linux --arch amd64 \
+            org.opencontainers.image.source="https://github.com/reaper47/recipya-rs" \
+            org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy." \
+            org.opencontainers.image.licenses="AGPL-3.0"
+
           docker manifest push ${{ env.GHCR_IMAGE }}:latest
 
       - name: Create latest manifest and push
@@ -264,5 +278,11 @@ jobs:
             ${{ env.REGISTRY_IMAGE }}:latest \
             --amend ${{ env.REGISTRY_IMAGE }}:latest-amd64 \
             --amend ${{ env.REGISTRY_IMAGE }}:latest-arm64
+
+          docker manifest annotate ${{ env.REGISTRY_IMAGE }}:latest \
+            --os linux --arch amd64 \
+            org.opencontainers.image.source="https://github.com/reaper47/recipya-rs" \
+            org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy." \
+            org.opencontainers.image.licenses="AGPL-3.0"
 
           docker manifest push ${{ env.REGISTRY_IMAGE }}:latest
