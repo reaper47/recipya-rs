@@ -1,0 +1,52 @@
+services:
+  recipya-app:
+    container_name: recipya
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      - RUST_LOG=debug,tokio_cron_scheduler=off
+      - RECIPYA_DATABASE_URL=postgres://postgres:postgres@recipya-db:5432/recipya
+      - RECIPYA_DATABASE_TEST_URL=postgres://postgres:postgres@localhost:5432/recipya_test
+      - RECIPYA_BASE_URL=http://0.0.0.0:8078
+      - RECIPYA_IS_AUTOLOGIN=true
+      - RECIPYA_IS_DEMO=false
+      - RECIPYA_IS_NO_SIGNUPS=false
+      - RECIPYA_EMAIL_ADMIN=""
+      - RECIPYA_EMAIL_SMTP_HOST=smtp.gmail.com
+      - RECIPYA_EMAIL_SMTP_USERNAME=""
+      - RECIPYA_EMAIL_SMTP_PASSWORD=abcd abcd bcd abcd
+      - RECIPYA_EMAIL_SENDGRID_API_KEY=""
+      - RECIPYA_AUTH_PASSWORD_KEY=CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA
+      - RECIPYA_AUTH_TOKEN_KEY=MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w
+      - RECIPYA_AUTH_TOKEN_DURATION_SEC=1800
+    ports:
+      - "8078:8078"
+    depends_on:
+      recipya-db:
+        condition: service_healthy
+  
+  recipya-db:
+    container_name: recipya-db 
+    restart: unless-stopped
+    image: recipya-db
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.db
+    environment:
+      POSTGRES_DB: recipya
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - recipya-rs-db:/var/lib/postgresql/data
+    ports:
+      - "9000:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      
+volumes:
+  recipya-rs-db:

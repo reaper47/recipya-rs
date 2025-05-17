@@ -30,6 +30,9 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install crypto provider");
     dotenv().ok();
 
     let subscriber = tracing_subscriber::fmt()

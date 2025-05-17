@@ -1,3 +1,12 @@
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_cron;
+EXCEPTION
+    WHEN others THEN
+        RAISE NOTICE 'pg_cron not installed or cannot be created';
+END
+$$;
+
 ---
 --- Other
 ---

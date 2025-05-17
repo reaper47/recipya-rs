@@ -33,9 +33,11 @@ where
             })
             .unwrap_or(default.clone()),
     );
-    
+
     Ok(diesel::insert_into(schema::categories::table)
-        .values(&CategoryForInsert { name: category.clone() })
+        .values(&CategoryForInsert {
+            name: category.clone(),
+        })
         .on_conflict(schema::categories::name)
         .do_update()
         .set(schema::categories::name.eq(category.unwrap_or(default)))

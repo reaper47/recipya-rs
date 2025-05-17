@@ -1,0 +1,268 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY_IMAGE: reaper99/recipya-rs
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/recipya-rs
+
+jobs:
+  commits:
+    name: Commits
+    runs-on: ubuntu-latest
+    outputs:
+      numCommits: ${{ steps.numCommits.outputs.commits }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get new commits
+        id: numCommits
+        run: echo "commits=$(git log --oneline --since '24 hours ago' | wc -l)" >> "$GITHUB_OUTPUT"
+
+  binaries:
+    timeout-minutes: 60
+    needs: commits
+    runs-on: ${{ matrix.os }}
+    if: ${{ needs.commits.outputs.numCommits > 0 }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact: recipya-nightly-x86_64-unknown-linux-musl
+
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: recipya-nightly-x86_64-unknown-linux-gnu
+
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact: recipya-nightly-aarch64-unknown-linux-gnu
+
+          # TODO: Try to build the following platforms.
+          #- os: ubuntu-latest
+          #  target: armv7-unknown-linux-gnueabihf
+          #  artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
+
+          #- os: macos-latest
+          #  target: x86_64-apple-darwin
+          #  artifact: recipya-nightly-x86_64-apple-darwin
+
+          #- os: macos-latest
+          #  target: aarch64-apple-darwin
+          #  artifact: recipya-nightly-aarch64-apple-darwin
+
+          #- os: windows-latest
+          #  target: x86_64-pc-windows-msvc
+          #  artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
+
+          #- os: windows-latest
+          #  target: x86_64-pc-windows-gnu
+          #  artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
+          
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Cross
+        if: runner.os == 'Linux'
+        run: | 
+          cargo install cross --git https://github.com/cross-rs/cross
+          git clone https://github.com/cross-rs/cross
+
+      - name: Build Archive
+        shell: bash
+        run: |         
+          BASE_DIR="staging-directory"
+          mkdir -p "$BASE_DIR"
+
+          cross build --target ${{ matrix.target }} -r
+
+          BINARY_NAME="recipya-rs"
+          ARTIFACT_NAME="${{ matrix.artifact }}"
+          TARGET_DIR="${BASE_DIR}/${ARTIFACT_NAME}"
+          mkdir -p "$TARGET_DIR"
+
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp "target/${{ matrix.target }}/release/${BINARY_NAME}.exe" "${TARGET_DIR}/${BINARY_NAME}.exe"
+          else
+            cp "target/${{ matrix.target }}/release/${BINARY_NAME}" "${TARGET_DIR}/${BINARY_NAME}"
+          fi
+
+          cp ./deploy/.env.example "${TARGET_DIR}/.env"
+          cp LICENSE "${TARGET_DIR}/LICENSE"
+          
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            sha256sum "${TARGET_DIR}/${BINARY_NAME}.exe" > "${TARGET_DIR}/${BINARY_NAME}.sha256"
+          else
+            shasum -a 256 "${TARGET_DIR}/${BINARY_NAME}" | awk '{ print $1 }' > "${TARGET_DIR}/${BINARY_NAME}.sha256"
+          fi
+
+          ZIP_NAME="${BASE_DIR}/${ARTIFACT_NAME}.zip"
+          cd "$BASE_DIR"
+          zip -r "${ARTIFACT_NAME}.zip" "${ARTIFACT_NAME}"
+          cd -
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: staging-directory/${{ matrix.artifact }}.zip
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: binaries
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: downloads
+
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN  }}
+          automatic_release_tag: nightly
+          prerelease: false
+          title: "Nightly Build"
+          files: |
+            downloads/recipya-nightly-x86_64-unknown-linux-musl
+            downloads/recipya-nightly-x86_64-unknown-linux-gnu
+            downloads/recipya-nightly-aarch64-unknown-linux-gnu
+
+  # TODO: Simplify this workflow by merging these together using `platforms: linux/arm64, linux/amd64`.
+  # Problem is `COPY --from=build /usr/lib/${ARCH}-linux-gnu/[...]]* /usr/lib/${ARCH}-linux-gnu/`. 
+  build-push-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 480
+    needs: release
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push digest
+        id: build
+        uses: docker/build-push-action@v6 
+        with: 
+          context: .
+          file: ./deploy/Dockerfile
+          platforms: linux/arm64
+          build-args: |
+            ARCH=aarch64
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ env.REGISTRY_IMAGE }}:latest-arm64
+            ${{ env.GHCR_IMAGE }}:latest-arm64
+          provenance: false
+          push: true
+
+  build-push-amd64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    needs: release
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push digest
+        id: build
+        uses: docker/build-push-action@v6 
+        with: 
+          context: .
+          file: ./deploy/Dockerfile
+          platforms: linux/amd64
+          build-args: |
+            ARCH=x86_64
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ env.REGISTRY_IMAGE }}:latest-amd64
+            ${{ env.GHCR_IMAGE }}:latest-amd64
+          provenance: false
+          push: true
+
+  create-manifests:
+    runs-on: ubuntu-latest
+    needs: [build-push-amd64, build-push-arm64]
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Create SHA manifest and push
+        run: |
+          docker manifest create \
+            ${{ env.GHCR_IMAGE }}:latest \
+            --amend ${{ env.GHCR_IMAGE }}:latest-amd64 \
+            --amend ${{ env.GHCR_IMAGE }}:latest-arm64
+
+          docker manifest push ${{ env.GHCR_IMAGE }}:latest
+
+      - name: Create latest manifest and push
+        run: |
+          docker manifest create \
+            ${{ env.REGISTRY_IMAGE }}:latest \
+            --amend ${{ env.REGISTRY_IMAGE }}:latest-amd64 \
+            --amend ${{ env.REGISTRY_IMAGE }}:latest-arm64
+
+          docker manifest push ${{ env.REGISTRY_IMAGE }}:latest
