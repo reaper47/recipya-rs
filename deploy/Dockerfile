@@ -31,6 +31,10 @@ RUN echo "=== /usr/lib ===" && ls -l /usr/lib && echo "=== uname -m ===" && unam
 # ---------------------------------------------------
 FROM gcr.io/distroless/cc-debian12
 
+LABEL org.opencontainers.image.source="https://github.com/reaper47/recipya-rs"
+LABEL org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy."
+LABEL org.opencontainers.image.licenses="AGPL-3.0"
+
 ARG ARCH
 
 COPY --from=build /ffmpeg-deps/usr /usr
