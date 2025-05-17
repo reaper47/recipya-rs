@@ -188,6 +188,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY_IMAGE }}:latest-arm64
             ${{ env.GHCR_IMAGE }}:latest-arm64
+          provenance: false
           push: true
 
   build-push-amd64:
@@ -226,6 +227,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY_IMAGE }}:latest-amd64
             ${{ env.GHCR_IMAGE }}:latest-amd64
+          provenance: false
           push: true
 
   create-manifests:
@@ -256,6 +258,7 @@ jobs:
             ${{ env.GHCR_IMAGE }}:latest \
             --amend ${{ env.GHCR_IMAGE }}:latest-amd64 \
             --amend ${{ env.GHCR_IMAGE }}:latest-arm64
+
           docker manifest push ${{ env.GHCR_IMAGE }}:latest
 
       - name: Create latest manifest and push
@@ -264,4 +267,5 @@ jobs:
             ${{ env.REGISTRY_IMAGE }}:latest \
             --amend ${{ env.REGISTRY_IMAGE }}:latest-amd64 \
             --amend ${{ env.REGISTRY_IMAGE }}:latest-arm64
+
           docker manifest push ${{ env.REGISTRY_IMAGE }}:latest
