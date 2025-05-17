@@ -10,7 +10,7 @@ use crate::core::support::fs::FsSupport;
 use crate::server::templates::data::{Data, ViewRecipe};
 use crate::server::templates::helpers::cut_string;
 use crate::server::templates::icons::{
-    icon_arrows_up_down, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
+    icon_bars_3, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
     icon_document_duplicate, icon_ellipsis_vertical, icon_information_circle, icon_pencil,
     icon_plus_circle, icon_printer, icon_share, icon_trash,
 };
@@ -354,7 +354,7 @@ fn render_add_recipe_manual(
                                 h2 class="font-semibold text-center pb-2" {
                                     span .underline { "Tools" }
                                 }
-                                ol #tools-list class="pl-4 list-decimal" {
+                                ol #tools-list class="pl-4" {
                                     @if let Some(v) = view {
                                         @if !v.recipe_details.tools.is_empty() {
                                             @for tool in &v.recipe_details.tools {
@@ -449,7 +449,10 @@ fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
     html! {
         li class="pb-2" {
             div class="grid grid-flow-col items-center" {
-                label {
+                label class="flex gap-1" {
+                    div class="inline-block h-4 cursor-move handle mt-1" {
+                        (icon_bars_3())
+                    }
                     input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full"
                         value=(
                             tool
@@ -471,9 +474,6 @@ fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
                                 set input to (closest <li/>).querySelector('input') then
                                 set input.value to '' then
                                 input.focus()")) { "-" }
-                    div class="inline-block h-4 cursor-move handle" {
-                        (icon_arrows_up_down())
-                    }
                 }
             }
         }
@@ -503,7 +503,7 @@ fn add_ingredient(name: &str) -> Markup {
                                 set input.value to '' then
                                 input.focus()")) { "-" }
                     div class="inline-block h-4 cursor-move handle" {
-                        (icon_arrows_up_down())
+                        (icon_bars_3())
                     }
                 }
             }
@@ -535,7 +535,7 @@ fn add_instruction(name: &str) -> Markup {
                                 set input.value to '' then
                                 input.focus()")) { "-" }
                     div class="h-4 cursor-move handle grid place-content-center" {
-                        (icon_arrows_up_down())
+                        (icon_bars_3())
                     }
                 }
             }
@@ -1300,7 +1300,7 @@ fn render_edit_recipe(
                                 h2 class="font-semibold text-center pb-2" {
                                     span .underline { "Tools" }
                                 }
-                                ol #tools-list class="pl-4 list-decimal" {
+                                ol #tools-list class="pl-4" {
                                     @if !view.recipe_details.tools.is_empty() {
                                         @for tool in &view.recipe_details.tools {
                                             (add_tool(Some(tool)))
