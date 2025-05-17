@@ -1,8 +1,8 @@
 [env]
 RUST_LOG = "debug,tokio_cron_scheduler=off"
 
-RECIPYA_DATABASE_URL = "postgres://macpoule:Poule420!@localhost:5432/recipya"
-RECIPYA_DATABASE_TEST_URL = "postgres://macpoule:Poule420!@localhost/recipya_test"
+RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432/recipya"
+RECIPYA_DATABASE_TEST_URL = "postgres://postgres:postgres@localhost/recipya_test"
 
 RECIPYA_BASE_URL = "http://localhost:8078"
 RECIPYA_IS_AUTOLOGIN = "true"
