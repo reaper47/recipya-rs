@@ -1,8 +1,14 @@
 name: Nightly
 
+#on:
+#  schedule:
+#    - cron: "0 0 * * *"
+
 on:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 permissions:
   contents: write
@@ -143,9 +149,9 @@ jobs:
           prerelease: false
           title: "Nightly Build"
           files: |
-            downloads/recipya-nightly-x86_64-unknown-linux-musl.zip
-            downloads/recipya-nightly-x86_64-unknown-linux-gnu.zip
-            downloads/recipya-nightly-aarch64-unknown-linux-gnu.zip
+            downloads/recipya-nightly-x86_64-unknown-linux-musl
+            downloads/recipya-nightly-x86_64-unknown-linux-gnu
+            downloads/recipya-nightly-aarch64-unknown-linux-gnu
 
   # TODO: Simplify this workflow by merging these together using `platforms: linux/arm64, linux/amd64`.
   # Problem is `COPY --from=build /usr/lib/${ARCH}-linux-gnu/[...]]* /usr/lib/${ARCH}-linux-gnu/`. 
