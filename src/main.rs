@@ -37,13 +37,23 @@ async fn main() -> Result<()> {
 
     let subscriber = tracing_subscriber::fmt()
         .compact()
-        .with_file(true)
-        .with_line_number(true)
-        .with_thread_ids(true)
+        .with_file(false)
+        .with_line_number(false)
+        .with_thread_ids(false)
         .with_target(false)
         .with_env_filter(EnvFilter::from_default_env())
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
+
+    tracing::info!(
+        "Recipya v{} starting in {} mode",
+        env!("CARGO_PKG_VERSION"),
+        if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        }
+    );
 
     if software::is_ffmpeg_installed() {
         info!("FFmpeg is installed");

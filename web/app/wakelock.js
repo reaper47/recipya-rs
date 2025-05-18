@@ -1,4 +1,4 @@
-let wakeLock = null;
+var wakeLock = null;
 initWakeLock();
 
 function initWakeLock() {
