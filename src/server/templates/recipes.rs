@@ -372,7 +372,7 @@ fn render_add_recipe_manual(
                                     span .underline { "Ingredients" }
                                     sup .text-red-600 { "*" }
                                 }
-                                ol #ingredients-list class="pl-4 list-decimal" {
+                                ol #ingredients-list class="pl-4" {
                                     @if let Some(v) = view {
                                          @if !v.recipe_details.ingredients.is_empty() {
                                             @for (_section, ingredients) in &v.recipe_details.ingredients {
@@ -484,7 +484,10 @@ fn add_ingredient(name: &str) -> Markup {
     html! {
         li .pb-2 {
             div class="grid grid-flow-col items-center" {
-                label {
+                label class="flex gap-1" {
+                    div class="inline-block h-4 cursor-move handle mt-1" {
+                        (icon_bars_3())
+                    }
                     input required type="text" name="ingredient" value=(name)
                         placeholder="1 cup of chopped onions"
                         class="input input-bordered input-sm w-full"
@@ -502,9 +505,6 @@ fn add_ingredient(name: &str) -> Markup {
                                 set input to (closest <li/>).querySelector('input') then
                                 set input.value to '' then
                                 input.focus()")) { "-" }
-                    div class="inline-block h-4 cursor-move handle" {
-                        (icon_bars_3())
-                    }
                 }
             }
         }
@@ -1314,7 +1314,7 @@ fn render_edit_recipe(
                                     span .underline { "Ingredients" }
                                     sup .text-red-600 { "*" }
                                 }
-                                ol #ingredients-list class="pl-4 list-decimal" {
+                                ol #ingredients-list class="pl-4" {
                                      @if !view.recipe_details.ingredients.is_empty() {
                                         @for (_section, ingredients) in &view.recipe_details.ingredients {
                                             @for ing in ingredients.iter() {
@@ -1650,7 +1650,6 @@ fn view_recipe_helper(
                                             form autocomplete="off" _="on submit halt the event" class="print:hidden" {
                                                 fieldset class="fieldset" {
                                                     legend { "Servings" }
-                                                    label class="label" for="yield" { "Servings" }
                                                     input #yield
                                                         type="number"
                                                         min="1"
@@ -1681,10 +1680,18 @@ fn view_recipe_helper(
                                                 a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
                                                 p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
                                            } @else {
-                                               p class="text-center" { "Source: " (source) }
+                                                p class="text-center" { 
+                                                    "Source:"
+                                                    br; 
+                                                    (source) 
+                                                }
                                            }
                                         } @else {
-                                            p class="text-center" { "Source: Unknown" }
+                                            p class="text-center" { 
+                                                "Source:"
+                                                br;
+                                                "Unknown"
+                                            }
                                         }
                                     }
                                 }
@@ -2215,22 +2222,22 @@ fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
             div class="col-span-6 border-gray-700 px-4 py-2 border-y md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
                     h2 class="font-semibold text-center underline pb-1" { "Tools" }
-                    ul class="md:pb-2" {
+                    ul class="grid gap-1" {
                         @for tool in recipe.tools.iter() {
-                            li class="hover:bg-gray-100 dark:hover:bg-gray-700" {
+                            li class="grid py-1 hover:bg-gray-100 dark:hover:bg-gray-700" {
                                 label class="label justify-start" {
                                     input type="checkbox" class="checkbox";
-                                    span class="pl-2" { (tool.quantity.to_string()) (tool.name) }
+                                    span class="pl-2" { (tool.quantity.to_string()) " " (tool.name) }
                                 }
                             }
                         }
                     }
                 }
                 h2 class="font-semibold text-center underline pb-1" { "Ingredients" }
-                ul {
+                ul class="grid gap-1" {
                     @for (_section, ingredients) in recipe.ingredients.iter() {
                         @for ingredient in ingredients.iter() {
-                             li class="hover:bg-gray-100 dark:hover:bg-gray-700" {
+                             li class="grid py-1 hover:bg-gray-100 dark:hover:bg-gray-700" {
                                 label class="label justify-start" {
                                     input type="checkbox" class="checkbox";
                                     span class="pl-2" { (ingredient) }

@@ -54,7 +54,7 @@ mod tests {
         assert_html(
             res.clone(),
             vec![
-                r##"<fieldset class="fieldset"><legend>Servings</legend><label class="label" for="yield">Servings</label><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
+                r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
             ],
         );
         assert_not_in_html(
@@ -86,7 +86,7 @@ mod tests {
             res,
             vec![
                 r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
-                r##"<fieldset class="fieldset"><legend>Servings</legend><label class="label" for="yield">Servings</label><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
+                r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
             ],
         );
         Ok(())
