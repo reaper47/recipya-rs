@@ -10,10 +10,9 @@ use super::{Error, Result};
 #[derive(Clone)]
 pub struct DataDir {
     pub backup: PathBuf,
-    // TODO: We possibly do not need this folder anymore because of PostgreSQL.
-    pub database: PathBuf,
     pub images: PathBuf,
     pub logs: PathBuf,
+    pub placeholders: PathBuf,
     pub thumbnails: PathBuf,
     pub videos: PathBuf,
 }
@@ -28,21 +27,21 @@ impl DataDir {
             let images_dir = media_dir.join("Images");
 
             let backup = base_dir.join("Backup");
-            let database = base_dir.join("Database");
             let logs = base_dir.join("Logs");
+            let placeholders = images_dir.join("Placeholders");
             let thumbnails = images_dir.join("Thumbnails");
             let videos = media_dir.join("Videos");
 
-            let paths = [&backup, &database, &logs, &thumbnails, &videos];
+            let paths = [&backup, &logs, &placeholders, &thumbnails, &videos];
             for path in &paths {
                 fs::create_dir_all(path)?;
             }
 
             Ok(Self {
                 backup,
-                database,
                 images: images_dir,
                 logs,
+                placeholders,
                 thumbnails,
                 videos,
             })
@@ -55,10 +54,10 @@ impl DataDir {
     pub fn log(&self) {
         info!("File locations:");
         info!("\t- Backups: {:?}", self.backup);
-        info!("\t- Database: {:?}", self.database);
         info!("\t- Images: {:?}", self.images);
-        info!("\t- Thumbnails: {:?}", self.thumbnails);
         info!("\t- Logs: {:?}", self.logs);
+        info!("\t- Placeholders: {:?}", self.placeholders);
+        info!("\t- Thumbnails: {:?}", self.thumbnails);
         info!("\t- Videos: {:?}", self.videos);
     }
 }
@@ -82,16 +81,16 @@ mod tests {
             format!("{base_dir_str}/Recipya/Backup")
         );
         pretty_assertions::assert_eq!(
-            got.database.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Database")
-        );
-        pretty_assertions::assert_eq!(
             got.images.to_str().expect("a path"),
             format!("{base_dir_str}/Recipya/Media/Images")
         );
         pretty_assertions::assert_eq!(
             got.logs.to_str().expect("a path"),
             format!("{base_dir_str}/Recipya/Logs")
+        );
+        pretty_assertions::assert_eq!(
+            got.placeholders.to_str().expect("a path"),
+            format!("{base_dir_str}/Recipya/Media/Images/Placeholders")
         );
         pretty_assertions::assert_eq!(
             got.thumbnails.to_str().expect("a path"),
