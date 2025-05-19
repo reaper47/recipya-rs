@@ -63,7 +63,7 @@ fn search_sort_option(
                 } @else {
                     input id=(id) type="radio" name="sort" class="radio radio-sm sort-option" value=(value);
                 }
-                span class="ml-1" { 
+                span class="ml-1" {
                     (title)
                     @if let Some(sub) = subtitle {
                         (PreEscaped("<br/>"))

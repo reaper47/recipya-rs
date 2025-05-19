@@ -1680,14 +1680,14 @@ fn view_recipe_helper(
                                                 a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
                                                 p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
                                            } @else {
-                                                p class="text-center" { 
+                                                p class="text-center" {
                                                     "Source:"
-                                                    br; 
-                                                    (source) 
+                                                    br;
+                                                    (source)
                                                 }
                                            }
                                         } @else {
-                                            p class="text-center" { 
+                                            p class="text-center" {
                                                 "Source:"
                                                 br;
                                                 "Unknown"
