@@ -215,7 +215,7 @@ pub(super) fn render_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
                 @if is_visible { "hidden md:block" } @else { " hidden" }
             }
             hx-swap-oob=(is_hx_swap_oob) {
-            ul class="menu w-full menu-sm bg-base-300 rounded-box h-full" style="border-radius: 0" {
+            ul class="menu w-full menu-sm bg-base-300 rounded-box h-full gap-1" style="border-radius: 0" {
                 li #recipes-sidebar-recipes
                     class={
                         "rounded-lg"

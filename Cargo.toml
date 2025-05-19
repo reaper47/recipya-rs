@@ -29,7 +29,7 @@ hmac = "0.12.1"
 humantime = "2.2.0"
 image = "0.25.6"
 infer = "0.19.0"
-iso8601 = { version = "0.6.2", features = ["serde"] }
+iso8601 = { version = "0.6.3", features = ["serde"] }
 lazy-regex = "3.4.1"
 lettre = { version = "0.11.16", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
 lru = "0.14.0"
@@ -41,7 +41,7 @@ postgres_rustls = "0.1.2"
 rand = "0.9.1"
 regex = "1.11.1"
 reqwest = { version = "0.12.15", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
-rust-embed = { version = "8.6.0", features = ["axum-ex"] }
+rust-embed = { version = "8.7.2", features = ["axum-ex"] }
 rustls = { version = "0.23.27", default-features = false, features = ["ring"] }
 scraper = "0.23.1"
 serde = { version = "1.0.219", features = ["derive"] }

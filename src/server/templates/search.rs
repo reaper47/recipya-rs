@@ -8,7 +8,7 @@ use crate::server::templates::icons::{
 /// Renders the searchbar.
 pub(super) fn searchbar(data: &SearchbarData) -> Markup {
     html! {
-        div class="w-full" {
+        div {
             label class="input input-sm flex justify-between px-0 gap-2 z-20" {
                 button #search-shortcut type="button" class="pl-2" popovertarget="search-help" _="on click toggle .hidden on #search-help" {
                     (icon_information_circle())
@@ -35,8 +35,8 @@ pub(super) fn searchbar(data: &SearchbarData) -> Markup {
             div tabindex="0" role="button" class="btn btn-sm p-1" {
                 (icon_bars_3_bottom_left())
             }
-            div tabindex="0" class="dropdown-content z-10 menu menu-sm p-2 shadow bg-base-200 w-52 sm:menu-md prose" {
-                h4 { "Sort" }
+            div tabindex="0" class="dropdown-content z-10 menu menu-sm p-2 shadow bg-base-200 w-36 sm:menu-md prose" {
+                h4 class="text-center underline" { "Sort" }
                 (search_sort_option("Default", None, "default", &data.sort))
                 (search_sort_option("Name:", Some("A to Z"), "a-z", &data.sort))
                 (search_sort_option("Name:", Some("Z to A"), "z-a", &data.sort))
@@ -56,19 +56,20 @@ fn search_sort_option(
 ) -> Markup {
     let id = format!("sort-opt-{value}");
     html! {
-        fieldset class="fieldset" {
-            label class="label cursor-pointer" for=(id) {
-                (title)
-                @if let Some(sub) = subtitle {
-                    br;
-                    (sub)
+        fieldset class="fieldset flex" {
+            label class="label cursor-pointer text-inherit" for=(id) {
+                @if selected_opt == value {
+                    input id=(id) type="radio" name="sort" class="radio radio-sm sort-option" value=(value) checked;
+                } @else {
+                    input id=(id) type="radio" name="sort" class="radio radio-sm sort-option" value=(value);
                 }
-            }
-
-            @if selected_opt == value {
-                input id=(id) type="radio" name="sort" class="radio radio-sm sort-option" value=(value) checked;
-            } @else {
-                input id=(id) type="radio" name="sort" class="radio radio-sm sort-option" value=(value);
+                span class="ml-1" { 
+                    (title)
+                    @if let Some(sub) = subtitle {
+                        (PreEscaped("<br/>"))
+                        (sub)
+                    }
+                }
             }
         }
     }
