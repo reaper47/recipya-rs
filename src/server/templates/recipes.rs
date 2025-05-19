@@ -1482,13 +1482,13 @@ pub fn list_recipes(
                                     "/data/images/Placeholders/placeholder.recipe.webp".into()
                                 }
                             })
-                            alt=(format!("Image for the {} recipe", view.recipe_details.recipe.name));
+                            alt=(format!("Image of the {} recipe", view.recipe_details.recipe.name));
 
                         div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex" {
                             p class="p-2 text-sm" {
                                 @match &view.recipe_details.recipe.description {
                                     Some(description) => (cut_string(description, 127)),
-                                    None => "No recipe description."
+                                    None => ""
                                 }
 
                             }
@@ -1680,14 +1680,14 @@ fn view_recipe_helper(
                                                 a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
                                                 p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
                                            } @else {
-                                                p class="text-center" { 
+                                                p class="text-center" {
                                                     "Source:"
-                                                    br; 
-                                                    (source) 
+                                                    br;
+                                                    (source)
                                                 }
                                            }
                                         } @else {
-                                            p class="text-center" { 
+                                            p class="text-center" {
                                                 "Source:"
                                                 br;
                                                 "Unknown"
