@@ -17,7 +17,7 @@ pub struct DataDir {
     pub videos: PathBuf,
 }
 
-/// Gets the base directory to store the application's data.
+/// Gets the base directory where the application's data is stored.
 pub fn get_base_dir() -> Result<PathBuf> {
     let Some(dirs) = BaseDirs::new() else {
         return Err(Error::NoValidHomeDir);
