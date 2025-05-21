@@ -9,18 +9,16 @@ on:
     branches: [ "main" ]
 
 env:
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-arm64
     steps:
       - uses: actions/checkout@v4
-
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: stable
+      - uses: Swatinem/rust-cache@v2
 
       - uses: ikalnytskyi/action-setup-postgres@v7
         with:
@@ -44,7 +42,7 @@ jobs:
           node-version: latest
 
       - name: Test
-        run: cargo test
+        run: cargo test --locked
         env:
           RECIPYA_DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"

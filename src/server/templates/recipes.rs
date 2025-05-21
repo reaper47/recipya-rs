@@ -1616,7 +1616,7 @@ fn view_recipe_helper(
     let recipe = &recipe_details.recipe;
 
     Ok(html! {
-        @if matches!(&data.share, Some(share) if share.is_shared) {
+        @if !matches!(&data.share, Some(share) if share.is_shared) {
              dialog #share-dialog .modal {
                 div class="modal-box w-4/5 sm:w-96" {
                     div #share-dialog-result {}

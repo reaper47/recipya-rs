@@ -20,6 +20,10 @@ pub enum Error {
     GenerateToken,
     NoToken,
 
+    AssetCouldNotCopy,
+    FileExists,
+    Fs,
+
     BadTimeFormat,
     Database,
     DeleteForbidden,
