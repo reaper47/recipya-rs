@@ -68,6 +68,10 @@ axum-test = { version = "17.2.0", features = ["ws"] }
 pretty_assertions = "1.4.1"
 tower = "0.5.2"
 
+[profile.release]
+lto = true
+codegen-units = 1
+
 [target.'x86_64-unknown-linux-musl'.dependencies]
 openssl = { version = "0.10.72", features = ["vendored"] }
 pq-sys = { version = "0.7.1", features = ["bundled"] }

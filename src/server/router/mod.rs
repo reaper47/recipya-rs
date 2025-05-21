@@ -2,12 +2,13 @@ mod auth_router;
 mod general_router;
 mod handlers;
 mod recipes_routes;
+mod shared_router;
 mod static_files_router;
 
 pub mod middleware;
-mod shared_router;
 
 pub use handlers::params::SearchParams;
+pub use handlers::static_files::copy_to_fs;
 
 use axum::Router;
 

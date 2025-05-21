@@ -10,8 +10,10 @@ use tracing_subscriber::EnvFilter;
 
 use crate::cli::server::server;
 use crate::cli::sponsors::generate_sponsors_image;
+use crate::core::config::get_base_dir;
 use crate::core::support::software;
 use crate::error::Result;
+use crate::server::router::copy_to_fs;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -30,20 +32,9 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    rustls::crypto::ring::default_provider()
-        .install_default()
-        .expect("Failed to install crypto provider");
+    init_crypto();
     dotenv().ok();
-
-    let subscriber = tracing_subscriber::fmt()
-        .compact()
-        .with_file(false)
-        .with_line_number(false)
-        .with_thread_ids(false)
-        .with_target(false)
-        .with_env_filter(EnvFilter::from_default_env())
-        .finish();
-    tracing::subscriber::set_global_default(subscriber)?;
+    init_tracing()?;
 
     tracing::info!(
         "Recipya v{} starting in {} mode",
@@ -54,6 +45,8 @@ async fn main() -> Result<()> {
             "release"
         }
     );
+
+    copy_assets_to_fs()?;
 
     if software::is_ffmpeg_installed() {
         info!("FFmpeg is installed");
@@ -74,11 +67,51 @@ async fn main() -> Result<()> {
     match Cli::parse().command {
         Commands::Server => {
             server().await?;
-            Ok(())
         }
         Commands::Sponsors => {
             generate_sponsors_image()?;
-            Ok(())
         }
     }
+
+    Ok(())
+}
+
+fn init_crypto() {
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install crypto provider");
+}
+
+fn init_tracing() -> Result<()> {
+    let subscriber = tracing_subscriber::fmt()
+        .compact()
+        .with_file(false)
+        .with_line_number(false)
+        .with_thread_ids(false)
+        .with_target(false)
+        .with_env_filter(EnvFilter::from_default_env())
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)?;
+
+    Ok(())
+}
+
+fn copy_assets_to_fs() -> Result<()> {
+    let placeholders = get_base_dir()?.join("Media/Images/Placeholders");
+
+    let placeholder_recipe = "img/recipes/placeholder.webp";
+    for (src, dest) in [
+        (placeholder_recipe, "placeholder.recipe.webp"),
+        (placeholder_recipe, "placeholder.recipe.original.webp"),
+    ] {
+        let dest = placeholders.join(dest);
+        if let Err(err) = copy_to_fs(src, dest) {
+            if !matches!(err, crate::server::Error::FileExists) {
+                return Err(crate::error::Error::Server(err.to_string()));
+            }
+        }
+    }
+
+    Ok(())
 }

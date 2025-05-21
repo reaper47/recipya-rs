@@ -28,6 +28,8 @@ pub enum Error {
     #[from]
     SetGlobalDefault(tracing::subscriber::SetGlobalDefaultError),
     #[from]
+    Config(crate::core::config::Error),
+    #[from]
     Token(crate::core::auth::token::Error),
 }
 

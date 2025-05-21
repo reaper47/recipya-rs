@@ -108,7 +108,9 @@ async fn start_cron_jobs(
 ) -> Result<()> {
     let sched = JobScheduler::new().await?;
 
-    info!("Scheduled cron job 'CleanMedia' every Sunday at midnight to clean dangling media resources");
+    info!(
+        "Scheduled cron job 'CleanMedia' every Sunday at midnight to clean dangling media resources"
+    );
     sched
         .add(Job::new_async("0 0 0 * * 7", move |_uuid, _l| {
             info!("Running CleanMedia job");

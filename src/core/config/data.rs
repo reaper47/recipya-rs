@@ -17,37 +17,42 @@ pub struct DataDir {
     pub videos: PathBuf,
 }
 
+/// Gets the base directory where the application's data is stored.
+pub fn get_base_dir() -> Result<PathBuf> {
+    let Some(dirs) = BaseDirs::new() else {
+        return Err(Error::NoValidHomeDir);
+    };
+
+    Ok(dirs.data_dir().join("Recipya"))
+}
+
 impl DataDir {
     /// Creates a new `Dir` instance with predefined subdirectories inside the
     /// user's data directory.
     pub fn new() -> Result<DataDir> {
-        if let Some(dirs) = BaseDirs::new() {
-            let base_dir = dirs.data_dir().join("Recipya");
-            let media_dir = base_dir.join("Media");
-            let images_dir = media_dir.join("Images");
+        let base_dir = get_base_dir()?;
+        let media_dir = base_dir.join("Media");
+        let images_dir = media_dir.join("Images");
 
-            let backup = base_dir.join("Backup");
-            let logs = base_dir.join("Logs");
-            let placeholders = images_dir.join("Placeholders");
-            let thumbnails = images_dir.join("Thumbnails");
-            let videos = media_dir.join("Videos");
+        let backup = base_dir.join("Backup");
+        let logs = base_dir.join("Logs");
+        let placeholders = images_dir.join("Placeholders");
+        let thumbnails = images_dir.join("Thumbnails");
+        let videos = media_dir.join("Videos");
 
-            let paths = [&backup, &logs, &placeholders, &thumbnails, &videos];
-            for path in &paths {
-                fs::create_dir_all(path)?;
-            }
-
-            Ok(Self {
-                backup,
-                images: images_dir,
-                logs,
-                placeholders,
-                thumbnails,
-                videos,
-            })
-        } else {
-            Err(Error::NoValidHomeDir)
+        let paths = [&backup, &logs, &placeholders, &thumbnails, &videos];
+        for path in &paths {
+            fs::create_dir_all(path)?;
         }
+
+        Ok(Self {
+            backup,
+            images: images_dir,
+            logs,
+            placeholders,
+            thumbnails,
+            videos,
+        })
     }
 
     /// Logs the paths.
