@@ -32,7 +32,32 @@ jobs:
 
       - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya;"
 
-      - run: cargo install diesel_cli --no-default-features --features postgres
+      - name: Cache cargo-installed binaries
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-install-diesel-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-install-diesel-
+
+      - name: Check for diesel CLI
+        id: diesel_check
+        run: |
+          if command -v diesel >/dev/null 2>&1; then
+            echo "Diesel already installed."
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Diesel not installed."
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install diesel_cli
+        if: steps.diesel_check.outputs.exists == 'false'
+        run: cargo install diesel_cli --no-default-features --features postgres
+
       - run: diesel migration run
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
