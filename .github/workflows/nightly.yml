@@ -183,8 +183,8 @@ jobs:
             ARCH=aarch64
           labels: ${{ steps.meta.outputs.labels }}
           tags: |
-            ${{ env.REGISTRY_IMAGE }}:latest-arm64
-            ${{ env.GHCR_IMAGE }}:latest-arm64
+            ${{ env.REGISTRY_IMAGE }}:nightly-arm64
+            ${{ env.GHCR_IMAGE }}:nightly-arm64
           provenance: false
           push: true
 
@@ -222,8 +222,8 @@ jobs:
             ARCH=x86_64
           labels: ${{ steps.meta.outputs.labels }}
           tags: |
-            ${{ env.REGISTRY_IMAGE }}:latest-amd64
-            ${{ env.GHCR_IMAGE }}:latest-amd64
+            ${{ env.REGISTRY_IMAGE }}:nightly-amd64
+            ${{ env.GHCR_IMAGE }}:nightly-amd64
           provenance: false
           push: true
 
@@ -252,17 +252,17 @@ jobs:
       - name: Create SHA manifest and push
         run: |
           docker manifest create \
-            ${{ env.GHCR_IMAGE }}:latest \
-            --amend ${{ env.GHCR_IMAGE }}:latest-amd64 \
-            --amend ${{ env.GHCR_IMAGE }}:latest-arm64
+            ${{ env.GHCR_IMAGE }}:nightly \
+            --amend ${{ env.GHCR_IMAGE }}:nightly-amd64 \
+            --amend ${{ env.GHCR_IMAGE }}:nightly-arm64
 
-          docker manifest push ${{ env.GHCR_IMAGE }}:latest
+          docker manifest push ${{ env.GHCR_IMAGE }}:nightly
 
       - name: Create latest manifest and push
         run: |
           docker manifest create \
-            ${{ env.REGISTRY_IMAGE }}:latest \
-            --amend ${{ env.REGISTRY_IMAGE }}:latest-amd64 \
-            --amend ${{ env.REGISTRY_IMAGE }}:latest-arm64
+            ${{ env.REGISTRY_IMAGE }}:nightly \
+            --amend ${{ env.REGISTRY_IMAGE }}:nightly-amd64 \
+            --amend ${{ env.REGISTRY_IMAGE }}:nightly-arm64
 
-          docker manifest push ${{ env.REGISTRY_IMAGE }}:latest
+          docker manifest push ${{ env.REGISTRY_IMAGE }}:nightly

@@ -30,17 +30,22 @@ impl Default for Config {
 
 impl Config {
     /// Populates the Config's fields from the environment variables.
-    pub fn load_from_env() -> crate::core::config::Result<Self> {
-        let mut database_url = get_env_on_load("RECIPYA_DATABASE_URL")?
-            .trim_end_matches('/')
-            .to_string();
-        if !database_url.ends_with("/recipya") {
-            database_url.push_str("/recipya");
-        }
+    pub fn load_from_env() -> Result<Self> {
+        let database_url = {
+            let base = get_env_on_load("RECIPYA_DATABASE_URL")?
+                .trim_end_matches('/')
+                .to_string();
+
+            if base.ends_with("/recipya") {
+                base
+            } else {
+                format!("{}/recipya", base)
+            }
+        };
 
         Ok(Self {
             base_url: get_env_on_load("RECIPYA_BASE_URL")?,
-            database_url: database_url.into(),
+            database_url,
             is_autologin: get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true",
             is_demo: get_env_on_load("RECIPYA_IS_DEMO")? == "true",
             is_no_signups: get_env_on_load("RECIPYA_IS_NO_SIGNUPS")? == "true",
@@ -48,7 +53,7 @@ impl Config {
     }
 }
 
-fn get_env_on_load(name: &'static str) -> crate::core::config::Result<String> {
+fn get_env_on_load(name: &'static str) -> Result<String> {
     match env::var(name) {
         Ok(v) => {
             let trimmed = v.trim_matches('"');

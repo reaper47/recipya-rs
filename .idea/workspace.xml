@@ -15,15 +15,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/nightly.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/nightly.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/recipe/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/recipe/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/report.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/report.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/tests/support/scraper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/tests/support/scraper.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/config/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/config/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/repository/pool.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/repository/pool.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/auth_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/auth_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,6 +59,13 @@
     }
   ]
 }</component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="main" />
+      </list>
+    </option>
+  </component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/reaper47/recipya-rs.git&quot;,
@@ -96,12 +100,12 @@
     "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
     "Cargo.Test core::config::tests::test_is_no_signups_err.executor": "Run",
     "Cargo.Test core::config::tests::test_is_no_signups_ok.executor": "Run",
-    "Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok.executor": "Run",
+    "Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok.executor": "Debug",
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicates_err.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::test_create_ok.executor": "Run",
-    "Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok.executor": "Debug",
+    "Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_duplicate_ok.executor": "Run",
     "Cargo.Test core::model::recipe::create::tests::tests_add_category::test_create_new_ok.executor": "Run",
     "Cargo.Test core::model::recipe::delete::tests::test_delete_recipe_found_ok.executor": "Run",
@@ -314,7 +318,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#117 on 46-implement-post-recipesaddwebsite",
+    "git-widget-placeholder": "#135 on 129-create-databases-on-init-1",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -357,7 +361,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok">
+  <component name="RunManager" selected="Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -367,6 +371,40 @@
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="true" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::model::recipe::create::tests::test_create_bare_minimum_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::create::tests::test_create_bare_minimum_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
@@ -410,40 +448,6 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test tests_recipe_add_website" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -463,19 +467,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
+      <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok" />
       <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
       <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok" />
       <item itemvalue="Cargo.Test tests_recipe_add_website" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok" />
+        <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
         <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
         <item itemvalue="Cargo.Test tests_recipe_add_website" />
         <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_unsupported_websites_ok" />
       </list>
     </recent_temporary>
   </component>

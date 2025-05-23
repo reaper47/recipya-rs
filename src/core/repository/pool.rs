@@ -63,25 +63,19 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
 
     match res {
         Ok(row) if row.count > 0 => {
-            info!("Database '{}' already exists", db_name);
+            info!("Database '{}' exists", db_name);
             Ok(())
         }
         Ok(_) => {
             warn!("Database '{db_name}' does not exist, creating it");
 
-            match sql_query("CREATE DATABASE '$1'")
-                .bind::<Text, _>(db_name)
+            sql_query(format!("CREATE DATABASE {db_name}"))
                 .execute(conn)
-            {
-                Ok(_) => {
-                    info!("Database '{db_name}' created successfully");
-                    Ok(())
-                }
-                Err(err) => {
+                .map(|_| ())
+                .map_err(|err| {
                     error!("Failed to create database '{db_name}': {err:?}");
-                    Err(err)
-                }
-            }
+                    err
+                })
         }
         Err(err) => {
             error!("Error checking database existence: {err:?}");
@@ -95,7 +89,7 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
     diesel::PgConnection::establish(database_url)
         .expect("error connecting to database")
         .run_pending_migrations(MIGRATIONS)
-        .expect("migrations should have been applied");
+        .unwrap_or_else(|_| panic!("migrations should have been applied for {database_url}"));
 
     if database_url.contains("localhost") || database_url.contains("host.docker.internal") {
         let (client, connection) =
