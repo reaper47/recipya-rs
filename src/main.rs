@@ -11,6 +11,7 @@ use tracing_subscriber::EnvFilter;
 use crate::cli::server::server;
 use crate::cli::sponsors::generate_sponsors_image;
 use crate::core::config::get_base_dir;
+use crate::core::repository::create_database_if_not_exists;
 use crate::core::support::software;
 use crate::error::Result;
 use crate::server::router::copy_to_fs;
@@ -46,6 +47,7 @@ async fn main() -> Result<()> {
         }
     );
 
+    create_database_if_not_exists("recipya")?;
     copy_assets_to_fs()?;
 
     if software::is_ffmpeg_installed() {

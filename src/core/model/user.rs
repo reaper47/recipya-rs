@@ -303,7 +303,6 @@ impl User {
 mod tests {
     use super::*;
 
-    use crate::server::AppState;
     use crate::server::test_utils::{TEST_USER_EMAIL, TestDb, create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;

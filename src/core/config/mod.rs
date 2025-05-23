@@ -31,9 +31,16 @@ impl Default for Config {
 impl Config {
     /// Populates the Config's fields from the environment variables.
     pub fn load_from_env() -> crate::core::config::Result<Self> {
+        let mut database_url = get_env_on_load("RECIPYA_DATABASE_URL")?
+            .trim_end_matches('/')
+            .to_string();
+        if !database_url.ends_with("/recipya") {
+            database_url.push_str("/recipya");
+        }
+
         Ok(Self {
             base_url: get_env_on_load("RECIPYA_BASE_URL")?,
-            database_url: get_env_on_load("RECIPYA_DATABASE_URL")?,
+            database_url: database_url.into(),
             is_autologin: get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true",
             is_demo: get_env_on_load("RECIPYA_IS_DEMO")? == "true",
             is_no_signups: get_env_on_load("RECIPYA_IS_NO_SIGNUPS")? == "true",
