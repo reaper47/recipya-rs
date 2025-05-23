@@ -26,7 +26,10 @@ pub enum Error {
     #[from]
     Jobs(tokio_cron_scheduler::JobSchedulerError),
     #[from]
+    Repository(diesel::result::Error),
+    #[from]
     SetGlobalDefault(tracing::subscriber::SetGlobalDefaultError),
+
     #[from]
     Config(crate::core::config::Error),
     #[from]

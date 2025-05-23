@@ -34,7 +34,7 @@ impl HttpClient for MockHttpClient {
         Ok(content)
     }
 
-    fn get_bytes(&self, url: &str) -> Result<Bytes> {
+    fn get_bytes(&self, _url: &str) -> Result<Bytes> {
         Ok(Bytes::new())
     }
 }

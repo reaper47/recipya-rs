@@ -760,7 +760,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: i64) {
         drop(tx);
 
         let mut processed = 0;
-        while let Some(p) = rx.recv().await {
+        while let Some(_p) = rx.recv().await {
             processed += 1;
             let title = format!("Fetched {processed}/{}", fetch_ctx.total);
             state

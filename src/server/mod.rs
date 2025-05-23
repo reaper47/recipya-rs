@@ -155,6 +155,8 @@ impl AppState {
 
 #[cfg(test)]
 pub mod test_utils {
+    use std::env;
+
     use axum::Router;
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
@@ -174,8 +176,7 @@ pub mod test_utils {
     use crate::core::model::user::{User, UserForCreate};
     use crate::core::model::{Recipe, RecipeDetails};
     use crate::core::repository::ModelManager;
-    use crate::core::repository::pool::make_db_pool;
-    use crate::core::scraper::Scraper;
+    use crate::core::repository::make_db_pool;
     use crate::core::scraper::tests::MockHttpClient;
     use crate::core::support::fs::MockFs;
     use crate::core::support::token::AUTH_TOKEN;
@@ -195,8 +196,16 @@ pub mod test_utils {
 
     /// The database URL used for connecting to the database in test environments.
     pub(crate) fn test_database_url() -> String {
-        std::env::var("RECIPYA_DATABASE_TEST_URL")
-            .unwrap_or("postgres://postgres:postgres@localhost:5432/recipya_test".into())
+        let base = env::var("RECIPYA_DATABASE_URL")
+            .expect("Environment variable 'RECIPYA_DATABASE_URL' to be set")
+            .trim_end_matches('/')
+            .to_string();
+
+        if base.ends_with("/recipya_test") {
+            base
+        } else {
+            format!("{}/recipya_test", base)
+        }
     }
 
     /// Provides a default config for the tests.
@@ -223,7 +232,6 @@ pub mod test_utils {
             use diesel_async::RunQueryDsl;
 
             let (db_name, db_url) = generate_db().await?;
-
             let conn = make_db_pool(&test_database_url()).await?;
             sql_query(format!("CREATE DATABASE \"{db_name}\";"))
                 .execute(&mut conn.get().await?)
@@ -377,6 +385,7 @@ pub mod test_utils {
     /// Generates a unique test database name and URL.
     pub async fn generate_db() -> Result<(String, String)> {
         let mut db_url = test_database_url();
+
         let mut db_name = String::from("recipya_test");
         let db_id = Uuid::new_v4().to_string();
         db_url.push_str(db_id.as_str());

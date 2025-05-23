@@ -1,11 +1,11 @@
-pub mod cache;
 mod error;
-pub mod pool;
+mod pool;
+
+pub mod cache;
 pub mod schema;
 
 pub use error::{Error, Result};
-
-use crate::core::repository::pool::{DbPool, make_db_pool};
+pub use pool::{DbPool, PgPooledConn, create_database_if_not_exists, make_db_pool};
 
 /// `ModelManager` is a structure responsible for managing database interactions.
 #[derive(Clone)]

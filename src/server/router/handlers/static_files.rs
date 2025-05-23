@@ -55,6 +55,6 @@ pub fn copy_to_fs(src: &str, dest: PathBuf) -> Result<()> {
         error!("Failed to write content to file: {err}");
         Error::Fs
     })?;
-    
+
     Ok(())
 }

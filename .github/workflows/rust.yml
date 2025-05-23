@@ -30,8 +30,6 @@ jobs:
           ssl: "false"
         id: postgres
 
-      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya;"
-
       - name: Check for diesel CLI
         id: diesel_check
         run: |

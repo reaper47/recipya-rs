@@ -145,7 +145,6 @@ mod tests {
         use axum_test::TestResponse;
 
         use crate::core::model::Recipe;
-        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_must_be_logged_in, assert_ws_message,
             build_server_ws, create_app_state,
@@ -224,7 +223,6 @@ mod tests {
         use axum::http::HeaderValue;
         use axum_test::TestResponse;
         use diesel::internal::derives::multiconnection::chrono::Duration;
-        use diesel_async::RunQueryDsl;
         use uuid::Uuid;
 
         use crate::core::model::recipe::{
@@ -828,7 +826,6 @@ mod tests {
         use super::*;
 
         use crate::core::model::Recipe;
-        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, create_app_state,
         };
@@ -897,7 +894,6 @@ mod tests {
 
         use crate::core::model::Recipe;
         use crate::core::model::recipe::{RecipeForCreate, VideoForCreate};
-        use crate::server::AppState;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_html, assert_must_be_logged_in, assert_ws_message,
             build_server_ws, create_app_state,
@@ -1229,7 +1225,6 @@ mod tests {
             ToolForCreate, ToolRecipe, VideoForCreate,
         };
         use crate::core::model::{Recipe, RecipeDetails};
-        use crate::server::AppState;
         use crate::server::test_utils::{assert_must_be_logged_in, create_app_state};
 
         const BASE_URI: &str = "/recipes/add/manual";
@@ -1632,7 +1627,6 @@ mod tests {
     mod tests_recipe_categories {
         use super::*;
         use crate::core::model::Recipe;
-        use crate::server::AppState;
         use crate::server::router::recipes_routes::RecipeCategoryForm;
         use crate::server::test_utils::{
             a_complete_recipe_for_create, assert_ws_message, build_server_ws, create_app_state,

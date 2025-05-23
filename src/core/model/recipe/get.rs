@@ -7,8 +7,7 @@ use uuid::Uuid;
 
 use crate::core::model::recipe::{Nutrition, RecipeDetails, Times, ToolRecipe, Video, VideoRecipe};
 use crate::core::model::{Error, Recipe, Result};
-use crate::core::repository::pool::PgPooledConn;
-use crate::core::repository::{ModelManager, schema};
+use crate::core::repository::{ModelManager, PgPooledConn, schema};
 use crate::server::router::SearchParams;
 
 impl Recipe {
@@ -269,7 +268,6 @@ async fn fetch_recipe_details(
 mod tests {
     use super::*;
 
-    use crate::server::AppState;
     use crate::server::test_utils::TestDb;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;

@@ -644,7 +644,7 @@ pub enum DefinedTermOrTextOrUrl {
 impl From<DefinedTermOrTextOrUrl> for String {
     fn from(value: DefinedTermOrTextOrUrl) -> Self {
         match value {
-            DefinedTermOrTextOrUrl::DefinedTerm(term) => "".into(),
+            DefinedTermOrTextOrUrl::DefinedTerm(_term) => "".into(),
             DefinedTermOrTextOrUrl::Text(text) => text,
             DefinedTermOrTextOrUrl::Url(url) => url.to_string(),
         }
@@ -1751,7 +1751,7 @@ impl From<TextOrTextObject> for String {
     fn from(value: TextOrTextObject) -> Self {
         match value {
             TextOrTextObject::Text(s) if !s.trim().is_empty() => s,
-            TextOrTextObject::TextObject(obj) => String::new(),
+            TextOrTextObject::TextObject(_obj) => String::new(),
             _ => String::new(),
         }
     }

@@ -97,7 +97,6 @@ mod tests {
     use super::*;
 
     use crate::core::repository::schema;
-    use crate::server::AppState;
     use crate::server::test_utils::{TestDb, a_complete_recipe_for_create, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
