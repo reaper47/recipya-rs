@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use super::Result;
 use crate::core::config::DataDir;
-use crate::core::repository::pool::PgPooledConn;
+use crate::core::repository::PgPooledConn;
 use crate::core::repository::{ModelManager, schema};
 use crate::core::support::fs::FsSupport;
 

@@ -1,6 +1,13 @@
+use std::fs::File;
+use std::io::Write;
+use std::path::PathBuf;
+
 use axum::http::{StatusCode, Uri, header};
 use axum::response::IntoResponse;
 use rust_embed::Embed;
+use tracing::error;
+
+use crate::server::{Error, Result};
 
 #[derive(Embed)]
 #[folder = "web/public/"]
@@ -35,4 +42,19 @@ pub async fn static_files_handler(uri: Uri) -> impl IntoResponse {
         .trim_start_matches('/');
 
     StaticFile(path).into_response()
+}
+
+/// Copies an embedded asset over to the file system.
+pub fn copy_to_fs(src: &str, dest: PathBuf) -> Result<()> {
+    let Some(asset) = Asset::get(src) else {
+        return Err(Error::AssetCouldNotCopy);
+    };
+
+    let mut file = File::create_new(dest).map_err(|_| Error::FileExists)?;
+    file.write_all(asset.data.trim_ascii()).map_err(|err| {
+        error!("Failed to write content to file: {err}");
+        Error::Fs
+    })?;
+
+    Ok(())
 }

@@ -1,6 +1,7 @@
+use maud::{Markup, html};
+
 use crate::server::templates::data::PaginationData;
 use crate::server::templates::helpers::mul_all;
-use maud::{Markup, html};
 
 /// Renders the pagination strip.
 pub(super) fn pagination(p: &PaginationData) -> Markup {
@@ -9,8 +10,9 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                 "footer footer-center bg-base-200 pb-12 p-2 md:pb-2 text-base-content gap-2"
                 @if p.is_hidden { " hidden" }
             }
+            style="grid-auto-flow: row;"
             onload=(format!("updateAddCookbookUrl({})", p.selected))
-            {@if p.htmx.is_swap { r##"hx-swap-oob="outerHTML:#pagination""##}} {
+            hx-swap-oob=[if p.htmx.is_swap { Some("outerHTML:#pagination") } else { None }] {
             div class="join gap-0" {
                 @if p.selected == 1 {
                     button class="join-item btn btn-disabled" { "«" }
@@ -128,7 +130,7 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
             }
             div class="text-center" {
                 p class="text-sm" {
-                    "Showing"
+                    "Showing "
                     span class="font-medium" {
                         @if p.selected == p.prev {
                             (format!("{}", p.selected))
@@ -136,7 +138,7 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                             (format!("{}", mul_all(vec![p.selected - 1, p.results_per_page]) + 1))
                         }
                     }
-                    "to"
+                    " to "
                     span class="font-medium" {
                         @if p.selected == p.num_pages {
                             (p.num_results)
@@ -144,10 +146,10 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                             (mul_all(vec![p.selected, p.results_per_page]))
                         }
                     }
-                    "of" span #search-count class="font-medium" {
+                    " of " span #search-count class="font-medium" {
                         (p.num_results)
                     }
-                    "results"
+                    " results"
                 }
             }
         }

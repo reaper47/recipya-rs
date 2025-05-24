@@ -1,7 +1,7 @@
 mod data;
 mod error;
 
-pub use data::DataDir;
+pub use data::{DataDir, get_base_dir};
 pub use error::{Error, Result};
 
 use std::env;
@@ -30,10 +30,22 @@ impl Default for Config {
 
 impl Config {
     /// Populates the Config's fields from the environment variables.
-    pub fn load_from_env() -> crate::core::config::Result<Self> {
+    pub fn load_from_env() -> Result<Self> {
+        let database_url = {
+            let base = get_env_on_load("RECIPYA_DATABASE_URL")?
+                .trim_end_matches('/')
+                .to_string();
+
+            if base.ends_with("/recipya") {
+                base
+            } else {
+                format!("{}/recipya", base)
+            }
+        };
+
         Ok(Self {
             base_url: get_env_on_load("RECIPYA_BASE_URL")?,
-            database_url: get_env_on_load("RECIPYA_DATABASE_URL")?,
+            database_url,
             is_autologin: get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true",
             is_demo: get_env_on_load("RECIPYA_IS_DEMO")? == "true",
             is_no_signups: get_env_on_load("RECIPYA_IS_NO_SIGNUPS")? == "true",
@@ -41,7 +53,7 @@ impl Config {
     }
 }
 
-fn get_env_on_load(name: &'static str) -> crate::core::config::Result<String> {
+fn get_env_on_load(name: &'static str) -> Result<String> {
     match env::var(name) {
         Ok(v) => {
             let trimmed = v.trim_matches('"');

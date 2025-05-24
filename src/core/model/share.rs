@@ -100,7 +100,6 @@ mod tests {
         use super::*;
         use diesel::internal::derives::multiconnection::chrono;
 
-        use crate::server::AppState;
         use crate::server::test_utils::{TestDb, create_app_state};
 
         #[tokio::test]
@@ -193,7 +192,6 @@ mod tests {
 
     mod tests_fetch_by_link {
         use super::*;
-        use crate::server::AppState;
         use crate::server::test_utils::{TestDb, create_app_state};
 
         #[tokio::test]

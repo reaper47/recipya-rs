@@ -1,4 +1,6 @@
 name: Rust
+permissions:
+  contents: read
 
 on:
   push:
@@ -7,6 +9,8 @@ on:
     branches: [ "main" ]
 
 env:
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -14,11 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: stable
+      - uses: Swatinem/rust-cache@v2
 
       - uses: ikalnytskyi/action-setup-postgres@v7
         with:
@@ -30,9 +30,21 @@ jobs:
           ssl: "false"
         id: postgres
 
-      - run: psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE DATABASE recipya;"
+      - name: Check for diesel CLI
+        id: diesel_check
+        run: |
+          if command -v diesel >/dev/null 2>&1; then
+            echo "Diesel already installed."
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Diesel not installed."
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
-      - run: cargo install diesel_cli --no-default-features --features postgres
+      - name: Install diesel_cli
+        if: steps.diesel_check.outputs.exists == 'false'
+        run: cargo install diesel_cli --no-default-features --features postgres
+
       - run: diesel migration run
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
@@ -42,7 +54,7 @@ jobs:
           node-version: latest
 
       - name: Test
-        run: cargo test
+        run: cargo test --locked
         env:
           RECIPYA_DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
@@ -53,8 +65,6 @@ jobs:
           RECIPYA_EMAIL_SMTP_HOST: "smtp.gmail.com"
           RECIPYA_EMAIL_SMTP_USERNAME: "example@gmail.com"
           RECIPYA_EMAIL_SMTP_PASSWORD: "abcd abcd bcd abcd"
-          RECIPYA_EMAIL_SENDGRID_API_KEY: "YOUR_API_KEY"
           RECIPYA_AUTH_PASSWORD_KEY: "CKUGFOD9_2Qf6Pn3ZFRYgPYb8ht4vKqEG9PGMXTB7497bT0367DjoaD6ydFnEVaIRda0kKeBZVCT5Hb62m2sCA"
           RECIPYA_AUTH_TOKEN_KEY: "MN2z8mZgRymm0iojkVm1zkhnAXgXyhRdl6R2ODWST8LOIGS1ImV6sUvEDUncc0izt9xCzju2sGcEdGfSj23B0w"
           RECIPYA_AUTH_TOKEN_DURATION_SEC: "1800"
-

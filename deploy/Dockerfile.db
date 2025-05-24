@@ -1,0 +1,10 @@
+FROM postgres:17-bookworm
+
+RUN apt-get update
+
+RUN apt-get update \
+      && apt-get install -y curl \
+      && apt-get -y install postgresql-17-pgvector postgresql-17-cron
+
+COPY deploy/init-db.sh /docker-entrypoint-initdb.d/init-db.sh
+RUN chmod +x /docker-entrypoint-initdb.d/init-db.sh

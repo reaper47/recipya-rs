@@ -10,7 +10,7 @@ use crate::core::support::fs::FsSupport;
 use crate::server::templates::data::{Data, ViewRecipe};
 use crate::server::templates::helpers::cut_string;
 use crate::server::templates::icons::{
-    icon_arrows_up_down, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
+    icon_bars_3, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
     icon_document_duplicate, icon_ellipsis_vertical, icon_information_circle, icon_pencil,
     icon_plus_circle, icon_printer, icon_share, icon_trash,
 };
@@ -354,7 +354,7 @@ fn render_add_recipe_manual(
                                 h2 class="font-semibold text-center pb-2" {
                                     span .underline { "Tools" }
                                 }
-                                ol #tools-list class="pl-4 list-decimal" {
+                                ol #tools-list class="pl-4" {
                                     @if let Some(v) = view {
                                         @if !v.recipe_details.tools.is_empty() {
                                             @for tool in &v.recipe_details.tools {
@@ -372,7 +372,7 @@ fn render_add_recipe_manual(
                                     span .underline { "Ingredients" }
                                     sup .text-red-600 { "*" }
                                 }
-                                ol #ingredients-list class="pl-4 list-decimal" {
+                                ol #ingredients-list class="pl-4" {
                                     @if let Some(v) = view {
                                          @if !v.recipe_details.ingredients.is_empty() {
                                             @for (_section, ingredients) in &v.recipe_details.ingredients {
@@ -449,7 +449,10 @@ fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
     html! {
         li class="pb-2" {
             div class="grid grid-flow-col items-center" {
-                label {
+                label class="flex gap-1" {
+                    div class="inline-block h-4 cursor-move handle mt-1" {
+                        (icon_bars_3())
+                    }
                     input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full"
                         value=(
                             tool
@@ -471,9 +474,6 @@ fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
                                 set input to (closest <li/>).querySelector('input') then
                                 set input.value to '' then
                                 input.focus()")) { "-" }
-                    div class="inline-block h-4 cursor-move handle" {
-                        (icon_arrows_up_down())
-                    }
                 }
             }
         }
@@ -484,7 +484,10 @@ fn add_ingredient(name: &str) -> Markup {
     html! {
         li .pb-2 {
             div class="grid grid-flow-col items-center" {
-                label {
+                label class="flex gap-1" {
+                    div class="inline-block h-4 cursor-move handle mt-1" {
+                        (icon_bars_3())
+                    }
                     input required type="text" name="ingredient" value=(name)
                         placeholder="1 cup of chopped onions"
                         class="input input-bordered input-sm w-full"
@@ -502,9 +505,6 @@ fn add_ingredient(name: &str) -> Markup {
                                 set input to (closest <li/>).querySelector('input') then
                                 set input.value to '' then
                                 input.focus()")) { "-" }
-                    div class="inline-block h-4 cursor-move handle" {
-                        (icon_arrows_up_down())
-                    }
                 }
             }
         }
@@ -535,7 +535,7 @@ fn add_instruction(name: &str) -> Markup {
                                 set input.value to '' then
                                 input.focus()")) { "-" }
                     div class="h-4 cursor-move handle grid place-content-center" {
-                        (icon_arrows_up_down())
+                        (icon_bars_3())
                     }
                 }
             }
@@ -1300,7 +1300,7 @@ fn render_edit_recipe(
                                 h2 class="font-semibold text-center pb-2" {
                                     span .underline { "Tools" }
                                 }
-                                ol #tools-list class="pl-4 list-decimal" {
+                                ol #tools-list class="pl-4" {
                                     @if !view.recipe_details.tools.is_empty() {
                                         @for tool in &view.recipe_details.tools {
                                             (add_tool(Some(tool)))
@@ -1314,7 +1314,7 @@ fn render_edit_recipe(
                                     span .underline { "Ingredients" }
                                     sup .text-red-600 { "*" }
                                 }
-                                ol #ingredients-list class="pl-4 list-decimal" {
+                                ol #ingredients-list class="pl-4" {
                                      @if !view.recipe_details.ingredients.is_empty() {
                                         @for (_section, ingredients) in &view.recipe_details.ingredients {
                                             @for ing in ingredients.iter() {
@@ -1482,13 +1482,13 @@ pub fn list_recipes(
                                     "/data/images/Placeholders/placeholder.recipe.webp".into()
                                 }
                             })
-                            alt=(format!("Image for the {} recipe", view.recipe_details.recipe.name));
+                            alt=(format!("Image of the {} recipe", view.recipe_details.recipe.name));
 
                         div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex" {
                             p class="p-2 text-sm" {
                                 @match &view.recipe_details.recipe.description {
                                     Some(description) => (cut_string(description, 127)),
-                                    None => "No recipe description."
+                                    None => ""
                                 }
 
                             }
@@ -1616,7 +1616,7 @@ fn view_recipe_helper(
     let recipe = &recipe_details.recipe;
 
     Ok(html! {
-        @if matches!(&data.share, Some(share) if share.is_shared) {
+        @if !matches!(&data.share, Some(share) if share.is_shared) {
              dialog #share-dialog .modal {
                 div class="modal-box w-4/5 sm:w-96" {
                     div #share-dialog-result {}
@@ -1650,7 +1650,6 @@ fn view_recipe_helper(
                                             form autocomplete="off" _="on submit halt the event" class="print:hidden" {
                                                 fieldset class="fieldset" {
                                                     legend { "Servings" }
-                                                    label class="label" for="yield" { "Servings" }
                                                     input #yield
                                                         type="number"
                                                         min="1"
@@ -1681,10 +1680,18 @@ fn view_recipe_helper(
                                                 a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
                                                 p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
                                            } @else {
-                                               p class="text-center" { "Source: " (source) }
+                                                p class="text-center" {
+                                                    "Source:"
+                                                    br;
+                                                    (source)
+                                                }
                                            }
                                         } @else {
-                                            p class="text-center" { "Source: Unknown" }
+                                            p class="text-center" {
+                                                "Source:"
+                                                br;
+                                                "Unknown"
+                                            }
                                         }
                                     }
                                 }
@@ -2215,22 +2222,22 @@ fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
             div class="col-span-6 border-gray-700 px-4 py-2 border-y md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
                     h2 class="font-semibold text-center underline pb-1" { "Tools" }
-                    ul class="md:pb-2" {
+                    ul class="grid gap-1" {
                         @for tool in recipe.tools.iter() {
-                            li class="hover:bg-gray-100 dark:hover:bg-gray-700" {
+                            li class="grid py-1 hover:bg-gray-100 dark:hover:bg-gray-700" {
                                 label class="label justify-start" {
                                     input type="checkbox" class="checkbox";
-                                    span class="pl-2" { (tool.quantity.to_string()) (tool.name) }
+                                    span class="pl-2" { (tool.quantity.to_string()) " " (tool.name) }
                                 }
                             }
                         }
                     }
                 }
                 h2 class="font-semibold text-center underline pb-1" { "Ingredients" }
-                ul {
+                ul class="grid gap-1" {
                     @for (_section, ingredients) in recipe.ingredients.iter() {
                         @for ingredient in ingredients.iter() {
-                             li class="hover:bg-gray-100 dark:hover:bg-gray-700" {
+                             li class="grid py-1 hover:bg-gray-100 dark:hover:bg-gray-700" {
                                 label class="label justify-start" {
                                     input type="checkbox" class="checkbox";
                                     span class="pl-2" { (ingredient) }

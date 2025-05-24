@@ -4,7 +4,7 @@
 
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {
-    themes: light --default, dark --prefersdark, cupcake;
+    themes: light --default, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, valentine, garden, forest --prefersdark, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, automn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk;
 }
 
 @tailwind base;

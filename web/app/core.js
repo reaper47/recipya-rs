@@ -270,9 +270,18 @@ function downloadFile(data, filename, mime) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    document.body.addEventListener("showMessageHtmx", function (event) {
-        const {action, message, status, title} = event.detail;
-        showToast(title, message, status, action);
+    document.body.addEventListener("htmx:wsAfterMessage", function (event) {
+        try {
+            const data = event.detail.message;
+            const parsed = typeof data === "string" ? JSON.parse(data) : data;
+
+            if (parsed.showMessageHtmx) {                
+                const {action, message, status, title} = parsed.showMessageHtmx;
+                showToast(title, message, status, action);
+            }
+        } catch (err) {
+            console.error(`Failed to parse WebSocket message: ${err}`);
+        }        
     })
 });
 

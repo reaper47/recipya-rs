@@ -9,7 +9,6 @@ pub struct Config {
     pub smtp_username: String,
     pub smtp_password: String,
     pub email_admin: String,
-    pub sendgrid_api_key: String,
 }
 
 /// Gets the current email `Config` struct. It will be initialized if not already done.
@@ -27,7 +26,6 @@ impl Config {
             smtp_username: get_env("RECIPYA_EMAIL_SMTP_USERNAME").unwrap_or_default(),
             smtp_password: get_env("RECIPYA_EMAIL_SMTP_PASSWORD").unwrap_or_default(),
             email_admin: get_env("RECIPYA_EMAIL_ADMIN").unwrap_or_default(),
-            sendgrid_api_key: get_env("RECIPYA_EMAIL_SENDGRID_API_KEY").unwrap_or_default(),
         }
     }
 
@@ -37,10 +35,5 @@ impl Config {
             && !self.smtp_host.is_empty()
             && !self.smtp_username.is_empty()
             && !self.smtp_password.is_empty()
-    }
-
-    /// Returns whether the email is configured for use with SendGrid.
-    pub fn is_sendgrid(&self) -> bool {
-        !self.email_admin.is_empty() && !self.sendgrid_api_key.is_empty()
     }
 }
