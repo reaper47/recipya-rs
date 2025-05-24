@@ -5,12 +5,14 @@
 
 use std::io::Read;
 
-use nom::combinator::map;
 use nom::multi::many1;
 use nom::{IResult, Parser};
+use nom::bytes::complete::take_until;
+use nom::combinator::map;
 
 use crate::core::integrations::{Error, Result};
-use crate::core::scraper::schema::{AtType, RecipeCategory, RecipeSchema};
+use crate::core::integrations::apps::helpers::{Ingredient, Instruction};
+use crate::core::scraper::schema::{RecipeCategory, RecipeSchema};
 
 struct RecipeComponents<'a> {
     software_version: &'a str,
@@ -24,10 +26,71 @@ struct RecipeComponents<'a> {
     erfasst: &'a str,
 }
 
-impl From<RecipeComponents<_>> for RecipeSchema {
+impl From<RecipeComponents<'_>> for RecipeSchema {
     fn from(r: RecipeComponents<'_>) -> Self {
         Self {
-            
+            at_context: Default::default(),
+            at_type: None,
+            at_graph: None,
+            at_id: None,
+            aggregate_rating: None,
+            alternate_name: None,
+            article_body: None,
+            audio: None,
+            author: None,
+            award: None,
+            citation: None,
+            comment: None,
+            comment_count: None,
+            content_rating: None,
+            contributor: None,
+            cook_time: None,
+            cooking_method: None,
+            content_location: None,
+            country_of_origin: None,
+            credit_text: None,
+            date_created: None,
+            date_modified: None,
+            date_published: None,
+            description: None,
+            estimated_cost: None,
+            headline: None,
+            identifier: None,
+            image: None,
+            in_language: None,
+            is_accessible_for_free: false,
+            is_based_on: None,
+            is_part_of: None,
+            keywords: None,
+            location_created: None,
+            main_entity_of_page: None,
+            name: None,
+            nutrition: None,
+            perform_time: None,
+            potential_action: None,
+            prep_time: None,
+            publisher: None,
+            recipe_category: Default::default(),
+            recipe_cuisine: None,
+            recipe_ingredient: None,
+            recipe_instructions: None,
+            recipe_yield: Default::default(),
+            review: None,
+            same_as: None,
+            step: None,
+            suitable_for_diet: vec![],
+            supply: None,
+            text: None,
+            tool: None,
+            total_time: None,
+            total_yield: None,
+            thumbnail: None,
+            thumbnail_url: None,
+            translation_of_work: None,
+            url: None,
+            video: None,
+            work_example: None,
+            work_translation: None,
         }
     }
 }
@@ -48,13 +111,41 @@ where
 fn parse_recipes(input: &str) -> Result<Vec<RecipeComponents>> {
     many1(recipe)
         .parse(input)
-        .map(|(_, recipes)| recipes.into_iter().flatten().collect())
+        .map(|(_, recipes)| recipes.into_iter().collect())
         .map_err(|err| Error::Parse(err.to_string()))
 }
 
-fn recipe(input: &str) -> IResul<&str, RecipeComponents> {
-    
+fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+    map(
+        (
+            header,
+            title,
+        ),
+        |(header, title)| {
+            RecipeComponents {
+                software_version: "",
+                title,
+                category: vec![],
+                r#yield: "",
+                ingredients: vec![],
+                instructions: vec![],
+                keywords: vec![],
+                author: "",
+                erfasst: "",
+            }
+        },
+    )
+        .parse(input)
 }
+
+fn header(input: &str) -> IResult<&str, &str> {
+    take_until("<RECIPE>").parse(input)
+}
+
+fn title(input: &str) -> IResult<&str, &str> {
+    take_until("<RECIPE>").parse(input)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -313,12 +404,15 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     }
 
     mod results {
+        use crate::core::integrations::helpers::{sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type, to_yield};
+        use crate::core::model::recipe::Sections;
+        use crate::core::scraper::schema::AtType;
         use super::*;
 
         pub fn kalorio_v4_03() -> Vec<RecipeSchema> {
             vec![RecipeSchema {
                 at_context: Default::default(),
-                at_type: ome(AtType::Recipe),
+                at_type: Some(AtType::Recipe),
                 author: to_organization_type("Petra Holzapfel".into()), 
                 is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()), 
                 keywords: to_defined_text(["Käse", "Kuchen"].join(",")), 
@@ -354,7 +448,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 ..Default::default()
             }, RecipeSchema {
                 at_context: Default::default(),
-                at_type: ome(AtType::Recipe),
+                at_type: Some(AtType::Recipe),
                 author: to_organization_type("Jochen Herz".into()), 
                 is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()), 
                 keywords: to_defined_text(["Elsass", "Hefe"].join(",")), 
@@ -393,7 +487,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 ..Default::default()
             }, RecipeSchema {
                 at_context: Default::default(),
-                at_type: ome(AtType::Recipe),
+                at_type: Some(AtType::Recipe),
                 author: to_organization_type("Jochen 'Nunz' Herz".into()), 
                 is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()), 
                 keywords: to_defined_text("Karotten".into()), 
@@ -424,7 +518,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 ..Default::default()
             }, RecipeSchema {
                 at_context: Default::default(),
-                at_type: ome(AtType::Recipe),
+                at_type: Some(AtType::Recipe),
                 author: to_organization_type("Jochen 'Nunz' Herz".into()), 
                 is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()), 
                 keywords: to_defined_text("Zwiebeln".into()), 
