@@ -4,8 +4,8 @@ use crate::core::model::recipe::Sections;
 
 #[derive(Debug)]
 pub(super) enum Instruction<'a> {
-    Line(&'a str),
-    Section(&'a str),
+    Line(Cow<'a, str>),
+    Section(Cow<'a, str>),
 }
 
 #[derive(Clone, Debug)]

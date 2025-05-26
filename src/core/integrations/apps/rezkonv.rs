@@ -3,94 +3,93 @@
 //! The following versions are supported:
 //!     - 'Kalorio V4.03' nach REZKONV
 
+use std::borrow::Cow;
 use std::io::Read;
 
-use nom::multi::many1;
+use nom::branch::alt;
+use nom::bytes::complete::tag;
+use nom::bytes::streaming::take_until;
+use nom::bytes::{take_till, take_while};
+use nom::character::complete::{char, digit1, line_ending, space0, space1};
+use nom::combinator::{map, map_res, not, opt, recognize};
+use nom::multi::{many0, many1, separated_list0};
+use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
-use nom::bytes::complete::take_until;
-use nom::combinator::map;
 
+use crate::core::integrations::apps::helpers::{Ingredient, Instruction, ToSections};
+use crate::core::integrations::helpers::{
+    sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
+    to_yield,
+};
 use crate::core::integrations::{Error, Result};
-use crate::core::integrations::apps::helpers::{Ingredient, Instruction};
-use crate::core::scraper::schema::{RecipeCategory, RecipeSchema};
+use crate::core::scraper::schema::{AtType, RecipeCategory, RecipeSchema};
 
 struct RecipeComponents<'a> {
     software_version: &'a str,
     title: &'a str,
     category: Vec<&'a str>,
-    r#yield: &'a str,
+    r#yield: i16,
     ingredients: Vec<Ingredient<'a>>,
     instructions: Vec<Instruction<'a>>,
     keywords: Vec<&'a str>,
-    author: &'a str,
-    erfasst: &'a str,
+    author: Option<&'a str>,
+    erfasst: Option<&'a str>,
 }
 
 impl From<RecipeComponents<'_>> for RecipeSchema {
     fn from(r: RecipeComponents<'_>) -> Self {
+        let (category, _) = match r
+            .category
+            .into_iter()
+            .filter(|&s| !s.trim().is_empty())
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>()
+            .as_slice()
+        {
+            [first, rest @ ..] => (Some(first).cloned(), rest.to_vec()),
+            [] => (None, Vec::new()),
+        };
+
+        let (category, keywords) = match category {
+            None => match r.keywords.as_slice() {
+                [first, rest @ ..] => (first.to_string(), rest.to_vec()),
+                [] => (String::new(), Vec::new()),
+            },
+            Some(c) => (c, r.keywords),
+        };
+
         Self {
             at_context: Default::default(),
-            at_type: None,
-            at_graph: None,
-            at_id: None,
-            aggregate_rating: None,
-            alternate_name: None,
-            article_body: None,
-            audio: None,
-            author: None,
-            award: None,
-            citation: None,
-            comment: None,
-            comment_count: None,
-            content_rating: None,
-            contributor: None,
-            cook_time: None,
-            cooking_method: None,
-            content_location: None,
-            country_of_origin: None,
-            credit_text: None,
-            date_created: None,
-            date_modified: None,
-            date_published: None,
-            description: None,
-            estimated_cost: None,
-            headline: None,
-            identifier: None,
-            image: None,
-            in_language: None,
-            is_accessible_for_free: false,
-            is_based_on: None,
-            is_part_of: None,
-            keywords: None,
-            location_created: None,
-            main_entity_of_page: None,
-            name: None,
-            nutrition: None,
-            perform_time: None,
-            potential_action: None,
-            prep_time: None,
-            publisher: None,
-            recipe_category: Default::default(),
-            recipe_cuisine: None,
-            recipe_ingredient: None,
-            recipe_instructions: None,
-            recipe_yield: Default::default(),
-            review: None,
-            same_as: None,
-            step: None,
-            suitable_for_diet: vec![],
-            supply: None,
-            text: None,
-            tool: None,
-            total_time: None,
-            total_yield: None,
-            thumbnail: None,
-            thumbnail_url: None,
-            translation_of_work: None,
-            url: None,
-            video: None,
-            work_example: None,
-            work_translation: None,
+            at_type: Some(AtType::Recipe),
+            author: to_organization_type(r.author.unwrap_or_default().into()),
+            is_based_on: to_is_based_on(r.software_version.replace("(unreg.) ", "")),
+            keywords: to_defined_text(keywords.join(",")),
+            name: Some(r.title.into()),
+            recipe_category: RecipeCategory::Text(category),
+            recipe_ingredient: sections_to_vec(
+                r.ingredients
+                    .into_iter()
+                    .fold(Vec::new(), |mut acc, item| {
+                        match item {
+                            Ingredient::Line(s) if s.starts_with('-') => match acc.last_mut() {
+                                Some(Ingredient::Line(prev)) => {
+                                    *prev = Cow::Owned(format!(
+                                        "{} [{}]",
+                                        prev,
+                                        s.replace("-", "").trim()
+                                    ));
+                                }
+                                _ => acc.push(Ingredient::Line(s)),
+                            },
+                            _ => acc.push(item),
+                        }
+                        acc
+                    })
+                    .to_sections(),
+            ),
+            recipe_instructions: sections_to_itemlist(r.instructions.to_sections()),
+            recipe_yield: to_yield(r.r#yield as i64),
+            ..Default::default()
         }
     }
 }
@@ -118,40 +117,212 @@ fn parse_recipes(input: &str) -> Result<Vec<RecipeComponents>> {
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
     map(
         (
+            terminated(header, line_ending),
+            title,
+            opt(category),
+            servings,
+            many1(line_ending),
+            ingredients,
+            opt(quelle),
+            instructions,
+            keywords,
+            opt(author),
+            opt(erfasst),
+            footer,
+        ),
+        |(
             header,
             title,
-        ),
-        |(header, title)| {
+            category,
+            servings,
+            _,
+            ingredients,
+            _,
+            instructions,
+            keywords,
+            author,
+            erfasst,
+            _,
+        )| {
             RecipeComponents {
-                software_version: "",
+                software_version: header,
                 title,
-                category: vec![],
-                r#yield: "",
-                ingredients: vec![],
-                instructions: vec![],
-                keywords: vec![],
-                author: "",
-                erfasst: "",
+                category: category.unwrap_or_default(),
+                r#yield: servings,
+                ingredients,
+                instructions,
+                keywords,
+                author,
+                erfasst,
             }
         },
     )
-        .parse(input)
+    .parse(input)
 }
 
 fn header(input: &str) -> IResult<&str, &str> {
-    take_until("<RECIPE>").parse(input)
+    terminated(
+        preceded(tag("========== "), take_till(|c| c == '\n')),
+        line_ending,
+    )
+    .parse(input)
 }
 
 fn title(input: &str) -> IResult<&str, &str> {
-    take_until("<RECIPE>").parse(input)
+    delimited(
+        (space0, tag("Titel: ")),
+        take_till(|c| c == '\n'),
+        line_ending,
+    )
+    .parse(input)
 }
 
+fn category(input: &str) -> IResult<&str, Vec<&str>> {
+    delimited(
+        (space0, tag("Kategorien: ")),
+        separated_list0(
+            tag(","),
+            nom::bytes::complete::take_till(|c| c == ',' || c == '\n'),
+        ),
+        line_ending,
+    )
+    .parse(input)
+}
+
+fn servings(input: &str) -> IResult<&str, i16> {
+    map_res(
+        delimited(
+            (space0, tag("Menge: ")),
+            digit1,
+            (take_till(|c| c == '\n'), line_ending),
+        ),
+        |digits: &str| digits.parse::<i16>(),
+    )
+    .parse(input)
+}
+
+fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
+    terminated(alt((ingredients_list, ingredient_sections)), line_ending).parse(input)
+}
+
+fn ingredients_list(input: &str) -> IResult<&str, Vec<Ingredient>> {
+    many1(ingredient).parse(input)
+}
+
+fn ingredient_sections(input: &str) -> IResult<&str, Vec<Ingredient>> {
+    many1(preceded(not(stopping_section), alt((section, ingredient)))).parse(input)
+}
+
+fn stopping_section(input: &str) -> IResult<&str, &str> {
+    recognize((
+        opt(line_ending),
+        take_while(|c| c == '='),
+        tag(" QUELLE "),
+        take_while(|c| c == '='),
+        line_ending,
+    ))
+    .parse(input)
+}
+
+fn section(input: &str) -> IResult<&str, Ingredient> {
+    map(
+        delimited(
+            (
+                opt(line_ending),
+                tag("="),
+                take_while(|c| c == '='),
+                char(' '),
+            ),
+            take_until(" ="),
+            (tag(" ="), take_while(|c| c == '='), line_ending),
+        ),
+        |s| Ingredient::Section(Cow::Borrowed(s)),
+    )
+    .parse(input)
+}
+
+fn ingredient(input: &str) -> IResult<&str, Ingredient> {
+    map(
+        delimited((tag("    "), space0), take_till(|c| c == '\n'), line_ending),
+        |s: &str| {
+            Ingredient::Line(Cow::Owned(
+                s.split_whitespace().collect::<Vec<_>>().join(" "),
+            ))
+        },
+    )
+    .parse(input)
+}
+
+fn quelle(input: &str) -> IResult<&str, Vec<&str>> {
+    preceded(
+        stopping_section,
+        terminated(many1(tabbed_line), line_ending),
+    )
+    .parse(input)
+}
+
+fn tabbed_line(input: &str) -> IResult<&str, &str> {
+    delimited(space1, take_till(|c: char| c == '\n'), line_ending).parse(input)
+}
+
+fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
+    preceded(
+        not(metadata_stop),
+        map(paragraphs, |s| {
+            s.split("\n\n")
+                .map(|s| Instruction::Line(Cow::Borrowed(s)))
+                .collect()
+        }),
+    )
+    .parse(input)
+}
+
+fn paragraphs(input: &str) -> IResult<&str, &str> {
+    terminated(
+        alt((take_until("\n\n:"), take_until("\r\n\r\n:"))),
+        double_line_ending,
+    )
+    .parse(input)
+}
+
+fn metadata_stop(input: &str) -> IResult<&str, &str> {
+    recognize((tag(":"), take_while(|c| c != ':'), tag(": "))).parse(input)
+}
+
+fn double_line_ending(input: &str) -> IResult<&str, &str> {
+    recognize((line_ending, line_ending)).parse(input)
+}
+
+fn keywords(input: &str) -> IResult<&str, Vec<&str>> {
+    many0(keyword).parse(input)
+}
+
+fn keyword(input: &str) -> IResult<&str, &str> {
+    delimited(tag(":Stichworte: "), take_till(|c| c == '\n'), line_ending).parse(input)
+}
+
+fn author(input: &str) -> IResult<&str, &str> {
+    delimited(
+        tag(":Erfasser/Name: "),
+        take_till(|c| c == '\n'),
+        line_ending,
+    )
+    .parse(input)
+}
+
+fn erfasst(input: &str) -> IResult<&str, &str> {
+    delimited(tag(":Erfasst am: "), take_till(|c| c == '\n'), line_ending).parse(input)
+}
+
+fn footer(input: &str) -> IResult<&str, &str> {
+    recognize((many1(line_ending), tag("====="), line_ending)).parse(input)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    mod tests {
+    mod test_recipes {
         use super::*;
 
         use std::io::Cursor;
@@ -404,10 +575,13 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     }
 
     mod results {
-        use crate::core::integrations::helpers::{sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type, to_yield};
+        use super::*;
+        use crate::core::integrations::helpers::{
+            sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
+            to_organization_type, to_yield,
+        };
         use crate::core::model::recipe::Sections;
         use crate::core::scraper::schema::AtType;
-        use super::*;
 
         pub fn kalorio_v4_03() -> Vec<RecipeSchema> {
             vec![RecipeSchema {
@@ -427,10 +601,10 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         "120 Gramm Zucker".into(),
                         "4 Eier".into(),
                         "1 Limette".into(),
-                        "1 Essl  Mehl".into(),
-                        "1 klein. Ananas [- a 1 kg]".into(),
+                        "1 Essl Mehl".into(),
+                        "1 klein. Ananas [a 1 kg]".into(),
                         "2 Essl. Rum".into(),
-                        "200 ml  Ananassaft".into(),
+                        "200 ml Ananassaft".into(),
                         "3 Essl. Vanille-Puddingpulver".into(),
                         "1 Spritzer Zitrone".into(),
                         "20 Gramm Kokosraspel".into(),
@@ -458,15 +632,15 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ("Für den Brotteig:".into(), vec![
                         "6 Essl. Mehl".into(),
                         "1/2 Teel. ; Salz".into(),
-                        "1 Prise  ; Pfeffer".into(),
+                        "1 Prise ; Pfeffer".into(),
                         "1/2 Würfel Hefe".into(),
                         "1/4 Litr. ; Wasser [(lauwarm)]".into()
                     ]),
                     ("Für den Belag".into(), vec![
-                        "250 Gramm  Quark [40% Fett]".into(),
-                        "1 Be  Saure Sahne".into(),
+                        "250 Gramm Quark [40% Fett]".into(),
+                        "1 Be Saure Sahne".into(),
                         "1/2 Teel. ; Salz".into(),
-                        "1 Prise  ; Pfeffer".into(),
+                        "1 Prise ; Pfeffer".into(),
                         "1 Zitrone".into(),
                     ]),
                     ("Für die Garnitur".into(), vec![
@@ -477,7 +651,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 ])),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     ("".into(), vec![
-                        "Zuerst den Teig vorbereiten: Mehl,Salz und Pfeffer in eine Schüssel geben. Die Hefe im Wasser auflösen und anschließend über das Mehl gießen, dabei mit einem Handmixer oder gleich mit der Hand kneten. Den Teig rühren bis er nicht mehr klebt (eventuell noch etwas mehr Mehl beimischen). Teig aus der Schüssel herrausnehmen und mit den Händen auf der Arbeitsplatte weiter verarbeiten, bis er schön geschmeidig wird. Dabei immer ein bißchen Mehl auf die Platte streuen damit der Teig nicht kleben bleibt ! Den Teig während der Zubereitung der Sauce und Garnitur ruhen lassen.".into(),
+                        "Zuerst den Teig vorbereiten: Mehl,Salz und Pfeffer in eine Schüssel geben. Die Hefe im Wasser auflösen und anschließend über das Mehl gießen, dabei mit einem Handmixer oder gleich mit der Hand kneten. Den Teig rühren bis er nicht mehr klebt (eventuell noch etwas mehr Mehl beimischen). Den Teig aus der Schüssel herrausnehmen und mit den Händen auf der Arbeitsplatte weiter verarbeiten, bis er schön geschmeidig wird. Dabei immer ein bißchen Mehl auf die Platte streuen damit der Teig nicht kleben bleibt ! Den Teig während der Zubereitung der Sauce und Garnitur ruhen lassen.".into(),
                         "Für die Sauce (Belag), den Quark, die saure Sahne, Salz und Pfeffer in einer Schüssel mischen. Damit diese Sauce einen noch sauerlicheren Geschmack bekommt, wird der Saft einer Zitrone untergerührt.".into(), 
                         "Die Zwiebeln schälen und halbieren, dann in dünne Scheiben (1 bis 2 mm dick) schneiden. Den Speck in kleine Würfel schneiden. Den Teigballen in 2 gleichgroße Hälften teilen. Jede Hälfte so dünn wie möglich ausrollen (je dünner, umso schmackhafter !). Die Teigplatten auf Backbleche mit Backpapier legen. Die Sauce dünn auftragen. Die Zwiebeln gleichmäßig darauf verteilen. Ebenso die Speckwürfel. Eventuell auch Käse dazu. (Traditioneller Flammenkuchen ist ohne Käse !)".into(), 
                         r#"Backzeit: 20 Minuten im vorgeheizten Backofen bei 200°C (oder bis der Teig an den Rändern goldbraun wird) Dazu ein Kerner Spätlese halbtrocken aus der Pfalz oder ganz einfach ein schönes elsäßisches Bier (Fischer Ambré). Und jetzt: "A güata !" wie man bei uns sagt"#.into(),
@@ -504,7 +678,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         "1/2 Teel. Zimt".into(),
                         "1/2 Zitrone (Schale davon)".into(),
                         "25 Gramm Stärkemehl".into(),
-                        "150 Gramm Puderzucker ".into(),
+                        "150 Gramm Puderzucker".into(),
                         "Zitronensaft".into(),
                     ]),
                 ])),

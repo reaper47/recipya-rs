@@ -300,7 +300,7 @@ impl From<Recipe> for RecipeSchema {
                 }),
                 ..Default::default()
             })
-                .filter(|n| !n.is_empty()),
+            .filter(|n| !n.is_empty()),
             perform_time: None,
             potential_action: None,
             prep_time,

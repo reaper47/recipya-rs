@@ -264,7 +264,7 @@ fn unit(input: &str) -> IResult<&str, &str> {
 }
 
 fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
-    many1(map(instruction, Instruction::Line)).parse(input)
+    many1(map(instruction, |s| Instruction::Line(Cow::Borrowed(s)))).parse(input)
 }
 
 fn instruction(input: &str) -> IResult<&str, &str> {

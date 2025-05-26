@@ -375,8 +375,8 @@ fn units3(input: &str) -> IResult<&str, &str> {
 
 fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
     many0(alt((
-        map(section, Instruction::Section),
-        map(instruction, Instruction::Line),
+        map(section, |s| Instruction::Section(Cow::Borrowed(s))),
+        map(instruction, |s| Instruction::Line(Cow::Borrowed(s))),
     )))
     .parse(input)
 }
