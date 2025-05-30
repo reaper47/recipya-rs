@@ -15,12 +15,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/paprika.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/data/integrations/example1.paprikarecipes" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/kalorio.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mealmaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/rezkonv.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,6 +105,7 @@
     "Cargo.Test core::config::tests::test_is_no_signups_err.executor": "Run",
     "Cargo.Test core::config::tests::test_is_no_signups_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1.executor": "Run",
+    "Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1.executor": "Run",
     "Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_kalorio_v4_03.executor": "Debug",
     "Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok.executor": "Debug",
     "Cargo.Test core::model::recipe::create::tests::test_create_duplicate_cuisines_err.executor": "Run",
@@ -321,7 +326,7 @@
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
     "git-widget-placeholder": "#120 on 42-implement-post-recipesaddimport",
-    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/src/core/jobs",
+    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/tests/data/integrations",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -345,11 +350,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tests/data/integrations" />
       <recent name="$PROJECT_DIR$/src/core/jobs" />
       <recent name="$PROJECT_DIR$/src/core/scraper" />
       <recent name="$PROJECT_DIR$/src/core/email" />
       <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/src/core/support" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/core/support" />
@@ -363,7 +368,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_kalorio_v4_03">
+  <component name="RunManager" selected="Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -385,6 +390,23 @@
     <configuration name="Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="buildProfileId" value="test" />
       <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::cookml::tests::test_recipes::test_recipes1 -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test core::integrations::apps::paprika::tests::test_recipes::test_example1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::paprika::tests::test_recipes::test_example1 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -451,38 +473,21 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1" />
       <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
       <item itemvalue="Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" />
       <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
       <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok" />
-      <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1" />
         <item itemvalue="Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" />
         <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
         <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_some_fields_are_lowercase_ok" />
         <item itemvalue="Cargo.Test core::model::recipe::create::tests::test_create_bare_minimum_ok" />
-        <item itemvalue="Cargo.Test server::router::recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
       </list>
     </recent_temporary>
   </component>
@@ -529,6 +534,11 @@
           <url>file://$PROJECT_DIR$/src/core/model/recipe/update.rs</url>
           <line>97</line>
           <option name="timeStamp" value="177" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/core/integrations/apps/paprika.rs</url>
+          <line>115</line>
+          <option name="timeStamp" value="182" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -576,12 +576,8 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
 
     mod results {
         use super::*;
-        use crate::core::integrations::helpers::{
-            sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
-            to_organization_type, to_yield,
-        };
+
         use crate::core::model::recipe::Sections;
-        use crate::core::scraper::schema::AtType;
 
         pub fn kalorio_v4_03() -> Vec<RecipeSchema> {
             vec![RecipeSchema {

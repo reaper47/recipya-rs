@@ -25,6 +25,8 @@ pub enum Error {
     #[from]
     Io(std::io::Error),
     #[from]
+    Paprika(libpaprika::Error),
+    #[from]
     NomStr(nom::Err<nom::error::Error<&'static str>>),
     #[from]
     RecipeMD(recipemd::Error),

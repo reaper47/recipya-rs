@@ -17,7 +17,7 @@ axum = { version = "0.8.4", features = ["multipart", "ws"] }
 axum-htmx = "0.7.0"
 base64 = "0.22.1"
 clap = { version = "4.5.38", features = ["derive"] }
-cooklang = "0.16.0"
+cooklang = "0.16.1"
 derive_more = { version = "2.0.1", features = ["from", "display"] }
 diesel = { version = "2.2.10", features = ["postgres", "chrono", "serde_json", "uuid"] }
 diesel-async = { version = "0.5.2", features = ["postgres", "bb8", "async-connection-wrapper"] }
@@ -43,7 +43,7 @@ postgres_rustls = "0.1.2"
 rand = "0.9.1"
 recipemd = "0.2.0"
 regex = "1.11.1"
-reqwest = { version = "0.12.15", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
+reqwest = { version = "0.12.18", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
 rust-embed = { version = "8.7.2", features = ["axum-ex"] }
 rustls = { version = "0.23.27", default-features = false, features = ["ring"] }
 scraper = "0.23.1"
@@ -66,6 +66,7 @@ uuid = { version = "1.17.0", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 webp = "0.3.0"
 whatlang = "0.16.4"
+libpaprika = { version = "0.4.1", default-features = false }
 
 [dev-dependencies]
 axum-test = { version = "17.2.0", features = ["ws"] }
