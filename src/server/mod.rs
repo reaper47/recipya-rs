@@ -155,13 +155,14 @@ impl AppState {
 
 #[cfg(test)]
 pub mod test_utils {
-    use std::env;
-
     use axum::Router;
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
     use diesel::internal::derives::multiconnection::chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use diesel::{Connection, sql_query};
+    use std::env;
+    use std::fs::File;
+    use std::io::{Cursor, Read};
     use std::sync::Arc;
     use tower_cookies::{Cookie, CookieManagerLayer};
     use tracing::error;
@@ -639,5 +640,14 @@ pub mod test_utils {
         res.assert_status_see_other();
         res.assert_header("Location", "/auth/login");
         Ok(())
+    }
+
+    /// Opens a data test file and returns its contents as a `Cursor`.
+    pub fn open_test_file(filename: &str) -> Cursor<Vec<u8>> {
+        let path = format!("./tests/data/{filename}");
+        let mut file = File::open(path).expect("File to exist");
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf).expect("Failed to read file");
+        Cursor::new(buf)
     }
 }

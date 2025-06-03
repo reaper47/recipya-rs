@@ -67,6 +67,7 @@ validator = { version = "0.20.0", features = ["derive"] }
 webp = "0.3.0"
 whatlang = "0.16.4"
 libpaprika = { version = "0.4.1", default-features = false }
+zip = "4.0.0"
 
 [dev-dependencies]
 axum-test = { version = "17.2.0", features = ["ws"] }

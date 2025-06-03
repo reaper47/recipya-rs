@@ -32,6 +32,8 @@ pub enum Error {
     RecipeMD(recipemd::Error),
     #[from]
     Serde(serde_json::Error),
+    #[from]
+    Zip(zip::result::ZipError),
 }
 
 impl_display_as_debug!(Error);

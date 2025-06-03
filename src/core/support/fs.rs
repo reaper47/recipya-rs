@@ -207,7 +207,7 @@ impl FsSupport for AppFs {
 
     async fn upload_to_temp(&self, content: Bytes) -> Result<PathBuf> {
         let file_uuid = Uuid::new_v4();
-        let temp = temp_dir().join(&file_uuid.to_string());
+        let temp = temp_dir().join(file_uuid.to_string());
         tokio::fs::write(&temp, content).await.map_err(|err| {
             error!("Error uploading to temporary directory: {err}");
             Error::UploadFile

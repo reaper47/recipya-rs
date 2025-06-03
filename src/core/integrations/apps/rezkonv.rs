@@ -2,6 +2,7 @@
 //!
 //! The following versions are supported:
 //!     - 'Kalorio V4.03' nach REZKONV
+//!     - Recipe via Cookmate [REZKONV Export Format]
 
 use std::borrow::Cow;
 use std::io::Read;
@@ -10,8 +11,8 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::bytes::streaming::take_until;
 use nom::bytes::{take_till, take_while};
-use nom::character::complete::{char, digit1, line_ending, space0, space1};
-use nom::combinator::{map, map_res, not, opt, recognize};
+use nom::character::complete::{char, digit1, line_ending, not_line_ending, space0, space1};
+use nom::combinator::{complete, map, map_res, not, opt, peek, recognize, rest};
 use nom::multi::{many0, many1, separated_list0};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
@@ -38,7 +39,7 @@ struct RecipeComponents<'a> {
 
 impl From<RecipeComponents<'_>> for RecipeSchema {
     fn from(r: RecipeComponents<'_>) -> Self {
-        let (category, _) = match r
+        let (category, keywords) = match r
             .category
             .into_iter()
             .filter(|&s| !s.trim().is_empty())
@@ -46,35 +47,47 @@ impl From<RecipeComponents<'_>> for RecipeSchema {
             .collect::<Vec<_>>()
             .as_slice()
         {
-            [first, rest @ ..] => (Some(first).cloned(), rest.to_vec()),
-            [] => (None, Vec::new()),
-        };
-
-        let (category, keywords) = match category {
-            None => match r.keywords.as_slice() {
-                [first, rest @ ..] => (first.to_string(), rest.to_vec()),
+            [first, rest @ ..] => (
+                first.to_string(),
+                rest.iter().map(|s| s.trim().to_string()).collect(),
+            ),
+            [] => match r.keywords.as_slice() {
+                [first, rest @ ..] => (
+                    first.to_string(),
+                    rest.iter().copied().map(str::to_string).collect::<Vec<_>>(),
+                ),
                 [] => (String::new(), Vec::new()),
             },
-            Some(c) => (c, r.keywords),
         };
 
         Self {
             at_context: Default::default(),
             at_type: Some(AtType::Recipe),
             author: to_organization_type(r.author.unwrap_or_default().into()),
-            is_based_on: to_is_based_on(r.software_version.replace("(unreg.) ", "")),
+            is_based_on: to_is_based_on(
+                r.software_version
+                    .replace("(unreg.) ", "")
+                    .trim_start_matches("Recipe via")
+                    .trim_end_matches("=====")
+                    .trim()
+                    .into(),
+            ),
             keywords: to_defined_text(keywords.join(",")),
             name: Some(r.title.into()),
             recipe_category: RecipeCategory::Text(category),
             recipe_ingredient: sections_to_vec(
                 r.ingredients
                     .into_iter()
+                    .filter(|i| match i {
+                        Ingredient::Line(s) => !s.is_empty(),
+                        Ingredient::Section(s) => !s.is_empty(),
+                    })
                     .fold(Vec::new(), |mut acc, item| {
                         match item {
                             Ingredient::Line(s) if s.starts_with('-') => match acc.last_mut() {
                                 Some(Ingredient::Line(prev)) => {
                                     *prev = Cow::Owned(format!(
-                                        "{} [{}]",
+                                        "{}, {}",
                                         prev,
                                         s.replace("-", "").trim()
                                     ));
@@ -128,7 +141,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
             keywords,
             opt(author),
             opt(erfasst),
-            footer,
+            (footer, many0(line_ending)),
         ),
         |(
             header,
@@ -162,7 +175,16 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
 
 fn header(input: &str) -> IResult<&str, &str> {
     terminated(
-        preceded(tag("========== "), take_till(|c| c == '\n')),
+        alt((
+            preceded(
+                peek(tag("========== ")),
+                preceded(tag("========== "), not_line_ending),
+            ),
+            preceded(
+                peek(tag("===== ")),
+                preceded(tag("===== "), not_line_ending),
+            ),
+        )),
         line_ending,
     )
     .parse(input)
@@ -202,7 +224,11 @@ fn servings(input: &str) -> IResult<&str, i16> {
 }
 
 fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
-    terminated(alt((ingredients_list, ingredient_sections)), line_ending).parse(input)
+    terminated(
+        alt((ingredients_list, ingredient_sections)),
+        many1(line_ending),
+    )
+    .parse(input)
 }
 
 fn ingredients_list(input: &str) -> IResult<&str, Vec<Ingredient>> {
@@ -243,7 +269,11 @@ fn section(input: &str) -> IResult<&str, Ingredient> {
 
 fn ingredient(input: &str) -> IResult<&str, Ingredient> {
     map(
-        delimited((tag("    "), space0), take_till(|c| c == '\n'), line_ending),
+        delimited(
+            alt(((tag("    "), space0), (tag("  "), space0))),
+            take_till(|c| c == '\n'),
+            line_ending,
+        ),
         |s: &str| {
             Ingredient::Line(Cow::Owned(
                 s.split_whitespace().collect::<Vec<_>>().join(" "),
@@ -278,10 +308,18 @@ fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
 }
 
 fn paragraphs(input: &str) -> IResult<&str, &str> {
-    terminated(
-        alt((take_until("\n\n:"), take_until("\r\n\r\n:"))),
-        double_line_ending,
-    )
+    alt((
+        recognize(terminated(
+            alt((
+                complete(take_until("\n\n:")),
+                complete(take_until("\n\n\n\n\n=====")),
+                complete(take_until("\r\n\r\n:")),
+                complete(take_until("\r\n\r\n\r\n\r\n\r\n=====")),
+            )),
+            double_line_ending,
+        )),
+        recognize(rest),
+    ))
     .parse(input)
 }
 
@@ -330,6 +368,17 @@ mod tests {
         type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
         #[test]
+        fn test_cookmate() -> Result<()> {
+            let file = files::cookmate();
+            let buf = Cursor::new(file);
+
+            let got = parse(buf)?;
+
+            pretty_assertions::assert_eq!(got, results::cookmate());
+            Ok(())
+        }
+
+        #[test]
         fn test_kalorio_v4_03() -> Result<()> {
             let file = files::kalorio_v4_03();
             let buf = Cursor::new(file);
@@ -342,6 +391,199 @@ mod tests {
     }
 
     mod files {
+        pub fn cookmate<'a>() -> &'a str {
+            r##"===== Recipe via Cookmate [REZKONV Export Format] =====
+
+      Titel: Aunt Julia's Paella
+Kategorien: Pork/ham, Poultry, Fish/sea, Spanish
+      Menge: 6
+
+      1    Chicken, cut up (Or 4
+           -thighs 1 3/4 oz Jar
+           
+           -and legs) 2 ts Capers,
+           
+           Salt and pepper to thaste
+           -4 oz Jar pimento-stiffed
+           -green
+      1 lb Lean pork, cut into 1-inch
+           --olives
+    1/2 lb Calamari (squid), cleaned
+      1    md Onion, minced -and
+           -sliced
+      2    Toes garlic, minced 5 c
+           -Water
+           Cut into 1 1/2 inch
+           -julliene 4 Chicken
+           
+      1 ts Saffron threads
+    1/2 lg Bell pepper 2 1/2 c Uncle
+           
+      1 lg Carrot -uncooked
+      1    Stalk celery 3 Hard boiled
+           
+      1    c Frozen green peas 1/2 lb
+           -Unpeeled shrimp (heads
+           -on)
+  1 1/2 lb Peeled shrimp Oil for
+           -frying
+
+
+{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }
+In a large electric skillet or paella pan, brown the chicken pieces (that
+have been seasoned with salt and pepper) in a little oil. Remove from the
+pan. Add the pork cubes to the drippinfs and brown for about 5 minutes.
+Remove from the pan. To the pan drippings (add a little more oil if
+necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry
+for 2 minutes.
+Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork.
+Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the
+bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.
+Gently stir the rice into the skillet mixture. Slowly pour in enough of
+the bouillon mixture to cover the rice and chicken pieces. Cover and cook
+over low heat for about 20 minutes. Uncover and decoaratively arrange the
+egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary
+to keep the rice moist.
+Cover and steam for another 10 minutes until the shrimp are cooked and the
+rice is tender. (Paella should be moist but not wet!) Place the pan on a
+hot pad on the serving table and let everyone help themselves.
+Serve with a mixed green salad, red ripe tomatoes and some French bread.
+Also mix up a pitcher of Sangria and enjoy!
+Serves: 12.
+[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]
+Posted by Fred Peters
+
+
+
+
+
+=====
+
+===== Recipe via Cookmate [REZKONV Export Format] =====
+
+      Titel: Ausgezogenes Mehlmus
+Kategorien: German
+      Menge: 4
+
+     80 g  Flour (3/4 cup) 8 Egg
+           
+      1 l  Milk (approx. 1 qt) -peaks
+    120 g  Sugar (1/2 cup plus 1/2
+           
+      1 pn Salt
+      8    Egg yolks, whisked to a 50
+           
+           -froth
+
+
+From Central Swabia.
+From grandmother's more thrifty times; rarely encountered today.
+Combine the flour and a little milk, and stir until smooth. Gradually add
+the remainder of the milk, the sugar and salt. Bring to a boil. Remove the
+pot from the heat, add the grated lemon peel. Carefully fold in the egg
+yolk froth and beaten egg whites. Pour the mixture into a buttered
+casserole dish and bake at medium heat for 20 minutes.
+Serves 4.
+From: D'SCHWAEBISCH' KUCHE' by Aegidius Kolb and Leonhard Lidel, Allgaeuer
+Zeitungsverlag, Kempten. 1976. (Translation/Conversion: Karin Brewer)
+Posted by: Karin Brewer, Cooking Echo, 8/92
+
+
+
+
+
+=====
+
+===== Recipe via Cookmate [REZKONV Export Format] =====
+
+      Titel: Austrian Bread Dumplings
+Kategorien: Ethnic, Breads
+      Menge: 6
+
+      4 oz Dry bread, diced Salt and
+           -pepper
+    1/2 oz (1 Tbsp) butter or lard 1
+           
+      1    Egg -(parsley, chervil,
+    1/2    c Milk -marjoram) -
+      3 oz (3/4 cup) flour
+
+
+Tbsp chopped fresh herbs (parsley, chervil, marjoram) - optional, but
+a great improvement
+You will need a frying pan, a large and a small bowl, and a saucepan of
+water or soup. Fry the diced bread lightly in the fat in a frying pan.
+Meanwhile, mix the egg and the milk in a small bowl. Tip the contents of
+the frying pan into a large bowl, and pour the egg and milk over all. Stir
+in the flour, and season with salt and pepper. Add the herbs, if using.
+You may need more milk to make a soft dough. Allow it to stand for 1/2 an
+hour.
+Dip your hand into cold water and roll the mixture into a dozen small
+balls. Put a pot of salted water on to boil, if there isn't a simmering
+soup pot waiting. Drop little balls of dough into the boiling salted water
+or the soup. Poach them for 10 to 15 minutes, until they are light and
+firm and well risen.
+Yield: 12 dumplings Time: 1 hour
+Notes: You may include chopped fried bacon or cubed pork cracklings in the
+mixture. Leaving out flour will result in a lighter dumpling.
+From: THE OLD WORLD KITCHEN - THE RICH TRADITION OF EUROPEAN PEASANT
+COOKING by Elisabeth Luard, ISBN 0-553-05219-5 Posted by: Karin Brewer,
+Cooking Echo, 7/92
+
+
+
+
+
+=====
+
+===== Recipe via Cookmate [REZKONV Export Format] =====
+
+      Titel: Authentic Italian Bread
+Kategorien: Italian, Breads
+      Menge: 2
+
+      1 ts Active dry yeast or 1/3
+           
+           -small cake (6 grams)
+           -fresh 2/3 c Milk at room
+           -temperature
+      1    c (135 grams) unbleached
+      1    Scant tsp. malt syrup
+           
+
+
+This takes 2 days but is worth the wait. Makes 2 round loaves Starter
+Stir the yeast and malt into the water; let stand until foamy, about 10
+minutes. Stir in the milk and beat in the flour with a rubber spatula or
+wooden spoon about 100 strokes until smooth. Cover with plastic wrap and
+let stand until bubbly, at least 4 hours but preferably overnight.
+Dough 2 cups water, at room temperature 6 1/4 cups (860 grams) unbleached
+all-purpose flour 1 T. salt Cornmeal
+Mix the starter and the water in a mixer until the starter is well broken
+up. Add the flour and salt and mix for 2 to 3 minutes at low speed. The
+dough will be smooth but won't pull away from the side of the bowl. Change
+to the dough hook and knead at medium speed, scraping down the side of the
+bowl as necessary, until the dough is elastic but slightly sticky, 3 to 4
+minutes. Finish kneading by hand on a floured work surface.
+First rise Place in a well-oiled bowl, cover tightly with plastic wrap, and
+let rise until doubled, about 1 1/2 hours. The dough is ready when it is
+very bubbled and blistered.
+Shaping and second rise Cut the dough in half on a floured surface and
+shape into 2 round loaves. Place on an oiled cookie sheet sprinkled with
+cornmeal. Cover and let rise till doubled, about 1 hour.
+Baking Preheat oven to 400 degrees F. Bake about 1 hour and cool on racks.
+To get a really good crust spray the loaves with water 3 times in the first
+minutes of baking.
+
+
+
+
+
+=====
+
+"##
+        }
+
         pub fn kalorio_v4_03<'a>() -> &'a str {
             r##"========== 'Kalorio V4.03' (unreg.) nach REZKONV
 
@@ -579,6 +821,108 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
 
         use crate::core::model::recipe::Sections;
 
+        pub fn cookmate() -> Vec<RecipeSchema> {
+            vec![RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                keywords: to_defined_text(["Poultry", "Fish/sea", "Spanish"].join(",")),
+                name: Some("Aunt Julia's Paella".into()),
+                recipe_category: RecipeCategory::Text("Pork/ham".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "1 Chicken, cut up (Or 4, thighs 1 3/4 oz Jar, and legs) 2 ts Capers,".into(),
+                        "Salt and pepper to thaste, 4 oz Jar pimentostiffed, green".into(),
+                        "1 lb Lean pork, cut into 1-inch, olives".into(),
+                        "1/2 lb Calamari (squid), cleaned".into(),
+                        "1 md Onion, minced -and, sliced".into(),
+                        "2 Toes garlic, minced 5 c, Water".into(),
+                        "Cut into 1 1/2 inch, julliene 4 Chicken".into(),
+                        "1 ts Saffron threads".into(),
+                        "1/2 lg Bell pepper 2 1/2 c Uncle".into(),
+                        "1 lg Carrot -uncooked".into(),
+                        "1 Stalk celery 3 Hard boiled".into(),
+                        "1 c Frozen green peas 1/2 lb, Unpeeled shrimp (heads, on)".into(),
+                        "1 1/2 lb Peeled shrimp Oil for, frying".into(),
+                    ])
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant } In a large electric skillet or paella pan, brown the chicken pieces (that have been seasoned with salt and pepper) in a little oil. Remove from the pan. Add the pork cubes to the drippinfs and brown for about 5 minutes. Remove from the pan. To the pan drippings (add a little more oil if necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry for 2 minutes. Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork. Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the bouillon cubes and saffron. Let it stand for 5 minutes until dissolved. Gently stir the rice into the skillet mixture. Slowly pour in enough of the bouillon mixture to cover the rice and chicken pieces. Cover and cook over low heat for about 20 minutes. Uncover and decoaratively arrange the egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary to keep the rice moist. Cover and steam for another 10 minutes until the shrimp are cooked and the rice is tender. (Paella should be moist but not wet!) Place the pan on a hot pad on the serving table and let everyone help themselves. Serve with a mixed green salad, red ripe tomatoes and some French bread. Also mix up a pitcher of Sangria and enjoy! Serves: 12. [ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ] Posted by Fred Peters".into(),
+                    ])
+                ])),
+                recipe_yield: to_yield(6),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                name: Some("Ausgezogenes Mehlmus".into()),
+                recipe_category: RecipeCategory::Text("German".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "80 g Flour (3/4 cup) 8 Egg".into(),
+                        "1 l Milk (approx. 1 qt) -peaks".into(),
+                        "120 g Sugar (1/2 cup plus 1/2".into(),
+                        "1 pn Salt".into(),
+                        "8 Egg yolks, whisked to a 50, froth".into(),
+                    ])
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "From Central Swabia. From grandmother's more thrifty times; rarely encountered today. Combine the flour and a little milk, and stir until smooth. Gradually add the remainder of the milk, the sugar and salt. Bring to a boil. Remove the pot from the heat, add the grated lemon peel. Carefully fold in the egg yolk froth and beaten egg whites. Pour the mixture into a buttered casserole dish and bake at medium heat for 20 minutes. Serves 4. From: D'SCHWAEBISCH' KUCHE' by Aegidius Kolb and Leonhard Lidel, Allgaeuer Zeitungsverlag, Kempten. 1976. (Translation/Conversion: Karin Brewer) Posted by: Karin Brewer, Cooking Echo, 8/92".into(),  
+                    ])
+                ])),
+                recipe_yield: to_yield(4),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                keywords: to_defined_text("Breads".into()),
+                name: Some("Austrian Bread Dumplings".into()),
+                recipe_category: RecipeCategory::Text("Ethnic".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "4 oz Dry bread, diced Salt and, pepper".into(),
+                        "1/2 oz (1 Tbsp) butter or lard 1".into(),
+                        "1 Egg -(parsley, chervil,".into(),
+                        "1/2 c Milk -marjoram) -".into(),
+                        "3 oz (3/4 cup) flour".into(),
+                    ])
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Tbsp chopped fresh herbs (parsley, chervil, marjoram) - optional, but a great improvement You will need a frying pan, a large and a small bowl, and a saucepan of water or soup. Fry the diced bread lightly in the fat in a frying pan. Meanwhile, mix the egg and the milk in a small bowl. Tip the contents of the frying pan into a large bowl, and pour the egg and milk over all. Stir in the flour, and season with salt and pepper. Add the herbs, if using. You may need more milk to make a soft dough. Allow it to stand for 1/2 an hour. Dip your hand into cold water and roll the mixture into a dozen small balls. Put a pot of salted water on to boil, if there isn't a simmering soup pot waiting. Drop little balls of dough into the boiling salted water or the soup. Poach them for 10 to 15 minutes, until they are light and firm and well risen. Yield: 12 dumplings Time: 1 hour Notes: You may include chopped fried bacon or cubed pork cracklings in the mixture. Leaving out flour will result in a lighter dumpling. From: THE OLD WORLD KITCHEN - THE RICH TRADITION OF EUROPEAN PEASANT COOKING by Elisabeth Luard, ISBN 0-553-05219-5 Posted by: Karin Brewer, Cooking Echo, 7/92".into(), 
+                    ])
+                ])),
+                recipe_yield: to_yield(6),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                keywords: to_defined_text("Breads".into()),
+                name: Some("Authentic Italian Bread".into()),
+                recipe_category: RecipeCategory::Text("Italian".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "1 ts Active dry yeast or 1/3, small cake (6 grams), fresh 2/3 c Milk at room, temperature".into(),
+                        "1 c (135 grams) unbleached".into(),
+                        "1 Scant tsp. malt syrup".into(),
+                    ])
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "This takes 2 days but is worth the wait. Makes 2 round loaves Starter Stir the yeast and malt into the water; let stand until foamy, about 10 minutes. Stir in the milk and beat in the flour with a rubber spatula or wooden spoon about 100 strokes until smooth. Cover with plastic wrap and let stand until bubbly, at least 4 hours but preferably overnight. Dough 2 cups water, at room temperature 6 1/4 cups (860 grams) unbleached all-purpose flour 1 T. salt Cornmeal Mix the starter and the water in a mixer until the starter is well broken up. Add the flour and salt and mix for 2 to 3 minutes at low speed. The dough will be smooth but won't pull away from the side of the bowl. Change to the dough hook and knead at medium speed, scraping down the side of the bowl as necessary, until the dough is elastic but slightly sticky, 3 to 4 minutes. Finish kneading by hand on a floured work surface. First rise Place in a well-oiled bowl, cover tightly with plastic wrap, and let rise until doubled, about 1 1/2 hours. The dough is ready when it is very bubbled and blistered. Shaping and second rise Cut the dough in half on a floured surface and shape into 2 round loaves. Place on an oiled cookie sheet sprinkled with cornmeal. Cover and let rise till doubled, about 1 hour. Baking Preheat oven to 400 degrees F. Bake about 1 hour and cool on racks. To get a really good crust spray the loaves with water 3 times in the first minutes of baking.".into(),
+                    ])
+                ])),
+                recipe_yield: to_yield(2),
+                ..Default::default()
+
+            }]
+        }
+
         pub fn kalorio_v4_03() -> Vec<RecipeSchema> {
             vec![RecipeSchema {
                 at_context: Default::default(),
@@ -598,7 +942,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         "4 Eier".into(),
                         "1 Limette".into(),
                         "1 Essl Mehl".into(),
-                        "1 klein. Ananas [a 1 kg]".into(),
+                        "1 klein. Ananas, a 1 kg".into(),
                         "2 Essl. Rum".into(),
                         "200 ml Ananassaft".into(),
                         "3 Essl. Vanille-Puddingpulver".into(),
@@ -630,10 +974,10 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         "1/2 Teel. ; Salz".into(),
                         "1 Prise ; Pfeffer".into(),
                         "1/2 Würfel Hefe".into(),
-                        "1/4 Litr. ; Wasser [(lauwarm)]".into()
+                        "1/4 Litr. ; Wasser, (lauwarm)".into()
                     ]),
                     ("Für den Belag".into(), vec![
-                        "250 Gramm Quark [40% Fett]".into(),
+                        "250 Gramm Quark, 40% Fett".into(),
                         "1 Be Saure Sahne".into(),
                         "1/2 Teel. ; Salz".into(),
                         "1 Prise ; Pfeffer".into(),
@@ -642,7 +986,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ("Für die Garnitur".into(), vec![
                         "5 groß. Zwiebel".into(),
                         "125 Gramm Durchwachsener Speck".into(),
-                        "125 Gramm Reibkäse [(optional)]".into(),
+                        "125 Gramm Reibkäse, (optional)".into(),
                     ])
                 ])),
                 recipe_instructions: sections_to_itemlist(Sections::from([
@@ -705,11 +1049,11 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         "6 groß. Zwiebeln".into(),
                         "75 Gramm Butter".into(),
                         "1 Be Joghurt".into(),
-                        "1 Be Saure Sahne [oder Schmand]".into(),
+                        "1 Be Saure Sahne, oder Schmand".into(),
                         "3 Eier".into(),
-                        "Kümmel [gemahlen]".into(),
+                        "Kümmel, gemahlen".into(),
                         "Pfeffer".into(),
-                        "Paprika [edelsüss]".into(),
+                        "Paprika, edelsüss".into(),
                         "1 Teel. Speisestärke".into(),
                     ]),
                 ])),

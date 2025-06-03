@@ -1,9 +1,15 @@
-use std::io::Read;
+use std::collections::HashMap;
+use std::env::temp_dir;
+use std::fs::File;
+use std::io;
+use std::io::{Read, Seek};
+use std::path::Path;
 
 use humantime::parse_duration;
 use serde::Deserialize;
 use tracing::{error, warn};
 use url::Url;
+use uuid::Uuid;
 
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
@@ -12,7 +18,7 @@ use crate::core::integrations::{Error, Result};
 use crate::core::model::recipe::Sections;
 use crate::core::scraper::schema::{
     AggregateRating, AtType, ClipOrVideoObject, CommentType, DefinedTermOrTextOrUrl,
-    ImageObjectOrUrl, NumberOrText, RecipeCategory, RecipeSchema, VideoObjectType,
+    ImageObjectOrUrl, ImageObjectType, NumberOrText, RecipeCategory, RecipeSchema, VideoObjectType,
 };
 use crate::core::support::strings::extract_number;
 
@@ -96,11 +102,16 @@ impl From<Recipe> for RecipeSchema {
             },
             description: to_text(r.description),
             image: Some(
-                vec![r.imageurl]
+                vec![r.imageurl, r.imagepath]
                     .into_iter()
-                    .filter_map(|img| match Url::parse(&img) {
-                        Ok(url) => Some(ImageObjectOrUrl::Url(url)),
-                        Err(_) => None,
+                    .filter(|s| !s.is_empty())
+                    .map(|img| match Url::parse(&img) {
+                        Ok(url) => ImageObjectOrUrl::Url(url),
+                        Err(_) => ImageObjectOrUrl::ImageObject(Box::new(ImageObjectType {
+                            at_type: AtType::ImageObject,
+                            at_id: Some(img.to_string()),
+                            ..Default::default()
+                        })),
                     })
                     .collect::<Vec<_>>(),
             )
@@ -177,6 +188,73 @@ where
     Ok(root.recipes.into_iter().map(RecipeSchema::from).collect())
 }
 
+pub fn parse_backup<R>(r: R) -> Result<Vec<RecipeSchema>>
+where
+    R: Read + Seek,
+{
+    let mut archive = zip::ZipArchive::new(r)?;
+    let mut recipes = Vec::new();
+    let mut images = HashMap::new();
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let file_name = file.name().to_string();
+        let ext = Path::new(&file_name)
+            .extension()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap_or_default();
+
+        match ext {
+            "xml" => {
+                let r = parse(file)?;
+                recipes.extend(r);
+            }
+            "jpg" => {
+                let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
+                let mut tmp_file = File::create(tmp_path.clone())?;
+                io::copy(&mut file, &mut tmp_file)?;
+
+                if let Some(name) = Path::new(&file_name).file_name().and_then(|s| s.to_str()) {
+                    images.insert(name.to_string(), tmp_path);
+                } else {
+                    warn!("Could not get file name from: {file_name}");
+                }
+            }
+            _ => {
+                warn!("Unzip .mcb archive, skipping file: {file_name}");
+            }
+        }
+    }
+
+    for r in &mut recipes {
+        let Some(recipe_images) = &mut r.image else {
+            continue;
+        };
+
+        for image in recipe_images.iter_mut() {
+            let ImageObjectOrUrl::ImageObject(obj) = image else {
+                continue;
+            };
+
+            if let ImageObjectOrUrl::ImageObject(obj) = image {
+                if let Some(id) = &obj.at_id {
+                    let name = Path::new(id)
+                        .file_name()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or_default();
+                    if let Some(path) = images.get(name) {
+                        obj.at_id = Some(path.to_string_lossy().into_owned());
+                    }
+                }
+            }
+        }
+    }
+
+    println!("Found {} recipes", recipes.len());
+    Ok(recipes)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -188,22 +266,34 @@ mod tests {
 
         use std::io::Cursor;
 
-        use files::*;
-        use results::*;
-
         #[test]
         fn test_xml_ok() -> Result<()> {
-            let file = xml_file();
+            let file = files::xml_file();
             let buf = Cursor::new(file);
 
             let got = parse(buf)?;
 
-            pretty_assertions::assert_eq!(got, xml_recipes());
+            pretty_assertions::assert_eq!(got, results::xml_recipes());
+            Ok(())
+        }
+
+        #[test]
+        fn test_backup_ok() -> Result<()> {
+            let buf = files::backup();
+
+            let mut got = parse_backup(buf)?;
+
+            let want = results::xml_recipes();
+            got[4].image = want[4].image.clone();
+            pretty_assertions::assert_eq!(got[..5], want);
             Ok(())
         }
     }
 
     mod files {
+        use crate::server::test_utils::open_test_file;
+        use std::io::Cursor;
+
         pub fn xml_file<'a>() -> &'a str {
             r##"<?xml version="1.0" encoding="utf-8"?>
 <cookbook version="71">
@@ -335,7 +425,126 @@ mod tests {
 <category>Casseroles</category>
 <category>French</category>
 </recipe>
+<recipe>
+<title>August Goerg's Grilled Steak (Spiessbraten August Goerg)</title>
+<preptime></preptime>
+<cooktime></cooktime>
+<totaltime></totaltime>
+<description></description>
+<ingredient><li>1 Shallot or small onion cut 1 pn Mace</li>
+<li>-into small pieces 1 lg Steak (just over 1 lb), at</li>
+<li>Freshly ground black pepper -least 1 1/4 inches</li>
+</ingredient>
+<recipetext><li>((Note: Per Horst Scharfenberg, this recipe originated in the town of</li>
+<li>Idar-Oberstein in the 19 th century, when gemstone prospectors returning</li>
+<li>from South America created their own version of gaucho-grilled steaks. The</li>
+<li>dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))</li>
+<li></li>
+<li>Per person: thick, trimmed</li>
+<li></li>
+<li>Mix together the shallot or onion with the pepper and mace. Insert a few</li>
+<li>shallot pieces into the steak using the point of a small knife. Coat the</li>
+<li>steak with the shallot mixture, pressing it in so it will adhere.</li>
+<li></li>
+<li>Remove the loose shallot pieces and grill the steak (over a fire of oak</li>
+<li>logs, says August Goerg, from which the bark has been removed).* Take the</li>
+<li>steaks off the grill while they are still pink inside. Sprinkle them with</li>
+<li>salt.</li>
+<li></li>
+<li>*Note: A special grill is used, suspended with 3 chains from an iron</li>
+<li>tripod and constantly swinging through the flames.</li>
+<li></li>
+<li>From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon &amp;</li>
+<li>Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking</li>
+<li>Echo, 8/92</li>
+</recipetext>
+<url>MMF</url>
+<imagepath></imagepath>
+<imageurl></imageurl>
+<quantity>6 servings</quantity>
+<comments></comments>
+<nutrition></nutrition>
+<lang></lang>
+<rating>0</rating>
+<source></source>
+<video></video>
+<category>Beef</category>
+<category>German</category>
+</recipe>
+
+<recipe>
+<title>Aunt Julia's Paella</title>
+<preptime></preptime>
+<cooktime></cooktime>
+<totaltime></totaltime>
+<description></description>
+<ingredient><li>1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento</li>
+<li>-and legs) 2 ts Capers, with juice</li>
+<li>Salt and pepper to thaste 4 oz Jar pimento-stiffed green</li>
+<li>1 lb Lean pork, cut into 1-inch -olives</li>
+<li>-cubes 1/2 lb Calamari (squid), cleaned</li>
+<li>1 md Onion, minced -and sliced</li>
+<li>2 Toes garlic, minced 5 c Water</li>
+<li>Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes</li>
+<li>-strips: 1 ts Saffron threads</li>
+<li>1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,</li>
+<li>1 lg Carrot -uncooked</li>
+<li>1 Stalk celery 3 Hard boiled eggs, sliced</li>
+<li>1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)</li>
+<li>1 1/2 lb Peeled shrimp Oil for frying</li>
+</ingredient>
+<recipetext><li>{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }</li>
+<li></li>
+<li>In a large electric skillet or paella pan, brown the chicken pieces (that</li>
+<li>have been seasoned with salt and pepper) in a little oil. Remove from the</li>
+<li>pan. Add the pork cubes to the drippinfs and brown for about 5 minutes.</li>
+<li>Remove from the pan. To the pan drippings (add a little more oil if</li>
+<li>necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry</li>
+<li>for 2 minutes.</li>
+<li></li>
+<li>Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork.</li>
+<li>Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the</li>
+<li>bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.</li>
+<li></li>
+<li>Gently stir the rice into the skillet mixture. Slowly pour in enough of</li>
+<li>the bouillon mixture to cover the rice and chicken pieces. Cover and cook</li>
+<li>over low heat for about 20 minutes. Uncover and decoaratively arrange the</li>
+<li>egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary</li>
+<li>to keep the rice moist.</li>
+<li></li>
+<li>Cover and steam for another 10 minutes until the shrimp are cooked and the</li>
+<li>rice is tender. (Paella should be moist but not wet!) Place the pan on a</li>
+<li>hot pad on the serving table and let everyone help themselves.</li>
+<li></li>
+<li>Serve with a mixed green salad, red ripe tomatoes and some French bread.</li>
+<li>Also mix up a pitcher of Sangria and enjoy!</li>
+<li></li>
+<li>Serves: 12.</li>
+<li></li>
+<li>[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]</li>
+<li></li>
+<li>Posted by Fred Peters</li>
+</recipetext>
+<url>MMF</url>
+<imagepath>/storage/emulated/0/Android/data/fr.cookbook/files/Pictures/Aunt_Julias_Paella.jpg</imagepath>
+<imageurl></imageurl>
+<quantity>6 servings</quantity>
+<comments></comments>
+<nutrition></nutrition>
+<lang></lang>
+<rating>0</rating>
+<source></source>
+<video></video>
+<category>Pork/ham</category>
+<category>Poultry</category>
+<category>Fish/sea</category>
+<category>Spanish</category>
+</recipe>
 </cookbook>"##
+        }
+
+        pub fn backup() -> Cursor<Vec<u8>> {
+            open_test_file("integrations/cookmate1.mcb")
         }
     }
 
@@ -456,6 +665,115 @@ mod tests {
                         ])
                     ])),
                     recipe_yield: to_yield(4),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_accessible_for_free: false,
+                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
+                    keywords: Some(DefinedTermOrTextOrUrl::Text("German".into())),
+                    name: Some("August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()),
+                    recipe_category: RecipeCategory::Text("Beef".into()),
+                    recipe_ingredient: Some(vec![
+                        "1 Shallot or small onion cut 1 pn Mace".into(),
+                        "-into small pieces 1 lg Steak (just over 1 lb), at".into(),
+                        "Freshly ground black pepper -least 1 1/4 inches".into(),
+                    ]),
+                    recipe_instructions: sections_to_itemlist(Sections::from([
+                        ("".into(), vec![
+                            "((Note: Per Horst Scharfenberg, this recipe originated in the town of".into(),
+                            "Idar-Oberstein in the 19 th century, when gemstone prospectors returning".into(),
+                            "from South America created their own version of gaucho-grilled steaks. The".into(),
+                            "dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))".into(),
+                            "".into(),
+                            "Per person: thick, trimmed".into(),
+                            "".into(),
+                            "Mix together the shallot or onion with the pepper and mace. Insert a few".into(),
+                            "shallot pieces into the steak using the point of a small knife. Coat the".into(),
+                            "steak with the shallot mixture, pressing it in so it will adhere.".into(),
+                            "".into(),
+                            "Remove the loose shallot pieces and grill the steak (over a fire of oak".into(),
+                            "logs, says August Goerg, from which the bark has been removed).* Take the".into(),
+                            "steaks off the grill while they are still pink inside. Sprinkle them with".into(),
+                            "salt.".into(),
+                            "".into(),
+                            "*Note: A special grill is used, suspended with 3 chains from an iron".into(),
+                            "tripod and constantly swinging through the flames.".into(),
+                            "".into(),
+                            "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon &".into(),
+                            "Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking".into(),
+                            "Echo, 8/92".into(),
+                        ])
+                    ])),
+                    recipe_yield: to_yield(6),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_accessible_for_free: false,
+                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
+                    image: Some(vec![ImageObjectOrUrl::ImageObject(Box::new(ImageObjectType {
+                        at_type: AtType::ImageObject,
+                        at_id: Some("/storage/emulated/0/Android/data/fr.cookbook/files/Pictures/Aunt_Julias_Paella.jpg".into()),
+                        ..Default::default()
+                    }))]),
+                    keywords: Some(DefinedTermOrTextOrUrl::Text(["Poultry", "Fish/sea", "Spanish"].join(","))),
+                    name: Some("Aunt Julia's Paella".into()),
+                    recipe_category: RecipeCategory::Text("Pork/ham".into()),
+                    recipe_ingredient: Some(vec![
+                        "1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into(),
+                        "-and legs) 2 ts Capers, with juice".into(),
+                        "Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into(),
+                        "1 lb Lean pork, cut into 1-inch -olives".into(),
+                        "-cubes 1/2 lb Calamari (squid), cleaned".into(),
+                        "1 md Onion, minced -and sliced".into(),
+                        "2 Toes garlic, minced 5 c Water".into(),
+                        "Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into(),
+                        "-strips: 1 ts Saffron threads".into(),
+                        "1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into(),
+                        "1 lg Carrot -uncooked".into(),
+                        "1 Stalk celery 3 Hard boiled eggs, sliced".into(),
+                        "1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into(),
+                        "1 1/2 lb Peeled shrimp Oil for frying".into(),
+                    ]),
+                    recipe_instructions: sections_to_itemlist(Sections::from([
+                        ("".into(), vec![
+                            "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }".into(),
+                            "".into(),
+                            "In a large electric skillet or paella pan, brown the chicken pieces (that".into(),
+                            "have been seasoned with salt and pepper) in a little oil. Remove from the".into(),
+                            "pan. Add the pork cubes to the drippinfs and brown for about 5 minutes.".into(),
+                            "Remove from the pan. To the pan drippings (add a little more oil if".into(),
+                            "necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry".into(),
+                            "for 2 minutes.".into(),
+                            "".into(),
+                            "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork.".into(),
+                            "Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the".into(),
+                            "bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.".into(),
+                            "".into(),
+                            "Gently stir the rice into the skillet mixture. Slowly pour in enough of".into(),
+                            "the bouillon mixture to cover the rice and chicken pieces. Cover and cook".into(),
+                            "over low heat for about 20 minutes. Uncover and decoaratively arrange the".into(),
+                            "egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary".into(),
+                            "to keep the rice moist.".into(),
+                            "".into(),
+                            "Cover and steam for another 10 minutes until the shrimp are cooked and the".into(),
+                            "rice is tender. (Paella should be moist but not wet!) Place the pan on a".into(),
+                            "hot pad on the serving table and let everyone help themselves.".into(),
+                            "".into(),
+                            "Serve with a mixed green salad, red ripe tomatoes and some French bread.".into(),
+                            "Also mix up a pitcher of Sangria and enjoy!".into(),
+                            "".into(),
+                            "Serves: 12.".into(),
+                            "".into(),
+                            "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]".into(),
+                            "".into(),
+                            "Posted by Fred Peters".into(),
+                        ])
+                    ])),
+                    recipe_yield: to_yield(6),
                     ..Default::default()
                 },
             ]

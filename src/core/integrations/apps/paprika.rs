@@ -2,13 +2,12 @@ use std::env::temp_dir;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use base64::Engine;
 use libpaprika::{Recipe, RecipeSet};
-use rand::random;
 use tracing::error;
 use url::Url;
+use uuid::Uuid;
 
 use crate::core::integrations::Result;
 use crate::core::integrations::helpers::{
@@ -26,11 +25,10 @@ pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read,
 {
-    let mut path = temp_dir();
-    path.push(format!("example-{}.paprikarecipes", random::<u64>()));
-
     let mut content = Vec::new();
     r.read_to_end(&mut content)?;
+
+    let path = temp_dir().join(format!("example-{}.paprikarecipes", Uuid::new_v4()));
     let mut file = File::create(path.clone())?;
     file.write_all(content.as_slice())?;
 
@@ -81,14 +79,10 @@ impl From<&Recipe> for RecipeSchema {
                     .ok()
             })
             .filter_map(|bytes| {
-                let timestamp = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .map(|d| d.as_millis())
-                    .unwrap_or_else(|_| random::<u128>());
                 let path = format!(
                     "{}/{}.image",
                     temp_dir().to_str().unwrap_or_default(),
-                    timestamp
+                    Uuid::new_v4()
                 );
                 match File::create(path.clone()) {
                     Ok(mut file) => {
@@ -188,15 +182,11 @@ mod tests {
     }
 
     mod files {
-        use std::fs::File;
-        use std::io::{Cursor, Read};
+        use crate::server::test_utils::open_test_file;
+        use std::io::Cursor;
 
         pub fn example1() -> Cursor<Vec<u8>> {
-            let path = "./tests/data/integrations/example1.paprikarecipes";
-            let mut file = File::open(path).expect("File to exist");
-            let mut buf = Vec::new();
-            file.read_to_end(&mut buf).expect("Failed to read file");
-            Cursor::new(buf)
+            open_test_file("integrations/example1.paprikarecipes")
         }
     }
 
