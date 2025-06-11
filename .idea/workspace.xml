@@ -15,18 +15,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/core/integrations/apps/mastercook.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/bigoven.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookmate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookmate.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/paprika.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/paprika.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/common.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/scraper/schema/nutrition.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mastercook.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mastercook.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,6 +102,9 @@
     "Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_backup_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_xml_ok.executor": "Run",
     "Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1.executor": "Run",
+    "Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mx2.executor": "Run",
+    "Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mxp.executor": "Run",
+    "Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1.executor": "Run",
     "Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1.executor": "Run",
     "Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_cookmate.executor": "Run",
     "Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_kalorio_v4_03.executor": "Run",
@@ -374,7 +370,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test test_recipes">
+  <component name="RunManager" selected="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -393,8 +389,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::cookmate::tests::test_recipes::test_backup_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::cookmate::tests::test_recipes::test_backup_ok -- --exact" />
+    <configuration name="Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::cookml::tests::test_recipes::test_recipes1 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -410,8 +406,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::cookmate::tests::test_recipes::test_xml_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::cookmate::tests::test_recipes::test_xml_ok -- --exact" />
+    <configuration name="Test core::integrations::apps::mastercook::tests::test_recipes::test_mx2" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mastercook::tests::test_recipes::test_mx2 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -427,8 +423,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::paprika::tests::test_recipes::test_example1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::paprika::tests::test_recipes::test_example1 -- --exact" />
+    <configuration name="Test core::integrations::apps::mastercook::tests::test_recipes::test_mxp" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mastercook::tests::test_recipes::test_mxp -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -444,8 +440,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::rezkonv::tests::test_recipes::test_cookmate" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::rezkonv::tests::test_recipes::test_cookmate -- --exact" />
+    <configuration name="Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mastercook::tests::test_recipes::test_txt1 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -480,19 +476,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
+      <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mxp" />
+      <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1" />
+      <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mx2" />
       <item itemvalue="Cargo.Test test_recipes" />
-      <item itemvalue="Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_backup_ok" />
-      <item itemvalue="Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_xml_ok" />
-      <item itemvalue="Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1" />
-      <item itemvalue="Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_cookmate" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1" />
+        <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mxp" />
+        <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
+        <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mx2" />
         <item itemvalue="Cargo.Test test_recipes" />
-        <item itemvalue="Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_backup_ok" />
-        <item itemvalue="Cargo.Test core::integrations::apps::cookmate::tests::test_recipes::test_xml_ok" />
-        <item itemvalue="Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1" />
-        <item itemvalue="Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_cookmate" />
       </list>
     </recent_temporary>
   </component>
