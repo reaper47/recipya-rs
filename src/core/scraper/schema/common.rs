@@ -1383,7 +1383,7 @@ impl<'de> Deserialize<'de> for MonetaryAmountOrText {
 
 #[derive(Debug, PartialEq)]
 pub enum NumberOrText {
-    Number(i64),
+    Number(f64),
     Text(String),
 }
 
@@ -1407,14 +1407,14 @@ impl<'de> Deserialize<'de> for NumberOrText {
             where
                 E: Error,
             {
-                Ok(Number(v))
+                Ok(Number(v as f64))
             }
 
             fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
             where
                 E: Error,
             {
-                Ok(Number(v as i64))
+                Ok(Number(v as f64))
             }
 
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>

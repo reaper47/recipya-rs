@@ -113,7 +113,7 @@ impl From<&Recipe> for RecipeSchema {
             aggregate_rating: if r.rating > 0 {
                 Some(AggregateRating {
                     at_type: AtType::AggregateRating,
-                    rating_value: Some(NumberOrText::Number(r.rating as i64)),
+                    rating_value: Some(NumberOrText::Number(r.rating as f64)),
                     ..Default::default()
                 })
             } else {

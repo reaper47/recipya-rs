@@ -7,6 +7,7 @@ pub mod cookml;
 pub mod crouton;
 mod helpers;
 pub mod kalorio;
+pub mod mastercook;
 pub mod mealmaster;
 pub mod paprika;
 pub mod recipemd;

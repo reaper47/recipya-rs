@@ -6,8 +6,8 @@ pub use error::{Error, Result};
 
 use crate::core::integrations::apps::cooklang::CookLang;
 use crate::core::integrations::apps::{
-    accuchef, cheftap, cookmate, cookml, crouton, kalorio, mealmaster, paprika, recipemd,
-    recipesage, rezkonv, saffron,
+    accuchef, cheftap, cookmate, cookml, crouton, kalorio, mastercook, mealmaster, paprika,
+    recipemd, recipesage, rezkonv, saffron,
 };
 use crate::core::scraper::schema::RecipeSchema;
 use std::io::{Read, Seek};
@@ -22,6 +22,7 @@ pub enum App {
     CookMate,
     Crouton,
     Kalorio,
+    MasterCook,
     MealMaster,
     Paprika,
     RecipeMD,
@@ -35,6 +36,9 @@ pub enum FileFormat {
     CookML,
     Json,
     MCB,
+    MX2,
+    MXP,
+    MZ2,
     MealMaster,
     Rezkonv,
     Txt,
@@ -67,6 +71,13 @@ where
         App::Kalorio => match file_format {
             FileFormat::CookML => cookml::parse(r),
             FileFormat::Txt => kalorio::parse(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
+        App::MasterCook => match file_format {
+            FileFormat::MX2 => mastercook::parse_mx2(r),
+            FileFormat::MXP => mastercook::parse_mxp(r),
+            FileFormat::MZ2 => mastercook::parse_mz2(r),
+            FileFormat::Txt => mastercook::parse_txt(r),
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::MealMaster => mealmaster::parse(r),

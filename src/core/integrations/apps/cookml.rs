@@ -235,18 +235,8 @@ impl From<Recipe> for RecipeSchema {
             } else {
                 None
             },
-            article_body: None,
             author: to_organization_type(r.head.createuser.unwrap_or_default()),
-            award: None,
-            citation: None,
-            comment: None,
-            comment_count: None,
-            content_rating: None,
-            contributor: None,
             cook_time,
-            cooking_method: None,
-            content_location: None,
-            credit_text: None,
             date_created: if created_date.is_some() {
                 Some(DateOrDateTime::DateTime(created_date.unwrap_or_default()))
             } else {
@@ -266,8 +256,6 @@ impl From<Recipe> for RecipeSchema {
                     }
                     MonetaryAmountOrText::Text(s) => !s.is_empty(),
                 }),
-            headline: None,
-            identifier: None,
             image: Some(images).filter(|v: &Vec<ImageObjectOrUrl>| !v.is_empty()),
             in_language: Some(LanguageOrText::Text(r.lang.unwrap_or_default())).filter(
                 |s| match s {
@@ -278,11 +266,7 @@ impl From<Recipe> for RecipeSchema {
                     LanguageOrText::Text(s) => !s.is_empty(),
                 },
             ),
-            is_accessible_for_free: false,
-            is_part_of: None,
             keywords: to_defined_text(keywords.unwrap_or_default().join(",")),
-            location_created: None,
-            main_entity_of_page: None,
             name: Some(r.head.title).filter(|v| !v.is_empty()),
             nutrition: Some(NutritionInformationSchema {
                 at_type: Some(AtType::NutritionInformation),
@@ -301,10 +285,7 @@ impl From<Recipe> for RecipeSchema {
                 ..Default::default()
             })
             .filter(|n| !n.is_empty()),
-            perform_time: None,
-            potential_action: None,
             prep_time,
-            publisher: None,
             recipe_category: RecipeCategory::Text(category.unwrap_or_default()),
             recipe_cuisine: Some(RecipeCuisine::Text(r.head.country.unwrap_or_default())).filter(
                 |v| match v {
@@ -317,22 +298,6 @@ impl From<Recipe> for RecipeSchema {
                 "{} {}",
                 r.head.servingqty, r.head.servingtype
             )),
-            review: None,
-            same_as: None,
-            step: None,
-            suitable_for_diet: vec![],
-            supply: None,
-            text: None,
-            tool: None,
-            total_time: None,
-            total_yield: None,
-            thumbnail: None,
-            thumbnail_url: None,
-            translation_of_work: None,
-            url: None,
-            video: None,
-            work_example: None,
-            work_translation: None,
             ..Default::default()
         }
     }
@@ -597,7 +562,7 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 at_type: Some(AtType::Recipe),
                 aggregate_rating: Some(AggregateRating {
                     at_type: AtType::Review,
-                    rating_value: Some(NumberOrText::Number(4)),
+                    rating_value: Some(NumberOrText::Number(4.0)),
                     ..Default::default()
                 }),
                 author: to_organization_type("Petra Holzapfel".into()),
@@ -673,7 +638,7 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 at_type: Some(AtType::Recipe),
                 aggregate_rating: Some(AggregateRating {
                     at_type: AtType::Review,
-                    rating_value: Some(NumberOrText::Number(5)),
+                    rating_value: Some(NumberOrText::Number(5.0)),
                     ..Default::default()
                 }),
                 author: to_organization_type("Jochen Herz".into()),

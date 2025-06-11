@@ -10,10 +10,10 @@ use crate::core::scraper::schema::RestrictedDiet::{
 use crate::core::support::strings::extract_number;
 
 /// Nutritional information about the recipe as described in the [schema](https://schema.org/NutritionInformation).
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct NutritionInformationSchema {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", default = "default_nutrition_type")]
     pub at_type: Option<AtType>,
     /// The number of calories (kcal).
     pub calories: Option<Energy>,
@@ -39,6 +39,30 @@ pub struct NutritionInformationSchema {
     pub trans_fat_content: Option<Mass>,
     /// The number of grams of unsaturated fat.
     pub unsaturated_fat_content: Option<Mass>,
+}
+
+impl Default for NutritionInformationSchema {
+    fn default() -> Self {
+        Self {
+            at_type: default_nutrition_type(),
+            calories: None,
+            carbohydrate_content: None,
+            cholesterol_content: None,
+            fat_content: None,
+            fiber_content: None,
+            protein_content: None,
+            saturated_fat_content: None,
+            serving_size: None,
+            sodium_content: None,
+            sugar_content: None,
+            trans_fat_content: None,
+            unsaturated_fat_content: None,
+        }
+    }
+}
+
+fn default_nutrition_type() -> Option<AtType> {
+    Some(AtType::NutritionInformation)
 }
 
 impl NutritionInformationSchema {
