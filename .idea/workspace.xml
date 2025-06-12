@@ -15,10 +15,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/tests/data/integrations/mastercook1.mz2" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookml.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/cookmate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/cookmate.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/helpers.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/integrations/apps/mastercook.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/integrations/apps/mastercook.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -104,6 +104,7 @@
     "Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1.executor": "Run",
     "Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mx2.executor": "Run",
     "Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mxp.executor": "Run",
+    "Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mz2.executor": "Run",
     "Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1.executor": "Run",
     "Cargo.Test core::integrations::apps::paprika::tests::test_recipes::test_example1.executor": "Run",
     "Cargo.Test core::integrations::apps::rezkonv::tests::test_recipes::test_cookmate.executor": "Run",
@@ -370,7 +371,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1">
+  <component name="RunManager" selected="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mz2">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-rs --bin recipya-rs -- server" />
@@ -440,8 +441,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mastercook::tests::test_recipes::test_txt1 -- --exact" />
+    <configuration name="Test core::integrations::apps::mastercook::tests::test_recipes::test_mz2" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mastercook::tests::test_recipes::test_mz2 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -457,8 +458,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test test_recipes" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mastercook::tests::test_recipes" />
+    <configuration name="Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package recipya-rs --bin recipya-rs core::integrations::apps::mastercook::tests::test_recipes::test_txt1 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -478,17 +479,17 @@
       <item itemvalue="Cargo.Run" />
       <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
       <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mxp" />
+      <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mz2" />
       <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1" />
       <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mx2" />
-      <item itemvalue="Cargo.Test test_recipes" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mz2" />
         <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_txt1" />
         <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mxp" />
         <item itemvalue="Cargo.Test core::integrations::apps::cookml::tests::test_recipes::test_recipes1" />
         <item itemvalue="Cargo.Test core::integrations::apps::mastercook::tests::test_recipes::test_mx2" />
-        <item itemvalue="Cargo.Test test_recipes" />
       </list>
     </recent_temporary>
   </component>
@@ -545,6 +546,11 @@
           <url>file://$PROJECT_DIR$/src/core/integrations/apps/rezkonv.rs</url>
           <line>298</line>
           <option name="timeStamp" value="211" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/core/integrations/apps/mastercook.rs</url>
+          <line>515</line>
+          <option name="timeStamp" value="254" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

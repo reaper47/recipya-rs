@@ -11,6 +11,9 @@ use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
+use crate::core::integrations::apps::helpers::{
+    extract_archive_contents, update_recipe_image_paths,
+};
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
 };
@@ -192,66 +195,9 @@ pub fn parse_backup<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read + Seek,
 {
-    let mut archive = zip::ZipArchive::new(r)?;
-    let mut recipes = Vec::new();
-    let mut images = HashMap::new();
-
-    for i in 0..archive.len() {
-        let mut file = archive.by_index(i)?;
-        let file_name = file.name().to_string();
-        let ext = Path::new(&file_name)
-            .extension()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default();
-
-        match ext {
-            "xml" => {
-                let r = parse(file)?;
-                recipes.extend(r);
-            }
-            "jpg" => {
-                let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
-                let mut tmp_file = File::create(tmp_path.clone())?;
-                io::copy(&mut file, &mut tmp_file)?;
-
-                if let Some(name) = Path::new(&file_name).file_name().and_then(|s| s.to_str()) {
-                    images.insert(name.to_string(), tmp_path);
-                } else {
-                    warn!("Could not get file name from: {file_name}");
-                }
-            }
-            _ => {
-                warn!("Unzip .mcb archive, skipping file: {file_name}");
-            }
-        }
-    }
-
-    for r in &mut recipes {
-        let Some(recipe_images) = &mut r.image else {
-            continue;
-        };
-
-        for image in recipe_images.iter_mut() {
-            let ImageObjectOrUrl::ImageObject(obj) = image else {
-                continue;
-            };
-
-            if let ImageObjectOrUrl::ImageObject(obj) = image {
-                if let Some(id) = &obj.at_id {
-                    let name = Path::new(id)
-                        .file_name()
-                        .and_then(|s| s.to_str())
-                        .unwrap_or_default();
-                    if let Some(path) = images.get(name) {
-                        obj.at_id = Some(path.to_string_lossy().into_owned());
-                    }
-                }
-            }
-        }
-    }
-
-    println!("Found {} recipes", recipes.len());
+    let archive = zip::ZipArchive::new(r)?;
+    let (mut recipes, images) = extract_archive_contents(archive)?;
+    update_recipe_image_paths(&mut recipes, &images);
     Ok(recipes)
 }
 

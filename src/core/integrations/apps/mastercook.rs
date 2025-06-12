@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Seek};
 
 use nom::IResult;
 use nom::Parser;
@@ -11,7 +11,9 @@ use nom::multi::{many1, separated_list0};
 use nom::sequence::{delimited, preceded, terminated};
 use serde::Deserialize;
 
-use crate::core::integrations::apps::helpers::{Ingredient, Instruction};
+use crate::core::integrations::apps::helpers::{
+    Ingredient, Instruction, extract_archive_contents, update_recipe_image_paths,
+};
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
     to_organization_type, to_text, to_yield,
@@ -19,8 +21,8 @@ use crate::core::integrations::helpers::{
 use crate::core::integrations::{Error, Result};
 use crate::core::model::recipe::Sections;
 use crate::core::scraper::schema::{
-    AggregateRating, AtType, Energy, Mass, NumberOrText, NutritionInformationSchema,
-    RecipeCategory, RecipeSchema,
+    AggregateRating, AtType, Energy, ImageObjectOrUrl, ImageObjectType, Mass, NumberOrText,
+    NutritionInformationSchema, RecipeCategory, RecipeSchema,
 };
 
 #[derive(Default)]
@@ -298,6 +300,13 @@ impl From<Recipe> for RecipeSchema {
             description: to_text(r.description),
             is_accessible_for_free: false,
             is_based_on: to_is_based_on(source),
+            image: (!r.img.is_empty()).then_some(vec![ImageObjectOrUrl::ImageObject(Box::new(
+                ImageObjectType {
+                    at_type: AtType::ImageObject,
+                    at_id: Some(r.img),
+                    ..Default::default()
+                },
+            ))]),
             keywords: to_defined_text(keywords.join(",")),
             name: Some(r.name),
             nutrition: parse_nutrition_schema(nutrition.split(";").collect()),
@@ -438,9 +447,12 @@ where
 /// Parses a MasterCook MZ2 file.
 pub fn parse_mz2<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    Ok(vec![])
+    let archive = zip::ZipArchive::new(r)?;
+    let (mut recipes, images) = extract_archive_contents(archive)?;
+    update_recipe_image_paths(&mut recipes, &images);
+    Ok(recipes)
 }
 
 fn parse_mxp_helper(input: &str) -> Result<Vec<RecipeComponents>> {
@@ -533,7 +545,7 @@ fn instructions_mxp(input: &str) -> IResult<&str, Vec<Instruction>> {
                 .collect()
         },
     )
-        .parse(input)
+    .parse(input)
 }
 
 fn flush_mxp(input: &str) -> IResult<&str, &str> {
@@ -687,17 +699,14 @@ fn ingredient(input: &str) -> IResult<&str, Ingredient> {
 }
 
 fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
-    map(
-        take_until("Description:"),
-        |content: &str| {
-            content
-                .split("\n\n")
-                .map(|s| s.trim())
-                .filter(|s| !s.is_empty())
-                .map(|s| Instruction::Line(Cow::Borrowed(s)))
-                .collect()
-        },
-    )
+    map(take_until("Description:"), |content: &str| {
+        content
+            .split("\n\n")
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .map(|s| Instruction::Line(Cow::Borrowed(s)))
+            .collect()
+    })
     .parse(input)
 }
 
@@ -798,6 +807,18 @@ mod tests {
         }
 
         #[test]
+        fn test_mz2() -> Result<()> {
+            let buf = files::mz2();
+
+            let mut got = parse_mz2(buf)?;
+
+            let want = results::txt();
+            got[0].image = want[0].image.clone();
+            pretty_assertions::assert_eq!(got, want);
+            Ok(())
+        }
+
+        #[test]
         fn test_txt1() -> Result<()> {
             let file = files::txt();
             let buf = Cursor::new(file);
@@ -810,6 +831,9 @@ mod tests {
     }
 
     mod files {
+        use crate::server::test_utils::open_test_file;
+        use std::io::Cursor;
+
         pub fn mx2<'a>() -> &'a str {
             r##"<?xml version="1.0" standalone="yes" encoding="ISO-8859-1"?>
 <!DOCTYPE mx2 SYSTEM "mx2.dtd">
@@ -1003,6 +1027,10 @@ I just have to pass this along to you. I don't want you to prepare this bec none
 
 
 "##
+        }
+
+        pub fn mz2() -> Cursor<Vec<u8>> {
+            open_test_file("integrations/mastercook1.mz2")
         }
 
         pub fn txt<'a>() -> &'a str {
