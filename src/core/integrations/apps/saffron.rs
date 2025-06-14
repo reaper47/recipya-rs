@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -9,6 +9,7 @@ use nom::sequence::{preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
+use crate::core::integrations::apps::helpers::read_file;
 use crate::core::integrations::error::{Error, Result};
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
@@ -101,13 +102,11 @@ impl From<SaffronRecipe> for RecipeSchema {
 }
 
 /// Parses a Saffron recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
-
+    let content = read_file(r)?;
     let recipe = parse_saffron_recipe(&content)?;
     Ok(vec![RecipeSchema::from(recipe)])
 }

@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
 use maud::{Markup, PreEscaped, html};
+use strum::IntoEnumIterator;
 use url::Url;
 
 use crate::core::config::DataDir;
+use crate::core::integrations::{App, FileFormat};
 use crate::core::model::RecipeDetails;
 use crate::core::model::recipe::{Category, Keyword, ToolRecipe};
 use crate::core::support::fs::FsSupport;
@@ -747,6 +749,7 @@ fn render_add_page() -> Markup {
                                 tr class="text-center" {
                                     th class="py-1" { "Number" }
                                     th class="py-1" { "Application" }
+                                    th class="py-1" { "File Formats" }
                                 }
                             }
                             tbody #application-results {}
@@ -775,20 +778,33 @@ fn render_add_page() -> Markup {
                 }
             }
             dialog #import-recipes-dialog .modal {
-                div .modal-box {
+                div .modal-box.w-fit {
                     form method="dialog" {
                         button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
                     }
                     h3 class="font-bold text-lg" { "Import Recipes" }
-                    form .py-4 hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" {
-                        div class="grid mb-4" {
-                            label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1" {
-                                "Choose files in the .json, .txt, .zip or other application format."
+                    form .py-4 hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()" {
+                        div {
+                            div class="grid mb-4" {
+                                label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1" {
+                                    "Select a file"
+                                }
+                                input #import-dialog-file type="file" name="file" required
+                                      accept=(FileFormat::extensions().join(","))
+                                      class="file-input";
                             }
-                            input #import-dialog-file type="file" name="files" accept=".cml,.crumb,.json,.mxp,.paprikarecipes,.txt,.zip" multiple
-                                  class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none";
+                            div {
+                                label for="app-select" class="floating-label text-sm font-semibold mb-1" {
+                                    "Select the application"
+                                }
+                                select #app-select name="app" .select {
+                                    @for app in App::iter().filter(|a| !matches!(a, App::Unknown)) {
+                                        option value=(app.to_string()) { (format!("{app:?}")) }
+                                    }
+                                }
+                            }
                         }
-                        button type="submit" class="btn btn-block btn-primary btn-sm" onclick="document.querySelector('#import-recipes-dialog').close()" {
+                        button type="submit" class="btn btn-block btn-primary btn-sm mt-4" {
                             "Submit"
                         }
                     }

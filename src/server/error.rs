@@ -15,6 +15,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[allow(unused)]
 #[derive(Debug, From)]
 pub enum Error {
+    // Auth
     ConfirmForbidden,
     ConfirmInvalidToken,
     GenerateToken,
@@ -27,6 +28,7 @@ pub enum Error {
     BadTimeFormat,
     Database,
     DeleteForbidden,
+    FailParse,
     Form,
     InvalidPayload,
     NoUser,
@@ -82,7 +84,7 @@ impl Error {
                 },
             ),
 
-            LoginFailUsernameNotFound { .. } | PwdNotMatching { .. } => {
+            LoginFailUsernameNotFound | PwdNotMatching { .. } => {
                 (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL)
             }
             LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LOGOUT_FAIL),

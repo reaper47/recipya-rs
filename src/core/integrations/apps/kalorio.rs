@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::io::{Read, Seek};
 
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until, take_while, take_while_m_n};
@@ -6,11 +7,10 @@ use nom::character::complete::{char, line_ending, space0, space1};
 use nom::character::satisfy;
 use nom::combinator::{map, opt, recognize, verify};
 use nom::multi::{many0, many1, separated_list1};
-use nom::sequence::{preceded, terminated};
+use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
-use std::io::Read;
 
-use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space};
+use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::core::integrations::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
 };
@@ -29,7 +29,7 @@ struct KalorioTextRecipe {
 
 struct RecipeComponents<'a> {
     title: &'a str,
-    author: &'a str,
+    author: Option<&'a str>,
     keywords: Vec<&'a str>,
     ingredients: Vec<Ingredient<'a>>,
     instructions: Vec<Instruction<'a>>,
@@ -43,7 +43,7 @@ impl From<RecipeComponents<'_>> for KalorioTextRecipe {
 
         Self {
             title: r.title.into(),
-            author: r.author.into(),
+            author: r.author.unwrap_or_default().into(),
             keywords: r.keywords.into_iter().map(String::from).collect(),
             instructions: r.instructions.to_sections(),
             ingredients: ingredients.to_sections(),
@@ -52,7 +52,7 @@ impl From<RecipeComponents<'_>> for KalorioTextRecipe {
     }
 }
 
-pub fn fix_ingredients<'a>(ingredients: &mut Vec<Ingredient<'a>>) {
+pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
     let mut i = 0;
     while i < ingredients.len() {
         if i >= 2 {
@@ -112,12 +112,11 @@ impl From<KalorioTextRecipe> for RecipeSchema {
 }
 
 /// Parses a Kalorio text file to extract the recipes from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
+    let content = read_file(r)?;
 
     let mut recipes = parse_txt(&content)?
         .into_iter()
@@ -155,30 +154,29 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
             title,
             ingredients,
             instructions,
-            keywords,
-            author,
+            opt(fingerprint),
+            opt(keywords),
+            opt(author),
             opt(registered_on),
             footer,
             opt(version),
         ),
-        |(_, title, ingredients, instructions, keywords, author, _, _, version)| RecipeComponents {
-            title,
-            author,
-            keywords,
-            ingredients,
-            instructions,
-            version: version.map(|s| s.trim()),
+        |(_, title, ingredients, instructions, _, keywords, author, _, _, version)| {
+            RecipeComponents {
+                title,
+                author,
+                keywords: keywords.unwrap_or_default(),
+                ingredients,
+                instructions,
+                version: version.map(|s| s.trim()),
+            }
         },
     )
     .parse(input)
 }
 
 fn title(input: &str) -> IResult<&str, &str> {
-    preceded(
-        space1,
-        terminated(take_while_m_n(1, 28, is_vchar_or_space), many1(line_ending)),
-    )
-    .parse(input)
+    preceded(space1, terminated(take_until("\n"), many1(line_ending))).parse(input)
 }
 
 fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
@@ -277,6 +275,15 @@ fn instruction(input: &str) -> IResult<&str, &str> {
     .parse(input)
 }
 
+fn fingerprint(input: &str) -> IResult<&str, &str> {
+    delimited(
+        tag(":Fingerprint: "),
+        take_until("\n"),
+        (line_ending, opt(line_ending)),
+    )
+    .parse(input)
+}
+
 fn keywords(input: &str) -> IResult<&str, Vec<&str>> {
     preceded(
         tag(":Stichworte: "),
@@ -285,7 +292,7 @@ fn keywords(input: &str) -> IResult<&str, Vec<&str>> {
                 char(','),
                 preceded(
                     space0,
-                    take_while_m_n(1, 11, |c: char| is_vchar_or_space(c) && c != ','),
+                    take_while_m_n(1, 18, |c: char| is_vchar_or_space(c) && c != ','),
                 ),
             ),
             line_ending,
@@ -314,7 +321,8 @@ fn registered_on(input: &str) -> IResult<&str, &str> {
 }
 
 fn footer(input: &str) -> IResult<&str, &str> {
-    terminated(
+    delimited(
+        opt(line_ending),
         tag("----------------------------------------------------------------------------"),
         line_ending,
     )
@@ -343,7 +351,7 @@ mod tests {
         use std::io::Cursor;
 
         #[test]
-        fn test_recipe1() -> Result<()> {
+        fn test_txt() -> Result<()> {
             let file = files::txt();
             let buf = Cursor::new(file);
 

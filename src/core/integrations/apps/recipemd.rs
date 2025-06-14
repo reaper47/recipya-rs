@@ -1,7 +1,8 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use recipemd::{Factor, Ingredient, Recipe};
 
+use crate::core::integrations::apps::helpers::read_file;
 use crate::core::integrations::error::Result;
 use crate::core::integrations::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_text, to_yield,
@@ -10,13 +11,11 @@ use crate::core::model::recipe::Sections;
 use crate::core::scraper::schema::{AtType, RecipeSchema};
 
 /// Parses a RecipeMD recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
-
+    let content = read_file(r)?;
     let recipe = Recipe::parse(content.as_str())?;
 
     let ingredients = Sections::from([("".into(), ingredients_to_string(recipe.ingredients))]);

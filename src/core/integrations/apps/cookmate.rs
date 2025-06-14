@@ -1,15 +1,9 @@
-use std::collections::HashMap;
-use std::env::temp_dir;
-use std::fs::File;
-use std::io;
 use std::io::{Read, Seek};
-use std::path::Path;
 
 use humantime::parse_duration;
 use serde::Deserialize;
 use tracing::{error, warn};
 use url::Url;
-use uuid::Uuid;
 
 use crate::core::integrations::apps::helpers::{
     extract_archive_contents, update_recipe_image_paths,

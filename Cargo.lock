@@ -670,7 +670,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "smallvec",
- "strum",
+ "strum 0.26.3",
  "syn",
  "thiserror 2.0.12",
  "toml",
@@ -3111,6 +3111,7 @@ dependencies = [
  "diesel_migrations",
  "directories",
  "dotenvy",
+ "encoding_rs",
  "enum_dispatch",
  "futures-util",
  "hmac",
@@ -3142,6 +3143,7 @@ dependencies = [
  "serde-xml-rs",
  "serde_json",
  "sha2",
+ "strum 0.27.1",
  "strum_macros 0.27.1",
  "time",
  "tokio",
@@ -3738,6 +3740,12 @@ checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
 dependencies = [
  "strum_macros 0.26.4",
 ]
+
+[[package]]
+name = "strum"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f64def088c51c9510a8579e3c5d67c65349dcf755e5479ad3d010aa6454e2c32"
 
 [[package]]
 name = "strum_macros"

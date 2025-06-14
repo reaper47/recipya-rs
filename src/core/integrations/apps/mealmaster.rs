@@ -15,19 +15,19 @@
 //!     - Now You're Cooking! v4.72 (Meal-Master Export Format)
 
 use std::borrow::Cow;
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_until, take_while_m_n, take_while1};
 use nom::bytes::take_while;
-use nom::character::complete::{char, line_ending, space0, space1};
-use nom::combinator::{map, map_res, opt, recognize, verify};
+use nom::character::complete::{char, line_ending, multispace0, multispace1, space0, space1};
+use nom::combinator::{map, map_res, opt, peek, recognize, verify};
 use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space};
+use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::core::integrations::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_yield,
 };
@@ -52,12 +52,20 @@ struct RecipeComponents<'a> {
     tags: Option<Vec<&'a str>>,
     servings: i16,
     ingredients: Vec<Ingredient<'a>>,
+    ingredient_notes: Option<Ingredient<'a>>,
     instructions: Vec<Instruction<'a>>,
 }
 
 impl From<RecipeComponents<'_>> for MealMasterRecipe {
     fn from(r: RecipeComponents<'_>) -> Self {
         let items = r.categories.split_first();
+
+        let mut instructions = r.instructions.to_sections();
+        if let Some(Ingredient::Line(ref s)) = r.ingredient_notes {
+            let line = s.split_whitespace().collect::<Vec<_>>().join(" ");
+            let line = format!("*{}", line.trim());
+            instructions.push(("Notes".to_string(), split_by_asterisks(&line)));
+        }
 
         Self {
             title: r.title.to_string(),
@@ -67,10 +75,29 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
                 .unwrap_or_default(),
             yield_: r.servings,
             ingredients: r.ingredients.to_sections(),
-            instructions: r.instructions.to_sections(),
+            instructions,
             source: format!("{} {}", r.header.0, r.header.1.trim_end_matches('-').trim()),
         }
     }
+}
+
+fn split_by_asterisks(input: &str) -> Vec<String> {
+    input
+        .chars()
+        .fold(String::new(), |mut acc, ch| {
+            if ch == '*' {
+                if !acc.ends_with('|') {
+                    acc.push('|');
+                }
+            } else {
+                acc.push(ch);
+            }
+            acc
+        })
+        .split('|')
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("- {}\n", s.trim()))
+        .collect()
 }
 
 impl From<MealMasterRecipe> for RecipeSchema {
@@ -92,12 +119,13 @@ impl From<MealMasterRecipe> for RecipeSchema {
 }
 
 /// Parses a MealMaster recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
+    let content = read_file(r)?
+        .replace("\n \n", "\n\n");
+
     Ok(parse_meal_master_recipe(&content)?
         .into_iter()
         .map(RecipeSchema::from)
@@ -105,7 +133,7 @@ where
 }
 
 fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
-    many0(alt((
+    many1(alt((
         map(
             preceded(take_while_m_n(1, 10, is_vchar_or_space), line_ending),
             |_| None,
@@ -126,6 +154,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
             opt(tags),
             servings,
             ingredients,
+            opt(ingredient_notes),
             instructions,
             footer,
         ),
@@ -136,6 +165,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
             tags,
             servings,
             ingredients,
+            ingredient_notes,
             instructions,
             _,
         )| {
@@ -146,6 +176,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
                 tags,
                 servings,
                 ingredients,
+                ingredient_notes,
                 instructions,
             }
         },
@@ -275,7 +306,7 @@ fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
     many1(alt((
         map(section, |s| vec![Ingredient::Section(Cow::Borrowed(s))]),
         map(
-            (ingredtwo, char(' '), ingredone, many0(eol)),
+            (ingredtwo, char(' '), ingredone, many0(line_ending)),
             |(ing1, _, ing2, _)| vec![ing1, ing2],
         ),
         map(terminated(ingredone, many0(eol)), |ing| vec![ing]),
@@ -373,16 +404,50 @@ fn units3(input: &str) -> IResult<&str, &str> {
     .parse(input)
 }
 
+fn ingredient_notes(input: &str) -> IResult<&str, Ingredient> {
+    let delim = "*----------------------------------------------------------------------*";
+    let delim2 = "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
+
+    let take_until_either = alt((take_until(delim), take_until(delim2)));
+
+    let closing_delim = alt((
+        (multispace0, tag(delim), line_ending),
+        (multispace0, tag(delim2), line_ending),
+    ));
+
+    map(
+        preceded(
+            peek(delimited(
+                (multispace1, tag("*"), space1),
+                alt((take_until(delim), take_until(delim2))),
+                alt((
+                    (multispace0, tag(delim), line_ending),
+                    (multispace0, tag(delim2), line_ending),
+                )),
+            )),
+            delimited(
+                (multispace1, tag("*"), space1),
+                take_until_either,
+                closing_delim,
+            ),
+        ),
+        |s| Ingredient::Line(Cow::Borrowed(s)),
+    )
+    .parse(input)
+}
+
 fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
     many0(alt((
-        map(section, |s| Instruction::Section(Cow::Borrowed(s))),
+        map((multispace0, section), |(_, s)| {
+            Instruction::Section(Cow::Borrowed(s))
+        }),
         map(instruction, |s| Instruction::Line(Cow::Borrowed(s))),
     )))
     .parse(input)
 }
 
 fn instruction(input: &str) -> IResult<&str, &str> {
-    let a = terminated(
+    terminated(
         verify(
             alt((take_until("\n\n"), take_until("\n-----"))),
             |line: &str| {
@@ -396,15 +461,13 @@ fn instruction(input: &str) -> IResult<&str, &str> {
             opt(line_ending),
         ),
     )
-    .parse(input);
-    println!("{:?}", a);
-    a
+    .parse(input)
 }
 
 fn section(input: &str) -> IResult<&str, &str> {
     preceded(
         separator,
-        terminated(delimited(dashes, not_dash, dashes), eol),
+        terminated(delimited(dashes, not_dash, dashes), line_ending),
     )
     .parse(input)
 }
@@ -417,7 +480,7 @@ fn not_dash(input: &str) -> IResult<&str, &str> {
     take_while1(|c: char| c != '-').parse(input) // Take until we hit a dash again
 }
 fn footer(input: &str) -> IResult<&str, &str> {
-    terminated(separator, opt(eol)).parse(input)
+    terminated(separator, multispace0).parse(input)
 }
 
 fn separator(input: &str) -> IResult<&str, &str> {
@@ -1184,15 +1247,15 @@ Typed for you by Karen Mintzias
                     "3/4 c Cheddar; Sharp, Shredded".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "* Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe. ** Use store bought sauce or your favorite recipe. ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++".into(),
-                            "In a skillet brown the ground beef and then drain off the excess fat. Add the bbq sauce, onion and brown sugar and set aside. Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup. Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese. Bake in a preheated 400 degrees F. oven for 12 minutes. Serve hot.".into(),
-                            "VARIATIONS:".into(),
-                            "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture. You can also add green bell pepper or a hot pepper to the above recipe with good results.".into(),
-                        ],
-                    )
+                    ("".into(), vec![
+                        "In a skillet brown the ground beef and then drain off the excess fat. Add the bbq sauce, onion and brown sugar and set aside. Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup. Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese. Bake in a preheated 400 degrees F. oven for 12 minutes. Serve hot.".into(),
+                        "VARIATIONS:".into(),
+                        "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture. You can also add green bell pepper or a hot pepper to the above recipe with good results.".into(),
+                    ]),
+                    ("Notes".into(), vec![
+                        "- Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe.\n".into(),
+                        "- Use store bought sauce or your favorite recipe.\n".into(),
+                    ]),
                 ])),
                 recipe_yield: to_yield(6),
                 ..Default::default()

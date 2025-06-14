@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use nom::IResult;
 use nom::Parser;
@@ -10,6 +10,7 @@ use nom::multi::{many_till, many1};
 use nom::sequence::{preceded, terminated};
 use url::Url;
 
+use crate::core::integrations::apps::helpers::read_file;
 use crate::core::integrations::helpers::{
     sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield,
 };
@@ -68,13 +69,11 @@ impl From<RecipeComponents<'_>> for ChefTapRecipe {
 }
 
 /// Parses a ChefTap recipe from the file's content.
-pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
-
+    let content = read_file(r)?;
     let recipe = parse_cheftap_recipe(&content)?;
     Ok(vec![recipe.into()])
 }

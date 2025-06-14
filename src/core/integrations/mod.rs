@@ -1,8 +1,14 @@
+mod app;
 mod apps;
 mod error;
+mod fileformat;
 mod helpers;
 
+pub use app::App;
 pub use error::{Error, Result};
+pub use fileformat::FileFormat;
+
+use std::io::{Read, Seek};
 
 use crate::core::integrations::apps::cooklang::CookLang;
 use crate::core::integrations::apps::{
@@ -10,40 +16,6 @@ use crate::core::integrations::apps::{
     recipemd, recipesage, rezkonv, saffron,
 };
 use crate::core::scraper::schema::RecipeSchema;
-use std::io::{Read, Seek};
-
-/// Represents a collection of recipe management applications.
-/// Each variant corresponds to a specific recipe or cooking-related app.
-pub enum App {
-    AccuChef,
-    BigOven,
-    ChefTap,
-    Cooklang,
-    CookMate,
-    Crouton,
-    Kalorio,
-    MasterCook,
-    MealMaster,
-    Paprika,
-    RecipeMD,
-    RecipeSage,
-    Rezkonv,
-    Saffron,
-}
-
-/// Represents the supported file formats for some applications.
-pub enum FileFormat {
-    CookML,
-    Json,
-    MCB,
-    MX2,
-    MXP,
-    MZ2,
-    MealMaster,
-    Rezkonv,
-    Txt,
-    Xml,
-}
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
 pub fn parse_recipe<R>(
@@ -69,8 +41,8 @@ where
         },
         App::Crouton => crouton::parse(r),
         App::Kalorio => match file_format {
-            FileFormat::CookML => cookml::parse(r),
             FileFormat::Txt => kalorio::parse(r),
+            FileFormat::Xml => cookml::parse(r),
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::MasterCook => match file_format {
@@ -91,5 +63,6 @@ where
         },
         App::Rezkonv => rezkonv::parse(r),
         App::Saffron => saffron::parse(r),
+        App::Unknown => Err(Error::UnsupportedApp),
     }
 }

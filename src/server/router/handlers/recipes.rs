@@ -13,7 +13,7 @@ use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
-use tracing::{error, warn};
+use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -33,7 +33,7 @@ use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx, MessageType};
 use crate::server::router::middleware::mw_auth::CtxW;
 use crate::server::router::recipes_routes::{
-    RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
+    ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
 };
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
@@ -447,7 +447,122 @@ pub async fn add_recipes_handler(
 pub async fn add_recipe_import_handler(
     ctx: CtxW,
     State(state): State<AppState>,
+    form: ImportFromAppForm,
 ) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+    save_parsed_recipes(state, form, user_id);
+
+    (StatusCode::ACCEPTED, "").into_response()
+}
+
+fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
+    tokio::spawn(async move {
+        let state = state.clone();
+        let start_time = Instant::now();
+
+        let recipes = match parse_recipes(&state, form, user_id).await {
+            None => {
+                state.hide_broadcast(user_id).await;
+                let toast = MessageHtmx::warning("No recipes found");
+                if let Ok(json) = serde_json::to_string(&toast) {
+                    state.broadcast(user_id, Message::Text(json.into())).await;
+                }
+                return;
+            }
+            Some(r) => r,
+        };
+
+        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+        let mut curr = 0;
+        let total_recipes = recipes.len() as i64;
+        let mut recipe_ids = Vec::new();
+
+        for schema in recipes {
+            curr += 1;
+            state
+                .broadcast_progress("Saving recipes", curr, total_recipes, true, user_id)
+                .await;
+
+            let recipe = schema_to_recipe_for_create(&state, schema).await;
+
+            match Recipe::create(&state.mm, user_id, &recipe).await {
+                Ok(recipe_id) => {
+                    report
+                        .report_logs
+                        .push(ReportLogForCreate::new_success(recipe.name));
+                    recipe_ids.push(recipe_id);
+                }
+                Err(DuplicateEntity) => {
+                    warn!("Recipe exists: {}", recipe.name);
+                    report.report_logs.push(ReportLogForCreate::new_warning(
+                        recipe.name,
+                        "Recipe exists".into(),
+                    ));
+                }
+                Err(err) => {
+                    error!("Error saving recipe '{}': {err}", recipe.name);
+                    report
+                        .report_logs
+                        .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
+                }
+            }
+        }
+
+        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
+        state.hide_broadcast(user_id).await;
+
+        let num_success = recipe_ids.len() as i64;
+        let num_skipped = total_recipes - num_success;
+
+        info!(
+            "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={total_recipes}"
+        );
+
+        let redirect = if num_success == 1 {
+            format!("View /recipes/{}", recipe_ids.first().unwrap_or(&-1))
+        } else {
+            "View /reports?view=latest".to_string()
+        };
+
+        let toast = MessageHtmx::builder(
+            MessageType::Toast,
+            "Operation Successful",
+            format!("Imported {num_success} recipes. Skipped {num_skipped}."),
+        )
+        .action(Some(&redirect))
+        .build();
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(user_id, Message::Text(json.into())).await;
+        }
+
+        if let Err(err) = report.insert(&state.mm).await {
+            error!("Error inserting report into the database: {err}");
+        }
+    });
+}
+
+async fn parse_recipes(state: &AppState, form: ImportFromAppForm, user_id: i64) -> Option<Vec<RecipeSchema>> {
+    state
+        .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
+        .await;
+
+    let recipes = match form.parse_recipes() {
+        Ok(r) => r,
+        Err(err) => {
+            state.hide_broadcast(user_id).await;
+            error!("Failed to parse recipes: {err}");
+            return None;
+        }
+    };
+
+    if recipes.is_empty() {
+        state.hide_broadcast(user_id).await;
+        warn!("No recipes found");
+        return None;
+    }
+
+    Some(recipes)
 }
 
 /// Handles rendering the form to add a recipe manually.
@@ -844,7 +959,7 @@ async fn extract_videos(
     for v in schema.video.iter() {
         for clip in v.iter() {
             match clip {
-                ClipOrVideoObject::Clip(c) => {
+                ClipOrVideoObject::Clip(_) => {
                     warn!("ClipType not implemented");
                 }
                 ClipOrVideoObject::VideoObject(obj) => {
@@ -1018,30 +1133,58 @@ pub async fn view_recipe_handler(
 /// Handles the supported applications endpoint.
 pub async fn supported_applications_handler(_ctx: CtxW) -> impl IntoResponse {
     let applications = [
-        ("AccuChef", "https://www.accuchef.com"),
-        ("ChefTap", "https://cheftap.com"),
-        ("Crouton", "https://crouton.app"),
+        ("AccuChef", "https://www.accuchef.com", vec![]),
+        ("BigOven", "https://www.bigoven.com", vec![".txt"]),
+        ("ChefTap", "https://cheftap.com", vec![".txt"]),
+        ("Cooklang", "https://cooklang.org/", vec![".cook"]),
+        (
+            "COOKmate",
+            "https://cooklang.org/",
+            vec![".mcb", ".mmf", ".rk", ".xml"],
+        ),
+        ("Crouton", "https://crouton.app", vec![".crumb"]),
         (
             "Easy Recipe Deluxe",
             "https://easy-recipe-deluxe.software.informer.com",
+            vec![],
         ),
-        ("Kalorio", "https://www.kalorio.de"),
-        ("MasterCook", "https://www.mastercook.com"),
-        ("Paprika", "https://www.paprikaapp.com"),
-        ("Recipe Keeper", "https://recipekeeperonline.com"),
-        ("RecipeSage", "https://recipesage.com"),
-        ("Saffron", "https://www.mysaffronapp.com"),
+        ("Kalorio", "https://www.kalorio.de", vec![".txt", ".xml"]),
+        (
+            "MasterCook",
+            "https://www.mastercook.com",
+            vec![".mx2", ".mxp", ".mz2", ".txt"],
+        ),
+        (
+            "Meal-Master",
+            "https://web.archive.org/web/20081221021301/http://episoft.home.comcast.net/~episoft/mmdown.htm",
+            vec![".mx2", ".mxp", ".mz2", ".txt"],
+        ),
+        (
+            "Paprika",
+            "https://www.paprikaapp.com",
+            vec![".paprikarecipes"],
+        ),
+        ("Recipe Keeper", "https://recipekeeperonline.com", vec![]),
+        ("RecipeMD", "https://recipemd.org/", vec![".md"]),
+        (
+            "RecipeSage",
+            "https://recipesage.com",
+            vec![".json", ".txt", ".xml"],
+        ),
+        ("Rezkonv", "https://www.rezkonv.de/", vec![".rk"]),
+        ("Saffron", "https://www.mysaffronapp.com", vec![".txt"]),
     ];
 
     let mut html = String::new();
 
-    for (i, (name, url)) in applications.into_iter().enumerate() {
+    for (i, (name, url, formats)) in applications.into_iter().enumerate() {
         html.push_str(r#"<tr class="text-center">"#);
         let _ = write!(html, "<td>{}</td>", i + 1);
         let _ = write!(
             html,
             r#"<td><a class="underline" href="{url}" target="_blank">{name}</a></td>"#
         );
+        let _ = write!(html, "<td>{}</td>", formats.join(", "));
         html.push_str("</tr>");
     }
 

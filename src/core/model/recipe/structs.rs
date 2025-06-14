@@ -11,7 +11,8 @@ use crate::core::model::recipe::RecipeForm;
 use crate::core::model::user::User;
 use crate::core::repository::schema;
 use crate::core::scraper::schema::{
-    CreativeWorkOrItemListOrText, HowToToolOrText, NutritionInformationSchema, RecipeSchema,
+    CreativeWorkOrItemListOrText, CreativeWorkOrText, HowToToolOrText, NutritionInformationSchema,
+    RecipeSchema,
 };
 use crate::core::support::fs::FsSupport;
 use crate::core::support::strings::extract_number;
@@ -147,12 +148,17 @@ impl From<RecipeForm> for RecipeForCreate {
 
 impl From<&RecipeSchema> for RecipeForCreate {
     fn from(schema: &RecipeSchema) -> Self {
+        let source = match &schema.is_based_on {
+            Some(CreativeWorkOrText::Text(s)) => Some(s.clone()),
+            _ => schema.url.clone().map(|s| s.to_string()),
+        };
+
         Self {
             name: schema.name.clone().unwrap_or_default(),
             description: schema.description.clone().map(String::from),
             images: vec![],
             yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
-            source: schema.url.clone().map(|s| s.into()),
+            source,
             videos: vec![],
             category: String::try_from(schema.recipe_category.clone()).ok(),
             cuisine: schema.recipe_cuisine.clone().map(String::from),

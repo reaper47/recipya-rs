@@ -1,9 +1,15 @@
-use axum::extract::DefaultBodyLimit;
+use std::io::Cursor;
+use std::str::FromStr;
+
+use axum::extract::multipart::{InvalidBoundary, MultipartRejection};
+use axum::extract::{DefaultBodyLimit, FromRequest, Multipart, Request};
 use axum::routing::{get, post};
 use axum::{Router, middleware};
 use serde::{Deserialize, Serialize};
+use tracing::{error, info, warn};
 
-use crate::server::AppState;
+use crate::core::integrations::{App, FileFormat, parse_recipe};
+use crate::core::scraper::schema::RecipeSchema;
 use crate::server::router::handlers::recipes::{
     add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipe_import_handler,
     add_recipes_handler, add_website_post_handler, delete_recipe_categories_handler,
@@ -12,6 +18,90 @@ use crate::server::router::handlers::recipes::{
     supported_applications_handler, supported_websites_handler, view_recipe_handler,
 };
 use crate::server::router::middleware::mw_auth;
+use crate::server::{AppState, Error, Result as ServerResult};
+
+/// Represents the content of the "Add Recipe -> Import from an app" form.
+#[derive(Default)]
+pub struct ImportFromAppForm {
+    pub file_data: Cursor<Vec<u8>>,
+    pub file_name: String,
+    pub app: App,
+    pub file_format: FileFormat,
+}
+
+impl<S> FromRequest<S> for ImportFromAppForm
+where
+    S: Send + Sync,
+{
+    type Rejection = MultipartRejection;
+
+    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
+        let mut multipart = Multipart::from_request(req, state).await?;
+
+        let mut form = ImportFromAppForm::default();
+
+        while let Some(field) = multipart.next_field().await.map_err(|err| {
+            error!("Failed to read multipart field in import recipes from app: {err}");
+            InvalidBoundary::default()
+        })? {
+            let name = field.name().unwrap_or("");
+            match name {
+                "app" => {
+                    let app_name = field.text().await.map_err(|_| InvalidBoundary::default())?;
+                    let app = App::from_str(&app_name.to_lowercase()).unwrap_or_default();
+                    if matches!(app, App::Unknown) {
+                        error!("Import recipes from app form field 'app' is invalid: {app_name}");
+                        return Err(InvalidBoundary::default())?;
+                    }
+                    form.app = app;
+                }
+                "file" => {
+                    let filename = field
+                        .file_name()
+                        .map(|s| s.to_string())
+                        .ok_or(InvalidBoundary::default())?;
+                    form.file_name = filename.clone();
+
+                    let bytes = field
+                        .bytes()
+                        .await
+                        .map_err(|err| {
+                            error!("Failed to read file bytes for '{filename}': {err}");
+                            InvalidBoundary::default()
+                        })?
+                        .to_vec();
+                    form.file_data = Cursor::new(bytes);
+
+                    form.file_format = FileFormat::from_filename(&filename);
+                }
+                _ => {
+                    warn!("Import recipes from app form field '{name}' is not processed")
+                }
+            }
+        }
+
+        info!(
+            "Importing recipes from '{}' using {} parser (format: {})",
+            form.file_name, form.app, form.file_format
+        );
+        Ok(form)
+    }
+}
+
+impl ImportFromAppForm {
+    /// Parses the recipe file contained in the form.
+    pub fn parse_recipes(self) -> ServerResult<Vec<RecipeSchema>> {
+        let data = self.file_data;
+        let app = self.app;
+        let file_name = self.file_name;
+        let file_format = self.file_format;
+
+        parse_recipe(data, app, &file_name, file_format).map_err(|err| {
+            error!("Failed to parse recipe file '{file_name}': {err}");
+            Error::FailParse
+        })
+    }
+}
 
 /// Represents the content of the share recipe form.
 #[derive(Deserialize, Serialize)]
@@ -48,7 +138,10 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
         )
         .route("/{:recipe_id}/share", post(share_recipe_post_handler))
         .route("/add", get(add_recipes_handler))
-        .route("/add/import", post(add_recipe_import_handler))
+        .route(
+            "/add/import",
+            post(add_recipe_import_handler).layer(DefaultBodyLimit::max(50 * 1024 * 1024)),
+        )
         .route(
             "/add/manual",
             get(add_manual_recipe_handler)
@@ -132,9 +225,9 @@ mod tests {
                     r##"<dialog id="websites-dialog" class="modal"><div class="modal-box"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Fetch recipes from websites</h3><form class="py-4" hx-post="/recipes/add/website" hx-swap="none" _="on submit call #websites-dialog.close() then set me.querySelector('textarea').value to ''"><div class="grid mb-4"><label class="floating-label"><span>Enter one or more URLs, each on a new line.</span><textarea class="textarea whitespace-pre-line" name="urls" rows="5" placeholder="URL 1"##,
                     r#"</textarea></label></div><button class="btn btn-block btn-primary btn-sm">Submit</button></form></div></dialog>"#,
                     r##"<dialog id="supported-websites-dialog" class="modal"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search a website" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Website</th></tr></thead><tbody id="search-results"></tbody></table></div></div></dialog>"##,
-                    r##"<dialog class="modal" id="supported-apps-import-dialog"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search an application" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Application</th></tr></thead><tbody id="application-results"></tbody></table></div></div></dialog>"##,
+                    r##"<dialog class="modal" id="supported-apps-import-dialog"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search an application" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Application</th><th class="py-1">File Formats</th></tr></thead><tbody id="application-results"></tbody></table></div></div></dialog>"##,
                     r##"<dialog class="modal" id="add-ocr-dialog"><div class="modal-box"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Scan Recipe</h3><form class="py-4" hx-post="/recipes/add/ocr" hx-encoding="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" _="on submit call document.querySelector('#add-ocr-dialog').close()"><div class="grid mb-4"><label for="add-ocr-files-input" class="floating-label text-sm font-medium mb-1">Select your recipe's images ordered by page or a recipe document in the PDF format.</label><input id="add-ocr-files-input" type="file" name="files" accept=".jpg, .jpeg, .png, .bmp, .tiff, .heif, .pdf" multiple class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none"></div><button class="btn btn-block btn-primary btn-sm">Submit</button></form></div></dialog>"##,
-                    r##"<dialog class="modal" id="import-recipes-dialog"><div class="modal-box"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Import Recipes</h3><form class="py-4" hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none"><div class="grid mb-4"><label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1">Choose files in the .json, .txt, .zip or other application format.</label><input id="import-dialog-file" type="file" name="files" accept=".cml,.crumb,.json,.mxp,.paprikarecipes,.txt,.zip" multiple class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none"></div><button type="submit" class="btn btn-block btn-primary btn-sm" onclick="document.querySelector('#import-recipes-dialog').close()">Submit</button></form></div></dialog>"##,
+                    r##"<dialog class="modal" id="import-recipes-dialog"><div class="modal-box w-fit"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Import Recipes</h3><form class="py-4" hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()"><div><div class="grid mb-4"><label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1">Select a file</label><input id="import-dialog-file" type="file" name="file" required accept=".cook,.crumb,.json,.mcb,.md,.mmf,.mx2,.mxp,.mz2,.mm,.mmf,.paprikarecipes,.rzk,.rk,.rzk,.txt,.xml" class="file-input"></div><div><label for="app-select" class="floating-label text-sm font-semibold mb-1">Select the application</label><select class="select" id="app-select" name="app"><option value="accuchef">AccuChef</option><option value="bigoven">BigOven</option><option value="cheftap">ChefTap</option><option value="cooklang">Cooklang</option><option value="cookmate">CookMate</option><option value="crouton">Crouton</option><option value="kalorio">Kalorio</option><option value="mastercook">MasterCook</option><option value="mealmaster">MealMaster</option><option value="paprika">Paprika</option><option value="recipemd">RecipeMD</option><option value="recipesage">RecipeSage</option><option value="rezkonv">Rezkonv</option><option value="saffron">Saffron</option></select></div></div><button type="submit" class="btn btn-block btn-primary btn-sm mt-4">Submit</button></form></div></dialog>"##,
                 ],
             )
         }
@@ -1222,6 +1315,21 @@ mod tests {
         async fn test_must_be_logged_in() -> Result<()> {
             assert_must_be_logged_in(Method::POST, BASE_URI).await
         }
+
+        #[tokio::test]
+        async fn test_post_payload_too_big() -> Result<()> {
+            todo!()
+        }
+
+        #[tokio::test]
+        async fn test_post_error_parsing_files() -> Result<()> {
+            todo!()
+        }
+
+        #[tokio::test]
+        async fn test_post_valid_request() -> Result<()> {
+            todo!()
+        }
     }
 
     mod tests_recipe_add_manual {
@@ -2027,7 +2135,7 @@ mod tests {
 
             res.assert_status_ok();
             res.assert_header(CONTENT_TYPE, "text/html; charset=utf-8");
-            res.assert_text_contains(r#"<tr class="text-center"><td>1</td><td><a class="underline" href="https://www.accuchef.com" target="_blank">AccuChef</a></td></tr><tr class="text-center"><td>2</td><td><a class="underline" href="https://cheftap.com" target="_blank">ChefTap</a></td></tr><tr class="text-center"><td>3</td><td><a class="underline" href="https://crouton.app" target="_blank">Crouton</a></td></tr><tr class="text-center"><td>4</td><td><a class="underline" href="https://easy-recipe-deluxe.software.informer.com" target="_blank">Easy Recipe Deluxe</a></td></tr><tr class="text-center"><td>5</td><td><a class="underline" href="https://www.kalorio.de" target="_blank">Kalorio</a></td></tr><tr class="text-center"><td>6</td><td><a class="underline" href="https://www.mastercook.com" target="_blank">MasterCook</a></td></tr><tr class="text-center"><td>7</td><td><a class="underline" href="https://www.paprikaapp.com" target="_blank">Paprika</a></td></tr><tr class="text-center"><td>8</td><td><a class="underline" href="https://recipekeeperonline.com" target="_blank">Recipe Keeper</a></td></tr><tr class="text-center"><td>9</td><td><a class="underline" href="https://recipesage.com" target="_blank">RecipeSage</a></td></tr><tr class="text-center"><td>10</td><td><a class="underline" href="https://www.mysaffronapp.com" target="_blank">Saffron</a></td></tr>"#);
+            res.assert_text_contains(r#"<tr class="text-center"><td>1</td><td><a class="underline" href="https://www.accuchef.com" target="_blank">AccuChef</a></td><td></td></tr><tr class="text-center"><td>2</td><td><a class="underline" href="https://www.bigoven.com" target="_blank">BigOven</a></td><td>.txt</td></tr><tr class="text-center"><td>3</td><td><a class="underline" href="https://cheftap.com" target="_blank">ChefTap</a></td><td>.txt</td></tr><tr class="text-center"><td>4</td><td><a class="underline" href="https://cooklang.org/" target="_blank">Cooklang</a></td><td>.cook</td></tr><tr class="text-center"><td>5</td><td><a class="underline" href="https://cooklang.org/" target="_blank">COOKmate</a></td><td>.mcb, .mmf, .rk, .xml</td></tr><tr class="text-center"><td>6</td><td><a class="underline" href="https://crouton.app" target="_blank">Crouton</a></td><td>.crumb</td></tr><tr class="text-center"><td>7</td><td><a class="underline" href="https://easy-recipe-deluxe.software.informer.com" target="_blank">Easy Recipe Deluxe</a></td><td></td></tr><tr class="text-center"><td>8</td><td><a class="underline" href="https://www.kalorio.de" target="_blank">Kalorio</a></td><td>.txt, .xml</td></tr><tr class="text-center"><td>9</td><td><a class="underline" href="https://www.mastercook.com" target="_blank">MasterCook</a></td><td>.mx2, .mxp, .mz2, .txt</td></tr><tr class="text-center"><td>10</td><td><a class="underline" href="https://web.archive.org/web/20081221021301/http://episoft.home.comcast.net/~episoft/mmdown.htm" target="_blank">Meal-Master</a></td><td>.mx2, .mxp, .mz2, .txt</td></tr><tr class="text-center"><td>11</td><td><a class="underline" href="https://www.paprikaapp.com" target="_blank">Paprika</a></td><td>.paprikarecipes</td></tr><tr class="text-center"><td>12</td><td><a class="underline" href="https://recipekeeperonline.com" target="_blank">Recipe Keeper</a></td><td></td></tr><tr class="text-center"><td>13</td><td><a class="underline" href="https://recipemd.org/" target="_blank">RecipeMD</a></td><td>.md</td></tr><tr class="text-center"><td>14</td><td><a class="underline" href="https://recipesage.com" target="_blank">RecipeSage</a></td><td>.json, .txt, .xml</td></tr><tr class="text-center"><td>15</td><td><a class="underline" href="https://www.rezkonv.de/" target="_blank">Rezkonv</a></td><td>.rk</td></tr><tr class="text-center"><td>16</td><td><a class="underline" href="https://www.mysaffronapp.com" target="_blank">Saffron</a></td><td>.txt</td></tr>"#);
             Ok(())
         }
     }

@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::io::{BufReader, Read, Seek};
+use std::io::{Read, Seek};
 
 use nom::IResult;
 use nom::Parser;
@@ -12,7 +12,7 @@ use nom::sequence::{delimited, preceded, terminated};
 use serde::Deserialize;
 
 use crate::core::integrations::apps::helpers::{
-    Ingredient, Instruction, extract_archive_contents, update_recipe_image_paths,
+    Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
 };
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
@@ -407,11 +407,9 @@ fn parse_nutrition_schema(s: Vec<&str>) -> Option<NutritionInformationSchema> {
 /// Parses a MasterCook MX2 file.
 pub fn parse_mx2<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut reader = BufReader::new(r);
-    let mut content = String::new();
-    reader.read_to_string(&mut content)?;
+    let content = read_file(r)?;
 
     let cleaned = content
         .lines()
@@ -429,12 +427,11 @@ where
 }
 
 /// Parses a MasterCook MXP file.
-pub fn parse_mxp<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_mxp<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
+    let content = read_file(r)?;
 
     let recipes = parse_mxp_helper(&content)?
         .into_iter()

@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 use std::str::FromStr;
 
 use iso8601::DateTime;
@@ -12,6 +12,7 @@ use serde::Deserialize;
 use tracing::{error, warn};
 use url::Url;
 
+use crate::core::integrations::apps::helpers::read_file;
 use crate::core::integrations::error::{Error, Result};
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
@@ -335,12 +336,11 @@ impl From<RecipeSageXMLRecipe> for RecipeSchema {
 }
 
 /// Parses a RecipeSage recipes text file.
-pub fn parse_txt<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_txt<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
+    let content = read_file(r)?;
     Ok(parse_text_file(&content)?
         .into_iter()
         .map(RecipeSchema::from)

@@ -35,14 +35,14 @@ function showToast(title, message, background, action) {
         container = dialogs[0].querySelector('.toast-container-dialog');
     }
 
-    const button = toast.querySelector("#toast_button");
+    const button = toast.querySelector("#toast-button");
     if (action) {
         const split = action.split(" ");
         if (split.length === 2) {
             button.setAttribute("hx-get", split[1]);
             button.setAttribute("hx-target", "#content");
             button.setAttribute("hx-push-url", split[1]);
-            htmx.process(document.querySelector("#toast_button"));
+            htmx.process(document.querySelector("#toast-button"));
         }
         button.innerText = split[0];
         button.classList.remove("hidden");
@@ -51,7 +51,7 @@ function showToast(title, message, background, action) {
         button.removeAttribute("hx-get");
         button.removeAttribute("hx-target");
         button.removeAttribute("hx-push-url");
-        htmx.process(document.querySelector("#toast_button"));
+        htmx.process(document.querySelector("#toast-button"));
 
         timeoutToast = setTimeout(() => {
             let opacity = 1;

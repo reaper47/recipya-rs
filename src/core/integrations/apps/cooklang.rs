@@ -1,10 +1,7 @@
-use std::io::Read;
-
-use cooklang::{Content, CooklangParser, Item, ScalableValue};
-use tracing::{error, warn};
-use url::Url;
+use std::io::{Read, Seek};
 
 use crate::core::integrations::Result;
+use crate::core::integrations::apps::helpers::read_file;
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_is_based_on,
     to_organization_type, to_text, to_yield,
@@ -15,6 +12,9 @@ use crate::core::scraper::schema::{
     RecipeCategory, RecipeCuisine, RecipeSchema, RestrictedDiet,
 };
 use crate::core::support::time::parse_duration;
+use cooklang::{Content, CooklangParser, Item, ScalableValue};
+use tracing::{error, warn};
+use url::Url;
 
 /// A wrapper around the Cooklang parser that provides a consistent interface for parsing
 /// and executing Cooklang code.
@@ -101,12 +101,11 @@ impl From<CooklangRecipe> for RecipeSchema {
 
 impl CookLang {
     /// Parses a Cooklang recipe from the file's content.
-    pub fn parse<R>(&self, mut r: R, file_name: &str) -> Result<Vec<RecipeSchema>>
+    pub fn parse<R>(&self, r: R, file_name: &str) -> Result<Vec<RecipeSchema>>
     where
-        R: Read,
+        R: Read + Seek,
     {
-        let mut content = String::new();
-        r.read_to_string(&mut content)?;
+        let content = read_file(r)?;
 
         let (recipe, report) = self.parser.parse(&content).into_result()?;
         report

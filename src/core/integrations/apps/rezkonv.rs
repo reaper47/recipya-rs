@@ -5,7 +5,7 @@
 //!     - Recipe via Cookmate [REZKONV Export Format]
 
 use std::borrow::Cow;
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -17,7 +17,7 @@ use nom::multi::{many0, many1, separated_list0};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 
-use crate::core::integrations::apps::helpers::{Ingredient, Instruction, ToSections};
+use crate::core::integrations::apps::helpers::{Ingredient, Instruction, ToSections, read_file};
 use crate::core::integrations::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
     to_yield,
@@ -108,12 +108,12 @@ impl From<RecipeComponents<'_>> for RecipeSchema {
 }
 
 /// Parses the recipes in a REZKONV file.
-pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
+    let content = read_file(r)?;
+
     Ok(parse_recipes(&content)?
         .into_iter()
         .map(RecipeSchema::from)

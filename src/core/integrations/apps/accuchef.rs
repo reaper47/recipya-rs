@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 
 use humantime::parse_duration;
 use nom::branch::alt;
@@ -12,6 +12,7 @@ use nom::{IResult, Parser};
 use tracing::error;
 use url::Url;
 
+use crate::core::integrations::apps::helpers::read_file;
 use crate::core::integrations::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
     to_yield,
@@ -111,13 +112,11 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
 }
 
 /// Represents the parsed components of an AccuChef recipe.
-pub fn parse<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
-    R: Read,
+    R: Read + Seek,
 {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
-
+    let content = read_file(r)?;
     let recipe = parse_accuchef_recipe(&content)?;
     Ok(recipe.into_iter().map(RecipeSchema::from).collect())
 }

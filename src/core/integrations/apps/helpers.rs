@@ -10,11 +10,12 @@ use tracing::log::warn;
 use uuid::Uuid;
 use zip::ZipArchive;
 
-use crate::core::integrations::Result;
 use crate::core::integrations::apps::cookmate;
 use crate::core::integrations::apps::mastercook::parse_mx2;
+use crate::core::integrations::{Error, Result};
 use crate::core::model::recipe::Sections;
 use crate::core::scraper::schema::{ImageObjectOrUrl, RecipeSchema};
+use crate::core::support::strings::auto_convert_to_utf8;
 
 #[derive(Debug)]
 pub(super) enum Instruction<'a> {
@@ -23,9 +24,20 @@ pub(super) enum Instruction<'a> {
 }
 
 #[derive(Clone, Debug)]
-pub(super) enum Ingredient<'a> {
+pub enum Ingredient<'a> {
     Line(Cow<'a, str>),
     Section(Cow<'a, str>),
+}
+
+/// Reads the entire contents of a reader and converts it to a UTF-8 string.
+pub(super) fn read_file<R>(mut r: R) -> Result<String>
+where
+    R: Read + Seek,
+{
+    let mut buffer = Vec::new();
+    r.read_to_end(&mut buffer)
+        .map_err(|err| Error::Parse(err.to_string()))?;
+    Ok(auto_convert_to_utf8(&buffer).replace("\r\n", "\n"))
 }
 
 pub(super) trait ToSections<'a> {
@@ -140,7 +152,11 @@ where
 
         match ext.to_lowercase().as_str() {
             "mx2" => {
-                let r = parse_mx2(file)?;
+                let mut buffer = Vec::new();
+                file.read_to_end(&mut buffer)?;
+
+                let cursor = io::Cursor::new(buffer);
+                let r = parse_mx2(cursor)?;
                 recipes.extend(r);
             }
             "jpg" => {
