@@ -1309,6 +1309,11 @@ mod tests {
     mod tests_recipes_add_import {
         use super::*;
 
+        use axum_test::http::StatusCode;
+        
+        use crate::core::model::Recipe;
+        use crate::server::test_utils::{assert_ws_message, build_server_ws, create_app_state, open_test_file, HIDDEN_WS_NOTIFICATION};
+
         const BASE_URI: &str = "/recipes/add/import";
 
         #[tokio::test]
@@ -1317,18 +1322,79 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_post_payload_too_big() -> Result<()> {
-            todo!()
+        async fn test_post_payload_too_large() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let large_payload = "x".repeat(51 * 1024 * 1024);
+
+            let res = server
+                .post(BASE_URI)
+                .multipart(
+                    MultipartForm::new()
+                        .add_part("app", Part::text("mealmaster"))
+                        .add_part("file", Part::bytes(large_payload.into_bytes())
+                            .file_name("cookmate1.mcb")
+                            .mime_type("application/octet-stream"))
+                )
+                .await;
+
+            res.assert_status_bad_request();
+            Ok(())
         }
 
         #[tokio::test]
         async fn test_post_error_parsing_files() -> Result<()> {
-            todo!()
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let file = open_test_file("integrations/kalorio1.txt");
+
+            let res = server
+                .post(BASE_URI)
+                .multipart(
+                    MultipartForm::new()
+                        .add_part("app", Part::text("mealmaster"))
+                        .add_part("file", Part::bytes(file.into_inner())
+                            .file_name("kalorio1.txt")
+                            .mime_type("application/octet-stream"))
+                )
+                .await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Parsing recipes...</p><div id="export-progress"><progress max="100" value="1.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"No recipes found","status":"alert-warning","title":"Attention"}}"#).await;
+            let state = create_app_state(config).await;
+            pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 0);
+            Ok(())
         }
 
         #[tokio::test]
         async fn test_post_valid_request() -> Result<()> {
-            todo!()
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let file = open_test_file("integrations/kalorio1.txt");
+
+            let res = server
+                .post(BASE_URI)
+                .multipart(
+                    MultipartForm::new()
+                        .add_part("app", Part::text("kalorio"))
+                        .add_part("file", Part::bytes(file.into_inner())
+                            .file_name("kalorio1.txt")
+                            .mime_type("application/octet-stream"))
+                )
+                .await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Parsing recipes...</p><div id="export-progress"><progress max="100" value="1.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Saving recipes</p><div id="export-progress"><progress max="100" value="33.33"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Saving recipes</p><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Saving recipes</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Imported 3 recipes. Skipped 0.","status":"alert-info","title":"Operation Successful"}}"#).await;
+            let state = create_app_state(config).await;
+            pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 3);
+            Ok(())
         }
     }
 

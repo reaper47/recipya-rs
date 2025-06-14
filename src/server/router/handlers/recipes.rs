@@ -550,14 +550,12 @@ async fn parse_recipes(state: &AppState, form: ImportFromAppForm, user_id: i64) 
     let recipes = match form.parse_recipes() {
         Ok(r) => r,
         Err(err) => {
-            state.hide_broadcast(user_id).await;
             error!("Failed to parse recipes: {err}");
             return None;
         }
     };
 
     if recipes.is_empty() {
-        state.hide_broadcast(user_id).await;
         warn!("No recipes found");
         return None;
     }
