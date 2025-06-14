@@ -14,15 +14,17 @@ categories = ["web-programming"]
 argon2 = { version = "0.5.3", features = ["std"] }
 async-trait = "0.1.88"
 axum = { version = "0.8.4", features = ["multipart", "ws"] }
-axum-htmx = "0.7.0"
+axum-htmx = "0.8.1"
 base64 = "0.22.1"
 clap = { version = "4.5.38", features = ["derive"] }
+cooklang = "0.16.1"
 derive_more = { version = "2.0.1", features = ["from", "display"] }
-diesel = { version = "2.2.8", features = ["postgres", "chrono", "serde_json", "uuid"] }
+diesel = { version = "2.2.10", features = ["postgres", "chrono", "serde_json", "uuid"] }
 diesel-async = { version = "0.5.2", features = ["postgres", "bb8", "async-connection-wrapper"] }
 diesel_migrations = { version = "2.2", features = ["postgres"] }
 directories = "6.0.0"
 dotenvy = "0.15.7"
+encoding_rs = "0.8.35"
 enum_dispatch = "0.3.13"
 futures-util = "0.3.31"
 hmac = "0.12.1"
@@ -31,25 +33,30 @@ image = "0.25.6"
 infer = "0.19.0"
 iso8601 = { version = "0.6.3", features = ["serde"] }
 lazy-regex = "3.4.1"
-lettre = { version = "0.11.16", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
+lettre = { version = "0.11.17", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
+libpaprika = { version = "0.4.1", default-features = false }
 lru = "0.14.0"
 maud = { version = "0.27.0", features = ["axum"] }
 mime_guess = "2.0.5"
 mrml = "5.0.0"
+nom = "8.0.0"
 paste = "1.0.15"
 postgres_rustls = "0.1.2"
 rand = "0.9.1"
+recipemd = "0.2.0"
 regex = "1.11.1"
-reqwest = { version = "0.12.15", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
+reqwest = { version = "0.12.19", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
 rust-embed = { version = "8.7.2", features = ["axum-ex"] }
 rustls = { version = "0.23.27", default-features = false, features = ["ring"] }
 scraper = "0.23.1"
 serde = { version = "1.0.219", features = ["derive"] }
+serde-xml-rs = "0.8.1"
 serde_json = "1.0.140"
-sha2 = "0.10.8"
+sha2 = "0.10.9"
+strum = "0.27.1"
 strum_macros = "0.27.1"
 time = "0.3.41"
-tokio = { version = "1.44.1", features = ["full"] }
+tokio = { version = "1.45.1", features = ["full"] }
 tokio-cron-scheduler = "0.14.0"
 tokio-postgres = { version = "0.7.13", features = ["with-serde_json-1", "with-time-0_3", "with-uuid-1"] }
 tokio-rustls = { version = "0.26.2", default-features = false, features = ["logging", "tls12", "ring"] }
@@ -58,10 +65,11 @@ tower-http = { version = "0.6.4", features = ["fs"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 url = { version = "2.5.4", features = ["serde"] }
-uuid = { version = "1.16.0", features = ["fast-rng", "serde", "v4"] }
+uuid = { version = "1.17.0", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 webp = "0.3.0"
 whatlang = "0.16.4"
+zip = "4.0.0"
 
 [dev-dependencies]
 axum-test = { version = "17.2.0", features = ["ws"] }

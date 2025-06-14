@@ -1,5 +1,5 @@
 use std::fmt::Write;
-use std::ops::Not;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 
@@ -13,7 +13,7 @@ use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
-use tracing::error;
+use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -26,13 +26,14 @@ use crate::core::model::report::{ReportForCreate, ReportLogForCreate, ReportType
 use crate::core::model::share::ShareRecipe;
 use crate::core::model::user::User;
 use crate::core::model::website::{ToHtmlTable, Website};
-use crate::core::scraper::schema::RecipeSchema;
+use crate::core::scraper::schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema};
+use crate::core::support::fs::FsSupport;
 use crate::server::router::SearchParams;
 use crate::server::router::handlers::helpers::is_hx_request;
 use crate::server::router::handlers::message::{IMessage, MessageHtmx, MessageType};
 use crate::server::router::middleware::mw_auth::CtxW;
 use crate::server::router::recipes_routes::{
-    RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
+    ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
 };
 use crate::server::templates::data::{
     AboutData, Data, FormattedTimes, PaginationData, PaginationHtmxData, PaginationSearchData,
@@ -361,7 +362,7 @@ pub async fn edit_recipe_put_handler(
     };
 
     let mut recipe_c = RecipeForCreate::from(form);
-    recipe_c.images = images.is_empty().not().then_some(images);
+    recipe_c.images = images;
     recipe_c.videos = videos;
 
     match Recipe::update(&state.mm, user_id, recipe_id, &mut recipe_c).await {
@@ -442,6 +443,126 @@ pub async fn add_recipes_handler(
     )
 }
 
+/// Handles the import recipes endpoint.
+pub async fn add_recipe_import_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    form: ImportFromAppForm,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+    save_parsed_recipes(state, form, user_id);
+
+    (StatusCode::ACCEPTED, "").into_response()
+}
+
+fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
+    tokio::spawn(async move {
+        let state = state.clone();
+        let start_time = Instant::now();
+
+        let recipes = match parse_recipes(&state, form, user_id).await {
+            None => {
+                state.hide_broadcast(user_id).await;
+                let toast = MessageHtmx::warning("No recipes found");
+                if let Ok(json) = serde_json::to_string(&toast) {
+                    state.broadcast(user_id, Message::Text(json.into())).await;
+                }
+                return;
+            }
+            Some(r) => r,
+        };
+
+        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+        let mut curr = 0;
+        let total_recipes = recipes.len() as i64;
+        let mut recipe_ids = Vec::new();
+
+        for schema in recipes {
+            curr += 1;
+            state
+                .broadcast_progress("Saving recipes", curr, total_recipes, true, user_id)
+                .await;
+
+            let recipe = schema_to_recipe_for_create(&state, schema).await;
+
+            match Recipe::create(&state.mm, user_id, &recipe).await {
+                Ok(recipe_id) => {
+                    report
+                        .report_logs
+                        .push(ReportLogForCreate::new_success(recipe.name));
+                    recipe_ids.push(recipe_id);
+                }
+                Err(DuplicateEntity) => {
+                    warn!("Recipe exists: {}", recipe.name);
+                    report.report_logs.push(ReportLogForCreate::new_warning(
+                        recipe.name,
+                        "Recipe exists".into(),
+                    ));
+                }
+                Err(err) => {
+                    error!("Error saving recipe '{}': {err}", recipe.name);
+                    report
+                        .report_logs
+                        .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
+                }
+            }
+        }
+
+        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
+        state.hide_broadcast(user_id).await;
+
+        let num_success = recipe_ids.len() as i64;
+        let num_skipped = total_recipes - num_success;
+
+        info!(
+            "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={total_recipes}"
+        );
+
+        let redirect = if num_success == 1 {
+            format!("View /recipes/{}", recipe_ids.first().unwrap_or(&-1))
+        } else {
+            "View /reports?view=latest".to_string()
+        };
+
+        let toast = MessageHtmx::builder(
+            MessageType::Toast,
+            "Operation Successful",
+            format!("Imported {num_success} recipes. Skipped {num_skipped}."),
+        )
+        .action(Some(&redirect))
+        .build();
+
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(user_id, Message::Text(json.into())).await;
+        }
+
+        if let Err(err) = report.insert(&state.mm).await {
+            error!("Error inserting report into the database: {err}");
+        }
+    });
+}
+
+async fn parse_recipes(state: &AppState, form: ImportFromAppForm, user_id: i64) -> Option<Vec<RecipeSchema>> {
+    state
+        .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
+        .await;
+
+    let recipes = match form.parse_recipes() {
+        Ok(r) => r,
+        Err(err) => {
+            error!("Failed to parse recipes: {err}");
+            return None;
+        }
+    };
+
+    if recipes.is_empty() {
+        warn!("No recipes found");
+        return None;
+    }
+
+    Some(recipes)
+}
+
 /// Handles rendering the form to add a recipe manually.
 pub async fn add_manual_recipe_handler(
     ctx: CtxW,
@@ -520,7 +641,7 @@ pub async fn add_manual_recipe_post_handler(
         &RecipeForCreate {
             name: form.title,
             description: form.description,
-            images: images.is_empty().not().then_some(images),
+            images,
             yield_: form.yield_,
             source: form.source,
             videos,
@@ -760,7 +881,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: i64) {
         drop(tx);
 
         let mut processed = 0;
-        while let Some(_p) = rx.recv().await {
+        while rx.recv().await.is_some() {
             processed += 1;
             let title = format!("Fetched {processed}/{}", fetch_ctx.total);
             state
@@ -784,38 +905,94 @@ async fn schema_to_recipe_for_create(state: &AppState, schema: RecipeSchema) -> 
     let schema = Arc::new(schema);
     let mut recipe_c = RecipeForCreate::from(&*schema);
 
-    if let Some(url) = schema.image_url() {
-        if let Ok(path) = state.scraper.fetch_and_upload_to_temp(url.as_str()).await {
-            let file_name = Uuid::new_v4();
-            fs_support.upload_image(&path, file_name, &state.data_dir.images);
-            recipe_c.images = state
-                .fs_support
-                .is_file_exists(file_name, &state.data_dir.images)
-                .then_some(vec![file_name]);
-        }
-    }
+    recipe_c.images = extract_images(&schema, state, fs_support.clone()).await;
+    recipe_c.videos = extract_videos(&schema, state, fs_support).await;
 
-    if let Some(url) = schema.video_url() {
-        if let Ok(path) = state.scraper.fetch_and_upload_to_temp(url.as_str()).await {
-            let file_name = Uuid::new_v4();
-            fs_support
-                .clone()
-                .upload_videos(vec![path.clone()], &state.data_dir.images);
-            if fs_support.is_file_exists(file_name, &state.data_dir.videos) {
-                recipe_c.videos = vec![VideoForCreate {
-                    video: file_name,
-                    duration: fs_support
-                        .calc_video_duration(path.to_str().unwrap_or_default())
-                        .await
-                        .ok(),
-                    content_url: schema.video_content_url().map(String::from),
-                    embed_url: schema.video_embed_url().map(String::from),
-                }];
+    recipe_c
+}
+
+async fn extract_images(
+    schema: &Arc<RecipeSchema>,
+    state: &AppState,
+    fs_support: Arc<dyn FsSupport>,
+) -> Vec<Uuid> {
+    let mut vec = Vec::new();
+
+    for images in schema.image.iter() {
+        for image in images.iter() {
+            let url = match image {
+                ImageObjectOrUrl::Url(url) => Some(url),
+                ImageObjectOrUrl::ImageObject(obj) => obj.url.as_ref().or(obj.content_url.as_ref()),
+            };
+
+            if let Some(url) = url {
+                // TODO: Fetch the image using reqwest.
+                let path = PathBuf::new();
+
+                let file_name = Uuid::new_v4();
+                fs_support.upload_image(&path, file_name, &state.data_dir.images);
+                vec.push(
+                    state
+                        .fs_support
+                        .is_file_exists(file_name, &state.data_dir.images)
+                        .then_some(file_name),
+                );
             }
         }
     }
 
-    recipe_c
+    vec.into_iter()
+        .map(|img| img.unwrap_or_default())
+        .filter(|v| v != &Uuid::nil())
+        .collect()
+}
+
+async fn extract_videos(
+    schema: &Arc<RecipeSchema>,
+    state: &AppState,
+    fs_support: Arc<dyn FsSupport>,
+) -> Vec<VideoForCreate> {
+    let mut videos = Vec::new();
+
+    for v in schema.video.iter() {
+        for clip in v.iter() {
+            match clip {
+                ClipOrVideoObject::Clip(_) => {
+                    warn!("ClipType not implemented");
+                }
+                ClipOrVideoObject::VideoObject(obj) => {
+                    if let Ok(path) = state
+                        .scraper
+                        .fetch_and_upload_to_temp(obj.content_url.as_str())
+                        .await
+                    {
+                        let file_name = Uuid::new_v4();
+                        fs_support
+                            .clone()
+                            .upload_videos(vec![path.clone()], &state.data_dir.images);
+
+                        if fs_support.is_file_exists(file_name, &state.data_dir.videos) {
+                            videos.push(VideoForCreate {
+                                video: file_name,
+                                duration: fs_support
+                                    .calc_video_duration(path.to_str().unwrap_or_default())
+                                    .await
+                                    .ok(),
+                                content_url: schema
+                                    .extract_video_content_urls()
+                                    .map(|v| v.into_iter().map(String::from).collect()),
+                                embed_url: schema
+                                    .extract_video_embed_urls()
+                                    .map(|v| v.into_iter().map(String::from).collect()),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    videos
 }
 
 /// Handles adding a recipe category into the database.
@@ -954,30 +1131,58 @@ pub async fn view_recipe_handler(
 /// Handles the supported applications endpoint.
 pub async fn supported_applications_handler(_ctx: CtxW) -> impl IntoResponse {
     let applications = [
-        ("AccuChef", "https://www.accuchef.com"),
-        ("ChefTap", "https://cheftap.com"),
-        ("Crouton", "https://crouton.app"),
+        ("AccuChef", "https://www.accuchef.com", vec![]),
+        ("BigOven", "https://www.bigoven.com", vec![".txt"]),
+        ("ChefTap", "https://cheftap.com", vec![".txt"]),
+        ("Cooklang", "https://cooklang.org/", vec![".cook"]),
+        (
+            "COOKmate",
+            "https://cooklang.org/",
+            vec![".mcb", ".mmf", ".rk", ".xml"],
+        ),
+        ("Crouton", "https://crouton.app", vec![".crumb"]),
         (
             "Easy Recipe Deluxe",
             "https://easy-recipe-deluxe.software.informer.com",
+            vec![],
         ),
-        ("Kalorio", "https://www.kalorio.de"),
-        ("MasterCook", "https://www.mastercook.com"),
-        ("Paprika", "https://www.paprikaapp.com"),
-        ("Recipe Keeper", "https://recipekeeperonline.com"),
-        ("RecipeSage", "https://recipesage.com"),
-        ("Saffron", "https://www.mysaffronapp.com"),
+        ("Kalorio", "https://www.kalorio.de", vec![".txt", ".xml"]),
+        (
+            "MasterCook",
+            "https://www.mastercook.com",
+            vec![".mx2", ".mxp", ".mz2", ".txt"],
+        ),
+        (
+            "Meal-Master",
+            "https://web.archive.org/web/20081221021301/http://episoft.home.comcast.net/~episoft/mmdown.htm",
+            vec![".mx2", ".mxp", ".mz2", ".txt"],
+        ),
+        (
+            "Paprika",
+            "https://www.paprikaapp.com",
+            vec![".paprikarecipes"],
+        ),
+        ("Recipe Keeper", "https://recipekeeperonline.com", vec![]),
+        ("RecipeMD", "https://recipemd.org/", vec![".md"]),
+        (
+            "RecipeSage",
+            "https://recipesage.com",
+            vec![".json", ".txt", ".xml"],
+        ),
+        ("Rezkonv", "https://www.rezkonv.de/", vec![".rk"]),
+        ("Saffron", "https://www.mysaffronapp.com", vec![".txt"]),
     ];
 
     let mut html = String::new();
 
-    for (i, (name, url)) in applications.into_iter().enumerate() {
+    for (i, (name, url, formats)) in applications.into_iter().enumerate() {
         html.push_str(r#"<tr class="text-center">"#);
         let _ = write!(html, "<td>{}</td>", i + 1);
         let _ = write!(
             html,
             r#"<td><a class="underline" href="{url}" target="_blank">{name}</a></td>"#
         );
+        let _ = write!(html, "<td>{}</td>", formats.join(", "));
         html.push_str("</tr>");
     }
 

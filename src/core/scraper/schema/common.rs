@@ -106,23 +106,23 @@ where
 {
     struct Visitor;
 
-    impl<'de> serde::de::Visitor<'de> for Visitor {
+    impl<'de> de::Visitor<'de> for Visitor {
         type Value = Option<i64>;
 
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
             formatter.write_str("an integer or a string that can be parsed into an integer")
         }
 
         fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
         where
-            E: serde::de::Error,
+            E: Error,
         {
             Ok(Some(value))
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
         where
-            E: serde::de::Error,
+            E: Error,
         {
             match v.parse::<i64>() {
                 Ok(num) => Ok(Some(num)),
@@ -132,7 +132,7 @@ where
 
         fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
         where
-            E: serde::de::Error,
+            E: Error,
         {
             match v.parse::<i64>() {
                 Ok(num) => Ok(Some(num)),
@@ -215,9 +215,14 @@ impl<'de> Deserialize<'de> for AudioObjectOrClipOrMusicRecording {
 
 /// A comment on an item - for example, a comment on a blog post. The comment's content is expressed
 /// via the text property, and its topic via about, properties shared with all CreativeWorks.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct CommentType {}
+pub struct CommentType {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
+    pub name: String,
+    pub text: String,
+}
 
 /// Enumeration of all possible values related to video.
 #[derive(Clone, Debug, PartialEq)]
@@ -444,7 +449,7 @@ fn deserialize_trim(mut s: String) -> String {
     s.trim().to_string()
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CreativeWorkOrText {
     CreativeWork(Box<CreativeWorkType>),
     Text(String),
@@ -504,7 +509,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrUrl {
     where
         D: Deserializer<'de>,
     {
-        use crate::core::scraper::schema::common::CreativeWorkOrUrl::*;
+        use super::CreativeWorkOrUrl::*;
 
         struct Visitor;
 
@@ -644,7 +649,7 @@ pub enum DefinedTermOrTextOrUrl {
 impl From<DefinedTermOrTextOrUrl> for String {
     fn from(value: DefinedTermOrTextOrUrl) -> Self {
         match value {
-            DefinedTermOrTextOrUrl::DefinedTerm(_term) => "".into(),
+            DefinedTermOrTextOrUrl::DefinedTerm(_) => "".into(),
             DefinedTermOrTextOrUrl::Text(text) => text,
             DefinedTermOrTextOrUrl::Url(url) => url.to_string(),
         }
@@ -864,9 +869,13 @@ pub enum HowToToolOrText {
 }
 
 /// A tool used (but not consumed) when performing instructions for how to achieve a result.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-pub struct HowToToolType {}
+pub struct HowToToolType {
+    pub r#type: AtType,
+    pub name: String,
+    pub required_quantity: Option<NumberOrQuantitativeValueTypeOrText>,
+}
 
 impl<'de> Deserialize<'de> for HowToToolOrText {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -898,11 +907,25 @@ impl<'de> Deserialize<'de> for HowToToolOrText {
                 Ok(Text(v))
             }
 
+            /* TODO: Check how to deal with this.
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut vec: Vec<HowToToolType> = Vec::new();
+                while let Some(action) = seq.next_element::<HowToToolType>()? {
+                    vec.push(action);
+                }
+                Ok(vec)
+            }*/
+
             fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
             where
                 A: MapAccess<'de>,
             {
-                let how = HowToToolType::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                let how = <HowToToolType as Deserialize>::deserialize(
+                    de::value::MapAccessDeserializer::new(map),
+                )?;
                 Ok(HowToTool(how))
             }
         }
@@ -1028,7 +1051,7 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                 }
 
                 let v = match vec.pop() {
-                    None => return Err(Error::custom("sequence is empty")),
+                    None => return Ok(ImageObject(Box::default())),
                     Some(v) => v,
                 };
 
@@ -1360,7 +1383,7 @@ impl<'de> Deserialize<'de> for MonetaryAmountOrText {
 
 #[derive(Debug, PartialEq)]
 pub enum NumberOrText {
-    Number(i64),
+    Number(f64),
     Text(String),
 }
 
@@ -1380,11 +1403,18 @@ impl<'de> Deserialize<'de> for NumberOrText {
                 formatter.write_str("a number or a string")
             }
 
-            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
             where
                 E: Error,
             {
-                Ok(Text(v))
+                Ok(Number(v as f64))
+            }
+
+            fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Number(v as f64))
             }
 
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -1394,18 +1424,74 @@ impl<'de> Deserialize<'de> for NumberOrText {
                 Ok(Text(v.to_owned()))
             }
 
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Text(v))
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum NumberOrQuantitativeValueTypeOrText {
+    Number(i64),
+    QuantitativeValue(QuantitativeValueType),
+    Text(String),
+}
+
+impl<'de> Deserialize<'de> for NumberOrQuantitativeValueTypeOrText {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct Visitor;
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = NumberOrQuantitativeValueTypeOrText;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("a number, a string, or a quantitative value")
+            }
+
             fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
             where
                 E: Error,
             {
-                Ok(Number(v))
+                Ok(NumberOrQuantitativeValueTypeOrText::Number(v))
             }
 
             fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
             where
                 E: Error,
             {
-                Ok(Number(v as i64))
+                Ok(NumberOrQuantitativeValueTypeOrText::Number(v as i64))
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(NumberOrQuantitativeValueTypeOrText::Text(v.to_owned()))
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(NumberOrQuantitativeValueTypeOrText::Text(v))
+            }
+
+            fn visit_map<M>(self, map: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let qv =
+                    QuantitativeValueType::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                Ok(NumberOrQuantitativeValueTypeOrText::QuantitativeValue(qv))
             }
         }
 
@@ -1594,7 +1680,7 @@ impl TryFrom<QuantitativeValueOrText> for i16 {
 }
 
 /// A point value or interval for product characteristics and other purposes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct QuantitativeValueType {
     pub value: i64,
 }
@@ -1751,7 +1837,7 @@ impl From<TextOrTextObject> for String {
     fn from(value: TextOrTextObject) -> Self {
         match value {
             TextOrTextObject::Text(s) if !s.trim().is_empty() => s,
-            TextOrTextObject::TextObject(_obj) => String::new(),
+            TextOrTextObject::TextObject(_) => String::new(),
             _ => String::new(),
         }
     }

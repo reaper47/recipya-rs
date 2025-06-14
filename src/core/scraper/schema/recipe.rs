@@ -1,7 +1,8 @@
+use std::fmt::Formatter;
+
 use reqwest::Url;
 use serde::{Deserialize, Deserializer, de};
-use std::fmt::Formatter;
-use tracing::{error, warn};
+use tracing::warn;
 
 use crate::core::scraper::schema::common::*;
 use crate::core::scraper::schema::nutrition::{NutritionInformationSchema, RestrictedDiet};
@@ -65,7 +66,7 @@ pub struct RecipeSchema {
     pub citation: Option<CreativeWorkOrText>,
 
     /// Comments, typically from users.
-    pub comment: Option<CommentType>,
+    pub comment: Option<Vec<CommentType>>,
 
     /// The number of comments this CreativeWork (e.g. Article, Question or Answer) has received.
     /// This is most applicable to works published in Web sites with commenting system; additional
@@ -126,7 +127,7 @@ pub struct RecipeSchema {
     pub identifier: Option<PropertyValueOrTextOrUrl>,
 
     /// An image of the item. This can be a URL or a fully described ImageObject.
-    pub image: Option<ImageObjectOrUrl>,
+    pub image: Option<Vec<ImageObjectOrUrl>>,
 
     /// The language of the content or performance or used in an action. Please use one of the
     /// language codes from the IETF BCP 47 standard. See also availableLanguage. Supersedes language.
@@ -136,8 +137,12 @@ pub struct RecipeSchema {
     #[serde(default, deserialize_with = "deserialize_bool")]
     pub is_accessible_for_free: bool,
 
+    /// A resource from which this work is derived or from which it is a modification or adaptation.
+    /// Supersedes isBasedOnUrl.
+    pub is_based_on: Option<CreativeWorkOrText>,
+
     /// Indicates an item or CreativeWork that this item, or CreativeWork (in some sense), is part of.
-    // Inverse property: hasPart
+    /// Inverse property: hasPart
     pub is_part_of: Option<CreativeWorkOrUrl>,
 
     /// Keywords or tags used to describe some item. Multiple textual entries in a keywords list
@@ -170,7 +175,7 @@ pub struct RecipeSchema {
 
     /// The length of time it takes to prepare the items to be used in instructions or a
     /// direction, in ISO 8601 duration format.
-    #[serde(alias = "PrepTime")]
+    #[serde(alias = "PrepTime", deserialize_with = "deserialize_iso8601_duration")]
     pub prep_time: Option<iso8601::Duration>,
 
     /// The publisher of the creative work.
@@ -210,7 +215,7 @@ pub struct RecipeSchema {
     /// Indicates a dietary restriction or guideline for which this recipe or menu item
     /// is suitable, e.g. diabetic, halal etc.
     #[serde(default)]
-    pub suitable_for_diet: RestrictedDiet,
+    pub suitable_for_diet: Vec<RestrictedDiet>,
 
     /// A sub-property of instrument. A supply consumed when performing instructions or a direction.
     pub supply: Option<HowToSupplyOrText>,
@@ -220,10 +225,11 @@ pub struct RecipeSchema {
 
     /// A sub property of instrument. An object used (but not consumed) when performing
     /// instructions or a direction.
-    pub tool: Option<HowToToolOrText>,
+    pub tool: Option<Vec<HowToToolOrText>>,
 
     /// The total time required to perform instructions or a direction (including time to prepare
     /// the supplies), in ISO 8601 duration format.
+    #[serde(deserialize_with = "deserialize_iso8601_duration")]
     pub total_time: Option<iso8601::Duration>,
 
     /// The quantity that results by performing instructions. For example, a paper airplane,
@@ -245,7 +251,7 @@ pub struct RecipeSchema {
     pub url: Option<Url>,
 
     /// An embedded video object.
-    pub video: Option<ClipOrVideoObject>,
+    pub video: Option<Vec<ClipOrVideoObject>>,
 
     /// Example/instance/realization/derivation of the concept of this creative work. E.g.
     /// the paperback edition, first edition, or e-book.
@@ -258,60 +264,50 @@ pub struct RecipeSchema {
 }
 
 impl RecipeSchema {
-    /// Fetches the image's url, if it exists.
-    pub fn image_url(&self) -> Option<Url> {
-        match self.image.clone().map(Url::try_from) {
-            Some(Ok(image)) => Some(image),
-            Some(Err(err)) => {
-                error!("Failed to parse RecipeSchema image: {err}");
-                None
-            }
-            _ => None,
-        }
+    /// Extracts image URLs from image objects.
+    pub fn extract_image_urls(&self) -> Option<Vec<Url>> {
+        self.image.clone().map(|vec| {
+            vec.into_iter()
+                .filter_map(|img| match img {
+                    ImageObjectOrUrl::Url(url) => Some(url),
+                    ImageObjectOrUrl::ImageObject(obj) => obj.url,
+                })
+                .collect::<Vec<_>>()
+        })
     }
 
-    /// Fetches the video's url, if it exists.
-    pub fn video_url(&self) -> Option<Url> {
-        match self.video.clone().map(Url::try_from) {
-            Some(Ok(video)) => Some(video),
-            Some(Err(err)) => {
-                error!("Failed to parse RecipeSchema image: {err}");
-                None
-            }
-            _ => None,
-        }
+    /// Extracts content URLs from video objects, filtering out clip objects.
+    pub fn extract_video_content_urls(&self) -> Option<Vec<Url>> {
+        self.video.as_ref().map(|videos| {
+            videos
+                .iter()
+                .filter_map(|video| match video {
+                    ClipOrVideoObject::Clip(clip) => {
+                        warn!("Ignoring clip object in video URL extraction: {clip:?}");
+                        None
+                    }
+                    ClipOrVideoObject::VideoObject(video_obj) => {
+                        Some(video_obj.content_url.clone())
+                    }
+                })
+                .collect()
+        })
     }
 
-    /// Gets the content url of the video.
-    pub fn video_content_url(&self) -> Option<Url> {
-        match self.video.clone() {
-            None => None,
-            Some(v) => match v {
-                ClipOrVideoObject::Clip(_) => {
-                    warn!(
-                        "RecipeSchema video content url will be ignored because of a clip object"
-                    );
-                    None
-                }
-                ClipOrVideoObject::VideoObject(object) => Some(object.content_url),
-            },
-        }
-    }
-
-    /// Gets the embed url of the video.
-    pub fn video_embed_url(&self) -> Option<Url> {
-        match self.video.clone() {
-            None => None,
-            Some(v) => match v {
-                ClipOrVideoObject::Clip(_) => {
-                    warn!(
-                        "RecipeSchema video content url will be ignored because of a clip object"
-                    );
-                    None
-                }
-                ClipOrVideoObject::VideoObject(object) => Some(object.embed_url),
-            },
-        }
+    /// Extracts embedded URLs from video objects, filtering out clip objects.
+    pub fn extract_video_embed_urls(&self) -> Option<Vec<Url>> {
+        self.video.as_ref().map(|videos| {
+            videos
+                .iter()
+                .filter_map(|video| match video {
+                    ClipOrVideoObject::Clip(clip) => {
+                        warn!("Ignoring clip object in video URL extraction: {clip:?}");
+                        None
+                    }
+                    ClipOrVideoObject::VideoObject(video_obj) => Some(video_obj.embed_url.clone()),
+                })
+                .collect()
+        })
     }
 }
 
@@ -488,5 +484,26 @@ impl<'de> Deserialize<'de> for RecipeCuisine {
         }
 
         deserializer.deserialize_any(Visitor)
+    }
+}
+
+fn deserialize_iso8601_duration<'de, D>(
+    deserializer: D,
+) -> Result<Option<iso8601::Duration>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::Error;
+    use serde_json::Value;
+
+    let value: Value = Deserialize::deserialize(deserializer)?;
+
+    match value {
+        Value::Null => Ok(None),
+        Value::String(ref s) if s.trim().is_empty() => Ok(None),
+        Value::String(ref s) => iso8601::duration(s).map(Some).map_err(D::Error::custom),
+        other => Err(D::Error::custom(format!(
+            "Expected a string or null for ISO 8601 duration, got: {other}"
+        ))),
     }
 }

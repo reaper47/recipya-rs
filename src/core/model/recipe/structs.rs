@@ -11,7 +11,8 @@ use crate::core::model::recipe::RecipeForm;
 use crate::core::model::user::User;
 use crate::core::repository::schema;
 use crate::core::scraper::schema::{
-    CreativeWorkOrItemListOrText, HowToToolOrText, NutritionInformationSchema, RecipeSchema,
+    CreativeWorkOrItemListOrText, CreativeWorkOrText, HowToToolOrText, NutritionInformationSchema,
+    RecipeSchema,
 };
 use crate::core::support::fs::FsSupport;
 use crate::core::support::strings::extract_number;
@@ -98,7 +99,7 @@ pub struct RecipeForCreate {
     // For the recipe table
     pub name: String,
     pub description: Option<String>,
-    pub images: Option<Vec<Uuid>>,
+    pub images: Vec<Uuid>,
     pub yield_: Option<i16>,
     pub source: Option<String>,
     pub videos: Vec<VideoForCreate>,
@@ -117,9 +118,9 @@ pub struct RecipeForCreate {
 impl RecipeForCreate {
     /// Returns the first image UUID if available and a vector of the remaining image UUIDs.
     pub fn first_and_rest_images(&self) -> (Option<Uuid>, Vec<Uuid>) {
-        match self.images.as_deref() {
-            Some([first, rest @ ..]) => (Some(*first), rest.to_vec()),
-            _ => (None, Vec::new()),
+        match self.images.as_slice() {
+            [first, rest @ ..] => (Some(*first), rest.to_vec()),
+            [] => (None, Vec::new()),
         }
     }
 }
@@ -129,7 +130,7 @@ impl From<RecipeForm> for RecipeForCreate {
         Self {
             name: form.title,
             description: form.description,
-            images: None,
+            images: vec![],
             yield_: form.yield_,
             source: form.source,
             videos: vec![],
@@ -147,12 +148,17 @@ impl From<RecipeForm> for RecipeForCreate {
 
 impl From<&RecipeSchema> for RecipeForCreate {
     fn from(schema: &RecipeSchema) -> Self {
+        let source = match &schema.is_based_on {
+            Some(CreativeWorkOrText::Text(s)) => Some(s.clone()),
+            _ => schema.url.clone().map(|s| s.to_string()),
+        };
+
         Self {
             name: schema.name.clone().unwrap_or_default(),
             description: schema.description.clone().map(String::from),
-            images: None,
+            images: vec![],
             yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
-            source: schema.url.clone().map(|s| s.into()),
+            source,
             videos: vec![],
             category: String::try_from(schema.recipe_category.clone()).ok(),
             cuisine: schema.recipe_cuisine.clone().map(String::from),
@@ -175,8 +181,9 @@ impl From<&RecipeSchema> for RecipeForCreate {
             tools: schema
                 .tool
                 .clone()
-                .map(ToolForCreate::from)
+                .unwrap_or_default()
                 .into_iter()
+                .map(ToolForCreate::from)
                 .collect(),
         }
     }
@@ -328,7 +335,7 @@ impl Nutrition {
 }
 
 /// Represents the nutritional information provided when creating a new recipe.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct NutritionForCreate {
     pub calories_kcal: Option<i16>,
     pub total_carbohydrates: Option<i16>,
@@ -445,7 +452,7 @@ pub struct Times {
 }
 
 /// Represents the preparation and cooking times for a recipe during creation.
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TimesForCreate {
     pub prep_seconds: i32,
     pub cook_seconds: i32,
@@ -503,6 +510,7 @@ pub struct Tool {
 }
 
 /// Represents a tool being created in the recipe management system.
+#[derive(Debug, PartialEq)]
 pub struct ToolForCreate {
     pub name: String,
     pub quantity: i16,
@@ -964,7 +972,7 @@ mod tests {
             let uuid2 = Uuid::new_v4();
             let uuid3 = Uuid::new_v4();
             let recipe_c = RecipeForCreate {
-                images: Some(vec![uuid1, uuid2, uuid3]),
+                images: vec![uuid1, uuid2, uuid3],
                 ..Default::default()
             };
 
@@ -978,7 +986,7 @@ mod tests {
         fn test_first_and_rest_with_one_image() {
             let uuid1 = Uuid::new_v4();
             let recipe_c = RecipeForCreate {
-                images: Some(vec![uuid1]),
+                images: vec![uuid1],
                 ..Default::default()
             };
 
@@ -991,7 +999,7 @@ mod tests {
         #[test]
         fn test_first_and_rest_with_no_images() {
             let recipe_c = RecipeForCreate {
-                images: None,
+                images: vec![],
                 ..Default::default()
             };
 
@@ -1004,7 +1012,7 @@ mod tests {
         #[test]
         fn test_first_and_rest_with_empty_vec() {
             let recipe_c = RecipeForCreate {
-                images: Some(vec![]),
+                images: vec![],
                 ..Default::default()
             };
 

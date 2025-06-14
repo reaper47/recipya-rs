@@ -33,6 +33,7 @@ pub enum AtType {
     BreadcrumbList,
     CreativeWork,
     HowToStep,
+    HowToTool,
     ImageObject,
     ListItem,
     NewsArticle,

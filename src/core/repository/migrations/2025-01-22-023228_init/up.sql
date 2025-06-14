@@ -89,7 +89,7 @@ CREATE TABLE recipes
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id     BIGINT    NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    UNIQUE (name, description, language, source, user_id)
+    UNIQUE (name, source, yield, user_id)
 );
 
 CREATE TABLE categories

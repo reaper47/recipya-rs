@@ -46,7 +46,7 @@ pub(super) fn toast() -> Markup {
                     h3 #toast-title .font-bold {}
                     div #toast-message .text-xs {}
                 }
-                button #toast_button .btn.btn-sm {
+                button #toast-button .btn.btn-sm {
                     "See"
                 }
             }

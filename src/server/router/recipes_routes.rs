@@ -1,17 +1,107 @@
-use axum::extract::DefaultBodyLimit;
+use std::io::Cursor;
+use std::str::FromStr;
+
+use axum::extract::multipart::{InvalidBoundary, MultipartRejection};
+use axum::extract::{DefaultBodyLimit, FromRequest, Multipart, Request};
 use axum::routing::{get, post};
 use axum::{Router, middleware};
 use serde::{Deserialize, Serialize};
+use tracing::{error, info, warn};
 
-use crate::server::AppState;
+use crate::core::integrations::{App, FileFormat, parse_recipe};
+use crate::core::scraper::schema::RecipeSchema;
 use crate::server::router::handlers::recipes::{
-    add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipes_handler,
-    add_website_post_handler, delete_recipe_categories_handler, delete_recipe_handler,
-    duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
+    add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipe_import_handler,
+    add_recipes_handler, add_website_post_handler, delete_recipe_categories_handler,
+    delete_recipe_handler, duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
     post_recipe_categories_handler, recipes_handler, share_recipe_post_handler,
     supported_applications_handler, supported_websites_handler, view_recipe_handler,
 };
 use crate::server::router::middleware::mw_auth;
+use crate::server::{AppState, Error, Result as ServerResult};
+
+/// Represents the content of the "Add Recipe -> Import from an app" form.
+#[derive(Default)]
+pub struct ImportFromAppForm {
+    pub file_data: Cursor<Vec<u8>>,
+    pub file_name: String,
+    pub app: App,
+    pub file_format: FileFormat,
+}
+
+impl<S> FromRequest<S> for ImportFromAppForm
+where
+    S: Send + Sync,
+{
+    type Rejection = MultipartRejection;
+
+    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
+        let mut multipart = Multipart::from_request(req, state).await?;
+
+        let mut form = ImportFromAppForm::default();
+
+        while let Some(field) = multipart.next_field().await.map_err(|err| {
+            error!("Failed to read multipart field in import recipes from app: {err}");
+            InvalidBoundary::default()
+        })? {
+            let name = field.name().unwrap_or("");
+            match name {
+                "app" => {
+                    let app_name = field.text().await.map_err(|_| InvalidBoundary::default())?;
+                    let app = App::from_str(&app_name.to_lowercase()).unwrap_or_default();
+                    if matches!(app, App::Unknown) {
+                        error!("Import recipes from app form field 'app' is invalid: {app_name}");
+                        return Err(InvalidBoundary::default())?;
+                    }
+                    form.app = app;
+                }
+                "file" => {
+                    let filename = field
+                        .file_name()
+                        .map(|s| s.to_string())
+                        .ok_or(InvalidBoundary::default())?;
+                    form.file_name = filename.clone();
+
+                    let bytes = field
+                        .bytes()
+                        .await
+                        .map_err(|err| {
+                            error!("Failed to read file bytes for '{filename}': {err}");
+                            InvalidBoundary::default()
+                        })?
+                        .to_vec();
+                    form.file_data = Cursor::new(bytes);
+
+                    form.file_format = FileFormat::from_filename(&filename);
+                }
+                _ => {
+                    warn!("Import recipes from app form field '{name}' is not processed")
+                }
+            }
+        }
+
+        info!(
+            "Importing recipes from '{}' using {} parser (format: {})",
+            form.file_name, form.app, form.file_format
+        );
+        Ok(form)
+    }
+}
+
+impl ImportFromAppForm {
+    /// Parses the recipe file contained in the form.
+    pub fn parse_recipes(self) -> ServerResult<Vec<RecipeSchema>> {
+        let data = self.file_data;
+        let app = self.app;
+        let file_name = self.file_name;
+        let file_format = self.file_format;
+
+        parse_recipe(data, app, &file_name, file_format).map_err(|err| {
+            error!("Failed to parse recipe file '{file_name}': {err}");
+            Error::FailParse
+        })
+    }
+}
 
 /// Represents the content of the share recipe form.
 #[derive(Deserialize, Serialize)]
@@ -48,6 +138,10 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
         )
         .route("/{:recipe_id}/share", post(share_recipe_post_handler))
         .route("/add", get(add_recipes_handler))
+        .route(
+            "/add/import",
+            post(add_recipe_import_handler).layer(DefaultBodyLimit::max(50 * 1024 * 1024)),
+        )
         .route(
             "/add/manual",
             get(add_manual_recipe_handler)
@@ -131,9 +225,9 @@ mod tests {
                     r##"<dialog id="websites-dialog" class="modal"><div class="modal-box"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Fetch recipes from websites</h3><form class="py-4" hx-post="/recipes/add/website" hx-swap="none" _="on submit call #websites-dialog.close() then set me.querySelector('textarea').value to ''"><div class="grid mb-4"><label class="floating-label"><span>Enter one or more URLs, each on a new line.</span><textarea class="textarea whitespace-pre-line" name="urls" rows="5" placeholder="URL 1"##,
                     r#"</textarea></label></div><button class="btn btn-block btn-primary btn-sm">Submit</button></form></div></dialog>"#,
                     r##"<dialog id="supported-websites-dialog" class="modal"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search a website" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Website</th></tr></thead><tbody id="search-results"></tbody></table></div></div></dialog>"##,
-                    r##"<dialog class="modal" id="supported-apps-import-dialog"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search an application" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Application</th></tr></thead><tbody id="application-results"></tbody></table></div></div></dialog>"##,
+                    r##"<dialog class="modal" id="supported-apps-import-dialog"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search an application" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Application</th><th class="py-1">File Formats</th></tr></thead><tbody id="application-results"></tbody></table></div></div></dialog>"##,
                     r##"<dialog class="modal" id="add-ocr-dialog"><div class="modal-box"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Scan Recipe</h3><form class="py-4" hx-post="/recipes/add/ocr" hx-encoding="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" _="on submit call document.querySelector('#add-ocr-dialog').close()"><div class="grid mb-4"><label for="add-ocr-files-input" class="floating-label text-sm font-medium mb-1">Select your recipe's images ordered by page or a recipe document in the PDF format.</label><input id="add-ocr-files-input" type="file" name="files" accept=".jpg, .jpeg, .png, .bmp, .tiff, .heif, .pdf" multiple class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none"></div><button class="btn btn-block btn-primary btn-sm">Submit</button></form></div></dialog>"##,
-                    r##"<dialog class="modal" id="import-recipes-dialog"><div class="modal-box"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Import Recipes</h3><form class="py-4" hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none"><div class="grid mb-4"><label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1">Choose files in the .json, .txt, .zip or other application format.</label><input id="import-dialog-file" type="file" name="files" accept=".cml,.crumb,.json,.mxp,.paprikarecipes,.txt,.zip" multiple class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none"></div><button type="submit" class="btn btn-block btn-primary btn-sm" onclick="document.querySelector('#import-recipes-dialog').close()">Submit</button></form></div></dialog>"##,
+                    r##"<dialog class="modal" id="import-recipes-dialog"><div class="modal-box w-fit"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Import Recipes</h3><form class="py-4" hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()"><div><div class="grid mb-4"><label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1">Select a file</label><input id="import-dialog-file" type="file" name="file" required accept=".cook,.crumb,.json,.mcb,.md,.mmf,.mx2,.mxp,.mz2,.mm,.mmf,.paprikarecipes,.rzk,.rk,.rzk,.txt,.xml" class="file-input"></div><div><label for="app-select" class="floating-label text-sm font-semibold mb-1">Select the application</label><select class="select" id="app-select" name="app"><option value="accuchef">AccuChef</option><option value="bigoven">BigOven</option><option value="cheftap">ChefTap</option><option value="cooklang">Cooklang</option><option value="cookmate">CookMate</option><option value="crouton">Crouton</option><option value="kalorio">Kalorio</option><option value="mastercook">MasterCook</option><option value="mealmaster">MealMaster</option><option value="paprika">Paprika</option><option value="recipemd">RecipeMD</option><option value="recipesage">RecipeSage</option><option value="rezkonv">Rezkonv</option><option value="saffron">Saffron</option></select></div></div><button type="submit" class="btn btn-block btn-primary btn-sm mt-4">Submit</button></form></div></dialog>"##,
                 ],
             )
         }
@@ -350,7 +444,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
             Recipe::create(&state.mm, 1, &recipe).await?;
-            recipe.images = None;
+            recipe.images = Vec::new();
             recipe.videos = Vec::new();
 
             let res = server
@@ -454,7 +548,7 @@ mod tests {
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
                 description: Some("Trust me. They're delicious.".into()),
-                images: Some(vec![Uuid::new_v4(), Uuid::new_v4()]),
+                images: vec![Uuid::new_v4(), Uuid::new_v4()],
                 yield_: Some(12),
                 source: Some("My father's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -973,7 +1067,7 @@ mod tests {
             let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
-            recipe.images = None;
+            recipe.images = vec![];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -997,7 +1091,7 @@ mod tests {
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             let img1 = Uuid::new_v4();
-            recipe.images = Some(vec![img1]);
+            recipe.images = vec![img1];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1020,7 +1114,7 @@ mod tests {
             let state = create_app_state(config).await;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
-            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
+            recipe.images = vec![Uuid::nil(), Uuid::nil()];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1049,7 +1143,7 @@ mod tests {
                 content_url: Some("https://example.com/embed/yg8FG4".into()),
                 embed_url: None,
             }];
-            recipe.images = None;
+            recipe.images = vec![];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1085,7 +1179,7 @@ mod tests {
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            recipe.images = None;
+            recipe.images = vec![];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1122,7 +1216,7 @@ mod tests {
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            recipe.images = Some(vec![Uuid::nil(), Uuid::nil()]);
+            recipe.images = vec![Uuid::nil(), Uuid::nil()];
             let _recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -1209,6 +1303,98 @@ mod tests {
                     r#"<h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><ol class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">"#,
                 ],
             )
+        }
+    }
+
+    mod tests_recipes_add_import {
+        use super::*;
+
+        use axum_test::http::StatusCode;
+        
+        use crate::core::model::Recipe;
+        use crate::server::test_utils::{assert_ws_message, build_server_ws, create_app_state, open_test_file, HIDDEN_WS_NOTIFICATION};
+
+        const BASE_URI: &str = "/recipes/add/import";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_post_payload_too_large() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let large_payload = "x".repeat(51 * 1024 * 1024);
+
+            let res = server
+                .post(BASE_URI)
+                .multipart(
+                    MultipartForm::new()
+                        .add_part("app", Part::text("mealmaster"))
+                        .add_part("file", Part::bytes(large_payload.into_bytes())
+                            .file_name("cookmate1.mcb")
+                            .mime_type("application/octet-stream"))
+                )
+                .await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_post_error_parsing_files() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let file = open_test_file("integrations/kalorio1.txt");
+
+            let res = server
+                .post(BASE_URI)
+                .multipart(
+                    MultipartForm::new()
+                        .add_part("app", Part::text("mealmaster"))
+                        .add_part("file", Part::bytes(file.into_inner())
+                            .file_name("kalorio1.txt")
+                            .mime_type("application/octet-stream"))
+                )
+                .await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Parsing recipes...</p><div id="export-progress"><progress max="100" value="1.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"No recipes found","status":"alert-warning","title":"Attention"}}"#).await;
+            let state = create_app_state(config).await;
+            pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 0);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_post_valid_request() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let file = open_test_file("integrations/kalorio1.txt");
+
+            let res = server
+                .post(BASE_URI)
+                .multipart(
+                    MultipartForm::new()
+                        .add_part("app", Part::text("kalorio"))
+                        .add_part("file", Part::bytes(file.into_inner())
+                            .file_name("kalorio1.txt")
+                            .mime_type("application/octet-stream"))
+                )
+                .await;
+
+            res.assert_status(StatusCode::ACCEPTED);
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Parsing recipes...</p><div id="export-progress"><progress max="100" value="1.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Saving recipes</p><div id="export-progress"><progress max="100" value="33.33"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Saving recipes</p><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Saving recipes</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+            assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Imported 3 recipes. Skipped 0.","status":"alert-info","title":"Operation Successful"}}"#).await;
+            let state = create_app_state(config).await;
+            pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 3);
+            Ok(())
         }
     }
 
@@ -1458,7 +1644,7 @@ mod tests {
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".into(),
                 description: Some("Your mouth will drool like never before".into()),
-                images: Some(vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()]),
+                images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
                 yield_: Some(6),
                 source: Some("My mother's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -1921,7 +2107,7 @@ mod tests {
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 2/3</p><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 3/3</p><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 1. Skipped: 2","status":"alert-info","title":"Operation Successful"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 0. Skipped: 3","status":"alert-info","title":"Operation Successful"}}"#).await;
             tokio::time::sleep(Duration::from_millis(50)).await;
             let got_logs = fetch_logs(config.clone()).await?;
             pretty_assertions::assert_eq!(
@@ -1929,28 +2115,28 @@ mod tests {
                 vec![ReportLog {
                     id: 1,
                     report_id: 1,
-                    title: "http://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs".to_string(),
+                    title: "http://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs".to_owned(),
                     is_success: false,
                     is_warning: false,
                     is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_string(),
+                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
                 }, ReportLog {
                     id: 2,
                     report_id: 1,
-                    title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies"
-                        .to_string(),
+                    title: "https://www.acouplecooks.com/chicken-meatballs-baked"
+                        .to_owned(),
                     is_success: false,
                     is_warning: false,
                     is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_string(),
+                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
                 }, ReportLog {
                     id: 3,
                     report_id: 1,
-                    title: "https://www.acouplecooks.com/chicken-meatballs-baked".to_string(),
-                    is_success: true,
+                    title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies".to_owned(),
+                    is_success: false,
                     is_warning: false,
-                    is_error: false,
-                    error_reason: "".to_string(),
+                    is_error: true,
+                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
                 },  ]
             );
             Ok(())
@@ -2015,7 +2201,7 @@ mod tests {
 
             res.assert_status_ok();
             res.assert_header(CONTENT_TYPE, "text/html; charset=utf-8");
-            res.assert_text_contains(r#"<tr class="text-center"><td>1</td><td><a class="underline" href="https://www.accuchef.com" target="_blank">AccuChef</a></td></tr><tr class="text-center"><td>2</td><td><a class="underline" href="https://cheftap.com" target="_blank">ChefTap</a></td></tr><tr class="text-center"><td>3</td><td><a class="underline" href="https://crouton.app" target="_blank">Crouton</a></td></tr><tr class="text-center"><td>4</td><td><a class="underline" href="https://easy-recipe-deluxe.software.informer.com" target="_blank">Easy Recipe Deluxe</a></td></tr><tr class="text-center"><td>5</td><td><a class="underline" href="https://www.kalorio.de" target="_blank">Kalorio</a></td></tr><tr class="text-center"><td>6</td><td><a class="underline" href="https://www.mastercook.com" target="_blank">MasterCook</a></td></tr><tr class="text-center"><td>7</td><td><a class="underline" href="https://www.paprikaapp.com" target="_blank">Paprika</a></td></tr><tr class="text-center"><td>8</td><td><a class="underline" href="https://recipekeeperonline.com" target="_blank">Recipe Keeper</a></td></tr><tr class="text-center"><td>9</td><td><a class="underline" href="https://recipesage.com" target="_blank">RecipeSage</a></td></tr><tr class="text-center"><td>10</td><td><a class="underline" href="https://www.mysaffronapp.com" target="_blank">Saffron</a></td></tr>"#);
+            res.assert_text_contains(r#"<tr class="text-center"><td>1</td><td><a class="underline" href="https://www.accuchef.com" target="_blank">AccuChef</a></td><td></td></tr><tr class="text-center"><td>2</td><td><a class="underline" href="https://www.bigoven.com" target="_blank">BigOven</a></td><td>.txt</td></tr><tr class="text-center"><td>3</td><td><a class="underline" href="https://cheftap.com" target="_blank">ChefTap</a></td><td>.txt</td></tr><tr class="text-center"><td>4</td><td><a class="underline" href="https://cooklang.org/" target="_blank">Cooklang</a></td><td>.cook</td></tr><tr class="text-center"><td>5</td><td><a class="underline" href="https://cooklang.org/" target="_blank">COOKmate</a></td><td>.mcb, .mmf, .rk, .xml</td></tr><tr class="text-center"><td>6</td><td><a class="underline" href="https://crouton.app" target="_blank">Crouton</a></td><td>.crumb</td></tr><tr class="text-center"><td>7</td><td><a class="underline" href="https://easy-recipe-deluxe.software.informer.com" target="_blank">Easy Recipe Deluxe</a></td><td></td></tr><tr class="text-center"><td>8</td><td><a class="underline" href="https://www.kalorio.de" target="_blank">Kalorio</a></td><td>.txt, .xml</td></tr><tr class="text-center"><td>9</td><td><a class="underline" href="https://www.mastercook.com" target="_blank">MasterCook</a></td><td>.mx2, .mxp, .mz2, .txt</td></tr><tr class="text-center"><td>10</td><td><a class="underline" href="https://web.archive.org/web/20081221021301/http://episoft.home.comcast.net/~episoft/mmdown.htm" target="_blank">Meal-Master</a></td><td>.mx2, .mxp, .mz2, .txt</td></tr><tr class="text-center"><td>11</td><td><a class="underline" href="https://www.paprikaapp.com" target="_blank">Paprika</a></td><td>.paprikarecipes</td></tr><tr class="text-center"><td>12</td><td><a class="underline" href="https://recipekeeperonline.com" target="_blank">Recipe Keeper</a></td><td></td></tr><tr class="text-center"><td>13</td><td><a class="underline" href="https://recipemd.org/" target="_blank">RecipeMD</a></td><td>.md</td></tr><tr class="text-center"><td>14</td><td><a class="underline" href="https://recipesage.com" target="_blank">RecipeSage</a></td><td>.json, .txt, .xml</td></tr><tr class="text-center"><td>15</td><td><a class="underline" href="https://www.rezkonv.de/" target="_blank">Rezkonv</a></td><td>.rk</td></tr><tr class="text-center"><td>16</td><td><a class="underline" href="https://www.mysaffronapp.com" target="_blank">Saffron</a></td><td>.txt</td></tr>"#);
             Ok(())
         }
     }
@@ -2078,14 +2264,12 @@ mod tests {
             form = form.add_part("yield", Part::text(n.to_string()));
         }
 
-        if let Some(images) = &recipe.images {
-            for image in images {
-                let file_name = format!("{image}.jpg");
-                form = form.add_part(
-                    "media",
-                    Part::file_name(Part::text(image.to_string()), file_name),
-                );
-            }
+        for image in &recipe.images {
+            let file_name = format!("{image}.jpg");
+            form = form.add_part(
+                "media",
+                Part::file_name(Part::text(image.to_string()), file_name),
+            );
         }
 
         for video in &recipe.videos {

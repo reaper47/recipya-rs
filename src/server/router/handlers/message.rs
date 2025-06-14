@@ -12,6 +12,7 @@ pub trait IMessage {
     ) -> MessageBuilder;
     fn error(message: impl Into<String>) -> Self;
     fn success(message: impl Into<String>) -> Self;
+    fn warning(message: impl Into<String>) -> Self;
 }
 
 /// Represents an HTMX-compatible message.
@@ -140,6 +141,18 @@ impl IMessage for MessageHtmx {
             },
         }
     }
+
+    fn warning(message: impl Into<String>) -> Self {
+        Self {
+            content: Content {
+                _type: MessageType::Toast,
+                message: message.into(),
+                title: "Attention".into(),
+                status: MessageStatus::Warning,
+                ..Default::default()
+            },
+        }
+    }
 }
 
 impl IMessage for MessageWs {
@@ -171,6 +184,16 @@ impl IMessage for MessageWs {
             content: Content {
                 message: message.into(),
                 title: "Operation Successful".to_string(),
+                ..Default::default()
+            },
+        }
+    }
+
+    fn warning(message: impl Into<String>) -> Self {
+        Self {
+            content: Content {
+                message: message.into(),
+                title: "Attention".to_string(),
                 ..Default::default()
             },
         }

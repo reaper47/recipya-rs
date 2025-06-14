@@ -1,8 +1,8 @@
-use std::str::FromStr;
-
-use derive_more::From;
+use std::str::{FromStr, from_utf8};
 
 use crate::impl_display_as_debug;
+use derive_more::From;
+use encoding_rs::{ISO_8859_15, WINDOWS_1252};
 
 /// Extracts a number from a string, if it exists.
 pub fn extract_number<T>(s: String) -> Result<T>
@@ -14,6 +14,24 @@ where
         .ok_or(Error::NoNumberFound)?
         .parse::<T>()
         .map_err(|_| Error::Conversion)
+}
+
+/// Attempts to convert a buffer to UTF-8 if not already in this encoding.
+pub fn auto_convert_to_utf8(buffer: &[u8]) -> String {
+    if let Ok(content) = from_utf8(buffer) {
+        return content.to_string();
+    }
+
+    let encodings = [WINDOWS_1252, ISO_8859_15];
+
+    for encoding in &encodings {
+        let (content, _encoding, had_errors) = encoding.decode(buffer);
+        if !had_errors {
+            return content.to_string();
+        }
+    }
+
+    String::from_utf8_lossy(buffer).to_string()
 }
 
 /// Result type for errors related to strings.

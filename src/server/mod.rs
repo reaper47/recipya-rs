@@ -155,13 +155,14 @@ impl AppState {
 
 #[cfg(test)]
 pub mod test_utils {
-    use std::env;
-
     use axum::Router;
     use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
     use diesel::internal::derives::multiconnection::chrono;
     use diesel::internal::derives::multiconnection::chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use diesel::{Connection, sql_query};
+    use std::env;
+    use std::fs::File;
+    use std::io::{Cursor, Read};
     use std::sync::Arc;
     use tower_cookies::{Cookie, CookieManagerLayer};
     use tracing::error;
@@ -457,7 +458,7 @@ pub mod test_utils {
         RecipeForCreate {
             name: "Best Chinese Kale".into(),
             description: Some("This is the most delicious recipe!".into()),
-            images: Some(vec![main_image, secondary_image]),
+            images: vec![main_image, secondary_image],
             yield_: Some(4),
             source: Some(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
@@ -533,7 +534,7 @@ pub mod test_utils {
     pub fn a_complete_recipe() -> RecipeDetails {
         let recipe_c = a_complete_recipe_for_create();
 
-        let images = recipe_c.images.expect("some images");
+        let images = recipe_c.images;
         let additional_images = images.last().iter().cloned().cloned().collect::<Vec<_>>();
 
         let created_date = NaiveDate::from_ymd_opt(2012, 12, 31).expect("end of the world");
@@ -639,5 +640,14 @@ pub mod test_utils {
         res.assert_status_see_other();
         res.assert_header("Location", "/auth/login");
         Ok(())
+    }
+
+    /// Opens a data test file and returns its contents as a `Cursor`.
+    pub fn open_test_file(filename: &str) -> Cursor<Vec<u8>> {
+        let path = format!("./tests/data/{filename}");
+        let mut file = File::open(path).expect("File to exist");
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf).expect("Failed to read file");
+        Cursor::new(buf)
     }
 }
