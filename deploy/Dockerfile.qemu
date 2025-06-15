@@ -1,111 +1,123 @@
 # Stage 1: Build
-FROM --platform=$BUILDPLATFORM rust:1.87.0-slim AS build
+FROM rust:1.87.0-slim AS build
 
+# Accept target architecture as build arg
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-# Install base dependencies and cross-compilation tools
+# Map Docker platforms to Rust targets
+RUN case "$TARGETPLATFORM" in \
+        "linux/amd64") echo "x86_64-unknown-linux-gnu" > /target.txt ;; \
+        "linux/arm64") echo "aarch64-unknown-linux-gnu" > /target.txt ;; \
+        *) echo "Unsupported platform: $TARGETPLATFORM" && exit 1 ;; \
+    esac
+
+# Install cross and dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
         pkg-config \
+        libssl-dev \
+        libpq-dev \
         ca-certificates \
-        perl \
-        perl-base && \
+        curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Install cross-compilation toolchain and target-specific dependencies
-RUN case "$TARGETPLATFORM" in \
-      "linux/arm64") \
-        apt-get update && \
-        apt-get install -y --no-install-recommends \
-          gcc-aarch64-linux-gnu \
-          libc6-dev-arm64-cross \
-          libssl-dev:arm64 \
-          libpq-dev:arm64 \
-          ffmpeg && \
-        rm -rf /var/lib/apt/lists/* && \
-        echo "aarch64-unknown-linux-gnu" > /tmp/target.txt && \
-        echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> /tmp/env.txt && \
-        echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> /tmp/env.txt && \
-        echo "AR_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ar" >> /tmp/env.txt && \
-        echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> /tmp/env.txt && \
-        echo "PKG_CONFIG_ALLOW_CROSS=1" >> /tmp/env.txt && \
-        echo "PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig" >> /tmp/env.txt \
-        ;; \
-      "linux/amd64"|*) \
-        apt-get update && \
-        apt-get install -y --no-install-recommends \
-          libssl-dev \
-          libpq-dev \
-          ffmpeg && \
-        rm -rf /var/lib/apt/lists/* && \
-        echo "x86_64-unknown-linux-gnu" > /tmp/target.txt && \
-        touch /tmp/env.txt \
-        ;; \
-    esac
+# Install cross
+RUN cargo install cross --git https://github.com/cross-rs/cross
 
 WORKDIR /usr/src/recipya
 
-# Set environment variables for cross-compilation
-RUN if [ -s /tmp/env.txt ]; then \
-      while IFS= read -r line; do \
-        echo "export $line" >> /etc/environment; \
-      done < /tmp/env.txt; \
-    fi
-
-# QEMU-specific environment variables
-ENV CARGO_NET_RETRY=10
-ENV CARGO_INCREMENTAL=0
-ENV RUST_BACKTRACE=0
-ENV RUST_LOG=error
+# Set environment variables
 ENV OPENSSL_NO_VENDOR=1
-ENV RUST_MIN_STACK=67108864
-ENV CARGO_BUILD_JOBS=1
+ENV PKG_CONFIG_ALLOW_CROSS=1
 
-# Add Rust target for cross-compilation
-RUN export TARGET=$(cat /tmp/target.txt) && \
-    if [ "$TARGET" != "x86_64-unknown-linux-gnu" ]; then \
-        rustup target add $TARGET; \
-    fi
+# Copy manifests
+COPY Cargo.toml Cargo.lock ./
 
-# Copy source
+# Create dummy source and build dependencies
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cross build --release --target $(cat /target.txt) && \
+    rm -rf src target/$(cat /target.txt)/release/deps/recipya*
+
+# Copy source code
 COPY . .
 
-# Build with proper cross-compilation setup
-RUN export TARGET=$(cat /tmp/target.txt) && \
-    if [ -s /tmp/env.txt ]; then \
-      set -a && . /tmp/env.txt && set +a; \
-    fi && \
-    if [ "$TARGET" = "x86_64-unknown-linux-gnu" ]; then \
-        cargo build --release --locked; \
-    else \
-        ulimit -s unlimited && \
-        cargo build --release --locked --target $TARGET --jobs 1; \
-    fi
+# Build the actual application
+RUN cross build --release --locked --target $(cat /target.txt)
 
-# Copy the built binary to a standard location
-RUN export TARGET=$(cat /tmp/target.txt) && \
-    if [ "$TARGET" = "x86_64-unknown-linux-gnu" ]; then \
-        cp target/release/recipya-rs /usr/local/bin/recipya; \
-    else \
-        cp target/$TARGET/release/recipya-rs /usr/local/bin/recipya; \
-    fi
+# Copy the binary to a standard location
+RUN cp target/$(cat /target.txt)/release/recipya-rs /usr/local/bin/recipya
 
-# Rest of your dependency copying logic...
+# ---------------------------------------------------
+# 2 - Runtime Dependencies Stage
+# ---------------------------------------------------
+FROM debian:12-slim AS runtime-deps
+
+ARG TARGETPLATFORM
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ffmpeg \
+        pax-utils \
+        libpq5 \
+        libssl3 \
+        libgssapi-krb5-2 \
+        libldap-2.5-0 \
+        libkrb5-3 \
+        libk5crypto3 \
+        libsasl2-2 \
+        libgnutls30 \
+        libcom-err2 \
+        libkeyutils1 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create runtime dependencies directory
 RUN mkdir -p /runtime-deps/usr/bin /runtime-deps/usr/lib /runtime-deps/lib
-RUN cp /usr/bin/ffmpeg /usr/bin/ffprobe /runtime-deps/usr/bin/ 2>/dev/null || true
 
-# Stage 2: Runtime
+# Copy ffmpeg binaries
+RUN cp /usr/bin/ffmpeg /usr/bin/ffprobe /runtime-deps/usr/bin/
+
+# Copy required libraries using lddtree
+RUN lddtree -l /usr/bin/ffmpeg /usr/bin/ffprobe | \
+    grep -v '^(' | \
+    xargs -I '{}' cp -L --parents '{}' /runtime-deps/ 2>/dev/null || true
+
+# Determine architecture-specific library path
+RUN case "$TARGETPLATFORM" in \
+        "linux/amd64") echo "x86_64-linux-gnu" > /arch.txt ;; \
+        "linux/arm64") echo "aarch64-linux-gnu" > /arch.txt ;; \
+        *) echo "Unsupported platform: $TARGETPLATFORM" && exit 1 ;; \
+    esac
+
+# Copy architecture-specific libraries
+RUN ARCH=$(cat /arch.txt) && \
+    find /usr/lib/${ARCH} /lib/${ARCH} -name "libpq.so*" -o \
+         -name "libssl.so*" -o -name "libcrypto.so*" -o -name "libgssapi_krb5.so*" -o \
+         -name "libldap*.so*" -o -name "libkrb5*.so*" -o -name "libk5crypto.so*" -o \
+         -name "libsasl2.so*" -o -name "libgnutls.so*" -o -name "libcom_err.so*" -o \
+         -name "libkeyutils.so*" 2>/dev/null | \
+    xargs -I '{}' cp -L '{}' /runtime-deps/usr/lib/ 2>/dev/null || true
+
+# ---------------------------------------------------
+# 3 - Final Stage
+# ---------------------------------------------------
 FROM gcr.io/distroless/cc-debian12
+
 LABEL org.opencontainers.image.source="https://github.com/reaper47/recipya-rs" \
       org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy." \
       org.opencontainers.image.licenses="AGPL-3.0"
 
-COPY --from=build /runtime-deps/usr /usr
-COPY --from=build /runtime-deps/lib /lib
+# Copy runtime dependencies
+COPY --from=runtime-deps /runtime-deps/usr /usr
+COPY --from=runtime-deps /runtime-deps/lib /lib
+
+# Copy application binary
 COPY --from=build /usr/local/bin/recipya /usr/local/bin/recipya
 
 USER nonroot:nonroot
 EXPOSE 8078
+
 CMD ["/usr/local/bin/recipya", "server"]
