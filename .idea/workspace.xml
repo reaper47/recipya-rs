@@ -338,7 +338,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "improve-docker",
+    "git-widget-placeholder": "#139 on improve-docker",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/tests/data/integrations",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
