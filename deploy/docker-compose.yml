@@ -2,9 +2,10 @@ services:
   recipya-app:
     container_name: recipya
     restart: unless-stopped
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
+    image: recipya-rs:test
+    #build:
+    #  context: ..
+    #  dockerfile: deploy/Dockerfile
     environment:
       - RUST_LOG=debug,tokio_cron_scheduler=off
       - RECIPYA_DATABASE_URL=postgres://postgres:postgres@recipya-db:5432

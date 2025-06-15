@@ -15,10 +15,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/tests/data/integrations/kalorio1.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/nightly.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/nightly.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/router/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/cli/server.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cli/server.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -339,7 +341,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#120 on 42-implement-post-recipesaddimport",
+    "git-widget-placeholder": "improve-docker",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/tests/data/integrations",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
