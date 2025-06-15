@@ -68,7 +68,7 @@ jobs:
           #- os: windows-latest
           #  target: x86_64-pc-windows-gnu
           #  artifact: recipya-nightly-x86_64-pc-windows-gnu.exe
-          
+
     steps:
       - uses: actions/checkout@v4
 
@@ -79,13 +79,13 @@ jobs:
 
       - name: Install Cross
         if: runner.os == 'Linux'
-        run: | 
+        run: |
           cargo install cross --git https://github.com/cross-rs/cross
           git clone https://github.com/cross-rs/cross
 
       - name: Build Archive
         shell: bash
-        run: |         
+        run: |
           BASE_DIR="staging-directory"
           mkdir -p "$BASE_DIR"
 
@@ -104,7 +104,7 @@ jobs:
 
           cp ./deploy/.env.example "${TARGET_DIR}/.env"
           cp LICENSE "${TARGET_DIR}/LICENSE"
-          
+
           if [ "${{ runner.os }}" = "Windows" ]; then
             sha256sum "${TARGET_DIR}/${BINARY_NAME}.exe" > "${TARGET_DIR}/${BINARY_NAME}.sha256"
           else
@@ -147,12 +147,50 @@ jobs:
             downloads/recipya-nightly-x86_64-unknown-linux-gnu
             downloads/recipya-nightly-aarch64-unknown-linux-gnu
 
-  # TODO: Simplify this workflow by merging these together using `platforms: linux/arm64, linux/amd64`.
-  # Problem is `COPY --from=build /usr/lib/${ARCH}-linux-gnu/[...]]* /usr/lib/${ARCH}-linux-gnu/`. 
-  build-push-arm64:
-    runs-on: ubuntu-24.04-arm
+  build-push-db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: commits
+    if: ${{ needs.commits.outputs.numCommits > 0 }}
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push database image
+        id: build-db
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./deploy/Dockerfile.db
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          tags: |
+            ${{ env.REGISTRY_IMAGE }}-db:nightly 
+            ${{ env.GHCR_IMAGE }}-db:nightly
+          push: true
+          cache-from: type=gha,scope=db
+          cache-to: type=gha,mode=max,scope=db
+
+  build-push:
+    runs-on: ubuntu-latest
     timeout-minutes: 480
-    needs: release
+    needs: commits
+    if: ${{ needs.commits.outputs.numCommits > 0 }}
 
     steps:
       - name: Login to Docker Hub
@@ -178,91 +216,12 @@ jobs:
         with: 
           context: .
           file: ./deploy/Dockerfile
-          platforms: linux/arm64
-          build-args: |
-            ARCH=aarch64
+          platforms: linux/amd64,linux/arm64
           labels: ${{ steps.meta.outputs.labels }}
-          tags: |
-            ${{ env.REGISTRY_IMAGE }}:nightly-arm64
-            ${{ env.GHCR_IMAGE }}:nightly-arm64
           provenance: false
-          push: true
-
-  build-push-amd64:
-    runs-on: ubuntu-latest
-    timeout-minutes: 480
-    needs: release
-
-    steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Login to Github Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Build and push digest
-        id: build
-        uses: docker/build-push-action@v6 
-        with: 
-          context: .
-          file: ./deploy/Dockerfile
-          platforms: linux/amd64
-          build-args: |
-            ARCH=x86_64
-          labels: ${{ steps.meta.outputs.labels }}
           tags: |
-            ${{ env.REGISTRY_IMAGE }}:nightly-amd64
-            ${{ env.GHCR_IMAGE }}:nightly-amd64
-          provenance: false
+            ${{ env.REGISTRY_IMAGE }}:nightly 
+            ${{ env.GHCR_IMAGE }}:nightly
           push: true
-
-  create-manifests:
-    runs-on: ubuntu-latest
-    needs: [build-push-amd64, build-push-arm64]
-
-    steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Login to Github Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Create SHA manifest and push
-        run: |
-          docker manifest create \
-            ${{ env.GHCR_IMAGE }}:nightly \
-            --amend ${{ env.GHCR_IMAGE }}:nightly-amd64 \
-            --amend ${{ env.GHCR_IMAGE }}:nightly-arm64
-
-          docker manifest push ${{ env.GHCR_IMAGE }}:nightly
-
-      - name: Create latest manifest and push
-        run: |
-          docker manifest create \
-            ${{ env.REGISTRY_IMAGE }}:nightly \
-            --amend ${{ env.REGISTRY_IMAGE }}:nightly-amd64 \
-            --amend ${{ env.REGISTRY_IMAGE }}:nightly-arm64
-
-          docker manifest push ${{ env.REGISTRY_IMAGE }}:nightly
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app

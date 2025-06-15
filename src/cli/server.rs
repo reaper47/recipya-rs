@@ -51,7 +51,7 @@ pub async fn server() -> Result<()> {
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 
-    let listener = TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], 8078))).await?;
+    let listener = TcpListener::bind("0.0.0.0:8078").await?;
     info!("Serving at http://{}", listener.local_addr()?);
     axum::serve(listener, router)
         .with_graceful_shutdown(shutdown_signal())

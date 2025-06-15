@@ -542,7 +542,11 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
     });
 }
 
-async fn parse_recipes(state: &AppState, form: ImportFromAppForm, user_id: i64) -> Option<Vec<RecipeSchema>> {
+async fn parse_recipes(
+    state: &AppState,
+    form: ImportFromAppForm,
+    user_id: i64,
+) -> Option<Vec<RecipeSchema>> {
     state
         .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
         .await;
