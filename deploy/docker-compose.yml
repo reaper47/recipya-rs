@@ -2,10 +2,7 @@ services:
   recipya-app:
     container_name: recipya
     restart: unless-stopped
-    image: recipya-rs:test
-    #build:
-    #  context: ..
-    #  dockerfile: deploy/Dockerfile
+    image: reaper99/recipya-rs
     environment:
       - RUST_LOG=debug,tokio_cron_scheduler=off
       - RECIPYA_DATABASE_URL=postgres://postgres:postgres@recipya-db:5432
@@ -27,12 +24,9 @@ services:
         condition: service_healthy
   
   recipya-db:
-    container_name: recipya-db 
+    container_name: recipya-rs-db
     restart: unless-stopped
-    image: recipya-db
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile.db
+    image: recipya-rs-db
     environment:
       POSTGRES_DB: recipya
       POSTGRES_USER: postgres

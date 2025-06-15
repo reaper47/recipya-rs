@@ -123,8 +123,7 @@ pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
 where
     R: Read + Seek,
 {
-    let content = read_file(r)?
-        .replace("\n \n", "\n\n");
+    let content = read_file(r)?.replace("\n \n", "\n\n");
 
     Ok(parse_meal_master_recipe(&content)?
         .into_iter()

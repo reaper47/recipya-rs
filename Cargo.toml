@@ -16,7 +16,7 @@ async-trait = "0.1.88"
 axum = { version = "0.8.4", features = ["multipart", "ws"] }
 axum-htmx = "0.8.1"
 base64 = "0.22.1"
-clap = { version = "4.5.38", features = ["derive"] }
+clap = { version = "4.5.40", features = ["derive"] }
 cooklang = "0.16.1"
 derive_more = { version = "2.0.1", features = ["from", "display"] }
 diesel = { version = "2.2.10", features = ["postgres", "chrono", "serde_json", "uuid"] }
@@ -69,7 +69,7 @@ uuid = { version = "1.17.0", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 webp = "0.3.0"
 whatlang = "0.16.4"
-zip = "4.0.0"
+zip = "4.1.0"
 
 [dev-dependencies]
 axum-test = { version = "17.2.0", features = ["ws"] }

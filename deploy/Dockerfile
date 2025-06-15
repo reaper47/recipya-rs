@@ -1,10 +1,7 @@
-# Stage 1: Build
+# ---------------------------------------------------
+# 1 - Build Stage
+# ---------------------------------------------------
 FROM rust:1.87.0-slim AS build
-
-# docker build . --build-arg="ARCH=x86_64" or docker build . --build-arg="ARCH=aarch64"
-# docker-compose build --build-arg "ARCH=x86_64" or docker-compose build --build-arg "ARCH=aarch64"
-#ARG ARCH=x86_64
-#ARG TARGETARCH
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -63,7 +60,6 @@ COPY --from=build /runtime-deps/lib /lib
 
 # Copy application files
 COPY --from=build /usr/src/recipya/target/release/recipya-rs /usr/local/bin/recipya
-#COPY ./deploy/.env.example /.env
 
 USER nonroot:nonroot
 EXPOSE 8078

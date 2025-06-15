@@ -1310,9 +1310,12 @@ mod tests {
         use super::*;
 
         use axum_test::http::StatusCode;
-        
+
         use crate::core::model::Recipe;
-        use crate::server::test_utils::{assert_ws_message, build_server_ws, create_app_state, open_test_file, HIDDEN_WS_NOTIFICATION};
+        use crate::server::test_utils::{
+            HIDDEN_WS_NOTIFICATION, assert_ws_message, build_server_ws, create_app_state,
+            open_test_file,
+        };
 
         const BASE_URI: &str = "/recipes/add/import";
 
@@ -1332,9 +1335,12 @@ mod tests {
                 .multipart(
                     MultipartForm::new()
                         .add_part("app", Part::text("mealmaster"))
-                        .add_part("file", Part::bytes(large_payload.into_bytes())
-                            .file_name("cookmate1.mcb")
-                            .mime_type("application/octet-stream"))
+                        .add_part(
+                            "file",
+                            Part::bytes(large_payload.into_bytes())
+                                .file_name("cookmate1.mcb")
+                                .mime_type("application/octet-stream"),
+                        ),
                 )
                 .await;
 
@@ -1353,9 +1359,12 @@ mod tests {
                 .multipart(
                     MultipartForm::new()
                         .add_part("app", Part::text("mealmaster"))
-                        .add_part("file", Part::bytes(file.into_inner())
-                            .file_name("kalorio1.txt")
-                            .mime_type("application/octet-stream"))
+                        .add_part(
+                            "file",
+                            Part::bytes(file.into_inner())
+                                .file_name("kalorio1.txt")
+                                .mime_type("application/octet-stream"),
+                        ),
                 )
                 .await;
 
@@ -1379,9 +1388,12 @@ mod tests {
                 .multipart(
                     MultipartForm::new()
                         .add_part("app", Part::text("kalorio"))
-                        .add_part("file", Part::bytes(file.into_inner())
-                            .file_name("kalorio1.txt")
-                            .mime_type("application/octet-stream"))
+                        .add_part(
+                            "file",
+                            Part::bytes(file.into_inner())
+                                .file_name("kalorio1.txt")
+                                .mime_type("application/octet-stream"),
+                        ),
                 )
                 .await;
 
