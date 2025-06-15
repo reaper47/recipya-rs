@@ -1,6 +1,11 @@
 # Stage 1: Build
 FROM rust:1.87.0-slim AS build
 
+# docker build . --build-arg="ARCH=x86_64" or docker build . --build-arg="ARCH=aarch64"
+# docker-compose build --build-arg "ARCH=x86_64" or docker-compose build --build-arg "ARCH=aarch64"
+#ARG ARCH=x86_64
+#ARG TARGETARCH
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
@@ -15,39 +20,28 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/recipya
+
 ENV OPENSSL_NO_VENDOR=1
 
-# Copy only Cargo files first for dependency caching
 COPY Cargo.toml Cargo.lock ./
 
-# Create a dummy lib.rs instead of main.rs to avoid the segfault
-RUN mkdir src && \
-    echo "pub fn main() {}" > src/lib.rs && \
-    echo '[lib]\nname = "recipya_rs"\npath = "src/lib.rs"' >> Cargo.toml && \
-    cargo build --release --lib && \
-    rm -rf src target/release/deps/recipya* && \
-    # Restore original Cargo.toml
-    head -n -2 Cargo.toml > Cargo.toml.tmp && mv Cargo.toml.tmp Cargo.toml
+RUN mkdir src &&  \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build -r && \
+    rm -rf src target/release/deps/recipya*
 
-# Now copy the actual source and build
 COPY . .
+
 RUN cargo build -r --locked
 
 RUN mkdir -p /runtime-deps/usr/bin /runtime-deps/usr/lib /runtime-deps/lib
+
 RUN cp /usr/bin/ffmpeg /usr/bin/ffprobe /runtime-deps/usr/bin/ && \
     lddtree -l /usr/bin/ffmpeg /usr/bin/ffprobe | \
     grep -v '^(' | \
     xargs -I '{}' cp -L --parents '{}' /runtime-deps/ 2>/dev/null || true
 
-# Fix the library copying step - use wildcard patterns that work across architectures
-RUN find /usr/lib -name "libpq.so*" -o \
-         -name "libssl.so*" -o -name "libcrypto.so*" -o -name "libgssapi_krb5.so*" -o \
-         -name "libldap*.so*" -o -name "libkrb5*.so*" -o -name "libk5crypto.so*" -o \
-         -name "libsasl2.so*" -o -name "libgnutls.so*" -o -name "libcom_err.so*" -o \
-         -name "libkeyutils.so*" | \
-    xargs -I '{}' cp -L '{}' /runtime-deps/usr/lib/ 2>/dev/null || true
-
-RUN find /lib -name "libpq.so*" -o \
+RUN find /usr/lib/${ARCH}-linux-gnu /lib/${ARCH}-linux-gnu -name "libpq.so*" -o \
          -name "libssl.so*" -o -name "libcrypto.so*" -o -name "libgssapi_krb5.so*" -o \
          -name "libldap*.so*" -o -name "libkrb5*.so*" -o -name "libk5crypto.so*" -o \
          -name "libsasl2.so*" -o -name "libgnutls.so*" -o -name "libcom_err.so*" -o \
@@ -58,6 +52,7 @@ RUN find /lib -name "libpq.so*" -o \
 # 2 - Deploy Stage
 # ---------------------------------------------------
 FROM gcr.io/distroless/cc-debian12
+
 LABEL org.opencontainers.image.source="https://github.com/reaper47/recipya-rs" \
       org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy." \
       org.opencontainers.image.licenses="AGPL-3.0"
@@ -68,7 +63,9 @@ COPY --from=build /runtime-deps/lib /lib
 
 # Copy application files
 COPY --from=build /usr/src/recipya/target/release/recipya-rs /usr/local/bin/recipya
+#COPY ./deploy/.env.example /.env
 
 USER nonroot:nonroot
 EXPOSE 8078
+
 CMD ["/usr/local/bin/recipya", "server"]

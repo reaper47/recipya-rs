@@ -183,7 +183,7 @@ jobs:
         uses: docker/build-push-action@v6 
         with: 
           context: .
-          file: ./deploy/Dockerfile
+          file: ./deploy/Dockerfile.qemu
           platforms: linux/amd64,linux/arm64
 #          build-args: |
 #            ARCH=aarch64
