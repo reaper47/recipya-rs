@@ -1,6 +1,7 @@
 # Stage 1: Build
-FROM rust:1.87.0-slim AS build
+FROM --platform=$BUILDPLATFORM rust:1.87.0-slim AS build
 
+# Install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
@@ -16,21 +17,42 @@ RUN apt-get update && \
 
 WORKDIR /usr/src/recipya
 
-# Aggressive QEMU/emulation workarounds
-ENV OPENSSL_NO_VENDOR=1
-ENV RUST_MIN_STACK=33554432
+# QEMU-specific environment variables
 ENV CARGO_NET_RETRY=10
-ENV RUST_BACKTRACE=0
 ENV CARGO_INCREMENTAL=0
+ENV RUST_BACKTRACE=0
 ENV RUST_LOG=error
+ENV OPENSSL_NO_VENDOR=1
+ENV RUST_MIN_STACK=67108864
+ENV CARGO_BUILD_JOBS=1
+
+# For cross-compilation
+ARG TARGETPLATFORM
+RUN case "$TARGETPLATFORM" in \
+      "linux/arm64") echo "aarch64-unknown-linux-gnu" > /tmp/target.txt ;; \
+      "linux/amd64") echo "x86_64-unknown-linux-gnu" > /tmp/target.txt ;; \
+      *) echo "x86_64-unknown-linux-gnu" > /tmp/target.txt ;; \
+    esac
+
+RUN export TARGET=$(cat /tmp/target.txt) && \
+    if [ "$TARGET" != "x86_64-unknown-linux-gnu" ]; then \
+        rustup target add $TARGET; \
+    fi
 
 # Copy source
 COPY . .
 
-# Try building with very conservative settings
-RUN ulimit -s unlimited && \
-    cargo build --release --locked --jobs 1 --offline || \
-    cargo build --release --locked --jobs 1
+# Build with target-specific optimizations
+RUN export TARGET=$(cat /tmp/target.txt) && \
+    if [ "$TARGET" = "x86_64-unknown-linux-gnu" ]; then \
+        cargo build --release --locked; \
+    else \
+        # Use conservative settings for cross-compilation
+        ulimit -s unlimited && \
+        timeout 3600 cargo build --release --locked --target $TARGET --jobs 1 || \
+        (echo "Retrying with even more conservative settings..." && \
+         RUST_MIN_STACK=134217728 cargo build --release --locked --target $TARGET --jobs 1); \
+    fi
 
 RUN mkdir -p /runtime-deps/usr/bin /runtime-deps/usr/lib /runtime-deps/lib
 RUN cp /usr/bin/ffmpeg /usr/bin/ffprobe /runtime-deps/usr/bin/ && \

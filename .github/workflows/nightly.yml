@@ -156,7 +156,7 @@ jobs:
   # TODO: Simplify this workflow by merging these together using `platforms: linux/arm64, linux/amd64`.
   # Problem is `COPY --from=build /usr/lib/${ARCH}-linux-gnu/[...]]* /usr/lib/${ARCH}-linux-gnu/`. 
   build-push:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     timeout-minutes: 480
     needs: release
 
@@ -185,6 +185,9 @@ jobs:
           context: .
           file: ./deploy/Dockerfile.qemu
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILDKIT_STEP_LOG_MAX_SIZE=50000000
+            BUILDKIT_STEP_LOG_MAX_SPEED=10000000
 #          build-args: |
 #            ARCH=aarch64
           labels: ${{ steps.meta.outputs.labels }}

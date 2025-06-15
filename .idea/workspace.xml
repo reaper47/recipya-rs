@@ -15,6 +15,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/nightly.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/nightly.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/deploy/Dockerfile.qemu" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/Dockerfile.qemu" afterDir="false" />
     </list>
