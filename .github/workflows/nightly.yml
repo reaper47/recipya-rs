@@ -191,7 +191,7 @@ jobs:
 #          build-args: |
 #            ARCH=aarch64
           labels: ${{ steps.meta.outputs.labels }}
-#          provenance: false
+          provenance: false
           tags: |
             ${{ env.REGISTRY_IMAGE }}:nightly 
             ${{ env.GHCR_IMAGE }}:nightly
