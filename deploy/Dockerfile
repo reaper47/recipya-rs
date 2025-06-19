@@ -37,8 +37,20 @@ COPY crates/support/Cargo.toml crates/support/
 COPY crates/templates/Cargo.toml crates/templates/
 COPY crates/testing/Cargo.toml crates/testing/
 
-RUN mkdir -p crates/recipya-cli/src && \
-    echo "fn main() {}" > crates/recipya-cli/src/main.rs && \
+RUN mkdir -p crates/app/src && echo "" > crates/app/src/lib.rs && \
+    mkdir -p crates/auth/src && echo "" > crates/auth/src/lib.rs && \
+    mkdir -p crates/config/src && echo "" > crates/config/src/lib.rs && \
+    mkdir -p crates/email/src && echo "" > crates/email/src/lib.rs && \
+    mkdir -p crates/integrations/src && echo "" > crates/integrations/src/lib.rs && \
+    mkdir -p crates/models/src && echo "" > crates/models/src/lib.rs && \
+    mkdir -p crates/recipe-schema/src && echo "" > crates/recipe-schema/src/lib.rs && \
+    mkdir -p crates/recipya-cli/src && echo "fn main() {}" > crates/recipya-cli/src/main.rs && \
+    mkdir -p crates/recipya-scraper/src && echo "" > crates/recipya-scraper/src/lib.rs && \
+    mkdir -p crates/repository/src && echo "" > crates/repository/src/lib.rs && \
+    mkdir -p crates/router/src && echo "" > crates/router/src/lib.rs && \
+    mkdir -p crates/support/src && echo "" > crates/support/src/lib.rs && \
+    mkdir -p crates/templates/src && echo "" > crates/templates/src/lib.rs && \
+    mkdir -p crates/testing/src && echo "" > crates/testing/src/lib.rs && \
     cargo build -r --bin recipya-cli && \
     rm -rf crates/*/src target/release/deps/recipya*
 
