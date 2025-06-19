@@ -1,0 +1,33 @@
+[package]
+name = "testing"
+version = "0.0.0"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+test-utils = []
+
+[dependencies]
+app = { workspace = true }
+auth = { workspace = true }
+axum = { workspace = true }
+axum-test = { workspace = true }
+config = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+models = { workspace = true }
+recipya-scraper = { workspace = true }
+repository = { workspace = true }
+router = { workspace = true }
+support = { workspace = true }
+tower-cookies = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }

@@ -1,0 +1,40 @@
+[package]
+name = "integrations"
+version = "0.1.0"
+publish = false
+
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+base64 = { workspace = true }
+cooklang = "0.16.1"
+derive_more = { workspace = true }
+humantime = { workspace = true }
+iso8601 = { workspace = true }
+libpaprika = { version = "0.4.1", default-features = false }
+nom = { workspace = true }
+recipe-schema = { workspace = true }
+recipemd = "0.2.0"
+serde = { workspace = true }
+serde-xml-rs = "0.8.1"
+serde_json = { workspace = true }
+strum = "0.27.1"
+strum_macros = { workspace = true }
+support = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }
+zip = "4.1.0"
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }
+testing = { path = "../testing", features = ["test-utils"] }

@@ -1,0 +1,55 @@
+[package]
+name = "router"
+version = "0.0.0"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app = { workspace = true }
+auth = { workspace = true }
+axum = { workspace = true }
+axum-htmx = "0.8.1"
+chrono = { workspace = true }
+config = { workspace = true }
+derive_more = { workspace = true }
+email = { workspace = true }
+futures-util = { workspace = true }
+humantime = { workspace = true }
+integrations = { workspace = true }
+mime_guess = "2.0.5"
+models = { workspace = true, features = ["test-utils"] }
+recipe-schema = { workspace = true }
+recipya-scraper = { workspace = true }
+repository = { workspace = true }
+reqwest = { workspace = true }
+rust-embed = { version = "8.7.2", features = ["axum-ex"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+strum_macros = { workspace = true }
+support = { workspace = true }
+templates = { workspace = true }
+tokio = { workspace = true }
+tower-cookies = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }
+validator = { workspace = true }
+
+[dev-dependencies]
+axum-test = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+pretty_assertions = { workspace = true }
+testing = { path = "../testing", features = ["test-utils"] }
+time = { workspace = true }
+tokio = { workspace = true }
+tower = "0.5.2"

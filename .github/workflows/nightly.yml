@@ -135,6 +135,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: downloads
+          pattern: recipya-nightly-*
 
       - uses: marvinpinto/action-automatic-releases@latest
         with:
