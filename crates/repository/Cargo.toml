@@ -1,0 +1,27 @@
+[package]
+name = "repository"
+version = "0.0.0"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+derive_more = { workspace = true }
+diesel = { workspace = true }
+diesel-async = { workspace = true }
+diesel_migrations = { version = "2.2", features = ["postgres"] }
+futures-util = { workspace = true }
+postgres_rustls = "0.1.2"
+rustls = { workspace = true }
+support = { workspace = true }
+tokio = { workspace = true }
+tokio-postgres = { version = "0.7.13", features = ["with-serde_json-1", "with-time-0_3", "with-uuid-1"] }
+tokio-rustls = { version = "0.26.2", default-features = false, features = ["logging", "tls12", "ring"] }
+tracing = { workspace = true }

@@ -1,0 +1,49 @@
+[package]
+name = "recipya-cli"
+version = "0.1.0"
+publish = true
+
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+app = { workspace = true }
+auth = { workspace = true }
+axum = { workspace = true }
+clap = { version = "4.5.40", features = ["derive"] }
+config = { workspace = true }
+derive_more = { workspace = true }
+diesel = { workspace = true }
+dotenvy = "0.15.7"
+models = { workspace = true }
+rand = "0.9.1"
+recipya-scraper = { workspace = true }
+repository = { workspace = true }
+router = { workspace = true }
+rustls = { workspace = true }
+support = { workspace = true }
+tokio = { workspace = true }
+tokio-cron-scheduler = "0.14.0"
+tower-cookies = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+
+[target.'x86_64-unknown-linux-musl'.dependencies]
+openssl = { version = "0.10.72", features = ["vendored"] }
+pq-sys = { version = "0.7.1", features = ["bundled"] }
+
+[target.'x86_64-unknown-linux-gnu'.dependencies]
+openssl = { version = "0.10.72", features = ["vendored"] }
+pq-sys = { version = "0.7.1", features = ["bundled"] }
+
+[target.'aarch64-unknown-linux-gnu'.dependencies]
+openssl = { version = "0.10.72", features = ["vendored"] }
+pq-sys = { version = "0.7.1", features = ["bundled"] }

@@ -91,7 +91,7 @@ jobs:
 
           cross build --target ${{ matrix.target }} -r
 
-          BINARY_NAME="recipya-rs"
+          BINARY_NAME="recipya-cli"
           ARTIFACT_NAME="${{ matrix.artifact }}"
           TARGET_DIR="${BASE_DIR}/${ARTIFACT_NAME}"
           mkdir -p "$TARGET_DIR"
@@ -135,6 +135,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: downloads
+          pattern: recipya-nightly-*
 
       - uses: marvinpinto/action-automatic-releases@latest
         with:

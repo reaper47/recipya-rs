@@ -20,13 +20,6 @@ WORKDIR /usr/src/recipya
 
 ENV OPENSSL_NO_VENDOR=1
 
-COPY Cargo.toml Cargo.lock ./
-
-RUN mkdir src &&  \
-    echo "fn main() {}" > src/main.rs && \
-    cargo build -r && \
-    rm -rf src target/release/deps/recipya*
-
 COPY . .
 
 RUN cargo build -r --locked
@@ -59,7 +52,7 @@ COPY --from=build /runtime-deps/usr /usr
 COPY --from=build /runtime-deps/lib /lib
 
 # Copy application files
-COPY --from=build /usr/src/recipya/target/release/recipya-rs /usr/local/bin/recipya
+COPY --from=build /usr/src/recipya/target/release/recipya-cli /usr/local/bin/recipya
 
 USER nonroot:nonroot
 EXPOSE 8078
