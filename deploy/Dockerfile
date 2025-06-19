@@ -20,40 +20,6 @@ WORKDIR /usr/src/recipya
 
 ENV OPENSSL_NO_VENDOR=1
 
-COPY Cargo.toml Cargo.lock ./
-
-COPY crates/app/Cargo.toml crates/app/
-COPY crates/auth/Cargo.toml crates/auth/
-COPY crates/config/Cargo.toml crates/config/
-COPY crates/email/Cargo.toml crates/email/
-COPY crates/integrations/Cargo.toml crates/integrations/
-COPY crates/models/Cargo.toml crates/models/
-COPY crates/recipe-schema/Cargo.toml crates/recipe-schema/
-COPY crates/recipya-cli/Cargo.toml crates/recipya-cli/
-COPY crates/recipya-scraper/Cargo.toml crates/recipya-scraper/
-COPY crates/repository/Cargo.toml crates/repository/
-COPY crates/router/Cargo.toml crates/router/
-COPY crates/support/Cargo.toml crates/support/
-COPY crates/templates/Cargo.toml crates/templates/
-COPY crates/testing/Cargo.toml crates/testing/
-
-RUN mkdir -p crates/app/src && echo "" > crates/app/src/lib.rs && \
-    mkdir -p crates/auth/src && echo "" > crates/auth/src/lib.rs && \
-    mkdir -p crates/config/src && echo "" > crates/config/src/lib.rs && \
-    mkdir -p crates/email/src && echo "" > crates/email/src/lib.rs && \
-    mkdir -p crates/integrations/src && echo "" > crates/integrations/src/lib.rs && \
-    mkdir -p crates/models/src && echo "" > crates/models/src/lib.rs && \
-    mkdir -p crates/recipe-schema/src && echo "" > crates/recipe-schema/src/lib.rs && \
-    mkdir -p crates/recipya-cli/src && echo "fn main() {}" > crates/recipya-cli/src/main.rs && \
-    mkdir -p crates/recipya-scraper/src && echo "" > crates/recipya-scraper/src/lib.rs && \
-    mkdir -p crates/repository/src && echo "" > crates/repository/src/lib.rs && \
-    mkdir -p crates/router/src && echo "" > crates/router/src/lib.rs && \
-    mkdir -p crates/support/src && echo "" > crates/support/src/lib.rs && \
-    mkdir -p crates/templates/src && echo "" > crates/templates/src/lib.rs && \
-    mkdir -p crates/testing/src && echo "" > crates/testing/src/lib.rs && \
-    cargo build -r --bin recipya-cli && \
-    rm -rf crates/*/src target/release/deps/recipya*
-
 COPY . .
 
 RUN cargo build -r --locked
@@ -86,7 +52,7 @@ COPY --from=build /runtime-deps/usr /usr
 COPY --from=build /runtime-deps/lib /lib
 
 # Copy application files
-COPY --from=build /usr/src/recipya/target/release/recipya-rs /usr/local/bin/recipya
+COPY --from=build /usr/src/recipya/target/release/recipya-cli /usr/local/bin/recipya
 
 USER nonroot:nonroot
 EXPOSE 8078
