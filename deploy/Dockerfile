@@ -22,16 +22,25 @@ ENV OPENSSL_NO_VENDOR=1
 
 COPY Cargo.toml Cargo.lock ./
 
-RUN mkdir -p crates/app crates/auth crates/config crates/email crates/integrations \
-             crates/models crates/recipe-schema crates/recipya-cli crates/recipya-scraper \
-             crates/repository crates/router crates/support crates/templates crates/testing
+COPY crates/app/Cargo.toml crates/app/
+COPY crates/auth/Cargo.toml crates/auth/
+COPY crates/config/Cargo.toml crates/config/
+COPY crates/email/Cargo.toml crates/email/
+COPY crates/integrations/Cargo.toml crates/integrations/
+COPY crates/models/Cargo.toml crates/models/
+COPY crates/recipe-schema/Cargo.toml crates/recipe-schema/
+COPY crates/recipya-cli/Cargo.toml crates/recipya-cli/
+COPY crates/recipya-scraper/Cargo.toml crates/recipya-scraper/
+COPY crates/repository/Cargo.toml crates/repository/
+COPY crates/router/Cargo.toml crates/router/
+COPY crates/support/Cargo.toml crates/support/
+COPY crates/templates/Cargo.toml crates/templates/
+COPY crates/testing/Cargo.toml crates/testing/
 
-COPY crates/*/Cargo.toml crates/
-
-RUN mkdir -p crates/recipya-cli/src &&  \
+RUN mkdir -p crates/recipya-cli/src && \
     echo "fn main() {}" > crates/recipya-cli/src/main.rs && \
-    cargo build -r && \
-    rm -rf src target/release/deps/recipya*
+    cargo build -r --bin recipya-cli && \
+    rm -rf crates/*/src target/release/deps/recipya*
 
 COPY . .
 
