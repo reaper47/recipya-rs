@@ -22,6 +22,12 @@ ENV OPENSSL_NO_VENDOR=1
 
 COPY Cargo.toml Cargo.lock ./
 
+RUN mkdir -p crates/app crates/auth crates/config crates/email crates/integrations \
+             crates/models crates/recipe-schema crates/recipya-cli crates/recipya-scraper \
+             crates/repository crates/router crates/support crates/templates crates/testing
+
+COPY crates/*/Cargo.toml crates/
+
 RUN mkdir -p crates/recipya-cli/src &&  \
     echo "fn main() {}" > crates/recipya-cli/src/main.rs && \
     cargo build -r && \
