@@ -1,6 +1,7 @@
 mod error;
 mod pool;
 
+pub mod extensions;
 pub mod schema;
 
 pub use error::{Error, Result};

@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use recipe_schema::Sections;
 use repository::schema;
+use support::strings::normalise_vulgar_fractions;
 
 use crate::Result;
 use crate::recipe::structs::{
@@ -103,7 +104,7 @@ where
                 ingredients
                     .iter()
                     .map(|name| IngredientForInsert {
-                        name: name.to_string(),
+                        name: normalise_vulgar_fractions(name),
                     })
                     .filter(|s| uniques.insert(s.name.clone()))
                     .collect::<Vec<_>>(),

@@ -98,6 +98,7 @@ impl ImportFromAppForm {
         let file_format = self.file_format;
 
         parse_recipe(data, app, &file_name, file_format).map_err(|err| {
+            // TODO: On failure, save file data to a file in an application's directory for debugging purposes.
             error!("Failed to parse recipe file '{file_name}': {err}");
             Error::FailParse
         })

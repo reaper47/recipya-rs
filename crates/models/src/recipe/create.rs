@@ -183,18 +183,18 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use self::test_utils::a_complete_recipe_for_create;
-
     use app::state::AppState;
     use recipe_schema::Sections;
-    use testing::utils::{build_server_logged_in, TestDb, create_app_state, insert_user};
+    use testing::utils::{TestDb, build_server_logged_in, create_app_state, insert_user};
+
+    use super::*;
+    use self::test_utils::a_complete_recipe_for_create;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_add_category {
         use super::*;
-        
+
         #[tokio::test]
         async fn test_create_new_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
@@ -235,6 +235,7 @@ mod tests {
                 .first::<i64>(&mut conn)
                 .await?;
             assert!(category_id > 0);
+
             let count = schema::users_categories::table
                 .filter(schema::users_categories::category_id.eq(category_id))
                 .count()

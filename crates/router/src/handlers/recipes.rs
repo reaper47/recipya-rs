@@ -28,7 +28,7 @@ use reqwest::StatusCode;
 use support::fs::FsSupport;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -1075,7 +1075,10 @@ pub async fn view_recipe_handler(
 
     let cache_key = (user_id, recipe_id);
     let view_recipe = match state.get_cached_recipe(cache_key).await {
-        Some(recipe) => recipe,
+        Some(recipe) => {
+            debug!("Recipes cache hit: {}", recipe_id);
+            recipe
+        }
         None => {
             let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
                 Ok(recipe) => recipe,
@@ -1111,9 +1114,6 @@ pub async fn view_recipe_handler(
                 is_update_available: false,
             },
             pagination: Some(PaginationData {
-                left: vec![],
-                middle: vec![],
-                right: vec![],
                 prev: 0,
                 selected: 0,
                 next: 0,
@@ -1122,6 +1122,7 @@ pub async fn view_recipe_handler(
                     target: "".to_string(),
                 },
                 search: PaginationSearchData { current_page: 0 },
+                slots: vec![],
                 is_hidden: false,
                 num_pages: 0,
                 num_results: 0,
