@@ -131,7 +131,7 @@ where
 }
 
 fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
-    many1(alt((
+    let res = many1(alt((
         map(
             preceded(take_while_m_n(1, 10, is_vchar_or_space), line_ending),
             |_| None,
@@ -139,8 +139,9 @@ fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
         map(recipe, |r| Some(r.into())),
     )))
     .parse(input)
-    .map(|(_, recipes)| recipes.into_iter().flatten().collect())
-    .map_err(|err| Error::Parse(err.to_string()))
+    .map(|(_, recipes)| recipes.into_iter().flatten().collect::<Vec<_>>())?;
+
+    Ok(res)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

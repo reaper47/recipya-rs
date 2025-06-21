@@ -1,4 +1,5 @@
 use std::fmt::Write;
+use std::io::Read;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -26,6 +27,7 @@ use models::website::{ToHtmlTable, Website};
 use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
 use reqwest::StatusCode;
 use support::fs::FsSupport;
+use tokio::fs;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
 use tracing::{debug, error, info, warn};
@@ -471,15 +473,26 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
         let start_time = Instant::now();
 
         let recipes = match parse_recipes(&state, form, user_id).await {
-            None => {
+            Ok(r) => r,
+            Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
-                let toast = MessageHtmx::warning("No recipes found");
+                let toast = MessageHtmx::warning("No recipes found.");
                 if let Ok(json) = serde_json::to_string(&toast) {
                     state.broadcast(user_id, Message::Text(json.into())).await;
                 }
                 return;
             }
-            Some(r) => r,
+
+            Err(_) => {
+                state.hide_broadcast(user_id).await;
+                let toast = MessageHtmx::error(
+                    "An error occurred while parsing the recipes. Please check the logs.",
+                );
+                if let Ok(json) = serde_json::to_string(&toast) {
+                    state.broadcast(user_id, Message::Text(json.into())).await;
+                }
+                return;
+            }
         };
 
         let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
@@ -554,9 +567,9 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
 
 async fn parse_recipes(
     state: &AppState,
-    form: ImportFromAppForm,
+    mut form: ImportFromAppForm,
     user_id: i64,
-) -> Option<Vec<RecipeSchema>> {
+) -> Result<Vec<RecipeSchema>> {
     state
         .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
         .await;
@@ -565,16 +578,21 @@ async fn parse_recipes(
         Ok(r) => r,
         Err(err) => {
             error!("Failed to parse recipes: {err}");
-            return None;
+
+            let saved_file = state.data_dir.debug.join(format!("{}_{}", Uuid::new_v4(), form.file_name));
+            fs::write(saved_file.clone(), &form.file_data).await?;
+            error!("Saved file to '{:?}' for debugging purposes", saved_file);
+
+            return Err(err);
         }
     };
 
     if recipes.is_empty() {
-        warn!("No recipes found");
-        return None;
+        warn!("No recipes found in file");
+        return Err(Error::NoRecipe);
     }
 
-    Some(recipes)
+    Ok(recipes)
 }
 
 /// Handles rendering the form to add a recipe manually.

@@ -96,8 +96,8 @@ impl Recipe {
 mod tests {
     use testing::utils::{TestDb, create_app_state, insert_user};
 
-    use super::*;
     use self::test_utils::a_complete_recipe_for_create;
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

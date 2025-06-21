@@ -187,8 +187,8 @@ mod tests {
     use recipe_schema::Sections;
     use testing::utils::{TestDb, build_server_logged_in, create_app_state, insert_user};
 
-    use super::*;
     use self::test_utils::a_complete_recipe_for_create;
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

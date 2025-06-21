@@ -56,24 +56,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/repository/src/extensions/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/repository/src/extensions/pagination.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/config/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/config/src/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/delete.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/delete.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/share.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/share.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/website.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/website.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/support/src/strings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/support/src/strings.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/pagination.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/pagination.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -232,6 +225,8 @@
     "Cargo.Test pwd::tests.executor": "Run",
     "Cargo.Test recipes_routes::tests.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok.executor": "Debug",
+    "Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files.executor": "Debug",
     "Cargo.Test report::tests.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_cannot_update_if_autologin_ok.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_err_must_be_logged_in.executor": "Run",
@@ -417,7 +412,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "35-implement-get-recipesidscale",
+    "git-widget-placeholder": "#143 on 35-implement-get-recipesidscale",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/app/cofig",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -460,7 +455,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -496,42 +491,43 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test data::tests::tests_pagination::test_pagination_new_hundreds_results_last_page_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib data::tests::tests_pagination::test_pagination_new_hundreds_results_last_page_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test data::tests::tests_pagination::test_pagination_new_no_results_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib data::tests::tests_pagination::test_pagination_new_no_results_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package models --lib data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -566,19 +562,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files" />
       <item itemvalue="Cargo.Test data::tests" />
-      <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_new_hundreds_results_last_page_ok" />
-      <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_new_no_results_ok" />
       <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok" />
       <item itemvalue="Cargo.Test tests_pagination" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files" />
         <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok" />
         <item itemvalue="Cargo.Test tests_pagination" />
         <item itemvalue="Cargo.Test data::tests" />
-        <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_new_no_results_ok" />
-        <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_new_hundreds_results_last_page_ok" />
       </list>
     </recent_temporary>
   </component>
@@ -625,6 +621,11 @@
           <url>file://$PROJECT_DIR$/crates/recipya-scraper/src/tests/support/scraper.rs</url>
           <line>94</line>
           <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/crates/router/src/recipes_routes.rs</url>
+          <line>959</line>
+          <option name="timeStamp" value="10" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

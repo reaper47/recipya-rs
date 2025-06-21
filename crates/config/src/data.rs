@@ -10,6 +10,7 @@ use super::{Error, Result};
 #[derive(Clone)]
 pub struct DataDir {
     pub backup: PathBuf,
+    pub debug: PathBuf,
     pub images: PathBuf,
     pub logs: PathBuf,
     pub placeholders: PathBuf,
@@ -35,18 +36,20 @@ impl DataDir {
         let images_dir = media_dir.join("Images");
 
         let backup = base_dir.join("Backup");
+        let debug = base_dir.join("Debug");
         let logs = base_dir.join("Logs");
         let placeholders = images_dir.join("Placeholders");
         let thumbnails = images_dir.join("Thumbnails");
         let videos = media_dir.join("Videos");
 
-        let paths = [&backup, &logs, &placeholders, &thumbnails, &videos];
+        let paths = [&backup, &debug, &logs, &placeholders, &thumbnails, &videos];
         for path in &paths {
             fs::create_dir_all(path)?;
         }
 
         Ok(Self {
             backup,
+            debug,
             images: images_dir,
             logs,
             placeholders,
@@ -59,6 +62,7 @@ impl DataDir {
     pub fn log(&self) {
         info!("File locations:");
         info!("\t- Backups: {:?}", self.backup);
+        info!("\t- Debug: {:?}", self.debug);
         info!("\t- Images: {:?}", self.images);
         info!("\t- Logs: {:?}", self.logs);
         info!("\t- Placeholders: {:?}", self.placeholders);
