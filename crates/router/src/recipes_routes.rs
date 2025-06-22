@@ -280,7 +280,7 @@ mod tests {
             let expected = [
                 r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
                 r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
-                r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale">"#,
+                r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale (copy)">"#,
                 r#"<img src="" alt="" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="4" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value="dinner"><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option><option>dinner</option></datalist>"#,

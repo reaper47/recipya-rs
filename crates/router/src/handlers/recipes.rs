@@ -176,7 +176,7 @@ pub async fn duplicate_recipe_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let (recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
+    let (mut recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
         Ok(res) => res,
         Err(err) => {
             error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
@@ -191,6 +191,8 @@ pub async fn duplicate_recipe_handler(
             .into_response();
         }
     };
+    
+    recipe.recipe_details.recipe.name = format!("{} (copy)", recipe.recipe_details.recipe.name);
 
     templates::recipes::add_recipe_manual(
         Data {
@@ -481,7 +483,6 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
                 }
                 return;
             }
-
             Err(_) => {
                 state.hide_broadcast(user_id).await;
                 let toast = MessageHtmx::error(
@@ -1096,10 +1097,7 @@ pub async fn view_recipe_handler(
 
     let cache_key = (user_id, recipe_id);
     let view_recipe = match state.get_cached_recipe(cache_key).await {
-        Some(recipe) => {
-            debug!("Recipes cache hit: {}", recipe_id);
-            recipe
-        }
+        Some(recipe) => recipe,
         None => {
             let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
                 Ok(recipe) => recipe,

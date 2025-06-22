@@ -18,7 +18,7 @@ use std::borrow::Cow;
 use std::io::{Read, Seek};
 
 use nom::branch::alt;
-use nom::bytes::complete::{tag, take_until, take_while_m_n, take_while1};
+use nom::bytes::complete::{tag, take_until, take_while_m_n, take_while1, tag_no_case};
 use nom::bytes::take_while;
 use nom::character::complete::{char, line_ending, multispace0, multispace1, space0, space1};
 use nom::combinator::{map, map_res, opt, peek, recognize, verify};
@@ -29,12 +29,11 @@ use recipe_schema::{AtType, RecipeCategory, RecipeSchema, Sections};
 use url::Url;
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
-use crate::helpers::{
-    sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_yield,
-};
-use crate::{Error, Result};
+use crate::helpers::{sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type, to_yield};
+use crate::Result;
 
 struct MealMasterRecipe {
+    author: Option<String>,
     title: String,
     category: Option<String>,
     keywords: Vec<String>,
@@ -45,6 +44,7 @@ struct MealMasterRecipe {
 }
 
 struct RecipeComponents<'a> {
+    author: Option<&'a str>,
     header: (&'a str, &'a str),
     title: &'a str,
     categories: Vec<&'a str>,
@@ -67,6 +67,7 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
         }
 
         Self {
+            author: r.author.map(String::from),
             title: r.title.to_string(),
             category: items.map(|(a, _b)| a.to_string()),
             keywords: items
@@ -104,7 +105,8 @@ impl From<MealMasterRecipe> for RecipeSchema {
         Self {
             at_context: Default::default(),
             at_type: Some(AtType::Recipe),
-            is_based_on: to_is_based_on(r.source.clone()),
+            author: to_organization_type(r.author.unwrap_or_default()),
+            is_based_on: to_is_based_on(r.source.trim().into()),
             keywords: to_defined_text(r.keywords.join(",")),
             name: Some(r.title).filter(|s| !s.is_empty()),
             recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
@@ -147,28 +149,33 @@ fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
     map(
         (
+            many0(line_ending),
             header,
             title,
             categories,
             opt(tags),
             servings,
+            opt(author),
             ingredients,
             opt(ingredient_notes),
             instructions,
             footer,
         ),
         |(
-            (header_tag, header_rest),
+            _,
+             (header_tag, header_rest),
             title,
             categories,
             tags,
             servings,
+            author,
             ingredients,
             ingredient_notes,
             instructions,
             _,
         )| {
             RecipeComponents {
+                author,
                 header: (header_tag, header_rest),
                 title,
                 categories,
@@ -252,7 +259,7 @@ fn categlist(input: &str) -> IResult<&str, Vec<&str>> {
         char(','),
         preceded(
             space0,
-            take_while_m_n(1, 11, |c: char| is_vchar_or_space(c) && c != ','),
+            take_while_m_n(1, 80, |c: char| is_vchar_or_space(c) && c != ','),
         ),
     )
     .parse(input)
@@ -270,19 +277,43 @@ fn categlist_spaces(input: &str) -> IResult<&str, Vec<&str>> {
 }
 
 fn servings(input: &str) -> IResult<&str, i16> {
-    map_res(
+    alt((
+        map_res(
+            (
+                space0,
+                alt((tag("Servings: "), tag("Yield: "))),
+                opt(char(' ')),
+                take_while_m_n(1, 4, |c: char| c.is_ascii_digit()),
+                opt((char(' '), take_until("\n"))),
+                many1(eol),
+                opt((space0, eol)),
+            ),
+            |(_, _, _, digits, _, _, _)| digits.parse()
+        ),
+        map(
+            (
+                space0,
+                alt((tag("Servings: "), tag("Yield: "))),
+                many1(eol),
+                opt((space0, eol)),
+            ),
+            |_| 2
+        )
+    ))
+        .parse(input)
+}
+
+fn author(input: &str) -> IResult<&str, &str> {
+    map(
         (
             space0,
-            alt((tag("Servings: "), tag("Yield: "))),
-            opt(char(' ')),
-            take_while_m_n(1, 4, |c: char| c.is_ascii_digit()),
-            opt((char(' '), opt(take_while_m_n(1, 10, is_vchar_or_space)))),
-            many1(eol),
-            opt((space0, eol)),
+            tag("Contributor: "),
+            take_while_m_n(0, 60, is_vchar_or_space),
+            line_ending,
         ),
-        |(_, _, _, digits, _, _, _)| digits.parse(),
+        |(_, _, s, _)| s,
     )
-    .parse(input)
+        .parse(input)
 }
 
 fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
@@ -318,7 +349,7 @@ fn ingredone(input: &str) -> IResult<&str, Ingredient> {
             char(' '),
             unit,
             space1,
-            take_while_m_n(1, 28, is_vchar_or_space),
+            take_while_m_n(1, 90, is_vchar_or_space),
         )),
         |s| Ingredient::Line(Cow::Borrowed(s)),
     )
@@ -344,60 +375,75 @@ fn amount(input: &str) -> IResult<&str, &str> {
 }
 
 fn unit(input: &str) -> IResult<&str, &str> {
-    alt((units1, units2, units3)).parse(input)
+    alt((units1, units2, units3, units4)).parse(input)
 }
 
 fn units1(input: &str) -> IResult<&str, &str> {
     alt((
-        tag("x "),
-        tag("sm"),
-        tag("md"),
-        tag("lg"),
-        tag("cn"),
-        tag("pk"),
-        tag("pn"),
-        tag("dr"),
-        tag("ds"),
-        tag("ct"),
-        tag("bn"),
-        tag("sl"),
+        tag_no_case("x "),
+        tag_no_case("sm"),
+        tag_no_case("md"),
+        tag_no_case("lg"),
+        tag_no_case("cn"),
+        tag_no_case("pk"),
+        tag_no_case("pn"),
+        tag_no_case("dr"),
+        tag_no_case("ds"),
+        tag_no_case("ct"),
+        tag_no_case("bn"),
     ))
     .parse(input)
 }
 
 fn units2(input: &str) -> IResult<&str, &str> {
     alt((
-        tag("ea"),
-        tag("t "),
-        tag("ts"),
-        tag("T "),
-        tag("tb"),
-        tag("fl"),
-        tag("c "),
-        tag("pt"),
-        tag("qt"),
-        tag("ga"),
-        tag("oz"),
-        tag("lb"),
+        tag_no_case("ea"),
+        tag_no_case("t "),
+        tag_no_case("ts"),
+        tag_no_case("T "),
+        tag_no_case("tb"),
+        tag_no_case("fl"),
+        tag_no_case("c "),
+        tag_no_case("pt"),
+        tag_no_case("qt"),
+        tag_no_case("ga"),
+        tag_no_case("oz"),
+        tag_no_case("lb"),
     ))
     .parse(input)
 }
 
 fn units3(input: &str) -> IResult<&str, &str> {
     alt((
-        tag("ml"),
-        tag("cb"),
-        tag("cl"),
-        tag("dl"),
-        tag("l "),
-        tag("mg"),
-        tag("cg"),
-        tag("dg"),
-        tag("g "),
-        tag("kg"),
-        tag("  "),
+        tag_no_case("ml"),
+        tag_no_case("cb"),
+        tag_no_case("cl"),
+        tag_no_case("dl"),
+        tag_no_case("l "),
+        tag_no_case("mg"),
+        tag_no_case("cg"),
+        tag_no_case("dg"),
+        tag_no_case("g "),
+        tag_no_case("kg"),
     ))
     .parse(input)
+}
+
+fn units4(input: &str) -> IResult<&str, &str> {
+    alt((
+        tag_no_case("st"),
+        tag_no_case("cv"),
+        tag_no_case("sp"),
+        tag_no_case("sl"),
+        tag_no_case("sk"),
+        tag_no_case("sks"),
+        tag_no_case("ta"),
+        tag_no_case("lh"),
+        tag_no_case("hd"),
+        tag_no_case("bx"),
+        tag_no_case("lf"),
+        tag_no_case("  "),
+    )).parse(input)
 }
 
 fn ingredient_notes(input: &str) -> IResult<&str, Ingredient> {
@@ -445,19 +491,36 @@ fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
 fn instruction(input: &str) -> IResult<&str, &str> {
     terminated(
         verify(
-            alt((take_until("\n\n"), take_until("\n-----"))),
+            take_until_earliest_of(&["\n-----", "\n\n"]),
             |line: &str| {
                 !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
             },
         ),
-        (
-            line_ending,
-            opt(line_ending),
-            opt(line_ending),
-            opt(line_ending),
-        ),
+        many1(line_ending),
     )
-    .parse(input)
+        .parse(input)
+}
+
+fn take_until_earliest_of(patterns: &[&str]) -> impl Fn(&str) -> IResult<&str, &str> {
+    move |input: &str| {
+        let mut earliest_pos = input.len();
+        let mut found_pattern = None;
+
+        for &pattern in patterns {
+            if let Some(pos) = input.find(pattern) {
+                if pos < earliest_pos {
+                    earliest_pos = pos;
+                    found_pattern = Some(pattern);
+                }
+            }
+        }
+
+        if let Some(_pattern) = found_pattern {
+            Ok((&input[earliest_pos..], &input[..earliest_pos]))
+        } else {
+            Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::TakeUntil)))
+        }
+    }
 }
 
 fn section(input: &str) -> IResult<&str, &str> {
@@ -508,13 +571,24 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_unspecified_version() -> Result<()> {
+        fn test_recipe_unspecified_version() -> Result<()> {
             let file = recipe_unspecified_version_file();
             let buf = Cursor::new(file);
 
             let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_unspecified_version()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_recipes_unspecified_version() -> Result<()> {
+            let file = recipes_unspecified_version_file();
+            let buf = Cursor::new(file);
+
+            let got = parse(buf)?;
+
+            pretty_assertions::assert_eq!(got, recipes_unspecified_version());
             Ok(())
         }
 
@@ -695,6 +769,277 @@ Categories: Chocolate Cakes Fruits Desserts
   ice cream on top.
 
 -----------------------------------------------------------------------------"##
+        }
+
+        pub fn recipes_unspecified_version_file<'a>() -> &'a str {
+            r##"
+----- Meal-Master -----------------------
+
+Title: Apfelkuchen
+Categories: dessert
+Yield: 1
+
+    2/3 c  butter;softened
+    2/3 c  sugar
+      2 ts vanilla sugar
+      1 pn salt
+      2 dr almond extract
+      2    eggs
+      1 c  flour
+      1 ts baking powder
+    1/2 c  ground almonds
+      8    apples
+      1    lemon of juice
+    1/3 c  currant
+    1/4 c  slivered almond
+      1 ts icing sugar;for dusting
+
+Preheat oven to 350°F.
+
+Beat the butter with a wooden spoon or mixer until creamy. Slowly add the sugar, together with the vanilla sugar, salt and almond extract, alternating with the eggs. Mix the dough until it is very foamy and the sugar has been thoroughly dissolved. Sift in the flour with the baking powder, add the ground almonds, and mix everything together quickly.
+
+Carefully coat a springform with butter or margarine. Pour the batter in and smooth down the surface. Peel the apples, cut in half lengthwise, and remove the cores. Cut into the outer surface a few times with a knife, but donï¿œt cut all the way through. Brush apples with the lemon juice. Place the apples close together onto the batter, core side down. Soak the currants for a short time in hot water, wash thoroughly and rub dry in a cloth. Sprinkle the currants, together with the slivered almonds over the apples. Bake the cake at 350°F for 75-80 minutes or until golden brown. Remove from the oven and let cool before dusting with icing sugar.
+
+Serve with whipped cream.
+-----
+----- Meal-Master -----------------------
+
+Title: Apple & Mango Curried Chicken Salad
+Categories: salad
+Yield: 1
+
+    1/2 lb  boneless skinless chicken b
+           - reast
+      6 tb low low-fat yogurt ;eqty  plus 2 tbsptablespoo
+           - ns
+      2 tb low low-fat mayonnaise;tablespoons
+      2 tb salsa
+      1 tb lime juice;freshly squeezed
+      1 ts curry powder
+      1    mango ;substitute mandarin orange
+           -  slices, if desired,ripe
+      1    apple ;if you would like more tan
+           - g, use a less-sweet apple such as Granny Smith,a small Fiji apple
+      1 sk celery;medium sized
+      4 oz fresh mozzarella cheese
+      6 sp cilantro
+      1 c  greens ;field greens, about two sm
+           - all handfuls
+
+Cook the chicken breast in an oven preheated to 350 degrees for 20-30 minutes (until no longer pink in the center).
+2
+As the chicken is baking, combine the yogurt, mayonnaise, salsa, lime juice and curry powder in a medium bowl. Stir to combine.
+3
+Peel and de-seed the mango then chop into half-inch chunks (I haven?t tried this salad with mandarin orange slices, but I think they would make a nice substitution if mango is unavailable).
+4
+Remove the apple?s core and chop into one-inch chunks. Chop the celery into 1/4-1/2 inch chunks. Cut the fresh mozzarella into one-inch chunks.
+5
+Add the mango, apple, celery and mozzarella to the bowl. Toss to combine.
+6
+Finely chop the cilantro. Add the cilantro and field greens to the bowl and stir to combine.
+7
+Shred the cooked chicken after it has cooled (cutting the chicken into small cubes would work as well, but shredded chicken adds a nice texture to the dish). Add to the bowl and toss.
+8
+Serves four as a small dish or serves two as a large dish.
+-----
+----- Meal-Master -----------------------
+
+Title: Apple And Sausage Stuffing
+Categories: casserole
+Yield: 1
+
+      1 lb sweet Italian sausage
+    1/4 c  butter
+      2 c  celery;chopped
+      5 c  onion;chopped
+  5 1/2 c  herbed cubed stuffing mix
+      8 c  tart green apples;diced cored
+      1 tb dried rubbed sage
+      2 ts dried thyme
+    1/2 ts ground allspice
+
+Saute sausage in heavy large skillet over medium-high heat until cooked through, crumbling sausage with back of spoon, about 10 minutes. Using slotted spoon, transfer sausage to large bowl. Add butter, onions and celery to skillet saute until onions are tender, about 15 minutes. Add apples saute until apples are tender but still hold shape, about 10 minutes. Add sage, thyme and allspice saute 1 minute. Add to sausage. Stir in stuffing mix. Season with salt and pepper. (Can be made 1 day ahead. Cover chill.)
+
+Preheat oven to 325°F. Generously butter 5x10-inch glass baking dish. Fill center of crown roast of pork with stuffing. Transfer remaining stuffing to prepared dish. Cover with foil and bake until heated through, about 40 minutes.
+-----
+----- Meal-Master -----------------------
+
+Title: Artichoke And Basil Dip
+Categories: appetizers,Dip
+Yield: 2 cups
+
+      4 oz artichoke hearts;(1/2 of a 14 oz can)
+      1 tb olive oil
+      1 tb shallot;minced
+      2 ts Garlic;minced
+      1    bay leaf
+      2 tb fresh thyme,(2 to 3 sprigs)
+      1 c  cottage cheese
+    1/4 c  fresh basil;finely chopped
+           Salt and pepper
+
+1. Heat olive oil in saute pan over medium heat. Add the shallots, garlic, bay leaf and fresh thyme. Saute, stirring until the shallots and garlic are soft. Add the artichoke hearts and stir gently to coat them with the seasonings. Remove from heat and remove the bay leaf.
+
+2. Transfer the contents of the saute pan to a blender or food processor fitted with a metal blade. Add the cottage cheese. Process until smooth.
+
+3. Transfer to a mixing bowl or serving bowl. Stir in the basil and season with salt and black pepper.
+
+4. Garnish with basil leaves or thyme sprigs and serve immediately or cover and chill until ready to serve. Tip, This dip can be made up to one day ahead, through step
+
+ 3. Keep covered and chilled. Stir before serving, adjust seasoning and garnish with fresh herbs.
+
+
+
+
+
+-----
+----- Meal-Master -----------------------
+
+Title: Apple Crisp
+Categories: dessert
+Yield: 8 servings
+
+           APPLE MIXTURE---
+     10 c  apples;peeled and sliced
+    1/4 c  lemon juice
+      1 tb lemon zest
+    3/4 c  sugar
+    1/2 c  Golden raisins
+           MIXTURE--
+  1 1/2 st butter
+  1 1/4 c  all-purpose flour
+  1 1/2 c  light brown sugar
+  1 1/2 c  oats
+      1 tb lemon zest
+      1 tb ground cinnamon
+      1 ts ground nutmeg
+      1 ts ground cardamom
+           vegetable oil
+
+1. Preheat the oven to 350°F.
+
+2. Place the apples in a large, shallow baking dish and toss with the lemon juice and sugar. Combine all of the ingredients for the apple mixture in a bowl.
+
+3. In another bowl, cut the butter into the flour and stir in the remaining topping ingredients.
+
+4. Cover with the oat mixture. Bake until the top is nicely browned and the apples are tender, about 45 minutes. Serve warm or at room temperature.
+
+
+-----
+----- Meal-Master -----------------------
+
+Title: Apple Cider-Braised Chicken
+Categories: meat,Chicken,holiday,Yom Kipper
+Yield: 4 Serves
+Contributor: Leah Koenig
+
+      4 lb chicken;quartered
+            Kosher salt and black peppe
+           - r;freshly ground
+      2 tb avocado oil
+      3    apples
+      6 sp fresh thyme ;plus 1 tbsp finely chopped
+           -  fresh thyme leaves
+      6 md shallots;thinly sliced
+      1 c  apple cider
+    1/2 c  apple cider vinegar
+      2 c  chicken or vegetable broth
+
+Sprinkle the chicken pieces with salt and pepper.  Heat 2 tablespoons of the olive oil in a large pan set over medium-high heat until shimmering.  Working in batches, brown the chicken pieces, starting skin-side down and flipping once, until browned on both sides, about 10 minutes per batch.  Add up to 2 tablespoons more oil, if needed.  Transfer the chicken to a large oven proof baking dish and top with the apples and thyme sprigs.  Preheat oven to 375F.
+
+Meanwhile, set the pan you cooked the chicken in over medium heat.  Add the shallots, season with salt and pepper, and cook, stirring occasionally, until browned, about 5 minutes.  Add the chopped thyme and cook, stirring often, for 1 minute.s  Stir in the apple cider and cider vinegar, scraping up any browned bits at the bottom of the pan.  Raise the heat to high and cook until the liquid has reduced by half, 4 to 5 minutes.  Stir in the broth and bring to a boil, then carefully pour the braising liquid over the chicken and apples.  Cover the baking dish with aluminum foil. Braise in the oven until the chicken is fork-tender, 45-55 minutes.  Use tongs or a slotted spoon to transfer the chicken and apples to a serving platter, and let rest.
+
+Meanwhile, if desired, make a sauce by transferring 1 1/2 cups of the braising liquid to a saucepan set over high heat.  Bring to a boil and cook, stirring often, until the liquid reduces by two-thirds, 10 to 15 minutes.  Spoon the sauce over the chicken and serve warm.
+-----
+----- Meal-Master -----------------------
+
+Title: Apple Galette
+Categories: nina original,culinaria,Jewish,pastry,Tarts
+Yield: 2
+Contributor: Nina MacDowall
+
+      1    recipe Pate Brisee
+      4    Granny Smith apples ;peeled, cored and sliced 1
+           - /8 inch
+      3 tb butter;softened
+      3 tb butter;melted
+      3 tb sugar
+      2 oz apricot jam
+
+1. Roll the chilled brisée into a rectangle to fit a 1/4 sheet pan about 1/8 inch thick. Be careful to work quickly and not over-work the dough or allow it to become warm.
+
+2. Fold one inch of the dough over to form a border.
+
+3. Return to refrigerator to chill for another 30-60 minutes.
+
+4. Peel apples, cut in half and core. Slice in even 1/8 inch slices.
+
+5. Fan apples slightly and place on parchment on baking sheet. Place 1/2 T softened butter on each apple and bake at 400°F for 15 minutes.
+
+6. Remove from oven and cool on parchment to allow juices to return to apples.
+
+7. Remove the rolled brisée from the refrigerator and brush a thin coat of butter over the brisée.
+
+8. Sprinkle with 1 tbs of the sugar.
+
+9. Arrange the apple slices over the brisée.
+
+10. Brush the apples and dough border with the remaining butter and sprinkle with the remaining sugar.
+
+11. Bake at 425°F until the galette begins to color, about 10-15 minutes.
+
+12. Reduce the oven temperature to 375°F and continue to cook until the pastry is golden brown, about 20 minutes longer.
+
+13. Slightly warm the apricot glaze and brush on warm tart when it is finished baking.
+-----
+----- Meal-Master -----------------------
+
+Title: Apple-ginger Turnovers
+Categories: fruit,nina original,pastry,Puff,culinaria,Puff
+Yield: 4 large or 6 small turnovers
+Contributor: Nina MacDowall
+
+      2    Granny Smith apple;small dice
+      1 Tb lemon juice
+    1/2 ts Chinese five-spice powder
+      2 Tb brown sugar
+      4 ts crystallized ginger;finely minced
+      1 Tb unsalted butter
+           PUFF PASTRY
+           EGG WASH
+
+1. In a medium bowl, coat the apples with lemon juice.
+2. Add brown sugar, five-spice powder and ginger.
+3. Melt butter in skillet and add apple mixture.
+4. Cook for several minutes until apples start to soften but are still slightly firm. Set aside.
+5. Roll puff pastry to 1/4 inch thickness and cut into 3 or 4 inch squares.
+6. Brush egg wash around perimeter.
+7. Place small amount of filling on center and fold over the diagonal.
+8. Crimp edges to seal and make a small slit in the top of each turnover to vent.
+9. Chill for 30 minutes (or freeze.)
+10. Bake at 400°F for 20 minutes or until medium golden brown.
+-----
+----- Meal-Master -----------------------
+
+Title: 3-minute Italian Dressing
+Categories: dressing
+Yield: 4
+
+    1/4 c  white vinegar
+    1/4 c  lemon juice
+      2 ts sugar
+      1 ts dry mustard
+      1 ts kosher salt
+    1/2 ts red pepper flakes
+    1/4 ts black pepper
+      4 cv garlic
+      1 c   neutral oil or extra-virgin
+           -  olive oil
+    1/3 c  Parmesan cheese;either fresh or from a can
+    3/4 ts Italian seasoning;add more if needed
+
+Place vinegar, lemon juice, sugar, mustard, salt, red pepper flakes, black pepper, and garlic in the jar of a blender and blend until smooth. While the blender is running, add the oil in a steady stream. Remove the blender jar from the blender and mix in the cheese and Italian seasoning by hand. Transfer to a storage or serving container and refrigerate for at least 1 hour before serving.
+-----"##
         }
 
         pub fn recipe_v6_14_file<'a>() -> &'a str {
@@ -1185,15 +1530,15 @@ Typed for you by Karen Mintzias
     mod results {
         use super::*;
         use recipe_schema::RecipeSchema;
+        use crate::helpers::to_organization_type;
 
         pub fn recipe_unspecified_version() -> RecipeSchema {
             RecipeSchema {
                 at_context: Default::default(),
                 at_type: Some(AtType::Recipe),
                 is_based_on: to_is_based_on("Meal-Master (tm) Database".into()),
-                keywords: to_defined_text(["Cakes", "Fruits", "Desserts"].join(",")),
                 name: Some("West Haven Chocolate Cake".into()),
-                recipe_category: RecipeCategory::Text("Chocolate".into()),
+                recipe_category: RecipeCategory::Text("Chocolate Cakes Fruits Desserts".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
                     "8 oz Dates; Pitted, Chopped".into(),
@@ -1221,18 +1566,305 @@ Typed for you by Karen Mintzias
             }
         }
 
+        pub fn recipes_unspecified_version() -> Vec<RecipeSchema> {
+            vec![RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                name: Some("Apfelkuchen".into()),
+                recipe_category: RecipeCategory::Text("dessert".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "2/3 c butter;softened".into(),
+                        "2/3 c sugar".into(),
+                        "2 ts vanilla sugar".into(),
+                        "1 pn salt".into(),
+                        "2 dr almond extract".into(),
+                        "2 eggs".into(),
+                        "1 c flour".into(),
+                        "1 ts baking powder".into(),
+                        "1/2 c ground almonds".into(),
+                        "8 apples".into(),
+                        "1 lemon of juice".into(),
+                        "1/3 c currant".into(),
+                        "1/4 c slivered almond".into(),
+                        "1 ts icing sugar;for dusting".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Preheat oven to 350°F.".into(),
+                        "Beat the butter with a wooden spoon or mixer until creamy. Slowly add the sugar, together with the vanilla sugar, salt and almond extract, alternating with the eggs. Mix the dough until it is very foamy and the sugar has been thoroughly dissolved. Sift in the flour with the baking powder, add the ground almonds, and mix everything together quickly.".into(),
+                        "Carefully coat a springform with butter or margarine. Pour the batter in and smooth down the surface. Peel the apples, cut in half lengthwise, and remove the cores. Cut into the outer surface a few times with a knife, but donï¿œt cut all the way through. Brush apples with the lemon juice. Place the apples close together onto the batter, core side down. Soak the currants for a short time in hot water, wash thoroughly and rub dry in a cloth. Sprinkle the currants, together with the slivered almonds over the apples. Bake the cake at 350°F for 75-80 minutes or until golden brown. Remove from the oven and let cool before dusting with icing sugar.".into(),
+                        "Serve with whipped cream.".into(),
+                    ])
+                ])),
+                recipe_yield: to_yield(1),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                name: Some("Apple & Mango Curried Chicken Salad".into()),
+                recipe_category: RecipeCategory::Text("salad".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "1/2 lb boneless skinless chicken b".into(),
+                        "- reast".into(),
+                        "6 tb low low-fat yogurt ;eqty plus 2 tbsptablespoo".into(),
+                        "- ns".into(),
+                        "2 tb low low-fat mayonnaise;tablespoons".into(),
+                        "2 tb salsa".into(),
+                        "1 tb lime juice;freshly squeezed".into(),
+                        "1 ts curry powder".into(),
+                        "1 mango ;substitute mandarin orange".into(),
+                        "- slices, if desired,ripe".into(),
+                        "1 apple ;if you would like more tan".into(),
+                        "- g, use a less-sweet apple such as Granny Smith,a small Fiji apple".into(),
+                        "1 sk celery;medium sized".into(),
+                        "4 oz fresh mozzarella cheese".into(),
+                        "6 sp cilantro".into(),
+                        "1 c greens ;field greens, about two sm".into(),
+                        "- all handfuls".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Cook the chicken breast in an oven preheated to 350 degrees for 20-30 minutes (until no longer pink in the center). 2 As the chicken is baking, combine the yogurt, mayonnaise, salsa, lime juice and curry powder in a medium bowl. Stir to combine. 3 Peel and de-seed the mango then chop into half-inch chunks (I haven?t tried this salad with mandarin orange slices, but I think they would make a nice substitution if mango is unavailable). 4 Remove the apple?s core and chop into one-inch chunks. Chop the celery into 1/4-1/2 inch chunks. Cut the fresh mozzarella into one-inch chunks. 5 Add the mango, apple, celery and mozzarella to the bowl. Toss to combine. 6 Finely chop the cilantro. Add the cilantro and field greens to the bowl and stir to combine. 7 Shred the cooked chicken after it has cooled (cutting the chicken into small cubes would work as well, but shredded chicken adds a nice texture to the dish). Add to the bowl and toss. 8 Serves four as a small dish or serves two as a large dish.".into(),
+                    ])
+                ])),
+                recipe_yield: to_yield(1),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                name: Some("Apple And Sausage Stuffing".into()),
+                recipe_category: RecipeCategory::Text("casserole".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "1 lb sweet Italian sausage".into(),
+                        "1/4 c butter".into(),
+                        "2 c celery;chopped".into(),
+                        "5 c onion;chopped".into(),
+                        "5 1/2 c herbed cubed stuffing mix".into(),
+                        "8 c tart green apples;diced cored".into(),
+                        "1 tb dried rubbed sage".into(),
+                        "2 ts dried thyme".into(),
+                        "1/2 ts ground allspice".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Saute sausage in heavy large skillet over medium-high heat until cooked through, crumbling sausage with back of spoon, about 10 minutes. Using slotted spoon, transfer sausage to large bowl. Add butter, onions and celery to skillet saute until onions are tender, about 15 minutes. Add apples saute until apples are tender but still hold shape, about 10 minutes. Add sage, thyme and allspice saute 1 minute. Add to sausage. Stir in stuffing mix. Season with salt and pepper. (Can be made 1 day ahead. Cover chill.)".into(),
+                        "Preheat oven to 325°F. Generously butter 5x10-inch glass baking dish. Fill center of crown roast of pork with stuffing. Transfer remaining stuffing to prepared dish. Cover with foil and bake until heated through, about 40 minutes.".into(),
+                    ])
+                ])),
+                recipe_yield: to_yield(1),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                keywords: to_defined_text(["Dip"].join(",")),
+                name: Some("Artichoke And Basil Dip".into()),
+                recipe_category: RecipeCategory::Text("appetizers".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "4 oz artichoke hearts;(1/2 of a 14 oz can)".into(),
+                        "1 tb olive oil".into(),
+                        "1 tb shallot;minced".into(),
+                        "2 ts Garlic;minced".into(),
+                        "1 bay leaf".into(),
+                        "2 tb fresh thyme,(2 to 3 sprigs)".into(),
+                        "1 c cottage cheese".into(),
+                        "1/4 c fresh basil;finely chopped".into(),
+                        "Salt and pepper".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Heat olive oil in saute pan over medium heat. Add the shallots, garlic, bay leaf and fresh thyme. Saute, stirring until the shallots and garlic are soft. Add the artichoke hearts and stir gently to coat them with the seasonings. Remove from heat and remove the bay leaf.".into(),
+                        "Transfer the contents of the saute pan to a blender or food processor fitted with a metal blade. Add the cottage cheese. Process until smooth.".into(),
+                        "Transfer to a mixing bowl or serving bowl. Stir in the basil and season with salt and black pepper.".into(),
+                        "Garnish with basil leaves or thyme sprigs and serve immediately or cover and chill until ready to serve. Tip, This dip can be made up to one day ahead, through step".into(),
+                        "Keep covered and chilled. Stir before serving, adjust seasoning and garnish with fresh herbs.".into(),
+                    ]),
+                ])),
+                recipe_yield: to_yield(2),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                name: Some("Apple Crisp".into()),
+                recipe_category: RecipeCategory::Text("dessert".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("APPLE MIXTURE".into(), vec![
+                        "10 c apples;peeled and sliced".into(),
+                        "1/4 c lemon juice".into(),
+                        "1 tb lemon zest".into(),
+                        "3/4 c sugar".into(),
+                        "1/2 c Golden raisins".into(),
+                    ]),
+                    ("MIXTURE".into(), vec![
+                        "1 1/2 st butter".into(),
+                        "1 1/4 c all-purpose flour".into(),
+                        "1 1/2 c light brown sugar".into(),
+                        "1 1/2 c oats".into(),
+                        "1 tb lemon zest".into(),
+                        "1 tb ground cinnamon".into(),
+                        "1 ts ground nutmeg".into(),
+                        "1 ts ground cardamom".into(),
+                        "vegetable oil".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Preheat the oven to 350°F.".into(),
+                        "Place the apples in a large, shallow baking dish and toss with the lemon juice and sugar. Combine all of the ingredients for the apple mixture in a bowl.".into(),
+                        "In another bowl, cut the butter into the flour and stir in the remaining topping ingredients.".into(),
+                        "Cover with the oat mixture. Bake until the top is nicely browned and the apples are tender, about 45 minutes. Serve warm or at room temperature.".into(),
+                    ]),
+                ])),
+                recipe_yield: to_yield(8),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                author: to_organization_type("Leah Koenig".into()),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                keywords: to_defined_text(["Chicken", "holiday", "Yom Kipper"].join(",")),
+                name: Some("Apple Cider-Braised Chicken".into()),
+                recipe_category: RecipeCategory::Text("meat".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "4 lb chicken;quartered".into(),
+                        "Kosher salt and black peppe".into(),
+                        "- r;freshly ground".into(),
+                        "2 tb avocado oil".into(),
+                        "3 apples".into(),
+                        "6 sp fresh thyme ;plus 1 tbsp finely chopped".into(),
+                        "- fresh thyme leaves".into(),
+                        "6 md shallots;thinly sliced".into(),
+                        "1 c apple cider".into(),
+                        "1/2 c apple cider vinegar".into(),
+                        "2 c chicken or vegetable broth".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Sprinkle the chicken pieces with salt and pepper. Heat 2 tablespoons of the olive oil in a large pan set over medium-high heat until shimmering. Working in batches, brown the chicken pieces, starting skin-side down and flipping once, until browned on both sides, about 10 minutes per batch. Add up to 2 tablespoons more oil, if needed. Transfer the chicken to a large oven proof baking dish and top with the apples and thyme sprigs. Preheat oven to 375F.".into(),
+                        "Meanwhile, set the pan you cooked the chicken in over medium heat. Add the shallots, season with salt and pepper, and cook, stirring occasionally, until browned, about 5 minutes. Add the chopped thyme and cook, stirring often, for 1 minute.s Stir in the apple cider and cider vinegar, scraping up any browned bits at the bottom of the pan. Raise the heat to high and cook until the liquid has reduced by half, 4 to 5 minutes. Stir in the broth and bring to a boil, then carefully pour the braising liquid over the chicken and apples. Cover the baking dish with aluminum foil. Braise in the oven until the chicken is fork-tender, 45-55 minutes. Use tongs or a slotted spoon to transfer the chicken and apples to a serving platter, and let rest.".into(),
+                        "Meanwhile, if desired, make a sauce by transferring 1 1/2 cups of the braising liquid to a saucepan set over high heat. Bring to a boil and cook, stirring often, until the liquid reduces by two-thirds, 10 to 15 minutes. Spoon the sauce over the chicken and serve warm.".into(),
+                    ]),
+                ])),
+                recipe_yield: to_yield(4),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                author: to_organization_type("Nina MacDowall".into()),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                keywords: to_defined_text(["culinaria", "Jewish", "pastry", "Tarts"].join(",")),
+                name: Some("Apple Galette".into()),
+                recipe_category: RecipeCategory::Text("nina original".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "1 recipe Pate Brisee".into(),
+                        "4 Granny Smith apples ;peeled, cored and sliced 1".into(),
+                        "- /8 inch".into(),
+                        "3 tb butter;softened".into(),
+                        "3 tb butter;melted".into(),
+                        "3 tb sugar".into(),
+                        "2 oz apricot jam".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Roll the chilled brisée into a rectangle to fit a 1/4 sheet pan about 1/8 inch thick. Be careful to work quickly and not over-work the dough or allow it to become warm.".into(),
+                        "Fold one inch of the dough over to form a border.".into(),
+                        "Return to refrigerator to chill for another 30-60 minutes.".into(),
+                        "Peel apples, cut in half and core. Slice in even 1/8 inch slices.".into(),
+                        "Fan apples slightly and place on parchment on baking sheet. Place 1/2 T softened butter on each apple and bake at 400°F for 15 minutes.".into(),
+                        "Remove from oven and cool on parchment to allow juices to return to apples.".into(),
+                        "Remove the rolled brisée from the refrigerator and brush a thin coat of butter over the brisée.".into(),
+                        "Sprinkle with 1 tbs of the sugar.".into(),
+                        "Arrange the apple slices over the brisée.".into(),
+                        "Brush the apples and dough border with the remaining butter and sprinkle with the remaining sugar.".into(),
+                        "Bake at 425°F until the galette begins to color, about 10-15 minutes.".into(),
+                        "Reduce the oven temperature to 375°F and continue to cook until the pastry is golden brown, about 20 minutes longer.".into(),
+                        "Slightly warm the apricot glaze and brush on warm tart when it is finished baking.".into(),
+                    ]),
+                ])),
+                recipe_yield: to_yield(2),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                author: to_organization_type("Nina MacDowall".into()),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                keywords: to_defined_text(["nina original", "pastry", "Puff", "culinaria", "Puff"].join(",")),
+                name: Some("Apple-ginger Turnovers".into()),
+                recipe_category: RecipeCategory::Text("fruit".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "2 Granny Smith apple;small dice".into(),
+                        "1 Tb lemon juice".into(),
+                        "1/2 ts Chinese five-spice powder".into(),
+                        "2 Tb brown sugar".into(),
+                        "4 ts crystallized ginger;finely minced".into(),
+                        "1 Tb unsalted butter".into(),
+                        "PUFF PASTRY".into(),
+                        "EGG WASH".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "In a medium bowl, coat the apples with lemon juice. 2. Add brown sugar, five-spice powder and ginger. 3. Melt butter in skillet and add apple mixture. 4. Cook for several minutes until apples start to soften but are still slightly firm. Set aside. 5. Roll puff pastry to 1/4 inch thickness and cut into 3 or 4 inch squares. 6. Brush egg wash around perimeter. 7. Place small amount of filling on center and fold over the diagonal. 8. Crimp edges to seal and make a small slit in the top of each turnover to vent. 9. Chill for 30 minutes (or freeze.) 10. Bake at 400°F for 20 minutes or until medium golden brown.".into(),
+                    ]),
+                ])),
+                recipe_yield: to_yield(4),
+                ..Default::default()
+            }, RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on("Meal-Master".into()),
+                name: Some("3-minute Italian Dressing".into()),
+                recipe_category: RecipeCategory::Text("dressing".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([
+                    ("".into(), vec![
+                        "1/4 c white vinegar".into(),
+                        "1/4 c lemon juice".into(),
+                        "2 ts sugar".into(),
+                        "1 ts dry mustard".into(),
+                        "1 ts kosher salt".into(),
+                        "1/2 ts red pepper flakes".into(),
+                        "1/4 ts black pepper".into(),
+                        "4 cv garlic".into(),
+                        "1 c neutral oil or extra-virgin".into(),
+                        "- olive oil".into(),
+                        "1/3 c Parmesan cheese;either fresh or from a can".into(),
+                        "3/4 ts Italian seasoning;add more if needed".into(),
+                    ]),
+                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([
+                    ("".into(), vec![
+                        "Place vinegar, lemon juice, sugar, mustard, salt, red pepper flakes, black pepper, and garlic in the jar of a blender and blend until smooth. While the blender is running, add the oil in a steady stream. Remove the blender jar from the blender and mix in the cheese and Italian seasoning by hand. Transfer to a storage or serving container and refrigerate for at least 1 hour before serving.".into(),
+                    ]),
+                ])),
+                recipe_yield: to_yield(4),
+                ..Default::default()
+            }]
+        }
+
         pub fn recipe_v6_14() -> RecipeSchema {
             RecipeSchema {
                 at_context: Default::default(),
                 at_type: Some(AtType::Recipe),
                 is_based_on: to_is_based_on("Meal-Master (tm) v6.14".into()),
-                keywords: to_defined_text(["Cheese",
-                    "Main",
-                    "dish",
-                    "Meats",
-                    "Sandwiches"].join(",")),
                 name: Some("Poppin' Fresh Barbe Cups".into()),
-                recipe_category: RecipeCategory::Text("Breads".into()),
+                recipe_category: RecipeCategory::Text("Breads Cheese Main dish Meats Sandwiches".into()),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
                     "3/4 lb Ground Beef; Lean".into(),

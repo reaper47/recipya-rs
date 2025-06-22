@@ -57,23 +57,21 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -138,6 +136,9 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Cargo.Run.executor": "Debug",
+    "Cargo.Test apps::kalorio::tests::test_recipes::test_txt.executor": "Run",
+    "Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version.executor": "Run",
+    "Cargo.Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03.executor": "Run",
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
@@ -221,7 +222,7 @@
     "Cargo.Test helpers::tests (1).executor": "Run",
     "Cargo.Test helpers::tests.executor": "Run",
     "Cargo.Test mealmaster.executor": "Run",
-    "Cargo.Test mealmaster::tests.executor": "Debug",
+    "Cargo.Test mealmaster::tests.executor": "Run",
     "Cargo.Test pwd::tests.executor": "Run",
     "Cargo.Test recipes_routes::tests.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok.executor": "Run",
@@ -455,7 +456,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok">
+  <component name="RunManager" selected="Cargo.Run">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -474,8 +475,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test data::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib data::tests" />
+    <configuration name="Test apps::kalorio::tests::test_recipes::test_txt" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package integrations --lib apps::kalorio::tests::test_recipes::test_txt -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -491,8 +492,43 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok -- --exact" />
+    <configuration name="Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package integrations --lib apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package integrations --lib apps::rezkonv::tests::test_recipes::test_kalorio_v4_03 -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test mealmaster::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package integrations --lib apps::mealmaster::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -525,56 +561,21 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="buildProfileId" value="test" />
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test tests_pagination" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib data::tests::tests_pagination" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test apps::kalorio::tests::test_recipes::test_txt" />
+      <item itemvalue="Cargo.Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" />
+      <item itemvalue="Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version" />
+      <item itemvalue="Cargo.Test mealmaster::tests" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files" />
-      <item itemvalue="Cargo.Test data::tests" />
-      <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok" />
-      <item itemvalue="Cargo.Test tests_pagination" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version" />
+        <item itemvalue="Cargo.Test apps::kalorio::tests::test_recipes::test_txt" />
+        <item itemvalue="Cargo.Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" />
+        <item itemvalue="Cargo.Test mealmaster::tests" />
         <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files" />
-        <item itemvalue="Cargo.Test data::tests::tests_pagination::test_pagination_thousands_results_last_page_ok" />
-        <item itemvalue="Cargo.Test tests_pagination" />
-        <item itemvalue="Cargo.Test data::tests" />
       </list>
     </recent_temporary>
   </component>
