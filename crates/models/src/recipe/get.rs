@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
+use repository::extensions::pagination::Paginate;
 use repository::{ModelManager, PgPooledConn, schema};
 
 use crate::params::SearchParams;
@@ -79,7 +80,7 @@ impl Recipe {
     pub async fn get_page(
         mm: &ModelManager,
         user_id: i64,
-        _search_params: &SearchParams,
+        search_params: &SearchParams,
     ) -> Result<Vec<RecipeDetails>> {
         let mut conn = mm.pool.get().await?;
 
@@ -105,6 +106,7 @@ impl Recipe {
                 schema::times::all_columns,
             ))
             .distinct_on(schema::recipes::id)
+            .paginate(search_params.page.unwrap_or(1) as i64)
             .load::<(
                 Recipe,
                 String,
@@ -267,17 +269,16 @@ async fn fetch_recipe_details(
 
 #[cfg(test)]
 mod tests {
+    use testing::utils::{TestDb, build_server_anonymous, create_app_state};
+
     use super::*;
     use crate::recipe::test_utils::a_complete_recipe_for_create;
     use crate::user::User;
-
-    use testing::utils::{build_server_anonymous, create_app_state, TestDb};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_count {
         use super::*;
-
 
         #[tokio::test]
         async fn test_count_ok() -> Result<()> {

@@ -21,10 +21,10 @@ use crate::apps::{
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
 pub fn parse_recipe<R>(
-    r: R,
-    app: App,
+    r: &mut R,
+    app: &App,
     file_name: &str,
-    file_format: FileFormat,
+    file_format: &FileFormat,
 ) -> Result<Vec<RecipeSchema>>
 where
     R: Read + Seek,

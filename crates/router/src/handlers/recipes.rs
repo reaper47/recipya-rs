@@ -26,9 +26,10 @@ use models::website::{ToHtmlTable, Website};
 use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
 use reqwest::StatusCode;
 use support::fs::FsSupport;
+use tokio::fs;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -175,7 +176,7 @@ pub async fn duplicate_recipe_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let (recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
+    let (mut recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
         Ok(res) => res,
         Err(err) => {
             error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
@@ -190,6 +191,8 @@ pub async fn duplicate_recipe_handler(
             .into_response();
         }
     };
+    
+    recipe.recipe_details.recipe.name = format!("{} (copy)", recipe.recipe_details.recipe.name);
 
     templates::recipes::add_recipe_manual(
         Data {
@@ -471,15 +474,25 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
         let start_time = Instant::now();
 
         let recipes = match parse_recipes(&state, form, user_id).await {
-            None => {
+            Ok(r) => r,
+            Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
-                let toast = MessageHtmx::warning("No recipes found");
+                let toast = MessageHtmx::warning("No recipes found.");
                 if let Ok(json) = serde_json::to_string(&toast) {
                     state.broadcast(user_id, Message::Text(json.into())).await;
                 }
                 return;
             }
-            Some(r) => r,
+            Err(_) => {
+                state.hide_broadcast(user_id).await;
+                let toast = MessageHtmx::error(
+                    "An error occurred while parsing the recipes. Please check the logs.",
+                );
+                if let Ok(json) = serde_json::to_string(&toast) {
+                    state.broadcast(user_id, Message::Text(json.into())).await;
+                }
+                return;
+            }
         };
 
         let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
@@ -554,9 +567,9 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
 
 async fn parse_recipes(
     state: &AppState,
-    form: ImportFromAppForm,
+    mut form: ImportFromAppForm,
     user_id: i64,
-) -> Option<Vec<RecipeSchema>> {
+) -> Result<Vec<RecipeSchema>> {
     state
         .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
         .await;
@@ -565,16 +578,25 @@ async fn parse_recipes(
         Ok(r) => r,
         Err(err) => {
             error!("Failed to parse recipes: {err}");
-            return None;
+
+            let saved_file =
+                state
+                    .data_dir
+                    .debug
+                    .join(format!("{}_{}", Uuid::new_v4(), form.file_name));
+            fs::write(saved_file.clone(), &form.file_data).await?;
+            error!("Saved file to '{:?}' for debugging purposes", saved_file);
+
+            return Err(err);
         }
     };
 
     if recipes.is_empty() {
-        warn!("No recipes found");
-        return None;
+        warn!("No recipes found in file");
+        return Err(Error::NoRecipe);
     }
 
-    Some(recipes)
+    Ok(recipes)
 }
 
 /// Handles rendering the form to add a recipe manually.
@@ -1111,9 +1133,6 @@ pub async fn view_recipe_handler(
                 is_update_available: false,
             },
             pagination: Some(PaginationData {
-                left: vec![],
-                middle: vec![],
-                right: vec![],
                 prev: 0,
                 selected: 0,
                 next: 0,
@@ -1122,6 +1141,7 @@ pub async fn view_recipe_handler(
                     target: "".to_string(),
                 },
                 search: PaginationSearchData { current_page: 0 },
+                slots: vec![],
                 is_hidden: false,
                 num_pages: 0,
                 num_results: 0,

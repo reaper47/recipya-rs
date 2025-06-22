@@ -19,12 +19,12 @@ use crate::handlers::recipes::{
     supported_applications_handler, supported_websites_handler, view_recipe_handler,
 };
 use crate::middleware::mw_auth;
-use crate::{AppState, Error, Result as ServerResult};
+use crate::{AppState, Result as ServerResult};
 
 /// Represents the content of the "Add Recipe -> Import from an app" form.
 #[derive(Default)]
 pub struct ImportFromAppForm {
-    pub file_data: Cursor<Vec<u8>>,
+    pub file_data: Vec<u8>,
     pub file_name: String,
     pub app: App,
     pub file_format: FileFormat,
@@ -63,7 +63,7 @@ where
                         .ok_or(InvalidBoundary::default())?;
                     form.file_name = filename.clone();
 
-                    let bytes = field
+                    form.file_data = field
                         .bytes()
                         .await
                         .map_err(|err| {
@@ -71,7 +71,6 @@ where
                             InvalidBoundary::default()
                         })?
                         .to_vec();
-                    form.file_data = Cursor::new(bytes);
 
                     form.file_format = FileFormat::from_filename(&filename);
                 }
@@ -91,16 +90,14 @@ where
 
 impl ImportFromAppForm {
     /// Parses the recipe file contained in the form.
-    pub fn parse_recipes(self) -> ServerResult<Vec<RecipeSchema>> {
-        let data = self.file_data;
-        let app = self.app;
-        let file_name = self.file_name;
-        let file_format = self.file_format;
+    pub fn parse_recipes(&mut self) -> ServerResult<Vec<RecipeSchema>> {
+        let mut data = Cursor::new(&self.file_data);
+        let app = &self.app;
+        let file_name = &self.file_name;
+        let file_format = &self.file_format;
 
-        parse_recipe(data, app, &file_name, file_format).map_err(|err| {
-            error!("Failed to parse recipe file '{file_name}': {err}");
-            Error::FailParse
-        })
+        let res = parse_recipe(&mut data, app, file_name, file_format)?;
+        Ok(res)
     }
 }
 
@@ -283,7 +280,7 @@ mod tests {
             let expected = [
                 r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
                 r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
-                r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale">"#,
+                r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale (copy)">"#,
                 r#"<img src="" alt="" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="4" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value="dinner"><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option><option>dinner</option></datalist>"#,
@@ -971,7 +968,7 @@ mod tests {
                     r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/1" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Best Chinese Kale0 recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Best Chinese Kale0</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/1" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
                     r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/2" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Best Chinese Kale1 recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Best Chinese Kale1</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/2" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
                     r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/3" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Best Chinese Kale2 recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Best Chinese Kale2</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/3" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
-                    r#"<footer id="pagination" class="footer footer-center bg-base-200 pb-12 p-2 md:pb-2 text-base-content gap-2" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled">«</button><button aria-current="page" class="join-item btn btn-active">1</button><button class="join-item btn btn-disabled">»</button></div><div class="text-center"><p class="text-sm">Showing <span class="font-medium">1</span> to <span class="font-medium">3</span> of <span id="search-count" class="font-medium">3</span> results</p></div></footer>"#,
+                    r#"><footer id="pagination" class="footer footer-center bg-base-200 pb-12 p-2 md:pb-2 text-base-content gap-2" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center mt-2"><p class="text-sm text-base-content/70">Showing <span class="font-semibold text-base-content">1</span>-<span class="font-semibold text-base-content">3</span> of <span id="search-count" class="font-medium">3</span> results</p></div></footer>"#,
                 ],
             );
             Ok(())
@@ -1371,7 +1368,7 @@ mod tests {
             res.assert_status(StatusCode::ACCEPTED);
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Parsing recipes...</p><div id="export-progress"><progress max="100" value="1.00"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"No recipes found","status":"alert-warning","title":"Attention"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred while parsing the recipes. Please check the logs.","status":"alert-error","title":"Operation Failed"}}"#).await;
             let state = create_app_state(config).await;
             pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 0);
             Ok(())

@@ -13,7 +13,7 @@ use url::Url;
 
 use super::helpers::read_file;
 use crate::helpers::{sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield};
-use crate::{Error, Result};
+use crate::Result;
 
 pub struct ChefTapRecipe {
     title: String,
@@ -76,10 +76,9 @@ where
 }
 
 fn parse_cheftap_recipe(input: &str) -> Result<ChefTapRecipe> {
-    map(recipe, ChefTapRecipe::from)
+    Ok(map(recipe, ChefTapRecipe::from)
         .parse(input)
-        .map(|(_, r)| r)
-        .map_err(|err| Error::Parse(err.to_string()))
+        .map(|(_, r)| r)?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

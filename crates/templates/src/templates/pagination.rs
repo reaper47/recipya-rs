@@ -1,8 +1,8 @@
+use std::cmp;
+
 use maud::{Markup, html};
 
-use models::data::PaginationData;
-
-use super::helpers::mul_all;
+use models::data::{PageSlot, PaginationData};
 
 /// Renders the pagination strip.
 pub(super) fn pagination(p: &PaginationData) -> Markup {
@@ -15,144 +15,112 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
             onload=(format!("updateAddCookbookUrl({})", p.selected))
             hx-swap-oob=[if p.htmx.is_swap { Some("outerHTML:#pagination") } else { None }] {
             div class="join gap-0" {
+                // Previous page button
                 @if p.selected == 1 {
-                    button class="join-item btn btn-disabled" { "«" }
+                    button class="join-item btn btn-disabled w-12" title="Previous page" aria-label="Previous page" { "‹" }
                 } @else {
+                    @let prev_url = format!("{}?page={}{}", p.url, p.prev, p.url_queries);
+
                     button
-                        class="join-item btn"
-                        hx-get=(format!("{}?page={}{}", p.url, p.prev, p.url_queries))
+                        class="join-item btn w-12"
+                        title="Previous page"
+                        aria-label="Previous page"
+                        hx-get=(prev_url)
                         hx-target=(p.htmx.target)
                         hx-trigger="mousedown"
-                        hx-push-url=(format!("{}?page={}", p.url, p.prev))
-                        hx-swap="innerHTML show:window:top transition:true" { "«" }
+                        hx-push-url=(prev_url)
+                        hx-swap="innerHTML show:window:top transition:true" { "‹" }
                 }
 
-                // Left Section
-                @for (i, l) in p.left.iter().enumerate() {
-                    @if p.selected == *l {
-                        button aria-current="page" class="join-item btn btn-active" { (l) }
-                    } @else {
-                        button class=(
-                            if p.left.len() > 3 {
-                                let mut class = String::from("join-item btn");
-                                if i > 3 {
-                                    class.push_str(" hidden sm:block");
-                                }
-                                class
-                            } else {
-                                let mut class = String::from("join-item btn");
-                                if (i == 1 && p.left.len() != 2) || i > 2 {
-                                    class.push_str(" hidden sm:block");
-                                }
-                                class
-                            })
-                            hx-get=(format!("{}?page={}{}", p.url, l, p.url_queries))
-                            hx-target=(p.htmx.target)
-                            hx-trigger="mousedown"
-                            hx-push-url=(format!("{}?page={}{}", p.url, l, p.url_queries))
-                            hx-swap="innerHTML show:window:top transition:true" { (l) }
-                    }
-                }
+                @for slot in p.slots.iter() {
+                    @match slot {
+                        PageSlot::Page(page_num) => {
+                            @if p.selected == *page_num {
+                                button class="join-item btn btn-active w-12"
+                                    aria-current="page"
+                                    aria-label=(format!("Page {}, current page", page_num)) { (page_num) }
+                            } @else {
+                                @let goto_page = format!("Go to page {}", page_num);
+                                @let get_page = format!("{}?page={}{}", p.url, page_num, p.url_queries);
 
-                // Middle Section
-                @if !p.middle.is_empty() {
-                    button class="hidden sm:block join-item btn btn-disabled" { "..." }
-                }
-                @for (i, m) in p.middle.iter().enumerate() {
-                    @if p.selected == *m {
-                        button class="join-item btn btn-active"
-                            aria-current="page"
-                            hx-get=(format!("{}?page={}{}", p.url, m, p.url_queries))
-                            hx-target=(p.htmx.target)
-                            hx-trigger="mousedown"
-                            hx-push-url=(format!("{}?page={}{}", p.url, m, p.url_queries))
-                            hx-swap="innerHTML show:window:top transition:true" { (m) }
-                    } @else {
-                        button class={
-                                "join-item btn"
-                                @if i == 1 || i > 3 { " hidden sm:block" }
+                                button class="join-item btn w-12"
+                                    title=(goto_page)
+                                    aria-label=(goto_page)
+                                    hx-get=(get_page)
+                                    hx-target=(p.htmx.target)
+                                    hx-trigger="click"
+                                    hx-push-url=(get_page)
+                                    hx-swap="innerHTML show:window:top transition:true" { (page_num) }
                             }
-                            hx-get=(format!("{}?page={}{}", p.url, m, p.url_queries))
-                            hx-target=(p.htmx.target)
-                            hx-trigger="mousedown"
-                            hx-push-url=(format!("{}?page={}{}", p.url, m, p.url_queries))
-                            hx-swap="innerHTML show:window:top transition:true" { (m) }
+                        }
+                        PageSlot::Ellipsis => {
+                            button class="join-item btn btn-disabled w-12"
+                                aria-hidden="true" { "⋯" }
+                        }
                     }
-                }
-                @if !p.middle.is_empty() {
-                    button class="hidden sm:block join-item btn btn-disabled" { "..." }
                 }
 
-                // Right Section
-                @if !p.right.is_empty() && p.middle.is_empty() {
-                    button class="hidden sm:block join-item btn btn-disabled" { "..." }
-                }
-                @for (i, r) in p.right.iter().enumerate() {
-                    @if p.selected == *r {
-                        button class="join-item btn btn-active"
-                            aria-current="page"
-                            hx-get=(format!("{}?page={}{}", p.url, r, p.url_queries))
-                            hx-target=(p.htmx.target)
-                            hx-trigger="mousedown"
-                            hx-push-url=(format!("{}?page={}{}", p.url, r, p.url_queries))
-                            hx-swap="innerHTML show:window:top transition:true" { (r) }
-                    } @else {
-                        button class=(
-                            if p.right.len() > 3 {
-                                let mut class = String::from("join-item btn");
-                                if i == 0 || i > 4 {
-                                    class.push_str(" hidden sm:block");
-                                }
-                                class
-                            } else {
-                                let mut class = String::from("join-item btn");
-                                if i == 1 || i > 2 {
-                                    class.push_str(" hidden sm:block");
-                                }
-                                class
-                            })
-                            hx-get=(format!("{}?page={}{}", p.url, r, p.url_queries))
-                            hx-target=(p.htmx.target)
-                            hx-trigger="mousedown"
-                            hx-push-url=(format!("{}?page={}{}", p.url, r, p.url_queries))
-                            hx-swap="innerHTML show:window:top transition:true" { (r) }
-                    }
-                }
+                // Next button
                 @if p.selected == p.num_pages {
-                    button class="join-item btn btn-disabled" { "»" }
+                   button class="join-item btn btn-disabled w-12"
+                        title="Next page"
+                        aria-label="Next page" { "›" }
                 } @else {
-                    button class="join-item btn"
-                        hx-get=(format!("{}?page={}{}", p.url, p.next, p.url_queries))
+                    @let next_url = format!("{}?page={}{}", p.url, p.next, p.url_queries);
+
+                    button class="join-item btn w-12"
+                        title="Next page"
+                        aria-label="Next page"
+                        hx-get=(next_url)
                         hx-target=(p.htmx.target)
                         hx-trigger="mousedown"
-                        hx-push-url=(format!("{}?page={}{}", p.url, p.next, p.url_queries))
-                        hx-swap="innerHTML show:window:top transition:true" { "»" }
+                        hx-push-url=(next_url)
+                        hx-swap="innerHTML show:window:top transition:true" { "›" }
                 }
             }
-            div class="text-center" {
-                p class="text-sm" {
+
+            div class="text-center mt-2" {
+                p class="text-sm text-base-content/70" {
                     "Showing "
-                    span class="font-medium" {
-                        @if p.selected == p.prev {
-                            (format!("{}", p.selected))
-                        } @else {
-                            (format!("{}", mul_all(vec![p.selected - 1, p.results_per_page]) + 1))
-                        }
+                    span class="font-semibold text-base-content" {
+                        (format_number(calc_start_result(p.selected, p.results_per_page)))
                     }
-                    " to "
-                    span class="font-medium" {
-                        @if p.selected == p.num_pages {
-                            (p.num_results)
-                        } @else {
-                            (mul_all(vec![p.selected, p.results_per_page]))
-                        }
+                    "-"
+                    span class="font-semibold text-base-content" {
+                        (format_number(calc_end_result(p.selected, p.results_per_page, p.num_results)))
                     }
                     " of " span #search-count class="font-medium" {
-                        (p.num_results)
+                        (format_number(p.num_results))
                     }
                     " results"
                 }
             }
         }
     }
+}
+
+fn format_number(num: u64) -> String {
+    if num < 1000 {
+        num.to_string()
+    } else {
+        let mut result = String::new();
+        let chars = num.to_string().chars().collect::<Vec<_>>();
+
+        for (i, c) in chars.iter().enumerate() {
+            if i > 0 && (chars.len() - i) % 3 == 0 {
+                result.push(',');
+            }
+            result.push(*c);
+        }
+
+        result
+    }
+}
+
+fn calc_start_result(page: u64, per_page: u64) -> u64 {
+    (page - 1) * per_page + 1
+}
+
+fn calc_end_result(page: u64, per_page: u64, total: u64) -> u64 {
+    cmp::min(page * per_page, total)
 }

@@ -189,11 +189,13 @@ fn render_add_recipe_manual(
                                     }
                                     div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
                                         div class="p-4 flex gap-2 flex-wrap" {
-                                            @for kw in keywords.iter() {
-                                                div class="badge badge-sm badge-neutral p-3 pr-0" {
-                                                    input type="hidden" name="keyword" value=(kw.name);
-                                                    span class="select-none" { (kw.name) }
-                                                    button type="button" class="btn btn-xs btn-ghost" _=(PreEscaped("on click remove closest <div/>")) { "X" }
+                                            @if let Some(v) = view {
+                                                @for kw in v.recipe_details.keywords.iter() {
+                                                    div class="badge badge-sm badge-neutral p-3 pr-0" {
+                                                        input type="hidden" name="keyword" value=(kw);
+                                                        span class="select-none" { (kw) }
+                                                        button type="button" class="btn btn-xs btn-ghost" _=(PreEscaped("on click remove closest <div/>")) { "X" }
+                                                    }
                                                 }
                                             }
                                             (recipe_keyword_empty(keywords))
@@ -1124,10 +1126,10 @@ fn render_edit_recipe(
                                     }
                                     div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
                                         div class="p-4 flex gap-2 flex-wrap" {
-                                            @for kw in keywords.iter() {
+                                            @for kw in view.recipe_details.keywords.iter() {
                                                 div class="badge badge-sm badge-neutral p-3 pr-0" {
-                                                    input type="hidden" name="keyword" value=(kw.name);
-                                                    span class="select-none" { (kw.name) }
+                                                    input type="hidden" name="keyword" value=(kw);
+                                                    span class="select-none" { (kw) }
                                                     button type="button" class="btn btn-xs btn-ghost" _=(PreEscaped("on click remove closest <div/>")) { "X" }
                                                 }
                                             }

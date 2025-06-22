@@ -12,7 +12,7 @@ use support::time::parse_duration;
 use url::Url;
 
 use crate::apps::helpers::read_file;
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::helpers::{
     seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
 };
@@ -111,10 +111,9 @@ where
 }
 
 fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
-    map(recipe, SaffronRecipe::from)
+    Ok(map(recipe, SaffronRecipe::from)
         .parse(input)
-        .map(|(_, r)| r)
-        .map_err(|err| Error::Parse(err.to_string()))
+        .map(|(_, r)| r)?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

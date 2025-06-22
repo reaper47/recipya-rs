@@ -17,7 +17,7 @@ use super::helpers::read_file;
 use crate::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield,
 };
-use crate::{Error, Result};
+use crate::Result;
 
 struct BigOvenRecipe {
     title: String,
@@ -164,10 +164,9 @@ where
 }
 
 fn parse_text_file(input: &str) -> Result<RecipeSchema> {
-    map(recipe, BigOvenRecipe::from)
+    Ok(map(recipe, BigOvenRecipe::from)
         .parse(input)
-        .map(|(_, r)| r.into())
-        .map_err(|err| Error::Parse(err.to_string()))
+        .map(|(_, r)| r.into())?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

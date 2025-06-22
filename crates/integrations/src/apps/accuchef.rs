@@ -19,7 +19,7 @@ use crate::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
     to_yield,
 };
-use crate::{Error, Result};
+use crate::Result;
 
 struct AccuChefRecipe {
     title: String,
@@ -122,10 +122,9 @@ where
 }
 
 fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
-    many0(map(recipe, |r| Some(AccuChefRecipe::from(r))))
+    Ok(many0(map(recipe, |r| Some(AccuChefRecipe::from(r))))
         .parse(input)
-        .map(|(_, recipes)| recipes.into_iter().flatten().collect())
-        .map_err(|err| Error::Parse(err.to_string()))
+        .map(|(_, recipes)| recipes.into_iter().flatten().collect())?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
