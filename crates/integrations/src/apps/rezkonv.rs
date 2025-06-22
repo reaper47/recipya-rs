@@ -23,7 +23,7 @@ use crate::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
     to_yield,
 };
-use crate::{Error, Result};
+use crate::Result;
 
 struct RecipeComponents<'a> {
     software_version: &'a str,
@@ -121,10 +121,9 @@ where
 }
 
 fn parse_recipes(input: &str) -> Result<Vec<RecipeComponents>> {
-    many1(recipe)
+    Ok(many1(recipe)
         .parse(input)
-        .map(|(_, recipes)| recipes.into_iter().collect())
-        .map_err(|err| Error::Parse(err.to_string()))
+        .map(|(_, recipes)| recipes.into_iter().collect())?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

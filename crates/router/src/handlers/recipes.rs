@@ -1,5 +1,4 @@
 use std::fmt::Write;
-use std::io::Read;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -579,7 +578,11 @@ async fn parse_recipes(
         Err(err) => {
             error!("Failed to parse recipes: {err}");
 
-            let saved_file = state.data_dir.debug.join(format!("{}_{}", Uuid::new_v4(), form.file_name));
+            let saved_file =
+                state
+                    .data_dir
+                    .debug
+                    .join(format!("{}_{}", Uuid::new_v4(), form.file_name));
             fs::write(saved_file.clone(), &form.file_data).await?;
             error!("Saved file to '{:?}' for debugging purposes", saved_file);
 

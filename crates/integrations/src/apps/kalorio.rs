@@ -15,7 +15,7 @@ use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, rea
 use crate::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
 };
-use crate::{Error, Result};
+use crate::Result;
 
 struct KalorioTextRecipe {
     title: String,
@@ -134,7 +134,7 @@ where
 }
 
 fn parse_txt(input: &str) -> Result<Vec<KalorioTextRecipe>> {
-    many0(alt((
+    Ok(many0(alt((
         map(
             preceded(take_while_m_n(1, 10, is_vchar_or_space), line_ending),
             |_| None,
@@ -142,8 +142,7 @@ fn parse_txt(input: &str) -> Result<Vec<KalorioTextRecipe>> {
         map(recipe, |r| Some(r.into())),
     )))
     .parse(input)
-    .map(|(_, recipes)| recipes.into_iter().flatten().collect())
-    .map_err(|err| Error::Parse(err.to_string()))
+    .map(|(_, recipes)| recipes.into_iter().flatten().collect())?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {

@@ -13,7 +13,7 @@ use uuid::Uuid;
 use zip::ZipArchive;
 
 use crate::apps::{cookmate, mastercook::parse_mx2};
-use crate::{Error, Result};
+use crate::Result;
 
 #[derive(Debug)]
 pub(super) enum Instruction<'a> {
@@ -33,8 +33,7 @@ where
     R: Read + Seek,
 {
     let mut buffer = Vec::new();
-    r.read_to_end(&mut buffer)
-        .map_err(|err| Error::Parse(err.to_string()))?;
+    r.read_to_end(&mut buffer)?;
     Ok(auto_convert_to_utf8(&buffer).replace("\r\n", "\n"))
 }
 

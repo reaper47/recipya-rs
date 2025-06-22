@@ -57,16 +57,16 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/config/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/config/src/data.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/delete.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/delete.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

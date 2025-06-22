@@ -373,13 +373,12 @@ where
 }
 
 fn parse_text_file(input: &str) -> Result<Vec<RecipeSage>> {
-    preceded(
+    Ok(preceded(
         (tag("==== Recipes ===="), line_ending, line_ending),
         many1(map(recipe, RecipeSage::from)),
     )
     .parse(input)
-    .map(|(_, r)| r)
-    .map_err(|err| Error::Parse(err.to_string()))
+    .map(|(_, r)| r)?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
@@ -427,7 +426,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
                 ingredients,
                 instructions,
                 keywords: items
-                    .map(|(_a, b)| b.iter().map(|&s| s).collect())
+                    .map(|(_a, b)| b.iter().copied().collect())
                     .unwrap_or_default(),
                 notes,
                 servings: servings
