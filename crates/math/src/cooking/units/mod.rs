@@ -3,6 +3,7 @@ mod mass;
 mod temperature;
 mod unit;
 mod unit_type;
+mod volume;
 
 pub mod custom;
 pub mod traits;
@@ -12,3 +13,4 @@ pub use mass::*;
 pub use temperature::*;
 pub use unit::*;
 pub use unit_type::*;
+pub use volume::*;
