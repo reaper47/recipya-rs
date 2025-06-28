@@ -1,17 +1,9 @@
-use crate::cooking::units::LengthType;
+use crate::cooking::units::{LengthUnit, MassUnit};
 
 #[derive(Debug, PartialEq)]
 pub enum UnitType {
-    Length(LengthType),
-
-    // Mass
-    Milligram,
-    Gram,
-    Dekagram,
-    Hectogram,
-    Kilogram,
-    Ounce,
-    Pound,
+    Length(LengthUnit), 
+    Mass(MassUnit),
 
     // Temperature
     Celsius,

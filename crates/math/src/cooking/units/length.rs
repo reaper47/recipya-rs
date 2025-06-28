@@ -13,7 +13,7 @@ pub enum Length {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum LengthType {
+pub enum LengthUnit {
     Millimetre,
     Centimetre,
     Metre,
@@ -24,13 +24,15 @@ pub enum LengthType {
 
 impl UnitOperations for Length {
     fn unit_type(&self) -> UnitType {
+        use LengthUnit::*;
+        
         match self {
-            Length::Millimetre(_) => UnitType::Length(LengthType::Millimetre),
-            Length::Centimetre(_) => UnitType::Length(LengthType::Centimetre),
-            Length::Metre(_) => UnitType::Length(LengthType::Metre),
-            Length::Kilometre(_) => UnitType::Length(LengthType::Kilometre),
-            Length::Inch(_) => UnitType::Length(LengthType::Inch),
-            Length::Foot(_) => UnitType::Length(LengthType::Foot),
+            Length::Millimetre(_) => UnitType::Length(Millimetre),
+            Length::Centimetre(_) => UnitType::Length(Centimetre),
+            Length::Metre(_) => UnitType::Length(Metre),
+            Length::Kilometre(_) => UnitType::Length(Kilometre),
+            Length::Inch(_) => UnitType::Length(Inch),
+            Length::Foot(_) => UnitType::Length(Foot),
         }
     }
 
@@ -59,18 +61,20 @@ impl UnitOperations for Length {
 
 impl UnitConverter for Length {
     fn convert(&self, to: UnitType) -> Result<Unit> {
+        use LengthUnit::*;
+        
         match self {
             Length::Millimetre(original_value) => match to {
                 UnitType::Length(unit) => {
                     let value = measurements::Length::from_millimetres(*original_value);
                     
                     match unit {
-                        LengthType::Millimetre => Ok(Unit::Length(self.with_value(*original_value))),
-                        LengthType::Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        LengthType::Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        LengthType::Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        LengthType::Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        LengthType::Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Millimetre => Ok(Unit::Length(self.with_value(*original_value))),
+                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
                     }
                 },
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to))
@@ -80,12 +84,12 @@ impl UnitConverter for Length {
                     let value = measurements::Length::from_centimetres(*original_value);
                     
                     match unit {
-                        LengthType::Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        LengthType::Centimetre => Ok(Unit::Length(self.with_value(*original_value))),
-                        LengthType::Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        LengthType::Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        LengthType::Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        LengthType::Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(self.with_value(*original_value))),
+                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
                     }
                 },
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to))
@@ -95,12 +99,12 @@ impl UnitConverter for Length {
                 
                 match to {
                     UnitType::Length(unit) => match unit {
-                        LengthType::Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        LengthType::Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        LengthType::Metre => Ok(Unit::Length(self.with_value(*original_value))),
-                        LengthType::Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        LengthType::Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        LengthType::Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(self.with_value(*original_value))),
+                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
                     },
                     _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to))
                 }
@@ -110,12 +114,12 @@ impl UnitConverter for Length {
                     let value = measurements::Length::from_kilometres(*original_value);
                     
                     match unit {
-                        LengthType::Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        LengthType::Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        LengthType::Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        LengthType::Kilometre => Ok(Unit::Length(self.with_value(*original_value))),
-                        LengthType::Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        LengthType::Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(self.with_value(*original_value))),
+                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
                     }
                 },
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to))
@@ -125,12 +129,12 @@ impl UnitConverter for Length {
                     let value = measurements::Length::from_inches(*original_value);
                     
                     match unit {
-                        LengthType::Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        LengthType::Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        LengthType::Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        LengthType::Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        LengthType::Inch => Ok(Unit::Length(self.with_value(*original_value))),
-                        LengthType::Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(self.with_value(*original_value))),
+                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
                     }
                 },
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to))
@@ -140,12 +144,12 @@ impl UnitConverter for Length {
                     let value = measurements::Length::from_feet(*original_value);
                     
                     match unit {
-                        LengthType::Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        LengthType::Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        LengthType::Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        LengthType::Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        LengthType::Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        LengthType::Foot => Ok(Unit::Length(self.with_value(*original_value))),
+                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(self.with_value(*original_value))),
                     }
                 },
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to))
@@ -157,8 +161,6 @@ impl UnitConverter for Length {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cooking::units::traits::UnitOperations;
-    use crate::cooking::units::UnitType;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
         
@@ -195,12 +197,14 @@ mod tests {
 
         #[test]
         fn test_unit_type_mapping() {
-            assert_eq!(Length::Millimetre(0.0).unit_type(), UnitType::Length(LengthType::Millimetre));
-            assert_eq!(Length::Centimetre(0.0).unit_type(), UnitType::Length(LengthType::Centimetre));
-            assert_eq!(Length::Metre(0.0).unit_type(), UnitType::Length(LengthType::Metre));
-            assert_eq!(Length::Kilometre(0.0).unit_type(), UnitType::Length(LengthType::Kilometre));
-            assert_eq!(Length::Inch(0.0).unit_type(), UnitType::Length(LengthType::Inch));
-            assert_eq!(Length::Foot(0.0).unit_type(), UnitType::Length(LengthType::Foot));
+            use LengthUnit::*;
+            
+            assert_eq!(Length::Millimetre(0.0).unit_type(), UnitType::Length(Millimetre));
+            assert_eq!(Length::Centimetre(0.0).unit_type(), UnitType::Length(Centimetre));
+            assert_eq!(Length::Metre(0.0).unit_type(), UnitType::Length(Metre));
+            assert_eq!(Length::Kilometre(0.0).unit_type(), UnitType::Length(Kilometre));
+            assert_eq!(Length::Inch(0.0).unit_type(), UnitType::Length(Inch));
+            assert_eq!(Length::Foot(0.0).unit_type(), UnitType::Length(Foot));
         }
 
         #[test]
@@ -286,7 +290,7 @@ mod tests {
             let mm = Length::Millimetre(10.0);
             let negative_mm = mm.with_value(-15.7);
             assert_eq!(negative_mm.value(), -15.7);
-            assert_eq!(negative_mm.unit_type(), UnitType::Length(LengthType::Millimetre));
+            assert_eq!(negative_mm.unit_type(), UnitType::Length(LengthUnit::Millimetre));
         }
 
         #[test]
@@ -408,12 +412,12 @@ mod tests {
                 Length::Inch(1.0),
                 Length::Foot(1.0)];
 
-            let expected_types = [UnitType::Length(LengthType::Millimetre),
-                UnitType::Length(LengthType::Centimetre),
-                UnitType::Length(LengthType::Metre),
-                UnitType::Length(LengthType::Kilometre),
-                UnitType::Length(LengthType::Inch),
-                UnitType::Length(LengthType::Foot)];
+            let expected_types = [UnitType::Length(LengthUnit::Millimetre),
+                UnitType::Length(LengthUnit::Centimetre),
+                UnitType::Length(LengthUnit::Metre),
+                UnitType::Length(LengthUnit::Kilometre),
+                UnitType::Length(LengthUnit::Inch),
+                UnitType::Length(LengthUnit::Foot)];
 
             for (variant, expected_type) in all_variants.iter().zip(expected_types.iter()) {
                 assert_eq!(variant.unit_type(), *expected_type);
@@ -430,7 +434,7 @@ mod tests {
                 .with_value(40.0);
 
             assert_eq!(result.value(), 40.0);
-            assert_eq!(result.unit_type(), UnitType::Length(LengthType::Metre));
+            assert_eq!(result.unit_type(), UnitType::Length(LengthUnit::Metre));
         }
 
         #[test]
@@ -469,27 +473,27 @@ mod tests {
         #[test]
         fn test_millimeter_conversions() -> Result<()> {
             assert_eq!(
-                Length::Millimetre(100.0).convert(UnitType::Length(LengthType::Millimetre))?,
+                Length::Millimetre(100.0).convert(UnitType::Length(LengthUnit::Millimetre))?,
                 Unit::Length(Length::Millimetre(100.0))
             );
             assert_eq!(
-                Length::Millimetre(100.0).convert(UnitType::Length(LengthType::Centimetre))?,
+                Length::Millimetre(100.0).convert(UnitType::Length(LengthUnit::Centimetre))?,
                 Unit::Length(Length::Centimetre(10.0)),
             );
             assert_eq!(
-                Length::Millimetre(1000.0).convert(UnitType::Length(LengthType::Metre))?,
+                Length::Millimetre(1000.0).convert(UnitType::Length(LengthUnit::Metre))?,
                 Unit::Length(Length::Metre(1.0)),
             );
             assert_eq!(
-                Length::Millimetre(1e6).convert(UnitType::Length(LengthType::Kilometre))?,
+                Length::Millimetre(1e6).convert(UnitType::Length(LengthUnit::Kilometre))?,
                 Unit::Length(Length::Kilometre(1.0)),
             );
             assert_eq!(
-                Length::Millimetre(25.4).convert(UnitType::Length(LengthType::Inch))?,
+                Length::Millimetre(25.4).convert(UnitType::Length(LengthUnit::Inch))?,
                 Unit::Length(Length::Inch(1.0))
             );
             assert_eq!(
-                Length::Millimetre(304.8).convert(UnitType::Length(LengthType::Foot))?,
+                Length::Millimetre(304.8).convert(UnitType::Length(LengthUnit::Foot))?,
                 Unit::Length(Length::Foot(1.0)),
             );
             Ok(())
@@ -498,27 +502,27 @@ mod tests {
         #[test]
         fn test_centimeter_conversions() -> Result<()> {
             assert_eq!(
-                Length::Centimetre(5.0).convert(UnitType::Length(LengthType::Millimetre))?,
+                Length::Centimetre(5.0).convert(UnitType::Length(LengthUnit::Millimetre))?,
                 Unit::Length(Length::Millimetre(50.0)),
             );
             assert_eq!(
-                Length::Centimetre(150.0).convert(UnitType::Length(LengthType::Centimetre))?,
+                Length::Centimetre(150.0).convert(UnitType::Length(LengthUnit::Centimetre))?,
                 Unit::Length(Length::Centimetre(150.0)),
             );
             assert_eq!(
-                Length::Centimetre(150.0).convert(UnitType::Length(LengthType::Metre))?,
+                Length::Centimetre(150.0).convert(UnitType::Length(LengthUnit::Metre))?,
                 Unit::Length(Length::Metre(1.5)),
             );
             assert_eq!(
-                Length::Centimetre(1e5).convert(UnitType::Length(LengthType::Kilometre))?,
+                Length::Centimetre(1e5).convert(UnitType::Length(LengthUnit::Kilometre))?,
                 Unit::Length(Length::Kilometre(1.0)),
             );
             assert_eq!(
-                Length::Centimetre(2.54).convert(UnitType::Length(LengthType::Inch))?,
+                Length::Centimetre(2.54).convert(UnitType::Length(LengthUnit::Inch))?,
                 Unit::Length(Length::Inch(1.0)),
             );
             assert_eq!(
-                Length::Centimetre(30.48).convert(UnitType::Length(LengthType::Foot))?,
+                Length::Centimetre(30.48).convert(UnitType::Length(LengthUnit::Foot))?,
                 Unit::Length(Length::Foot(1.0)),
             );
             Ok(())
@@ -527,28 +531,28 @@ mod tests {
         #[test]
         fn test_meter_conversions() -> Result<()> {
             assert_eq!(
-                Length::Metre(2.5).convert(UnitType::Length(LengthType::Millimetre))?,
+                Length::Metre(2.5).convert(UnitType::Length(LengthUnit::Millimetre))?,
                 Unit::Length(Length::Millimetre(2500.0)),
             );
             assert_eq!(
-                Length::Metre(0.75).convert(UnitType::Length(LengthType::Centimetre))?,
+                Length::Metre(0.75).convert(UnitType::Length(LengthUnit::Centimetre))?,
                 Unit::Length(Length::Centimetre(75.0)),
             );
             assert_eq!(
-                Length::Metre(42.0).convert(UnitType::Length(LengthType::Metre))?,
+                Length::Metre(42.0).convert(UnitType::Length(LengthUnit::Metre))?,
                 Unit::Length(Length::Metre(42.0)),
             );
             assert_eq!(
-                Length::Metre(1e3).convert(UnitType::Length(LengthType::Kilometre))?,
+                Length::Metre(1e3).convert(UnitType::Length(LengthUnit::Kilometre))?,
                 Unit::Length(Length::Kilometre(1.0)),
             );
             assert_approx_eq(
-                Length::Metre(0.3048).convert(UnitType::Length(LengthType::Inch))?,
+                Length::Metre(0.3048).convert(UnitType::Length(LengthUnit::Inch))?,
                 Unit::Length(Length::Inch(12.0)),
                 1e-6,
             );
             assert_approx_eq(
-                Length::Metre(1.0).convert(UnitType::Length(LengthType::Foot))?,
+                Length::Metre(1.0).convert(UnitType::Length(LengthUnit::Foot))?,
                 Unit::Length(Length::Foot(3.28084)),
                 1e-6,
             );
@@ -558,59 +562,59 @@ mod tests {
         #[test]
         fn test_inch_conversions() -> Result<()> {
             assert_eq!(
-                Length::Inch(1.0).convert(UnitType::Length(LengthType::Millimetre))?,
+                Length::Inch(1.0).convert(UnitType::Length(LengthUnit::Millimetre))?,
                 Unit::Length(Length::Millimetre(25.4)),
             );
             assert_eq!(
-                Length::Inch(1.0).convert(UnitType::Length(LengthType::Centimetre))?,
+                Length::Inch(1.0).convert(UnitType::Length(LengthUnit::Centimetre))?,
                 Unit::Length(Length::Centimetre(2.54)),
             );
             assert_approx_eq(
-                Length::Inch(39.3701).convert(UnitType::Length(LengthType::Metre))?,
+                Length::Inch(39.3701).convert(UnitType::Length(LengthUnit::Metre))?,
                 Unit::Length(Length::Metre(1.0)),
                 1e-6,
             );
             assert_approx_eq(
-                Length::Inch(39370.1).convert(UnitType::Length(LengthType::Kilometre))?,
+                Length::Inch(39370.1).convert(UnitType::Length(LengthUnit::Kilometre))?,
                 Unit::Length(Length::Kilometre(1.0)),
                 1e-6,
             );
-            assert_eq!(Length::Inch(5.5).convert(UnitType::Length(LengthType::Inch))?, Unit::Length(Length::Inch(5.5)));
-            assert_eq!(Length::Inch(12.0).convert(UnitType::Length(LengthType::Foot))?, Unit::Length(Length::Foot(1.0)));
+            assert_eq!(Length::Inch(5.5).convert(UnitType::Length(LengthUnit::Inch))?, Unit::Length(Length::Inch(5.5)));
+            assert_eq!(Length::Inch(12.0).convert(UnitType::Length(LengthUnit::Foot))?, Unit::Length(Length::Foot(1.0)));
             Ok(())
         }
 
         #[test]
         fn test_foot_conversions() -> Result<()> {
             assert_eq!(
-                Length::Foot(1.0).convert(UnitType::Length(LengthType::Millimetre))?,
+                Length::Foot(1.0).convert(UnitType::Length(LengthUnit::Millimetre))?,
                 Unit::Length(Length::Millimetre(304.8)),
             );
             assert_eq!(
-                Length::Foot(1.0).convert(UnitType::Length(LengthType::Centimetre))?,
+                Length::Foot(1.0).convert(UnitType::Length(LengthUnit::Centimetre))?,
                 Unit::Length(Length::Centimetre(30.48)),
             );
             assert_eq!(
-                Length::Foot(1.0).convert(UnitType::Length(LengthType::Metre))?,
+                Length::Foot(1.0).convert(UnitType::Length(LengthUnit::Metre))?,
                 Unit::Length(Length::Metre(0.3048)),
             );
             assert_approx_eq(
-                Length::Foot(3280.84).convert(UnitType::Length(LengthType::Kilometre))?,
+                Length::Foot(3280.84).convert(UnitType::Length(LengthUnit::Kilometre))?,
                 Unit::Length(Length::Kilometre(1.0)),
                 1e-6,
             );
             assert_approx_eq(
-                Length::Foot(2.0).convert(UnitType::Length(LengthType::Inch))?,
+                Length::Foot(2.0).convert(UnitType::Length(LengthUnit::Inch))?,
                 Unit::Length(Length::Inch(24.0)),
                 1e-6,
             );
-            assert_eq!(Length::Foot(7.25).convert(UnitType::Length(LengthType::Foot))?, Unit::Length(Length::Foot(7.25)));
+            assert_eq!(Length::Foot(7.25).convert(UnitType::Length(LengthUnit::Foot))?, Unit::Length(Length::Foot(7.25)));
             Ok(())
         }
 
         #[test]
         fn test_zero_conversion() -> Result<()> {
-            let got = Length::Metre(0.0).convert(UnitType::Length(LengthType::Inch))?;
+            let got = Length::Metre(0.0).convert(UnitType::Length(LengthUnit::Inch))?;
 
             assert_approx_eq(got, Unit::Length(Length::Inch(0.0)), 1e-10);
             Ok(())
@@ -618,7 +622,7 @@ mod tests {
 
         #[test]
         fn test_negative_values() -> Result<()> {
-            let got = Length::Metre(-5.0).convert(UnitType::Length(LengthType::Centimetre))?;
+            let got = Length::Metre(-5.0).convert(UnitType::Length(LengthUnit::Centimetre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Centimetre(-500.0)), 1e-10);
             Ok(())
@@ -626,7 +630,7 @@ mod tests {
 
         #[test]
         fn test_very_small_values() -> Result<()> {
-            let got = Length::Millimetre(0.001).convert(UnitType::Length(LengthType::Metre))?;
+            let got = Length::Millimetre(0.001).convert(UnitType::Length(LengthUnit::Metre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Metre(0.000001)), 1e-12);
             Ok(())
@@ -634,7 +638,7 @@ mod tests {
 
         #[test]
         fn test_very_large_values() -> Result<()> {
-            let got = Length::Metre(1000000.0).convert(UnitType::Length(LengthType::Millimetre))?;
+            let got = Length::Metre(1000000.0).convert(UnitType::Length(LengthUnit::Millimetre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Millimetre(1000000000.0)), 1e-6);
             Ok(())
@@ -642,7 +646,7 @@ mod tests {
 
         #[test]
         fn test_fractional_values() -> Result<()> {
-            let got = Length::Foot(0.5).convert(UnitType::Length(LengthType::Inch))?;
+            let got = Length::Foot(0.5).convert(UnitType::Length(LengthUnit::Inch))?;
 
             assert_approx_eq(got, Unit::Length(Length::Inch(6.0)), 1e-10);
             Ok(())
@@ -650,7 +654,7 @@ mod tests {
 
         #[test]
         fn test_precise_decimal() -> Result<()> {
-            let got = Length::Metre(1.234567).convert(UnitType::Length(LengthType::Centimetre))?;
+            let got = Length::Metre(1.234567).convert(UnitType::Length(LengthUnit::Centimetre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Centimetre(123.4567)), 1e-10);
             Ok(())
@@ -658,7 +662,7 @@ mod tests {
 
         #[test]
         fn test_height_conversion_6_feet() -> Result<()> {
-            let got = Length::Foot(6.0).convert(UnitType::Length(LengthType::Metre))?;
+            let got = Length::Foot(6.0).convert(UnitType::Length(LengthUnit::Metre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Metre(1.8288)), 1e-4);
             Ok(())
@@ -666,7 +670,7 @@ mod tests {
 
         #[test]
         fn test_height_conversion_180_cm() -> Result<()> {
-            let got = Length::Centimetre(180.0).convert(UnitType::Length(LengthType::Foot))?;
+            let got = Length::Centimetre(180.0).convert(UnitType::Length(LengthUnit::Foot))?;
 
             assert_approx_eq(got, Unit::Length(Length::Foot(5.90551)), 1e-4);
             Ok(())
@@ -674,7 +678,7 @@ mod tests {
 
         #[test]
         fn test_screen_size_24_inch() -> Result<()> {
-            let got = Length::Inch(24.0).convert(UnitType::Length(LengthType::Centimetre))?;
+            let got = Length::Inch(24.0).convert(UnitType::Length(LengthUnit::Centimetre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Centimetre(60.96)), 1e-10);
             Ok(())
@@ -682,7 +686,7 @@ mod tests {
 
         #[test]
         fn test_paper_size_a4_width() -> Result<()> {
-            let got = Length::Millimetre(210.0).convert(UnitType::Length(LengthType::Inch))?;
+            let got = Length::Millimetre(210.0).convert(UnitType::Length(LengthUnit::Inch))?;
 
             assert_approx_eq(got, Unit::Length(Length::Inch(8.26772)), 1e-4);
             Ok(())
@@ -692,8 +696,8 @@ mod tests {
         fn test_round_trip_meter_inch() -> Result<()> {
             let original = 5.0;
 
-            let to_inches = Length::Metre(original).convert(UnitType::Length(LengthType::Inch))?;
-            let back_to_meters = to_inches.convert(UnitType::Length(LengthType::Metre))?;
+            let to_inches = Length::Metre(original).convert(UnitType::Length(LengthUnit::Inch))?;
+            let back_to_meters = to_inches.convert(UnitType::Length(LengthUnit::Metre))?;
 
             assert_approx_eq(back_to_meters, Unit::Length(Length::Metre(original)), 1e-10);
             Ok(())
@@ -703,8 +707,8 @@ mod tests {
         fn test_round_trip_foot_millimeter() -> Result<()> {
             let original = 3.5;
 
-            let to_mm = Length::Foot(original).convert(UnitType::Length(LengthType::Millimetre))?;
-            let back_to_feet = to_mm.convert(UnitType::Length(LengthType::Foot))?;
+            let to_mm = Length::Foot(original).convert(UnitType::Length(LengthUnit::Millimetre))?;
+            let back_to_feet = to_mm.convert(UnitType::Length(LengthUnit::Foot))?;
 
             assert_approx_eq(back_to_feet, Unit::Length(Length::Foot(original)), 1e-10);
             Ok(())
@@ -714,8 +718,8 @@ mod tests {
         fn test_round_trip_centimeter_inch() -> Result<()> {
             let original = 15.75;
 
-            let to_inches = Length::Centimetre(original).convert(UnitType::Length(LengthType::Inch))?;
-            let back_to_cm = to_inches.convert(UnitType::Length(LengthType::Centimetre))?;
+            let to_inches = Length::Centimetre(original).convert(UnitType::Length(LengthUnit::Inch))?;
+            let back_to_cm = to_inches.convert(UnitType::Length(LengthUnit::Centimetre))?;
 
             assert_approx_eq(back_to_cm, Unit::Length(Length::Centimetre(original)), 1e-10);
             Ok(())
@@ -723,7 +727,7 @@ mod tests {
 
         #[test]
         fn test_international_foot_definition() -> Result<()> {
-            let got = Length::Foot(1.0).convert(UnitType::Length(LengthType::Metre))?;
+            let got = Length::Foot(1.0).convert(UnitType::Length(LengthUnit::Metre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Metre(0.3048)), 1e-15);
             Ok(())
@@ -731,7 +735,7 @@ mod tests {
 
         #[test]
         fn test_international_inch_definition() -> Result<()> {
-            let got = Length::Inch(1.0).convert(UnitType::Length(LengthType::Millimetre))?;
+            let got = Length::Inch(1.0).convert(UnitType::Length(LengthUnit::Millimetre))?;
 
             assert_approx_eq(got, Unit::Length(Length::Millimetre(25.4)), 1e-15);
             Ok(())
@@ -739,13 +743,13 @@ mod tests {
 
         #[test]
         fn test_metric_definitions() -> Result<()> {
-            let result1 = Length::Metre(1.0).convert(UnitType::Length(LengthType::Centimetre))?;
+            let result1 = Length::Metre(1.0).convert(UnitType::Length(LengthUnit::Centimetre))?;
             assert_approx_eq(result1, Unit::Length(Length::Centimetre(100.0)), 1e-15);
 
-            let result2 = Length::Metre(1.0).convert(UnitType::Length(LengthType::Millimetre))?;
+            let result2 = Length::Metre(1.0).convert(UnitType::Length(LengthUnit::Millimetre))?;
             assert_approx_eq(result2, Unit::Length(Length::Millimetre(1000.0)), 1e-15);
 
-            let result3 = Length::Centimetre(1.0).convert(UnitType::Length(LengthType::Millimetre))?;
+            let result3 = Length::Centimetre(1.0).convert(UnitType::Length(LengthUnit::Millimetre))?;
             assert_approx_eq(result3, Unit::Length(Length::Millimetre(10.0)), 1e-15);
             Ok(())
         }
@@ -754,12 +758,12 @@ mod tests {
         fn test_complex_chain_conversion() -> Result<()> {
             let original = 1234.5; // millimeters
 
-            let step1 = Length::Millimetre(original).convert(UnitType::Length(LengthType::Centimetre))?;
-            let step2 = step1.convert(UnitType::Length(LengthType::Metre))?;
-            let step3 = step2.convert(UnitType::Length(LengthType::Foot))?;
-            let got = step3.convert(UnitType::Length(LengthType::Inch))?;
+            let step1 = Length::Millimetre(original).convert(UnitType::Length(LengthUnit::Centimetre))?;
+            let step2 = step1.convert(UnitType::Length(LengthUnit::Metre))?;
+            let step3 = step2.convert(UnitType::Length(LengthUnit::Foot))?;
+            let got = step3.convert(UnitType::Length(LengthUnit::Inch))?;
 
-            let want = Length::Millimetre(original).convert(UnitType::Length(LengthType::Inch))?;
+            let want = Length::Millimetre(original).convert(UnitType::Length(LengthUnit::Inch))?;
             assert_eq!(got, want);
             Ok(())
         }

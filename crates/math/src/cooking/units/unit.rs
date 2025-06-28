@@ -1,19 +1,11 @@
-use crate::cooking::units::Length;
+use crate::cooking::units::{Length, Mass};
 use crate::cooking::units::traits::UnitOperations;
 use crate::cooking::units::UnitType;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Unit {
     Length(Length),
-
-    // === MASS ===
-    Milligram(f64),
-    Gram(f64),
-    Dekagram(f64),
-    Hectogram(f64),
-    Kilogram(f64),
-    Ounce(f64),
-    Pound(f64),
+    Mass(Mass),
 
     // === TEMPERATURE ===
     Celsius(f64),
@@ -59,13 +51,6 @@ pub enum Unit {
 impl UnitOperations for Unit {
     fn unit_type(&self) -> UnitType {
         match self {
-            Unit::Milligram(_) => UnitType::Milligram,
-            Unit::Gram(_) => UnitType::Gram,
-            Unit::Dekagram(_) => UnitType::Dekagram,
-            Unit::Hectogram(_) => UnitType::Hectogram,
-            Unit::Kilogram(_) => UnitType::Kilogram,
-            Unit::Ounce(_) => UnitType::Ounce,
-            Unit::Pound(_) => UnitType::Pound,
             Unit::Celsius(_) => UnitType::Celsius,
             Unit::Fahrenheit(_) => UnitType::Fahrenheit,
             Unit::Millilitre(_) => UnitType::Millilitre,
@@ -96,19 +81,12 @@ impl UnitOperations for Unit {
             Unit::USGallon(_) => UnitType::USGallon,
             Unit::Jigger(_) => UnitType::Jigger,
             Unit::Length(unit) => unit.unit_type(),
+            Unit::Mass(unit) => unit.unit_type(),
         }
     }
 
     fn value(&self) -> f64 {
         match self {
-            Unit::Milligram(v)
-            | Unit::Gram(v)
-            | Unit::Dekagram(v)
-            | Unit::Hectogram(v)
-            | Unit::Kilogram(v)
-            | Unit::Ounce(v)
-            | Unit::Pound(v) => *v,
-
             Unit::Celsius(v) | Unit::Fahrenheit(v) => *v,
 
             Unit::Millilitre(v)
@@ -139,19 +117,12 @@ impl UnitOperations for Unit {
             | Unit::USGallon(v)
             | Unit::Jigger(v) => *v,
             Unit::Length(unit) => unit.value(),
+            Unit::Mass(unit) => unit.value(),
         }
     }
 
     fn with_value(&self, value: f64) -> Self {
         match self {
-            Unit::Milligram(_) => Unit::Milligram(value),
-            Unit::Gram(_) => Unit::Gram(value),
-            Unit::Dekagram(_) => Unit::Dekagram(value),
-            Unit::Hectogram(_) => Unit::Hectogram(value),
-            Unit::Kilogram(_) => Unit::Kilogram(value),
-            Unit::Ounce(_) => Unit::Ounce(value),
-            Unit::Pound(_) => Unit::Pound(value),
-
             Unit::Celsius(_) => Unit::Celsius(value),
             Unit::Fahrenheit(_) => Unit::Fahrenheit(value),
 
@@ -183,6 +154,7 @@ impl UnitOperations for Unit {
             Unit::USGallon(_) => Unit::USGallon(value),
             Unit::Jigger(_) => Unit::Jigger(value),
             Unit::Length(unit) => Unit::Length(unit.with_value(value)),
+            Unit::Mass(unit) => Unit::Mass(unit.with_value(value)),
         }
     }
 }
@@ -205,13 +177,13 @@ mod tests {
 
         #[test]
         fn test_weight_units() {
-            assert_eq!(Unit::Milligram(100.0).value(), 100.0);
-            assert_eq!(Unit::Gram(50.5).value(), 50.5);
-            assert_eq!(Unit::Dekagram(10.25).value(), 10.25);
-            assert_eq!(Unit::Hectogram(5.75).value(), 5.75);
-            assert_eq!(Unit::Kilogram(2.3).value(), 2.3);
-            assert_eq!(Unit::Ounce(16.5).value(), 16.5);
-            assert_eq!(Unit::Pound(3.2).value(), 3.2);
+            assert_eq!(Unit::Mass(Mass::Milligram(100.0)).value(), 100.0);
+            assert_eq!(Unit::Mass(Mass::Gram(50.5)).value(), 50.5);
+            assert_eq!(Unit::Mass(Mass::Dekagram(10.25)).value(), 10.25);
+            assert_eq!(Unit::Mass(Mass::Hectogram(5.75)).value(), 5.75);
+            assert_eq!(Unit::Mass(Mass::Kilogram(2.3)).value(), 2.3);
+            assert_eq!(Unit::Mass(Mass::Ounce(16.5)).value(), 16.5);
+            assert_eq!(Unit::Mass(Mass::Pound(3.2)).value(), 3.2);
         }
 
         #[test]
@@ -305,7 +277,7 @@ mod tests {
         fn test_zero_values() {
             let units = vec![
                 Unit::Length(Length::Metre(0.0)),
-                Unit::Kilogram(0.0),
+                Unit::Mass(Mass::Kilogram(0.0)),
                 Unit::Celsius(0.0),
                 Unit::Litre(0.0),
                 Unit::USCup(0.0),
@@ -337,7 +309,7 @@ mod tests {
             let large_value = 1_000_000.0;
             let units = vec![
                 Unit::Length(Length::Millimetre(large_value)),
-                Unit::Milligram(large_value),
+                Unit::Mass(Mass::Milligram(large_value)),
                 Unit::Millilitre(large_value),
             ];
 
@@ -353,7 +325,7 @@ mod tests {
         #[test]
         fn test_small_decimal() {
             let small_value = 0.000001;
-            let gram = Unit::Gram(small_value);
+            let gram = Unit::Mass(Mass::Gram(small_value));
             let millilitre = Unit::Millilitre(small_value);
 
             assert_eq!(gram.value(), small_value);
@@ -419,13 +391,13 @@ mod tests {
         #[test]
         fn test_weight_units() {
             let units = [
-                Unit::Milligram(1.0),
-                Unit::Gram(1.0),
-                Unit::Dekagram(1.0),
-                Unit::Hectogram(1.0),
-                Unit::Kilogram(1.0),
-                Unit::Ounce(1.0),
-                Unit::Pound(1.0),
+                Unit::Mass(Mass::Milligram(1.0)),
+                Unit::Mass(Mass::Gram(1.0)),
+                Unit::Mass(Mass::Dekagram(1.0)),
+                Unit::Mass(Mass::Hectogram(1.0)),
+                Unit::Mass(Mass::Kilogram(1.0)),
+                Unit::Mass(Mass::Ounce(1.0)),
+                Unit::Mass(Mass::Pound(1.0)),
             ];
 
             for (i, unit) in units.iter().enumerate() {
@@ -434,8 +406,8 @@ mod tests {
                 assert_eq!(updated_unit.value(), new_value);
             }
 
-            match Unit::Kilogram(5.0).with_value(15.5) {
-                Unit::Kilogram(v) => assert_eq!(v, 15.5),
+            match Unit::Mass(Mass::Kilogram(5.0).with_value(15.5)){
+                Unit::Mass(Mass::Kilogram(v)) => assert_eq!(v, 15.5),
                 _ => panic!("Expected Kilogram unit"),
             }
         }
@@ -462,12 +434,12 @@ mod tests {
 
         #[test]
         fn test_chained_operations() {
-            let unit = Unit::Gram(1.0);
+            let unit = Unit::Mass(Mass::Gram(1.0));
             let result = unit.with_value(2.0).with_value(3.0).with_value(4.0);
 
             assert_eq!(result.value(), 4.0);
             match result {
-                Unit::Gram(v) => assert_eq!(v, 4.0),
+                Unit::Mass(Mass::Gram(v)) => assert_eq!(v, 4.0),
                 _ => panic!("Expected Gram unit"),
             }
         }
@@ -521,28 +493,32 @@ mod tests {
     }
 
     mod tests_unit_type {
-        use crate::cooking::units::LengthType;
+        use crate::cooking::units::{LengthUnit, MassUnit};
         use super::*;
 
         #[test]
         fn test_length_units() {
-            assert_eq!(Unit::Length(Length::Millimetre(1.0)).unit_type(), UnitType::Length(LengthType::Millimetre));
-            assert_eq!(Unit::Length(Length::Centimetre(2.5)).unit_type(), UnitType::Length(LengthType::Centimetre));
-            assert_eq!(Unit::Length(Length::Metre(10.0)).unit_type(), UnitType::Length(LengthType::Metre));
-            assert_eq!(Unit::Length(Length::Kilometre(100.0)).unit_type(), UnitType::Length(LengthType::Kilometre));
-            assert_eq!(Unit::Length(Length::Inch(12.0)).unit_type(), UnitType::Length(LengthType::Inch));
-            assert_eq!(Unit::Length(Length::Foot(3.0)).unit_type(), UnitType::Length(LengthType::Foot));
+            use crate::cooking::units::LengthUnit::*;
+
+            assert_eq!(Unit::Length(Length::Millimetre(1.0)).unit_type(), UnitType::Length(Millimetre));
+            assert_eq!(Unit::Length(Length::Centimetre(2.5)).unit_type(), UnitType::Length(Centimetre));
+            assert_eq!(Unit::Length(Length::Metre(10.0)).unit_type(), UnitType::Length(Metre));
+            assert_eq!(Unit::Length(Length::Kilometre(100.0)).unit_type(), UnitType::Length(Kilometre));
+            assert_eq!(Unit::Length(Length::Inch(12.0)).unit_type(), UnitType::Length(Inch));
+            assert_eq!(Unit::Length(Length::Foot(3.0)).unit_type(), UnitType::Length(Foot));
         }
 
         #[test]
         fn test_mass_units() {
-            assert_eq!(Unit::Milligram(100.0).unit_type(), UnitType::Milligram);
-            assert_eq!(Unit::Gram(500.0).unit_type(), UnitType::Gram);
-            assert_eq!(Unit::Dekagram(1.5).unit_type(), UnitType::Dekagram);
-            assert_eq!(Unit::Hectogram(0.8).unit_type(), UnitType::Hectogram);
-            assert_eq!(Unit::Kilogram(2.3).unit_type(), UnitType::Kilogram);
-            assert_eq!(Unit::Ounce(16.0).unit_type(), UnitType::Ounce);
-            assert_eq!(Unit::Pound(2.2).unit_type(), UnitType::Pound);
+            use crate::cooking::units::MassUnit::*;
+
+            assert_eq!(Unit::Mass(Mass::Milligram(100.0)).unit_type(), UnitType::Mass(Milligram));
+            assert_eq!(Unit::Mass(Mass::Gram(500.0)).unit_type(), UnitType::Mass(Gram));
+            assert_eq!(Unit::Mass(Mass::Dekagram(1.5)).unit_type(), UnitType::Mass(Dekagram));
+            assert_eq!(Unit::Mass(Mass::Hectogram(0.8)).unit_type(), UnitType::Mass(Hectogram));
+            assert_eq!(Unit::Mass(Mass::Kilogram(2.3)).unit_type(), UnitType::Mass(Kilogram));
+            assert_eq!(Unit::Mass(Mass::Ounce(16.0)).unit_type(), UnitType::Mass(Ounce));
+            assert_eq!(Unit::Mass(Mass::Pound(2.2)).unit_type(), UnitType::Mass(Pound));
         }
 
         #[test]
@@ -604,8 +580,8 @@ mod tests {
 
         #[test]
         fn test_zero_values() {
-            assert_eq!(Unit::Length(Length::Millimetre(0.0)).unit_type(), UnitType::Length(LengthType::Millimetre));
-            assert_eq!(Unit::Gram(0.0).unit_type(), UnitType::Gram);
+            assert_eq!(Unit::Length(Length::Millimetre(0.0)).unit_type(), UnitType::Length(LengthUnit::Millimetre));
+            assert_eq!(Unit::Mass(Mass::Gram(0.0)).unit_type(), UnitType::Mass(MassUnit::Gram));
             assert_eq!(Unit::Celsius(0.0).unit_type(), UnitType::Celsius);
             assert_eq!(Unit::Millilitre(0.0).unit_type(), UnitType::Millilitre);
             assert_eq!(Unit::ImperialPint(0.0).unit_type(), UnitType::ImperialPint);
@@ -614,50 +590,63 @@ mod tests {
 
         #[test]
         fn test_negative_values() {
+            use LengthUnit::Metre;
+            
             assert_eq!(Unit::Celsius(-10.0).unit_type(), UnitType::Celsius);
             assert_eq!(Unit::Fahrenheit(-5.0).unit_type(), UnitType::Fahrenheit);
-            assert_eq!(Unit::Length(Length::Metre(-2.5)).unit_type(), UnitType::Length(LengthType::Metre));
+            assert_eq!(Unit::Length(Length::Metre(-2.5)).unit_type(), UnitType::Length(Metre));
         }
 
         #[test]
         fn test_large_values() {
-            assert_eq!(Unit::Kilogram(1000000.0).unit_type(), UnitType::Kilogram);
+            use crate::cooking::units::LengthUnit::Metre;
+            use crate::cooking::units::MassUnit::Kilogram;
+            
+            assert_eq!(Unit::Mass(Mass::Kilogram(1000000.0)).unit_type(), UnitType::Mass(Kilogram));
             assert_eq!(Unit::Litre(999999.9).unit_type(), UnitType::Litre);
-            assert_eq!(Unit::Length(Length::Metre(1e10)).unit_type(), UnitType::Length(LengthType::Metre));
+            assert_eq!(Unit::Length(Length::Metre(1e10)).unit_type(), UnitType::Length(Metre));
         }
 
         #[test]
         fn test_small_fractional_values() {
-            assert_eq!(Unit::Milligram(0.001).unit_type(), UnitType::Milligram);
+            use crate::cooking::units::LengthUnit::Millimetre;
+            use crate::cooking::units::MassUnit::Milligram;
+            
+            assert_eq!(Unit::Mass(Mass::Milligram(0.001)).unit_type(), UnitType::Mass(Milligram));
             assert_eq!(Unit::Millilitre(0.0001).unit_type(), UnitType::Millilitre);
-            assert_eq!(Unit::Length(Length::Millimetre(1e-6)).unit_type(), UnitType::Length(LengthType::Millimetre));
+            assert_eq!(Unit::Length(Length::Millimetre(1e-6)).unit_type(), UnitType::Length(Millimetre));
         }
 
         #[test]
         fn test_special_float_values() {
-            assert_eq!(Unit::Gram(f64::INFINITY).unit_type(), UnitType::Gram);
+            use crate::cooking::units::LengthUnit::Metre;
+            use crate::cooking::units::MassUnit::Gram;
+
+            assert_eq!(Unit::Mass(Mass::Gram(f64::INFINITY)).unit_type(), UnitType::Mass(Gram));
             assert_eq!(Unit::Litre(f64::NEG_INFINITY).unit_type(), UnitType::Litre);
-            assert_eq!(Unit::Length(Length::Metre(f64::NAN)).unit_type(), UnitType::Length(LengthType::Metre));
+            assert_eq!(Unit::Length(Length::Metre(f64::NAN)).unit_type(), UnitType::Length(Metre));
         }
 
         #[test]
         fn test_comprehensive_unit_coverage() {
+            use crate::cooking::units::{LengthUnit::*, MassUnit::*};
+            
             let test_cases: Vec<(Unit, UnitType)> = vec![
                 // Length units
-                (Unit::Length(Length::Millimetre(1.0)), UnitType::Length(LengthType::Millimetre)),
-                (Unit::Length(Length::Centimetre(1.0)), UnitType::Length(LengthType::Centimetre)),
-                (Unit::Length(Length::Metre(1.0)), UnitType::Length(LengthType::Metre)),
-                (Unit::Length(Length::Inch(1.0)), UnitType::Length(LengthType::Inch)),
-                (Unit::Length(Length::Foot(1.0)), UnitType::Length(LengthType::Foot)),
+                (Unit::Length(Length::Millimetre(1.0)), UnitType::Length(Millimetre)),
+                (Unit::Length(Length::Centimetre(1.0)), UnitType::Length(Centimetre)),
+                (Unit::Length(Length::Metre(1.0)), UnitType::Length(Metre)),
+                (Unit::Length(Length::Inch(1.0)), UnitType::Length(Inch)),
+                (Unit::Length(Length::Foot(1.0)), UnitType::Length(Foot)),
 
                 // Mass units
-                (Unit::Milligram(1.0), UnitType::Milligram),
-                (Unit::Gram(1.0), UnitType::Gram),
-                (Unit::Dekagram(1.0), UnitType::Dekagram),
-                (Unit::Hectogram(1.0), UnitType::Hectogram),
-                (Unit::Kilogram(1.0), UnitType::Kilogram),
-                (Unit::Ounce(1.0), UnitType::Ounce),
-                (Unit::Pound(1.0), UnitType::Pound),
+                (Unit::Mass(Mass::Milligram(1.0)), UnitType::Mass(Milligram)),
+                (Unit::Mass(Mass::Gram(1.0)), UnitType::Mass(Gram)),
+                (Unit::Mass(Mass::Dekagram(1.0)), UnitType::Mass(Dekagram)),
+                (Unit::Mass(Mass::Hectogram(1.0)), UnitType::Mass(Hectogram)),
+                (Unit::Mass(Mass::Kilogram(1.0)), UnitType::Mass(Kilogram)),
+                (Unit::Mass(Mass::Ounce(1.0)), UnitType::Mass(Ounce)),
+                (Unit::Mass(Mass::Pound(1.0)), UnitType::Mass(Pound)),
 
                 // Temperature units
                 (Unit::Celsius(1.0), UnitType::Celsius),
@@ -712,7 +701,7 @@ mod tests {
         fn test_unit_type_consistency() {
             let gram_values = vec![0.0, 1.0, -1.0, 100.5, 0.001, 1e6, f64::INFINITY];
             for value in gram_values {
-                assert_eq!(Unit::Gram(value).unit_type(), UnitType::Gram);
+                assert_eq!(Unit::Mass(Mass::Gram(value)).unit_type(), UnitType::Mass(MassUnit::Gram));
             }
 
             let litre_values = vec![0.0, 0.5, 2.0, 10.25, 0.001, 999.99];
@@ -739,13 +728,13 @@ mod tests {
             Unit::Length(Length::Metre(1.0)),
 
             // Mass
-            Unit::Milligram(1.0),
-            Unit::Gram(1.0),
-            Unit::Dekagram(1.0),
-            Unit::Hectogram(1.0),
-            Unit::Kilogram(1.0),
-            Unit::Ounce(1.0),
-            Unit::Pound(1.0),
+            Unit::Mass(Mass::Milligram(1.0)),
+            Unit::Mass(Mass::Gram(1.0)),
+            Unit::Mass(Mass::Dekagram(1.0)),
+            Unit::Mass(Mass::Hectogram(1.0)),
+            Unit::Mass(Mass::Kilogram(1.0)),
+            Unit::Mass(Mass::Ounce(1.0)),
+            Unit::Mass(Mass::Pound(1.0)),
 
             // Temperature
             Unit::Celsius(1.0),

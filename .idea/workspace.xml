@@ -59,10 +59,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/converter.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/converter.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" afterDir="false" />
@@ -143,6 +143,7 @@
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
+    "Cargo.Test cooking::converter::tests::test_convert_mass::test_dekagram_conversions.executor": "Run",
     "Cargo.Test cooking::units::length::tests::test_zero_values.executor": "Run",
     "Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions.executor": "Debug",
     "Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions.executor": "Run",
@@ -226,6 +227,7 @@
     "Cargo.Test helpers::tests (1).executor": "Run",
     "Cargo.Test helpers::tests.executor": "Run",
     "Cargo.Test length::tests.executor": "Run",
+    "Cargo.Test mass::tests.executor": "Run",
     "Cargo.Test mealmaster.executor": "Run",
     "Cargo.Test mealmaster::tests.executor": "Run",
     "Cargo.Test pwd::tests.executor": "Run",
@@ -385,6 +387,7 @@
     "Cargo.Test strings::tests::tests_normalise_vulgar_fractions::test_multiple_vulgar_fractions.executor": "Run",
     "Cargo.Test strings::tests::tests_normalise_vulgar_fractions::test_no_vulgar_fractions.executor": "Run",
     "Cargo.Test structs::tests.executor": "Run",
+    "Cargo.Test test_conversions.executor": "Run",
     "Cargo.Test test_fetch_or_create.executor": "Run",
     "Cargo.Test test_new.executor": "Run",
     "Cargo.Test test_recipes.executor": "Run",
@@ -394,6 +397,7 @@
     "Cargo.Test tests_change_password.executor": "Run",
     "Cargo.Test tests_confirm.executor": "Run",
     "Cargo.Test tests_conversion.executor": "Run",
+    "Cargo.Test tests_conversions.executor": "Run",
     "Cargo.Test tests_delete_recipe_category.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
     "Cargo.Test tests_edit.executor": "Run",
@@ -413,6 +417,8 @@
     "Cargo.Test tests_searchbar.executor": "Run",
     "Cargo.Test tests_share_recipe.executor": "Run",
     "Cargo.Test tests_supported_websites.executor": "Run",
+    "Cargo.Test tests_unit_operations.executor": "Run",
+    "Cargo.Test tests_unit_type.executor": "Run",
     "Cargo.Test unit::tests.executor": "Run",
     "Cargo.Test user::tests.executor": "Run",
     "Cargo.Test website::tests.executor": "Run",
@@ -463,7 +469,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test length::tests">
+  <component name="RunManager" selected="Cargo.Test mass::tests">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -482,8 +488,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cooking::units::length::tests::test_zero_values" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::length::tests::test_zero_values -- --exact" />
+    <configuration name="Test mass::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::mass::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -499,8 +505,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_conversion::test_centimeter_conversions -- --exact" />
+    <configuration name="Test test_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::mass::tests::test_conversions" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -516,8 +522,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_conversion::test_millimeter_conversions -- --exact" />
+    <configuration name="Test tests_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::mass::tests::tests_conversions" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -533,8 +539,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test length::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::length::tests" />
+    <configuration name="Test tests_unit_operations" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::mass::tests::tests_unit_operations" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -550,8 +556,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_conversion" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_conversion" />
+    <configuration name="Test tests_unit_type" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::unit::tests::tests_unit_type" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -569,19 +575,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test cooking::units::length::tests::test_zero_values" />
-      <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions" />
-      <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions" />
-      <item itemvalue="Cargo.Test length::tests" />
-      <item itemvalue="Cargo.Test tests_conversion" />
+      <item itemvalue="Cargo.Test mass::tests" />
+      <item itemvalue="Cargo.Test test_conversions" />
+      <item itemvalue="Cargo.Test tests_conversions" />
+      <item itemvalue="Cargo.Test tests_unit_operations" />
+      <item itemvalue="Cargo.Test tests_unit_type" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test length::tests" />
-        <item itemvalue="Cargo.Test tests_conversion" />
-        <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions" />
-        <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions" />
-        <item itemvalue="Cargo.Test cooking::units::length::tests::test_zero_values" />
+        <item itemvalue="Cargo.Test mass::tests" />
+        <item itemvalue="Cargo.Test test_conversions" />
+        <item itemvalue="Cargo.Test tests_conversions" />
+        <item itemvalue="Cargo.Test tests_unit_operations" />
+        <item itemvalue="Cargo.Test tests_unit_type" />
       </list>
     </recent_temporary>
   </component>
