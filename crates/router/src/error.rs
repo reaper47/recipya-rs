@@ -54,6 +54,10 @@ pub enum Error {
     #[from]
     Email(email::Error),
     #[from]
+    Integration(integrations::Error),
+    #[from]
+    Io(std::io::Error),
+    #[from]
     Model(models::Error),
     #[from]
     Repository(repository::Error),

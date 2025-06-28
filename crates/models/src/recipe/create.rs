@@ -235,6 +235,7 @@ mod tests {
                 .first::<i64>(&mut conn)
                 .await?;
             assert!(category_id > 0);
+
             let count = schema::users_categories::table
                 .filter(schema::users_categories::category_id.eq(category_id))
                 .count()

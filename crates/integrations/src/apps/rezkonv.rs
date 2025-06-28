@@ -23,7 +23,7 @@ use crate::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
     to_yield,
 };
-use crate::{Error, Result};
+use crate::Result;
 
 struct RecipeComponents<'a> {
     software_version: &'a str,
@@ -121,10 +121,9 @@ where
 }
 
 fn parse_recipes(input: &str) -> Result<Vec<RecipeComponents>> {
-    many1(recipe)
+    Ok(many1(recipe)
         .parse(input)
-        .map(|(_, recipes)| recipes.into_iter().collect())
-        .map_err(|err| Error::Parse(err.to_string()))
+        .map(|(_, recipes)| recipes.into_iter().collect())?)
 }
 
 fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
@@ -887,7 +886,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         "4 oz Dry bread, diced Salt and, pepper".into(),
                         "1/2 oz (1 Tbsp) butter or lard 1".into(),
                         "1 Egg -(parsley, chervil,".into(),
-                        "1/2 c Milk -marjoram) -".into(),
+                        "1/2 c Milk -marjoram)".into(),
                         "3 oz (3/4 cup) flour".into(),
                     ])
                 ])),
@@ -954,7 +953,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ("".into(), vec![
                         "Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und unter die Brösel mischen. Den Boden einer Springform (24 cm Durchmesser) mit Backpapier auslegen. Die Brösel als Boden darauf verteilen und gut andrücken. Kalt stellen.".into(),
                         "Frischkäse, saure Sahne und 100 g Zucker mit den Quirlen des Handrührers glattrühren. Nacheinander die Eier dazugeben. Die Limettenschale fein abreiben, die Limette auspressen. Limettensaft und Mehl unter die Käsemasse heben. Die Masse auf dem Boden in der Springform verteilen. Im heissen Backofen auf der 2. Einschubleiste von unten bei 160GradC 15 Minuten backen. Dann die Temperatur auf 150GradC reduzieren und weitere 35 Minuten backen. Den Kuchen in der Form auf einem Gitter auskühlen lassen und dann mindestens 2 Stunden kalt stellen.".into(),
-                        "3. Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren.".into(),
+                        "Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren.".into(),
                         "Das restliche Ananaskompott extra zum Kuchen servieren.".into(),
                     ])
                 ])),

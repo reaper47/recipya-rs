@@ -8,7 +8,7 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/recipya_test</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="recipya@localhost" uuid="3a609f6a-0909-4eac-bc48-746da38cec8d">
+    <data-source source="LOCAL" name="recipya@localhost" uuid="3b61de44-8368-498a-a28d-e997463a5fe3">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

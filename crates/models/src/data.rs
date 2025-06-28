@@ -1,3 +1,5 @@
+use repository::extensions::pagination::DEFAULT_PER_PAGE;
+
 use crate::RecipeDetails;
 use crate::params::SearchParams;
 use crate::time::FormattedTimes;
@@ -23,19 +25,22 @@ pub struct AboutData {
     pub is_update_available: bool,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum PageSlot {
+    Page(u64),
+    Ellipsis,
+}
+
 /// PaginationData holds data related to pagination.
 #[derive(Debug, PartialEq)]
 pub struct PaginationData {
-    pub left: Vec<u64>,
-    pub middle: Vec<u64>,
-    pub right: Vec<u64>,
-
     pub prev: u64,
     pub selected: u64,
     pub next: u64,
 
     pub htmx: PaginationHtmxData,
     pub search: PaginationSearchData,
+    pub slots: Vec<PageSlot>,
 
     pub is_hidden: bool,
     pub num_pages: u64,
@@ -83,61 +88,25 @@ impl PaginationData {
         num_results: u64,
         htmx: PaginationHtmxData,
     ) -> Self {
-        let num_pages = std::cmp::max(1, (num_results + (15 - 1)) / 15);
+        let num_pages = std::cmp::max(1, num_results.div_ceil(DEFAULT_PER_PAGE as u64));
 
-        let mut left = Vec::<u64>::new();
-        let mut middle = Vec::<u64>::new();
-        let mut right = Vec::<u64>::new();
-
-        if num_pages <= 10 {
-            left.extend(1..=num_pages);
-        } else if current_page <= num_pages / 2 {
-            if current_page > 4 {
-                middle.extend_from_slice(&[
-                    current_page - 2,
-                    current_page - 1,
-                    current_page,
-                    current_page + 1,
-                    current_page + 2,
-                ]);
-                left.push(1);
-            } else {
-                left.extend(1..=current_page + 3);
-            }
-
-            right.push(num_pages);
-        } else {
-            if current_page < num_pages - 3 {
-                middle.extend_from_slice(&[
-                    current_page - 2,
-                    current_page - 1,
-                    current_page,
-                    current_page + 1,
-                    current_page + 2,
-                ]);
-                right.push(num_pages);
-            } else {
-                right.extend(current_page - 3..=num_pages);
-            }
-
-            left.push(1);
-        }
-
-        let selected = if num_results < current_page * 15 {
+        let selected = if num_results < (current_page - 1) * 15 {
             1
         } else {
             current_page
         };
 
         Self {
-            left,
-            middle,
-            right,
             prev: std::cmp::max(1, selected - 1),
             selected,
-            next: selected + 1,
+            next: if selected == num_pages {
+                selected
+            } else {
+                selected + 1
+            },
             htmx,
             search: PaginationSearchData { current_page: 1 },
+            slots: page_slots(selected, num_pages),
             is_hidden: num_pages == 0,
             num_pages,
             num_results,
@@ -146,6 +115,38 @@ impl PaginationData {
             url_queries,
         }
     }
+}
+
+fn page_slots(curr: u64, total: u64) -> Vec<PageSlot> {
+    if total <= 7 {
+        return (1..=total).map(PageSlot::Page).collect();
+    }
+
+    let mut slots = Vec::with_capacity(7);
+
+    if curr <= 4 {
+        for i in 1..=5 {
+            slots.push(PageSlot::Page(i));
+        }
+        slots.push(PageSlot::Ellipsis);
+        slots.push(PageSlot::Page(total));
+    } else if curr >= total - 3 {
+        slots.push(PageSlot::Page(1));
+        slots.push(PageSlot::Ellipsis);
+        for i in (total - 4)..=total {
+            slots.push(PageSlot::Page(i));
+        }
+    } else {
+        slots.push(PageSlot::Page(1));
+        slots.push(PageSlot::Ellipsis);
+        slots.push(PageSlot::Page(curr - 1));
+        slots.push(PageSlot::Page(curr));
+        slots.push(PageSlot::Page(curr + 1));
+        slots.push(PageSlot::Ellipsis);
+        slots.push(PageSlot::Page(total));
+    }
+
+    slots
 }
 
 /// SearchbarData holds data related to the searchbar.
@@ -286,7 +287,7 @@ mod tests {
     }
 
     mod tests_pagination {
-        use crate::data::{PaginationData, PaginationHtmxData, PaginationSearchData};
+        use crate::data::{PageSlot, PaginationData, PaginationHtmxData, PaginationSearchData};
 
         #[test]
         fn test_pagination_new_some_results_ok() {
@@ -304,9 +305,6 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got,
                 PaginationData {
-                    left: vec![1, 2],
-                    middle: vec![],
-                    right: vec![],
                     prev: 1,
                     selected: 1,
                     next: 2,
@@ -315,6 +313,7 @@ mod tests {
                         target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
+                    slots: vec![PageSlot::Page(1), PageSlot::Page(2),],
                     is_hidden: false,
                     num_pages: 2,
                     num_results: 20,
@@ -341,17 +340,15 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got,
                 PaginationData {
-                    left: vec![1],
-                    middle: vec![],
-                    right: vec![],
                     prev: 1,
                     selected: 1,
-                    next: 2,
+                    next: 1,
                     htmx: PaginationHtmxData {
                         is_swap: false,
                         target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
+                    slots: vec![PageSlot::Page(1)],
                     is_hidden: false,
                     num_pages: 1,
                     num_results: 12,
@@ -378,9 +375,6 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got,
                 PaginationData {
-                    left: vec![1, 2, 3, 4, 5, 6, 7],
-                    middle: vec![],
-                    right: vec![18],
                     prev: 3,
                     selected: 4,
                     next: 5,
@@ -389,6 +383,15 @@ mod tests {
                         target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
+                    slots: vec![
+                        PageSlot::Page(1),
+                        PageSlot::Page(2),
+                        PageSlot::Page(3),
+                        PageSlot::Page(4),
+                        PageSlot::Page(5),
+                        PageSlot::Ellipsis,
+                        PageSlot::Page(18),
+                    ],
                     is_hidden: false,
                     num_pages: 18,
                     num_results: 258,
@@ -415,9 +418,6 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got,
                 PaginationData {
-                    left: vec![1],
-                    middle: vec![9, 10, 11, 12, 13],
-                    right: vec![18],
                     prev: 10,
                     selected: 11,
                     next: 12,
@@ -426,6 +426,15 @@ mod tests {
                         target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
+                    slots: vec![
+                        PageSlot::Page(1),
+                        PageSlot::Ellipsis,
+                        PageSlot::Page(10),
+                        PageSlot::Page(11),
+                        PageSlot::Page(12),
+                        PageSlot::Ellipsis,
+                        PageSlot::Page(18),
+                    ],
                     is_hidden: false,
                     num_pages: 18,
                     num_results: 258,
@@ -452,9 +461,6 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got,
                 PaginationData {
-                    left: vec![1],
-                    middle: vec![],
-                    right: vec![13, 14, 15, 16, 17, 18],
                     prev: 15,
                     selected: 16,
                     next: 17,
@@ -463,9 +469,104 @@ mod tests {
                         target: "#content".into()
                     },
                     search: PaginationSearchData { current_page: 1 },
+                    slots: vec![
+                        PageSlot::Page(1),
+                        PageSlot::Ellipsis,
+                        PageSlot::Page(14),
+                        PageSlot::Page(15),
+                        PageSlot::Page(16),
+                        PageSlot::Page(17),
+                        PageSlot::Page(18),
+                    ],
                     is_hidden: false,
                     num_pages: 18,
                     num_results: 258,
+                    results_per_page: 15,
+                    url: "/recipes".into(),
+                    url_queries: String::new()
+                }
+            );
+        }
+
+        #[test]
+        fn test_pagination_new_hundreds_results_last_page_ok() {
+            let got = PaginationData::new(
+                "/recipes",
+                "".into(),
+                18,
+                258,
+                PaginationHtmxData {
+                    is_swap: false,
+                    target: "#content".into(),
+                },
+            );
+
+            pretty_assertions::assert_eq!(
+                got,
+                PaginationData {
+                    prev: 17,
+                    selected: 18,
+                    next: 18,
+                    htmx: PaginationHtmxData {
+                        is_swap: false,
+                        target: "#content".into()
+                    },
+                    search: PaginationSearchData { current_page: 1 },
+                    slots: vec![
+                        PageSlot::Page(1),
+                        PageSlot::Ellipsis,
+                        PageSlot::Page(14),
+                        PageSlot::Page(15),
+                        PageSlot::Page(16),
+                        PageSlot::Page(17),
+                        PageSlot::Page(18),
+                    ],
+                    is_hidden: false,
+                    num_pages: 18,
+                    num_results: 258,
+                    results_per_page: 15,
+                    url: "/recipes".into(),
+                    url_queries: String::new()
+                }
+            );
+        }
+
+        #[test]
+        fn test_pagination_thousands_results_last_page_ok() {
+            let got = PaginationData::new(
+                "/recipes",
+                "".into(),
+                193,
+                2888,
+                PaginationHtmxData {
+                    is_swap: false,
+                    target: "#content".into(),
+                },
+            );
+
+            pretty_assertions::assert_eq!(
+                got,
+                PaginationData {
+                    prev: 192,
+                    selected: 193,
+                    next: 193,
+                    htmx: PaginationHtmxData {
+                        is_swap: false,
+                        target: "#content".into()
+                    },
+                    search: PaginationSearchData { current_page: 1 },
+                    slots: vec![
+                        PageSlot::Page(1),
+                        PageSlot::Ellipsis,
+                        PageSlot::Page(189),
+                        PageSlot::Page(190),
+                        PageSlot::Page(191),
+                        PageSlot::Page(192),
+                        PageSlot::Page(193),
+                    ],
+                    is_hidden: false,
+                    num_pages: 193,
+                    num_results: 2888,
                     results_per_page: 15,
                     url: "/recipes".into(),
                     url_queries: String::new()

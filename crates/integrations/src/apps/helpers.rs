@@ -13,7 +13,7 @@ use uuid::Uuid;
 use zip::ZipArchive;
 
 use crate::apps::{cookmate, mastercook::parse_mx2};
-use crate::{Error, Result};
+use crate::Result;
 
 #[derive(Debug)]
 pub(super) enum Instruction<'a> {
@@ -33,8 +33,7 @@ where
     R: Read + Seek,
 {
     let mut buffer = Vec::new();
-    r.read_to_end(&mut buffer)
-        .map_err(|err| Error::Parse(err.to_string()))?;
+    r.read_to_end(&mut buffer)?;
     Ok(auto_convert_to_utf8(&buffer).replace("\r\n", "\n"))
 }
 
@@ -48,13 +47,18 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
             .fold(Sections::new(), |mut acc, ing| {
                 match ing {
                     Ingredient::Line(name) => {
-                        let name = name.split_whitespace().collect::<Vec<_>>().join(" ");
-                        let name = name.trim().to_string();
-
+                        let name_trimmed = name.split_whitespace().collect::<Vec<_>>().join(" ");
+                        let name_trimmed = name_trimmed.trim_end_matches('-').trim().to_string();
+                        
+                        if name.starts_with("           ") && name.ends_with("--") {
+                            acc.push((name_trimmed, Vec::new()));
+                            return acc;
+                        }
+                        
                         if let Some((_, lines)) = acc.last_mut() {
-                            lines.push(name);
+                            lines.push(name_trimmed);
                         } else {
-                            acc.push(("".into(), vec![name]));
+                            acc.push(("".into(), vec![name_trimmed]));
                         }
                     }
                     Ingredient::Section(section) => {
@@ -65,6 +69,8 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
             })
             .into_iter()
             .map(|(section, lines)| {
+                let lines = lines.into_iter().filter(|l| !l.is_empty()).collect::<Vec<_>>();
+                
                 let merged = (0..lines.len())
                     .filter_map(|i| {
                         let line = &lines[i];
@@ -96,7 +102,13 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
                     }
                     Instruction::Line(line) => {
                         let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
-                        let line = line.trim().to_string();
+                        
+                        let line = match line.trim().find('.') {
+                            Some(i) if i < 3 => {
+                                line[i+1..].trim().to_string()
+                            },
+                            _ => line,
+                        };
 
                         if !line.is_empty() {
                             if acc.is_empty() {
