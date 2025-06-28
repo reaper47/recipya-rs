@@ -689,7 +689,7 @@ pub mod test_utils {
         ToolRecipe, VideoForCreate,
     };
     use crate::{Recipe, RecipeDetails};
-    
+
     use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use uuid::Uuid;
 

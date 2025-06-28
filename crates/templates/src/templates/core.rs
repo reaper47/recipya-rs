@@ -26,7 +26,7 @@ pub(super) fn head(title: &str) -> Markup {
             link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png";
             link rel="manifest" href="/public/site.webmanifest";
             link rel="mask-icon" href="/public/safari-pinned-tab.svg" color="#5bbad5";
-            script src="https://unpkg.com/htmx.org@2.0.4"{}
+            script src="https://unpkg.com/htmx.org@2.0.6"{}
             script src="https://unpkg.com/hyperscript.org@0.9.14" {}
             script src="https://unpkg.com/htmx-ext-ws@2.0.2/ws.js" {}
             script defer src="/public/js/core.min.js" {}

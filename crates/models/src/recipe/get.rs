@@ -271,13 +271,12 @@ mod tests {
     use crate::recipe::test_utils::a_complete_recipe_for_create;
     use crate::user::User;
 
-    use testing::utils::{build_server_anonymous, create_app_state, TestDb};
+    use testing::utils::{TestDb, build_server_anonymous, create_app_state};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_count {
         use super::*;
-
 
         #[tokio::test]
         async fn test_count_ok() -> Result<()> {

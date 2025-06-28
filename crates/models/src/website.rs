@@ -61,7 +61,7 @@ impl ToHtmlTable for Vec<Website> {
 #[cfg(test)]
 mod tests {
     use crate::website::{ToHtmlTable, Website};
-    
+
     use testing::utils::{TestDb, create_app_state};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;

@@ -94,10 +94,10 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use self::test_utils::a_complete_recipe_for_create;
-    
-    use testing::utils::{create_app_state, TestDb, insert_user};
+    use super::*;
+
+    use testing::utils::{TestDb, create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -235,7 +235,7 @@ mod tests {
         use crate::user::UserCategory;
 
         use diesel_async::RunQueryDsl;
-        
+
         const A_CATEGORY: &str = "midnight crunchies";
 
         #[tokio::test]
