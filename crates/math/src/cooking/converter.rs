@@ -12,8 +12,6 @@ use crate::Result;
 impl UnitConverter for Unit {
     fn convert(&self, to: UnitType) -> Result<Unit> {
         match self {
-            Unit::Celsius(value) => Ok(self.with_value(*value)),
-            Unit::Fahrenheit(value) => Ok(self.with_value(*value)),
             Unit::Millilitre(value) => Ok(self.with_value(*value)),
             Unit::Centilitre(value) => Ok(self.with_value(*value)),
             Unit::Decilitre(value) => Ok(self.with_value(*value)),
@@ -43,23 +41,11 @@ impl UnitConverter for Unit {
             Unit::Jigger(value) => Ok(self.with_value(*value)),
             Unit::Length(unit) => unit.convert(to),
             Unit::Mass(unit) => unit.convert(to),
+            Unit::Temperature(unit) => unit.convert(to),
         }
 
         /*
         match (self, to) {
-            // === TEMPERATURE ===
-            // From Celsius
-            (Unit::Celsius(value), UnitType::Celsius) => Ok(Unit::Celsius(*value)),
-            (Unit::Celsius(value), UnitType::Fahrenheit) => Ok(Unit::Fahrenheit(
-                Temperature::from_celsius(*value).as_fahrenheit(),
-            )),
-
-            // From Fahrenheit
-            (Unit::Fahrenheit(value), UnitType::Celsius) => Ok(Unit::Celsius(
-                Temperature::from_fahrenheit(*value).as_celsius(),
-            )),
-            (Unit::Fahrenheit(value), UnitType::Fahrenheit) => Ok(Unit::Fahrenheit(*value)),
-
             // === VOLUME ===
             // From millilitre
             (Unit::Millilitre(value), UnitType::Millilitre) => Ok(Unit::Millilitre(*value)),
@@ -2354,37 +2340,6 @@ mod tests {
         );
     }
     
-    mod test_convert_temperature {
-        use super::*;
-
-        #[test]
-        fn test_celsius_conversions() -> Result<()> {
-            assert_eq!(
-                Unit::Celsius(100.0).convert(UnitType::Celsius)?,
-                Unit::Celsius(100.0),
-            );
-            assert_eq!(
-                Unit::Celsius(100.0).convert(UnitType::Fahrenheit)?,
-                Unit::Fahrenheit(212.0),
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_fahrenheit_conversions() -> Result<()> {
-            assert_approx_eq(
-                Unit::Fahrenheit(100.0).convert(UnitType::Celsius)?,
-                Unit::Celsius(37.7777778),
-                1e-5,
-            );
-            assert_eq!(
-                Unit::Fahrenheit(100.0).convert(UnitType::Fahrenheit)?,
-                Unit::Fahrenheit(100.0),
-            );
-            Ok(())
-        }
-    }
-
     mod test_convert_volume {
         use super::*;
 

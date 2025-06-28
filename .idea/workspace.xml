@@ -59,10 +59,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/converter.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/converter.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" afterDir="false" />
@@ -387,6 +386,7 @@
     "Cargo.Test strings::tests::tests_normalise_vulgar_fractions::test_multiple_vulgar_fractions.executor": "Run",
     "Cargo.Test strings::tests::tests_normalise_vulgar_fractions::test_no_vulgar_fractions.executor": "Run",
     "Cargo.Test structs::tests.executor": "Run",
+    "Cargo.Test temperature::tests.executor": "Run",
     "Cargo.Test test_conversions.executor": "Run",
     "Cargo.Test test_fetch_or_create.executor": "Run",
     "Cargo.Test test_new.executor": "Run",
@@ -469,7 +469,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test mass::tests">
+  <component name="RunManager" selected="Cargo.Test temperature::tests">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -490,6 +490,23 @@
     </configuration>
     <configuration name="Test mass::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package math --lib cooking::units::mass::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test temperature::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::temperature::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -556,38 +573,21 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_unit_type" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::unit::tests::tests_unit_type" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
       <item itemvalue="Cargo.Test mass::tests" />
+      <item itemvalue="Cargo.Test temperature::tests" />
       <item itemvalue="Cargo.Test test_conversions" />
       <item itemvalue="Cargo.Test tests_conversions" />
       <item itemvalue="Cargo.Test tests_unit_operations" />
-      <item itemvalue="Cargo.Test tests_unit_type" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test temperature::tests" />
         <item itemvalue="Cargo.Test mass::tests" />
         <item itemvalue="Cargo.Test test_conversions" />
         <item itemvalue="Cargo.Test tests_conversions" />
         <item itemvalue="Cargo.Test tests_unit_operations" />
-        <item itemvalue="Cargo.Test tests_unit_type" />
       </list>
     </recent_temporary>
   </component>

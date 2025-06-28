@@ -1,5 +1,6 @@
 mod length;
 mod mass;
+mod temperature;
 mod unit;
 mod unit_type;
 
@@ -8,5 +9,6 @@ pub mod traits;
 
 pub use length::*;
 pub use mass::*;
+pub use temperature::*;
 pub use unit::*;
 pub use unit_type::*;

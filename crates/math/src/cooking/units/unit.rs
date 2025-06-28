@@ -1,4 +1,5 @@
 use crate::cooking::units::{Length, Mass};
+use crate::cooking::units::temperature::Temperature;
 use crate::cooking::units::traits::UnitOperations;
 use crate::cooking::units::UnitType;
 
@@ -6,11 +7,8 @@ use crate::cooking::units::UnitType;
 pub enum Unit {
     Length(Length),
     Mass(Mass),
-
-    // === TEMPERATURE ===
-    Celsius(f64),
-    Fahrenheit(f64),
-
+    Temperature(Temperature),
+    
     // === VOLUME ===
     // Metric
     Millilitre(f64),
@@ -51,8 +49,6 @@ pub enum Unit {
 impl UnitOperations for Unit {
     fn unit_type(&self) -> UnitType {
         match self {
-            Unit::Celsius(_) => UnitType::Celsius,
-            Unit::Fahrenheit(_) => UnitType::Fahrenheit,
             Unit::Millilitre(_) => UnitType::Millilitre,
             Unit::Centilitre(_) => UnitType::Centilitre,
             Unit::Decilitre(_) => UnitType::Decilitre,
@@ -82,13 +78,12 @@ impl UnitOperations for Unit {
             Unit::Jigger(_) => UnitType::Jigger,
             Unit::Length(unit) => unit.unit_type(),
             Unit::Mass(unit) => unit.unit_type(),
+            Unit::Temperature(unit) => unit.unit_type(),
         }
     }
 
     fn value(&self) -> f64 {
         match self {
-            Unit::Celsius(v) | Unit::Fahrenheit(v) => *v,
-
             Unit::Millilitre(v)
             | Unit::Centilitre(v)
             | Unit::Decilitre(v)
@@ -118,14 +113,12 @@ impl UnitOperations for Unit {
             | Unit::Jigger(v) => *v,
             Unit::Length(unit) => unit.value(),
             Unit::Mass(unit) => unit.value(),
+            Unit::Temperature(unit) => unit.value(),
         }
     }
 
     fn with_value(&self, value: f64) -> Self {
         match self {
-            Unit::Celsius(_) => Unit::Celsius(value),
-            Unit::Fahrenheit(_) => Unit::Fahrenheit(value),
-
             Unit::Millilitre(_) => Unit::Millilitre(value),
             Unit::Centilitre(_) => Unit::Centilitre(value),
             Unit::Decilitre(_) => Unit::Decilitre(value),
@@ -155,6 +148,7 @@ impl UnitOperations for Unit {
             Unit::Jigger(_) => Unit::Jigger(value),
             Unit::Length(unit) => Unit::Length(unit.with_value(value)),
             Unit::Mass(unit) => Unit::Mass(unit.with_value(value)),
+            Unit::Temperature(unit) => Unit::Temperature(unit.with_value(value)),
         }
     }
 }
@@ -188,10 +182,10 @@ mod tests {
 
         #[test]
         fn test_temperature_units() {
-            assert_eq!(Unit::Celsius(25.0).value(), 25.0);
-            assert_eq!(Unit::Fahrenheit(77.0).value(), 77.0);
-            assert_eq!(Unit::Celsius(-10.5).value(), -10.5);
-            assert_eq!(Unit::Fahrenheit(32.0).value(), 32.0);
+            assert_eq!(Unit::Temperature(Temperature::Celsius(25.0)).value(), 25.0);
+            assert_eq!(Unit::Temperature(Temperature::Fahrenheit(77.0)).value(), 77.0);
+            assert_eq!(Unit::Temperature(Temperature::Celsius(-10.5)).value(), -10.5);
+            assert_eq!(Unit::Temperature(Temperature::Fahrenheit(32.0)).value(), 32.0);
         }
 
         #[test]
@@ -278,7 +272,7 @@ mod tests {
             let units = vec![
                 Unit::Length(Length::Metre(0.0)),
                 Unit::Mass(Mass::Kilogram(0.0)),
-                Unit::Celsius(0.0),
+                Unit::Temperature(Temperature::Celsius(0.0)),
                 Unit::Litre(0.0),
                 Unit::USCup(0.0),
             ];
@@ -291,8 +285,8 @@ mod tests {
 
         #[test]
         fn test_negative_values() {
-            let celsius = Unit::Celsius(-10.0);
-            let fahrenheit = Unit::Fahrenheit(-5.0);
+            let celsius = Unit::Temperature(Temperature::Celsius(-10.0));
+            let fahrenheit = Unit::Temperature(Temperature::Fahrenheit(-5.0));
 
             assert_eq!(celsius.value(), -10.0);
             assert_eq!(fahrenheit.value(), -5.0);
@@ -414,8 +408,8 @@ mod tests {
 
         #[test]
         fn test_temperature_units() {
-            let celsius = Unit::Celsius(20.0);
-            let fahrenheit = Unit::Fahrenheit(68.0);
+            let celsius = Unit::Temperature(Temperature::Celsius(20.0));
+            let fahrenheit = Unit::Temperature(Temperature::Fahrenheit(68.0));
 
             assert_eq!(celsius.with_value(100.0).value(), 100.0);
             assert_eq!(fahrenheit.with_value(212.0).value(), 212.0);
@@ -423,11 +417,11 @@ mod tests {
             assert_eq!(fahrenheit.with_value(-40.0).value(), -40.0);
 
             match celsius.with_value(37.5) {
-                Unit::Celsius(v) => assert_eq!(v, 37.5),
+                Unit::Temperature(Temperature::Celsius(v)) => assert_eq!(v, 37.5),
                 _ => panic!("Expected Celsius unit"),
             }
             match fahrenheit.with_value(99.5) {
-                Unit::Fahrenheit(v) => assert_eq!(v, 99.5),
+                Unit::Temperature(Temperature::Fahrenheit(v)) => assert_eq!(v, 99.5),
                 _ => panic!("Expected Fahrenheit unit"),
             }
         }
@@ -493,7 +487,7 @@ mod tests {
     }
 
     mod tests_unit_type {
-        use crate::cooking::units::{LengthUnit, MassUnit};
+        use crate::cooking::units::{LengthUnit, MassUnit, TemperatureUnit};
         use super::*;
 
         #[test]
@@ -523,8 +517,10 @@ mod tests {
 
         #[test]
         fn test_temperature_units() {
-            assert_eq!(Unit::Celsius(25.0).unit_type(), UnitType::Celsius);
-            assert_eq!(Unit::Fahrenheit(77.0).unit_type(), UnitType::Fahrenheit);
+            use crate::cooking::units::TemperatureUnit::*;
+            
+            assert_eq!(Unit::Temperature(Temperature::Celsius(25.0)).unit_type(), UnitType::Temperature(Celsius));
+            assert_eq!(Unit::Temperature(Temperature::Fahrenheit(77.0)).unit_type(), UnitType::Temperature(Fahrenheit));
         }
 
         #[test]
@@ -582,7 +578,7 @@ mod tests {
         fn test_zero_values() {
             assert_eq!(Unit::Length(Length::Millimetre(0.0)).unit_type(), UnitType::Length(LengthUnit::Millimetre));
             assert_eq!(Unit::Mass(Mass::Gram(0.0)).unit_type(), UnitType::Mass(MassUnit::Gram));
-            assert_eq!(Unit::Celsius(0.0).unit_type(), UnitType::Celsius);
+            assert_eq!(Unit::Temperature(Temperature::Celsius(0.0)).unit_type(), UnitType::Temperature(TemperatureUnit::Celsius));
             assert_eq!(Unit::Millilitre(0.0).unit_type(), UnitType::Millilitre);
             assert_eq!(Unit::ImperialPint(0.0).unit_type(), UnitType::ImperialPint);
             assert_eq!(Unit::USCup(0.0).unit_type(), UnitType::USCup);
@@ -592,8 +588,8 @@ mod tests {
         fn test_negative_values() {
             use LengthUnit::Metre;
             
-            assert_eq!(Unit::Celsius(-10.0).unit_type(), UnitType::Celsius);
-            assert_eq!(Unit::Fahrenheit(-5.0).unit_type(), UnitType::Fahrenheit);
+            assert_eq!(Unit::Temperature(Temperature::Celsius(-10.0)).unit_type(), UnitType::Temperature(TemperatureUnit::Celsius));
+            assert_eq!(Unit::Temperature(Temperature::Fahrenheit(-5.0)).unit_type(), UnitType::Temperature(TemperatureUnit::Fahrenheit));
             assert_eq!(Unit::Length(Length::Metre(-2.5)).unit_type(), UnitType::Length(Metre));
         }
 
@@ -649,8 +645,8 @@ mod tests {
                 (Unit::Mass(Mass::Pound(1.0)), UnitType::Mass(Pound)),
 
                 // Temperature units
-                (Unit::Celsius(1.0), UnitType::Celsius),
-                (Unit::Fahrenheit(1.0), UnitType::Fahrenheit),
+                (Unit::Temperature(Temperature::Celsius(1.0)), UnitType::Temperature(TemperatureUnit::Celsius)),
+                (Unit::Temperature(Temperature::Fahrenheit(1.0)), UnitType::Temperature(TemperatureUnit::Fahrenheit)),
 
                 // Metric volume units
                 (Unit::Millilitre(1.0), UnitType::Millilitre),
@@ -711,7 +707,7 @@ mod tests {
 
             let celsius_values = vec![-273.15, 0.0, 25.0, 100.0, 1000.0];
             for value in celsius_values {
-                assert_eq!(Unit::Celsius(value).unit_type(), UnitType::Celsius);
+                assert_eq!(Unit::Temperature(Temperature::Celsius(value)).unit_type(), UnitType::Temperature(TemperatureUnit::Celsius));
             }
         }
     }
@@ -737,8 +733,8 @@ mod tests {
             Unit::Mass(Mass::Pound(1.0)),
 
             // Temperature
-            Unit::Celsius(1.0),
-            Unit::Fahrenheit(1.0),
+            Unit::Temperature(Temperature::Celsius(1.0)),
+            Unit::Temperature(Temperature::Fahrenheit(1.0)),
 
             // Volume - Metric
             Unit::Millilitre(1.0),

@@ -1,14 +1,12 @@
 use crate::cooking::units::{LengthUnit, MassUnit};
+use crate::cooking::units::temperature::TemperatureUnit;
 
 #[derive(Debug, PartialEq)]
 pub enum UnitType {
     Length(LengthUnit), 
     Mass(MassUnit),
-
-    // Temperature
-    Celsius,
-    Fahrenheit,
-
+    Temperature(TemperatureUnit),
+    
     // === VOLUME ===
     // Metric
     Millilitre,
