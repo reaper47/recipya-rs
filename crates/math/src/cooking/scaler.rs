@@ -1,7 +1,7 @@
 use crate::cooking::units::traits::{UnitOperations, UnitScaler};
 use crate::cooking::units::{Unit, UnitType};
 use crate::{Error, Result};
-
+/*
 impl UnitScaler for Unit {
     /// Scales the unit by the given factor in the same measurement system.
     fn scale(&self, factor: f64) -> Result<Unit> {
@@ -587,3 +587,4 @@ mod tests {
         use super::*;
     }
 }
+*/

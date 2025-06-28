@@ -1,12 +1,8 @@
+use crate::cooking::units::LengthType;
+
 #[derive(Debug, PartialEq)]
 pub enum UnitType {
-    // Length
-    Millimetre,
-    Centimetre,
-    Kilometre,
-    Metre,
-    Inch,
-    Foot,
+    Length(LengthType),
 
     // Mass
     Milligram,

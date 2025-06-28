@@ -23,6 +23,9 @@
       <package file="$PROJECT_DIR$/crates/integrations">
         <enabledFeature name="default" />
       </package>
+      <package file="$PROJECT_DIR$/crates/math">
+        <enabledFeature name="default" />
+      </package>
       <package file="$PROJECT_DIR$/crates/models">
         <enabledFeature name="test-utils" />
         <enabledFeature name="default" />
@@ -56,22 +59,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/converter.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/converter.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -142,6 +143,9 @@
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::test_zero_values.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions.executor": "Debug",
+    "Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions.executor": "Run",
     "Cargo.Test core::config::data::tests::test_new_ok.executor": "Debug",
     "Cargo.Test core::config::tests::test_config_ok.executor": "Run",
     "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
@@ -221,6 +225,7 @@
     "Cargo.Test general_router::tests.executor": "Run",
     "Cargo.Test helpers::tests (1).executor": "Run",
     "Cargo.Test helpers::tests.executor": "Run",
+    "Cargo.Test length::tests.executor": "Run",
     "Cargo.Test mealmaster.executor": "Run",
     "Cargo.Test mealmaster::tests.executor": "Run",
     "Cargo.Test pwd::tests.executor": "Run",
@@ -388,6 +393,7 @@
     "Cargo.Test tests_auto_convert_to_utf8.executor": "Run",
     "Cargo.Test tests_change_password.executor": "Run",
     "Cargo.Test tests_confirm.executor": "Run",
+    "Cargo.Test tests_conversion.executor": "Run",
     "Cargo.Test tests_delete_recipe_category.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
     "Cargo.Test tests_edit.executor": "Run",
@@ -407,13 +413,14 @@
     "Cargo.Test tests_searchbar.executor": "Run",
     "Cargo.Test tests_share_recipe.executor": "Run",
     "Cargo.Test tests_supported_websites.executor": "Run",
+    "Cargo.Test unit::tests.executor": "Run",
     "Cargo.Test user::tests.executor": "Run",
     "Cargo.Test website::tests.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#143 on 35-implement-get-recipesidscale",
+    "git-widget-placeholder": "#145 on 35-implement-get-recipesidscale",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/app/cofig",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -456,7 +463,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Run">
+  <component name="RunManager" selected="Cargo.Test length::tests">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -475,8 +482,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test apps::kalorio::tests::test_recipes::test_txt" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package integrations --lib apps::kalorio::tests::test_recipes::test_txt -- --exact" />
+    <configuration name="Test cooking::units::length::tests::test_zero_values" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::length::tests::test_zero_values -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -492,8 +499,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package integrations --lib apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version -- --exact" />
+    <configuration name="Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_conversion::test_centimeter_conversions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -509,8 +516,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package integrations --lib apps::rezkonv::tests::test_recipes::test_kalorio_v4_03 -- --exact" />
+    <configuration name="Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_conversion::test_millimeter_conversions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -526,9 +533,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test mealmaster::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="buildProfileId" value="test" />
-      <option name="command" value="test --package integrations --lib apps::mealmaster::tests" />
+    <configuration name="Test length::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::length::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -544,8 +550,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok -- --exact" />
+    <configuration name="Test tests_conversion" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_conversion" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -563,19 +569,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test apps::kalorio::tests::test_recipes::test_txt" />
-      <item itemvalue="Cargo.Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" />
-      <item itemvalue="Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version" />
-      <item itemvalue="Cargo.Test mealmaster::tests" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
+      <item itemvalue="Cargo.Test cooking::units::length::tests::test_zero_values" />
+      <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions" />
+      <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions" />
+      <item itemvalue="Cargo.Test length::tests" />
+      <item itemvalue="Cargo.Test tests_conversion" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version" />
-        <item itemvalue="Cargo.Test apps::kalorio::tests::test_recipes::test_txt" />
-        <item itemvalue="Cargo.Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03" />
-        <item itemvalue="Cargo.Test mealmaster::tests" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
+        <item itemvalue="Cargo.Test length::tests" />
+        <item itemvalue="Cargo.Test tests_conversion" />
+        <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions" />
+        <item itemvalue="Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions" />
+        <item itemvalue="Cargo.Test cooking::units::length::tests::test_zero_values" />
       </list>
     </recent_temporary>
   </component>
