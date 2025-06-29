@@ -233,6 +233,17 @@ mod tests {
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
+    fn assert_approx_eq(actual: Unit, expected: Unit, threshold: f64) {
+        let actual = actual.value();
+        let expected = expected.value();
+
+        assert!(
+            (actual - expected).abs() < threshold,
+            "Expected {actual}, got {expected}, difference: {}",
+            (actual - expected).abs()
+        );
+    }
+
     mod tests_unit_operations {
         use super::*;
 
@@ -544,17 +555,6 @@ mod tests {
                 }
             }
         }
-    }
-
-    fn assert_approx_eq(actual: Unit, expected: Unit, threshold: f64) {
-        let actual = actual.value();
-        let expected = expected.value();
-
-        assert!(
-            (actual - expected).abs() < threshold,
-            "Expected {actual}, got {expected}, difference: {}",
-            (actual - expected).abs()
-        );
     }
 
     mod tests_conversion {
