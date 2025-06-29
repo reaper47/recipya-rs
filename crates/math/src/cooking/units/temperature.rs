@@ -1,5 +1,6 @@
 use crate::Error;
-use crate::cooking::units::traits::{UnitConverter, UnitOperations};
+use crate::Result;
+use crate::cooking::units::traits::{UnitConverter, UnitOperations, UnitScaler};
 use crate::cooking::units::{Unit, UnitType};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -69,6 +70,14 @@ impl UnitConverter for Temperature {
                 _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to)),
             },
         }
+    }
+}
+
+impl UnitScaler for Temperature {
+    fn scale(&self, factor: f64) -> Result<Unit> {
+        let scaled_value = self.value() * factor;
+
+        Ok(Unit::Temperature(self.with_value(scaled_value)))
     }
 }
 
@@ -625,6 +634,28 @@ mod tests {
                 Unit::Temperature(Temperature::Fahrenheit(100.0))
                     .convert(UnitType::Temperature(Fahrenheit))?,
                 Unit::Temperature(Temperature::Fahrenheit(100.0)),
+            );
+            Ok(())
+        }
+    }
+
+    mod tests_scale {
+        use super::*;
+
+        #[test]
+        fn test_celsius() -> crate::Result<()> {
+            assert_eq!(
+                Unit::Temperature(Temperature::Celsius(100.0)).scale(2.0)?,
+                Unit::Temperature(Temperature::Celsius(200.0))
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn test_fahrenheit() -> crate::Result<()> {
+            assert_eq!(
+                Unit::Temperature(Temperature::Fahrenheit(100.0)).scale(2.0)?,
+                Unit::Temperature(Temperature::Fahrenheit(200.0))
             );
             Ok(())
         }

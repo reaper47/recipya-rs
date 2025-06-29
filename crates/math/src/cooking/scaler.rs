@@ -12,7 +12,7 @@ impl UnitScaler for Unit {
         match self {
             Unit::Length(unit) => unit.scale(factor),
             Unit::Mass(unit) => unit.scale(factor),
-            // Unit::Temperature(unit) => unit.scale(factor),
+            Unit::Temperature(unit) => unit.scale(factor),
             // Unit::Volume(unit) => unit.scale(factor),
             _ => Ok(self.clone()),
         }
@@ -130,17 +130,7 @@ impl UnitScaler for Unit {
 //     mod test_scale_temperature {
 //         use super::*;
 //
-//         #[test]
-//         fn test_celsius() -> Result<()> {
-//             assert_eq!(Unit::Celsius(100.0).scale(2.0)?, Unit::Celsius(200.0));
-//             Ok(())
-//         }
-//
-//         #[test]
-//         fn test_fahrenheit() -> Result<()> {
-//             assert_eq!(Unit::Fahrenheit(100.0).scale(2.0)?, Unit::Fahrenheit(200.0));
-//             Ok(())
-//         }
+
 //     }
 //
 //     mod test_scale_volume {
