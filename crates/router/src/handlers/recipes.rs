@@ -176,22 +176,23 @@ pub async fn duplicate_recipe_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let (mut recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
-        Ok(res) => res,
-        Err(err) => {
-            error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
-            let toast = MessageHtmx::error("Recipe not found.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
+    let (mut recipe, categories, keywords) =
+        match fetch_view_recipe(&state, user_id, recipe_id).await {
+            Ok(res) => res,
+            Err(err) => {
+                error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
+                let toast = MessageHtmx::error("Recipe not found.");
+                if let Ok(json) = serde_json::to_string(&toast) {
+                    state.broadcast(user_id, Message::Text(json.into())).await;
+                }
+                return Error::Model(EntityNotFound {
+                    id: recipe_id,
+                    entity: "recipe",
+                })
+                .into_response();
             }
-            return Error::Model(EntityNotFound {
-                id: recipe_id,
-                entity: "recipe",
-            })
-            .into_response();
-        }
-    };
-    
+        };
+
     recipe.recipe_details.recipe.name = format!("{} (copy)", recipe.recipe_details.recipe.name);
 
     templates::recipes::add_recipe_manual(

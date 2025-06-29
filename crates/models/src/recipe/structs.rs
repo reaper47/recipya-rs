@@ -9,7 +9,10 @@ use uuid::Uuid;
 
 use crate::recipe::RecipeForm;
 use crate::user::User;
-use recipe_schema::{CreativeWorkOrText, DefinedTermOrTextOrUrl, HowToToolOrText, NutritionInformationSchema, RecipeSchema, Sections};
+use recipe_schema::{
+    CreativeWorkOrText, DefinedTermOrTextOrUrl, HowToToolOrText, NutritionInformationSchema,
+    RecipeSchema, Sections,
+};
 use repository::schema;
 use support::fs::FsSupport;
 use support::name_entity_with_relations;
@@ -127,12 +130,14 @@ impl From<&RecipeSchema> for RecipeForCreate {
                         warn!("Keywords DefinedTerm is defined but not processed: {term:?}");
                         vec![]
                     }
-                    DefinedTermOrTextOrUrl::Text(text) => text.split(',').map(String::from).collect(),
+                    DefinedTermOrTextOrUrl::Text(text) => {
+                        text.split(',').map(String::from).collect()
+                    }
                     DefinedTermOrTextOrUrl::Url(url) => {
                         warn!("Keywords Url is defined but not processed: {url}");
                         vec![]
                     }
-                } 
+                },
             },
             nutrition: schema.nutrition.clone().map(NutritionForCreate::from),
             times: Some(TimesForCreate::from_components(

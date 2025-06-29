@@ -12,8 +12,8 @@ use recipe_schema::{AtType, RecipeSchema, Sections};
 use url::Url;
 
 use super::helpers::read_file;
-use crate::helpers::{sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield};
 use crate::Result;
+use crate::helpers::{sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield};
 
 pub struct ChefTapRecipe {
     title: String,

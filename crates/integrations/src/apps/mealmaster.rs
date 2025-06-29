@@ -18,7 +18,7 @@ use std::borrow::Cow;
 use std::io::{Read, Seek};
 
 use nom::branch::alt;
-use nom::bytes::complete::{tag, take_until, take_while_m_n, take_while1, tag_no_case};
+use nom::bytes::complete::{tag, tag_no_case, take_until, take_while_m_n, take_while1};
 use nom::bytes::take_while;
 use nom::character::complete::{char, line_ending, multispace0, multispace1, space0, space1};
 use nom::combinator::{map, map_res, opt, peek, recognize, verify};
@@ -29,8 +29,11 @@ use recipe_schema::{AtType, RecipeCategory, RecipeSchema, Sections};
 use url::Url;
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
-use crate::helpers::{sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type, to_yield};
 use crate::Result;
+use crate::helpers::{
+    sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
+    to_yield,
+};
 
 struct MealMasterRecipe {
     author: Option<String>,
@@ -163,7 +166,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
         ),
         |(
             _,
-             (header_tag, header_rest),
+            (header_tag, header_rest),
             title,
             categories,
             tags,
@@ -288,7 +291,7 @@ fn servings(input: &str) -> IResult<&str, i16> {
                 many1(eol),
                 opt((space0, eol)),
             ),
-            |(_, _, _, digits, _, _, _)| digits.parse()
+            |(_, _, _, digits, _, _, _)| digits.parse(),
         ),
         map(
             (
@@ -297,10 +300,10 @@ fn servings(input: &str) -> IResult<&str, i16> {
                 many1(eol),
                 opt((space0, eol)),
             ),
-            |_| 2
-        )
+            |_| 2,
+        ),
     ))
-        .parse(input)
+    .parse(input)
 }
 
 fn author(input: &str) -> IResult<&str, &str> {
@@ -313,7 +316,7 @@ fn author(input: &str) -> IResult<&str, &str> {
         ),
         |(_, _, s, _)| s,
     )
-        .parse(input)
+    .parse(input)
 }
 
 fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
@@ -443,7 +446,8 @@ fn units4(input: &str) -> IResult<&str, &str> {
         tag_no_case("bx"),
         tag_no_case("lf"),
         tag_no_case("  "),
-    )).parse(input)
+    ))
+    .parse(input)
 }
 
 fn ingredient_notes(input: &str) -> IResult<&str, Ingredient> {
@@ -498,7 +502,7 @@ fn instruction(input: &str) -> IResult<&str, &str> {
         ),
         many1(line_ending),
     )
-        .parse(input)
+    .parse(input)
 }
 
 fn take_until_earliest_of(patterns: &[&str]) -> impl Fn(&str) -> IResult<&str, &str> {
@@ -518,7 +522,10 @@ fn take_until_earliest_of(patterns: &[&str]) -> impl Fn(&str) -> IResult<&str, &
         if let Some(_pattern) = found_pattern {
             Ok((&input[earliest_pos..], &input[..earliest_pos]))
         } else {
-            Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::TakeUntil)))
+            Err(nom::Err::Error(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::TakeUntil,
+            )))
         }
     }
 }
@@ -1529,8 +1536,8 @@ Typed for you by Karen Mintzias
 
     mod results {
         use super::*;
-        use recipe_schema::RecipeSchema;
         use crate::helpers::to_organization_type;
+        use recipe_schema::RecipeSchema;
 
         pub fn recipe_unspecified_version() -> RecipeSchema {
             RecipeSchema {

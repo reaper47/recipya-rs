@@ -75,8 +75,11 @@ impl AppState {
         is_notification_visible: bool,
         user_id: i64,
     ) {
-        let percentage = if total
-            .gt(&0) { (current_value as f64 / total as f64) * 100.0 } else { Default::default() };
+        let percentage = if total.gt(&0) {
+            (current_value as f64 / total as f64) * 100.0
+        } else {
+            Default::default()
+        };
 
         let content = format!(
             r#"

@@ -59,8 +59,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/rust.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/rust.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -417,6 +418,7 @@
     "Cargo.Test tests_recipes.executor": "Run",
     "Cargo.Test tests_recipes_add_import.executor": "Run",
     "Cargo.Test tests_register.executor": "Run",
+    "Cargo.Test tests_scale.executor": "Run",
     "Cargo.Test tests_searchbar.executor": "Run",
     "Cargo.Test tests_share_recipe.executor": "Run",
     "Cargo.Test tests_supported_websites.executor": "Run",
@@ -473,7 +475,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test tests_conversions">
+  <component name="RunManager" selected="Cargo.Test tests_scale">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -483,23 +485,6 @@
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="true" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test cooking::units::volume::tests::tests_conversions::test_imperial_dessert_spoon_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::volume::tests::tests_conversions::test_imperial_dessert_spoon_conversions -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
@@ -577,9 +562,26 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test tests_scale" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_scale" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_dessert_spoon_conversions" />
+      <item itemvalue="Cargo.Test tests_scale" />
       <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_fluid_ounce_conversions" />
       <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_gill_conversions" />
       <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_tablespoon_conversions" />
@@ -587,11 +589,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test tests_scale" />
         <item itemvalue="Cargo.Test tests_conversions" />
         <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_gill_conversions" />
         <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_fluid_ounce_conversions" />
         <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_tablespoon_conversions" />
-        <item itemvalue="Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_dessert_spoon_conversions" />
       </list>
     </recent_temporary>
   </component>

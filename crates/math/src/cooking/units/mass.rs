@@ -1,7 +1,7 @@
+use crate::Error;
+use crate::cooking::units::custom::{MassDekagramExt, MassHectogramExt};
 use crate::cooking::units::traits::{UnitConverter, UnitOperations};
 use crate::cooking::units::{Unit, UnitType};
-use crate::cooking::units::custom::{MassDekagramExt, MassHectogramExt};
-use crate::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Mass {
@@ -28,7 +28,7 @@ pub enum MassUnit {
 impl UnitOperations for Mass {
     fn unit_type(&self) -> UnitType {
         use MassUnit::*;
-        
+
         match self {
             Mass::Milligram(_) => UnitType::Mass(Milligram),
             Mass::Gram(_) => UnitType::Mass(Gram),
@@ -68,7 +68,7 @@ impl UnitOperations for Mass {
 impl UnitConverter for Mass {
     fn convert(&self, to: UnitType) -> crate::Result<Unit> {
         use MassUnit::*;
-        
+
         match self {
             Mass::Milligram(original_value) => match to {
                 UnitType::Mass(unit) => {
@@ -83,9 +83,9 @@ impl UnitConverter for Mass {
                         Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
                         Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+            },
             Mass::Gram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_grams(*original_value);
@@ -99,9 +99,9 @@ impl UnitConverter for Mass {
                         Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
                         Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+            },
             Mass::Dekagram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_dekagrams(*original_value);
@@ -115,9 +115,9 @@ impl UnitConverter for Mass {
                         Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
                         Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+            },
             Mass::Hectogram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_hectograms(*original_value);
@@ -131,9 +131,9 @@ impl UnitConverter for Mass {
                         Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
                         Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+            },
             Mass::Kilogram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_kilograms(*original_value);
@@ -147,9 +147,9 @@ impl UnitConverter for Mass {
                         Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
                         Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+            },
             Mass::Ounce(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_ounces(*original_value);
@@ -163,13 +163,13 @@ impl UnitConverter for Mass {
                         Ounce => Ok(Unit::Mass(self.with_value(*original_value))),
                         Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+            },
             Mass::Pound(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_pounds(*original_value);
-                    
+
                     match unit {
                         Milligram => Ok(Unit::Mass(Mass::Milligram(value.as_milligrams()))),
                         Gram => Ok(Unit::Mass(Mass::Gram(value.as_grams()))),
@@ -179,9 +179,9 @@ impl UnitConverter for Mass {
                         Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
                         Pound => Ok(Unit::Mass(self.with_value(*original_value))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+            },
         }
     }
 }
@@ -191,7 +191,7 @@ mod tests {
     use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-    
+
     mod tests_unit_operations {
         use super::*;
 
@@ -518,21 +518,25 @@ mod tests {
         #[test]
         fn test_unit_type_exhaustiveness() {
             // This test ensures all Mass variants have corresponding UnitType mappings
-            let all_variants = [Mass::Milligram(1.0),
+            let all_variants = [
+                Mass::Milligram(1.0),
                 Mass::Gram(1.0),
                 Mass::Dekagram(1.0),
                 Mass::Hectogram(1.0),
                 Mass::Kilogram(1.0),
                 Mass::Ounce(1.0),
-                Mass::Pound(1.0)];
+                Mass::Pound(1.0),
+            ];
 
-            let expected_types = [UnitType::Mass(MassUnit::Milligram),
+            let expected_types = [
+                UnitType::Mass(MassUnit::Milligram),
                 UnitType::Mass(MassUnit::Gram),
                 UnitType::Mass(MassUnit::Dekagram),
                 UnitType::Mass(MassUnit::Hectogram),
                 UnitType::Mass(MassUnit::Kilogram),
                 UnitType::Mass(MassUnit::Ounce),
-                UnitType::Mass(MassUnit::Pound)];
+                UnitType::Mass(MassUnit::Pound),
+            ];
 
             for (variant, expected_type) in all_variants.iter().zip(expected_types.iter()) {
                 assert_eq!(variant.unit_type(), *expected_type);
@@ -543,10 +547,7 @@ mod tests {
         fn test_chaining_operations() {
             let original = Mass::Kilogram(1.0);
 
-            let result = original
-                .with_value(2.0)
-                .with_value(3.0)
-                .with_value(4.5);
+            let result = original.with_value(2.0).with_value(3.0).with_value(4.5);
 
             assert_eq!(result.value(), 4.5);
             assert_eq!(result.unit_type(), UnitType::Mass(MassUnit::Kilogram));
@@ -578,12 +579,20 @@ mod tests {
         #[test]
         fn test_value_roundtrip_property() {
             let test_values = vec![
-                0.0, 1.0, -1.0, 42.42, -99.99, 1e6, -1e6,
-                f64::MIN_POSITIVE, f64::MAX, f64::EPSILON,
+                0.0,
+                1.0,
+                -1.0,
+                42.42,
+                -99.99,
+                1e6,
+                -1e6,
+                f64::MIN_POSITIVE,
+                f64::MAX,
+                f64::EPSILON,
                 // Some cooking-relevant values
-                28.35, // 1 ounce in grams
+                28.35,   // 1 ounce in grams
                 453.592, // 1 pound in grams
-                1000.0, // 1 kg in grams
+                1000.0,  // 1 kg in grams
             ];
 
             let variants = create_mass_variants();
@@ -628,10 +637,7 @@ mod tests {
                 Mass::Kilogram(1.0),
             ];
 
-            let imperial_units = vec![
-                Mass::Ounce(1.0),
-                Mass::Pound(1.0),
-            ];
+            let imperial_units = vec![Mass::Ounce(1.0), Mass::Pound(1.0)];
 
             // All metric units should be different from all imperial units
             for metric in &metric_units {
@@ -642,7 +648,7 @@ mod tests {
             }
         }
     }
-    
+
     mod tests_conversions {
         use super::*;
         use MassUnit::*;
@@ -699,7 +705,10 @@ mod tests {
                 Unit::Mass(Mass::Gram(1.0)).convert(UnitType::Mass(Milligram))?,
                 Unit::Mass(Mass::Milligram(1000.0)),
             );
-            assert_eq!(Unit::Mass(Mass::Gram(1.0)).convert(UnitType::Mass(Gram))?, Unit::Mass(Mass::Gram(1.0)),);
+            assert_eq!(
+                Unit::Mass(Mass::Gram(1.0)).convert(UnitType::Mass(Gram))?,
+                Unit::Mass(Mass::Gram(1.0)),
+            );
             assert_eq!(
                 Unit::Mass(Mass::Gram(10.0)).convert(UnitType::Mass(Dekagram))?,
                 Unit::Mass(Mass::Dekagram(1.0)),
@@ -859,7 +868,10 @@ mod tests {
                 Unit::Mass(Mass::Kilogram(0.0283495)),
                 0.000001,
             );
-            assert_eq!(Unit::Mass(Mass::Ounce(1.0)).convert(UnitType::Mass(Ounce))?, Unit::Mass(Mass::Ounce(1.0)),);
+            assert_eq!(
+                Unit::Mass(Mass::Ounce(1.0)).convert(UnitType::Mass(Ounce))?,
+                Unit::Mass(Mass::Ounce(1.0)),
+            );
             assert_eq!(
                 Unit::Mass(Mass::Ounce(16.0)).convert(UnitType::Mass(Pound))?,
                 Unit::Mass(Mass::Pound(1.0)),
@@ -894,7 +906,10 @@ mod tests {
                 Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Ounce))?,
                 Unit::Mass(Mass::Ounce(16.0)),
             );
-            assert_eq!(Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Pound))?, Unit::Mass(Mass::Pound(1.0)),);
+            assert_eq!(
+                Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Pound))?,
+                Unit::Mass(Mass::Pound(1.0)),
+            );
             Ok(())
         }
 
@@ -904,7 +919,10 @@ mod tests {
                 Unit::Mass(Mass::Gram(0.0)).convert(UnitType::Mass(Kilogram))?,
                 Unit::Mass(Mass::Kilogram(0.0)),
             );
-            assert_eq!(Unit::Mass(Mass::Pound(0.0)).convert(UnitType::Mass(Ounce))?, Unit::Mass(Mass::Ounce(0.0)),);
+            assert_eq!(
+                Unit::Mass(Mass::Pound(0.0)).convert(UnitType::Mass(Ounce))?,
+                Unit::Mass(Mass::Ounce(0.0)),
+            );
             assert_eq!(
                 Unit::Mass(Mass::Gram(0.001)).convert(UnitType::Mass(Milligram))?,
                 Unit::Mass(Mass::Milligram(1.0)),
@@ -934,7 +952,10 @@ mod tests {
                 (Unit::Mass(Mass::Kilogram(2.12)), UnitType::Mass(Kilogram)),
                 (Unit::Mass(Mass::Pound(2.71)), UnitType::Mass(Pound)),
                 (Unit::Mass(Mass::Ounce(1.41)), UnitType::Mass(Ounce)),
-                (Unit::Mass(Mass::Milligram(999.0)), UnitType::Mass(Milligram)),
+                (
+                    Unit::Mass(Mass::Milligram(999.0)),
+                    UnitType::Mass(Milligram),
+                ),
                 (Unit::Mass(Mass::Dekagram(66.0)), UnitType::Mass(Dekagram)),
                 (Unit::Mass(Mass::Hectogram(55.0)), UnitType::Mass(Hectogram)),
             ];

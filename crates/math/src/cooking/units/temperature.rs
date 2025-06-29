@@ -1,6 +1,6 @@
+use crate::Error;
 use crate::cooking::units::traits::{UnitConverter, UnitOperations};
 use crate::cooking::units::{Unit, UnitType};
-use crate::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Temperature {
@@ -17,7 +17,7 @@ pub enum TemperatureUnit {
 impl UnitOperations for Temperature {
     fn unit_type(&self) -> UnitType {
         use TemperatureUnit::*;
-        
+
         match self {
             Temperature::Celsius(_) => UnitType::Temperature(Celsius),
             Temperature::Fahrenheit(_) => UnitType::Temperature(Fahrenheit),
@@ -42,30 +42,32 @@ impl UnitOperations for Temperature {
 impl UnitConverter for Temperature {
     fn convert(&self, to: UnitType) -> crate::Result<Unit> {
         use TemperatureUnit::*;
-        
+
         match self {
             Temperature::Celsius(original_value) => match to {
                 UnitType::Temperature(unit) => {
                     let value = measurements::Temperature::from_celsius(*original_value);
-                    
+
                     match unit {
                         Celsius => Ok(Unit::Temperature(self.with_value(*original_value))),
-                        Fahrenheit => Ok(Unit::Temperature(Temperature::Fahrenheit(value.as_fahrenheit()))),
+                        Fahrenheit => Ok(Unit::Temperature(Temperature::Fahrenheit(
+                            value.as_fahrenheit(),
+                        ))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to)),
+            },
             Temperature::Fahrenheit(original_value) => match to {
                 UnitType::Temperature(unit) => {
                     let value = measurements::Temperature::from_fahrenheit(*original_value);
-                    
+
                     match unit {
-                        Celsius =>Ok(Unit::Temperature(Temperature::Celsius(value.as_celsius()))),
+                        Celsius => Ok(Unit::Temperature(Temperature::Celsius(value.as_celsius()))),
                         Fahrenheit => Ok(Unit::Temperature(self.with_value(*original_value))),
                     }
-                },
-                _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to))
-            }
+                }
+                _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to)),
+            },
         }
     }
 }
@@ -80,17 +82,11 @@ mod tests {
         use super::*;
 
         fn create_temperature_variants() -> Vec<Temperature> {
-            vec![
-                Temperature::Celsius(25.0),
-                Temperature::Fahrenheit(77.0),
-            ]
+            vec![Temperature::Celsius(25.0), Temperature::Fahrenheit(77.0)]
         }
 
         fn create_temperature_unit_variants() -> Vec<TemperatureUnit> {
-            vec![
-                TemperatureUnit::Celsius,
-                TemperatureUnit::Fahrenheit,
-            ]
+            vec![TemperatureUnit::Celsius, TemperatureUnit::Fahrenheit]
         }
 
         #[test]
@@ -120,8 +116,14 @@ mod tests {
         #[test]
         fn test_unit_type_mapping() {
             let test_cases = vec![
-                (Temperature::Celsius(0.0), UnitType::Temperature(TemperatureUnit::Celsius)),
-                (Temperature::Fahrenheit(0.0), UnitType::Temperature(TemperatureUnit::Fahrenheit)),
+                (
+                    Temperature::Celsius(0.0),
+                    UnitType::Temperature(TemperatureUnit::Celsius),
+                ),
+                (
+                    Temperature::Fahrenheit(0.0),
+                    UnitType::Temperature(TemperatureUnit::Fahrenheit),
+                ),
             ];
 
             for (temperature, expected_unit_type) in test_cases {
@@ -162,10 +164,26 @@ mod tests {
         #[test]
         fn test_with_value_all_variants() {
             let test_cases = vec![
-                (Temperature::Celsius(20.0), 100.0, Temperature::Celsius(100.0)),
-                (Temperature::Fahrenheit(68.0), 212.0, Temperature::Fahrenheit(212.0)),
-                (Temperature::Celsius(0.0), -273.15, Temperature::Celsius(-273.15)),
-                (Temperature::Fahrenheit(32.0), -459.67, Temperature::Fahrenheit(-459.67)),
+                (
+                    Temperature::Celsius(20.0),
+                    100.0,
+                    Temperature::Celsius(100.0),
+                ),
+                (
+                    Temperature::Fahrenheit(68.0),
+                    212.0,
+                    Temperature::Fahrenheit(212.0),
+                ),
+                (
+                    Temperature::Celsius(0.0),
+                    -273.15,
+                    Temperature::Celsius(-273.15),
+                ),
+                (
+                    Temperature::Fahrenheit(32.0),
+                    -459.67,
+                    Temperature::Fahrenheit(-459.67),
+                ),
             ];
 
             for (original, new_value, expected) in test_cases {
@@ -176,10 +194,7 @@ mod tests {
 
         #[test]
         fn test_zero_values() {
-            let zero_variants = vec![
-                Temperature::Celsius(0.0),
-                Temperature::Fahrenheit(0.0),
-            ];
+            let zero_variants = vec![Temperature::Celsius(0.0), Temperature::Fahrenheit(0.0)];
 
             for variant in zero_variants {
                 assert_eq!(variant.value(), 0.0);
@@ -204,7 +219,10 @@ mod tests {
             let celsius = Temperature::Celsius(20.0);
             let negative_celsius = celsius.with_value(-15.5);
             assert_eq!(negative_celsius.value(), -15.5);
-            assert_eq!(negative_celsius.unit_type(), UnitType::Temperature(TemperatureUnit::Celsius));
+            assert_eq!(
+                negative_celsius.unit_type(),
+                UnitType::Temperature(TemperatureUnit::Celsius)
+            );
         }
 
         #[test]
@@ -271,10 +289,15 @@ mod tests {
 
             let inf_celsius = celsius.with_value(f64::INFINITY);
             assert!(inf_celsius.value().is_infinite());
-            assert_eq!(inf_celsius.unit_type(), UnitType::Temperature(TemperatureUnit::Celsius));
+            assert_eq!(
+                inf_celsius.unit_type(),
+                UnitType::Temperature(TemperatureUnit::Celsius)
+            );
 
             let neg_inf_celsius = celsius.with_value(f64::NEG_INFINITY);
-            assert!(neg_inf_celsius.value().is_infinite() && neg_inf_celsius.value().is_sign_negative());
+            assert!(
+                neg_inf_celsius.value().is_infinite() && neg_inf_celsius.value().is_sign_negative()
+            );
 
             // Test with NaN
             let nan_celsius = celsius.with_value(f64::NAN);
@@ -331,8 +354,14 @@ mod tests {
             assert_ne!(Temperature::Celsius(25.0), Temperature::Celsius(25.1));
             assert_ne!(Temperature::Celsius(0.0), Temperature::Fahrenheit(32.0));
             assert_ne!(Temperature::Celsius(100.0), Temperature::Fahrenheit(212.0));
-            assert_eq!(Temperature::Celsius(f64::INFINITY), Temperature::Celsius(f64::INFINITY));
-            assert_ne!(Temperature::Celsius(f64::NAN), Temperature::Celsius(f64::NAN)); // NaN != NaN
+            assert_eq!(
+                Temperature::Celsius(f64::INFINITY),
+                Temperature::Celsius(f64::INFINITY)
+            );
+            assert_ne!(
+                Temperature::Celsius(f64::NAN),
+                Temperature::Celsius(f64::NAN)
+            ); // NaN != NaN
         }
 
         #[test]
@@ -365,11 +394,12 @@ mod tests {
 
         #[test]
         fn test_unit_type_exhaustiveness() {
-            let all_variants = [Temperature::Celsius(1.0),
-                Temperature::Fahrenheit(1.0)];
+            let all_variants = [Temperature::Celsius(1.0), Temperature::Fahrenheit(1.0)];
 
-            let expected_types = [UnitType::Temperature(TemperatureUnit::Celsius),
-                UnitType::Temperature(TemperatureUnit::Fahrenheit)];
+            let expected_types = [
+                UnitType::Temperature(TemperatureUnit::Celsius),
+                UnitType::Temperature(TemperatureUnit::Fahrenheit),
+            ];
 
             for (variant, expected_type) in all_variants.iter().zip(expected_types.iter()) {
                 assert_eq!(variant.unit_type(), *expected_type);
@@ -380,13 +410,13 @@ mod tests {
         fn test_chaining_operations() {
             let original = Temperature::Celsius(20.0);
 
-            let result = original
-                .with_value(30.0)
-                .with_value(40.0)
-                .with_value(50.0);
+            let result = original.with_value(30.0).with_value(40.0).with_value(50.0);
 
             assert_eq!(result.value(), 50.0);
-            assert_eq!(result.unit_type(), UnitType::Temperature(TemperatureUnit::Celsius));
+            assert_eq!(
+                result.unit_type(),
+                UnitType::Temperature(TemperatureUnit::Celsius)
+            );
         }
 
         #[test]
@@ -400,7 +430,10 @@ mod tests {
                 if let UnitType::Temperature(unit) = temperature.unit_type() {
                     assert_eq!(unit, expected_unit);
                 } else {
-                    panic!("Expected UnitType::Temperature, got {:?}", temperature.unit_type());
+                    panic!(
+                        "Expected UnitType::Temperature, got {:?}",
+                        temperature.unit_type()
+                    );
                 }
             }
         }
@@ -474,9 +507,22 @@ mod tests {
         #[test]
         fn test_value_roundtrip_property() {
             let test_values = vec![
-                0.0, 1.0, -1.0, 25.0, -40.0, 100.0, 212.0,
-                -273.15, -459.67, 37.0, 98.6, 180.0, 350.0,
-                f64::MIN, f64::MAX, f64::EPSILON,
+                0.0,
+                1.0,
+                -1.0,
+                25.0,
+                -40.0,
+                100.0,
+                212.0,
+                -273.15,
+                -459.67,
+                37.0,
+                98.6,
+                180.0,
+                350.0,
+                f64::MIN,
+                f64::MAX,
+                f64::EPSILON,
             ];
 
             let variants = create_temperature_variants();
@@ -503,9 +549,15 @@ mod tests {
             let cold_to_hot_f = sub_zero_f.with_value(104.0);
 
             assert_eq!(cold_to_hot_c.value(), 40.0);
-            assert_eq!(cold_to_hot_c.unit_type(), UnitType::Temperature(TemperatureUnit::Celsius));
+            assert_eq!(
+                cold_to_hot_c.unit_type(),
+                UnitType::Temperature(TemperatureUnit::Celsius)
+            );
             assert_eq!(cold_to_hot_f.value(), 104.0);
-            assert_eq!(cold_to_hot_f.unit_type(), UnitType::Temperature(TemperatureUnit::Fahrenheit));
+            assert_eq!(
+                cold_to_hot_f.unit_type(),
+                UnitType::Temperature(TemperatureUnit::Fahrenheit)
+            );
         }
 
         #[test]
@@ -530,7 +582,7 @@ mod tests {
             }
         }
     }
-    
+
     mod tests_conversions {
         use super::*;
         use TemperatureUnit::*;
@@ -549,11 +601,13 @@ mod tests {
         #[test]
         fn test_celsius_conversions() -> Result<()> {
             assert_eq!(
-                Unit::Temperature(Temperature::Celsius(100.0)).convert(UnitType::Temperature(Celsius))?,
+                Unit::Temperature(Temperature::Celsius(100.0))
+                    .convert(UnitType::Temperature(Celsius))?,
                 Unit::Temperature(Temperature::Celsius(100.0)),
             );
             assert_eq!(
-                Unit::Temperature(Temperature::Celsius(100.0)).convert(UnitType::Temperature(Fahrenheit))?,
+                Unit::Temperature(Temperature::Celsius(100.0))
+                    .convert(UnitType::Temperature(Fahrenheit))?,
                 Unit::Temperature(Temperature::Fahrenheit(212.0)),
             );
             Ok(())
@@ -562,12 +616,14 @@ mod tests {
         #[test]
         fn test_fahrenheit_conversions() -> Result<()> {
             assert_approx_eq(
-                Unit::Temperature(Temperature::Fahrenheit(100.0)).convert(UnitType::Temperature(Celsius))?,
+                Unit::Temperature(Temperature::Fahrenheit(100.0))
+                    .convert(UnitType::Temperature(Celsius))?,
                 Unit::Temperature(Temperature::Celsius(37.7777778)),
                 1e-5,
             );
             assert_eq!(
-                Unit::Temperature(Temperature::Fahrenheit(100.0)).convert(UnitType::Temperature(Fahrenheit))?,
+                Unit::Temperature(Temperature::Fahrenheit(100.0))
+                    .convert(UnitType::Temperature(Fahrenheit))?,
                 Unit::Temperature(Temperature::Fahrenheit(100.0)),
             );
             Ok(())

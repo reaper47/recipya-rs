@@ -1,6 +1,6 @@
+use crate::Result;
 use crate::cooking::units::traits::UnitConverter;
 use crate::cooking::units::{Unit, UnitType};
-use crate::Result;
 
 impl UnitConverter for Unit {
     fn convert(&self, to: UnitType) -> Result<Unit> {
