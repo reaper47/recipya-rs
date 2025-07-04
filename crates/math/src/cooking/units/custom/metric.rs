@@ -1,5 +1,9 @@
 use measurements::{Mass, Measurement, Volume};
 
+use crate::cooking::units::custom::factors::volume::{
+    LITRE_CENTILITRE_FACTOR, LITRE_DECILITRE_FACTOR,
+};
+
 const DEKAGRAM_IN_KG: f64 = 0.01;
 
 /// A dekagram is a metric unit of mass and weight equal to 10 grams.
@@ -84,8 +88,6 @@ impl MassHectogramExt for Mass {
     }
 }
 
-const CENTILITRE_IN_LITRE: f64 = 0.01;
-
 /// A metric unit of capacity, equal to one hundredth of a liter.
 pub struct Centilitre {
     pub value: f64,
@@ -101,12 +103,12 @@ impl Measurement for Centilitre {
     }
 
     fn as_base_units(&self) -> f64 {
-        self.value * CENTILITRE_IN_LITRE
+        self.value / LITRE_CENTILITRE_FACTOR
     }
 
     fn from_base_units(units: f64) -> Self {
         Self {
-            value: units / CENTILITRE_IN_LITRE,
+            value: units * LITRE_CENTILITRE_FACTOR,
         }
     }
 }
@@ -118,15 +120,13 @@ pub trait VolumeCentilitreExt {
 
 impl VolumeCentilitreExt for Volume {
     fn as_centilitres(&self) -> f64 {
-        self.as_litres() / CENTILITRE_IN_LITRE
+        self.as_litres() * LITRE_CENTILITRE_FACTOR
     }
 
     fn from_centilitres(centilitres: f64) -> Volume {
-        Volume::from_litres(centilitres * CENTILITRE_IN_LITRE)
+        Volume::from_litres(centilitres / LITRE_CENTILITRE_FACTOR)
     }
 }
-
-const DECILITRE_IN_LITRE: f64 = 0.1;
 
 /// Decilitre is volume equivalent to one tenth of a liter (L/10).
 pub struct Decilitre {
@@ -143,12 +143,12 @@ impl Measurement for Decilitre {
     }
 
     fn as_base_units(&self) -> f64 {
-        self.value * DECILITRE_IN_LITRE
+        self.value / LITRE_DECILITRE_FACTOR
     }
 
     fn from_base_units(units: f64) -> Self {
         Self {
-            value: units / DECILITRE_IN_LITRE,
+            value: units * LITRE_DECILITRE_FACTOR,
         }
     }
 }
@@ -160,11 +160,11 @@ pub trait VolumeDecilitreExt {
 
 impl VolumeDecilitreExt for Volume {
     fn as_decilitres(&self) -> f64 {
-        self.as_litres() / DECILITRE_IN_LITRE
+        self.as_litres() * LITRE_DECILITRE_FACTOR
     }
 
     fn from_decilitres(decilitres: f64) -> Volume {
-        Volume::from_litres(decilitres * DECILITRE_IN_LITRE)
+        Volume::from_litres(decilitres / LITRE_DECILITRE_FACTOR)
     }
 }
 

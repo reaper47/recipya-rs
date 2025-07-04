@@ -59,8 +59,37 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/custom/factors.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/conversion.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/operations.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/scale.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/conversion.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/operations.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/scale.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/conversion.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/operations.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/scale.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/conversion.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/operations.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/scale.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/converter.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/scaler.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/system.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/custom/metric.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/custom/metric.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/custom/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/custom/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/custom/us.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume.rs" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -142,6 +171,44 @@
     "Cargo.Test cooking::units::length::tests::test_zero_values.executor": "Run",
     "Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions.executor": "Debug",
     "Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::tests_scale::test_cm_to_cm.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::tests_scale::test_ft_to_ft.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::tests_scale::test_ft_to_in.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::tests_scale::test_in_to_ft.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::tests_scale::test_in_to_in.executor": "Debug",
+    "Cargo.Test cooking::units::length::tests::tests_scale::test_km_to_cm.executor": "Run",
+    "Cargo.Test cooking::units::length::tests::tests_scale::test_mm_to_km.executor": "Run",
+    "Cargo.Test cooking::units::mass::tests::tests_scale::test_g_to_mg.executor": "Debug",
+    "Cargo.Test cooking::units::temperature::tests::tests_scale::test_celsius.executor": "Debug",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_australian_cup_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_australian_dsp_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_australian_tbsp_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_centilitre_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_decilitre_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_cup_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_dessert_spoon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_fluid_ounce_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_gallon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_gill_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_pint_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_quart_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_tablespoon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_imperial_tsp_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_jigger_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_litre_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_metric_cup_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_metric_dessert_spoon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_metric_tbsp_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_metric_tsp_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_millilitre_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_us_cup_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_us_floz_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_us_gallon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_us_pint_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_us_quart_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_us_tablespoon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::conversion::tests::test_us_teaspoon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::scale::tests::test_jigger.executor": "Run",
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_dessert_spoon_conversions.executor": "Debug",
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_fluid_ounce_conversions.executor": "Run",
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_gill_conversions.executor": "Run",
@@ -149,6 +216,44 @@
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_metric_tbsp_conversions.executor": "Run",
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_millilitre_conversions.executor": "Run",
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_us_teaspoon_conversions.executor": "Debug",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::cl_to_cl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::cl_to_dl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::cl_to_l.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::cl_to_ml.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::dl_to_cl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::dl_to_dl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::dl_to_l.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::dl_to_ml.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::l_to_cl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::l_to_dl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::l_to_l.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::l_to_ml.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::ml_to_cl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::ml_to_dl.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::ml_to_l.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::ml_to_ml.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_cup_metric.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_cup_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_cup_us.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_dsp_metric.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_dsp_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_floz_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_floz_us.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_gallon_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_gallon_us.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_gill_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_jigger.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_ml.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_pint_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_pint_us.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_quart_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_quart_us.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_tbsp_metric.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_tbsp_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_tbsp_us.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_tsp_metric.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_tsp_uk.executor": "Run",
+    "Cargo.Test cooking::units::volume::tests::tests_scale::test_tsp_us.executor": "Run",
     "Cargo.Test core::config::data::tests::test_new_ok.executor": "Debug",
     "Cargo.Test core::config::tests::test_config_ok.executor": "Run",
     "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
@@ -418,6 +523,7 @@
     "Cargo.Test tests_recipes_add_import.executor": "Run",
     "Cargo.Test tests_register.executor": "Run",
     "Cargo.Test tests_scale (1).executor": "Run",
+    "Cargo.Test tests_scale (2).executor": "Run",
     "Cargo.Test tests_scale.executor": "Run",
     "Cargo.Test tests_searchbar.executor": "Run",
     "Cargo.Test tests_share_recipe.executor": "Run",
@@ -464,18 +570,18 @@
       <recent name="$PROJECT_DIR$/crates/app/src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/crates/math/src/cooking/units" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/crates/app/src" />
       <recent name="$PROJECT_DIR$/crates" />
       <recent name="$PROJECT_DIR$/crates/models/src" />
-      <recent name="$PROJECT_DIR$/crates/foundation/types/src" />
     </key>
   </component>
   <component name="RsExternalLinterProjectSettings">
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test tests_scale (2)">
+  <component name="RunManager" selected="Cargo.Test cooking::units::volume::conversion::tests::test_australian_dsp_conversions">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -494,8 +600,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_conversion" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_conversion" />
+    <configuration name="Test cooking::units::volume::conversion::tests::test_australian_cup_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::volume::conversion::tests::test_australian_cup_conversions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -511,8 +617,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::volume::tests::tests_conversions" />
+    <configuration name="Test cooking::units::volume::conversion::tests::test_australian_dsp_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::volume::conversion::tests::test_australian_dsp_conversions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -528,8 +634,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_scale (1)" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::mass::tests::tests_scale" />
+    <configuration name="Test cooking::units::volume::conversion::tests::test_jigger_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::volume::conversion::tests::test_jigger_conversions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -545,8 +651,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_scale (2)" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::temperature::tests::tests_scale" />
+    <configuration name="Test cooking::units::volume::conversion::tests::test_us_gallon_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::volume::conversion::tests::test_us_gallon_conversions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -562,8 +668,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_scale" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::length::tests::tests_scale" />
+    <configuration name="Test cooking::units::volume::conversion::tests::test_us_quart_conversions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::volume::conversion::tests::test_us_quart_conversions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -581,19 +687,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test tests_scale (1)" />
-      <item itemvalue="Cargo.Test tests_scale (2)" />
-      <item itemvalue="Cargo.Test tests_conversion" />
-      <item itemvalue="Cargo.Test tests_scale" />
-      <item itemvalue="Cargo.Test tests_conversions" />
+      <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_australian_cup_conversions" />
+      <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_australian_dsp_conversions" />
+      <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_jigger_conversions" />
+      <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_us_gallon_conversions" />
+      <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_us_quart_conversions" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test tests_scale (2)" />
-        <item itemvalue="Cargo.Test tests_scale (1)" />
-        <item itemvalue="Cargo.Test tests_scale" />
-        <item itemvalue="Cargo.Test tests_conversion" />
-        <item itemvalue="Cargo.Test tests_conversions" />
+        <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_australian_dsp_conversions" />
+        <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_australian_cup_conversions" />
+        <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_jigger_conversions" />
+        <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_us_gallon_conversions" />
+        <item itemvalue="Cargo.Test cooking::units::volume::conversion::tests::test_us_quart_conversions" />
       </list>
     </recent_temporary>
   </component>

@@ -1,5 +1,6 @@
+use crate::Error;
 use crate::cooking::units::UnitType;
-use crate::cooking::units::traits::UnitOperations;
+use crate::cooking::units::traits::{UnitConverter, UnitOperations, UnitScaler};
 use crate::cooking::units::{Length, Mass, Temperature, Volume};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -35,6 +36,33 @@ impl UnitOperations for Unit {
             Unit::Mass(unit) => Unit::Mass(unit.with_value(value)),
             Unit::Temperature(unit) => Unit::Temperature(unit.with_value(value)),
             Unit::Volume(unit) => Unit::Volume(unit.with_value(value)),
+        }
+    }
+}
+
+impl UnitConverter for Unit {
+    fn convert(&self, to: UnitType) -> crate::Result<Unit> {
+        match self {
+            Unit::Length(unit) => unit.convert(to),
+            Unit::Mass(unit) => unit.convert(to),
+            Unit::Temperature(unit) => unit.convert(to),
+            Unit::Volume(unit) => unit.convert(to),
+        }
+    }
+}
+
+impl UnitScaler for Unit {
+    /// Scales the unit by the given factor in the same measurement system.
+    fn scale(&self, factor: f64) -> crate::Result<Unit> {
+        if factor.is_sign_negative() {
+            return Err(Error::InvalidScaleFactor(factor));
+        }
+
+        match self {
+            Unit::Length(unit) => unit.scale(factor),
+            Unit::Mass(unit) => unit.scale(factor),
+            Unit::Temperature(unit) => unit.scale(factor),
+            Unit::Volume(unit) => unit.scale(factor),
         }
     }
 }
@@ -91,7 +119,7 @@ mod tests {
             assert_eq!(Unit::Volume(Volume::Litre(1.5)).value(), 1.5);
             assert_eq!(Unit::Volume(Volume::MetricTeaspoon(5.0)).value(), 5.0);
             assert_eq!(Unit::Volume(Volume::MetricTablespoon(15.0)).value(), 15.0);
-            assert_eq!(Unit::Volume(Volume::MetricDessertSpoon(10.0)).value(), 10.0);
+            assert_eq!(Unit::Volume(Volume::MetricDessertspoon(10.0)).value(), 10.0);
             assert_eq!(Unit::Volume(Volume::MetricCup(250.0)).value(), 250.0);
         }
 
@@ -110,7 +138,6 @@ mod tests {
 
         #[test]
         fn test_us_volume_units_value() {
-            assert_eq!(Unit::Volume(Volume::USLegalCup(240.0)).value(), 240.0);
             assert_eq!(Unit::Volume(Volume::USTeaspoon(4.93)).value(), 4.93);
             assert_eq!(Unit::Volume(Volume::USTablespoon(14.79)).value(), 14.79);
             assert_eq!(Unit::Volume(Volume::USFluidOunce(29.57)).value(), 29.57);
@@ -123,7 +150,6 @@ mod tests {
         #[test]
         fn test_us_volume_units_with_value() {
             let us_units = vec![
-                Unit::Volume(Volume::USLegalCup(1.0)),
                 Unit::Volume(Volume::USTeaspoon(1.0)),
                 Unit::Volume(Volume::USTablespoon(1.0)),
                 Unit::Volume(Volume::USFluidOunce(1.0)),
@@ -346,7 +372,7 @@ mod tests {
                     "MetricTablespoon",
                 ),
                 (
-                    Unit::Volume(Volume::MetricDessertSpoon(1.0)),
+                    Unit::Volume(Volume::MetricDessertspoon(1.0)),
                     "MetricDessertSpoon",
                 ),
                 (Unit::Volume(Volume::MetricCup(1.0)), "MetricCup"),
@@ -501,7 +527,7 @@ mod tests {
                 UnitType::Volume(MetricTablespoon)
             );
             assert_eq!(
-                Unit::Volume(Volume::MetricDessertSpoon(1.5)).unit_type(),
+                Unit::Volume(Volume::MetricDessertspoon(1.5)).unit_type(),
                 UnitType::Volume(MetricDessertSpoon)
             );
             assert_eq!(
@@ -560,10 +586,6 @@ mod tests {
 
         #[test]
         fn test_us_volume_units() {
-            assert_eq!(
-                Unit::Volume(Volume::USLegalCup(1.0)).unit_type(),
-                UnitType::Volume(USLegalCup)
-            );
             assert_eq!(
                 Unit::Volume(Volume::USTeaspoon(6.0)).unit_type(),
                 UnitType::Volume(USTeaspoon)
@@ -763,7 +785,7 @@ mod tests {
                     UnitType::Volume(MetricTablespoon),
                 ),
                 (
-                    Unit::Volume(Volume::MetricDessertSpoon(1.0)),
+                    Unit::Volume(Volume::MetricDessertspoon(1.0)),
                     UnitType::Volume(MetricDessertSpoon),
                 ),
                 (
@@ -813,10 +835,6 @@ mod tests {
                     UnitType::Volume(ImperialGallon),
                 ),
                 // US volume units
-                (
-                    Unit::Volume(Volume::USLegalCup(1.0)),
-                    UnitType::Volume(USLegalCup),
-                ),
                 (
                     Unit::Volume(Volume::USTeaspoon(1.0)),
                     UnitType::Volume(USTeaspoon),
@@ -904,7 +922,7 @@ mod tests {
             Unit::Volume(Volume::Litre(1.0)),
             Unit::Volume(Volume::MetricTeaspoon(1.0)),
             Unit::Volume(Volume::MetricTablespoon(1.0)),
-            Unit::Volume(Volume::MetricDessertSpoon(1.0)),
+            Unit::Volume(Volume::MetricDessertspoon(1.0)),
             Unit::Volume(Volume::MetricCup(1.0)),
             // Volume - Australian
             Unit::Volume(Volume::AustralianTablespoon(1.0)),
@@ -919,7 +937,6 @@ mod tests {
             Unit::Volume(Volume::ImperialQuart(1.0)),
             Unit::Volume(Volume::ImperialGallon(1.0)),
             // Volume - US
-            Unit::Volume(Volume::USLegalCup(1.0)),
             Unit::Volume(Volume::USTeaspoon(1.0)),
             Unit::Volume(Volume::USTablespoon(1.0)),
             Unit::Volume(Volume::USFluidOunce(1.0)),
