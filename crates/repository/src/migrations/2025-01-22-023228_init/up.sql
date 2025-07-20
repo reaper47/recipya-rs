@@ -86,7 +86,7 @@ CREATE TABLE recipes
     image                 UUID,
     yield                 SMALLINT  NOT NULL DEFAULT 1,
     language              CHAR(3)   NOT NULL,
-    measurement_system_id SMALLINT  NOT NULL REFERENCES measurement_systems (id) ON DELETE CASCADE,
+    measurement_system_id SMALLINT  NOT NULL REFERENCES measurement_systems (id) ON DELETE CASCADE DEFAULT 1,
     source                TEXT,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
