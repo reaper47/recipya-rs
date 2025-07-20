@@ -1,7 +1,8 @@
-use crate::Error;
 use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::{UnitConverter, UnitOperations, UnitScaler};
 use crate::cooking::units::{Length, Mass, Temperature, Volume};
+use crate::{Error, Result};
+use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Unit {
@@ -41,7 +42,7 @@ impl UnitOperations for Unit {
 }
 
 impl UnitConverter for Unit {
-    fn convert(&self, to: UnitType) -> crate::Result<Unit> {
+    fn convert(&self, to: UnitType) -> Result<Unit> {
         match self {
             Unit::Length(unit) => unit.convert(to),
             Unit::Mass(unit) => unit.convert(to),
@@ -53,7 +54,7 @@ impl UnitConverter for Unit {
 
 impl UnitScaler for Unit {
     /// Scales the unit by the given factor in the same measurement system.
-    fn scale(&self, factor: f64) -> crate::Result<Unit> {
+    fn scale(&self, factor: f64) -> Result<Unit> {
         if factor.is_sign_negative() {
             return Err(Error::InvalidScaleFactor(factor));
         }
@@ -61,8 +62,26 @@ impl UnitScaler for Unit {
         match self {
             Unit::Length(unit) => unit.scale(factor),
             Unit::Mass(unit) => unit.scale(factor),
-            Unit::Temperature(unit) => unit.scale(factor),
             Unit::Volume(unit) => unit.scale(factor),
+            _ => Err(Error::InvalidScale),
+        }
+    }
+}
+
+impl FromStr for Unit {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        if let Ok(v) = Volume::from_str(s) {
+            Ok(Unit::Volume(v))
+        } else if let Ok(v) = Mass::from_str(s) {
+            Ok(Unit::Mass(v))
+        } else if let Ok(v) = Length::from_str(s) {
+            Ok(Unit::Length(v))
+        } else if let Ok(v) = Temperature::from_str(s) {
+            Ok(Unit::Temperature(v))
+        } else {
+            Err(Error::NotDetected)
         }
     }
 }

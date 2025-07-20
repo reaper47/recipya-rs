@@ -2,4 +2,4 @@ mod error;
 
 pub mod cooking;
 
-pub use error::*;
+pub use error::{Error, Result};

@@ -547,6 +547,7 @@ mod tests {
                 name: "Crepes".into(),
                 description: Some("Trust me. They're delicious.".into()),
                 images: vec![Uuid::new_v4(), Uuid::new_v4()],
+                measurement_system_id: 1,
                 yield_: Some(12),
                 source: Some("My father's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -732,6 +733,7 @@ mod tests {
                     image: reference.recipe.image,
                     yield_: recipe_c.yield_.unwrap_or(4),
                     language: "eng".into(),
+                    measurement_system_id: 1,
                     source: recipe_c.source,
                     created_at: reference.recipe.created_at,
                     updated_at: reference.recipe.updated_at,
@@ -1655,6 +1657,7 @@ mod tests {
                 name: "Best Chinese Kale".into(),
                 description: Some("Your mouth will drool like never before".into()),
                 images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
+                measurement_system_id: 1,
                 yield_: Some(6),
                 source: Some("My mother's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -1730,6 +1733,7 @@ mod tests {
                         image: Some(got.recipe.image.expect("A main image")),
                         yield_: 6,
                         language: "eng".into(),
+                        measurement_system_id: 1,
                         source: recipe.source,
                         created_at: got.recipe.created_at,
                         updated_at: got.recipe.updated_at,

@@ -18,7 +18,7 @@ diesel = { workspace = true }
 diesel-async = { workspace = true }
 diesel_migrations = { version = "2.2", features = ["postgres"] }
 futures-util = { workspace = true }
-postgres_rustls = "0.1.2"
+postgres_rustls = "0.1.3"
 rustls = { workspace = true }
 support = { workspace = true }
 tokio = { workspace = true }

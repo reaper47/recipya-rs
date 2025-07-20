@@ -8,6 +8,9 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     InvalidScaleFactor(f64),
+    InvalidScale,
+    NotDetected,
+    RegexFail,
     SystemMismatch,
     UnsupportedUnit(Unit, UnitType),
 }

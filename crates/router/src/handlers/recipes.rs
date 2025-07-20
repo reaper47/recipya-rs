@@ -10,6 +10,7 @@ use axum::http::{HeaderMap, HeaderValue};
 use axum::response::{Html, IntoResponse};
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
+use math::cooking::units;
 use models::Error::{DuplicateEntity, EntityNotFound};
 use models::Recipe;
 use models::data::{
@@ -29,7 +30,7 @@ use support::fs::FsSupport;
 use tokio::fs;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
-use tracing::{debug, error, info, warn};
+use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -672,6 +673,9 @@ pub async fn add_manual_recipe_post_handler(
         videos
     };
 
+    let ingredients = form.ingredients;
+    let measurement_system_id = units::MeasurementSystem::from(ingredients.clone()).id();
+
     let recipe_id = match Recipe::create(
         &state.mm,
         user_id,
@@ -679,12 +683,13 @@ pub async fn add_manual_recipe_post_handler(
             name: form.title,
             description: form.description,
             images,
+            measurement_system_id,
             yield_: form.yield_,
             source: form.source,
             videos,
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: Sections::from([("".into(), form.ingredients)]),
+            ingredients: Sections::from([("".into(), ingredients)]),
             instructions: Sections::from([("".into(), form.instructions)]),
             keywords: form.keywords,
             nutrition: form.nutrition,
