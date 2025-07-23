@@ -19,9 +19,7 @@ use models::data::{
     ShareData, ViewRecipe,
 };
 use models::params::SearchParams;
-use models::recipe::{
-    Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate,
-};
+use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;

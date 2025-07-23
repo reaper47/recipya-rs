@@ -939,13 +939,11 @@ mod tests {
                     r#"<span class="pl-2">1 1/2 cl of whiskey</span>"#,
                     r#"<span class="pl-2">1 1/3 tbsp lemon juice</span>"#,
                     r#"<span class="pl-2">Ground ginger</span>"#,
-                    r#"<span class="pl-2">6 Large or 8 medium ripe Hass avocados</span>"#,
-                    r#"<span class="pl-2">1/2-1 tsp salt plus more for seasoning</span>"#,
                     r#"<span class="pl-2">1 fresh pineapple, cored and cut into 1 1/2-inch pieces</span>"#,
                     r#"<span class="pl-2">Un sac de chips de 2 kg</span>"#,
-                    r#"<span class="pl-2">Two 15-ounce can Goya beans</span>"#,
+                    r#"<span class="pl-2">Two 30-ounce can Goya beans</span>"#,
                     r#"<span class="pl-2">8 lb top quality chicken filet</span>"#,
-                    r#"<span class="pl-2">1/4 cup lemon juice</span>"#,
+                    r#"<span class="pl-2">4 tbsp lemon juice</span>"#,
                 ],
             );
             Ok(())

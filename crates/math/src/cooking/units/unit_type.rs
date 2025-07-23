@@ -5,5 +5,6 @@ pub enum UnitType {
     Length(LengthUnit),
     Mass(MassUnit),
     Temperature(TemperatureUnit),
+    Unitless,
     Volume(VolumeUnit),
 }

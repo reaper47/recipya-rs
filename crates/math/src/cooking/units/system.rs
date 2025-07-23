@@ -45,8 +45,10 @@ impl MeasurementSystem {
         elements
             .into_iter()
             .map(|s| {
+                if s.contains("fresh pineapple, cored and") {
+                    println!("yay");
+                }
                 let Ok(unit) = Unit::from_str(&s) else {
-                    
                     return s;
                 };
 
@@ -178,6 +180,7 @@ impl MeasurementSystem {
                 Volume::USGallon(_) => MeasurementSystem::UsCustomary,
                 Volume::Jigger(_) => MeasurementSystem::UsCustomary,
             },
+            Unit::Unitless(_) => MeasurementSystem::default(),
         }
     }
 }
@@ -242,6 +245,7 @@ mod tests {
             assert_eq!(
                 MeasurementSystem::from(vec![
                     "2 lb beef chuck roast".to_string(),
+                    "4 lb beef chuck roast".to_string(),
                     "1 stone potatoes".to_string(),
                     "8 fl oz beef stock".to_string(),
                     "4 oz carrots".to_string(),

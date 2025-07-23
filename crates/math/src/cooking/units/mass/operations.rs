@@ -3,7 +3,7 @@ use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Mass {
-    fn abbrev<'a>(&self) -> &'a str {
+    fn abbrev(&self) -> &str {
         use Mass::*;
 
         match self {
