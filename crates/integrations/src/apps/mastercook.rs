@@ -452,9 +452,7 @@ where
 }
 
 fn parse_mxp_helper(input: &str) -> Result<Vec<RecipeComponents>> {
-    Ok(many1(map(recipe_mxp, |r| r))
-        .parse(input)
-        .map(|(_, r)| r)?)
+    Ok(many1(map(recipe_mxp, |r| r)).parse(input).map(|(_, r)| r)?)
 }
 
 fn recipe_mxp(input: &str) -> IResult<&str, RecipeComponents> {
@@ -564,9 +562,7 @@ where
 }
 
 fn parse_txt_helper(input: &str) -> Result<Vec<RecipeComponents>> {
-    Ok(many1(map(recipe_txt, |r| r))
-        .parse(input)
-        .map(|(_, r)| r)?)
+    Ok(many1(map(recipe_txt, |r| r)).parse(input).map(|(_, r)| r)?)
 }
 
 fn recipe_txt(input: &str) -> IResult<&str, RecipeComponents> {

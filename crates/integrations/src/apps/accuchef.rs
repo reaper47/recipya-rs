@@ -14,12 +14,12 @@ use tracing::error;
 use url::Url;
 
 use super::helpers::read_file;
+use crate::Result;
 use crate::common::Times;
 use crate::helpers::{
     seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
     to_yield,
 };
-use crate::Result;
 
 struct AccuChefRecipe {
     title: String,

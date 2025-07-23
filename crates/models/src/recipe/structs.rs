@@ -4,22 +4,27 @@ use std::sync::Arc;
 use diesel::data_types::PgInterval;
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
+use math::cooking::units;
+use recipe_schema::{
+    CreativeWorkOrText, DefinedTermOrTextOrUrl, HowToToolOrText, NutritionInformationSchema,
+    RecipeSchema, Sections,
+};
+use repository::schema;
+use support::fs::FsSupport;
+use support::name_entity_with_relations;
+use support::strings::extract_number;
 use tracing::warn;
 use uuid::Uuid;
 
 use crate::recipe::RecipeForm;
 use crate::user::User;
-use recipe_schema::{CreativeWorkOrText, DefinedTermOrTextOrUrl, HowToToolOrText, NutritionInformationSchema, RecipeSchema, Sections};
-use repository::schema;
-use support::fs::FsSupport;
-use support::name_entity_with_relations;
-use support::strings::extract_number;
 
 /// Represents a recipe entity stored in the database.
 #[derive(
     AsChangeset, Associations, Clone, Debug, Queryable, Identifiable, PartialEq, Selectable,
 )]
 #[diesel(belongs_to(User))]
+#[diesel(belongs_to(MeasurementSystem))]
 #[diesel(treat_none_as_null = true)]
 #[diesel(table_name = schema::recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -36,6 +41,8 @@ pub struct Recipe {
     pub yield_: i16,
     /// The language in which the recipe is written.
     pub language: String,
+    /// The original measurement system the recipe is in.
+    pub measurement_system_id: i16,
     /// An optional reference to the origin or inspiration of the recipe.
     pub source: Option<String>,
     /// The timestamp when the nutrition entry was created.
@@ -53,6 +60,7 @@ pub struct RecipeForCreate {
     pub name: String,
     pub description: Option<String>,
     pub images: Vec<Uuid>,
+    pub measurement_system_id: i16,
     pub yield_: Option<i16>,
     pub source: Option<String>,
     pub videos: Vec<VideoForCreate>,
@@ -80,6 +88,9 @@ impl RecipeForCreate {
 
 impl From<RecipeForm> for RecipeForCreate {
     fn from(form: RecipeForm) -> Self {
+        let ingredients = form.ingredients;
+        let measurement_system_id = units::MeasurementSystem::from(ingredients.clone()).id();
+
         Self {
             name: form.title,
             description: form.description,
@@ -89,9 +100,10 @@ impl From<RecipeForm> for RecipeForCreate {
             videos: vec![],
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: Sections::from([("".into(), form.ingredients)]),
+            ingredients: Sections::from([("".into(), ingredients)]),
             instructions: Sections::from([("".into(), form.instructions)]),
             keywords: form.keywords,
+            measurement_system_id,
             nutrition: form.nutrition,
             times: form.times,
             tools: form.tools,
@@ -106,6 +118,9 @@ impl From<&RecipeSchema> for RecipeForCreate {
             _ => schema.url.clone().map(|s| s.to_string()),
         };
 
+        let ingredients = schema.recipe_ingredient.clone().unwrap_or_default();
+        let measurement_system_id = units::MeasurementSystem::from(ingredients.clone()).id();
+
         Self {
             name: schema.name.clone().unwrap_or_default(),
             description: schema.description.clone().map(String::from),
@@ -115,10 +130,7 @@ impl From<&RecipeSchema> for RecipeForCreate {
             videos: vec![],
             category: String::try_from(schema.recipe_category.clone()).ok(),
             cuisine: schema.recipe_cuisine.clone().map(String::from),
-            ingredients: Sections::from([(
-                "".into(),
-                schema.recipe_ingredient.clone().unwrap_or_default(),
-            )]),
+            ingredients: Sections::from([("".into(), ingredients)]),
             instructions: Sections::from(schema.recipe_instructions.clone().unwrap_or_default()),
             keywords: match &schema.keywords {
                 None => vec![],
@@ -127,13 +139,16 @@ impl From<&RecipeSchema> for RecipeForCreate {
                         warn!("Keywords DefinedTerm is defined but not processed: {term:?}");
                         vec![]
                     }
-                    DefinedTermOrTextOrUrl::Text(text) => text.split(',').map(String::from).collect(),
+                    DefinedTermOrTextOrUrl::Text(text) => {
+                        text.split(',').map(String::from).collect()
+                    }
                     DefinedTermOrTextOrUrl::Url(url) => {
                         warn!("Keywords Url is defined but not processed: {url}");
                         vec![]
                     }
-                } 
+                },
             },
+            measurement_system_id,
             nutrition: schema.nutrition.clone().map(NutritionForCreate::from),
             times: Some(TimesForCreate::from_components(
                 schema.prep_time,
@@ -208,6 +223,17 @@ impl RecipeDetails {
             .copied()
             .collect()
     }
+}
+
+/// Represents a measurement system entity stored in the database.
+#[derive(Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[diesel(table_name = schema::measurement_systems)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct MeasurementSystem {
+    /// Unique identifier of the measurement system entry.
+    pub id: i16,
+    /// The name of the measurement system.
+    pub name: String,
 }
 
 /// Represents a nutrition entity stored in the database.
@@ -688,7 +714,7 @@ pub(super) struct VideoForInsert {
     pub embed_url: Option<String>,
 }
 
-#[cfg(any(test, feature = "test-utils"))]
+#[cfg(feature = "test-utils")]
 pub mod test_utils {
     use crate::recipe::{
         Nutrition, NutritionForCreate, RecipeForCreate, Times, TimesForCreate, ToolForCreate,
@@ -720,6 +746,7 @@ pub mod test_utils {
                 image: images.first().cloned().or(None),
                 yield_: recipe_c.yield_.ok_or(4).expect("a yield found"),
                 language: "en".into(),
+                measurement_system_id: 1,
                 source: recipe_c.source,
                 created_at: NaiveDateTime::new(created_date, time),
                 updated_at: NaiveDateTime::new(updated_date, time),
@@ -779,6 +806,7 @@ pub mod test_utils {
             name: "Best Chinese Kale".into(),
             description: Some("This is the most delicious recipe!".into()),
             images: vec![main_image, secondary_image],
+            measurement_system_id: 1,
             yield_: Some(4),
             source: Some(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
@@ -868,6 +896,7 @@ mod tests {
                     yield_: 0,
                     language: "".to_string(),
                     source: None,
+                    measurement_system_id: 1,
                     created_at: Default::default(),
                     updated_at: Default::default(),
                     user_id: 0,

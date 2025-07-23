@@ -4,7 +4,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::extract::ws::{Message, WebSocket};
-use lru::LruCache;
 use tokio::sync::Mutex;
 use tokio::time::timeout;
 use tracing::error;
@@ -54,7 +53,7 @@ impl AppState {
             email_service,
             fs_support,
             mm: ModelManager::new(config.database_url).await?,
-            recipe_cache: Arc::new(Mutex::new(LruCache::new(
+            recipe_cache: Arc::new(Mutex::new(RecipeCache::new(
                 NonZeroUsize::new(1000).expect("LRU to be initialized"),
             ))),
             scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
@@ -76,10 +75,11 @@ impl AppState {
         is_notification_visible: bool,
         user_id: i64,
     ) {
-        let percentage = total
-            .gt(&0)
-            .then_some((current_value as f64 / total as f64) * 100.0)
-            .unwrap_or_default();
+        let percentage = if total.gt(&0) {
+            (current_value as f64 / total as f64) * 100.0
+        } else {
+            Default::default()
+        };
 
         let content = format!(
             r#"

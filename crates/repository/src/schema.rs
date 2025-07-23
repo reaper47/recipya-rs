@@ -135,7 +135,7 @@ diesel::table! {
 
 diesel::table! {
     measurement_systems (id) {
-        id -> Int8,
+        id -> Int2,
         name -> Text,
     }
 }
@@ -169,6 +169,7 @@ diesel::table! {
         yield_ -> Int2,
         #[max_length = 3]
         language -> Bpchar,
+        measurement_system_id -> Int2,
         source -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
@@ -266,7 +267,7 @@ diesel::table! {
     user_settings (id) {
         id -> Int8,
         user_id -> Int8,
-        measurement_system_id -> Nullable<Int8>,
+        measurement_system_id -> Nullable<Int2>,
         calculate_nutrition -> Bool,
         convert_automatically -> Bool,
         cookbooks_view -> Nullable<Int4>,
@@ -349,6 +350,7 @@ diesel::joinable!(instructions_recipes -> sections (section_id));
 diesel::joinable!(keywords_recipes -> keywords (keyword_id));
 diesel::joinable!(keywords_recipes -> recipes (recipe_id));
 diesel::joinable!(nutrition -> recipes (recipe_id));
+diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
 diesel::joinable!(recipes -> users (user_id));
 diesel::joinable!(reports -> report_types (report_type_id));
 diesel::joinable!(reports -> users (user_id));

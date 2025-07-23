@@ -1,4 +1,2 @@
-mod testing;
-
-#[allow(unused_imports)]
-pub use testing::*;
+#[cfg(feature = "test-utils")]
+pub mod utils;

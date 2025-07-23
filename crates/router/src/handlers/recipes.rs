@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 
+use app::state::AppState;
 use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
@@ -10,6 +11,7 @@ use axum::http::{HeaderMap, HeaderValue};
 use axum::response::{Html, IntoResponse};
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
+use math::cooking::units;
 use models::Error::{DuplicateEntity, EntityNotFound};
 use models::Recipe;
 use models::data::{
@@ -25,11 +27,12 @@ use models::user::User;
 use models::website::{ToHtmlTable, Website};
 use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
 use reqwest::StatusCode;
+use serde::Deserialize;
 use support::fs::FsSupport;
 use tokio::fs;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
-use tracing::{debug, error, info, warn};
+use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -41,7 +44,6 @@ use crate::recipes_routes::{
 };
 
 use crate::{Error, Result};
-use app::state::AppState;
 
 /// Handles deleting a user's recipe.
 pub async fn delete_recipe_handler(
@@ -176,22 +178,23 @@ pub async fn duplicate_recipe_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let (mut recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
-        Ok(res) => res,
-        Err(err) => {
-            error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
-            let toast = MessageHtmx::error("Recipe not found.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
+    let (mut recipe, categories, keywords) =
+        match fetch_view_recipe(&state, user_id, recipe_id).await {
+            Ok(res) => res,
+            Err(err) => {
+                error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
+                let toast = MessageHtmx::error("Recipe not found.");
+                if let Ok(json) = serde_json::to_string(&toast) {
+                    state.broadcast(user_id, Message::Text(json.into())).await;
+                }
+                return Error::Model(EntityNotFound {
+                    id: recipe_id,
+                    entity: "recipe",
+                })
+                .into_response();
             }
-            return Error::Model(EntityNotFound {
-                id: recipe_id,
-                entity: "recipe",
-            })
-            .into_response();
-        }
-    };
-    
+        };
+
     recipe.recipe_details.recipe.name = format!("{} (copy)", recipe.recipe_details.recipe.name);
 
     templates::recipes::add_recipe_manual(
@@ -398,6 +401,60 @@ pub async fn edit_recipe_put_handler(
             .insert(axum_htmx::headers::HX_REDIRECT, value);
     }
     res
+}
+
+#[derive(Deserialize)]
+pub struct YieldQueryParams {
+    #[serde(rename = "yield")]
+    pub yield_param: u16,
+}
+
+/// Handles scaling the recipe's yield.
+pub async fn scale_recipe_handler(
+    ctx_w: CtxW,
+    Path(recipe_id): Path<i64>,
+    Query(params): Query<YieldQueryParams>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let user_id = ctx_w.0.user_id();
+
+    if params.yield_param == 0 {
+        let toast = MessageHtmx::error("Yield must be greater than zero.");
+        if let Ok(json) = serde_json::to_string(&toast) {
+            state.broadcast(user_id, Message::Text(json.into())).await;
+        }
+        return Error::InvalidQuery.into_response();
+    }
+
+    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+        Ok(mut recipe) => {
+            let measurement_system =
+                units::MeasurementSystem::from_id(recipe.recipe.measurement_system_id)
+                    .unwrap_or_default();
+
+            let factor = params.yield_param as f64 / recipe.recipe.yield_ as f64;
+
+            for (_name, ingredients) in recipe.ingredients.iter_mut() {
+                *ingredients = measurement_system.scale(ingredients.clone(), factor);
+            }
+
+            recipe
+        }
+        Err(err) => {
+            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
+            let toast = MessageHtmx::error("Recipe not found.");
+            if let Ok(json) = serde_json::to_string(&toast) {
+                state.broadcast(user_id, Message::Text(json.into())).await;
+            }
+            return Error::Model(EntityNotFound {
+                id: recipe_id,
+                entity: "recipe",
+            })
+            .into_response();
+        }
+    };
+
+    templates::recipes::ingredients_instructions(&recipe).into_response()
 }
 
 /// Handles generating a link for the recipe to share.
@@ -671,6 +728,9 @@ pub async fn add_manual_recipe_post_handler(
         videos
     };
 
+    let ingredients = form.ingredients;
+    let measurement_system_id = units::MeasurementSystem::from(ingredients.clone()).id();
+
     let recipe_id = match Recipe::create(
         &state.mm,
         user_id,
@@ -678,12 +738,13 @@ pub async fn add_manual_recipe_post_handler(
             name: form.title,
             description: form.description,
             images,
+            measurement_system_id,
             yield_: form.yield_,
             source: form.source,
             videos,
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: Sections::from([("".into(), form.ingredients)]),
+            ingredients: Sections::from([("".into(), ingredients)]),
             instructions: Sections::from([("".into(), form.instructions)]),
             keywords: form.keywords,
             nutrition: form.nutrition,

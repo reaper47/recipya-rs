@@ -2234,7 +2234,8 @@ fn view_recipe_nutrition(recipe_details: &RecipeDetails) -> Markup {
     }
 }
 
-fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
+/// Renders the ingredient and the instruction lists.
+pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
     html! {
         div #ingredients-instructions-container class="grid text-sm md:grid-flow-col md:col-span-6" {
             div class="col-span-6 border-gray-700 px-4 py-2 border-y md:col-span-2 md:border-r md:border-y-0 print:hidden" {

@@ -12,10 +12,10 @@ use nom::{IResult, Parser};
 use recipe_schema::{AtType, RecipeCategory, RecipeSchema, Sections};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
+use crate::Result;
 use crate::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
 };
-use crate::Result;
 
 struct KalorioTextRecipe {
     title: String,

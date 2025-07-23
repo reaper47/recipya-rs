@@ -21,7 +21,6 @@ derive_more = { workspace = true }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 email = { workspace = true }
-lru = "0.14.0"
 models = { workspace = true }
 recipe-schema = { workspace = true }
 recipya-scraper = { workspace = true }

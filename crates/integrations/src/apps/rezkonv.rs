@@ -18,12 +18,12 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
+use crate::Result;
 use crate::apps::helpers::{Ingredient, Instruction, ToSections, read_file};
 use crate::helpers::{
     sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
     to_yield,
 };
-use crate::Result;
 
 struct RecipeComponents<'a> {
     software_version: &'a str,

@@ -183,12 +183,12 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
+    use self::test_utils::a_complete_recipe_for_create;
+    use super::*;
+
     use app::state::AppState;
     use recipe_schema::Sections;
     use testing::utils::{TestDb, build_server_logged_in, create_app_state, insert_user};
-
-    use self::test_utils::a_complete_recipe_for_create;
-    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -284,6 +284,7 @@ mod tests {
                 ),
             ]),
             keywords: vec![],
+            measurement_system_id: 1,
             nutrition: None,
             times: None,
             tools: vec![],
@@ -331,6 +332,7 @@ mod tests {
                 yield_: recipe.yield_.unwrap_or(4),
                 language: "eng".into(),
                 source: recipe.source,
+                measurement_system_id: 1,
                 user_id: 1,
                 created_at: got.recipe.created_at,
                 updated_at: got.recipe.updated_at,

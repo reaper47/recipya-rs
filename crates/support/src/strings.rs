@@ -42,29 +42,29 @@ pub fn normalise_vulgar_fractions(input: &str) -> String {
 
     for c in input.chars() {
         match c {
-            '½' => result.push_str("1/2"),
-            '⅓' => result.push_str("1/3"),
-            '⅔' => result.push_str("2/3"),
-            '¼' => result.push_str("1/4"),
-            '¾' => result.push_str("3/4"),
-            '⅕' => result.push_str("1/5"),
-            '⅖' => result.push_str("2/5"),
-            '⅗' => result.push_str("3/5"),
-            '⅘' => result.push_str("4/5"),
-            '⅙' => result.push_str("1/6"),
-            '⅚' => result.push_str("5/6"),
-            '⅐' => result.push_str("1/7"),
-            '⅛' => result.push_str("1/8"),
-            '⅜' => result.push_str("3/8"),
-            '⅝' => result.push_str("5/8"),
-            '⅞' => result.push_str("7/8"),
-            '⅑' => result.push_str("1/9"),
-            '⅒' => result.push_str("1/10"),
+            '½' => result.push_str(" 1/2"),
+            '⅓' => result.push_str(" 1/3"),
+            '⅔' => result.push_str(" 2/3"),
+            '¼' => result.push_str(" 1/4"),
+            '¾' => result.push_str(" 3/4"),
+            '⅕' => result.push_str(" 1/5"),
+            '⅖' => result.push_str(" 2/5"),
+            '⅗' => result.push_str(" 3/5"),
+            '⅘' => result.push_str(" 4/5"),
+            '⅙' => result.push_str(" 1/6"),
+            '⅚' => result.push_str(" 5/6"),
+            '⅐' => result.push_str(" 1/7"),
+            '⅛' => result.push_str(" 1/8"),
+            '⅜' => result.push_str(" 3/8"),
+            '⅝' => result.push_str(" 5/8"),
+            '⅞' => result.push_str(" 7/8"),
+            '⅑' => result.push_str(" 1/9"),
+            '⅒' => result.push_str(" 1/10"),
             _ => result.push(c),
         }
     }
 
-    result
+    result.trim().replace("  ", " ")
 }
 
 /// Result type for errors related to strings.

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" dialect="PostgreSQL" />
-  </component>
-</project>

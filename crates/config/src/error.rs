@@ -1,7 +1,5 @@
 use derive_more::derive::From;
 
-use support::impl_display_as_debug;
-
 /// Result type for errors related to the app's configuration.
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -18,6 +16,10 @@ pub enum Error {
     Io(std::io::Error),
 }
 
-impl_display_as_debug!(Error);
+impl core::fmt::Display for Error {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
+        write!(fmt, "{self:?}")
+    }
+}
 
 impl std::error::Error for Error {}

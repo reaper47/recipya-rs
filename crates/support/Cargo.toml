@@ -22,7 +22,7 @@ encoding_rs = "0.8.35"
 futures-util = { workspace = true }
 image = "0.25.6"
 nom = { workspace = true }
-regex = "1.11.1"
+regex = { workspace = true }
 time = { workspace = true, features = ["formatting", "parsing"] }
 tokio = { workspace = true }
 tracing = { workspace = true }

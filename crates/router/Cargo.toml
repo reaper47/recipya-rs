@@ -25,6 +25,7 @@ futures-util = { workspace = true }
 humantime = { workspace = true }
 integrations = { workspace = true }
 mime_guess = "2.0.5"
+math = { workspace = true }
 models = { workspace = true, features = ["test-utils"] }
 recipe-schema = { workspace = true }
 recipya-scraper = { workspace = true }
