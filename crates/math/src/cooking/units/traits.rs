@@ -1,8 +1,8 @@
+use crate::Result;
 use crate::cooking::units::{Unit, UnitType};
 
-use crate::Result;
-
 pub trait UnitOperations {
+    fn abbrev<'a>(&self) -> &'a str;
     fn unit_type(&self) -> UnitType;
     fn value(&self) -> f64;
     fn with_value(&self, value: f64) -> Self;

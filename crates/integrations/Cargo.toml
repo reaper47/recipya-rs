@@ -27,7 +27,7 @@ recipemd = "0.2.0"
 serde = { workspace = true }
 serde-xml-rs = "0.8.1"
 serde_json = { workspace = true }
-strum = "0.27.1"
+strum = "0.27.2"
 strum_macros = { workspace = true }
 support = { workspace = true }
 tracing = { workspace = true }

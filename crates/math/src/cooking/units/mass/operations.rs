@@ -3,6 +3,20 @@ use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Mass {
+    fn abbrev<'a>(&self) -> &'a str {
+        use Mass::*;
+
+        match self {
+            Milligram(_) => "mg",
+            Gram(_) => "g",
+            Dekagram(_) => "dag",
+            Hectogram(_) => "hg",
+            Kilogram(_) => "kg",
+            Ounce(_) => "oz",
+            Pound(_) => "lb",
+        }
+    }
+
     fn unit_type(&self) -> UnitType {
         use MassUnit::*;
 
@@ -46,8 +60,6 @@ impl UnitOperations for Mass {
 mod tests {
     use super::*;
 
-    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
     fn create_mass_variants() -> Vec<Mass> {
         vec![
             Mass::Milligram(500.0),
@@ -60,7 +72,6 @@ mod tests {
         ]
     }
 
-    // Helper function to create all MassUnit variants
     fn create_mass_unit_variants() -> Vec<MassUnit> {
         vec![
             MassUnit::Milligram,
@@ -71,6 +82,30 @@ mod tests {
             MassUnit::Ounce,
             MassUnit::Pound,
         ]
+    }
+
+    #[test]
+    fn test_abbrev() {
+        use Mass::*;
+
+        let test_cases = vec![
+            (Milligram(1.0), "mg"),
+            (Gram(1.0), "g"),
+            (Dekagram(1.0), "dag"),
+            (Hectogram(1.0), "hg"),
+            (Kilogram(1.0), "kg"),
+            (Ounce(1.0), "oz"),
+            (Pound(1.0), "lb"),
+        ];
+
+        for (mass, expected) in test_cases {
+            assert_eq!(
+                mass.abbrev(),
+                expected,
+                "Failed for mass variant: {:?}",
+                mass
+            );
+        }
     }
 
     #[test]

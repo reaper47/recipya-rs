@@ -2,17 +2,25 @@ use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
 
+use crate::cooking::units::traits::UnitScaler;
 use crate::cooking::units::{Length, Mass, Temperature, Unit, Volume};
+use crate::{Error, Result};
 
-#[derive(Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub enum MeasurementSystem {
     ImperialUK,
+    #[default]
     Metric,
     MetricAustralia,
     UsCustomary,
 }
 
 impl MeasurementSystem {
+    /// Maps each measurement system to a numeric ID:
+    /// - Imperial UK => 1
+    /// - Metric => 2
+    /// - Metric (Australia) => 3
+    /// - US Customary => 4
     pub fn id(&self) -> i16 {
         match self {
             MeasurementSystem::ImperialUK => 1,
@@ -22,7 +30,101 @@ impl MeasurementSystem {
         }
     }
 
-    pub fn from_unit(unit: &Unit) -> Self {
+    /// Creates a MeasurementSystem from its numeric ID
+    pub fn from_id(id: i16) -> Result<Self> {
+        match id {
+            1 => Ok(MeasurementSystem::ImperialUK),
+            2 => Ok(MeasurementSystem::Metric),
+            3 => Ok(MeasurementSystem::MetricAustralia),
+            4 => Ok(MeasurementSystem::UsCustomary),
+            _ => Err(Error::InvalidMeasurementSystem(id)),
+        }
+    }
+
+    pub fn scale(&self, elements: Vec<String>, factor: f64) -> Vec<String> {
+        elements
+            .into_iter()
+            .map(|s| {
+                let Ok(unit) = Unit::from_str(&s) else {
+                    
+                    return s;
+                };
+
+                let Ok(unit) = match unit {
+                    Unit::Volume(u) => match u {
+                        Volume::MetricTeaspoon(v) => match self {
+                            MeasurementSystem::ImperialUK => {
+                                Unit::Volume(Volume::ImperialTeaspoon(v))
+                            }
+                            MeasurementSystem::Metric => Unit::Volume(Volume::MetricTeaspoon(v)),
+                            MeasurementSystem::MetricAustralia => {
+                                Unit::Volume(Volume::AustralianTeaspoon(v))
+                            }
+                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USTeaspoon(v)),
+                        },
+                        Volume::MetricTablespoon(v) => match self {
+                            MeasurementSystem::ImperialUK => {
+                                Unit::Volume(Volume::ImperialTablespoon(v))
+                            }
+                            MeasurementSystem::Metric => Unit::Volume(Volume::MetricTablespoon(v)),
+                            MeasurementSystem::MetricAustralia => {
+                                Unit::Volume(Volume::AustralianTablespoon(v))
+                            }
+                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USTablespoon(v)),
+                        },
+                        Volume::MetricDessertspoon(v) => match self {
+                            MeasurementSystem::ImperialUK => {
+                                Unit::Volume(Volume::ImperialDessertspoon(v))
+                            }
+                            MeasurementSystem::Metric => {
+                                Unit::Volume(Volume::MetricDessertspoon(v))
+                            }
+                            MeasurementSystem::MetricAustralia => {
+                                Unit::Volume(Volume::AustralianDessertspoon(v))
+                            }
+                            MeasurementSystem::UsCustomary => {
+                                Unit::Volume(Volume::ImperialDessertspoon(v))
+                            }
+                        },
+                        Volume::MetricCup(v) => match self {
+                            MeasurementSystem::ImperialUK => Unit::Volume(Volume::ImperialCup(v)),
+                            MeasurementSystem::Metric => Unit::Volume(Volume::MetricCup(v)),
+                            MeasurementSystem::MetricAustralia => {
+                                Unit::Volume(Volume::AustralianCup(v))
+                            }
+                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USCup(v)),
+                        },
+                        Volume::ImperialFluidOunce(v) => match self {
+                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USFluidOunce(v)),
+                            _ => Unit::Volume(Volume::ImperialFluidOunce(v)),
+                        },
+                        Volume::ImperialPint(v) => match self {
+                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USPint(v)),
+                            _ => Unit::Volume(Volume::ImperialPint(v)),
+                        },
+                        Volume::ImperialQuart(v) => match self {
+                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USQuart(v)),
+                            _ => Unit::Volume(Volume::ImperialQuart(v)),
+                        },
+                        Volume::ImperialGallon(v) => match self {
+                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USGallon(v)),
+                            _ => Unit::Volume(Volume::ImperialGallon(v)),
+                        },
+                        _ => Unit::Volume(u),
+                    },
+                    _ => unit,
+                }
+                .scale(factor) else {
+                    return s;
+                };
+
+                unit.replace(s)
+            })
+            .collect()
+    }
+
+    /// Determines the measurement system from the unit.
+    fn from_unit(unit: &Unit) -> Self {
         match unit {
             Unit::Length(v) => match v {
                 Length::Millimetre(_) => MeasurementSystem::Metric,

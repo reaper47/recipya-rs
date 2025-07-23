@@ -39,37 +39,37 @@ async fn main() -> Result<()> {
     dotenv().ok();
     init_tracing()?;
 
-    info!(
-        "Recipya v{} starting in {} mode",
-        env!("CARGO_PKG_VERSION"),
-        if cfg!(debug_assertions) {
-            "debug"
-        } else {
-            "release"
-        }
-    );
-
-    create_database_if_not_exists("recipya")?;
-    copy_assets_to_fs()?;
-
-    if software::is_ffmpeg_installed() {
-        info!("FFmpeg is installed");
-    } else {
-        let mut message = String::from("FFmpeg is not installed. ");
-
-        if cfg!(target_os = "macos") {
-            message.push_str("Please execute: brew install ffmpeg");
-        } else if cfg!(target_os = "linux") {
-            message.push_str("Please consult your package manager to install it.");
-        } else if cfg!(target_os = "windows") {
-            message.push_str("Please install from https://www.gyan.dev/ffmpeg/builds");
-        }
-
-        warn!("{message}");
-    }
-
     match Cli::parse().command {
         Commands::Server => {
+            info!(
+                "Recipya v{} starting in {} mode",
+                env!("CARGO_PKG_VERSION"),
+                if cfg!(debug_assertions) {
+                    "debug"
+                } else {
+                    "release"
+                }
+            );
+
+            create_database_if_not_exists("recipya")?;
+            copy_assets_to_fs()?;
+
+            if software::is_ffmpeg_installed() {
+                info!("FFmpeg is installed");
+            } else {
+                let mut message = String::from("FFmpeg is not installed. ");
+
+                if cfg!(target_os = "macos") {
+                    message.push_str("Please execute: brew install ffmpeg");
+                } else if cfg!(target_os = "linux") {
+                    message.push_str("Please consult your package manager to install it.");
+                } else if cfg!(target_os = "windows") {
+                    message.push_str("Please install from https://www.gyan.dev/ffmpeg/builds");
+                }
+
+                warn!("{message}");
+            }
+
             server().await?;
         }
         Commands::Sponsors => {

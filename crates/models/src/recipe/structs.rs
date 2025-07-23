@@ -714,7 +714,7 @@ pub(super) struct VideoForInsert {
     pub embed_url: Option<String>,
 }
 
-#[cfg(any(test, feature = "test-utils"))]
+#[cfg(feature = "test-utils")]
 pub mod test_utils {
     use crate::recipe::{
         Nutrition, NutritionForCreate, RecipeForCreate, Times, TimesForCreate, ToolForCreate,

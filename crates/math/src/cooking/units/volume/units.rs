@@ -89,6 +89,13 @@ pub enum VolumeUnit {
 
 static VOLUME_REGEX: OnceLock<Regex> = OnceLock::new();
 
+pub fn get_regex<'a>() -> &'a Regex {
+    VOLUME_REGEX.get_or_init(|| {
+        Regex::new(r"(?i)(\d(?:\s?[\d.]*/?\d+)?)\s?(fl(?:uid)?\.?\s?o(?:z\.?|unce)?|[a-z]+\b)")
+            .unwrap()
+    })
+}
+
 impl FromStr for Volume {
     type Err = Error;
 
@@ -97,12 +104,8 @@ impl FromStr for Volume {
             return Err(Error::NotDetected);
         }
 
-        let re = VOLUME_REGEX.get_or_init(|| {
-            Regex::new(r"(?i)(\d(?:\s?[\d.]/?\d+)?)\s?(fl(?:uid)?\.?\s?o(?:z\.?|unce)?|[a-z]+\b)")
-                .unwrap()
-        });
-
-        re.captures(s)
+        get_regex()
+            .captures(s)
             .and_then(|caps| {
                 let value = caps.get(1)?.as_str();
 
@@ -323,6 +326,7 @@ mod tests {
 
         #[test]
         fn test_imperial_tablespoon() {
+            assert_text("1/2 tbsp cinnamon", Volume::MetricTablespoon(0.5));
             assert_text("2 tbsp of rose water", Volume::MetricTablespoon(2.0));
             assert_text("1.75 tbsp of rose water", Volume::MetricTablespoon(1.75));
             assert_text("1.75tbs of rose water", Volume::MetricTablespoon(1.75));

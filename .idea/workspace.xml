@@ -59,8 +59,45 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/config/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/config/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/config/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/config/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/traits.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/traits.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/recipya-cli/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-cli/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/recipya-cli/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-cli/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/testing/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/testing/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/testing/src/testing.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/sponsors/out/.cache.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/sponsors/out/sponsors.svg" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/out/sponsors.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/sponsors/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/sponsors/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/sponsors/sponsorkit.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/sponsors/sponsorkit.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/sponsors/sponsorkit/.cache.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -139,6 +176,8 @@
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
     "Cargo.Test cooking::converter::tests::test_convert_mass::test_dekagram_conversions.executor": "Run",
+    "Cargo.Test cooking::units::length::operations::tests::test_abbrev.executor": "Run",
+    "Cargo.Test cooking::units::length::scale::tests::test_replace.executor": "Run",
     "Cargo.Test cooking::units::length::tests::test_zero_values.executor": "Run",
     "Cargo.Test cooking::units::length::tests::tests_conversion::test_centimeter_conversions.executor": "Debug",
     "Cargo.Test cooking::units::length::tests::tests_conversion::test_millimeter_conversions.executor": "Run",
@@ -154,6 +193,8 @@
     "Cargo.Test cooking::units::length::units::tests::tests_from_str::test_inch.executor": "Debug",
     "Cargo.Test cooking::units::length::units::tests::tests_from_str::test_metre.executor": "Run",
     "Cargo.Test cooking::units::length::units::tests::tests_from_str::test_millimetre.executor": "Run",
+    "Cargo.Test cooking::units::length::units::tests::tests_replace::test_replace.executor": "Run",
+    "Cargo.Test cooking::units::mass::operations::tests::test_abbrev.executor": "Run",
     "Cargo.Test cooking::units::mass::tests::tests_scale::test_g_to_mg.executor": "Debug",
     "Cargo.Test cooking::units::mass::units::tests::tests_from_str::test_dekagram.executor": "Run",
     "Cargo.Test cooking::units::mass::units::tests::tests_from_str::test_gram.executor": "Run",
@@ -171,10 +212,18 @@
     "Cargo.Test cooking::units::system::tests::tests_from_unit::test_temperature.executor": "Run",
     "Cargo.Test cooking::units::system::tests::tests_from_unit::test_us_customary.executor": "Run",
     "Cargo.Test cooking::units::system::tests::tests_id.executor": "Run",
+    "Cargo.Test cooking::units::temperature::operations::tests::test_abbrev.executor": "Run",
     "Cargo.Test cooking::units::temperature::tests::tests_scale::test_celsius.executor": "Debug",
     "Cargo.Test cooking::units::temperature::unit::tests::tests_from_str::test_celsius.executor": "Run",
     "Cargo.Test cooking::units::temperature::unit::tests::tests_from_str::test_celsius_and_fahrenheit_invalid.executor": "Run",
     "Cargo.Test cooking::units::temperature::unit::tests::tests_from_str::test_fahrenheit.executor": "Run",
+    "Cargo.Test cooking::units::unit::tests::tests_display::test_fractions.executor": "Run",
+    "Cargo.Test cooking::units::unit::tests::tests_display::test_volume.executor": "Run",
+    "Cargo.Test cooking::units::unit::tests::tests_replace::test_fractions.executor": "Run",
+    "Cargo.Test cooking::units::unit::tests::tests_replace::test_length.executor": "Run",
+    "Cargo.Test cooking::units::unit::tests::tests_replace::test_mass.executor": "Run",
+    "Cargo.Test cooking::units::unit::tests::tests_replace::test_temperature.executor": "Run",
+    "Cargo.Test cooking::units::unit::tests::tests_replace::test_volume.executor": "Run",
     "Cargo.Test cooking::units::volume::conversion::tests::test_australian_cup_conversions.executor": "Run",
     "Cargo.Test cooking::units::volume::conversion::tests::test_australian_dsp_conversions.executor": "Run",
     "Cargo.Test cooking::units::volume::conversion::tests::test_australian_tbsp_conversions.executor": "Run",
@@ -204,6 +253,7 @@
     "Cargo.Test cooking::units::volume::conversion::tests::test_us_quart_conversions.executor": "Run",
     "Cargo.Test cooking::units::volume::conversion::tests::test_us_tablespoon_conversions.executor": "Run",
     "Cargo.Test cooking::units::volume::conversion::tests::test_us_teaspoon_conversions.executor": "Run",
+    "Cargo.Test cooking::units::volume::operations::tests::test_abbrev.executor": "Run",
     "Cargo.Test cooking::units::volume::scale::tests::test_jigger.executor": "Run",
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_dessert_spoon_conversions.executor": "Debug",
     "Cargo.Test cooking::units::volume::tests::tests_conversions::test_imperial_fluid_ounce_conversions.executor": "Run",
@@ -255,6 +305,7 @@
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_imperial_fluid_ounce.executor": "Run",
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_imperial_gill.executor": "Run",
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_imperial_pint.executor": "Run",
+    "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_imperial_tablespoon.executor": "Run",
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_jigger.executor": "Debug",
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_litre.executor": "Run",
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_metric_cup.executor": "Run",
@@ -351,6 +402,12 @@
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok.executor": "Debug",
     "Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files.executor": "Debug",
+    "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_cannot_find_recipe_in_database.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_must_be_logged_in.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_query_param_must_be_greater_than_0.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_query_param_must_not_be_negative.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield.executor": "Debug",
+    "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_yield_query_param_must_be_specified.executor": "Run",
     "Cargo.Test report::tests.executor": "Run",
     "Cargo.Test scale::tests.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_cannot_update_if_autologin_ok.executor": "Run",
@@ -520,6 +577,7 @@
     "Cargo.Test tests_conversions.executor": "Run",
     "Cargo.Test tests_delete_recipe_category.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
+    "Cargo.Test tests_display.executor": "Run",
     "Cargo.Test tests_edit.executor": "Run",
     "Cargo.Test tests_extract_number.executor": "Run",
     "Cargo.Test tests_forgot_password.executor": "Run",
@@ -537,9 +595,11 @@
     "Cargo.Test tests_recipes.executor": "Run",
     "Cargo.Test tests_recipes_add_import.executor": "Run",
     "Cargo.Test tests_register.executor": "Run",
+    "Cargo.Test tests_replace.executor": "Run",
     "Cargo.Test tests_scale (1).executor": "Run",
     "Cargo.Test tests_scale (2).executor": "Run",
     "Cargo.Test tests_scale.executor": "Run",
+    "Cargo.Test tests_scale_recipe.executor": "Run",
     "Cargo.Test tests_searchbar.executor": "Run",
     "Cargo.Test tests_share_recipe.executor": "Run",
     "Cargo.Test tests_supported_websites.executor": "Run",
@@ -558,7 +618,7 @@
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
     "git-widget-placeholder": "#145 on 35-implement-get-recipesidscale",
-    "last_opened_file_path": "/home/macpoule/Documents/Levio/projects/local-cluster/customer-case",
+    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -569,7 +629,7 @@
     "org.rust.first.attach.projects": "true",
     "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/javascript-plugin/jsLanguageServicesImpl/external"
+    "ts.external.directory.path": "/home/macpoule/.local/share/JetBrains/Toolbox/apps/rustrover-2/plugins/javascript-plugin/jsLanguageServicesImpl/external"
   },
   "keyToStringList": {
     "DatabaseDriversLRU": [
@@ -582,25 +642,25 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/crates/shit" />
+      <recent name="$PROJECT_DIR$/crates/support/src" />
       <recent name="$PROJECT_DIR$/crates/app/cofig" />
       <recent name="$PROJECT_DIR$/crates/foundation/config/src" />
       <recent name="$PROJECT_DIR$/crates/foundation/src/macros" />
-      <recent name="$PROJECT_DIR$/crates/router" />
-      <recent name="$PROJECT_DIR$/crates/app/src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/crates/testing" />
       <recent name="$PROJECT_DIR$/crates/math/src/cooking/units" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/crates/app/src" />
       <recent name="$PROJECT_DIR$/crates" />
-      <recent name="$PROJECT_DIR$/crates/models/src" />
     </key>
   </component>
   <component name="RsExternalLinterProjectSettings">
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -619,8 +679,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cooking::units::system::tests::tests_from_str_vec::test_imperial_uk" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::system::tests::tests_from_str_vec::test_imperial_uk -- --exact" />
+    <configuration name="Test cooking::units::volume::units::tests::tests_from_str::test_imperial_tablespoon" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::volume::units::tests::tests_from_str::test_imperial_tablespoon -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -636,8 +696,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cooking::units::system::tests::tests_from_str_vec::test_us_customary" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::system::tests::tests_from_str_vec::test_us_customary -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_scale_recipe::test_valid_double_yield -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -653,8 +713,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::delete::tests::tests_delete::test_delete_recipe_found_ok -- --exact" />
+    <configuration name="Test tests_replace" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::unit::tests::tests_replace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -670,8 +730,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test share::tests::tests_fetch_by_link::test_exists_err" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib share::tests::tests_fetch_by_link::test_exists_err -- --exact" />
+    <configuration name="Test tests_scale_recipe" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_scale_recipe" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -687,8 +747,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_from_str_vec" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::system::tests::tests_from_str_vec" />
+    <configuration name="Test unit::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::unit::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -706,19 +766,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok" />
-      <item itemvalue="Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_imperial_uk" />
-      <item itemvalue="Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_us_customary" />
-      <item itemvalue="Cargo.Test share::tests::tests_fetch_by_link::test_exists_err" />
-      <item itemvalue="Cargo.Test tests_from_str_vec" />
+      <item itemvalue="Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_imperial_tablespoon" />
+      <item itemvalue="Cargo.Test tests_replace" />
+      <item itemvalue="Cargo.Test tests_scale_recipe" />
+      <item itemvalue="Cargo.Test unit::tests" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok" />
-        <item itemvalue="Cargo.Test share::tests::tests_fetch_by_link::test_exists_err" />
-        <item itemvalue="Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_us_customary" />
-        <item itemvalue="Cargo.Test tests_from_str_vec" />
-        <item itemvalue="Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_imperial_uk" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
+        <item itemvalue="Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_imperial_tablespoon" />
+        <item itemvalue="Cargo.Test tests_scale_recipe" />
+        <item itemvalue="Cargo.Test unit::tests" />
+        <item itemvalue="Cargo.Test tests_replace" />
       </list>
     </recent_temporary>
   </component>
@@ -756,11 +816,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/crates/math/src/cooking/units/system.rs</url>
-          <line>105</line>
-          <option name="timeStamp" value="9" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/crates/models/src/recipe/delete.rs</url>
           <line>111</line>

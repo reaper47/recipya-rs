@@ -27,6 +27,10 @@ pub enum MassUnit {
 
 static MASS_REGEX: OnceLock<Regex> = OnceLock::new();
 
+pub fn get_regex<'a>() -> &'a Regex {
+    MASS_REGEX.get_or_init(|| Regex::new(r"(?i)(\d(?:\s?[\d.]/?\d+)?)\s?([a-zμ]+)\b").unwrap())
+}
+
 impl FromStr for Mass {
     type Err = Error;
 
@@ -35,10 +39,8 @@ impl FromStr for Mass {
             return Err(Error::NotDetected);
         }
 
-        let re = MASS_REGEX
-            .get_or_init(|| Regex::new(r"(?i)(\d(?:\s?[\d.]/?\d+)?)\s?([a-zμ]+)\b").unwrap());
-
-        re.captures(s)
+        get_regex()
+            .captures(s)
             .and_then(|caps| {
                 let value = caps.get(1)?.as_str();
 

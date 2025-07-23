@@ -3,6 +3,32 @@ use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Volume {
+    fn abbrev<'a>(&self) -> &'a str {
+        use Volume::*;
+
+        match self {
+            Millilitre(_) => "ml",
+            Centilitre(_) => "cl",
+            Decilitre(_) => "dl",
+            Litre(_) => "l",
+            MetricTeaspoon(_) | AustralianTeaspoon(_) | ImperialTeaspoon(_) | USTeaspoon(_) => {
+                "tsp"
+            }
+            MetricTablespoon(_)
+            | AustralianTablespoon(_)
+            | ImperialTablespoon(_)
+            | USTablespoon(_) => "tbsp",
+            MetricDessertspoon(_) | AustralianDessertspoon(_) | ImperialDessertspoon(_) => "dsp",
+            MetricCup(_) | AustralianCup(_) | ImperialCup(_) | USCup(_) => "cup",
+            ImperialFluidOunce(_) | USFluidOunce(_) => "fl oz",
+            ImperialGill(_) => "gill",
+            ImperialPint(_) | USPint(_) => "pt",
+            ImperialQuart(_) | USQuart(_) => "qt",
+            ImperialGallon(_) | USGallon(_) => "gal",
+            Jigger(_) => "jig",
+        }
+    }
+
     fn unit_type(&self) -> UnitType {
         use VolumeUnit::*;
 
@@ -111,20 +137,6 @@ impl UnitOperations for Volume {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cooking::units::Unit;
-
-    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
-    fn assert_approx_eq(actual: Unit, expected: Unit, threshold: f64) {
-        let actual_value = actual.value();
-        let expected_value = expected.value();
-
-        assert!(
-            (actual_value - expected_value).abs() < threshold,
-            "Expected {actual:?}, got {expected:?}, difference: {}",
-            (actual_value - expected_value).abs()
-        );
-    }
 
     fn create_test_volumes() -> Vec<Volume> {
         vec![
@@ -197,6 +209,52 @@ mod tests {
             Volume::USGallon(value),
             Volume::Jigger(value),
         ]
+    }
+
+    #[test]
+    fn test_abbrev() {
+        use Volume::*;
+
+        let test_cases = vec![
+            (Millilitre(1.0), "ml"),
+            (Centilitre(1.0), "cl"),
+            (Decilitre(1.0), "dl"),
+            (Litre(1.0), "l"),
+            (MetricTeaspoon(1.0), "tsp"),
+            (AustralianTeaspoon(1.0), "tsp"),
+            (ImperialTeaspoon(1.0), "tsp"),
+            (USTeaspoon(1.0), "tsp"),
+            (MetricTablespoon(1.0), "tbsp"),
+            (AustralianTablespoon(1.0), "tbsp"),
+            (ImperialTablespoon(1.0), "tbsp"),
+            (USTablespoon(1.0), "tbsp"),
+            (MetricDessertspoon(1.0), "dsp"),
+            (AustralianDessertspoon(1.0), "dsp"),
+            (ImperialDessertspoon(1.0), "dsp"),
+            (MetricCup(1.0), "cup"),
+            (AustralianCup(1.0), "cup"),
+            (ImperialCup(1.0), "cup"),
+            (USCup(1.0), "cup"),
+            (ImperialFluidOunce(1.0), "fl oz"),
+            (USFluidOunce(1.0), "fl oz"),
+            (ImperialGill(1.0), "gill"),
+            (ImperialPint(1.0), "pt"),
+            (USPint(1.0), "pt"),
+            (ImperialQuart(1.0), "qt"),
+            (USQuart(1.0), "qt"),
+            (ImperialGallon(1.0), "gal"),
+            (USGallon(1.0), "gal"),
+            (Jigger(1.0), "jig"),
+        ];
+
+        for (volume, expected) in test_cases {
+            assert_eq!(
+                volume.abbrev(),
+                expected,
+                "Failed for volume variant: {:?}",
+                volume
+            );
+        }
     }
 
     #[test]

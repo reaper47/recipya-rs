@@ -15,8 +15,9 @@ use crate::handlers::recipes::{
     add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipe_import_handler,
     add_recipes_handler, add_website_post_handler, delete_recipe_categories_handler,
     delete_recipe_handler, duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
-    post_recipe_categories_handler, recipes_handler, share_recipe_post_handler,
-    supported_applications_handler, supported_websites_handler, view_recipe_handler,
+    post_recipe_categories_handler, recipes_handler, scale_recipe_handler,
+    share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
+    view_recipe_handler,
 };
 use crate::middleware::mw_auth;
 use crate::{AppState, Result as ServerResult};
@@ -134,6 +135,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
                 .put(edit_recipe_put_handler)
                 .layer(DefaultBodyLimit::max(1024 * 512)),
         )
+        .route("/{:recipe_id}/scale", get(scale_recipe_handler))
         .route("/{:recipe_id}/share", post(share_recipe_post_handler))
         .route("/add", get(add_recipes_handler))
         .route(
@@ -169,7 +171,10 @@ mod tests {
 
     use config::Config;
     use models::recipe::RecipeForCreate;
-    use testing::utils::{TestDb, assert_must_be_logged_in, build_server_logged_in};
+    use testing::utils::{
+        TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
+        build_server_ws, create_app_state,
+    };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -606,7 +611,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let got = Recipe::get(&state.mm, 1, 1).await?;
             let mut expected = recipe_for_create_to_details(recipe, &got);
-            expected.ingredients = got.ingredients.clone(); // TODO: Fix once sections are implemented.
+            expected.ingredients = got.ingredients.clone();
             expected.instructions = got.instructions.clone();
             pretty_assertions::assert_eq!(got, expected);
             Ok(())
@@ -784,9 +789,171 @@ mod tests {
         }
     }
 
+    mod tests_scale_recipe {
+        use super::*;
+        use axum_test::{TestServer, TestWebSocket};
+        use models::Recipe;
+        use models::recipe::test_utils::a_complete_recipe_for_create;
+        use recipe_schema::Sections;
+
+        fn base_uri(recipe_id: i64) -> String {
+            format!("/recipes/{recipe_id}/scale")
+        }
+
+        async fn setup(config: Config) -> Result<(TestServer, TestWebSocket)> {
+            let (server, ws_server) = build_server_ws(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+            Ok((server, ws_server))
+        }
+
+        #[tokio::test]
+        async fn test_must_be_logged_in() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, &base_uri(1)).await
+        }
+
+        #[tokio::test]
+        async fn test_yield_query_param_must_be_specified() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, _ws_server) = setup(config).await?;
+
+            let res = server.get(&base_uri(1)).await;
+
+            res.assert_status_bad_request();
+            res.assert_text("Failed to deserialize query string: missing field `yield`");
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_query_param_must_not_be_negative() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, _ws_server) = setup(config).await?;
+
+            let res = server.get(&format!("{}?yield=-1", base_uri(1))).await;
+
+            res.assert_status_bad_request();
+            res.assert_text(
+                "Failed to deserialize query string: yield: invalid digit found in string",
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_query_param_must_be_greater_than_0() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = setup(config).await?;
+
+            let res = server.get(&format!("{}?yield=0", base_uri(1))).await;
+
+            res.assert_status_bad_request();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Yield must be greater than zero.","status":"alert-error","title":"Operation Failed"}}"#).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_cannot_find_recipe_in_database() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = setup(config).await?;
+
+            let res = server.get(&format!("{}?yield=8", base_uri(999))).await;
+
+            res.assert_status_not_found();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"#).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_valid_double_yield() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, _ws_server) = setup(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let recipe_id = Recipe::create(
+                &state.mm,
+                1,
+                &RecipeForCreate {
+                    name: "Best Chinese Kale".into(),
+                    yield_: Some(4),
+                    ingredients: Sections::from([
+                        (
+                            "Sauce".into(),
+                            Vec::<String>::from([
+                                "1 cup blue spinach".into(),
+                                "1/2 tbsp cinnamon".into(),
+                                "2lb chicken".into(),
+                                "1/2 cup bread loaf".into(),
+                                "½ tbsp beef broth".into(),
+                                "7 1/2 cups flour".into(),
+                                "2 big apples".into(),
+                                "Lots of big apples".into(),
+                                "2.5 slices of bacon".into(),
+                                "2 1/3 cans of bamboo sticks".into(),
+                                "1½can of tomato paste".into(),
+                                "6 ¾ peanut butter jars".into(),
+                                "7.5mL of whiskey".into(),
+                                "2 tsp lemon juice".into(),
+                            ]),
+                        ),
+                        (
+                            "Main".into(),
+                            Vec::<String>::from([
+                                "Ground ginger".into(),
+                                "3 Large or 4 medium ripe Hass avocados".into(),
+                                "1/4-1/2 teaspoon salt plus more for seasoning".into(),
+                                "1/2 fresh pineapple, cored and cut into 1 1/2-inch pieces".into(),
+                                "Un sac de chips de 1kg".into(),
+                                "Two 15-ounce can Goya beans".into(),
+                                "4 pounds top quality chicken filet".into(),
+                                "1/8 cup lemon juice".into(),
+                            ]),
+                        ),
+                    ]),
+                    instructions: Sections::from([(
+                        "Sauce".into(),
+                        Vec::<String>::from(["Mix all these ingredients".into()]),
+                    )]),
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+            let res = server
+                .get(&format!("{}?yield=8", base_uri(recipe_id)))
+                .await;
+
+            res.assert_status_ok();
+            assert_html(
+                res.clone(),
+                vec![
+                    r#"<span class="pl-2">2 cup blue spinach</span>"#,
+                    r#"<span class="pl-2">1 tbsp cinnamon</span>"#,
+                    r#"<span class="pl-2">4 lb chicken</span>"#,
+                    r#"<span class="pl-2">1 cup bread loaf</span>"#,
+                    r#"<span class="pl-2">1 tbsp beef broth</span>"#,
+                    r#"<span class="pl-2">15 cup flour</span>"#,
+                    r#"<span class="pl-2">4 big apples</span>"#,
+                    r#"<span class="pl-2">Lots of big apples</span>"#,
+                    r#"<span class="pl-2">5 slices of bacon</span>"#,
+                    r#"<span class="pl-2">4 2/3 cans of bamboo sticks</span>"#,
+                    r#"<span class="pl-2">3can of tomato paste</span>"#,
+                    r#"<span class="pl-2">13 1/2 peanut butter jars</span>"#,
+                    r#"<span class="pl-2">1 1/2 cl of whiskey</span>"#,
+                    r#"<span class="pl-2">1 1/3 tbsp lemon juice</span>"#,
+                    r#"<span class="pl-2">Ground ginger</span>"#,
+                    r#"<span class="pl-2">6 Large or 8 medium ripe Hass avocados</span>"#,
+                    r#"<span class="pl-2">1/2-1 tsp salt plus more for seasoning</span>"#,
+                    r#"<span class="pl-2">1 fresh pineapple, cored and cut into 1 1/2-inch pieces</span>"#,
+                    r#"<span class="pl-2">Un sac de chips de 2 kg</span>"#,
+                    r#"<span class="pl-2">Two 15-ounce can Goya beans</span>"#,
+                    r#"<span class="pl-2">8 lb top quality chicken filet</span>"#,
+                    r#"<span class="pl-2">1/4 cup lemon juice</span>"#,
+                ],
+            );
+            Ok(())
+        }
+    }
+
     mod tests_share_recipe {
         use super::*;
-        use models::recipe::test_utils::a_complete_recipe_for_create;
 
         use diesel::internal::derives::multiconnection::chrono;
         use diesel::prelude::*;
@@ -795,9 +962,9 @@ mod tests {
         use crate::recipes_routes::ShareRecipeForm;
         use app::state::AppState;
         use models::Recipe;
+        use models::recipe::test_utils::a_complete_recipe_for_create;
         use models::share::ShareRecipe;
         use repository::schema;
-        use testing::utils::{assert_html, assert_must_be_logged_in, create_app_state};
 
         fn base_uri(recipe_id: i64) -> String {
             format!("/recipes/{recipe_id}/share")

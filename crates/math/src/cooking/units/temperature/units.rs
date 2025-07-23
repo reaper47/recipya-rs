@@ -19,6 +19,13 @@ pub enum TemperatureUnit {
 
 static TEMPERATURE_REGEX: OnceLock<Regex> = OnceLock::new();
 
+pub fn get_regex<'a>() -> &'a Regex {
+    TEMPERATURE_REGEX.get_or_init(|| {
+        Regex::new(r"(?i)([\d.]+)\s?(?:deg|degrees?|\u{00B0})?\s?(celsius|fahrenheit|[cf])\b")
+            .unwrap()
+    })
+}
+
 impl FromStr for Temperature {
     type Err = Error;
 
@@ -27,12 +34,8 @@ impl FromStr for Temperature {
             return Err(Error::NotDetected);
         }
 
-        let re = TEMPERATURE_REGEX.get_or_init(|| {
-            Regex::new(r"(?i)([\d.]+)\s?(?:deg|degrees?|\u{00B0})?\s?(celsius|fahrenheit|[cf])\b")
-                .expect("Temperature regex is invalid")
-        });
-
-        re.captures(s)
+        get_regex()
+            .captures(s)
             .and_then(|caps| {
                 let value = caps.get(1)?.as_str().parse::<f64>().ok()?;
                 let unit = caps.get(2)?.as_str().to_lowercase();

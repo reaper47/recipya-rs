@@ -1,8 +1,11 @@
-use crate::cooking::units::UnitType;
+use std::fmt;
+use std::fmt::Formatter;
+use std::str::FromStr;
+
 use crate::cooking::units::traits::{UnitConverter, UnitOperations, UnitScaler};
 use crate::cooking::units::{Length, Mass, Temperature, Volume};
+use crate::cooking::units::{UnitType, length, mass, temperature, volume};
 use crate::{Error, Result};
-use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Unit {
@@ -12,7 +15,30 @@ pub enum Unit {
     Volume(Volume),
 }
 
+impl Unit {
+    pub fn replace(&self, s: impl Into<String>) -> String {
+        let re = match self {
+            Unit::Length(_) => length::get_regex(),
+            Unit::Mass(_) => mass::get_regex(),
+            Unit::Temperature(_) => temperature::get_regex(),
+            Unit::Volume(_) => volume::get_regex(),
+        };
+
+        let s: String = s.into();
+        re.replace(&s, self.to_string()).to_string()
+    }
+}
+
 impl UnitOperations for Unit {
+    fn abbrev<'a>(&self) -> &'a str {
+        match self {
+            Unit::Length(u) => u.abbrev(),
+            Unit::Mass(u) => u.abbrev(),
+            Unit::Temperature(u) => u.abbrev(),
+            Unit::Volume(u) => u.abbrev(),
+        }
+    }
+
     fn unit_type(&self) -> UnitType {
         match self {
             Unit::Length(unit) => unit.unit_type(),
@@ -68,6 +94,58 @@ impl UnitScaler for Unit {
     }
 }
 
+impl fmt::Display for Unit {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let abbrev = self.abbrev();
+
+        write!(
+            f,
+            "{}{}",
+            format_fractional(self.value()),
+            match self {
+                Unit::Length(u) => match u {
+                    Length::Inch(_) | Length::Foot(_) => abbrev.to_string(),
+                    _ => format!(" {abbrev}"),
+                },
+                Unit::Temperature(_) => abbrev.to_string(),
+                Unit::Volume(_) | Unit::Mass(_) => format!(" {abbrev}"),
+            }
+        )
+    }
+}
+
+fn format_fractional(value: f64) -> String {
+    let whole = value.trunc();
+    let frac = value.fract();
+
+    let denominators = [2, 3, 4, 8, 16];
+    let mut best = None;
+    let mut best_error = f64::MAX;
+
+    for &den in denominators.iter() {
+        let num = (frac * den as f64).round();
+        let approx = num / den as f64;
+        let error = (frac - approx).abs();
+
+        if error < best_error {
+            best = Some((num as u32, den));
+            best_error = error;
+        }
+    }
+
+    match best {
+        Some((0, _)) => format!("{whole:.0}"),
+        Some((num, den)) => {
+            if whole == 0.0 {
+                format!("{num}/{den}")
+            } else {
+                format!("{whole:.0} {num}/{den}")
+            }
+        }
+        None => format!("{value:.2}"),
+    }
+}
+
 impl FromStr for Unit {
     type Err = Error;
 
@@ -89,6 +167,364 @@ impl FromStr for Unit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod tests_display {
+        use super::*;
+        use crate::cooking::units::Length::*;
+
+        #[test]
+        fn test_length() {
+            assert_eq!(Unit::Length(Millimetre(100.0)).to_string(), "100 mm");
+            assert_eq!(Unit::Length(Centimetre(50.0)).to_string(), "50 cm");
+            assert_eq!(Unit::Length(Metre(3.0)).to_string(), "3 m");
+            assert_eq!(Unit::Length(Kilometre(4.0)).to_string(), "4 km");
+            assert_eq!(Unit::Length(Inch(1.0)).to_string(), "1\"");
+            assert_eq!(Unit::Length(Foot(6.0)).to_string(), "6'");
+        }
+
+        #[test]
+        fn test_temperature() {
+            assert_eq!(
+                Unit::Temperature(Temperature::Celsius(25.0)).to_string(),
+                "25°C"
+            );
+            assert_eq!(
+                Unit::Temperature(Temperature::Fahrenheit(77.0)).to_string(),
+                "77°F"
+            );
+        }
+
+        #[test]
+        fn test_volume() {
+            assert_eq!(
+                Unit::Volume(Volume::Millilitre(250.0)).to_string(),
+                "250 ml"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::Centilitre(250.0)).to_string(),
+                "250 cl"
+            );
+            assert_eq!(Unit::Volume(Volume::Decilitre(250.0)).to_string(), "250 dl");
+            assert_eq!(Unit::Volume(Volume::Litre(1.0)).to_string(), "1 l");
+
+            assert_eq!(
+                Unit::Volume(Volume::MetricTeaspoon(1.0)).to_string(),
+                "1 tsp"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::AustralianTeaspoon(1.0)).to_string(),
+                "1 tsp"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::ImperialTeaspoon(1.0)).to_string(),
+                "1 tsp"
+            );
+            assert_eq!(Unit::Volume(Volume::USTeaspoon(1.0)).to_string(), "1 tsp");
+
+            assert_eq!(
+                Unit::Volume(Volume::MetricDessertspoon(1.0)).to_string(),
+                "1 dsp"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::AustralianDessertspoon(1.0)).to_string(),
+                "1 dsp"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::ImperialDessertspoon(1.0)).to_string(),
+                "1 dsp"
+            );
+
+            assert_eq!(
+                Unit::Volume(Volume::MetricTablespoon(1.0)).to_string(),
+                "1 tbsp"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::AustralianTablespoon(1.0)).to_string(),
+                "1 tbsp"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::ImperialTablespoon(1.0)).to_string(),
+                "1 tbsp"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::USTablespoon(1.0)).to_string(),
+                "1 tbsp"
+            );
+
+            assert_eq!(Unit::Volume(Volume::MetricCup(1.0)).to_string(), "1 cup");
+            assert_eq!(
+                Unit::Volume(Volume::AustralianCup(1.0)).to_string(),
+                "1 cup"
+            );
+            assert_eq!(Unit::Volume(Volume::ImperialCup(1.0)).to_string(), "1 cup");
+            assert_eq!(Unit::Volume(Volume::USCup(1.0)).to_string(), "1 cup");
+
+            assert_eq!(
+                Unit::Volume(Volume::ImperialFluidOunce(1.0)).to_string(),
+                "1 fl oz"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::USFluidOunce(1.0)).to_string(),
+                "1 fl oz"
+            );
+            assert_eq!(
+                Unit::Volume(Volume::ImperialGill(1.0)).to_string(),
+                "1 gill"
+            );
+            assert_eq!(Unit::Volume(Volume::ImperialPint(1.0)).to_string(), "1 pt");
+            assert_eq!(Unit::Volume(Volume::USPint(1.0)).to_string(), "1 pt");
+            assert_eq!(Unit::Volume(Volume::ImperialQuart(1.0)).to_string(), "1 qt");
+            assert_eq!(Unit::Volume(Volume::USQuart(1.0)).to_string(), "1 qt");
+            assert_eq!(
+                Unit::Volume(Volume::ImperialGallon(1.0)).to_string(),
+                "1 gal"
+            );
+            assert_eq!(Unit::Volume(Volume::USGallon(1.0)).to_string(), "1 gal");
+            assert_eq!(Unit::Volume(Volume::Jigger(1.0)).to_string(), "1 jig");
+        }
+
+        #[test]
+        fn test_mass_display() {
+            assert_eq!(Unit::Mass(Mass::Gram(500.0)).to_string(), "500 g");
+            assert_eq!(Unit::Mass(Mass::Kilogram(3.0)).to_string(), "3 kg");
+            assert_eq!(Unit::Mass(Mass::Pound(1.0)).to_string(), "1 lb");
+            assert_eq!(Unit::Mass(Mass::Ounce(8.0)).to_string(), "8 oz");
+            assert_eq!(Unit::Mass(Mass::Milligram(750.0)).to_string(), "750 mg");
+        }
+
+        #[test]
+        fn test_fractions() {
+            assert_eq!(Unit::Length(Millimetre(1.125)).to_string(), "1 1/8 mm");
+            assert_eq!(Unit::Length(Centimetre(1.25)).to_string(), "1 1/4 cm");
+            assert_eq!(Unit::Length(Metre(1.5)).to_string(), "1 1/2 m");
+            assert_eq!(Unit::Length(Kilometre(1.75)).to_string(), "1 3/4 km");
+        }
+    }
+
+    mod tests_replace {
+        use super::*;
+        use Length::*;
+        use Mass::*;
+        use Temperature::*;
+        use Volume::*;
+
+        fn assert_replace(s: &str, unit: Unit, expected: &str) {
+            let got = unit.replace(s);
+            assert_eq!(got, expected);
+        }
+
+        #[test]
+        fn test_length() {
+            let s = "1 mg of grandma's smoky bacon";
+            assert_replace(
+                s,
+                Unit::Length(Millimetre(1.0)),
+                "1 mm of grandma's smoky bacon",
+            );
+            assert_replace(
+                s,
+                Unit::Length(Centimetre(1.0)),
+                "1 cm of grandma's smoky bacon",
+            );
+            assert_replace(s, Unit::Length(Metre(1.0)), "1 m of grandma's smoky bacon");
+            assert_replace(
+                s,
+                Unit::Length(Kilometre(1.0)),
+                "1 km of grandma's smoky bacon",
+            );
+            assert_replace(s, Unit::Length(Inch(1.0)), "1\" of grandma's smoky bacon");
+            assert_replace(s, Unit::Length(Foot(1.0)), "1' of grandma's smoky bacon");
+        }
+
+        #[test]
+        fn test_mass() {
+            let s = "1 mg of grandma's clear water";
+            assert_replace(
+                s,
+                Unit::Mass(Milligram(2.0)),
+                "2 mg of grandma's clear water",
+            );
+            assert_replace(s, Unit::Mass(Gram(1.0)), "1 g of grandma's clear water");
+            assert_replace(
+                s,
+                Unit::Mass(Dekagram(1.0)),
+                "1 dag of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Mass(Hectogram(1.0)),
+                "1 hg of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Mass(Kilogram(1.0)),
+                "1 kg of grandma's clear water",
+            );
+            assert_replace(s, Unit::Mass(Ounce(1.0)), "1 oz of grandma's clear water");
+            assert_replace(s, Unit::Mass(Pound(1.0)), "1 lb of grandma's clear water");
+        }
+
+        #[test]
+        fn test_temperature() {
+            let s = "Heat the oven to 100 degrees celsius";
+            assert_replace(
+                s,
+                Unit::Temperature(Celsius(150.0)),
+                "Heat the oven to 150°C",
+            );
+            assert_replace(
+                s,
+                Unit::Temperature(Fahrenheit(352.0)),
+                "Heat the oven to 352°F",
+            );
+        }
+
+        #[test]
+        fn test_volume() {
+            let s = "1 mg of grandma's clear water";
+            assert_replace(
+                s,
+                Unit::Volume(Millilitre(1.0)),
+                "1 ml of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(Centilitre(1.0)),
+                "1 cl of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(Decilitre(1.0)),
+                "1 dl of grandma's clear water",
+            );
+            assert_replace(s, Unit::Volume(Litre(1.0)), "1 l of grandma's clear water");
+            assert_replace(
+                s,
+                Unit::Volume(MetricTeaspoon(1.0)),
+                "1 tsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(MetricTablespoon(1.0)),
+                "1 tbsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(MetricDessertspoon(1.0)),
+                "1 dsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(MetricCup(1.0)),
+                "1 cup of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(AustralianTeaspoon(1.0)),
+                "1 tsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(AustralianDessertspoon(1.0)),
+                "1 dsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(AustralianTablespoon(1.0)),
+                "1 tbsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(AustralianCup(1.0)),
+                "1 cup of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialTeaspoon(1.0)),
+                "1 tsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialDessertspoon(1.0)),
+                "1 dsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialTablespoon(1.0)),
+                "1 tbsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialFluidOunce(1.0)),
+                "1 fl oz of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialGill(1.0)),
+                "1 gill of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialCup(1.0)),
+                "1 cup of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialPint(1.0)),
+                "1 pt of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialQuart(1.0)),
+                "1 qt of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(ImperialGallon(1.0)),
+                "1 gal of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(USTeaspoon(1.0)),
+                "1 tsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(USTablespoon(1.0)),
+                "1 tbsp of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(USFluidOunce(1.0)),
+                "1 fl oz of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(USCup(1.0)),
+                "1 cup of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(USPint(1.0)),
+                "1 pt of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(USQuart(1.0)),
+                "1 qt of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(USGallon(1.0)),
+                "1 gal of grandma's clear water",
+            );
+            assert_replace(
+                s,
+                Unit::Volume(Jigger(1.0)),
+                "1 jig of grandma's clear water",
+            );
+        }
+    }
 
     mod tests_value {
         use super::*;

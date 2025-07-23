@@ -3,6 +3,15 @@ use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Temperature {
+    fn abbrev<'a>(&self) -> &'a str {
+        use Temperature::*;
+
+        match self {
+            Celsius(_) => "°C",
+            Fahrenheit(_) => "°F",
+        }
+    }
+
     fn unit_type(&self) -> UnitType {
         use TemperatureUnit::*;
 
@@ -39,6 +48,22 @@ mod tests {
 
     fn create_temperature_unit_variants() -> Vec<TemperatureUnit> {
         vec![TemperatureUnit::Celsius, TemperatureUnit::Fahrenheit]
+    }
+
+    #[test]
+    fn test_abbrev() {
+        use Temperature::*;
+
+        let test_cases = vec![(Celsius(20.0), "°C"), (Fahrenheit(68.0), "°F")];
+
+        for (temp, expected) in test_cases {
+            assert_eq!(
+                temp.abbrev(),
+                expected,
+                "Failed for temperature variant: {:?}",
+                temp
+            );
+        }
     }
 
     #[test]

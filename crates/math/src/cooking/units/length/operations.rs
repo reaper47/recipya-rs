@@ -3,6 +3,19 @@ use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Length {
+    fn abbrev<'a>(&self) -> &'a str {
+        use Length::*;
+
+        match self {
+            Millimetre(_) => "mm",
+            Centimetre(_) => "cm",
+            Metre(_) => "m",
+            Kilometre(_) => "km",
+            Inch(_) => "\"",
+            Foot(_) => "'",
+        }
+    }
+
     fn unit_type(&self) -> UnitType {
         use LengthUnit::*;
 
@@ -44,19 +57,6 @@ mod tests {
     use super::*;
     use crate::cooking::units::Unit;
 
-    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
-    fn assert_approx_eq(actual: Unit, expected: Unit, threshold: f64) {
-        let actual = actual.value();
-        let expected = expected.value();
-
-        assert!(
-            (actual - expected).abs() < threshold,
-            "Expected {actual}, got {expected}, difference: {}",
-            (actual - expected).abs()
-        );
-    }
-
     fn create_length_variants() -> Vec<Length> {
         vec![
             Length::Millimetre(10.0),
@@ -66,6 +66,28 @@ mod tests {
             Length::Inch(8.0),
             Length::Foot(3.0),
         ]
+    }
+
+    #[test]
+    fn test_abbrev() {
+        use Length::*;
+
+        let test_cases = vec![
+            (Millimetre(1.0), "mm"),
+            (Centimetre(1.0), "cm"),
+            (Metre(1.0), "m"),
+            (Kilometre(1.0), "km"),
+            (Inch(1.0), "\""),
+            (Foot(1.0), "'"),
+        ];
+
+        for (length, expected) in test_cases {
+            assert_eq!(
+                length.abbrev(),
+                expected,
+                "Failed for length variant: {length:?}",
+            );
+        }
     }
 
     #[test]
