@@ -493,9 +493,10 @@ fn add_ingredient(name: &str) -> Markup {
                         (icon_bars_3())
                     }
                     input required type="text" name="ingredient" value=(name)
-                        placeholder="1 cup of chopped onions"
-                        class="input input-bordered input-sm w-full"
-                        _="on keydown if event.key is 'Enter' halt the event then call addItem(event)";
+                            placeholder="1 cup of chopped onions"
+                            class="input input-bordered input-sm w-full"
+                            _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end
+                               on paste call pasteText(me,event.clipboardData.getData('text/plain'))";
                 }
                 div class="ml-2 flex gap-2" {
                     button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)" {
