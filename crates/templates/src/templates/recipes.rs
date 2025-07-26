@@ -522,7 +522,7 @@ fn add_instruction(name: &str) -> Markup {
                 label class="w-11/12" {
                     textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full"
                         placeholder="Mix all ingredients together"
-                        _="on keydown if event.key is 'Enter' halt the event then call addItem(event)" {
+                        _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))" {
                         (name)
                     }
                 }
