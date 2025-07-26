@@ -59,31 +59,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/operations.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/scale.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/units.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/operations.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/operations.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/operations.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/traits.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/traits.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/operations.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/support/src/strings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/support/src/strings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -382,7 +367,13 @@
     "Cargo.Test operations::tests.executor": "Run",
     "Cargo.Test pwd::tests.executor": "Run",
     "Cargo.Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok.executor": "Debug",
+    "Cargo.Test recipes_routes.executor": "Run",
     "Cargo.Test recipes_routes::tests.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok.executor": "Debug",
     "Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files.executor": "Debug",
@@ -602,7 +593,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#145 on 35-implement-get-recipesidscale",
+    "git-widget-placeholder": "#147 on 137-allow-pasting-of-line-separat…tions",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -645,7 +636,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Run">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -664,8 +655,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cooking::units::system::tests::tests_from_str_vec::test_imperial_uk" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::system::tests::tests_from_str_vec::test_imperial_uk -- --exact" />
+    <configuration name="Test recipes_routes" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -681,8 +672,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test cooking::units::unitless::units::tests::test_from_str" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::unitless::units::tests::test_from_str -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -698,8 +689,9 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_scale_recipe::test_valid_double_yield -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_get_recipe_exists_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -715,8 +707,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_abbrev" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::unit::tests::tests_abbrev" />
+    <configuration name="Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -732,8 +724,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_from_str_vec" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package math --lib cooking::units::system::tests::tests_from_str_vec" />
+    <configuration name="Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -751,19 +743,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_imperial_uk" />
-      <item itemvalue="Cargo.Test cooking::units::unitless::units::tests::test_from_str" />
-      <item itemvalue="Cargo.Test tests_abbrev" />
-      <item itemvalue="Cargo.Test tests_from_str_vec" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
+      <item itemvalue="Cargo.Test recipes_routes" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test tests_from_str_vec" />
-        <item itemvalue="Cargo.Test tests_abbrev" />
-        <item itemvalue="Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_imperial_uk" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
-        <item itemvalue="Cargo.Test cooking::units::unitless::units::tests::test_from_str" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
+        <item itemvalue="Cargo.Test recipes_routes" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
       </list>
     </recent_temporary>
   </component>
