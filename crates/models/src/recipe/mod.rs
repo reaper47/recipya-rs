@@ -5,6 +5,7 @@ mod export;
 mod form;
 mod get;
 mod helpers;
+mod search;
 mod structs;
 mod update;
 

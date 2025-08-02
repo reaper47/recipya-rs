@@ -48,7 +48,19 @@ impl Recipe {
             )
             .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
             .select((
-                schema::recipes::all_columns,
+                (
+                    schema::recipes::id,
+                    schema::recipes::name,
+                    schema::recipes::description,
+                    schema::recipes::image,
+                    schema::recipes::yield_,
+                    schema::recipes::language,
+                    schema::recipes::measurement_system_id,
+                    schema::recipes::source,
+                    schema::recipes::created_at,
+                    schema::recipes::updated_at,
+                    schema::recipes::user_id,
+                ),
                 schema::categories::name,
                 schema::cuisines::name.nullable(),
                 schema::keywords::name.nullable(),
@@ -98,7 +110,19 @@ impl Recipe {
             )
             .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
             .select((
-                schema::recipes::all_columns,
+                (
+                    schema::recipes::id,
+                    schema::recipes::name,
+                    schema::recipes::description,
+                    schema::recipes::image,
+                    schema::recipes::yield_,
+                    schema::recipes::language,
+                    schema::recipes::measurement_system_id,
+                    schema::recipes::source,
+                    schema::recipes::created_at,
+                    schema::recipes::updated_at,
+                    schema::recipes::user_id,
+                ),
                 schema::categories::name,
                 schema::cuisines::name.nullable(),
                 schema::keywords::name.nullable(),
@@ -130,7 +154,7 @@ impl Recipe {
     }
 }
 
-async fn fetch_recipe_details(
+pub async fn fetch_recipe_details(
     conn: &mut PgPooledConn<'_>,
     recipe: Recipe,
     category: String,

@@ -208,10 +208,7 @@ where
 
                     let name = tool.replace(&quantity.to_string(), "").trim().to_owned();
                     if !name.is_empty() {
-                        tools.push(ToolForCreate {
-                            name,
-                            quantity,
-                        })
+                        tools.push(ToolForCreate { name, quantity })
                     }
                 }),
                 "trans-fat" => field

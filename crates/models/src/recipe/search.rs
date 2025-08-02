@@ -1,0 +1,435 @@
+use diesel_full_text_search::{TsVectorExtensions, to_tsquery, ts_rank};
+use std::str::FromStr;
+
+use diesel::prelude::*;
+use diesel::{JoinOnDsl, NullableExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
+use repository::{ModelManager, schema};
+use winnow::Parser;
+use winnow::combinator::alt;
+use winnow::token::literal;
+
+use crate::recipe::get::fetch_recipe_details;
+use crate::recipe::{Nutrition, Times};
+use crate::{Error, Recipe, RecipeDetails, Result};
+
+pub struct RecipeSearch {
+    filters: SearchFilters,
+    user_id: i64,
+}
+
+impl RecipeSearch {
+    pub fn new(query: String, user_id: i64) -> Result<Self> {
+        Ok(Self {
+            filters: SearchFilters::from_str(query.as_str())?,
+            user_id,
+        })
+    }
+
+    pub async fn search(&self, mm: &ModelManager) -> Result<Vec<RecipeDetails>> {
+        use schema::recipes::dsl::*;
+
+        let mut conn = mm.pool.get().await?;
+
+        let base_query = schema::recipes::table
+            .inner_join(schema::users_recipes::table.on(schema::users_recipes::recipe_id.eq(id)))
+            .filter(schema::users_recipes::user_id.eq(self.user_id))
+            .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
+            .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
+            .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
+            .left_join(schema::nutrition::table.on(schema::nutrition::recipe_id.eq(id)))
+            .inner_join(schema::times::table.on(schema::times::recipe_id.eq(id)))
+            .select((
+                (
+                    id,
+                    name,
+                    description,
+                    image,
+                    yield_,
+                    language,
+                    measurement_system_id,
+                    source,
+                    created_at,
+                    updated_at,
+                    user_id,
+                ),
+                schema::categories::name,
+                schema::cuisines::name.nullable(),
+                schema::keywords::name.nullable(),
+                schema::nutrition::all_columns.nullable(),
+                schema::times::all_columns,
+            ));
+
+        let all_recipes = if let Some(text) = &self.filters.category {
+            vec![]
+        } else if let Some(text) = &self.filters.unclassified {
+            let text = text.replace(" ", "&");
+            let ts_query = to_tsquery(text);
+
+            let fetched_recipes = base_query
+                .filter(fts_combined.matches(ts_query.clone()))
+                .distinct_on(id)
+                .order_by((id, ts_rank(fts_combined, ts_query).desc()))
+                .load::<(
+                    Recipe,
+                    String,
+                    Option<String>,
+                    Option<String>,
+                    Option<Nutrition>,
+                    Times,
+                )>(&mut conn)
+                .await?;
+
+            let mut all_recipes = Vec::with_capacity(fetched_recipes.len());
+            for (recipe, category, cuisine, keywords, nutrition, times) in fetched_recipes {
+                all_recipes.push(
+                    fetch_recipe_details(
+                        &mut conn, recipe, category, cuisine, keywords, nutrition, times,
+                    )
+                    .await?,
+                );
+            }
+
+            return Ok(all_recipes);
+        } else {
+            vec![]
+        };
+
+        Ok(all_recipes)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+struct SearchFilters {
+    category: Option<String>,
+    unclassified: Option<String>,
+}
+
+impl FromStr for SearchFilters {
+    type Err = Error;
+
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
+        if s.is_empty() {
+            return Err(Error::NoSearch);
+        }
+
+        let mut unclassified: Option<String> = None;
+        let mut input = s;
+
+        let prefixes = ["cat:"];
+        let first_prefix_pos = prefixes.iter().filter_map(|p| input.find(p)).min();
+
+        if let Some(pos) = first_prefix_pos {
+            if pos > 0 {
+                unclassified = Some(input[0..pos].trim().to_string());
+            }
+            input = &input[pos..];
+        } else {
+            return Ok(SearchFilters {
+                category: None,
+                unclassified: Some(s.to_string()),
+            });
+        }
+
+        let mut category: Option<String> = None;
+
+        while !input.is_empty() {
+            match parse_any_section(&mut input) {
+                Ok((prefix, text)) => match prefix {
+                    "cat:" => category = Some(text),
+                    _ => unreachable!(),
+                },
+                Err(_) => break,
+            }
+        }
+
+        Ok(SearchFilters {
+            category: category.map(|s| normalize_to_ts_query(&s, "<->")),
+            unclassified: unclassified.map(|s| normalize_to_ts_query(&s, "&")),
+        })
+    }
+}
+
+fn normalize_to_ts_query(s: &str, space_char: &str) -> String {
+    s.replace(",", "|").replace(" ", space_char)
+}
+
+fn parse_any_section<'a>(input: &mut &'a str) -> winnow::Result<(&'a str, String)> {
+    alt((parse_section("cat:"),)).parse_next(input)
+}
+
+fn parse_section<'a>(
+    prefix: &'a str,
+) -> impl Parser<&'a str, (&'a str, String), winnow::error::ContextError> + 'a {
+    move |input: &mut &'a str| {
+        let _ = literal(prefix).parse_next(input)?;
+
+        let remaining = *input;
+        let prefixes = ["name:", "tool:", "ing:", "ins:", "src:", "cat:"];
+
+        let end_pos = prefixes
+            .iter()
+            .filter_map(|p| remaining.find(p))
+            .min()
+            .unwrap_or(remaining.len());
+
+        let content = &remaining[..end_pos];
+        *input = &remaining[end_pos..];
+
+        Ok((prefix, content.to_string()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Recipe;
+    use crate::recipe::test_utils::a_complete_recipe_for_create;
+
+    use crate::recipe::{RecipeForCreate, ToolRecipe, Video};
+    use testing::utils::{TestDb, create_app_state, insert_user};
+
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod tests_filters {
+        use super::*;
+
+        #[test]
+        fn test_filters_category_only() {
+            let filters = SearchFilters::from_str("cat:Breakfast,midnight dinner").unwrap();
+
+            pretty_assertions::assert_eq!(
+                filters,
+                SearchFilters {
+                    category: Some("Breakfast|midnight<->dinner".to_string()),
+                    unclassified: None,
+                }
+            );
+        }
+
+        #[test]
+        fn test_filters_category_and_unclassified() {
+            let filters =
+                SearchFilters::from_str("rip Alexi Laiho cat:Breakfast,midnight dinner").unwrap();
+
+            pretty_assertions::assert_eq!(
+                filters,
+                SearchFilters {
+                    category: Some("Breakfast|midnight<->dinner".to_string()),
+                    unclassified: Some("rip&Alexi&Laiho".to_string()),
+                }
+            );
+        }
+    }
+
+    mod tests_search {
+        use super::*;
+
+        fn to_recipe_details(id: i64, recipe_c: RecipeForCreate) -> RecipeDetails {
+            let mut keywords = recipe_c.keywords;
+            keywords.sort();
+
+            let times = recipe_c.times.unwrap_or_default();
+            let prep_seconds = times.prep_seconds;
+            let cook_seconds = times.cook_seconds;
+
+            RecipeDetails {
+                recipe: Recipe {
+                    id,
+                    name: recipe_c.name,
+                    description: recipe_c.description,
+                    image: if !recipe_c.images.is_empty() {
+                        Some(recipe_c.images[0])
+                    } else {
+                        None
+                    },
+                    yield_: recipe_c.yield_.unwrap_or_default(),
+                    language: "eng".to_string(),
+                    measurement_system_id: 1,
+                    source: recipe_c.source,
+                    created_at: Default::default(),
+                    updated_at: Default::default(),
+                    user_id: 1,
+                },
+                additional_images: if recipe_c.images.len() > 1 {
+                    recipe_c.images[1..].to_vec()
+                } else {
+                    vec![]
+                },
+                category: recipe_c.category.unwrap_or_default(),
+                cuisine: recipe_c.cuisine,
+                ingredients: recipe_c.ingredients,
+                instructions: recipe_c.instructions,
+                keywords,
+                nutrition: if let Some(n) = recipe_c.nutrition {
+                    Some(Nutrition {
+                        id,
+                        recipe_id: id,
+                        calories_kcal: n.calories_kcal,
+                        total_carbohydrates: n.total_carbohydrates,
+                        sugars_g: n.sugars_g,
+                        protein_g: n.protein_g,
+                        total_fat_g: n.total_fat_g,
+                        saturated_fat_g: n.saturated_fat_g,
+                        unsaturated_fat_g: n.unsaturated_fat_g,
+                        cholesterol_mg: n.cholesterol_mg,
+                        sodium_mg: n.sodium_mg,
+                        fiber_g: n.fiber_g,
+                        trans_fat_g: n.trans_fat_g,
+                        serving_size: n.serving_size,
+                    })
+                } else {
+                    None
+                },
+                times: Times {
+                    id,
+                    recipe_id: id,
+                    prep_seconds,
+                    cook_seconds,
+                    total_seconds: prep_seconds + cook_seconds,
+                },
+                tools: recipe_c
+                    .tools
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, t)| ToolRecipe {
+                        name: t.name,
+                        quantity: t.quantity,
+                        tool_order: (i as i16) + 1,
+                    })
+                    .collect(),
+                videos: recipe_c
+                    .videos
+                    .into_iter()
+                    .map(|v| Video {
+                        video: v.video,
+                        duration: v.duration,
+                        content_url: v.content_url,
+                        embed_url: v.embed_url,
+                        created_at: Default::default(),
+                    })
+                    .collect(),
+            }
+        }
+
+        fn adjust_recipe(mut recipe: RecipeDetails, other_recipe: RecipeDetails) -> RecipeDetails {
+            recipe.recipe.created_at = other_recipe.recipe.created_at;
+            recipe.recipe.updated_at = other_recipe.recipe.updated_at;
+            recipe.videos = other_recipe.videos.clone();
+            recipe
+        }
+
+        #[tokio::test]
+        async fn test_search_by_name() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut a_recipe = a_complete_recipe_for_create();
+            let _ = Recipe::create(&state.mm, user.id, &a_recipe).await?;
+            a_recipe.name = "Taco Tuesday".to_string();
+            let _ = Recipe::create(&state.mm, user.id, &a_recipe).await?;
+
+            let recipe_search = RecipeSearch::new("chinese".to_string(), user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![adjust_recipe(
+                    to_recipe_details(1, a_complete_recipe_for_create()),
+                    results[0].clone()
+                ),]
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_search_by_rank() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let first_recipe = a_complete_recipe_for_create();
+            let mut second_recipe = a_complete_recipe_for_create();
+            second_recipe.name = "Taco Tuesday".to_string();
+            second_recipe.description = Some("The most authentic Chinese recipe ever".to_string());
+            let mut third_recipe = a_complete_recipe_for_create();
+            third_recipe.name = "Chicken Jersey".to_string();
+            third_recipe.description = Some("The most authentic tacos recipe ever".to_string());
+            let _ = Recipe::create(&state.mm, user.id, &first_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &second_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &third_recipe).await?;
+
+            let recipe_search = RecipeSearch::new("chinese".to_string(), user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![
+                    adjust_recipe(to_recipe_details(1, first_recipe), results[0].clone()),
+                    adjust_recipe(to_recipe_details(2, second_recipe), results[1].clone()),
+                ]
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_search_by_category() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let first_recipe = a_complete_recipe_for_create();
+            let mut second_recipe = a_complete_recipe_for_create();
+            second_recipe.name = "Taco Tuesday".to_string();
+            second_recipe.category = Some("Meat".to_string());
+            let mut third_recipe = a_complete_recipe_for_create();
+            third_recipe.name = "Chicken Jersey".to_string();
+            third_recipe.category = Some("breakfast".to_string());
+            let _ = Recipe::create(&state.mm, user.id, &first_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &second_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &third_recipe).await?;
+
+            let recipe_search = RecipeSearch::new("cat:Breakfast".to_string(), user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![adjust_recipe(
+                    to_recipe_details(1, third_recipe),
+                    results[0].clone()
+                ),]
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_search_by_cuisine() -> Result<()> {
+            todo!()
+        }
+
+        #[tokio::test]
+        async fn test_search_by_ingredients() -> Result<()> {
+            todo!()
+        }
+
+        #[tokio::test]
+        async fn test_search_by_instructions() -> Result<()> {
+            todo!()
+        }
+
+        #[tokio::test]
+        async fn test_search_by_tools() -> Result<()> {
+            todo!()
+        }
+
+        #[tokio::test]
+        async fn test_search_terms_separated_by_commas() -> Result<()> {
+            // ts_query replace commas with | (OR)
+            todo!()
+        }
+
+        #[tokio::test]
+        async fn test_search_terms_separated_by_spaces() -> Result<()> {
+            // ts_query replace commas with & (AND)
+            todo!()
+        }
+    }
+}

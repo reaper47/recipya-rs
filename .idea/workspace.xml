@@ -59,9 +59,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/diesel.toml" beforeDir="false" afterPath="$PROJECT_DIR$/diesel.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -366,7 +378,16 @@
     "Cargo.Test mealmaster::tests.executor": "Run",
     "Cargo.Test operations::tests.executor": "Run",
     "Cargo.Test pwd::tests.executor": "Run",
+    "Cargo.Test recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
     "Cargo.Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok.executor": "Debug",
+    "Cargo.Test recipe::search::tests::test_search_by_category.executor": "Run",
+    "Cargo.Test recipe::search::tests::test_search_by_name.executor": "Run",
+    "Cargo.Test recipe::search::tests::test_search_by_rank.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_filters::test_filters_category_and_unclassified.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_filters::test_filters_category_only.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_search::test_search_by_name.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_empty_string.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_one_name.executor": "Run",
     "Cargo.Test recipes_routes.executor": "Run",
     "Cargo.Test recipes_routes::tests.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists.executor": "Run",
@@ -385,6 +406,7 @@
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_yield_query_param_must_be_specified.executor": "Run",
     "Cargo.Test report::tests.executor": "Run",
     "Cargo.Test scale::tests.executor": "Run",
+    "Cargo.Test search::tests.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_cannot_update_if_autologin_ok.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_err_must_be_logged_in.executor": "Run",
     "Cargo.Test server::router::auth_router::tests::tests_change_password::test_post_change_password_form_invalid_ok.executor": "Run",
@@ -593,7 +615,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#147 on 137-allow-pasting-of-line-separat…tions",
+    "git-widget-placeholder": "49-implement-get-recipessearch",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -636,7 +658,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok">
+  <component name="RunManager" selected="Cargo.Test recipe::search::tests::tests_search::test_search_by_name">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -655,8 +677,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes" />
+    <configuration name="Test recipe::search::tests::test_search_by_category" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::test_search_by_category -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -672,8 +694,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists -- --exact" />
+    <configuration name="Test recipe::search::tests::test_search_by_rank" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::test_search_by_rank -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -689,9 +711,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="buildProfileId" value="test" />
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_get_recipe_exists_ok -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_filters::test_filters_category_and_unclassified" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_filters::test_filters_category_and_unclassified -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -707,8 +728,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_filters::test_filters_category_only" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_filters::test_filters_category_only -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -724,8 +745,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_search::test_search_by_name" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_name -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -743,19 +764,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_routes" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_name" />
+      <item itemvalue="Cargo.Test recipe::search::tests::test_search_by_category" />
+      <item itemvalue="Cargo.Test recipe::search::tests::test_search_by_rank" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_filters::test_filters_category_and_unclassified" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_filters::test_filters_category_only" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
-        <item itemvalue="Cargo.Test recipes_routes" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_name" />
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_filters::test_filters_category_only" />
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_filters::test_filters_category_and_unclassified" />
+        <item itemvalue="Cargo.Test recipe::search::tests::test_search_by_rank" />
+        <item itemvalue="Cargo.Test recipe::search::tests::test_search_by_category" />
       </list>
     </recent_temporary>
   </component>
@@ -793,11 +814,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/crates/models/src/recipe/delete.rs</url>
-          <line>111</line>
-          <option name="timeStamp" value="10" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/crates/math/src/cooking/units/system.rs</url>
           <line>48</line>

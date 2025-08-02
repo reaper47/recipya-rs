@@ -1,6 +1,9 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     additional_images_recipe (id) {
         id -> Int8,
         recipe_id -> Int8,
@@ -9,6 +12,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     app (id) {
         id -> Int8,
         is_update_available -> Nullable<Bool>,
@@ -18,6 +24,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     auth_tokens (id) {
         id -> Int8,
         #[max_length = 12]
@@ -30,6 +39,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     categories (id) {
         id -> Int8,
         name -> Text,
@@ -37,6 +49,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     categories_recipes (category_id, recipe_id) {
         category_id -> Int8,
         recipe_id -> Int8,
@@ -44,6 +59,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     cookbooks (id) {
         id -> Int8,
         title -> Text,
@@ -54,6 +72,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     cookbooks_recipes (id) {
         id -> Int8,
         cookbook_id -> Nullable<Int8>,
@@ -63,6 +84,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     counts (id) {
         id -> Int8,
         user_id -> Nullable<Int8>,
@@ -72,6 +96,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     cuisines (id) {
         id -> Int8,
         name -> Text,
@@ -79,6 +106,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     cuisines_recipes (cuisine_id, recipe_id) {
         cuisine_id -> Int8,
         recipe_id -> Int8,
@@ -86,6 +116,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     ingredients (id) {
         id -> Int8,
         name -> Text,
@@ -93,6 +126,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     ingredients_recipes (id) {
         id -> Int8,
         ingredient_id -> Int8,
@@ -103,6 +139,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     instructions (id) {
         id -> Int8,
         name -> Text,
@@ -110,6 +149,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     instructions_recipes (id) {
         id -> Int8,
         instruction_id -> Int8,
@@ -120,6 +162,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     keywords (id) {
         id -> Int8,
         name -> Text,
@@ -127,6 +172,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     keywords_recipes (keyword_id, recipe_id) {
         keyword_id -> Int8,
         recipe_id -> Int8,
@@ -134,6 +182,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     measurement_systems (id) {
         id -> Int2,
         name -> Text,
@@ -141,6 +192,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     nutrition (id) {
         id -> Int8,
         recipe_id -> Int8,
@@ -160,6 +214,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     recipes (id) {
         id -> Int8,
         name -> Text,
@@ -174,10 +231,14 @@ diesel::table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         user_id -> Int8,
+        fts_combined -> Tsvector,
     }
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     report_types (id) {
         id -> Int2,
         name -> Text,
@@ -185,6 +246,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     reports (id) {
         id -> Int8,
         report_type_id -> Int2,
@@ -195,6 +259,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     reports_logs (id) {
         id -> Int8,
         report_id -> Int8,
@@ -207,6 +274,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     sections (id) {
         id -> Int8,
         name -> Text,
@@ -214,6 +284,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     shares_cookbooks (id) {
         id -> Int8,
         link -> Text,
@@ -224,6 +297,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     shares_recipes (id) {
         id -> Int8,
         link -> Uuid,
@@ -237,6 +313,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     times (id) {
         id -> Int8,
         recipe_id -> Int8,
@@ -247,6 +326,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     tools (id) {
         id -> Int8,
         name -> Text,
@@ -254,6 +336,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     tools_recipes (id) {
         id -> Int8,
         tool_id -> Int8,
@@ -264,6 +349,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     user_settings (id) {
         id -> Int8,
         user_id -> Int8,
@@ -275,6 +363,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     users (id) {
         id -> Int8,
         email -> Text,
@@ -290,6 +381,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     users_categories (user_id, category_id) {
         user_id -> Int8,
         category_id -> Int8,
@@ -297,6 +391,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     users_keywords (user_id, keyword_id) {
         user_id -> Int8,
         keyword_id -> Int8,
@@ -304,6 +401,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     users_recipes (id) {
         id -> Int8,
         user_id -> Int8,
@@ -312,6 +412,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     videos_recipes (id) {
         id -> Int8,
         video -> Uuid,
@@ -324,6 +427,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::Tsvector;
+
     websites (id) {
         id -> Int8,
         host -> Text,

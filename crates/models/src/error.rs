@@ -13,6 +13,7 @@ pub enum Error {
         entity: &'static str,
         id: i64,
     },
+    NoSearch,
     Time,
 
     // Modules
