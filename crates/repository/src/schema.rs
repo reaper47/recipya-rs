@@ -2,7 +2,7 @@
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     additional_images_recipe (id) {
         id -> Int8,
@@ -13,7 +13,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     app (id) {
         id -> Int8,
@@ -25,7 +25,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     auth_tokens (id) {
         id -> Int8,
@@ -40,7 +40,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     categories (id) {
         id -> Int8,
@@ -50,7 +50,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     categories_recipes (category_id, recipe_id) {
         category_id -> Int8,
@@ -60,7 +60,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     cookbooks (id) {
         id -> Int8,
@@ -73,7 +73,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     cookbooks_recipes (id) {
         id -> Int8,
@@ -85,7 +85,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     counts (id) {
         id -> Int8,
@@ -97,7 +97,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     cuisines (id) {
         id -> Int8,
@@ -107,7 +107,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     cuisines_recipes (cuisine_id, recipe_id) {
         cuisine_id -> Int8,
@@ -117,7 +117,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     ingredients (id) {
         id -> Int8,
@@ -127,7 +127,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     ingredients_recipes (id) {
         id -> Int8,
@@ -140,7 +140,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     instructions (id) {
         id -> Int8,
@@ -150,7 +150,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     instructions_recipes (id) {
         id -> Int8,
@@ -163,7 +163,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     keywords (id) {
         id -> Int8,
@@ -173,7 +173,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     keywords_recipes (keyword_id, recipe_id) {
         keyword_id -> Int8,
@@ -183,7 +183,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     measurement_systems (id) {
         id -> Int2,
@@ -193,7 +193,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     nutrition (id) {
         id -> Int8,
@@ -215,7 +215,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     recipes (id) {
         id -> Int8,
@@ -232,12 +232,13 @@ diesel::table! {
         updated_at -> Timestamp,
         user_id -> Int8,
         fts_combined -> Tsvector,
+        fts_category -> Tsvector,
     }
 }
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     report_types (id) {
         id -> Int2,
@@ -247,7 +248,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     reports (id) {
         id -> Int8,
@@ -260,7 +261,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     reports_logs (id) {
         id -> Int8,
@@ -275,7 +276,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     sections (id) {
         id -> Int8,
@@ -285,7 +286,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     shares_cookbooks (id) {
         id -> Int8,
@@ -298,7 +299,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     shares_recipes (id) {
         id -> Int8,
@@ -314,7 +315,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     times (id) {
         id -> Int8,
@@ -327,7 +328,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     tools (id) {
         id -> Int8,
@@ -337,7 +338,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     tools_recipes (id) {
         id -> Int8,
@@ -350,7 +351,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     user_settings (id) {
         id -> Int8,
@@ -364,7 +365,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     users (id) {
         id -> Int8,
@@ -382,7 +383,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     users_categories (user_id, category_id) {
         user_id -> Int8,
@@ -392,7 +393,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     users_keywords (user_id, keyword_id) {
         user_id -> Int8,
@@ -402,7 +403,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     users_recipes (id) {
         id -> Int8,
@@ -413,7 +414,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     videos_recipes (id) {
         id -> Int8,
@@ -428,7 +429,7 @@ diesel::table! {
 
 diesel::table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::Tsvector;
+    use diesel_full_text_search::TsVector as Tsvector;
 
     websites (id) {
         id -> Int8,

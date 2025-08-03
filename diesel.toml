@@ -5,7 +5,7 @@
 file = "crates/repository/src/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
 except_custom_type_definitions = ["Tsvector"]
-import_types = ["diesel::sql_types::*", "diesel_full_text_search::Tsvector"]
+import_types = ["diesel::sql_types::*", "diesel_full_text_search::TsVector as Tsvector"]
 
 [migrations_directory]
 dir = "crates/repository/src/migrations"

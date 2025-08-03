@@ -9,10 +9,10 @@ DROP TRIGGER IF EXISTS trig_times_au ON times;
 DROP TRIGGER IF EXISTS trig_recipes_au ON recipes;
 DROP TRIGGER IF EXISTS trig_users_ai ON users;
 DROP TRIGGER IF EXISTS trig_update_category_fts_ai ON categories_recipes;
---DROP TRIGGER IF EXISTS trig_update_search_vectors ON recipes;
+-- DROP TRIGGER IF EXISTS trig_update_search_vectors ON recipes;
 
 --DROP FUNCTION IF EXISTS update_recipe_search_vectors;
---DROP FUNCTION IF EXISTS trig_update_search_vectors;
+DROP FUNCTION IF EXISTS trig_update_search_vectors;
 DROP FUNCTION IF EXISTS get_tsv_config(character) CASCADE;
 DROP FUNCTION IF EXISTS update_category_fts_func;
 DROP FUNCTION IF EXISTS trig_cookbooks_ad_func;

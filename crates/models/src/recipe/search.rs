@@ -1,9 +1,9 @@
-use diesel_full_text_search::{TsVectorExtensions, to_tsquery, ts_rank};
 use std::str::FromStr;
 
 use diesel::prelude::*;
 use diesel::{JoinOnDsl, NullableExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
+use diesel_full_text_search::{TsVectorExtensions, to_tsquery, ts_rank};
 use repository::{ModelManager, schema};
 use winnow::Parser;
 use winnow::combinator::alt;
@@ -31,7 +31,7 @@ impl RecipeSearch {
 
         let mut conn = mm.pool.get().await?;
 
-        let base_query = schema::recipes::table
+        let mut query = schema::recipes::table
             .inner_join(schema::users_recipes::table.on(schema::users_recipes::recipe_id.eq(id)))
             .filter(schema::users_recipes::user_id.eq(self.user_id))
             .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
@@ -58,42 +58,42 @@ impl RecipeSearch {
                 schema::keywords::name.nullable(),
                 schema::nutrition::all_columns.nullable(),
                 schema::times::all_columns,
-            ));
+            ))
+            .distinct_on(id)
+            .into_boxed();
 
-        let all_recipes = if let Some(text) = &self.filters.category {
-            vec![]
-        } else if let Some(text) = &self.filters.unclassified {
-            let text = text.replace(" ", "&");
+        if let Some(text) = &self.filters.category {
             let ts_query = to_tsquery(text);
+            query = query.filter(fts_category.matches(ts_query));
+        }
 
-            let fetched_recipes = base_query
-                .filter(fts_combined.matches(ts_query.clone()))
-                .distinct_on(id)
-                .order_by((id, ts_rank(fts_combined, ts_query).desc()))
-                .load::<(
-                    Recipe,
-                    String,
-                    Option<String>,
-                    Option<String>,
-                    Option<Nutrition>,
-                    Times,
-                )>(&mut conn)
-                .await?;
+        if let Some(text) = &self.filters.unclassified {
+            let ts_query = to_tsquery(text);
+            query = query
+                .filter(fts_combined.matches(ts_query))
+                .order_by((id, ts_rank(fts_combined, ts_query).desc()));
+        }
 
-            let mut all_recipes = Vec::with_capacity(fetched_recipes.len());
-            for (recipe, category, cuisine, keywords, nutrition, times) in fetched_recipes {
-                all_recipes.push(
-                    fetch_recipe_details(
-                        &mut conn, recipe, category, cuisine, keywords, nutrition, times,
-                    )
-                    .await?,
-                );
-            }
+        let fetched_recipes = query
+            .load::<(
+                Recipe,
+                String,
+                Option<String>,
+                Option<String>,
+                Option<Nutrition>,
+                Times,
+            )>(&mut conn)
+            .await?;
 
-            return Ok(all_recipes);
-        } else {
-            vec![]
-        };
+        let mut all_recipes = Vec::with_capacity(fetched_recipes.len());
+        for (recipe, category, cuisine, keywords, nutrition, times) in fetched_recipes {
+            all_recipes.push(
+                fetch_recipe_details(
+                    &mut conn, recipe, category, cuisine, keywords, nutrition, times,
+                )
+                .await?,
+            );
+        }
 
         Ok(all_recipes)
     }
@@ -113,11 +113,12 @@ impl FromStr for SearchFilters {
             return Err(Error::NoSearch);
         }
 
-        let mut unclassified: Option<String> = None;
-        let mut input = s;
+        let input = s.to_lowercase();
+        let mut input = input.as_str();
 
         let prefixes = ["cat:"];
         let first_prefix_pos = prefixes.iter().filter_map(|p| input.find(p)).min();
+        let mut unclassified: Option<String> = None;
 
         if let Some(pos) = first_prefix_pos {
             if pos > 0 {
@@ -201,7 +202,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 filters,
                 SearchFilters {
-                    category: Some("Breakfast|midnight<->dinner".to_string()),
+                    category: Some("breakfast|midnight<->dinner".to_string()),
                     unclassified: None,
                 }
             );
@@ -215,8 +216,8 @@ mod tests {
             pretty_assertions::assert_eq!(
                 filters,
                 SearchFilters {
-                    category: Some("Breakfast|midnight<->dinner".to_string()),
-                    unclassified: Some("rip&Alexi&Laiho".to_string()),
+                    category: Some("breakfast|midnight<->dinner".to_string()),
+                    unclassified: Some("rip&alexi&laiho".to_string()),
                 }
             );
         }
@@ -393,7 +394,36 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(1, third_recipe),
+                    to_recipe_details(3, third_recipe),
+                    results[0].clone()
+                ),]
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_search_by_category_and_unclassified() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let first_recipe = a_complete_recipe_for_create();
+            let mut second_recipe = a_complete_recipe_for_create();
+            second_recipe.name = "Taco Tuesday".to_string();
+            second_recipe.category = Some("breakfast".to_string());
+            let mut third_recipe = a_complete_recipe_for_create();
+            third_recipe.name = "Chicken Jersey".to_string();
+            third_recipe.category = Some("breakfast".to_string());
+            let _ = Recipe::create(&state.mm, user.id, &first_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &second_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &third_recipe).await?;
+
+            let recipe_search = RecipeSearch::new("tacos cat:Breakfast".to_string(), user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![adjust_recipe(
+                    to_recipe_details(2, second_recipe),
                     results[0].clone()
                 ),]
             );

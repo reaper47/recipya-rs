@@ -132,7 +132,7 @@ CREATE TABLE recipes
         setweight(to_tsvector(get_tsv_config(language), coalesce(language, '')), 'C') ||
         setweight(to_tsvector(get_tsv_config(language), coalesce(description, '')), 'D')
         ) STORED,
---     fts_category          TSVECTOR NOT NULL,
+    fts_category          TSVECTOR NOT NULL DEFAULT ''::tsvector,
 --     fts_cuisine           TSVECTOR,
 --     fts_ingredients       TSVECTOR,
 --     fts_instructions      TSVECTOR,
@@ -142,107 +142,17 @@ CREATE TABLE recipes
     UNIQUE (name, source, yield, user_id)
 );
 
--- CREATE FUNCTION update_recipe_search_vectors(new_recipe_id BIGINT) RETURNS VOID AS
--- $$
--- DECLARE
---     config              TEXT;
---     category            TEXT;
---     cuisine             TEXT;
---     recipe_ingredients  TEXT;
---     recipe_instructions TEXT;
---     recipe_keywords     TEXT;
---     recipe_tools        TEXT;
--- BEGIN
---     SELECT get_tsv_config(language) INTO config FROM recipes WHERE id = new_recipe_id;
---
---     SELECT string_agg(name, ' ')
---     FROM categories c
---              JOIN categories_recipes cr on cr.category_id = c.id
---     WHERE cr.recipe_id = new_recipe_id
---     INTO category;
---
---     SELECT string_agg(name, ' ')
---     FROM cuisines cu
---              JOIN cuisines_recipes cr on cr.cuisine_id = cu.id
---     WHERE cr.recipe_id = new_recipe_id
---     INTO cuisine;
---
---     SELECT string_agg(name, ' ')
---     FROM ingredients i
---              JOIN ingredients_recipes ir on ir.ingredient_id = i.id
---     WHERE ir.recipe_id = new_recipe_id
---     INTO recipe_ingredients;
---
---     SELECT string_agg(name, ' ')
---     FROM instructions i
---              JOIN instructions_recipes ir on ir.instruction_id = i.id
---     WHERE ir.recipe_id = new_recipe_id
---     INTO recipe_instructions;
---
---     SELECT string_agg(name, ' ')
---     FROM keywords k
---              JOIN keywords_recipes kr on k.id = kr.keyword_id
---     WHERE kr.recipe_id = new_recipe_id
---     INTO recipe_keywords;
---
---     SELECT string_agg(name, ' ')
---     FROM tools t
---              JOIN tools_recipes tr on t.id = tr.tool_id
---     WHERE tr.recipe_id = new_recipe_id
---     INTO recipe_tools;
---
---     UPDATE recipes
---     SET fts_category     = CASE WHEN category IS NULL OR category = ''
---                                     THEN to_tsvector(config, '')
---                                 ELSE to_tsvector(config, category) END,
---         fts_cuisine      =  CASE WHEN cuisine IS NULL OR cuisine = ''
---                                      THEN to_tsvector(config, '')
---                                  ELSE to_tsvector(config, cuisine) END,
---         fts_ingredients  = CASE WHEN cuisine IS NULL OR recipe_ingredients = ''
---                                     THEN to_tsvector(config, '')
---                                 ELSE to_tsvector(config, recipe_ingredients) END,
---         fts_instructions = CASE WHEN cuisine IS NULL OR recipe_instructions = ''
---                                     THEN to_tsvector(config, '')
---                                 ELSE to_tsvector(config, recipe_instructions) END,
---         fts_keywords     = CASE WHEN cuisine IS NULL OR recipe_keywords = ''
---                                     THEN to_tsvector(config, '')
---                                 ELSE to_tsvector(config, recipe_keywords) END,
---         fts_tools        = CASE WHEN cuisine IS NULL OR recipe_tools = ''
---                                     THEN to_tsvector(config, '')
---                                 ELSE to_tsvector(config, recipe_tools) END,
---
---         fts_all          = to_tsvector(config, coalesce(category, '') || ' ' ||
---                                                coalesce(cuisine, '') || ' ' ||
---                                                coalesce(recipe_ingredients, '') || ' ' ||
---                                                coalesce(recipe_instructions, '') || ' ' ||
---                                                coalesce(recipe_keywords, '') || ' ' ||
---                                                coalesce(recipe_tools, ''))
---     WHERE id = new_recipe_id;
--- END;
--- $$ LANGUAGE plpgsql;
-
 -- CREATE INDEX idx_fts_name ON recipes USING gin (fts_name);
 CREATE INDEX idx_fts_combined ON recipes USING gin (fts_combined);
 -- CREATE INDEX idx_fts_description ON recipes USING gin (fts_description);
 -- CREATE INDEX idx_fts_source ON recipes USING gin (fts_source);
--- CREATE INDEX idx_fts_category ON recipes USING gin (fts_category);
+CREATE INDEX idx_fts_category ON recipes USING gin (fts_category);
 -- CREATE INDEX idx_fts_cuisine ON recipes USING gin (fts_cuisine);
 -- CREATE INDEX idx_fts_ingredients ON recipes USING gin (fts_ingredients);
 -- CREATE INDEX idx_fts_instructions ON recipes USING gin (fts_instructions);
 -- CREATE INDEX idx_fts_keywords ON recipes USING gin (fts_keywords);
 -- CREATE INDEX idx_fts_tools ON recipes USING gin (fts_tools);
 -- CREATE INDEX idx_fts_all ON recipes USING gin (fts_all);
-
--- CREATE OR REPLACE FUNCTION trig_update_search_vectors() RETURNS TRIGGER AS $$
--- BEGIN
---     PERFORM update_recipe_search_vectors(NEW.id);
---     RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE TRIGGER trig_update_search_vectors
--- AFTER INSERT OR UPDATE ON recipes
--- FOR EACH ROW EXECUTE FUNCTION trig_update_search_vectors();
 
 CREATE TABLE categories
 (
@@ -622,21 +532,21 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
---
--- CREATE OR REPLACE FUNCTION update_category_fts_func() RETURNS TRIGGER AS $$
--- BEGIN
---     UPDATE recipes
---     SET fts_category = (
---         SELECT to_tsvector(get_tsv_config(language), string_agg(name, ''))
---         FROM categories c
---                  JOIN categories_recipes cr on cr.category_id = c.id
---         WHERE cr.recipe_id = NEW.recipe_id
---     )
---     WHERE id = NEW.recipe_id;
---
---     RETURN NULL;
--- END;
--- $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_category_fts_func() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE recipes
+    SET fts_category = (
+        SELECT to_tsvector(get_tsv_config(language), string_agg(name, ''))
+        FROM categories c
+                 JOIN categories_recipes cr on cr.category_id = c.id
+        WHERE cr.recipe_id = NEW.recipe_id
+    )
+    WHERE id = NEW.recipe_id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 ---
 --- Triggers
@@ -701,9 +611,9 @@ CREATE TRIGGER trig_cookbooks_ad
     FOR EACH ROW
 EXECUTE FUNCTION trig_cookbooks_ad_func();
 
--- CREATE TRIGGER trig_update_category_fts_ai
--- AFTER INSERT OR DELETE ON categories_recipes
--- FOR EACH ROW EXECUTE FUNCTION update_category_fts_func();
+CREATE TRIGGER trig_update_category_fts_ai
+AFTER INSERT OR DELETE ON categories_recipes
+FOR EACH ROW EXECUTE FUNCTION update_category_fts_func();
 
 ---
 --- Cron Jobs
