@@ -126,19 +126,19 @@ CREATE TABLE recipes
     updated_at            TIMESTAMP NOT NULL                                                       DEFAULT CURRENT_TIMESTAMP,
     user_id               BIGINT    NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 
-    fts_combined TSVECTOR NOT NULL GENERATED ALWAYS AS (
+    fts_combined          TSVECTOR  NOT NULL GENERATED ALWAYS AS (
         setweight(to_tsvector(get_tsv_config(language), coalesce(name, '')), 'A') ||
         setweight(to_tsvector(get_tsv_config(language), coalesce(source, '')), 'B') ||
         setweight(to_tsvector(get_tsv_config(language), coalesce(language, '')), 'C') ||
         setweight(to_tsvector(get_tsv_config(language), coalesce(description, '')), 'D')
         ) STORED,
-    fts_category          TSVECTOR NOT NULL DEFAULT ''::tsvector,
---     fts_cuisine           TSVECTOR,
---     fts_ingredients       TSVECTOR,
---     fts_instructions      TSVECTOR,
---     fts_keywords          TSVECTOR,
---     fts_tools             TSVECTOR,
---     fts_all               TSVECTOR,
+    fts_category          TSVECTOR  NOT NULL                                                       DEFAULT ''::tsvector,
+    fts_cuisine           TSVECTOR  NOT NULL                                                       DEFAULT ''::tsvector,
+    fts_ingredients       TSVECTOR  NOT NULL                                                       DEFAULT ''::tsvector,
+--     fts_instructions      TSVECTOR NOT NULL DEFAULT ''::tsvector,
+--     fts_keywords          TSVECTOR NOT NULL DEFAULT ''::tsvector,
+--     fts_tools             TSVECTOR NOT NULL DEFAULT ''::tsvector,
+--     fts_all               TSVECTOR NOT NULL DEFAULT ''::tsvector,
     UNIQUE (name, source, yield, user_id)
 );
 
@@ -147,8 +147,8 @@ CREATE INDEX idx_fts_combined ON recipes USING gin (fts_combined);
 -- CREATE INDEX idx_fts_description ON recipes USING gin (fts_description);
 -- CREATE INDEX idx_fts_source ON recipes USING gin (fts_source);
 CREATE INDEX idx_fts_category ON recipes USING gin (fts_category);
--- CREATE INDEX idx_fts_cuisine ON recipes USING gin (fts_cuisine);
--- CREATE INDEX idx_fts_ingredients ON recipes USING gin (fts_ingredients);
+CREATE INDEX idx_fts_cuisine ON recipes USING gin (fts_cuisine);
+CREATE INDEX idx_fts_ingredients ON recipes USING gin (fts_ingredients);
 -- CREATE INDEX idx_fts_instructions ON recipes USING gin (fts_instructions);
 -- CREATE INDEX idx_fts_keywords ON recipes USING gin (fts_keywords);
 -- CREATE INDEX idx_fts_tools ON recipes USING gin (fts_tools);
@@ -533,18 +533,60 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION update_category_fts_func() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION update_category_fts_func() RETURNS TRIGGER AS
+$$
 BEGIN
     UPDATE recipes
-    SET fts_category = (
-        SELECT to_tsvector(get_tsv_config(language), string_agg(name, ''))
-        FROM categories c
-                 JOIN categories_recipes cr on cr.category_id = c.id
-        WHERE cr.recipe_id = NEW.recipe_id
-    )
+    SET fts_category = COALESCE((SELECT to_tsvector(get_tsv_config(language), string_agg(name, ''))
+                                 FROM categories c
+                                          JOIN categories_recipes cr ON cr.category_id = c.id
+                                 WHERE cr.recipe_id = NEW.recipe_id), ''::tsvector)
     WHERE id = NEW.recipe_id;
 
     RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_cuisine_fts_func() RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE recipes
+    SET fts_cuisine = (SELECT to_tsvector(get_tsv_config(language), string_agg(name, ' ' ORDER BY name))
+                       FROM cuisines c
+                                JOIN cuisines_recipes cr ON cr.cuisine_id = c.id
+                       WHERE cr.recipe_id = NEW.recipe_id)
+    WHERE id = NEW.recipe_id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_ingredients_fts_func() RETURNS TRIGGER AS
+$$
+DECLARE
+    recipe_id_to_update BIGINT;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        recipe_id_to_update := OLD.recipe_id;
+    ELSE
+        recipe_id_to_update := NEW.recipe_id;
+    END IF;
+
+    UPDATE recipes
+    SET fts_ingredients = COALESCE(
+            (SELECT to_tsvector(get_tsv_config(language), string_agg(i.name, ' '))
+             FROM ingredients i
+                      JOIN ingredients_recipes ir ON ir.ingredient_id = i.id
+             WHERE ir.recipe_id = recipe_id_to_update
+             GROUP BY recipe_id_to_update),
+            ''::tsvector)
+    WHERE id = recipe_id_to_update;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -612,8 +654,22 @@ CREATE TRIGGER trig_cookbooks_ad
 EXECUTE FUNCTION trig_cookbooks_ad_func();
 
 CREATE TRIGGER trig_update_category_fts_ai
-AFTER INSERT OR DELETE ON categories_recipes
-FOR EACH ROW EXECUTE FUNCTION update_category_fts_func();
+    AFTER INSERT OR DELETE OR UPDATE
+    ON categories_recipes
+    FOR EACH ROW
+EXECUTE FUNCTION update_category_fts_func();
+
+CREATE TRIGGER trig_update_cuisine_fts_ai
+    AFTER INSERT OR DELETE OR UPDATE
+    ON cuisines_recipes
+    FOR EACH ROW
+EXECUTE FUNCTION update_cuisine_fts_func();
+
+CREATE TRIGGER trig_update_ingredients_fts_ai
+    AFTER INSERT OR DELETE OR UPDATE
+    ON ingredients_recipes
+    FOR EACH ROW
+EXECUTE FUNCTION update_ingredients_fts_func();
 
 ---
 --- Cron Jobs

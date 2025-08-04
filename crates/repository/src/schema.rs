@@ -233,6 +233,8 @@ diesel::table! {
         user_id -> Int8,
         fts_combined -> Tsvector,
         fts_category -> Tsvector,
+        fts_cuisine -> Tsvector,
+        fts_ingredients -> Tsvector,
     }
 }
 
