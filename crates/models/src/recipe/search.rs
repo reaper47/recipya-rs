@@ -77,13 +77,28 @@ impl RecipeSearch {
             query = query.filter(fts_ingredients.matches(ts_query));
         }
 
+        if let Some(text) = &self.filters.instructions {
+            let ts_query = to_tsquery(text);
+            query = query.filter(fts_instructions.matches(ts_query));
+        }
+
+        if let Some(text) = &self.filters.keywords {
+            let ts_query = to_tsquery(text);
+            query = query.filter(fts_keywords.matches(ts_query));
+        }
+
+        if let Some(text) = &self.filters.tools {
+            let ts_query = to_tsquery(text);
+            query = query.filter(fts_tools.matches(ts_query));
+        }
+
         if let Some(text) = &self.filters.unclassified {
             let ts_query = to_tsquery(text);
             query = query
                 .filter(fts_combined.matches(ts_query))
                 .order_by((id, ts_rank(fts_combined, ts_query).desc()));
         }
-        
+
         let fetched_recipes = query
             .load::<(
                 Recipe,
@@ -114,6 +129,9 @@ struct SearchFilters {
     category: Option<String>,
     cuisine: Option<String>,
     ingredients: Option<String>,
+    instructions: Option<String>,
+    keywords: Option<String>,
+    tools: Option<String>,
     unclassified: Option<String>,
 }
 
@@ -128,7 +146,7 @@ impl FromStr for SearchFilters {
         let input = s.to_lowercase();
         let mut input = input.as_str();
 
-        let prefixes = ["cat:", "cui:", "ing:"];
+        let prefixes = ["cat:", "cui:", "ing:", "ins:", "kw:", "tool:"];
         let first_prefix_pos = prefixes.iter().filter_map(|p| input.find(p)).min();
         let mut unclassified: Option<String> = None;
 
@@ -147,6 +165,9 @@ impl FromStr for SearchFilters {
         let mut category: Option<String> = None;
         let mut cuisine: Option<String> = None;
         let mut ingredients: Option<String> = None;
+        let mut instructions: Option<String> = None;
+        let mut keywords: Option<String> = None;
+        let mut tools: Option<String> = None;
 
         while !input.is_empty() {
             match parse_any_section(&mut input) {
@@ -154,6 +175,9 @@ impl FromStr for SearchFilters {
                     "cat:" => category = Some(text),
                     "cui:" => cuisine = Some(text),
                     "ing:" => ingredients = Some(text),
+                    "ins:" => instructions = Some(text),
+                    "kw:" => keywords = Some(text),
+                    "tool:" => tools = Some(text),
                     _ => unreachable!(),
                 },
                 Err(_) => break,
@@ -164,6 +188,9 @@ impl FromStr for SearchFilters {
             category: category.map(|s| normalize_to_ts_query(&s, "|", "<->")),
             cuisine: cuisine.map(|s| normalize_to_ts_query(&s, "|", "<->")),
             ingredients: ingredients.map(|s| normalize_to_ts_query(&s, "&", "<->")),
+            instructions: instructions.map(|s| normalize_to_ts_query(&s, "&", "&")),
+            keywords: keywords.map(|s| normalize_to_ts_query(&s, "&", "<->")),
+            tools: tools.map(|s| normalize_to_ts_query(&s, "&", "<->")),
             unclassified: unclassified.map(|s| normalize_to_ts_query(&s, "|", "&")),
         })
     }
@@ -178,7 +205,11 @@ fn parse_any_section<'a>(input: &mut &'a str) -> winnow::Result<(&'a str, String
         parse_section("cat:"),
         parse_section("cui:"),
         parse_section("ing:"),
-    )).parse_next(input)
+        parse_section("ins:"),
+        parse_section("kw:"),
+        parse_section("tool:"),
+    ))
+    .parse_next(input)
 }
 
 fn parse_section<'a>(
@@ -188,7 +219,7 @@ fn parse_section<'a>(
         let _ = literal(prefix).parse_next(input)?;
 
         let remaining = *input;
-        let prefixes = ["cat:", "cui:", "ing:"];
+        let prefixes = ["cat:", "cui:", "ing:", "ins:", "kw:", "tool:"];
 
         let end_pos = prefixes
             .iter()
@@ -257,9 +288,52 @@ mod tests {
         }
 
         #[test]
+        fn test_instructions_only() {
+            let filters =
+                SearchFilters::from_str("ins:sprinkle some salt and pepper,mix everything and eat")
+                    .unwrap();
+
+            pretty_assertions::assert_eq!(
+                filters,
+                SearchFilters {
+                    instructions: Some(
+                        "sprinkle&some&salt&and&pepper&mix&everything&and&eat".to_string()
+                    ),
+                    ..Default::default()
+                }
+            );
+        }
+
+        #[test]
+        fn test_keywords_only() {
+            let filters = SearchFilters::from_str("kw:air fryer,healthy,very fat").unwrap();
+
+            pretty_assertions::assert_eq!(
+                filters,
+                SearchFilters {
+                    keywords: Some("air<->fryer&healthy&very<->fat".to_string()),
+                    ..Default::default()
+                }
+            );
+        }
+
+        #[test]
+        fn test_tools_only() {
+            let filters = SearchFilters::from_str("tool:steel pan,wok").unwrap();
+
+            pretty_assertions::assert_eq!(
+                filters,
+                SearchFilters {
+                    tools: Some("steel<->pan&wok".to_string()),
+                    ..Default::default()
+                }
+            );
+        }
+
+        #[test]
         fn test_all() {
             let filters =
-                SearchFilters::from_str("rip Alexi Laiho cat:Breakfast,midnight dinner cui:thai ing:blue cheese,paprika").unwrap();
+                SearchFilters::from_str("rip Alexi Laiho cat:Breakfast,midnight dinner cui:thai ing:blue cheese,paprika ins:sprinkle some salt and pepper kw:air fryer,healthy tool:steel pan,wok").unwrap();
 
             pretty_assertions::assert_eq!(
                 filters,
@@ -267,6 +341,9 @@ mod tests {
                     category: Some("breakfast|midnight<->dinner".to_string()),
                     cuisine: Some("thai".to_string()),
                     ingredients: Some("blue<->cheese&paprika".to_string()),
+                    instructions: Some("sprinkle&some&salt&and&pepper".to_string()),
+                    keywords: Some("air<->fryer&healthy".to_string()),
+                    tools: Some("steel<->pan&wok".to_string()),
                     unclassified: Some("rip&alexi&laiho".to_string()),
                 }
             );
@@ -274,8 +351,9 @@ mod tests {
     }
 
     mod tests_search {
-        use recipe_schema::Sections;
         use super::*;
+        use crate::recipe::ToolForCreate;
+        use recipe_schema::Sections;
 
         fn to_recipe_details(id: i64, recipe_c: RecipeForCreate) -> RecipeDetails {
             let mut keywords = recipe_c.keywords;
@@ -510,51 +588,134 @@ mod tests {
             let recipe1 = a_complete_recipe_for_create();
             let mut recipe2 = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
-            recipe2.ingredients = Sections::from([("".into(), vec![
-                "tomato".to_string(),
-                "1/2 cups of lettuce".to_string(),
-            ])]);
+            recipe2.ingredients = Sections::from([(
+                "".into(),
+                vec!["tomato".to_string(), "1/2 cups of lettuce".to_string()],
+            )]);
             let mut recipe3 = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
-            recipe3.ingredients = Sections::from([("".into(), vec![
-                "1 tbsp of hot cayenne pepper".to_string(),
-                "3 lbs of chicken breasts".to_string(),
-            ])]);
+            recipe3.ingredients = Sections::from([(
+                "".into(),
+                vec![
+                    "1 tbsp of hot cayenne pepper".to_string(),
+                    "3 lbs of chicken breasts".to_string(),
+                ],
+            )]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("ing:cayenne pepper,chicken".to_string(), user.id)?;
+            let recipe_search =
+                RecipeSearch::new("ing:cayenne pepper,chicken".to_string(), user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
                 results,
-                vec![adjust_recipe(to_recipe_details(3, recipe3), results[0].clone())]
+                vec![adjust_recipe(
+                    to_recipe_details(3, recipe3),
+                    results[0].clone()
+                )]
             );
             Ok(())
         }
 
         #[tokio::test]
         async fn test_search_by_instructions() -> Result<()> {
-            todo!()
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let recipe1 = a_complete_recipe_for_create();
+            let mut recipe2 = a_complete_recipe_for_create();
+            recipe2.name = "Taco Tuesday".to_string();
+            recipe2.instructions = Sections::from([("".into(), vec![
+                "Sauté veggies: In a large pot, melt butter over medium heat. Add onions and garlic, cooking until soft (about 5 minutes). Add mushrooms and cook until they release moisture and begin to brown ".to_string(),
+                "Make roux: Sprinkle flour over the mushrooms and stir well to coat. Cook for 1–2 minutes to eliminate the raw flour taste.".to_string(),
+            ])]);
+            let mut recipe3 = a_complete_recipe_for_create();
+            recipe3.name = "Chicken Jersey".to_string();
+            recipe3.instructions = Sections::from([("".into(), vec![
+                "Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining.".to_string(),
+                "Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.".to_string(),
+            ])]);
+            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+
+            let recipe_search =
+                RecipeSearch::new("ins:melt butter medium heat".to_string(), user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![adjust_recipe(
+                    to_recipe_details(2, recipe2),
+                    results[0].clone()
+                )]
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_search_by_keywords() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let recipe1 = a_complete_recipe_for_create();
+            let mut recipe2 = a_complete_recipe_for_create();
+            recipe2.name = "Taco Tuesday".to_string();
+            recipe2.keywords = vec!["healthy".to_string(), "vegan".to_string()];
+            let mut recipe3 = a_complete_recipe_for_create();
+            recipe3.name = "Chicken Jersey".to_string();
+            recipe3.keywords = vec!["very fat".to_string(), "air fryer".to_string()];
+            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+
+            let recipe_search = RecipeSearch::new("kw:very fat,air fryer".to_string(), user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![adjust_recipe(
+                    to_recipe_details(3, recipe3),
+                    results[0].clone()
+                )]
+            );
+            Ok(())
         }
 
         #[tokio::test]
         async fn test_search_by_tools() -> Result<()> {
-            todo!()
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let recipe1 = a_complete_recipe_for_create();
+            let mut recipe2 = a_complete_recipe_for_create();
+            recipe2.name = "Taco Tuesday".to_string();
+            recipe2.tools = vec![ToolForCreate {
+                name: "wok".to_string(),
+                quantity: 1,
+            }];
+            let mut recipe3 = a_complete_recipe_for_create();
+            recipe3.name = "Chicken Jersey".to_string();
+            recipe3.tools = vec![ToolForCreate {
+                name: "frying pan".to_string(),
+                quantity: 1,
+            }];
+            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+
+            let recipe_search = RecipeSearch::new("tool:wok".to_string(), user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![
+                    adjust_recipe(to_recipe_details(1, recipe1), results[0].clone()),
+                    adjust_recipe(to_recipe_details(2, recipe2), results[1].clone()),
+                ]
+            );
+            Ok(())
         }
 
-        #[tokio::test]
-        async fn test_search_terms_separated_by_commas() -> Result<()> {
-            // ts_query replace commas with | (OR)
-            todo!()
-        }
-
-        #[tokio::test]
-        async fn test_search_terms_separated_by_spaces() -> Result<()> {
-            // ts_query replace commas with & (AND)
-            todo!()
-        }
-
-        async fn insert_recipes(mm: &ModelManager, user_id: i64, recipes: Vec<&RecipeForCreate>) ->Result<()>{
+        async fn insert_recipes(
+            mm: &ModelManager,
+            user_id: i64,
+            recipes: Vec<&RecipeForCreate>,
+        ) -> Result<()> {
             for recipe in recipes {
                 let _ = Recipe::create(mm, user_id, recipe).await?;
             }

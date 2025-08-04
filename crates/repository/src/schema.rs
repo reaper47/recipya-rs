@@ -235,6 +235,9 @@ diesel::table! {
         fts_category -> Tsvector,
         fts_cuisine -> Tsvector,
         fts_ingredients -> Tsvector,
+        fts_instructions -> Tsvector,
+        fts_keywords -> Tsvector,
+        fts_tools -> Tsvector,
     }
 }
 

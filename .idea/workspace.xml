@@ -59,7 +59,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" afterDir="false" />
@@ -377,11 +376,15 @@
     "Cargo.Test recipe::search::tests::tests_filters::test_all.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_filters::test_filters_category_and_unclassified.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_filters::test_filters_category_only.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_filters::test_instructions_only.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_category.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_category_and_unclassified.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_cuisine.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_ingredients.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_search::test_search_by_keywords.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_name.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_search::test_search_by_tools.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_empty_string.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_one_name.executor": "Run",
     "Cargo.Test recipes_routes.executor": "Run",
@@ -655,7 +658,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipe::search::tests::tests_search::test_search_by_ingredients">
+  <component name="RunManager" selected="Cargo.Test recipe::search::tests::tests_search::test_search_by_tools">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -674,8 +677,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::search::tests::tests_filters::test_all" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_filters::test_all -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_search::test_search_by_instructions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_instructions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -691,8 +694,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::search::tests::tests_search::test_search_by_cuisine" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_cuisine -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_search::test_search_by_keywords" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_keywords -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -708,8 +711,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::search::tests::tests_search::test_search_by_ingredients" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_ingredients -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_search::test_search_by_tools" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_tools -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -761,19 +764,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipe::search::tests::tests_filters::test_all" />
-      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_cuisine" />
-      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_ingredients" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_keywords" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_tools" />
       <item itemvalue="Cargo.Test search::tests" />
       <item itemvalue="Cargo.Test tests_filters" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_ingredients" />
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_tools" />
         <item itemvalue="Cargo.Test tests_filters" />
-        <item itemvalue="Cargo.Test recipe::search::tests::tests_filters::test_all" />
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_keywords" />
         <item itemvalue="Cargo.Test search::tests" />
-        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_cuisine" />
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
       </list>
     </recent_temporary>
   </component>
@@ -815,11 +818,6 @@
           <url>file://$PROJECT_DIR$/crates/math/src/cooking/units/system.rs</url>
           <line>48</line>
           <option name="timeStamp" value="35" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/crates/models/src/recipe/search.rs</url>
-          <line>97</line>
-          <option name="timeStamp" value="47" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/crates/repository/src/pool.rs</url>
