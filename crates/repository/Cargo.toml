@@ -16,6 +16,7 @@ rust-version.workspace = true
 derive_more = { workspace = true }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
+diesel_full_text_search = { workspace = true }
 diesel_migrations = { version = "2.2", features = ["postgres"] }
 futures-util = { workspace = true }
 postgres_rustls = "0.1.3"

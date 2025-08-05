@@ -3,13 +3,13 @@ use std::collections::BTreeMap;
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use repository::{ModelManager, PgPooledConn, schema};
 use uuid::Uuid;
 
-use repository::extensions::pagination::Paginate;
-use repository::{ModelManager, PgPooledConn, schema};
-
 use crate::params::SearchParams;
-use crate::recipe::{Nutrition, RecipeDetails, Times, ToolRecipe, Video, VideoRecipe};
+use crate::recipe::{
+    Nutrition, RecipeDetails, RecipeSearch, Times, ToolRecipe, Video, VideoRecipe,
+};
 use crate::{Error, Recipe, Result};
 
 impl Recipe {
@@ -48,7 +48,19 @@ impl Recipe {
             )
             .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
             .select((
-                schema::recipes::all_columns,
+                (
+                    schema::recipes::id,
+                    schema::recipes::name,
+                    schema::recipes::description,
+                    schema::recipes::image,
+                    schema::recipes::yield_,
+                    schema::recipes::language,
+                    schema::recipes::measurement_system_id,
+                    schema::recipes::source,
+                    schema::recipes::created_at,
+                    schema::recipes::updated_at,
+                    schema::recipes::user_id,
+                ),
                 schema::categories::name,
                 schema::cuisines::name.nullable(),
                 schema::keywords::name.nullable(),
@@ -82,55 +94,17 @@ impl Recipe {
         user_id: i64,
         search_params: &SearchParams,
     ) -> Result<Vec<RecipeDetails>> {
-        let mut conn = mm.pool.get().await?;
+        let query = search_params.q.as_deref().unwrap_or_default();
+        let page = search_params.page.unwrap_or(1) as i64;
 
-        let fetched_recipes = schema::recipes::table
-            .inner_join(
-                schema::users_recipes::table
-                    .on(schema::users_recipes::recipe_id.eq(schema::recipes::id)),
-            )
-            .filter(schema::users_recipes::user_id.eq(user_id))
-            .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
-            .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
-            .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
-            .left_join(
-                schema::nutrition::table.on(schema::nutrition::recipe_id.eq(schema::recipes::id)),
-            )
-            .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
-            .select((
-                schema::recipes::all_columns,
-                schema::categories::name,
-                schema::cuisines::name.nullable(),
-                schema::keywords::name.nullable(),
-                schema::nutrition::all_columns.nullable(),
-                schema::times::all_columns,
-            ))
-            .distinct_on(schema::recipes::id)
-            .paginate(search_params.page.unwrap_or(1) as i64)
-            .load::<(
-                Recipe,
-                String,
-                Option<String>,
-                Option<String>,
-                Option<Nutrition>,
-                Times,
-            )>(&mut conn)
-            .await?;
+        let recipe_search = RecipeSearch::new(query, page, user_id)?;
+        let recipes = recipe_search.search(mm).await?;
 
-        let mut recipes = Vec::with_capacity(fetched_recipes.len());
-        for (recipe, category, cuisine, keywords, nutrition, times) in fetched_recipes {
-            recipes.push(
-                fetch_recipe_details(
-                    &mut conn, recipe, category, cuisine, keywords, nutrition, times,
-                )
-                .await?,
-            );
-        }
         Ok(recipes)
     }
 }
 
-async fn fetch_recipe_details(
+pub async fn fetch_recipe_details(
     conn: &mut PgPooledConn<'_>,
     recipe: Recipe,
     category: String,

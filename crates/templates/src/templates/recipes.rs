@@ -1588,6 +1588,25 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
     }
 }
 
+/// Renders search results for recipes.
+pub fn search_results(
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    path: &str,
+    data: Data,
+    data_dir: DataDir,
+) -> Markup {
+    if data.is_hx_request {
+        index(fs_support, path, data, data_dir)
+    } else {
+        layouts::main(
+            "Recipes",
+            path,
+            &data,
+            list_recipes(fs_support, &data, &data_dir),
+        )
+    }
+}
+
 /// Renders the details of a recipe.
 pub fn view_recipe(
     fs_support: Arc<dyn FsSupport + Sync + Send>,
