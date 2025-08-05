@@ -19,7 +19,9 @@ use models::data::{
     ShareData, ViewRecipe,
 };
 use models::params::SearchParams;
-use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
+use models::recipe::{
+    Category, Keyword, RecipeForCreate, RecipeForm, RecipeSearch, VideoForCreate,
+};
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;
@@ -37,7 +39,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::{IMessage, MessageHtmx, MessageType};
+use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_routes::{
     ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
@@ -64,12 +66,7 @@ pub async fn delete_recipe_handler(
         }
         Err(err) => {
             error!("Error deleting recipe {recipe_id} for user {user_id}: {err}");
-
-            let toast = MessageHtmx::error("Recipe could not be deleted.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
-
+            broadcast_error(&state, user_id, "Recipe could not be deleted.").await;
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
@@ -89,14 +86,7 @@ pub async fn recipes_handler(
         Ok(count) => count,
         Err(err) => {
             error!("Error counting recipes for user {user_id}: {err}");
-
-            let toast = MessageHtmx::error("Error fetching number of recipes.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state
-                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                    .await;
-            }
-
+            broadcast_error(&state, user_id, "Error fetching number of recipes.").await;
             return Error::Database.into_response();
         }
     };
@@ -113,12 +103,8 @@ pub async fn recipes_handler(
                         })
                         .map_err(async |err| {
                             error!("Error formatting times for recipe: {err}");
-                            let toast = MessageHtmx::error("Error formatting recipe times.");
-                            if let Ok(json) = serde_json::to_string(&toast) {
-                                state
-                                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                                    .await;
-                            }
+                            broadcast_error(&state, user_id, "Error formatting recipe times.")
+                                .await;
                             Error::Database
                         })
                 })
@@ -131,15 +117,9 @@ pub async fn recipes_handler(
         }
         Err(err) => {
             error!(
-                "Error fetching recipes for user '{user_id}' with search params '{:?}': {err}",
-                search_params
+                "Error fetching recipes for user '{user_id}' with search params '{search_params:?}': {err}"
             );
-            let toast = MessageHtmx::error("Error fetching recipes.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state
-                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                    .await;
-            }
+            broadcast_error(&state, user_id, "Error fetching recipes.").await;
             return Error::Database.into_response();
         }
     };
@@ -183,10 +163,7 @@ pub async fn duplicate_recipe_handler(
             Ok(res) => res,
             Err(err) => {
                 error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
-                let toast = MessageHtmx::error("Recipe not found.");
-                if let Ok(json) = serde_json::to_string(&toast) {
-                    state.broadcast(user_id, Message::Text(json.into())).await;
-                }
+                broadcast_error(&state, user_id, "Recipe not found.").await;
                 return Error::Model(EntityNotFound {
                     id: recipe_id,
                     entity: "recipe",
@@ -225,10 +202,7 @@ pub async fn edit_recipe_handler(
         Ok(res) => res,
         Err(err) => {
             error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
-            let toast = MessageHtmx::error("Recipe not found.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(&state, user_id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id,
                 entity: "recipe",
@@ -271,10 +245,7 @@ async fn fetch_view_recipe(
         Ok(recipe) => recipe,
         Err(err) => {
             error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
-            let toast = MessageHtmx::error("Recipe not found.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(state, user_id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id,
                 entity: "recipe",
@@ -387,10 +358,7 @@ pub async fn edit_recipe_put_handler(
         }
         Err(err) => {
             error!("Failed to update recipe '{recipe_id}' user '{user_id}': {err}");
-            let toast = MessageHtmx::error("Failed to add recipe to collection.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(&state, user_id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }
     };
@@ -419,10 +387,7 @@ pub async fn scale_recipe_handler(
     let user_id = ctx_w.0.user_id();
 
     if params.yield_param == 0 {
-        let toast = MessageHtmx::error("Yield must be greater than zero.");
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
+        broadcast_error(&state, user_id, "Yield must be greater than zero.").await;
         return Error::InvalidQuery.into_response();
     }
 
@@ -442,10 +407,7 @@ pub async fn scale_recipe_handler(
         }
         Err(err) => {
             error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
-            let toast = MessageHtmx::error("Recipe not found.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(&state, user_id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id,
                 entity: "recipe",
@@ -485,10 +447,7 @@ pub async fn share_recipe_post_handler(
             error!(
                 "Error generating shared recipe link for recipe '{recipe_id}' and user '{user_id}': {err}"
             );
-            let toast = MessageHtmx::error("Error parsing datetime.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(&state, user_id, "Error parsing datetime.").await;
             Error::BadTimeFormat.into_response()
         }
     }
@@ -542,12 +501,12 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
             }
             Err(_) => {
                 state.hide_broadcast(user_id).await;
-                let toast = MessageHtmx::error(
+                broadcast_error(
+                    &state,
+                    user_id,
                     "An error occurred while parsing the recipes. Please check the logs.",
-                );
-                if let Ok(json) = serde_json::to_string(&toast) {
-                    state.broadcast(user_id, Message::Text(json.into())).await;
-                }
+                )
+                .await;
                 return;
             }
         };
@@ -757,10 +716,7 @@ pub async fn add_manual_recipe_post_handler(
         Ok(id) => id,
         Err(err) => {
             error!("Failed to add recipe to collection for user '{user_id}': {err}");
-            let toast = MessageHtmx::error("Failed to add recipe to collection.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(&state, user_id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }
     };
@@ -781,10 +737,7 @@ async fn fetch_categories_keywords(
         Ok(categories) => categories,
         Err(err) => {
             error!("Error fetching recipe categories: {err}");
-            let toast = MessageHtmx::error("Error fetching recipe categories.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(state, user_id, "Error fetching recipe categories.").await;
             return Err(Error::Database);
         }
     };
@@ -793,10 +746,7 @@ async fn fetch_categories_keywords(
         Ok(keywords) => keywords,
         Err(err) => {
             error!("Error fetching recipe keywords: {err}");
-            let toast = MessageHtmx::error("Error fetching recipe keywords.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
+            broadcast_error(state, user_id, "Error fetching recipe keywords.").await;
             return Err(Error::Database);
         }
     };
@@ -900,10 +850,7 @@ pub async fn add_website_post_handler(
         .collect::<Vec<_>>();
 
     if urls.is_empty() {
-        let toast = MessageHtmx::error("No valid URLs found.");
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
+        broadcast_error(&state, user_id, "No valid URLs found.").await;
         return Error::InvalidPayload.into_response();
     }
     urls.sort();
@@ -1107,10 +1054,7 @@ pub async fn post_recipe_categories_handler(
 
     if let Err(err) = Recipe::add_category(&state.mm, &category, user_id).await {
         error!("Error adding recipe category: {err}");
-        let toast = MessageHtmx::error("Failed to add recipe category.");
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
+        broadcast_error(&state, user_id, "Failed to add recipe category.").await;
         return Error::Database.into_response();
     }
 
@@ -1127,19 +1071,18 @@ pub async fn delete_recipe_categories_handler(
 
     let category = form.category;
     if category.is_empty() || category == "uncategorized" {
-        let toast = MessageHtmx::error("Category cannot be empty or uncategorized.");
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
+        broadcast_error(
+            &state,
+            user_id,
+            "Category cannot be empty or uncategorized.",
+        )
+        .await;
         return Error::InvalidPayload.into_response();
     }
 
     if let Err(err) = Recipe::delete_recipe_category(&state.mm, &category, user_id).await {
         error!("Error deleting recipe category: {err}");
-        let toast = MessageHtmx::error("Failed to delete recipe category.");
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
+        broadcast_error(&state, user_id, "Failed to delete recipe category.").await;
         return Error::Database.into_response();
     }
 
@@ -1231,6 +1174,91 @@ pub async fn view_recipe_handler(
     }
 }
 
+/// Handles searching recipes.
+pub async fn search_recipes_handler(
+    ctx: CtxW,
+    headers: HeaderMap,
+    Query(search_params): Query<SearchParams>,
+    OriginalUri(uri): OriginalUri,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let recipes = match Recipe::get_page(&state.mm, user_id, &search_params).await {
+        Ok(recipes) => {
+            let mapped_recipes: std::result::Result<Vec<ViewRecipe>, _> = recipes
+                .into_iter()
+                .map(|recipe| {
+                    FormattedTimes::from_times(&recipe.times)
+                        .map(|formatted_times| ViewRecipe {
+                            recipe_details: recipe,
+                            formatted_times,
+                        })
+                        .map_err(async |err| {
+                            error!("Error formatting times for recipe: {err}");
+                            broadcast_error(&state, user_id, "Error formatting recipe times.")
+                                .await;
+                            Error::Database
+                        })
+                })
+                .collect();
+
+            match mapped_recipes {
+                Ok(mapped) => mapped,
+                Err(_) => return Error::Database.into_response(),
+            }
+        }
+        Err(err) => {
+            error!(
+                "Error fetching recipes for user '{user_id}' with search params '{search_params:?}': {err}"
+            );
+            broadcast_error(&state, user_id, "Error fetching recipes.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    if recipes.is_empty() {
+        return templates::search::no_results().into_response();
+    }
+
+    let hx_target_value = match search_params.q.as_ref() {
+        None => "#content",
+        Some(s) if s.is_empty() => "#content",
+        Some(_) => "#list-recipes",
+    };
+
+    let body = templates::recipes::search_results(
+        state.fs_support,
+        uri.path(),
+        Data {
+            is_admin: user_id == 1,
+            is_authenticated: true,
+            is_autologin: state.config.is_autologin,
+            is_hx_request: is_hx_request(&headers),
+            about: AboutData {
+                is_update_available: false,
+            },
+            pagination: Some(PaginationData::new_for_recipes(
+                &search_params,
+                recipes.len() as i64,
+                false,
+            )),
+            searchbar: Some(SearchbarData::from_params(search_params)),
+            share: None,
+            recipes,
+        },
+        state.data_dir,
+    );
+
+    let mut extra_headers = HeaderMap::new();
+    extra_headers.insert(
+        axum_htmx::HX_RETARGET,
+        HeaderValue::from_static(hx_target_value),
+    );
+
+    (extra_headers, body).into_response()
+}
+
 /// Handles the supported applications endpoint.
 pub async fn supported_applications_handler(_ctx: CtxW) -> impl IntoResponse {
     let applications = [
@@ -1301,12 +1329,8 @@ pub async fn supported_websites_handler(
         Ok(websites) => Html(websites.to_html_table_rows()).into_response(),
         Err(err) => {
             error!("Error fetching supported websites: {err}");
-            let toast = MessageHtmx::error("Error fetching supported websites.");
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state
-                    .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                    .await;
-            }
+            let user_id = ctx.0.user_id();
+            broadcast_error(&state, user_id, "Error fetching supported websites.").await;
             Error::Database.into_response()
         }
     }

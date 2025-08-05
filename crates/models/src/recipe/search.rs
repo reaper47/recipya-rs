@@ -4,6 +4,7 @@ use diesel::prelude::*;
 use diesel::{JoinOnDsl, NullableExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use diesel_full_text_search::{TsVectorExtensions, to_tsquery, ts_rank};
+use repository::extensions::pagination::Paginate;
 use repository::{ModelManager, schema};
 use winnow::Parser;
 use winnow::combinator::alt;
@@ -15,13 +16,15 @@ use crate::{Error, Recipe, RecipeDetails, Result};
 
 pub struct RecipeSearch {
     filters: SearchFilters,
+    page: i64,
     user_id: i64,
 }
 
 impl RecipeSearch {
-    pub fn new(query: String, user_id: i64) -> Result<Self> {
+    pub fn new(query: &str, page: i64, user_id: i64) -> Result<Self> {
         Ok(Self {
-            filters: SearchFilters::from_str(query.as_str())?,
+            filters: SearchFilters::from_str(query)?,
+            page,
             user_id,
         })
     }
@@ -99,7 +102,10 @@ impl RecipeSearch {
                 .order_by((id, ts_rank(fts_combined, ts_query).desc()));
         }
 
+        let page = if self.page < 1 { 1 } else { self.page };
+
         let fetched_recipes = query
+            .paginate(page)
             .load::<(
                 Recipe,
                 String,
@@ -140,7 +146,7 @@ impl FromStr for SearchFilters {
 
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
         if s.is_empty() {
-            return Err(Error::NoSearch);
+            return Ok(SearchFilters::default());
         }
 
         let input = s.to_lowercase();
@@ -459,7 +465,7 @@ mod tests {
             a_recipe.name = "Taco Tuesday".to_string();
             let _ = Recipe::create(&state.mm, user.id, &a_recipe).await?;
 
-            let recipe_search = RecipeSearch::new("chinese".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("chinese", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -486,7 +492,7 @@ mod tests {
             recipe3.description = Some("The most authentic tacos recipe ever".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("chinese".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("chinese", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -513,7 +519,7 @@ mod tests {
             recipe3.category = Some("breakfast".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("cat:Breakfast".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("cat:Breakfast", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -540,7 +546,7 @@ mod tests {
             recipe3.category = Some("breakfast".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("tacos cat:Breakfast".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("tacos cat:Breakfast", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -567,7 +573,7 @@ mod tests {
             recipe3.cuisine = Some("Chinese".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("cui:THAI".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("cui:THAI", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -603,8 +609,7 @@ mod tests {
             )]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search =
-                RecipeSearch::new("ing:cayenne pepper,chicken".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("ing:cayenne pepper,chicken", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -637,8 +642,7 @@ mod tests {
             ])]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search =
-                RecipeSearch::new("ins:melt butter medium heat".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("ins:melt butter medium heat", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -665,7 +669,7 @@ mod tests {
             recipe3.keywords = vec!["very fat".to_string(), "air fryer".to_string()];
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("kw:very fat,air fryer".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("kw:very fat,air fryer", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -698,7 +702,7 @@ mod tests {
             }];
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("tool:wok".to_string(), user.id)?;
+            let recipe_search = RecipeSearch::new("tool:wok", 1, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(

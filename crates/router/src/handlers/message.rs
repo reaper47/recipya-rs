@@ -1,4 +1,6 @@
+use app::state::AppState;
 use axum::body::Body;
+use axum::extract::ws::Message;
 use axum::http::HeaderValue;
 use axum::response::Response;
 use serde::Serialize;
@@ -207,5 +209,13 @@ pub fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
             res.headers_mut()
                 .insert(axum_htmx::headers::HX_TRIGGER, value);
         }
+    }
+}
+
+/// Broadcasts an error toast to all active WebSocket subscribers of a given user.
+pub async fn broadcast_error(state: &AppState, user_id: i64, message: &str) {
+    let toast = MessageHtmx::error(message);
+    if let Ok(json) = serde_json::to_string(&toast) {
+        state.broadcast(user_id, Message::Text(json.into())).await;
     }
 }

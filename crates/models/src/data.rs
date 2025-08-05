@@ -76,7 +76,10 @@ impl PaginationData {
             None => String::new(),
         };
 
-        let page = params.page.unwrap_or(1);
+        let mut page = params.page.unwrap_or(1);
+        if page < 1 {
+            page = 1
+        }
 
         Self::new("/recipes", queries, page, num_recipes as u64, htmx)
     }

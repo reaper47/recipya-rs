@@ -17,9 +17,18 @@ pub enum Error {
     // Auth
     ConfirmForbidden,
     ConfirmInvalidToken,
+    DeleteUser,
     GenerateToken,
+    LoginFailUsernameNotFound,
+    LogoutFail,
+    LogoutForbidden,
     NoToken,
+    PwdNotMatching {
+        user_id: i64,
+    },
+    UpdatePassword,
 
+    // Files
     AssetCouldNotCopy,
     FileExists,
     Fs,
@@ -34,16 +43,6 @@ pub enum Error {
     InvalidQuery,
     NoUser,
     NoRecipe,
-
-    DeleteUser,
-    LoginFailUsernameNotFound,
-    LogoutFail,
-    LogoutForbidden,
-
-    PwdNotMatching {
-        user_id: i64,
-    },
-    UpdatePassword,
 
     // Modules
     #[from]
@@ -75,8 +74,17 @@ impl Error {
     pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
         use self::Error::*;
 
-        #[allow(unreachable_patterns)]
         match self {
+            // Auth
+            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
+            ConfirmInvalidToken => (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL),
+            LoginFailUsernameNotFound | PwdNotMatching { .. } => {
+                (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL)
+            }
+            LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LOGOUT_FAIL),
+            LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LOGOUT_FAIL),
+            NoToken => (StatusCode::BAD_REQUEST, ClientError::MISSING_PARAMS),
+
             BadTimeFormat => (StatusCode::BAD_REQUEST, ClientError::BAD_TIME_FORMAT),
             DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DELETE_FORBIDDEN),
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
@@ -90,16 +98,7 @@ impl Error {
                 },
             ),
 
-            LoginFailUsernameNotFound | PwdNotMatching { .. } => {
-                (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL)
-            }
-            LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LOGOUT_FAIL),
-            LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LOGOUT_FAIL),
-
-            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
-            ConfirmInvalidToken => (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL),
-            NoToken => (StatusCode::BAD_REQUEST, ClientError::MISSING_PARAMS),
-
+            // Modules
             Model(models::Error::EntityNotFound { entity, id }) => (
                 StatusCode::NOT_FOUND,
                 ClientError::ENTITY_NOT_FOUND { entity, id: *id },

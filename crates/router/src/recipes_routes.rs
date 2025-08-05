@@ -15,7 +15,7 @@ use crate::handlers::recipes::{
     add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipe_import_handler,
     add_recipes_handler, add_website_post_handler, delete_recipe_categories_handler,
     delete_recipe_handler, duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
-    post_recipe_categories_handler, recipes_handler, scale_recipe_handler,
+    post_recipe_categories_handler, recipes_handler, scale_recipe_handler, search_recipes_handler,
     share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
     view_recipe_handler,
 };
@@ -153,6 +153,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
             "/categories",
             post(post_recipe_categories_handler).delete(delete_recipe_categories_handler),
         )
+        .route("/search", get(search_recipes_handler))
         .route(
             "/supported-applications",
             get(supported_applications_handler),
@@ -2353,6 +2354,207 @@ mod tests {
                 is_error: true,
                 error_reason: "Scraper(UnknownWebsite)".to_string(),
             }
+        }
+    }
+
+    mod tests_search {
+        use super::*;
+        use axum_test::TestServer;
+        use models::Recipe;
+        use models::params::SearchParams;
+        use models::recipe::test_utils::a_complete_recipe_for_create;
+        use repository::ModelManager;
+
+        const BASE_URI: &str = "/recipes/search";
+
+        async fn insert_recipes(mm: &ModelManager, user_id: i64) -> Result<()> {
+            let mut recipe1 = a_complete_recipe_for_create();
+            recipe1.name = "Chinese Firmware".to_string();
+            let mut recipe2 = a_complete_recipe_for_create();
+            recipe2.name = "Lovely Canada".to_string();
+            let mut recipe3 = a_complete_recipe_for_create();
+            recipe3.name = "Lovely Ukraine".to_string();
+            for recipe in [recipe1, recipe2, recipe3] {
+                let _ = Recipe::create(mm, user_id, &recipe).await?;
+            }
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_page_below_1_returns_recipes_from_first_page() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut server: TestServer = build_server_logged_in(config).await?;
+            server.add_header(axum_htmx::HX_REQUEST, "true");
+            insert_recipes(&state.mm, 1).await?;
+
+            let res = server
+                .get(BASE_URI)
+                .add_query_params(SearchParams {
+                    q: Some("lovely".to_string()),
+                    sort: None,
+                    page: Some(0),
+                })
+                .await;
+
+            res.assert_status_ok();
+            res.assert_header(axum_htmx::HX_RETARGET, "#list-recipes");
+            assert_html(
+                res,
+                vec![
+                    r#"<h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Ukraine</h2>"#,
+                    r#"<h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Canada</h2>"#,
+                    r#"<button class="join-item btn btn-disabled w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled w-12" title="Next page" aria-label="Next page">›</button>"#,
+                ],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_empty_query_redirects_to_recipes_index() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut server: TestServer = build_server_logged_in(config).await?;
+            server.add_header(axum_htmx::HX_REQUEST, "true");
+            insert_recipes(&state.mm, 1).await?;
+
+            let res = server
+                .get(BASE_URI)
+                .add_query_params(SearchParams {
+                    q: Some("".to_string()),
+                    sort: None,
+                    page: Some(0),
+                })
+                .await;
+
+            res.assert_status_ok();
+            res.assert_header(axum_htmx::HX_RETARGET, "#content");
+            assert_html(
+                res,
+                vec![
+                    r#"<h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Chinese Firmware</h2>"#,
+                    r#"<h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Ukraine</h2>"#,
+                    r#"<h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Canada</h2>"#,
+                    r#"<button class="join-item btn btn-disabled w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled w-12" title="Next page" aria-label="Next page">›</button>"#,
+                ],
+            );
+
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_no_results() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut server: TestServer = build_server_logged_in(config).await?;
+            server.add_header(axum_htmx::HX_REQUEST, "true");
+            insert_recipes(&state.mm, 1).await?;
+
+            let res = server
+                .get(BASE_URI)
+                .add_query_params(SearchParams {
+                    q: Some("kool-aid".to_string()),
+                    sort: None,
+                    page: Some(0),
+                })
+                .await;
+
+            res.assert_status_ok();
+            assert_html(
+                res,
+                vec![
+                    r#"<div class="grid place-content-center text-sm text-center h-3/5 md:text-base"><p>No results found.</p></div>"#,
+                ],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_results_query1() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut server: TestServer = build_server_logged_in(config).await?;
+            server.add_header(axum_htmx::HX_REQUEST, "true");
+            insert_recipes(&state.mm, 1).await?;
+
+            let res = server
+                .get(BASE_URI)
+                .add_query_params(SearchParams {
+                    q: Some("love".to_string()),
+                    sort: None,
+                    page: Some(0),
+                })
+                .await;
+
+            res.assert_status_ok();
+            assert_html(
+                res,
+                vec![
+                    r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/2" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Lovely Canada recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Canada</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/2" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
+                    r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/3" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Lovely Ukraine recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Ukraine</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/3" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
+                ],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_results_query2() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut server: TestServer = build_server_logged_in(config).await?;
+            server.add_header(axum_htmx::HX_REQUEST, "true");
+            insert_recipes(&state.mm, 1).await?;
+
+            let res = server
+                .get(BASE_URI)
+                .add_query_params(SearchParams {
+                    q: Some("Chinese".to_string()),
+                    sort: None,
+                    page: Some(0),
+                })
+                .await;
+
+            res.assert_status_ok();
+            assert_html(
+                res,
+                vec![
+                    r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/1" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Chinese Firmware recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Chinese Firmware</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/1" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
+                ],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_results_query3() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut server: TestServer = build_server_logged_in(config).await?;
+            server.add_header(axum_htmx::HX_REQUEST, "true");
+            insert_recipes(&state.mm, 1).await?;
+
+            let res = server
+                .get(BASE_URI)
+                .add_query_params(SearchParams {
+                    q: Some("LOVELY".to_string()),
+                    sort: None,
+                    page: Some(0),
+                })
+                .await;
+
+            res.assert_status_ok();
+            assert_html(
+                res,
+                vec![
+                    r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/2" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Lovely Canada recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Canada</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/2" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
+                    r##"<section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full"><span class="hidden sm:block"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral indicator-item indicator-center" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><figure class="relative cursor-pointer" hx-get="/recipes/3" hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true"><img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full" src="/data/images/Placeholders/placeholder.recipe.webp" alt="Image of the Lovely Ukraine recipe"><div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex"><p class="p-2 text-sm">This is the most delicious recipe!</p></div></figure><div class="card-body justify-between"><h2 class="sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14">Lovely Ukraine</h2><div class="sm:max-h-14 sm:overflow-y-auto sm:content-end sm:min-h-14"><div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row"><span class="sm:hidden"><span class="badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "cat:dinner"}" _="on click put &quot;cat:dinner&quot; into #search_recipes.value">dinner</span></span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":tofu}" _="on click put &quot;tag:tofu&quot; into #search-recipes.value">tofu</span><span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer" hx-get="/recipes/search" hx-target="#list-recipes" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-vals="{"q": "tag":vegetarian}" _="on click put &quot;tag:vegetarian&quot; into #search-recipes.value">vegetarian</span></div></div><div class="card-actions flex-col-reverse h-fit"><button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get="/recipes/3" hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true">View</button></div></div></section>"##,
+                ],
+            );
+            Ok(())
         }
     }
 

@@ -60,10 +60,18 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/params.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/params.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -403,6 +411,13 @@
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_query_param_must_not_be_negative.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_yield_query_param_must_be_specified.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_search::test_empty_query_redirects_to_recipes_index.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_search::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_search::test_no_results.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_search::test_results_query1.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_search::test_results_query2.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_search::test_results_query3.executor": "Run",
     "Cargo.Test report::tests.executor": "Run",
     "Cargo.Test scale::tests.executor": "Run",
     "Cargo.Test search::tests.executor": "Run",
@@ -658,7 +673,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipe::search::tests::tests_search::test_search_by_tools">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_search::test_results_query3">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -677,8 +692,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::search::tests::tests_search::test_search_by_instructions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_instructions -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_search::test_no_results" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_no_results -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -694,8 +709,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::search::tests::tests_search::test_search_by_keywords" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_keywords -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -711,8 +726,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::search::tests::tests_search::test_search_by_tools" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_tools -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_search::test_results_query1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query1 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -728,8 +743,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test search::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests" />
+    <configuration name="Test recipes_routes::tests::tests_search::test_results_query2" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query2 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -745,8 +760,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_filters" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_filters" />
+    <configuration name="Test recipes_routes::tests::tests_search::test_results_query3" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query3 -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -764,19 +779,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
-      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_keywords" />
-      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_tools" />
-      <item itemvalue="Cargo.Test search::tests" />
-      <item itemvalue="Cargo.Test tests_filters" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_no_results" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query3" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_tools" />
-        <item itemvalue="Cargo.Test tests_filters" />
-        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_keywords" />
-        <item itemvalue="Cargo.Test search::tests" />
-        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query3" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_no_results" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page" />
       </list>
     </recent_temporary>
   </component>

@@ -145,3 +145,12 @@ pub(super) fn search_help() -> Markup {
         }
     }
 }
+
+/// Renders the component to display when there are no search results.
+pub fn no_results() -> Markup {
+    html! {
+        div class="grid place-content-center text-sm text-center h-3/5 md:text-base" {
+            p { "No results found." }
+        }
+    }
+}
