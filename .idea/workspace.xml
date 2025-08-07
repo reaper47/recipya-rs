@@ -59,19 +59,45 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/crates/models/src/settings.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/router/src/handlers/settings.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/router/src/settings_router.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/app/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/app/src/state.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/config/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/config/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/email/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/email/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/email/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/email/src/config.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/email/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/email/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/email/src/smtp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/email/src/smtp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/data.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/params.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/params.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/down.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/auth.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/shared.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/shared.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/middleware/mw_auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/middleware/mw_auth.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/support/src/fs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/support/src/fs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,6 +175,7 @@
     "Cargo.Test auth_router::tests.executor": "Run",
     "Cargo.Test b64::tests.executor": "Run",
     "Cargo.Test config::tests.executor": "Run",
+    "Cargo.Test config::tests::test_load_from_env.executor": "Run",
     "Cargo.Test cooking::converter::tests::test_convert_mass::test_dekagram_conversions.executor": "Run",
     "Cargo.Test cooking::units::length::operations::tests::test_abbrev.executor": "Run",
     "Cargo.Test cooking::units::length::scale::tests::test_replace.executor": "Run",
@@ -177,6 +204,7 @@
     "Cargo.Test cooking::units::mass::units::tests::tests_from_str::test_milligram.executor": "Run",
     "Cargo.Test cooking::units::mass::units::tests::tests_from_str::test_ounce.executor": "Run",
     "Cargo.Test cooking::units::mass::units::tests::tests_from_str::test_pound.executor": "Debug",
+    "Cargo.Test cooking::units::system::tests::test_display.executor": "Run",
     "Cargo.Test cooking::units::system::tests::tests_display.executor": "Debug",
     "Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_imperial_uk.executor": "Run",
     "Cargo.Test cooking::units::system::tests::tests_from_str_vec::test_metric_australia.executor": "Run",
@@ -291,6 +319,7 @@
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_metric_tablespoon.executor": "Run",
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_metric_teaspoon.executor": "Run",
     "Cargo.Test cooking::units::volume::units::tests::tests_from_str::test_millilitre.executor": "Run",
+    "Cargo.Test cooklang::tests.executor": "Run",
     "Cargo.Test core::config::data::tests::test_new_ok.executor": "Debug",
     "Cargo.Test core::config::tests::test_config_ok.executor": "Run",
     "Cargo.Test core::config::tests::test_is_demo_err.executor": "Run",
@@ -558,6 +587,8 @@
     "Cargo.Test server::templates::data::tests::tests_searchbar::test_searchbar_data_from_query_none_ok.executor": "Run",
     "Cargo.Test server::templates::helpers::tests::test_cut_string_num_chars_out_of_range_ok.executor": "Run",
     "Cargo.Test server::templates::helpers::tests::test_mul_all_ok.executor": "Run",
+    "Cargo.Test settings::tests::test_get_settings.executor": "Run",
+    "Cargo.Test settings_router::tests::tests_settings::test_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test share::tests.executor": "Run",
     "Cargo.Test share::tests::tests_fetch_by_link::test_exists_err.executor": "Run",
     "Cargo.Test shared_router::tests.executor": "Run",
@@ -630,7 +661,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#148 on 49-implement-get-recipessearch",
+    "git-widget-placeholder": "150-add-the-settings-dialog",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -673,7 +704,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_search::test_results_query3">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -692,8 +723,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_no_results" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_no_results -- --exact" />
+    <configuration name="Test config::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package email --lib config::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -709,8 +740,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page -- --exact" />
+    <configuration name="Test cooking::units::system::tests::test_display" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::system::tests::test_display -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -726,8 +757,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query1 -- --exact" />
+    <configuration name="Test cooklang::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package integrations --lib apps::cooklang::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -743,8 +774,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query2" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query2 -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_scale_recipe::test_valid_double_yield -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -760,8 +791,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query3" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query3 -- --exact" />
+    <configuration name="Test system::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package math --lib cooking::units::system::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -779,19 +810,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_no_results" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query3" />
+      <item itemvalue="Cargo.Test cooklang::tests" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
+      <item itemvalue="Cargo.Test cooking::units::system::tests::test_display" />
+      <item itemvalue="Cargo.Test system::tests" />
+      <item itemvalue="Cargo.Test config::tests" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query3" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_no_results" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_page_below_1_returns_recipes_from_first_page" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
+        <item itemvalue="Cargo.Test cooklang::tests" />
+        <item itemvalue="Cargo.Test cooking::units::system::tests::test_display" />
+        <item itemvalue="Cargo.Test system::tests" />
+        <item itemvalue="Cargo.Test config::tests" />
       </list>
     </recent_temporary>
   </component>
@@ -829,11 +860,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/crates/math/src/cooking/units/system.rs</url>
-          <line>48</line>
-          <option name="timeStamp" value="35" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/crates/repository/src/pool.rs</url>
           <line>59</line>

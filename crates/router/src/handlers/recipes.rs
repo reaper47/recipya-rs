@@ -130,10 +130,15 @@ pub async fn recipes_handler(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
+            // TODO: Populate AboutData with good values.
             about: AboutData {
                 is_update_available: false,
+                is_check_update: false,
+                last_checked_update_at: Default::default(),
+                last_updated_at: Default::default(),
+                version: "".to_string(),
             },
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
@@ -178,7 +183,7 @@ pub async fn duplicate_recipe_handler(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             recipes: vec![recipe],
             ..Default::default()
@@ -217,7 +222,7 @@ pub async fn edit_recipe_handler(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             recipes: vec![recipe],
             ..Default::default()
@@ -440,7 +445,11 @@ pub async fn share_recipe_post_handler(
 
     match ShareRecipe::new(&state.mm, user_id, recipe_id, expires_at).await {
         Ok(share) => {
-            let url = format!("{}/shared/r/{}", state.config.base_url, share.link);
+            let url = format!(
+                "{}/shared/r/{}",
+                state.config.read().await.base_url,
+                share.link
+            );
             templates::general::share_link(&url).into_response()
         }
         Err(err) => {
@@ -465,7 +474,7 @@ pub async fn add_recipes_handler(
         Data {
             is_admin: ctx.0.user_id() == 1,
             is_authenticated: true,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
@@ -634,7 +643,7 @@ pub async fn add_manual_recipe_handler(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
@@ -729,7 +738,8 @@ pub async fn add_manual_recipe_post_handler(
     res
 }
 
-async fn fetch_categories_keywords(
+/// Fetches the user's categories and keywords from the database.
+pub async fn fetch_categories_keywords(
     state: &AppState,
     user_id: i64,
 ) -> Result<(Vec<Category>, Vec<Keyword>)> {
@@ -1131,10 +1141,14 @@ pub async fn view_recipe_handler(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             about: AboutData {
                 is_update_available: false,
+                is_check_update: false,
+                last_checked_update_at: Default::default(),
+                last_updated_at: Default::default(),
+                version: "".to_string(),
             },
             pagination: Some(PaginationData {
                 prev: 0,
@@ -1233,10 +1247,15 @@ pub async fn search_recipes_handler(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
+            // TODO: Populate AboutData with good values.
             about: AboutData {
                 is_update_available: false,
+                is_check_update: false,
+                last_checked_update_at: Default::default(),
+                last_updated_at: Default::default(),
+                version: "".to_string(),
             },
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,

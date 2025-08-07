@@ -2,6 +2,7 @@ mod config;
 mod error;
 mod smtp;
 
+pub use config::{Config, email_config};
 pub use error::{Error, Result};
 
 use mrml::prelude::render::RenderOptions;

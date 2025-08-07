@@ -16,7 +16,7 @@ impl SmtpEmailSender {
     /// Creates a new SMTP email sender based on the SMTP environment variables.
     pub fn new() -> Result<Self> {
         if email_config().is_smtp() {
-            Ok(Self {})
+            Ok(Self)
         } else {
             Err(Error::SmtpNotInitialized)
         }

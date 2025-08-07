@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use support::envs::get_env;
 
 /// Configuration struct for the email client.
-#[derive(PartialEq, Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Config {
     pub smtp_host: String,
     pub smtp_username: String,
@@ -20,7 +20,7 @@ pub fn email_config() -> &'static Config {
 
 impl Config {
     /// Populates the Config's fields from the environment variables.
-    pub fn load_from_env() -> Self {
+    fn load_from_env() -> Self {
         Self {
             smtp_host: get_env("RECIPYA_EMAIL_SMTP_HOST").unwrap_or_default(),
             smtp_username: get_env("RECIPYA_EMAIL_SMTP_USERNAME").unwrap_or_default(),
@@ -35,5 +35,59 @@ impl Config {
             && !self.smtp_host.is_empty()
             && !self.smtp_username.is_empty()
             && !self.smtp_password.is_empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_load_from_env() {
+        temp_env::with_vars(
+            [
+                ("RECIPYA_EMAIL_SMTP_HOST", Some("smtp_host")),
+                ("RECIPYA_EMAIL_SMTP_USERNAME", Some("smtp_username")),
+                ("RECIPYA_EMAIL_SMTP_PASSWORD", Some("smtp_password")),
+                ("RECIPYA_EMAIL_ADMIN", Some("smtp_admin")),
+            ],
+            || {
+                let got = Config::load_from_env();
+
+                pretty_assertions::assert_eq!(
+                    got,
+                    Config {
+                        smtp_host: "smtp_host".to_string(),
+                        smtp_username: "smtp_username".to_string(),
+                        smtp_password: "smtp_password".to_string(),
+                        email_admin: "smtp_admin".to_string(),
+                    }
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn test_is_smtp_valid() {
+        let config = Config {
+            smtp_host: "smtp_host".to_string(),
+            smtp_username: "smtp_username".to_string(),
+            smtp_password: "smtp_password".to_string(),
+            email_admin: "smtp_admin".to_string(),
+        };
+
+        pretty_assertions::assert_eq!(config.is_smtp(), true);
+    }
+
+    #[test]
+    fn test_is_smtp_invalid() {
+        let config = Config {
+            smtp_host: "smtp_host".to_string(),
+            smtp_username: "smtp_username".to_string(),
+            smtp_password: "smtp_password".to_string(),
+            email_admin: "".to_string(),
+        };
+
+        pretty_assertions::assert_eq!(config.is_smtp(), false);
     }
 }

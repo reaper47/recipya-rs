@@ -708,9 +708,9 @@ dependencies = [
 
 [[package]]
 name = "cooklang"
-version = "0.16.2"
+version = "0.16.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75440a51ac76e8ba5c87fecccbc57276d5cb13fd25860a22374eae9e5f927743"
+checksum = "69b53feb0ec0b5d5ca047c91495234fd6dd90bcdc998ac685c8e0b2932dffcaa"
 dependencies = [
  "bitflags 2.9.1",
  "codesnake",
@@ -1114,7 +1114,9 @@ dependencies = [
  "derive_more 2.0.1",
  "lettre",
  "mrml",
+ "pretty_assertions",
  "support",
+ "temp-env",
  "tracing",
 ]
 
@@ -2041,9 +2043,9 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "lettre"
-version = "0.11.17"
+version = "0.11.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb2a0354e9ece2fcdcf9fa53417f6de587230c0c248068eb058fa26c4a753179"
+checksum = "5cb54db6ff7a89efac87dba5baeac57bb9ccd726b49a9b6f21fb92b3966aaf56"
 dependencies = [
  "base64",
  "chumsky",
@@ -2059,7 +2061,7 @@ dependencies = [
  "percent-encoding",
  "quoted_printable",
  "rustls",
- "socket2 0.5.10",
+ "socket2 0.6.0",
  "tokio",
  "url",
  "webpki-roots",
@@ -2274,6 +2276,7 @@ version = "0.0.0"
 dependencies = [
  "measurements",
  "regex",
+ "strum 0.27.2",
 ]
 
 [[package]]
@@ -3980,6 +3983,9 @@ name = "strum"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
+dependencies = [
+ "strum_macros 0.27.2",
+]
 
 [[package]]
 name = "strum_macros"
@@ -4106,14 +4112,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
+name = "temp-env"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96374855068f47402c3121c6eed88d29cb1de8f3ab27090e273e420bdabcf050"
+dependencies = [
+ "parking_lot",
+]
+
+[[package]]
 name = "templates"
 version = "0.0.0"
 dependencies = [
  "config",
  "integrations",
+ "math",
  "maud",
  "models",
  "pretty_assertions",
+ "strum 0.27.2",
  "support",
  "url",
 ]

@@ -85,7 +85,7 @@ pub async fn mw_ctx_resolver(
 
 /// Resolves the context (user authentication) from cookies and the application state.
 async fn ctx_resolve(state: State<AppState>, cookies: &Cookies) -> CtxExtResult {
-    if state.config.is_autologin {
+    if state.config.read().await.is_autologin {
         return Ctx::new(1)
             .map(CtxW)
             .map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()));
@@ -129,11 +129,11 @@ pub async fn mw_redirect_if_authenticated(
 ) -> Result<Response> {
     let is_ok = ctx.is_ok();
 
-    if is_ok && (state.config.is_autologin || is_path_to_redirect(req.uri().path())) {
+    if is_ok && (state.config.read().await.is_autologin || is_path_to_redirect(req.uri().path())) {
         return Ok(Redirect::to("/recipes").into_response());
     }
 
-    if is_ok && state.config.is_no_signups {
+    if is_ok && state.config.read().await.is_no_signups {
         return Ok(Redirect::to("/auth/login").into_response());
     }
 

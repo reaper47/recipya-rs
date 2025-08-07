@@ -1,3 +1,5 @@
+use iso8601::DateTime;
+
 use repository::extensions::pagination::DEFAULT_PER_PAGE;
 
 use crate::RecipeDetails;
@@ -23,6 +25,10 @@ pub struct Data {
 #[derive(Default)]
 pub struct AboutData {
     pub is_update_available: bool,
+    pub is_check_update: bool,
+    pub last_checked_update_at: DateTime,
+    pub last_updated_at: DateTime,
+    pub version: String,
 }
 
 #[derive(Debug, PartialEq)]

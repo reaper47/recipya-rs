@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::extract::ws::{Message, WebSocket};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 use tokio::time::timeout;
 use tracing::error;
 use url::Url;
@@ -23,7 +23,7 @@ use crate::Result;
 /// Shared application state for the Axum web server.
 #[derive(Clone)]
 pub struct AppState {
-    pub config: Config,
+    pub config: Arc<RwLock<Config>>,
     pub data_dir: DataDir,
     pub email_service: Option<EmailClient>,
     pub fs_support: Arc<dyn FsSupport + Send + Sync>,
@@ -48,7 +48,7 @@ impl AppState {
         data_dir.log();
 
         Ok(Self {
-            config: config.clone(),
+            config: Arc::new(RwLock::new(config.clone())),
             data_dir,
             email_service,
             fs_support,

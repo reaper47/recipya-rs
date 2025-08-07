@@ -32,7 +32,7 @@ pub async fn change_password_post_handler(
     State(state): State<AppState>,
     Form(form): Form<ChangePasswordForm>,
 ) -> impl IntoResponse {
-    if state.config.is_autologin {
+    if state.config.read().await.is_autologin {
         return Error::ConfirmForbidden.into_response();
     }
 
@@ -154,7 +154,7 @@ pub async fn forgot_password_post_handler(
                     data: Some(Data {
                         token: token.to_string(),
                         username: user_email,
-                        url: state.config.base_url,
+                        url: state.config.read().await.base_url.clone(),
                     }),
                 };
 
@@ -235,7 +235,9 @@ pub async fn forgot_password_reset_post_handler(
 
 /// Renders the login page.
 pub async fn login_handler(State(state): State<AppState>) -> impl IntoResponse {
-    templates::auth::login(state.config.is_demo, state.config.is_no_signups).into_response()
+    let config = state.config.read().await;
+
+    templates::auth::login(config.is_demo, config.is_no_signups).into_response()
 }
 
 /// Handles user login requests.
@@ -319,7 +321,7 @@ pub async fn logout_post_handler(
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
-    if state.config.is_autologin {
+    if state.config.read().await.is_autologin {
         return Error::LogoutForbidden.into_response();
     }
 
@@ -343,7 +345,7 @@ pub async fn logout_post_handler(
 
 /// Renders the user registration page.
 pub async fn register_handler(State(state): State<AppState>) -> impl IntoResponse {
-    if state.config.is_no_signups {
+    if state.config.read().await.is_no_signups {
         return Redirect::to("/auth/login").into_response();
     }
 
@@ -355,7 +357,9 @@ pub async fn register_post_handler(
     State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
-    if state.config.is_no_signups {
+    let config = state.config.read().await;
+
+    if config.is_no_signups {
         return Redirect::to("/auth/login").into_response();
     }
 
@@ -390,6 +394,8 @@ pub async fn register_post_handler(
     };
 
     if let Some(service) = state.email_service {
+        let base_url = config.base_url.clone();
+
         tokio::spawn(async move {
             service.send(&Email {
                 to: user.email,
@@ -399,7 +405,7 @@ pub async fn register_post_handler(
                 data: Some(Data {
                     token: token.to_string(),
                     username: form.email.into(),
-                    url: state.config.base_url,
+                    url: base_url,
                 }),
             })
         });
@@ -414,7 +420,9 @@ pub async fn user_delete_handler(
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
-    if state.config.is_autologin {
+    let config = state.config.read().await;
+
+    if config.is_autologin {
         let toast = MessageWs::error("This account cannot be deleted.");
 
         if let Ok(json) = serde_json::to_string(&toast) {
@@ -427,7 +435,7 @@ pub async fn user_delete_handler(
     }
 
     let user_id = ctx.0.user_id();
-    if state.config.is_demo && is_demo_user(&state, user_id).await {
+    if config.is_demo && is_demo_user(&state, user_id).await {
         let toast = MessageWs::error("Trump is Putin's lap dog. Remove him from office!");
 
         if let Ok(json) = serde_json::to_string(&toast) {
@@ -438,9 +446,12 @@ pub async fn user_delete_handler(
     }
 
     match User::delete(&state.mm, user_id).await {
-        Ok(_) => logout_post_handler(ctx, State(state), cookies)
-            .await
-            .into_response(),
+        Ok(_) => {
+            drop(config);
+            logout_post_handler(ctx, State(state), cookies)
+                .await
+                .into_response()
+        }
         Err(err) => {
             error!("Could not delete user with id {user_id}: {err}");
             Error::DeleteUser.into_response()

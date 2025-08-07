@@ -39,7 +39,7 @@ impl Config {
             if base.ends_with("/recipya") {
                 base
             } else {
-                format!("{}/recipya", base)
+                format!("{base}/recipya")
             }
         };
 

@@ -3,6 +3,7 @@ mod error;
 mod general_router;
 mod handlers;
 mod recipes_routes;
+mod settings_router;
 mod shared_router;
 mod static_files_router;
 
@@ -24,6 +25,7 @@ pub async fn router(state: AppState) -> Result<Router<AppState>> {
     let router = Router::new()
         .nest("/auth", auth_routes(state.clone()))
         .nest("/recipes", recipes_routes(state.clone()))
+        .nest("/settings", settings_router::settings_routes(state.clone()))
         .nest("/shared", shared_routes())
         .merge(general_routes(state.clone()))
         .merge(static_files_routes(state.clone()));

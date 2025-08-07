@@ -32,7 +32,7 @@ DROP FUNCTION IF EXISTS trig_users_recipes_ad_func;
 DROP FUNCTION IF EXISTS trig_users_recipes_ai_func;
 DROP FUNCTION IF EXISTS trig_times_au_func;
 DROP FUNCTION IF EXISTS trig_recipes_au_func;
-DROP FUNCTION IF EXISTS trig_users_ai_func;
+DROP FUNCTION IF EXISTS users_ai_func;
 
 DROP TABLE IF EXISTS videos_recipes;
 DROP TABLE IF EXISTS users_recipes;

@@ -1,6 +1,6 @@
 use std::io::{Read, Seek};
 
-use cooklang::{Content, CooklangParser, Item, ScalableValue};
+use cooklang::{Content, CooklangParser, Item, Value};
 use recipe_schema::{
     AtType, DefinedTermOrTextOrUrl, HowToToolOrText, HowToToolType, ImageObjectOrUrl,
     RecipeCategory, RecipeCuisine, RecipeSchema, RestrictedDiet, Sections,
@@ -269,8 +269,11 @@ impl CookLang {
                             Some(q) => {
                                 let unit = q.unit().unwrap_or_default();
                                 match q.value() {
-                                    ScalableValue::Fixed(v) => format!("{v} {unit} {name}"),
-                                    ScalableValue::Linear(v) => format!("{v} {unit} {name}"),
+                                    Value::Number(v) => format!("{} {unit} {name}", v.value()),
+                                    Value::Range { start, end } => {
+                                        format!("{}-{} {unit} {name}", start.value(), end.value())
+                                    }
+                                    Value::Text(s) => format!("{s} {unit} {name}")
                                 }
                             }
                         }
@@ -304,7 +307,7 @@ impl CookLang {
             servings: recipe
                 .metadata
                 .servings()
-                .map(|v| v.first().map(|&v| v as i16))
+                .map(|v|  v.as_number().map(|v| v as i16))
                 .unwrap_or_default(),
             source: recipe
                 .metadata
@@ -334,8 +337,11 @@ impl CookLang {
                     name: cookware.name,
                     quantity: match cookware.quantity {
                         None => 1,
-                        Some(ScalableValue::Fixed(v)) => v.to_string().parse().unwrap_or(1),
-                        Some(ScalableValue::Linear(v)) => v.to_string().parse().unwrap_or(1),
+                        Some(q) =>  match q.value() {
+                            Value::Number(v) => v.value() as i16,
+                            Value::Range { start, end } => start.value() as i16,
+                            Value::Text(s) => s.parse().unwrap_or(1),
+                        }
                     },
                 })
                 .collect(),
@@ -445,8 +451,8 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                     "200 g mushrooms".into(),
                     "oil".into(),
                     "4 g salt".into(),
-                    "1/4 tsp pepper".into(),
-                    "1/4 tsp rosemary".into(),
+                    "0.25 tsp pepper".into(),
+                    "0.25 tsp rosemary".into(),
                     "50 g double cream".into(),
                     "salt".into(),
                 ]),

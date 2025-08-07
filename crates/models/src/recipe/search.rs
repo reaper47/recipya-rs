@@ -381,7 +381,7 @@ mod tests {
                     },
                     yield_: recipe_c.yield_.unwrap_or_default(),
                     language: "eng".to_string(),
-                    measurement_system_id: 1,
+                    measurement_system_id: 2,
                     source: recipe_c.source,
                     created_at: Default::default(),
                     updated_at: Default::default(),

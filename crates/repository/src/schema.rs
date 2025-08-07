@@ -361,10 +361,10 @@ diesel::table! {
     user_settings (id) {
         id -> Int8,
         user_id -> Int8,
-        measurement_system_id -> Nullable<Int2>,
+        measurement_system_id -> Int2,
         calculate_nutrition -> Bool,
         convert_automatically -> Bool,
-        cookbooks_view -> Nullable<Int4>,
+        cookbooks_view -> Int4,
     }
 }
 
