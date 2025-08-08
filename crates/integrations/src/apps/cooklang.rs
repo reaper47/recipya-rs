@@ -273,7 +273,7 @@ impl CookLang {
                                     Value::Range { start, end } => {
                                         format!("{}-{} {unit} {name}", start.value(), end.value())
                                     }
-                                    Value::Text(s) => format!("{s} {unit} {name}")
+                                    Value::Text(s) => format!("{s} {unit} {name}"),
                                 }
                             }
                         }
@@ -307,7 +307,7 @@ impl CookLang {
             servings: recipe
                 .metadata
                 .servings()
-                .map(|v|  v.as_number().map(|v| v as i16))
+                .map(|v| v.as_number().map(|v| v as i16))
                 .unwrap_or_default(),
             source: recipe
                 .metadata
@@ -337,11 +337,11 @@ impl CookLang {
                     name: cookware.name,
                     quantity: match cookware.quantity {
                         None => 1,
-                        Some(q) =>  match q.value() {
+                        Some(q) => match q.value() {
                             Value::Number(v) => v.value() as i16,
                             Value::Range { start, end } => start.value() as i16,
                             Value::Text(s) => s.parse().unwrap_or(1),
-                        }
+                        },
                     },
                 })
                 .collect(),

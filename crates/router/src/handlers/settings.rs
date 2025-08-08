@@ -31,8 +31,11 @@ pub async fn settings_handler(
         }
     };
 
-    let (categories, _keywords) = match fetch_categories_keywords(&state, user_id).await {
-        Ok(res) => res,
+    let categories = match fetch_categories_keywords(&state, user_id).await {
+        Ok((categories, _)) => categories
+            .into_iter()
+            .filter(|c| c.name != "uncategorized")
+            .collect::<Vec<_>>(),
         Err(err) => {
             error!("Error fetching categories for user {user_id}: {err}");
             broadcast_error(&state, user_id, "Error fetching categories.").await;
@@ -40,7 +43,9 @@ pub async fn settings_handler(
         }
     };
 
-    let email_config = if state.config.read().await.is_demo {
+    let config = state.config.read().await;
+
+    let email_config = if config.is_demo {
         &email::Config {
             smtp_host: "smtp.gmail.com".into(),
             smtp_username: "demo@demo.com".into(),
@@ -50,8 +55,6 @@ pub async fn settings_handler(
     } else {
         email::email_config()
     };
-
-    let config = state.config.read().await;
 
     templates::settings::settings(
         Data {

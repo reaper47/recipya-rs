@@ -29,6 +29,7 @@ pub(super) fn head(title: &str) -> Markup {
             script src="https://unpkg.com/htmx.org@2.0.6"{}
             script src="https://unpkg.com/hyperscript.org@0.9.14" {}
             script src="https://unpkg.com/htmx-ext-ws@2.0.2/ws.js" {}
+            script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js" {}
             script defer src="/public/js/core.min.js" {}
             script defer src="/public/js/toast.min.js" {}
         }

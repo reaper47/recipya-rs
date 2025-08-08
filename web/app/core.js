@@ -411,3 +411,22 @@ async function reloadImg(url) {
         window.location.reload(true);
     }
 }
+
+function initGlobalKeyboardShortcuts() {
+    console.log("Init keyboard shortcuts");
+    document.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "s") {
+            event.preventDefault();
+
+            htmx.ajax('GET', '/settings', {
+                target: '#settings-dialog-content'
+            }).then(() => {
+                document.querySelector("#settings-dialog").showModal();
+            });
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initGlobalKeyboardShortcuts();
+});

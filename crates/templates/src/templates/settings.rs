@@ -60,44 +60,44 @@ pub fn settings(
 ) -> Markup {
     html! {
         div class="flex flex-col menu-sm sm:flex-row sm:menu-md" {
-            ul class="menu menu-horizontal pt-0 flex-nowrap overflow-x-auto sm:w-56 sm:overflow-x-clip sm:flex-wrap sm:menu sm:menu-vertical"
-               _=(PreEscaped("on click remove .active from .setting-tab then add .active to closest <a/> to event.target")) {
+            ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical"
+               _=(PreEscaped("on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target")) {
                 li {
-                    a class="setting-tab active" _=(PreEscaped("on click add .hidden to the children of #settings_blocks then remove .hidden from #settings-recipes")) {
+                    a class="setting-tab menu-active" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-recipes")) {
                         (icon_cube_transparent())
                         "Recipes"
                     }
                 }
                 @if data.is_admin {
                     li {
-                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings_blocks then remove .hidden from #settings-connections")) {
+                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections")) {
                             (icon_cloud())
                             "Connections"
                         }
                     }
                 }
                 li {
-                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings_blocks then remove .hidden from #settings-data")) {
+                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-data")) {
                         (icon_circle_stack())
                         "Data"
                     }
                 }
                 @if data.is_admin {
                     li {
-                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings_blocks then remove .hidden from #settings-server")) {
+                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server")) {
                             (icon_server())
                             "Server"
                         }
                     }
                 }
                 li {
-                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings_blocks then remove .hidden from #settings-account")) {
+                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-account")) {
                         (icon_user_circle())
                         "Account"
                     }
                 }
                 li {
-                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings_blocks then remove .hidden from #settings-about")) {
+                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-about")) {
                         (icon_information_circle())
                         "About"
                     }
@@ -119,29 +119,33 @@ pub fn settings(
 
 fn settings_recipes(categories: Vec<Category>, settings: UserSettingDetails) -> Markup {
     html! {
-        div #settings-recipes class="p-3 md:p-0 md:pr-4 md:max-h-96 overflow-y-auto" {
+        div #settings-recipes class="p-3 md:max-h-96 overflow-y-auto" {
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
-                    summary class="font-semibold cursor-default" {
+                    summary class="font-semibold cursor-default select-none" {
                         "Categories"
                     }
                     div class="flex flex-wrap gap-2 p-2" {
                         @for category in categories.iter().map(|c| c.name.as_str()) {
-                            div class="badge badge-outline p-3 pr-0" {
+                            div class="category-badge badge badge-outline p-3 pr-0" {
                                 form class="inline-flex" hx-delete="/recipes/categories" hx-target="closest <div/>" hx-swap="delete" {
                                     input type="hidden" name="category" value=(category);
                                     span class="select-none" { (category) }
-                                    button type="submit" class="btn btn-xs btn-ghost" { "X" }
+                                    button type="submit" class="btn btn-xs btn-circle btn-ghost" {
+                                        "X"
+                                    }
                                 }
                             }
                         }
                     }
-                    div class="badge badge-outline p-3 pr-0" {
+                    div class="badge badge-outline p-3 pr-0 ml-2" {
                         form class="inline-flex" hx-post="/recipes/categories" hx-target="closest <div/>" hx-swap="outerHTML" {
                             label class="form-control" {
                                 input required type="text" placeholder="New category" class="input input-ghost input-xs w-[16ch] focus:outline-none" name="category" autocomplete="off";
                             }
-                            button class="btn btn-xs btn-ghost" { (PreEscaped("&#10003;")) }
+                            button class="btn btn-xs btn-circle btn-ghost" {
+                                (PreEscaped("&#10003;"))
+                            }
                         }
                     }
                 }
@@ -151,7 +155,7 @@ fn settings_recipes(categories: Vec<Category>, settings: UserSettingDetails) -> 
                 label for="settings-recipes-measurement-system" class="font-semibold" {
                     "Measurement system"
                 }
-                select id="settings-recipes-measurement-system" name="system" class="w-fit select select-bordered select-sm" hx-post="/settings/measurement-system" hx-swap="none" {
+                select #settings-recipes-measurement-system name="system" class="w-fit select select-bordered select-sm" hx-post="/settings/measurement-system" hx-swap="none" {
                     @for system in MeasurementSystem::iter() {
                         option value=(system)
                                selected[system == settings.measurement_system] {
@@ -160,25 +164,25 @@ fn settings_recipes(categories: Vec<Category>, settings: UserSettingDetails) -> 
                     }
                 }
             }
-            div class="flex justify-between items-center text-sm mt-2" {
-                label for="settings-recipes-convert" {
+            label class="flex justify-between items-center text-sm mt-2" for="settings-recipes-convert" {
+                div {
                     span class="font-semibold" {
                         "Convert automatically"
                     }
                     br;
-                    span class="text-sm" {
+                    span class="text-xs" {
                         "Convert new recipes to your preferred measurement system."
                     }
                 }
                 input type="checkbox" name="convert" #settings-recipes-convert
-                      checked[settings.is_convert_automatically]
-                      class="checkbox"
-                      hx-post="/settings/convert-automatically"
-                      hx-trigger="click";
+                  checked[settings.is_convert_automatically]
+                  class="checkbox"
+                  hx-post="/settings/convert-automatically"
+                  hx-trigger="click";
             }
             div class="divider m-0" {}
-            div class="flex justify-between items-center text-sm mt-2" {
-                label for="settings-recipes-calc-nutrition" {
+            label class="flex justify-between items-center text-sm mt-2" for="settings-recipes-calc-nutrition" {
+                div {
                     span class="font-semibold" {
                         "Calculate nutrition facts"
                     }
@@ -196,7 +200,7 @@ fn settings_recipes(categories: Vec<Category>, settings: UserSettingDetails) -> 
             div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
-                    summary class="font-semibold cursor-default" {
+                    summary class="font-semibold cursor-default select-none" {
                         "Placeholders"
                     }
                     div class="flex flex-wrap gap-2 p-2 flex-row" {
@@ -221,26 +225,26 @@ fn settings_recipes(categories: Vec<Category>, settings: UserSettingDetails) -> 
                                 "Restore original"
                             }
                         }
-                    }
-                    div class="max-w-60" {
-                        p class="text-center mb-1 font-medium underline" {
-                            "Cookbook"
-                        }
-                        form hx-post="/placeholder" hx-encoding="multipart/form-data" hx-swap="none"
-                             _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
-                            img src="/data/images/Placeholders/placeholder.cookbook.webp" alt="Cookbook placeholder" class="w-60 h-60";
-                            input type="hidden" name="name" value="cookbook";
-                            input type="file" name="images" class="file-input file-input-bordered file-input-sm max-w-60 mt-1";
-                            button class="btn btn-neutral btn-sm btn-block my-1" {
-                                "Update"
+                        div class="max-w-60" {
+                            p class="text-center mb-1 font-medium underline" {
+                                "Cookbook"
                             }
-                        }
-                        button class="btn btn-error btn-sm btn-block"
-                               hx-post="/placeholder/restore"
-                               hx-vals=r#"js:{name: "cookbook"}"#
-                               hx-swap="none"
-                               _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
-                            "Restore original"
+                            form hx-post="/placeholder" hx-encoding="multipart/form-data" hx-swap="none"
+                                 _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
+                                img src="/data/images/Placeholders/placeholder.cookbook.webp" alt="Cookbook placeholder" class="w-60 h-60";
+                                input type="hidden" name="name" value="cookbook";
+                                input type="file" name="images" class="file-input file-input-bordered file-input-sm max-w-60 mt-1";
+                                button class="btn btn-neutral btn-sm btn-block my-1" {
+                                    "Update"
+                                }
+                            }
+                            button class="btn btn-error btn-sm btn-block"
+                                   hx-post="/placeholder/restore"
+                                   hx-vals=r#"js:{name: "cookbook"}"#
+                                   hx-swap="none"
+                                   _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
+                                "Restore original"
+                            }
                         }
                     }
                 }
@@ -251,62 +255,46 @@ fn settings_recipes(categories: Vec<Category>, settings: UserSettingDetails) -> 
 
 fn settings_connections(config: &SettingsForView) -> Markup {
     html! {
-        div #settings-connections class="p-3 overflow-y-auto max-h-96 hidden md:p-0 md:pr-4" {
+        div #settings-connections class="p-3 overflow-y-auto max-h-96 hidden" {
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
-                    summary class="font-semibold cursor-default" {
+                    summary class="font-semibold cursor-default select-none" {
                         "SMTP Server"
                         br;
                         span class="text-xs font-normal" {
                             "This connection is used to send emails."
                         }
                     }
-                    form class="grid w-full" hx-put="/settings/config" hx-swap="none" {
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "From"
-                                }
-                            }
-                            input name="email.from" type="text" placeholder="SMTP email" value=(config.email_admin) autocomplete="off" class="input input-bordered input-sm w-full";
+                    form class="grid w-full " hx-put="/settings/config" hx-swap="none" {
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "From" }
+                            input name="email.from" type="email" placeholder="SMTP email" value=(config.email_admin) autocomplete="off" class="input input-sm";
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "SMTP Host"
-                                }
-                            }
-                            input name="email.host" type="text" placeholder="smtp.gmail.com" value=(config.smtp_host) autocomplete="off" class="input input-bordered input-sm w-full";
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Host" }
+                            input name="email.host" type="text" placeholder="smtp.gmail.com" value=(config.smtp_host) autocomplete="off" class="input input-bordered input-sm";
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "SMTP Username"
-                                }
-                            }
-                            input name="email.username" type="text" placeholder="email@example.com" value=(config.smtp_username) autocomplete="off" class="input input-bordered input-sm w-full";
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Username" }
+                            input name="email.username" type="email" placeholder="email@example.com" value=(config.smtp_username) autocomplete="off" class="input input-bordered input-sm";
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "SMTP Password"
-                                }
-                            }
-                            input name="email.password" type="password" placeholder="SMTP password or app password" value=(config.smtp_password) autocomplete="off" class="input input-bordered input-sm w-full";
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Password" }
+                            input name="email.password" type="password" placeholder="SMTP password or app password" value=(config.smtp_password) autocomplete="off" class="input input-bordered input-sm";
                         }
-                        button class="btn btn-sm mt-2" {
+                        button class="btn btn-soft btn-sm mt-2" {
                             "Update"
                         }
                     }
                 }
-                button type="button" title="Test connection" class="btn btn-xs float-right self-baseline" hx-get="/integrations/test-connection?api=smtp" hx-swap="none" {
+                button type="button" title="Test connection" class="btn btn-xs float-right self-baseline hover:text-secondary" hx-get="/integrations/test-connection?api=smtp" hx-swap="none" {
                     (icon_arrow_path())
                 }
             }
             div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
-                    summary class="font-semibold cursor-default" {
+                    summary class="font-semibold cursor-default select-none" {
                         "Azure AI Document Intelligence"
                         br;
                         span class="text-xs font-normal" {
@@ -314,28 +302,20 @@ fn settings_connections(config: &SettingsForView) -> Markup {
                         }
                     }
                     form class="grid w-full" hx-put="/settings/config" hx-swap="none" {
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Resource key"
-                                }
-                            }
-                            input name="integrations.ocr.key" type="text" placeholder="Resource key 1" value="{ data.Settings.Config.Integrations.AzureDI.Key }" autocomplete="off" class="input input-bordered input-sm w-full";
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Resource key" }
+                            input name="integrations.ocr.key" type="text" placeholder="Resource key 1" value="{ data.Settings.Config.Integrations.AzureDI.Key }" autocomplete="off" class="input input-bordered input-sm";
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Endpoint"
-                                }
-                            }
-                            input name="integrations.ocr.url" type="url" placeholder="Vision endpoint URL" value="{ data.Settings.Config.Integrations.AzureDI.Endpoint }" autocomplete="off" class="input input-bordered input-sm w-full";
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Endpoint" }
+                            input name="integrations.ocr.url" type="url" placeholder="Vision endpoint URL" value="{ data.Settings.Config.Integrations.AzureDI.Endpoint }" autocomplete="off" class="input input-bordered input-sm";
                         }
-                        button class="btn btn-sm mt-2" {
+                        button class="btn btn-soft btn-sm mt-2" {
                             "Update"
                         }
                     }
                 }
-                button type="button" title="Test connection" class="btn btn-xs float-right self-baseline" hx-get="/integrations/test-connection?api=azure-di" hx-swap="none" {
+                button type="button" title="Test connection" class="btn btn-xs float-right self-baseline hover:text-secondary" hx-get="/integrations/test-connection?api=azure-di" hx-swap="none" {
                     (icon_arrow_path())
                 }
             }
@@ -345,34 +325,28 @@ fn settings_connections(config: &SettingsForView) -> Markup {
 
 fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
     html! {
-        div #settings-server class="hidden p-3 md:p-0 md:pr-4 md:max-h-96" {
+        div #settings-server class="hidden p-3 md:max-h-96" {
             div class="flex justify-between items-center text-sm" {
                 form class="grid w-full" hx-put="/settings/config" hx-swap="none" {
-                    p class="font-semibold" {
+                    p class="font-semibold pb-2" {
                         "Configuration"
                     }
-                    div class="form-control" {
-                        label class="label cursor-pointer" {
-                            span class="label-text" {
-                                "Autologin"
-                            }
+                    fieldset class="fieldset" {
+                        label class="label text-base-content" {
                             input name="server.autologin" type="checkbox" checked[data.is_autologin] class="checkbox";
+                            "Autologin"
                         }
                     }
-                    div class="form-control" {
-                        label class="label cursor-pointer" {
-                            span class="label-text" {
-                                "No signups"
-                            }
+                    fieldset class="fieldset" {
+                        label class="label text-base-content" {
                             input name="server.noSignups" type="checkbox" checked[config.is_no_signups] class="checkbox";
+                            "No signups"
                         }
                     }
-                    div class="form-control" {
-                        label class="label cursor-pointer" {
-                            span class="label-text" {
-                                "Is production"
-                            }
+                    fieldset class="fieldset" {
+                        label class="label text-base-content" {
                             input name="server.production" type="checkbox" checked=(config.is_production) class="checkbox";
+                            "Is production"
                         }
                     }
                     button class="btn btn-sm mt-2" {
@@ -386,10 +360,10 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
 
 fn settings_data(data: &Data) -> Markup {
     html! {
-       div #settings-data class="hidden p-3 md:p-0 md:pr-4" {
+       div #settings-data class="hidden p-3" {
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
-                    summary class="font-semibold cursor-default" {
+                    summary class="font-semibold cursor-default select-none" {
                         "Import data"
                         br;
                         span class="text-xs font-normal" {
@@ -397,49 +371,27 @@ fn settings_data(data: &Data) -> Markup {
                         }
                     }
                     form class="flex flex-col text-sm" hx-post="/integrations/import" hx-swap="none" {
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Solution"
-                                }
-                            }
-                            select name="integration" class="w-fit select select-bordered select-sm" {
-                                option value="mealie" selected {
-                                    "Mealie"
-                                }
-                                option value="nextcloud" {
-                                    "Nextcloud"
-                                }
-                                option value="tandoor" {
-                                    "Tandoor"
-                                }
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Solution" }
+                            select name="integration" class="w-fit select select-sm" {
+                                option value="mealie" selected { "Mealie" }
+                                option value="nextcloud" { "Nextcloud" }
+                                option value="tandoor" { "Tandoor" }
                             }
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Base URL"
-                                }
-                            }
-                            input type="url" name="url" placeholder="https://instance.mydomain.com" class="input input-bordered input-sm w-full" required;
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Base URL" }
+                            input type="url" name="url" placeholder="https://instance.mydomain.com" class="input input-bordered input-sm" required;
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Username"
-                                }
-                            }
-                            input type="text" name="username" placeholder="Enter your username" class="input input-bordered input-sm w-full" required;
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Username" }
+                            input type="text" name="username" placeholder="Enter your username" class="input input-bordered input-sm" required;
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Password"
-                                }
-                            }
-                            input type="password" name="password" placeholder="Enter your password" class="input input-bordered input-sm w-full" required;
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Password" }
+                            input type="password" name="password" placeholder="Enter your password" class="input input-bordered input-sm" required;
                         }
-                        button class="btn btn-sm mt-2" {
+                        button class="btn btn-soft btn-sm mt-2" {
                             (icon_download_cloud())
                             "Import"
                         }
@@ -456,20 +408,16 @@ fn settings_data(data: &Data) -> Markup {
                         "Download your data in the selected file format."
                     }
                 }
-                form class="grid gap-1 grid-flow-col w-fit" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" {
-                    label class="form-control w-full max-w-xs" {
-                        select required id="file-type" name="type" class="w-fit select select-bordered select-sm" {
+                form class="grid gap-1 grid-flow-col" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" {
+                    fieldset class="fieldset" {
+                        select required #file-type name="type" class="select select-sm" {
                             optgroup label="Recipes" {
-                                option value="json" selected {
-                                    "JSON"
-                                }
-                                option value="pdf" {
-                                    "PDF"
-                                }
+                                option value="json" selected { "JSON" }
+                                option value="pdf" { "PDF" }
                             }
                         }
                     }
-                    button class="btn btn-outline btn-sm" {
+                    button class="btn btn-soft btn-sm mt-1" {
                         (icon_arrow_down_tray())
                     }
                 }
@@ -492,7 +440,7 @@ fn settings_data(data: &Data) -> Markup {
                         hx-indicator="#fullscreen-loader"
                         hx-confirm="Continue with this backup? Today's data will be backed up if not already done." {
                         label {
-                            select required id="file-type" name="date" class="select select-bordered select-sm" {
+                            select required #file-type name="date" class="select select-bordered select-sm" {
                                 @for b in data.Settings.Backups {
                                     option value=(b.Value) selected {
                                         (b.Display)
@@ -512,14 +460,14 @@ fn settings_data(data: &Data) -> Markup {
 
 fn settings_account() -> Markup {
     html! {
-        div #settings-account class="hidden p-3 md:p-0 md:pr-4 md:max-h-96" {
+        div #settings-account class="hidden p-3 md:max-h-96" {
             div {
                 div class="flex justify-between items-center text-sm" {
                     div {
                         p class="font-semibold" {
                             "Theme"
                         }
-                        p class="font-normal text-sm" {
+                        p class="font-normal text-xs" {
                             "Select your preferred theme."
                         }
                     }
@@ -529,41 +477,23 @@ fn settings_account() -> Markup {
             div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
-                    summary class="font-semibold cursor-default" {
+                    summary class="font-semibold cursor-default select-none" {
                         "Change password "
                     }
                     form class="flex flex-col text-sm" hx-post="/auth/change-password" hx-indicator="#fullscreen-loader" hx-swap="none" {
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Current password"
-                                }
-                            }
-                            input type="password" placeholder="Enter current password"
-                                  class="input input-bordered input-sm w-full"
-                                  name="password-current" required;
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Current password" }
+                            input type="password" placeholder="Enter current password" class="input input-sm" name="password-current" required;
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "New password"
-                                }
-                            }
-                            input type="password" placeholder="Enter new password"
-                                class="input input-bordered input-sm w-full"
-                                name="password-new" required;
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "New password" }
+                            input type="password" placeholder="Enter new password" class="input input-sm" name="password-new" required;
                         }
-                        label class="form-control w-full" {
-                            span class="label" {
-                                span class="label-text text-sm" {
-                                    "Confirm password"
-                                }
-                            }
-                            input type="password" placeholder="Retype new password"
-                                class="input input-bordered input-sm w-full"
-                                name="password-confirm" required;
+                        fieldset class="fieldset" {
+                            legend class="fieldset-legend" { "Confirm password" }
+                            input type="password" placeholder="Retype new password" class="input input-sm" name="password-confirm" required;
                         }
-                        button class="btn btn-sm mt-2" {
+                        button class="btn btn-soft btn-sm mt-2" {
                             "Update password"
                         }
                     }
@@ -576,12 +506,11 @@ fn settings_account() -> Markup {
                         p class="font-semibold" {
                             "Delete Account"
                         }
-                        p class="font-normal text-sm" {
+                        p class="font-normal text-xs" {
                             "This will delete all your data."
                         }
                     }
-                    button type="submit" class="btn btn-sm" hx-delete="/auth/user"
-                           hx-confirm="Are you sure you want to delete your account? This action is irreversible." {
+                    button type="submit" class="btn btn-soft btn-sm" hx-delete="/auth/user" hx-confirm="Are you sure you want to delete your account? This action is irreversible." {
                         "Delete"
                     }
                 }
@@ -593,12 +522,12 @@ fn settings_account() -> Markup {
 fn themes_palette() -> Markup {
     html! {
         div #themes-palette class="dropdown dropdown-end hidden z-30 [@supports(color:oklch(0%_0_0))]:block"
-            _=(PreEscaped("on load call themeChange(document.querySelector('#theme_palette'))")) {
-            div tabindex="0" role="button" class="btn btn-ghost" {
+            _=(PreEscaped("on load call themeChange(document.querySelector('#theme-palette'))")) {
+            div tabindex="0" role="button" class="btn btn-outline" {
                 svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-5 w-5 stroke-current md:hidden" {
                     path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" {}
                 }
-                span id="theme_name" class="hidden font-normal md:inline" _="on load set theme to localStorage.getItem('theme') then  if not theme put 'system' into me else put theme into me" {
+                span #theme-name class="hidden font-normal md:inline" _=(PreEscaped("on load set theme to localStorage.getItem('theme') then  if not theme put 'system' into me else put theme into me")) {
                     "Theme"
                 }
                 svg width="12px" height="12px" class="hidden h-2 w-2 fill-current opacity-60 sm:inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" {
@@ -607,7 +536,7 @@ fn themes_palette() -> Markup {
             }
             div tabindex="0" class="dropdown-content bg-base-200 text-base-content rounded-box top-px h-[28.6rem] max-h-[calc(100vh-10rem)] w-56 overflow-y-auto border border-white/5 shadow-2xl outline outline-1 outline-black/5 mt-16" {
                 div class="grid grid-cols-1 gap-3 p-3" {
-                    button class="outline-base-content text-start outline-offset-4 [&_svg]:visible" data-act-class="[&_svg]:visible" data-set-theme="" _="on click put 'system' into #theme_name" {
+                    button class="outline-base-content text-start outline-offset-4 [&_svg]:visible" data-act-class="[&_svg]:visible" data-set-theme="" _=(PreEscaped("on click put 'system' into #theme-name")) {
                         span class="bg-base-100 rounded-btn text-base-content block w-full cursor-pointer font-sans" data-theme="" {
                             span class="grid grid-cols-5 grid-rows-3" {
                                 span class="col-span-5 row-span-3 row-start-1 flex items-center gap-2 px-4 py-3" {
@@ -626,8 +555,10 @@ fn themes_palette() -> Markup {
                         }
                     }
                     @for theme in [
-                        "light", "dark", "cupcake", "bumblebee", "emerald", "corporate", "synthwave", "retro", "cyberpunk", "valentine", "halloween", "garden", "forest", "aqua", "lofi", "pastel", "fantasy",
-                        "wireframe", "black", "luxury", "dracula", "cmyk", "autumn", "business", "acid", "lemonade", "night", "coffee", "winter", "dim", "nord", "sunset"
+                        "light", "dark", "abyss", "acid", "aqua", "autumn", "black", "bumblebee", "business", "caramellatte",
+                        "coffee", "corporate", "cmyk", "cupcake", "cyberpunk", "dim", "dracula", "emerald", "fantasy", "forest", "garden",
+                        "halloween", "lemonade", "lofi", "luxury", "night", "nord", "pastel", "retro", "silk", "sunset",
+                        "synthwave", "valentine", "white", "wireframe", "winter"
                     ] {
                         (render_theme(theme))
                     }
@@ -644,7 +575,7 @@ fn themes_palette() -> Markup {
 
 fn render_theme(theme_name: &str) -> Markup {
     html! {
-        button class="outline-base-content text-start outline-offset-4" data-act-class="[&_svg]:visible" data-set-theme=(theme_name) _=(PreEscaped(format!("on click put '{theme_name}' into #theme_name"))) {
+        button class="outline-base-content text-start outline-offset-4" data-act-class="[&_svg]:visible" data-set-theme=(theme_name) _=(PreEscaped(format!("on click put '{theme_name}' into #theme-name"))) {
             span class="bg-base-100 rounded-btn text-base-content block w-full cursor-pointer font-sans" data-theme=(theme_name) {
                 span class="grid grid-cols-5 grid-rows-3" {
                     span class="col-span-5 row-span-3 row-start-1 flex items-center gap-2 px-4 py-3" {
@@ -668,8 +599,8 @@ fn render_theme(theme_name: &str) -> Markup {
 fn settings_about(data: Data) -> Markup {
     html! {
         div #settings-about class={
-            "p-3 md:p-0 md:pr-4"
-            @if !data.about.is_check_update { "hidden" }
+            "hidden p-3 md:p-0 md:pr-4"
+            @if !data.about.is_check_update { " hidden" }
         } {
             div {
                 div class="flex justify-between items-center text-sm" {
@@ -680,9 +611,9 @@ fn settings_about(data: Data) -> Markup {
                         p class="text-sm mt-2" {
                             "v" (data.about.version)
                             @if data.about.is_update_available {
-                                "update available"
+                                " (update available)"
                             } @else {
-                                "latest"
+                                " (latest)"
                             }
                         }
                         p class="text-xs" {
@@ -700,8 +631,8 @@ fn settings_about(data: Data) -> Markup {
                                 "Update"
                             }
                         } @else {
-                            img id="settings_about_update_check" class="htmx-indicator mr-1" src="/static/img/bars.svg" alt="Checking...";
-                            button class="btn btn-sm" hx-get="/update/check" hx-target="#settings_about" hx-swap="outerHTML" hx-indicator="#settings_about_update_check" {
+                            img #settings-about-update-check class="htmx-indicator mr-1" src="/public/img/bars.svg" alt="Checking...";
+                            button class="btn btn-sm" hx-get="/update/check" hx-target="#settings-about" hx-swap="outerHTML" hx-indicator="#settings-about-update-check" {
                                 "Check for updates"
                             }
                         }
@@ -710,11 +641,11 @@ fn settings_about(data: Data) -> Markup {
             }
             div class="divider m-0" {}
             div class="flex space-x-1" {
-                a href="https://app.element.io/#/room/#recipya:matrix.org" {
+                a href="https://app.element.io/#/room/#recipya:matrix.org" target="_blank" {
                     img alt="Support" src="https://img.shields.io/badge/Element-Recipya-blue?logo=element&logoColor=white";
                 }
                 a href="https://github.com/reaper47/recipya" target="_blank" {
-                    img alt="Github Repo" src="https://img.shields.io/github/stars/reaper47/recipya?style=social&label=Star on Github";
+                    img alt="Github Repo" src="https://img.shields.io/github/stars/reaper47/recipya-rs?style=social&label=Star on Github";
                 }
             }
         }
