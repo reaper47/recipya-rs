@@ -9,7 +9,7 @@ target/
 .env
 .idea/*.iml
 .idea/workspace.xml
-crates/recipya-scraper/src/tests/data/*.html
+crates/recipya-scraper/src/tests/data/html/*.html
 web/app/node_modules
 web/sponsors/node_modules
 web/sponsors/.env

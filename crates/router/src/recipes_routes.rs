@@ -2278,7 +2278,7 @@ mod tests {
             scrape_test_websites(3).await?;
 
             let res = server.post(BASE_URI).form(&RecipeScrapeForm {
-                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.acouplecooks.com/chicken-meatballs-baked\nhttp://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs/".into(),
+                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.acouplecooks.com/chicken-meatballs-baked\nhttps://addapinch.com/easy-grape-jelly-meatballs-recipe/".into(),
             }).await;
 
             res.assert_status(StatusCode::ACCEPTED);
@@ -2294,7 +2294,7 @@ mod tests {
                 vec![ReportLog {
                     id: 1,
                     report_id: 1,
-                    title: "http://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs".to_owned(),
+                    title: "https://addapinch.com/easy-grape-jelly-meatballs-recipe".to_owned(),
                     is_success: false,
                     is_warning: false,
                     is_error: true,

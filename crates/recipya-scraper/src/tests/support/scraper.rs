@@ -27,11 +27,8 @@ impl HttpClient for MockHttpClient {
 
     fn get(&self, host: Website, _url: &str) -> Result<String> {
         // TODO: 'tests/data/html should be a constant.
-        let path2 = std::env::current_dir().unwrap();
-        println!("Current path 2: {}", path2.display());
-        let content =
-            fs::read_to_string(PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{host}.html"))).unwrap();
-
+        let path = std::env::current_dir().unwrap().join(format!("tests/data/html/{host}.html"));
+        let content = fs::read_to_string(path).unwrap();
         Ok(content)
     }
 
@@ -54,7 +51,7 @@ pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {
         None => panic!("website '{website}' not found in map"),
     };
 
-    let path = PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{website}.html"));
+    let path = std::env::current_dir().unwrap().join(format!("tests/data/html/{website}.html"));
 
     if !path.exists() {
         let client = reqwest::blocking::Client::new();
@@ -79,8 +76,8 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
     let website = match number {
         1 => Website::AllRecipesDotCom,
         2 => Website::ACoupleCooksDotCom,
-        3 => Website::AfghanKitchenRecipesDotCom,
-        _ => Website::AfghanKitchenRecipesDotCom,
+        3 => Website::AddAPinchDotCom,
+        _ => Website::AddAPinchDotCom,
     };
 
     let url = match websites_for_tests().get(&website) {
@@ -88,9 +85,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         None => panic!("website '{website}' not found in map"),
     };
 
-    let path2 = std::env::current_dir().unwrap();
-    println!("Current path 1: {}", path2.display());
-    let path = PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{website}.html"));
+    let path = std::env::current_dir().unwrap().join(format!("tests/data/html/{website}.html"));
 
     if !path.exists() {
         let client = reqwest::Client::new();
@@ -102,7 +97,9 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
                     .inspect_err(|err| error!("Could not write {website}: {err:?}"))
                     .unwrap();
             }
-            Err(err) => error!("Could not fetch {website}: {err:?}"),
+            Err(err) => {
+                error!("Could not fetch {website}: {err:?}")
+            },
         };
     }
 

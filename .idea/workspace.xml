@@ -61,8 +61,8 @@
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/data/html/www.acouplecooks.com.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/data/html/www.allrecipes.com.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/support/scraper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/support/scraper.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
