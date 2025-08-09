@@ -28,7 +28,7 @@ impl HttpClient for MockHttpClient {
     fn get(&self, host: Website, _url: &str) -> Result<String> {
         // TODO: 'tests/data/html should be a constant.
         let content =
-            fs::read_to_string(PathBuf::from(format!("tests/data/html/{host}.html"))).unwrap();
+            fs::read_to_string(PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{host}.html"))).unwrap();
 
         Ok(content)
     }
@@ -52,7 +52,7 @@ pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {
         None => panic!("website '{website}' not found in map"),
     };
 
-    let path = PathBuf::from(format!("./src/core/scraper/tests/data/{website}.html"));
+    let path = PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{website}.html"));
 
     if !path.exists() {
         let client = reqwest::blocking::Client::new();
@@ -82,13 +82,13 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
     };
 
     let url = match websites_for_tests().get(&website) {
-        Some(urls) => urls.get(0).expect("url to test not in vector of urls"),
+        Some(urls) => urls.first().expect("url to test not in vector of urls"),
         None => panic!("website '{website}' not found in map"),
     };
 
     let path2 = std::env::current_dir().unwrap();
     println!("Current path: {}", path2.display());
-    let path = PathBuf::from(format!("./tests/data/html/{website}.html"));
+    let path = PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{website}.html"));
 
     if !path.exists() {
         let client = reqwest::Client::new();
@@ -97,10 +97,10 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes().await?)
-                    .inspect_err(|err| error!("Could not write {}: {:?}", website, err))
+                    .inspect_err(|err| error!("Could not write {website}: {err:?}"))
                     .unwrap();
             }
-            Err(err) => error!("Could not fetch {}: {:?}", website, err),
+            Err(err) => error!("Could not fetch {website}: {err:?}"),
         };
     }
 

@@ -60,7 +60,7 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/settings_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/settings_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/support/scraper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/support/scraper.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -394,6 +394,7 @@
     "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok.executor": "Debug",
     "Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files.executor": "Debug",
@@ -551,6 +552,7 @@
     "Cargo.Test server::templates::helpers::tests::test_cut_string_num_chars_out_of_range_ok.executor": "Run",
     "Cargo.Test server::templates::helpers::tests::test_mul_all_ok.executor": "Run",
     "Cargo.Test settings::tests::test_get_settings.executor": "Run",
+    "Cargo.Test settings_router::tests.executor": "Run",
     "Cargo.Test settings_router::tests::tests_settings::test_demo_sees_fake_connection_data_ok.executor": "Run",
     "Cargo.Test settings_router::tests::tests_settings::test_display_settings_ok.executor": "Run",
     "Cargo.Test settings_router::tests::tests_settings::test_must_be_logged_in_ok.executor": "Run",
@@ -670,7 +672,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test settings_router::tests">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -689,8 +691,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_scale_recipe::test_valid_double_yield -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -776,19 +778,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" />
       <item itemvalue="Cargo.Test settings_router::tests" />
       <item itemvalue="Cargo.Test settings_router::tests::tests_settings::test_demo_sees_fake_connection_data_ok" />
       <item itemvalue="Cargo.Test settings_router::tests::tests_settings::test_display_settings_ok" />
       <item itemvalue="Cargo.Test settings_router::tests::tests_settings::test_server_and_conn_tabs_not_displayed_when_not_admin_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok" />
         <item itemvalue="Cargo.Test settings_router::tests" />
         <item itemvalue="Cargo.Test settings_router::tests::tests_settings::test_display_settings_ok" />
         <item itemvalue="Cargo.Test settings_router::tests::tests_settings::test_server_and_conn_tabs_not_displayed_when_not_admin_ok" />
         <item itemvalue="Cargo.Test settings_router::tests::tests_settings::test_demo_sees_fake_connection_data_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_scale_recipe::test_valid_double_yield" />
       </list>
     </recent_temporary>
   </component>
