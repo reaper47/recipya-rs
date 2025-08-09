@@ -15,3 +15,4 @@ rust-version.workspace = true
 [dependencies]
 measurements = {  version = "0.11", features = ["std"] }
 regex = { workspace = true }
+strum = { workspace = true }

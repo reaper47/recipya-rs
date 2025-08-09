@@ -1,17 +1,22 @@
 use std::collections::HashMap;
-use std::fmt;
 use std::str::FromStr;
+
+use strum::{Display, EnumIter};
 
 use crate::cooking::units::traits::UnitScaler;
 use crate::cooking::units::{Length, Mass, Temperature, Unit, Volume};
 use crate::{Error, Result};
 
-#[derive(Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd, Display, EnumIter)]
 pub enum MeasurementSystem {
+    #[strum(serialize = "Imperial (UK)")]
     ImperialUK,
     #[default]
+    #[strum(serialize = "Metric")]
     Metric,
+    #[strum(serialize = "Metric (Australia)")]
     MetricAustralia,
+    #[strum(serialize = "US Customary")]
     UsCustomary,
 }
 
@@ -45,9 +50,6 @@ impl MeasurementSystem {
         elements
             .into_iter()
             .map(|s| {
-                if s.contains("fresh pineapple, cored and") {
-                    println!("yay");
-                }
                 let Ok(unit) = Unit::from_str(&s) else {
                     return s;
                 };
@@ -181,17 +183,6 @@ impl MeasurementSystem {
                 Volume::Jigger(_) => MeasurementSystem::UsCustomary,
             },
             Unit::Unitless(_) => MeasurementSystem::default(),
-        }
-    }
-}
-
-impl fmt::Display for MeasurementSystem {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            MeasurementSystem::ImperialUK => write!(f, "Imperial (UK)"),
-            MeasurementSystem::Metric => write!(f, "Metric"),
-            MeasurementSystem::MetricAustralia => write!(f, "Metric (Australia)"),
-            MeasurementSystem::UsCustomary => write!(f, "US Customary"),
         }
     }
 }

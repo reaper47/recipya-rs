@@ -53,10 +53,15 @@ pub async fn share_recipe_handler(
         Data {
             is_admin: user_id == 1,
             is_authenticated: user_id > 0,
-            is_autologin: state.config.is_autologin,
+            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
+            // TODO: Populate AboutData with good values.
             about: AboutData {
                 is_update_available: false,
+                is_check_update: false,
+                last_checked_update_at: Default::default(),
+                last_updated_at: Default::default(),
+                version: "".to_string(),
             },
             pagination: None,
             searchbar: None,

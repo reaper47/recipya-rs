@@ -553,7 +553,7 @@ mod tests {
                 name: "Crepes".into(),
                 description: Some("Trust me. They're delicious.".into()),
                 images: vec![Uuid::new_v4(), Uuid::new_v4()],
-                measurement_system_id: 1,
+                measurement_system_id: 2,
                 yield_: Some(12),
                 source: Some("My father's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -739,7 +739,7 @@ mod tests {
                     image: reference.recipe.image,
                     yield_: recipe_c.yield_.unwrap_or(4),
                     language: "eng".into(),
-                    measurement_system_id: 1,
+                    measurement_system_id: 2,
                     source: recipe_c.source,
                     created_at: reference.recipe.created_at,
                     updated_at: reference.recipe.updated_at,
@@ -944,7 +944,7 @@ mod tests {
                     r#"<span class="pl-2">Un sac de chips de 2 kg</span>"#,
                     r#"<span class="pl-2">Two 30-ounce can Goya beans</span>"#,
                     r#"<span class="pl-2">8 lb top quality chicken filet</span>"#,
-                    r#"<span class="pl-2">4 tbsp lemon juice</span>"#,
+                    r#"<span class="pl-2">1 1/3 tbsp lemon juice</span>"#,
                 ],
             );
             Ok(())
@@ -1823,7 +1823,7 @@ mod tests {
                 name: "Best Chinese Kale".into(),
                 description: Some("Your mouth will drool like never before".into()),
                 images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
-                measurement_system_id: 1,
+                measurement_system_id: 2,
                 yield_: Some(6),
                 source: Some("My mother's maple syrup recipes cookbook".into()),
                 videos: vec![VideoForCreate {
@@ -1899,7 +1899,7 @@ mod tests {
                         image: Some(got.recipe.image.expect("A main image")),
                         yield_: 6,
                         language: "eng".into(),
-                        measurement_system_id: 1,
+                        measurement_system_id: 2,
                         source: recipe.source,
                         created_at: got.recipe.created_at,
                         updated_at: got.recipe.updated_at,
@@ -2278,7 +2278,7 @@ mod tests {
             scrape_test_websites(3).await?;
 
             let res = server.post(BASE_URI).form(&RecipeScrapeForm {
-                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.acouplecooks.com/chicken-meatballs-baked\nhttp://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs/".into(),
+                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.acouplecooks.com/chicken-meatballs-baked\nhttps://addapinch.com/easy-grape-jelly-meatballs-recipe/".into(),
             }).await;
 
             res.assert_status(StatusCode::ACCEPTED);
@@ -2294,7 +2294,7 @@ mod tests {
                 vec![ReportLog {
                     id: 1,
                     report_id: 1,
-                    title: "http://www.afghankitchenrecipes.com/recipe/kofta-kebab-kebab-koobideh-minced-meat-kebabs".to_owned(),
+                    title: "https://addapinch.com/easy-grape-jelly-meatballs-recipe".to_owned(),
                     is_success: false,
                     is_warning: false,
                     is_error: true,

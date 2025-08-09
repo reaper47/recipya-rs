@@ -4,6 +4,7 @@ pub mod recipe;
 pub mod data;
 pub mod params;
 pub mod report;
+pub mod settings;
 pub mod share;
 pub mod time;
 pub mod user;

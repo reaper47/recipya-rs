@@ -401,3 +401,32 @@ function copyToClipboard(text) {
         alert('Your browser does not support the clipboard feature. Please copy the link manually.');
     }
 }
+
+async function reloadImg(url) {
+    await fetch(url, { cache: 'reload', mode: 'same-origin' })
+    document.body.querySelectorAll(`img[src='${url}']`)
+        .forEach(img => img.src = url)
+
+    if (navigator.userAgent.toLowerCase().includes('firefox')) {
+        window.location.reload(true);
+    }
+}
+
+function initGlobalKeyboardShortcuts() {
+    console.log("Init keyboard shortcuts");
+    document.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "s") {
+            event.preventDefault();
+
+            htmx.ajax('GET', '/settings', {
+                target: '#settings-dialog-content'
+            }).then(() => {
+                document.querySelector("#settings-dialog").showModal();
+            });
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initGlobalKeyboardShortcuts();
+});

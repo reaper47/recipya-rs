@@ -192,7 +192,7 @@ impl FsSupport for AppFs {
     fn files_in_directory(&self, root: &Path) -> Result<HashSet<PathBuf>> {
         let mut paths = HashSet::new();
 
-        for entry in fs::read_dir(&root)? {
+        for entry in fs::read_dir(root)? {
             let entry = entry?;
             let path = entry.path();
 
