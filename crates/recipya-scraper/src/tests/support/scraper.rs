@@ -27,6 +27,8 @@ impl HttpClient for MockHttpClient {
 
     fn get(&self, host: Website, _url: &str) -> Result<String> {
         // TODO: 'tests/data/html should be a constant.
+        let path2 = std::env::current_dir().unwrap();
+        println!("Current path 2: {}", path2.display());
         let content =
             fs::read_to_string(PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{host}.html"))).unwrap();
 
@@ -87,7 +89,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
     };
 
     let path2 = std::env::current_dir().unwrap();
-    println!("Current path: {}", path2.display());
+    println!("Current path 1: {}", path2.display());
     let path = PathBuf::from(format!("../recipya-scraper/src/tests/data/html/{website}.html"));
 
     if !path.exists() {
