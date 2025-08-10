@@ -96,9 +96,7 @@ impl ImportFromAppForm {
         let app = &self.app;
         let file_name = &self.file_name;
         let file_format = &self.file_format;
-
-        let res = parse_recipe(&mut data, app, file_name, file_format)?;
-        Ok(res)
+        Ok(parse_recipe(&mut data, app, file_name, file_format)?)
     }
 }
 
@@ -2291,32 +2289,37 @@ mod tests {
             let got_logs = fetch_logs(config.clone()).await?;
             pretty_assertions::assert_eq!(
                 got_logs,
-                vec![ReportLog {
-                    id: 1,
-                    report_id: 1,
-                    title: "https://addapinch.com/easy-grape-jelly-meatballs-recipe".to_owned(),
-                    is_success: false,
-                    is_warning: false,
-                    is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
-                }, ReportLog {
-                    id: 2,
-                    report_id: 1,
-                    title: "https://www.acouplecooks.com/chicken-meatballs-baked"
-                        .to_owned(),
-                    is_success: false,
-                    is_warning: false,
-                    is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
-                }, ReportLog {
-                    id: 3,
-                    report_id: 1,
-                    title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies".to_owned(),
-                    is_success: false,
-                    is_warning: false,
-                    is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
-                },  ]
+                vec![
+                    ReportLog {
+                        id: 1,
+                        report_id: 1,
+                        title: "https://addapinch.com/easy-grape-jelly-meatballs-recipe".to_owned(),
+                        is_success: false,
+                        is_warning: false,
+                        is_error: true,
+                        error_reason: "Scraper(DomainNotImplemented)".to_owned(),
+                    },
+                    ReportLog {
+                        id: 2,
+                        report_id: 1,
+                        title: "https://www.acouplecooks.com/chicken-meatballs-baked".to_owned(),
+                        is_success: false,
+                        is_warning: false,
+                        is_error: true,
+                        error_reason: "Scraper(DomainNotImplemented)".to_owned(),
+                    },
+                    ReportLog {
+                        id: 3,
+                        report_id: 1,
+                        title:
+                            "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies"
+                                .to_owned(),
+                        is_success: false,
+                        is_warning: false,
+                        is_error: true,
+                        error_reason: "Scraper(DomainNotImplemented)".to_owned(),
+                    },
+                ]
             );
             Ok(())
         }

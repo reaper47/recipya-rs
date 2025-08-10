@@ -23,6 +23,7 @@ use models::recipe::{
     Category, Keyword, RecipeForCreate, RecipeForm, RecipeSearch, VideoForCreate,
 };
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
+use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;
 use models::user::User;
@@ -38,14 +39,14 @@ use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
+use crate::{Error, Result};
+use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_routes::{
     ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
 };
-
-use crate::{Error, Result};
 
 /// Handles deleting a user's recipe.
 pub async fn delete_recipe_handler(
@@ -79,15 +80,17 @@ pub async fn recipes_handler(
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
+
+    let settings = get_settings(&state, user_id).await?;
 
     let num_recipes = match Recipe::count(&state.mm, user_id).await {
         Ok(count) => count,
         Err(err) => {
             error!("Error counting recipes for user {user_id}: {err}");
             broadcast_error(&state, user_id, "Error fetching number of recipes.").await;
-            return Error::Database.into_response();
+            return Ok(Error::Database.into_response());
         }
     };
 
@@ -112,7 +115,7 @@ pub async fn recipes_handler(
 
             match mapped_recipes {
                 Ok(mapped) => mapped,
-                Err(_) => return Error::Database.into_response(),
+                Err(_) => return Err(Error::Database),
             }
         }
         Err(err) => {
@@ -120,11 +123,11 @@ pub async fn recipes_handler(
                 "Error fetching recipes for user '{user_id}' with search params '{search_params:?}': {err}"
             );
             broadcast_error(&state, user_id, "Error fetching recipes.").await;
-            return Error::Database.into_response();
+            return Err(Error::Database);
         }
     };
 
-    templates::recipes::index(
+    Ok(templates::recipes::index(
         state.fs_support,
         uri.path(),
         Data {
@@ -150,8 +153,8 @@ pub async fn recipes_handler(
             recipes,
         },
         state.data_dir,
-    )
-    .into_response()
+        settings,
+    ).into_response())
 }
 
 /// Handles the duplicate recipe endpoint.
@@ -160,8 +163,10 @@ pub async fn duplicate_recipe_handler(
     Path(recipe_id): Path<i64>,
     header_map: HeaderMap,
     State(state): State<AppState>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
+
+    let settings = get_settings(&state, user_id).await?;
 
     let (mut recipe, categories, keywords) =
         match fetch_view_recipe(&state, user_id, recipe_id).await {
@@ -169,17 +174,16 @@ pub async fn duplicate_recipe_handler(
             Err(err) => {
                 error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
                 broadcast_error(&state, user_id, "Recipe not found.").await;
-                return Error::Model(EntityNotFound {
+                return Err(Error::Model(EntityNotFound {
                     id: recipe_id,
                     entity: "recipe",
-                })
-                .into_response();
+                }));
             }
         };
 
     recipe.recipe_details.recipe.name = format!("{} (copy)", recipe.recipe_details.recipe.name);
 
-    templates::recipes::add_recipe_manual(
+    Ok(templates::recipes::add_recipe_manual(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
@@ -188,10 +192,11 @@ pub async fn duplicate_recipe_handler(
             recipes: vec![recipe],
             ..Default::default()
         },
+        settings,
         categories,
         keywords,
     )
-    .into_response()
+    .into_response())
 }
 
 /// Handles a recipe's edit page.
@@ -202,6 +207,8 @@ pub async fn edit_recipe_handler(
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
+
+    let settings = get_settings(&state, user_id).await?;
 
     let (recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
         Ok(res) => res,
@@ -228,6 +235,7 @@ pub async fn edit_recipe_handler(
             ..Default::default()
         },
         &state.data_dir,
+        settings,
         categories,
         keywords,
     ) {
@@ -468,8 +476,12 @@ pub async fn add_recipes_handler(
     header_map: HeaderMap,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
-) -> impl IntoResponse {
-    templates::recipes::add_page(
+) -> Result<impl IntoResponse> {
+    let user_id = ctx.0.user_id();
+
+    let settings = get_settings(&state, user_id).await?;
+
+    Ok(templates::recipes::add_page(
         uri.path(),
         Data {
             is_admin: ctx.0.user_id() == 1,
@@ -478,7 +490,9 @@ pub async fn add_recipes_handler(
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
+        settings,
     )
+    .into_response())
 }
 
 /// Handles the import recipes endpoint.
@@ -629,17 +643,19 @@ pub async fn add_manual_recipe_handler(
     ctx: CtxW,
     header_map: HeaderMap,
     State(state): State<AppState>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
+
+    let settings = get_settings(&state, user_id).await?;
 
     let (categories, keywords) = match fetch_categories_keywords(&state, user_id).await {
         Ok(res) => res,
         Err(err) => {
-            return err.into_response();
+            return Err(err);
         }
     };
 
-    templates::recipes::add_recipe_manual(
+    Ok(templates::recipes::add_recipe_manual(
         Data {
             is_admin: user_id == 1,
             is_authenticated: true,
@@ -647,10 +663,11 @@ pub async fn add_manual_recipe_handler(
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
+        settings,
         categories,
         keywords,
     )
-    .into_response()
+    .into_response())
 }
 
 /// Handles posting a submitted recipe form.
@@ -1134,6 +1151,8 @@ pub async fn view_recipe_handler(
         }
     };
 
+    let user_settings = UserSettingDetails::get_settings(&state.mm, user_id).await?;
+
     match templates::recipes::view_recipe(
         state.fs_support,
         uri.path(),
@@ -1177,6 +1196,7 @@ pub async fn view_recipe_handler(
             }),
             recipes: vec![view_recipe],
         },
+        user_settings,
     ) {
         Ok(res) => Ok(res),
         Err(err) => {
@@ -1195,7 +1215,7 @@ pub async fn search_recipes_handler(
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse> {
     let user_id = ctx.0.user_id();
 
     let recipes = match Recipe::get_page(&state.mm, user_id, &search_params).await {
@@ -1219,7 +1239,7 @@ pub async fn search_recipes_handler(
 
             match mapped_recipes {
                 Ok(mapped) => mapped,
-                Err(_) => return Error::Database.into_response(),
+                Err(_) => return Err(Error::Database),
             }
         }
         Err(err) => {
@@ -1227,12 +1247,12 @@ pub async fn search_recipes_handler(
                 "Error fetching recipes for user '{user_id}' with search params '{search_params:?}': {err}"
             );
             broadcast_error(&state, user_id, "Error fetching recipes.").await;
-            return Error::Database.into_response();
+            return Err(Error::Database);
         }
     };
 
     if recipes.is_empty() {
-        return templates::search::no_results().into_response();
+        return Ok(templates::search::no_results().into_response());
     }
 
     let hx_target_value = match search_params.q.as_ref() {
@@ -1240,6 +1260,8 @@ pub async fn search_recipes_handler(
         Some(s) if s.is_empty() => "#content",
         Some(_) => "#list-recipes",
     };
+
+    let settings = get_settings(&state, user_id).await?;
 
     let body = templates::recipes::search_results(
         state.fs_support,
@@ -1267,6 +1289,7 @@ pub async fn search_recipes_handler(
             recipes,
         },
         state.data_dir,
+        settings,
     );
 
     let mut extra_headers = HeaderMap::new();
@@ -1275,7 +1298,7 @@ pub async fn search_recipes_handler(
         HeaderValue::from_static(hx_target_value),
     );
 
-    (extra_headers, body).into_response()
+    Ok((extra_headers, body).into_response())
 }
 
 /// Handles the supported applications endpoint.

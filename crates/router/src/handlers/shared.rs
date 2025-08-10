@@ -4,6 +4,8 @@ use axum::response::IntoResponse;
 use tracing::error;
 use uuid::Uuid;
 
+use app::state::AppState;
+use models::settings::UserSettingDetails;
 use models::Error::EntityNotFound;
 use models::data::{AboutData, Data, ShareData, ViewRecipe};
 use models::share::ShareRecipe;
@@ -12,7 +14,6 @@ use models::time::FormattedTimes;
 use crate::Error;
 use crate::handlers::helpers::is_hx_request;
 use crate::middleware::mw_auth::CtxW;
-use app::state::AppState;
 
 /// Renders the shared recipe.
 pub async fn share_recipe_handler(
@@ -23,6 +24,11 @@ pub async fn share_recipe_handler(
     Path(link): Path<Uuid>,
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
+
+    let settings = UserSettingDetails::get_settings(&state.mm, user_id).await.unwrap_or_else(|_| UserSettingDetails {
+        user_id,
+        ..Default::default()
+    });
 
     let (share, recipe) = match ShareRecipe::get_by_link(&state.mm, link).await {
         Ok(share) => share,
@@ -74,6 +80,7 @@ pub async fn share_recipe_handler(
                 formatted_times,
             }],
         },
+        settings,
     ) {
         Ok(res) => res.into_response(),
         Err(err) => {

@@ -404,7 +404,7 @@ pub async fn register_post_handler(
                 template: Some(Template::Intro),
                 data: Some(Data {
                     token: token.to_string(),
-                    username: form.email.into(),
+                    username: form.email,
                     url: base_url,
                 }),
             })

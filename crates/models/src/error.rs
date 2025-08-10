@@ -15,6 +15,7 @@ pub enum Error {
     },
     NoSearch,
     Time,
+    ThemeNotFound,
 
     // Modules
     #[from]

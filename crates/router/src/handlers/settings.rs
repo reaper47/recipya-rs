@@ -1,11 +1,13 @@
 use axum::extract::State;
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
+use axum::Form;
 use tracing::error;
 
 use app::state::AppState;
 use models::data::{AboutData, Data};
-use models::settings::UserSettingDetails;
+use models::settings::{Theme, UserSettingDetails};
+use repository::ModelManager;
 use templates::settings::SettingsForView;
 
 use crate::Error;
@@ -13,6 +15,7 @@ use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::broadcast_error;
 use crate::handlers::recipes::fetch_categories_keywords;
 use crate::middleware::mw_auth::CtxW;
+use crate::settings_router::ThemePayload;
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
@@ -87,4 +90,63 @@ pub async fn settings_handler(
         },
     )
     .into_response()
+}
+
+/// Handles setting the default theme for the target user.
+pub async fn set_default_theme_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(payload): Form<ThemePayload>,
+) -> impl IntoResponse {
+    handle_theme_request(ctx, state, payload, |theme, mm, user_id| async move {
+        theme.save_default(&mm, user_id).await
+    })
+    .await
+}
+
+/// Handles setting the selected theme for the target user.
+pub async fn set_selected_theme_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(payload): Form<ThemePayload>,
+) -> impl IntoResponse {
+    handle_theme_request(ctx, state, payload, |theme, mm, user_id| async move {
+        theme.save_selected(&mm, user_id).await
+    })
+    .await
+}
+
+async fn handle_theme_request<F, Fut>(
+    ctx: CtxW,
+    state: AppState,
+    payload: ThemePayload,
+    save_operation: F,
+) -> impl IntoResponse
+where
+    F: FnOnce(Theme, ModelManager, i64) -> Fut,
+    Fut: Future<Output = Result<(), models::Error>> + Send,
+{
+    let user_id = ctx.0.user_id();
+
+    let theme = match payload.theme.parse::<Theme>() {
+        Ok(theme) => theme,
+        Err(_) => {
+            error!("Invalid theme: {}", payload.theme);
+            broadcast_error(
+                &state,
+                user_id,
+                &format!("Theme '{}' is invalid.", payload.theme),
+            )
+            .await;
+            return Error::InvalidPayload.into_response();
+        }
+    };
+
+    if let Err(err) = save_operation(theme, state.mm.clone(), user_id).await {
+        error!("Error saving selected theme for user {user_id}: {err}");
+        broadcast_error(&state, user_id, "Error saving selected theme.").await;
+        return Error::Database.into_response();
+    }
+
+    (StatusCode::NO_CONTENT, "").into_response()
 }

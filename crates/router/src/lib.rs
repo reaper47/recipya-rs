@@ -32,3 +32,4 @@ pub async fn router(state: AppState) -> Result<Router<AppState>> {
 
     Ok(router)
 }
+

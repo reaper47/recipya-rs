@@ -61,6 +61,7 @@ pub struct RegisterForm {
     pub email: String,
     #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
     pub password: String,
+    #[serde(rename = "password-confirm")]
     #[validate(must_match(other = "password"))]
     pub password_confirm: String,
 }

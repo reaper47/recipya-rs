@@ -1,15 +1,26 @@
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Router, middleware};
+use serde::{Deserialize, Serialize};
 
 use app::state::AppState;
 
-use crate::handlers::settings::settings_handler;
+use crate::handlers::settings::{
+    set_default_theme_handler, set_selected_theme_handler, settings_handler,
+};
 use crate::middleware::mw_auth;
+
+/// Represents the payload for setting themes.
+#[derive(Deserialize, Serialize)]
+pub struct ThemePayload {
+    pub theme: String,
+}
 
 /// Defines the routes for endpoints related to the settings module.
 pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
+        .route("/theme-default", post(set_default_theme_handler))
+        .route("/theme-selected", post(set_selected_theme_handler))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             mw_auth::mw_ctx_require,
@@ -20,8 +31,8 @@ pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
 mod tests {
     use super::*;
     use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, assert_ws_message,
-        build_server_logged_in, build_server_ws, build_server_ws_other_user, create_app_state,
+        TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, build_server_logged_in,
+        build_server_ws, build_server_ws_other_user, create_app_state, insert_other_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -57,8 +68,10 @@ mod tests {
             assert_not_in_html(
                 res,
                 vec![
+                    r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"##,
                     r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"##,
                     r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections">"##,
+                    r##"<div id="settings-admin""##,
                     r##"<div id="settings-server""##,
                     r##"<div id="settings-connections""##,
                 ],
@@ -119,17 +132,68 @@ mod tests {
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections">"#,
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-data">"#,
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"#,
+                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"#,
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-account">"#,
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-about">"#,
-                    r#"<div id="settings-blocks" class="w-full md:h-[26rem] md:max-h-[26rem]" style="padding-right: 1rem">"#,
+                    r#"<div id="settings-blocks" class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem">"#,
                     r#"<div id="settings-recipes" class="p-3 md:max-h-96 overflow-y-auto">"#,
                     r#"<div id="settings-connections" class="p-3 overflow-y-auto max-h-96 hidden">"#,
                     r#"<div id="settings-server" class="hidden p-3 md:max-h-96">"#,
                     r#"<div id="settings-data" class="hidden p-3">"#,
+                    r#"<div id="settings-admin" class="hidden p-3 md:max-h-96">"#,
                     r##"<div id="settings-account" class="hidden p-3 md:max-h-96">"##,
                     r##"<div id="settings-about" class="hidden p-3 md:p-0 md:pr-4 hidden">"##,
                 ],
             );
+            Ok(())
+        }
+    }
+
+    mod tests_themes {
+        use super::*;
+        use axum::http::StatusCode;
+        use models::settings::{Theme, UserSettingDetails};
+
+        const BASE_URI: &str = "/settings/theme";
+
+        #[tokio::test]
+        async fn test_set_default_theme_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let other_user = insert_other_user(config, "slava@ukraini.ua").await?;
+
+            let res = server
+                .post(&format!("{BASE_URI}-default"))
+                .form(&ThemePayload {
+                    theme: Theme::Aqua.to_string(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::NO_CONTENT);
+            let got1 = UserSettingDetails::get_settings(&state.mm, 1).await?;
+            let got2 = UserSettingDetails::get_settings(&state.mm, other_user.id).await?;
+            pretty_assertions::assert_eq!(got1.default_theme, Theme::Aqua);
+            pretty_assertions::assert_eq!(got2.default_theme, Theme::Aqua);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_set_selected_theme_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+
+            let res = server
+                .post(&format!("{BASE_URI}-selected"))
+                .form(&ThemePayload {
+                    theme: Theme::Winter.to_string(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::NO_CONTENT);
+            let got = UserSettingDetails::get_settings(&state.mm, 1).await?;
+            pretty_assertions::assert_eq!(got.selected_theme, Theme::Winter);
             Ok(())
         }
     }
