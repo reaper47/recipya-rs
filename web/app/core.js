@@ -413,7 +413,6 @@ async function reloadImg(url) {
 }
 
 function initGlobalKeyboardShortcuts() {
-    console.log("Init keyboard shortcuts");
     document.addEventListener("keydown", (event) => {
         if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "s") {
             event.preventDefault();
@@ -425,6 +424,12 @@ function initGlobalKeyboardShortcuts() {
             });
         }
     });
+}
+
+function initTheme(themeDefault, themeSelected) {
+    let theme = themeSelected === "default" ? themeDefault : themeSelected;
+    localStorage.setItem("theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
 }
 
 document.addEventListener('DOMContentLoaded', function() {

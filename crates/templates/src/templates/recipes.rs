@@ -8,6 +8,7 @@ use integrations::{FileFormat, all_apps};
 use models::RecipeDetails;
 use models::data::{Data, ViewRecipe};
 use models::recipe::{Category, Keyword, ToolRecipe};
+use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
 
 use super::helpers::cut_string;
@@ -23,7 +24,12 @@ use super::search::{search_help, searchbar};
 use crate::{Error, Result};
 
 /// Renders the add recipe manually page.
-pub fn add_recipe_manual(data: Data, categories: Vec<Category>, keywords: Vec<Keyword>) -> Markup {
+pub fn add_recipe_manual(
+    data: Data,
+    user_setting: UserSettingDetails,
+    categories: Vec<Category>,
+    keywords: Vec<Keyword>,
+) -> Markup {
     let path = "/add/manual";
     let view = data.recipes.first();
 
@@ -34,7 +40,7 @@ pub fn add_recipe_manual(data: Data, categories: Vec<Category>, keywords: Vec<Ke
             (render_nav(path, true))
             (render_add_recipe_manual(view, categories, keywords))
         } @else {
-            (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords)))
+            (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords), user_setting))
         }
     }
 }
@@ -548,7 +554,7 @@ fn add_instruction(name: &str) -> Markup {
 }
 
 /// Renders the add recipe page.
-pub fn add_page(path: &str, data: Data) -> Markup {
+pub fn add_page(path: &str, data: Data, user_setting: UserSettingDetails) -> Markup {
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
@@ -556,7 +562,7 @@ pub fn add_page(path: &str, data: Data) -> Markup {
             (render_nav(path, true))
             (render_add_page())
         } @else {
-            (layouts::main("Add Recipe", path, &data, render_add_page()))
+            (layouts::main("Add Recipe", path, &data, render_add_page(), user_setting))
         }
     }
 }
@@ -821,6 +827,7 @@ pub fn edit_recipe(
     fs_support: Arc<dyn FsSupport + Sync + Send>,
     mut data: Data,
     data_dir: &DataDir,
+    user_setting: UserSettingDetails,
     categories: Vec<Category>,
     keywords: Vec<Keyword>,
 ) -> Result<Markup> {
@@ -843,7 +850,7 @@ pub fn edit_recipe(
             (render_nav(&path, true))
             (render_edit_recipe(fs_support, view, &data_dir, categories, keywords))
         } @else {
-            (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords)))
+            (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords), user_setting))
         }
     })
 }
@@ -1379,6 +1386,7 @@ pub fn index(
     path: &str,
     data: Data,
     data_dir: DataDir,
+    user_setting: UserSettingDetails,
 ) -> Markup {
     if data.is_hx_request {
         html! {
@@ -1393,6 +1401,7 @@ pub fn index(
             path,
             &data,
             render_index(fs_support, &data, &data_dir),
+            user_setting,
         )
     }
 }
@@ -1594,15 +1603,17 @@ pub fn search_results(
     path: &str,
     data: Data,
     data_dir: DataDir,
+    user_setting: UserSettingDetails,
 ) -> Markup {
     if data.is_hx_request {
-        index(fs_support, path, data, data_dir)
+        index(fs_support, path, data, data_dir, user_setting)
     } else {
         layouts::main(
             "Recipes",
             path,
             &data,
             list_recipes(fs_support, &data, &data_dir),
+            user_setting,
         )
     }
 }
@@ -1613,6 +1624,7 @@ pub fn view_recipe(
     path: &str,
     data_dir: DataDir,
     data: Data,
+    user_setting: UserSettingDetails,
 ) -> Result<Markup> {
     let view = data
         .recipes
@@ -1631,7 +1643,8 @@ pub fn view_recipe(
                 &view.recipe_details.recipe.name,
                 path,
                 &data,
-                view_recipe_helper(fs_support, data_dir, &data)?
+                view_recipe_helper(fs_support, data_dir, &data)?,
+                user_setting,
             ))
         }
     })

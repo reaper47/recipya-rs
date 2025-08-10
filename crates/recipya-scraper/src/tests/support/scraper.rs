@@ -1,7 +1,6 @@
 use std::{
     fs,
     io::Write,
-    path::PathBuf,
     sync::{Arc, OnceLock},
 };
 
@@ -27,7 +26,9 @@ impl HttpClient for MockHttpClient {
 
     fn get(&self, host: Website, _url: &str) -> Result<String> {
         // TODO: 'tests/data/html should be a constant.
-        let path = std::env::current_dir().unwrap().join(format!("tests/data/html/{host}.html"));
+        let path = std::env::current_dir()
+            .unwrap()
+            .join(format!("tests/data/html/{host}.html"));
         let content = fs::read_to_string(path).unwrap();
         Ok(content)
     }
@@ -51,7 +52,9 @@ pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {
         None => panic!("website '{website}' not found in map"),
     };
 
-    let path = std::env::current_dir().unwrap().join(format!("tests/data/html/{website}.html"));
+    let path = std::env::current_dir()
+        .unwrap()
+        .join(format!("tests/data/html/{website}.html"));
 
     if !path.exists() {
         let client = reqwest::blocking::Client::new();
@@ -85,7 +88,9 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         None => panic!("website '{website}' not found in map"),
     };
 
-    let path = std::env::current_dir().unwrap().join(format!("tests/data/html/{website}.html"));
+    let path = std::env::current_dir()
+        .unwrap()
+        .join(format!("tests/data/html/{website}.html"));
 
     if !path.exists() {
         let client = reqwest::Client::new();
@@ -99,7 +104,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
             }
             Err(err) => {
                 error!("Could not fetch {website}: {err:?}")
-            },
+            }
         };
     }
 

@@ -322,6 +322,16 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    themes (id) {
+        id -> Int4,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     times (id) {
         id -> Int8,
         recipe_id -> Int8,
@@ -365,6 +375,8 @@ diesel::table! {
         calculate_nutrition -> Bool,
         convert_automatically -> Bool,
         cookbooks_view -> Int4,
+        default_theme -> Int4,
+        selected_theme -> Int4,
     }
 }
 
@@ -475,6 +487,7 @@ diesel::joinable!(times -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> tools (tool_id));
 diesel::joinable!(user_settings -> measurement_systems (measurement_system_id));
+diesel::joinable!(user_settings -> themes (selected_theme));
 diesel::joinable!(user_settings -> users (user_id));
 diesel::joinable!(users_categories -> categories (category_id));
 diesel::joinable!(users_categories -> users (user_id));
@@ -510,6 +523,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     sections,
     shares_cookbooks,
     shares_recipes,
+    themes,
     times,
     tools,
     tools_recipes,

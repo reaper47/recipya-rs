@@ -1,15 +1,14 @@
+use crate::templates::icons::{
+    icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_circle_stack, icon_cloud,
+    icon_cube_transparent, icon_download_cloud, icon_information_circle, icon_rocket_launch,
+    icon_server, icon_user_circle,
+};
 use math::cooking::units::MeasurementSystem;
 use maud::{Markup, PreEscaped, html};
 use models::data::Data;
 use models::recipe::Category;
-use models::settings::UserSettingDetails;
+use models::settings::{Theme, UserSettingDetails};
 use strum::IntoEnumIterator;
-
-use crate::templates::icons::{
-    icon_arrow_down_tray, icon_arrow_path, icon_circle_stack, icon_cloud, icon_cube_transparent,
-    icon_download_cloud, icon_information_circle, icon_rocket_launch, icon_server,
-    icon_user_circle,
-};
 
 pub struct SettingsForView {
     pub is_autologin: bool,
@@ -89,6 +88,12 @@ pub fn settings(
                             "Server"
                         }
                     }
+                    li {
+                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin")) {
+                            (icon_building_library())
+                            "Admin"
+                        }
+                    }
                 }
                 li {
                     a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-account")) {
@@ -103,21 +108,22 @@ pub fn settings(
                     }
                 }
             }
-            div #settings-blocks class="w-full md:h-[26rem] md:max-h-[26rem]" style="padding-right: 1rem" {
-                (settings_recipes(categories, user_setting))
+            div #settings-blocks class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem" {
+                (settings_recipes(categories, &user_setting))
                 @if data.is_admin {
                     (settings_connections(&config))
                     (settings_server(&data, &config))
+                    (settings_admin(&user_setting))
                 }
                 (settings_data(&data))
-                (settings_account())
+                (settings_account(&user_setting))
                 (settings_about(data))
             }
         }
     }
 }
 
-fn settings_recipes(categories: Vec<Category>, settings: UserSettingDetails) -> Markup {
+fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) -> Markup {
     html! {
         div #settings-recipes class="p-3 md:max-h-96 overflow-y-auto" {
             div class="flex justify-between items-center text-sm" {
@@ -358,6 +364,24 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
     }
 }
 
+fn settings_admin(user_settings: &UserSettingDetails) -> Markup {
+    html! {
+        div #settings-admin class="hidden p-3 md:max-h-96"  {
+            div class="flex justify-between items-center text-sm" {
+                div {
+                    p class="font-semibold" {
+                        "Default theme"
+                    }
+                    p class="font-normal text-xs" {
+                        "This sets the default theme for all users."
+                    }
+                }
+                (themes_palette(true, &user_settings.default_theme, &user_settings.selected_theme))
+            }
+        }
+    }
+}
+
 fn settings_data(data: &Data) -> Markup {
     html! {
        div #settings-data class="hidden p-3" {
@@ -458,7 +482,7 @@ fn settings_data(data: &Data) -> Markup {
     }
 }
 
-fn settings_account() -> Markup {
+fn settings_account(user_settings: &UserSettingDetails) -> Markup {
     html! {
         div #settings-account class="hidden p-3 md:max-h-96" {
             div {
@@ -471,7 +495,7 @@ fn settings_account() -> Markup {
                             "Select your preferred theme."
                         }
                     }
-                    (themes_palette())
+                    (themes_palette(false, &user_settings.default_theme, &user_settings.selected_theme))
                 }
             }
             div class="divider m-0" {}
@@ -519,15 +543,48 @@ fn settings_account() -> Markup {
     }
 }
 
-fn themes_palette() -> Markup {
+fn themes_palette(is_set_default: bool, default_theme: &Theme, selected_theme: &Theme) -> Markup {
+    let theme_id = if is_set_default {
+        "theme-name-default"
+    } else {
+        "theme-name"
+    };
+
+    let palette_id = if is_set_default {
+        "themes-palette-default"
+    } else {
+        "themes-palette"
+    };
+
+    let selected_theme = if selected_theme == &Theme::Default {
+        default_theme
+    } else {
+        selected_theme
+    };
+
+    let init = if is_set_default {
+        format!(
+            "on load put '{default_theme}' into #{theme_id} then call themeChange(document.querySelector('#{palette_id}'))"
+        )
+    } else {
+        format!(
+            "on load put '{selected_theme}' into #{theme_id} then call themeChange(document.querySelector('#{palette_id}'))"
+        )
+    };
+
+    let endpoint = if is_set_default {
+        "/settings/theme-default"
+    } else {
+        "/settings/theme-selected"
+    };
+
     html! {
-        div #themes-palette class="dropdown dropdown-end hidden z-30 [@supports(color:oklch(0%_0_0))]:block"
-            _=(PreEscaped("on load call themeChange(document.querySelector('#theme-palette'))")) {
-            div tabindex="0" role="button" class="btn btn-outline" {
+        div id=(palette_id) class="dropdown dropdown-end hidden z-30 [@supports(color:oklch(0%_0_0))]:block" _=(PreEscaped(init)) {
+            div tabindex="0" role="button" class="btn btn-outline w-40" {
                 svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-5 w-5 stroke-current md:hidden" {
                     path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" {}
                 }
-                span #theme-name class="hidden font-normal md:inline" _=(PreEscaped("on load set theme to localStorage.getItem('theme') then  if not theme put 'system' into me else put theme into me")) {
+                span id=(theme_id) class="hidden font-normal md:inline" {
                     "Theme"
                 }
                 svg width="12px" height="12px" class="hidden h-2 w-2 fill-current opacity-60 sm:inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" {
@@ -536,31 +593,14 @@ fn themes_palette() -> Markup {
             }
             div tabindex="0" class="dropdown-content bg-base-200 text-base-content rounded-box top-px h-[28.6rem] max-h-[calc(100vh-10rem)] w-56 overflow-y-auto border border-white/5 shadow-2xl outline outline-1 outline-black/5 mt-16" {
                 div class="grid grid-cols-1 gap-3 p-3" {
-                    button class="outline-base-content text-start outline-offset-4 [&_svg]:visible" data-act-class="[&_svg]:visible" data-set-theme="" _=(PreEscaped("on click put 'system' into #theme-name")) {
-                        span class="bg-base-100 rounded-btn text-base-content block w-full cursor-pointer font-sans" data-theme="" {
-                            span class="grid grid-cols-5 grid-rows-3" {
-                                span class="col-span-5 row-span-3 row-start-1 flex items-center gap-2 px-4 py-3" {
-                                    svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="invisible h-3 w-3 shrink-0" {
-                                        path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z" {}
-                                    }
-                                    span class="flex-grow text-sm" { "system" }
-                                    span class="flex h-full shrink-0 flex-wrap gap-1" {
-                                        span class="bg-primary rounded-badge w-2" {}
-                                        span class="bg-secondary rounded-badge w-2" {}
-                                        span class="bg-accent rounded-badge w-2" {}
-                                        span class="bg-neutral rounded-badge w-2" {}
-                                    }
-                                }
-                            }
+                    @if is_set_default {
+                        @for theme in Theme::iter().skip(1) {
+                            (render_theme(theme, endpoint, theme_id))
                         }
-                    }
-                    @for theme in [
-                        "light", "dark", "abyss", "acid", "aqua", "autumn", "black", "bumblebee", "business", "caramellatte",
-                        "coffee", "corporate", "cmyk", "cupcake", "cyberpunk", "dim", "dracula", "emerald", "fantasy", "forest", "garden",
-                        "halloween", "lemonade", "lofi", "luxury", "night", "nord", "pastel", "retro", "silk", "sunset",
-                        "synthwave", "valentine", "white", "wireframe", "winter"
-                    ] {
-                        (render_theme(theme))
+                    } @else {
+                        @for theme in Theme::iter() {
+                            (render_theme(theme, endpoint, theme_id))
+                        }
                     }
                     a class="outline-base-content overflow-hidden rounded-lg text-center" href="/theme-generator/" {
                         p class="px-2 text-xs" {
@@ -573,22 +613,50 @@ fn themes_palette() -> Markup {
     }
 }
 
-fn render_theme(theme_name: &str) -> Markup {
+fn render_theme(theme_name: Theme, endpoint: &str, theme_id: &str) -> Markup {
+    if endpoint == "/settings/theme-default" {
+        html! {
+            button class="outline-base-content text-start outline-offset-4"
+                    hx-post=(endpoint)
+                    hx-vals=(format!(r#"{{"theme": "{theme_name}"}}"#))
+                    hx-headers=(r#"{"Content-Type": "application/json"}"#)
+                    hx-trigger="click"
+                    hx-swap="none"
+                    _=(PreEscaped(format!("on click put '{theme_name}' into #{theme_id}"))) {
+                (render_theme_button_content(&theme_name))
+            }
+        }
+    } else {
+        html! {
+            button class="outline-base-content text-start outline-offset-4"
+                    data-act-class="[&_svg]:visible"
+                    data-set-theme=(theme_name)
+                    hx-post=(endpoint)
+                    hx-vals=(format!(r#"{{"theme": "{theme_name}"}}"#))
+                    hx-headers=(r#"{"Content-Type": "application/json"}"#)
+                    hx-trigger="click"
+                    hx-swap="none"
+                    _=(PreEscaped(format!("on click put '{theme_name}' into #{theme_id}"))) {
+                (render_theme_button_content(&theme_name))
+            }
+        }
+    }
+}
+
+fn render_theme_button_content(theme_name: &Theme) -> Markup {
     html! {
-        button class="outline-base-content text-start outline-offset-4" data-act-class="[&_svg]:visible" data-set-theme=(theme_name) _=(PreEscaped(format!("on click put '{theme_name}' into #theme-name"))) {
-            span class="bg-base-100 rounded-btn text-base-content block w-full cursor-pointer font-sans" data-theme=(theme_name) {
-                span class="grid grid-cols-5 grid-rows-3" {
-                    span class="col-span-5 row-span-3 row-start-1 flex items-center gap-2 px-4 py-3" {
-                        svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="invisible h-3 w-3 shrink-0" {
-                            path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z" {}
-                        }
-                        span class="flex-grow text-sm" { (theme_name) }
-                        span class="flex h-full shrink-0 flex-wrap gap-1" {
-                            span class="bg-primary rounded-badge w-2" {}
-                            span class="bg-secondary rounded-badge w-2" {}
-                            span class="bg-accent rounded-badge w-2" {}
-                            span class="bg-neutral rounded-badge w-2"{}
-                        }
+        span class="bg-base-100 rounded-btn text-base-content block w-full cursor-pointer font-sans" data-theme=(theme_name) {
+            span class="grid grid-cols-5 grid-rows-3" {
+                span class="col-span-5 row-span-3 row-start-1 flex items-center gap-2 px-4 py-3" {
+                    svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="invisible h-3 w-3 shrink-0" {
+                        path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z" {}
+                    }
+                    span class="flex-grow text-sm" { (theme_name) }
+                    span class="flex h-full shrink-0 flex-wrap gap-1" {
+                        span class="bg-primary rounded-badge w-2" {}
+                        span class="bg-secondary rounded-badge w-2" {}
+                        span class="bg-accent rounded-badge w-2" {}
+                        span class="bg-neutral rounded-badge w-2"{}
                     }
                 }
             }

@@ -1,12 +1,12 @@
-use maud::{DOCTYPE, Markup, html};
-
-use models::data::Data;
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use super::core::{head, toast, toast_ws};
 use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_building_library, icon_cog_6_tooth,
     icon_flag, icon_pencil,
 };
+use models::data::Data;
+use models::settings::UserSettingDetails;
 
 /// Renders the authentication layout template.
 pub fn auth(title: &str, content: Markup) -> Markup {
@@ -23,12 +23,19 @@ pub fn auth(title: &str, content: Markup) -> Markup {
 }
 
 /// Renders the main layout template.
-pub fn main(title: &str, path: &str, data: &Data, content: Markup) -> Markup {
+pub fn main(
+    title: &str,
+    path: &str,
+    data: &Data,
+    content: Markup,
+    user_settings: UserSettingDetails,
+) -> Markup {
     html! {
         (DOCTYPE)
         html lang="en" class="h-full" {
             (head(title))
-            body class="min-h-full" hx-ext="ws" ws-connect="/ws" {
+            body class="min-h-full" hx-ext="ws" ws-connect="/ws"
+                 _=(PreEscaped(format!("on load call initTheme('{}', '{}')", user_settings.default_theme, user_settings.selected_theme))) {
                 header class="navbar bg-base-200 shadow-sm print:hidden" {
                     div class="navbar-start" {
                         a class="btn btn-ghost text-lg" style="padding-left: 0"

@@ -2448,6 +2448,7 @@ dependencies = [
  "recipya-scraper",
  "repository",
  "serde",
+ "strum 0.27.2",
  "support",
  "testing",
  "tokio",
