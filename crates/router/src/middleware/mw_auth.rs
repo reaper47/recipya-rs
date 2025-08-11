@@ -143,3 +143,19 @@ pub async fn mw_redirect_if_authenticated(
 fn is_path_to_redirect(path: &str) -> bool {
     path.eq("/") || path.eq("/login") || path.eq("/forgot-password") || path.eq("/register")
 }
+
+/// Middleware to redirect authenticated users to the appropriate page.
+pub async fn mw_only_admin(ctx: Result<CtxW>, req: Request<Body>, next: Next) -> Result<Response> {
+    match ctx {
+        Ok(ctx) => {
+            let user_id = ctx.0.user_id();
+
+            if user_id == 1 {
+                Ok(next.run(req).await)
+            } else {
+                Err(Error::UserNotAdmin)
+            }
+        }
+        Err(err) => Err(Error::CtxExt(CtxExtError::CtxCreateFail(err.to_string()))),
+    }
+}

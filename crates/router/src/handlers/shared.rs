@@ -5,9 +5,9 @@ use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
-use models::settings::UserSettingDetails;
 use models::Error::EntityNotFound;
 use models::data::{AboutData, Data, ShareData, ViewRecipe};
+use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;
 
@@ -25,10 +25,12 @@ pub async fn share_recipe_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let settings = UserSettingDetails::get_settings(&state.mm, user_id).await.unwrap_or_else(|_| UserSettingDetails {
-        user_id,
-        ..Default::default()
-    });
+    let settings = UserSettingDetails::get_settings(&state.mm, user_id)
+        .await
+        .unwrap_or_else(|_| UserSettingDetails {
+            user_id,
+            ..Default::default()
+        });
 
     let (share, recipe) = match ShareRecipe::get_by_link(&state.mm, link).await {
         Ok(share) => share,

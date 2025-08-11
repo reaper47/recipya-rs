@@ -50,6 +50,7 @@ axum-test = { workspace = true }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 pretty_assertions = { workspace = true }
+serial_test = "3.2.0"
 testing = { path = "../testing", features = ["test-utils"] }
 time = { workspace = true }
 tokio = { workspace = true }

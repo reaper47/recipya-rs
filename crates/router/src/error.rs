@@ -27,6 +27,7 @@ pub enum Error {
         user_id: i64,
     },
     UpdatePassword,
+    UserNotAdmin,
 
     // Files
     AssetCouldNotCopy,
@@ -97,6 +98,7 @@ impl Error {
                     id: -1,
                 },
             ),
+            UserNotAdmin => (StatusCode::FORBIDDEN, ClientError::FORBIDDEN_REQUEST),
 
             // Modules
             Model(models::Error::EntityNotFound { entity, id }) => (
@@ -134,6 +136,7 @@ pub enum ClientError {
     DELETE_FORBIDDEN,
     ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
     BAD_TIME_FORMAT,
+    FORBIDDEN_REQUEST,
     FORM_ERROR,
     INVALID_PAYLOAD,
     INVALID_QUERY,

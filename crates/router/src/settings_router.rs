@@ -8,6 +8,7 @@ use crate::handlers::settings::{
     set_default_theme_handler, set_selected_theme_handler, settings_handler,
 };
 use crate::middleware::mw_auth;
+use crate::middleware::mw_auth::mw_only_admin;
 
 /// Represents the payload for setting themes.
 #[derive(Deserialize, Serialize)]
@@ -19,7 +20,10 @@ pub struct ThemePayload {
 pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
-        .route("/theme-default", post(set_default_theme_handler))
+        .route(
+            "/theme-default",
+            post(set_default_theme_handler).layer(middleware::from_fn(mw_only_admin)),
+        )
         .route("/theme-selected", post(set_selected_theme_handler))
         .layer(middleware::from_fn_with_state(
             state.clone(),
@@ -151,10 +155,33 @@ mod tests {
 
     mod tests_themes {
         use super::*;
-        use axum::http::StatusCode;
+        use axum::http::{Method, StatusCode};
         use models::settings::{Theme, UserSettingDetails};
 
         const BASE_URI: &str = "/settings/theme";
+
+        #[tokio::test]
+        async fn test_post_change_password_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, &format!("{BASE_URI}-default")).await?;
+            assert_must_be_logged_in(Method::POST, &format!("{BASE_URI}-selected")).await?;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_set_default_theme_must_be_admin_err() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, _) = build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+
+            let res = server
+                .post(&format!("{BASE_URI}-default"))
+                .form(&ThemePayload {
+                    theme: Theme::Aqua.to_string(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::FORBIDDEN);
+            Ok(())
+        }
 
         #[tokio::test]
         async fn test_set_default_theme_ok() -> Result<()> {
