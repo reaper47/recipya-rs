@@ -1936,6 +1936,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                                 a title="Share recipe"
                                     hx-post=(format!("/recipes/{recipe_id}/share"))
                                     hx-target="#share-dialog-result"
+                                    hx-push-url="false"
                                     _="on htmx:afterRequest from me
                                             if event.detail.successful
                                                 if navigator.canShare
@@ -1994,6 +1995,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                     button title="Share recipe" class="mr-2 hidden sm:block"
                         hx-post=(format!("/recipes/{recipe_id}/share"))
                         hx-target="#share-dialog-result"
+                        hx-push-url="false"
                         _="on htmx:afterRequest from me
                             if event.detail.successful
                                 if navigator.canShare

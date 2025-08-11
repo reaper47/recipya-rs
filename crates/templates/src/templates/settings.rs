@@ -622,6 +622,7 @@ fn render_theme(theme_name: Theme, endpoint: &str, theme_id: &str) -> Markup {
                     hx-headers=(r#"{"Content-Type": "application/json"}"#)
                     hx-trigger="click"
                     hx-swap="none"
+                    hx-on::after-request="this.closest('.dropdown').querySelector(':focus')?.blur()"
                     _=(PreEscaped(format!("on click put '{theme_name}' into #{theme_id}"))) {
                 (render_theme_button_content(&theme_name))
             }
@@ -714,6 +715,66 @@ fn settings_about(data: Data) -> Markup {
                 }
                 a href="https://github.com/reaper47/recipya" target="_blank" {
                     img alt="Github Repo" src="https://img.shields.io/github/stars/reaper47/recipya-rs?style=social&label=Star on Github";
+                }
+            }
+            div class="divider m-0" {}
+            div class="flex justify-between items-center text-sm" {
+                details class="w-full" {
+                    summary class="font-semibold cursor-default select-none" {
+                        "Keyboard shortcuts"
+                    }
+                    div class="grid gap-4 p-2" {
+                        (render_shortcuts_table("Global", vec![
+                            (vec!["Ctrl", "Alt", "S"], "Open the settings dialog"),
+                            (vec!["Ctrl", "Alt", "N"], "Create a new recipe manually"),
+                            (vec!["Ctrl", "Alt", "I"], "Open the import recipes dialog"),
+                            (vec!["Ctrl", "Alt", "W"], "Open the fetch recipes from websites dialog"),
+                            (vec!["Ctrl", "Alt", "R"], "Open the reports page")
+                        ]))
+                        (render_shortcuts_table("Manual recipe form", vec![
+                            (vec!["Ctrl", "S"], "Save the recipe"),
+                        ]))
+                        (render_shortcuts_table("Edit recipe form", vec![
+                            (vec!["Ctrl", "S"], "Save the recipe"),
+                        ]))
+                        (render_shortcuts_table("View recipe", vec![
+                            (vec!["Ctrl", "D"], "Duplicate the recipe"),
+                            (vec!["Ctrl", "E"], "Edit the recipe"),
+                            (vec!["Ctrl", "P"], "Print the recipe"),
+                            (vec!["Ctrl", "X"], "Share the recipe"),
+                            (vec!["Ctrl", "Del"], "Delete the recipe"),
+                        ]))
+                        p {
+                            kbd class="kbd" { "Ctrl" } " can also be replaced with " kbd class="kbd" { "Cmd" } " instead for macOS users"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn render_shortcuts_table(title: &str, shortcuts: Vec<(Vec<&str>, &str)>) -> Markup {
+    html! {
+        div {
+            p class="font-medium" { (title)":" }
+            div class="overflow-x-auto" {
+                table class="table table-zebra table-sm" {
+                    tbody {
+                        @for (keys, description) in shortcuts {
+                            tr {
+                                td {
+                                    @for (idx, key) in keys.iter().enumerate() {
+                                        kbd class="kbd" { (key) }
+                                        @if idx != keys.len() - 1 {
+                                            " + "
+                                        }
+                                    }
+                                }
+                                td { (description) }
+                            }
+                        }
+                    }
                 }
             }
         }
