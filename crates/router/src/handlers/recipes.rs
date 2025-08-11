@@ -39,7 +39,6 @@ use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
-use crate::{Error, Result};
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
@@ -47,6 +46,7 @@ use crate::middleware::mw_auth::CtxW;
 use crate::recipes_routes::{
     ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
 };
+use crate::{Error, Result};
 
 /// Handles deleting a user's recipe.
 pub async fn delete_recipe_handler(
@@ -154,7 +154,8 @@ pub async fn recipes_handler(
         },
         state.data_dir,
         settings,
-    ).into_response())
+    )
+    .into_response())
 }
 
 /// Handles the duplicate recipe endpoint.

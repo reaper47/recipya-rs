@@ -229,7 +229,7 @@ function pasteText(inputEl, values) {
         if (lastInput) {
             setTimeout(() => {
                 lastInput.value = valueArray[valueArray.length - 1];
-                lastInput.dispatchEvent(new Event('input', { bubbles: true }));
+                lastInput.dispatchEvent(new Event('input', {bubbles: true}));
                 lastInput.blur();
             }, 10);
             lastInput.focus();
@@ -329,13 +329,13 @@ window.addEventListener("DOMContentLoaded", () => {
             const data = event.detail.message;
             const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-            if (parsed.showMessageHtmx) {                
+            if (parsed.showMessageHtmx) {
                 const {action, message, status, title} = parsed.showMessageHtmx;
                 showToast(title, message, status, action);
             }
         } catch (err) {
             console.error(`Failed to parse WebSocket message: ${err}`);
-        }        
+        }
     })
 });
 
@@ -403,7 +403,7 @@ function copyToClipboard(text) {
 }
 
 async function reloadImg(url) {
-    await fetch(url, { cache: 'reload', mode: 'same-origin' })
+    await fetch(url, {cache: 'reload', mode: 'same-origin'})
     document.body.querySelectorAll(`img[src='${url}']`)
         .forEach(img => img.src = url)
 
@@ -414,14 +414,115 @@ async function reloadImg(url) {
 
 function initGlobalKeyboardShortcuts() {
     document.addEventListener("keydown", (event) => {
-        if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "s") {
-            event.preventDefault();
+        const key = event.key.toLowerCase();
 
-            htmx.ajax('GET', '/settings', {
-                target: '#settings-dialog-content'
-            }).then(() => {
-                document.querySelector("#settings-dialog").showModal();
-            });
+        if (event.ctrlKey || event.metaKey) {
+            if (event.altKey) {
+                switch (key) {
+                    case "i":
+                        htmx.ajax("GET", "/recipes/add", {
+                            target: "#content"
+                        }).then(() => {
+                            document.querySelector("#import-recipes-dialog").showModal();
+                        }).then(() => {
+                            window.history.pushState({}, "", "/recipes/add");
+                        });
+                        break;
+                    case "n":
+                        htmx.ajax("GET", "/recipes/add/manual", {
+                            target: "#content"
+                        }).then(() => {
+                            window.history.pushState({}, "", "/recipes/add/manual");
+                        });
+                        break;
+                    case "s":
+                        if (window.location.pathname === "/recipes/add/manual" || window.location.pathname.match(/^\/recipes\/(\d+)\/edit$/)) {
+                            const form = document.querySelector('form.card-body');
+                            if (form) {
+                                form.requestSubmit();
+                            }
+                        } else {
+                            htmx.ajax("GET", "/settings", {
+                                target: "#settings-dialog-content"
+                            }).then(() => {
+                                document.querySelector("#settings-dialog").showModal();
+                            });
+                        }
+                        break;
+                    case "r":
+                        htmx.ajax("GET", "/reports", {
+                            target: "#content"
+                        }).then(() => {
+                            window.history.pushState({}, "", "/reports");
+                        });
+                        break;
+                    case "w":
+                        htmx.ajax("GET", "/recipes/add", {
+                            target: "#content"
+                        }).then(() => {
+                            document.querySelector("#websites-dialog").showModal();
+                            window.history.pushState({}, "", "/recipes/add");
+                        });
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                let viewRecipePage = window.location.pathname.match(/^\/recipes\/(\d+)$/);
+
+                switch (key) {
+                    case "d":
+                        if (viewRecipePage) {
+                            const id = parseInt(viewRecipePage[1], 10);
+                            htmx.ajax("GET", `/recipes/${id}/duplicate`, {
+                                target: "#content"
+                            }).then(() => {
+                                window.history.pushState({}, "", "/recipes/add/manual");
+                            });
+                        }
+                        break;
+                    case "e":
+                        if (viewRecipePage) {
+                            const url = `/recipes/${parseInt(viewRecipePage[1], 10)}/edit`;
+                            htmx.ajax("GET", url, {
+                                target: "#content"
+                            }).then(() => {
+                                window.history.pushState({}, "", url)
+                            });
+                        }
+                        break;
+                    case "s":
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (window.location.pathname === "/recipes/add/manual" || window.location.pathname.match(/^\/recipes\/(\d+)\/edit$/)) {
+                            const form = document.querySelector('form.card-body');
+                            if (form) {
+                                form.requestSubmit();
+                            }
+                        }
+                        break;
+                    case "x":
+                        if (viewRecipePage) {
+                            const url = `/recipes/${parseInt(viewRecipePage[1], 10)}/share`;
+                            htmx.ajax("POST", url, {
+                                target: "#content"
+                            });
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } else if (key === "delete") {
+            let viewRecipePage = window.location.pathname.match(/^\/recipes\/(\d+)$/);
+            if (viewRecipePage) {
+                if (confirm("Are you sure you want to delete this recipe?")) {
+                    fetch(`/recipes/${parseInt(viewRecipePage[1], 10)}`, {method: "DELETE"}).then(() => {
+                        window.location.replace("/recipes");
+                    });
+                }
+            }
         }
     });
 }
@@ -432,6 +533,6 @@ function initTheme(themeDefault, themeSelected) {
     document.documentElement.setAttribute("data-theme", theme);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initGlobalKeyboardShortcuts();
 });
