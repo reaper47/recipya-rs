@@ -1,3 +1,4 @@
+use diesel::dsl::count_star;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
@@ -230,6 +231,18 @@ impl User {
         Ok(user)
     }
 
+    /// Fetches the number of users in the database.
+    pub async fn num_users(mm: &ModelManager) -> Result<i64> {
+        let mut conn = mm.pool.get().await?;
+
+        let count = schema::users::table
+            .select(count_star())
+            .first::<i64>(&mut conn)
+            .await?;
+
+        Ok(count)
+    }
+
     /// Marks the user as confirmed in the database.
     pub async fn set_is_confirmed(&self, mm: &ModelManager) -> Result<()> {
         use repository::schema::users::dsl::*;
@@ -435,6 +448,23 @@ mod tests {
                 },
             ];
             pretty_assertions::assert_eq!(want, categories);
+            Ok(())
+        }
+    }
+
+    mod test_count {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_num_users() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            insert_user(config.clone()).await?;
+            insert_other_user(config.clone(), "slava@ukraini.ua").await?;
+
+            let num_users = User::num_users(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(2, num_users);
             Ok(())
         }
     }

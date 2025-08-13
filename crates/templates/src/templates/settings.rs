@@ -9,7 +9,7 @@ use strum::IntoEnumIterator;
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_circle_stack, icon_cloud,
     icon_cube_transparent, icon_download_cloud, icon_information_circle, icon_pencil,
-    icon_rocket_launch, icon_server, icon_trash, icon_user_circle,
+    icon_plus_circle, icon_rocket_launch, icon_server, icon_trash, icon_user_circle,
 };
 
 pub struct SettingsForView {
@@ -382,7 +382,7 @@ fn settings_admin(users: Vec<User>, user_settings: &UserSettingDetails) -> Marku
                 (themes_palette(true, &user_settings.default_theme, &user_settings.selected_theme))
             }
             div class="divider m-0" {}
-            div class="flex justify-between items-center text-sm" {
+            div class="flex justify-between items-center text-sm pb-4" {
                 details class="w-full" {
                     summary class="font-semibold cursor-default select-none" {
                         "Users"
@@ -391,21 +391,82 @@ fn settings_admin(users: Vec<User>, user_settings: &UserSettingDetails) -> Marku
                         table class="table table-zebra table-sm" {
                             tbody {
                                 @for (idx, user) in users.iter().enumerate() {
-                                    tr {
-                                        th { (idx + 1) }
-                                        td { (user.email) }
-                                        td { "" }
-                                        td class="grid grid-flow-col" {
-                                            (icon_pencil(true))
-                                            button type="submit" class="btn btn-ghost btn-square btn-xs" hx-delete=(format!("/admin/user/{}", user.id)) hx-confirm="Are you sure you want to delete this user? This action is irreversible." {
-                                                (icon_trash())
-                                            }
-                                        }
-                                    }
+                                    (user_row(idx, user))
                                 }
+                                (new_user_row(users.len()))
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+pub fn new_user_with_new_row(curr_idx: usize, user: &User) -> Markup {
+    html! {
+        (user_row(curr_idx, user))
+        (new_user_row(curr_idx + 2))
+    }
+}
+
+fn user_row(idx: usize, user: &User) -> Markup {
+    html! {
+        tr {
+            th { (idx + 1) }
+            td { (user.email) }
+            td { "" }
+            td class="grid grid-flow-col gap-2" {
+                button type="button" class="btn btn-ghost btn-square btn-xs" {
+                    (icon_pencil(true))
+                }
+                button type="submit" class="btn btn-ghost btn-square btn-xs" hx-delete=(format!("/admin/user/{}", user.id)) hx-confirm="Are you sure you want to delete this user? This action is irreversible." {
+                    (icon_trash())
+                }
+            }
+        }
+    }
+}
+
+fn new_user_row(num_users: usize) -> Markup {
+    html! {
+        tr id="new-row-user" {
+            th { (num_users) }
+            td {
+                input #email type="email" required placeholder="Email"
+                       class="input input-sm" name="email" autocomplete="off"
+                       hx-post="/admin/user"
+                       hx-target="#new-row-user"
+                       hx-swap="outerHTML"
+                       hx-include="#email,#password,#confirm-password"
+                       hx-trigger="keydown[key=='Enter']"
+                       _="on htmx:afterRequest call document.activeElement.blur()";
+            }
+            td {
+                input #password type="password" required placeholder="Enter password"
+                       class="input input-sm mb-1" name="password" autocomplete="off"
+                       hx-post="/admin/user"
+                       hx-target="#new-row-user"
+                       hx-swap="outerHTML"
+                       hx-include="#email,#password,#confirm-password"
+                       hx-trigger="keydown[key=='Enter']"
+                       _="on htmx:afterRequest call document.activeElement.blur()";
+                input #confirm-password type="password" required placeholder="Retype password"
+                       class="input input-sm" name="password-confirm" autocomplete="off"
+                       hx-post="/admin/user"
+                       hx-target="#new-row-user"
+                       hx-swap="outerHTML"
+                       hx-include="#email,#password,#confirm-password"
+                       hx-trigger="keydown[key=='Enter']"
+                       _="on htmx:afterRequest call document.activeElement.blur()";
+            }
+            td {
+                button class="btn btn-ghost btn-square btn-xs"
+                  hx-post="/admin/user"
+                  hx-target="#new-row-user"
+                  hx-swap="outerHTML"
+                  hx-include="#email,#password,#confirm-password" {
+                    (icon_plus_circle())
                 }
             }
         }

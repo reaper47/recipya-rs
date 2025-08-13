@@ -38,6 +38,9 @@ pub enum Error {
     BadTimeFormat,
     Database,
     DeleteForbidden,
+    EntityExists {
+        entity: &'static str,
+    },
     FailParse,
     Form,
     InvalidPayload,
@@ -88,6 +91,15 @@ impl Error {
 
             BadTimeFormat => (StatusCode::BAD_REQUEST, ClientError::BAD_TIME_FORMAT),
             DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DELETE_FORBIDDEN),
+            EntityExists { entity } => (
+                StatusCode::CONFLICT,
+                ClientError::ENTITY_NOT_FOUND { entity, id: -1 },
+            ),
+            FailParse => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
+            FileExists => (
+                StatusCode::CONFLICT,
+                ClientError::ENTITY_NOT_FOUND { entity: "", id: -1 },
+            ),
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
             InvalidPayload => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
             InvalidQuery => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),

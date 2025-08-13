@@ -59,20 +59,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/router/src/admin_router.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/auth_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/auth_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/settings.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/settings_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/settings_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/layouts.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/layouts.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/admin_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/admin_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,6 +138,9 @@
   "keyToString": {
     "Cargo.Run.executor": "Run",
     "Cargo.Test admin_router::tests.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_user::test_add_user_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_user::test_add_user_password_invalid_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_cannot_delete_admin_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_delete_user_not_exist_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_delete_user_ok.executor": "Run",
@@ -652,6 +648,7 @@
     "Cargo.Test tests_themes.executor": "Run",
     "Cargo.Test tests_unit_operations.executor": "Run",
     "Cargo.Test tests_unit_type.executor": "Run",
+    "Cargo.Test tests_user.executor": "Run",
     "Cargo.Test unit::tests.executor": "Run",
     "Cargo.Test units::tests (1).executor": "Run",
     "Cargo.Test units::tests (2).executor": "Run",
@@ -708,7 +705,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok">
+  <component name="RunManager" selected="Cargo.Test admin_router::tests::tests_user::test_add_user_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -727,8 +724,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test auth_router" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib auth_router" />
+    <configuration name="Test admin_router::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -744,8 +741,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test auth_router::tests::tests_change_password::test_post_change_password_password_same_as_new_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib auth_router::tests::tests_change_password::test_post_change_password_password_same_as_new_ok -- --exact" />
+    <configuration name="Test admin_router::tests::tests_user::test_add_user_email_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_user::test_add_user_email_exists_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -761,8 +758,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test auth_router::tests::tests_delete_user::test_delete_user_cannot_delete_if_autologin_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib auth_router::tests::tests_delete_user::test_delete_user_cannot_delete_if_autologin_ok -- --exact" />
+    <configuration name="Test admin_router::tests::tests_user::test_add_user_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_user::test_add_user_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -778,8 +775,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test auth_router::tests::tests_delete_user::test_delete_user_demo_cannot_be_deleted_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib auth_router::tests::tests_delete_user::test_delete_user_demo_cannot_be_deleted_ok -- --exact" />
+    <configuration name="Test admin_router::tests::tests_user::test_add_user_password_invalid_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_user::test_add_user_password_invalid_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -795,8 +792,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok -- --exact" />
+    <configuration name="Test tests_user" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_user" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -814,19 +811,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test auth_router" />
-      <item itemvalue="Cargo.Test auth_router::tests::tests_change_password::test_post_change_password_password_same_as_new_ok" />
-      <item itemvalue="Cargo.Test auth_router::tests::tests_delete_user::test_delete_user_cannot_delete_if_autologin_ok" />
-      <item itemvalue="Cargo.Test auth_router::tests::tests_delete_user::test_delete_user_demo_cannot_be_deleted_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
+      <item itemvalue="Cargo.Test admin_router::tests" />
+      <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok" />
+      <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_ok" />
+      <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_password_invalid_ok" />
+      <item itemvalue="Cargo.Test tests_user" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
-        <item itemvalue="Cargo.Test auth_router::tests::tests_delete_user::test_delete_user_demo_cannot_be_deleted_ok" />
-        <item itemvalue="Cargo.Test auth_router" />
-        <item itemvalue="Cargo.Test auth_router::tests::tests_delete_user::test_delete_user_cannot_delete_if_autologin_ok" />
-        <item itemvalue="Cargo.Test auth_router::tests::tests_change_password::test_post_change_password_password_same_as_new_ok" />
+        <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_ok" />
+        <item itemvalue="Cargo.Test admin_router::tests" />
+        <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok" />
+        <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_password_invalid_ok" />
+        <item itemvalue="Cargo.Test tests_user" />
       </list>
     </recent_temporary>
   </component>
