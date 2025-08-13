@@ -7,8 +7,7 @@ use app::state::AppState;
 use crate::handlers::settings::{
     set_default_theme_handler, set_selected_theme_handler, settings_handler,
 };
-use crate::middleware::mw_auth;
-use crate::middleware::mw_auth::mw_only_admin;
+use crate::middleware::mw_auth::{mw_ctx_require, mw_only_admin};
 
 /// Represents the payload for setting themes.
 #[derive(Deserialize, Serialize)]
@@ -27,7 +26,7 @@ pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
         .route("/theme-selected", post(set_selected_theme_handler))
         .layer(middleware::from_fn_with_state(
             state.clone(),
-            mw_auth::mw_ctx_require,
+            mw_ctx_require,
         ))
 }
 

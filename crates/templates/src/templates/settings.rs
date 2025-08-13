@@ -1,14 +1,16 @@
-use crate::templates::icons::{
-    icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_circle_stack, icon_cloud,
-    icon_cube_transparent, icon_download_cloud, icon_information_circle, icon_rocket_launch,
-    icon_server, icon_user_circle,
-};
 use math::cooking::units::MeasurementSystem;
 use maud::{Markup, PreEscaped, html};
 use models::data::Data;
 use models::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
+use models::user::User;
 use strum::IntoEnumIterator;
+
+use crate::templates::icons::{
+    icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_circle_stack, icon_cloud,
+    icon_cube_transparent, icon_download_cloud, icon_information_circle, icon_pencil,
+    icon_rocket_launch, icon_server, icon_trash, icon_user_circle,
+};
 
 pub struct SettingsForView {
     pub is_autologin: bool,
@@ -53,6 +55,7 @@ fn empty_recipe_category() -> Markup {
 /// Renders the settings dialog.
 pub fn settings(
     data: Data,
+    users: Option<Vec<User>>,
     user_setting: UserSettingDetails,
     categories: Vec<Category>,
     config: &SettingsForView,
@@ -113,7 +116,7 @@ pub fn settings(
                 @if data.is_admin {
                     (settings_connections(&config))
                     (settings_server(&data, &config))
-                    (settings_admin(&user_setting))
+                    (settings_admin(users.unwrap_or_default(), &user_setting))
                 }
                 (settings_data(&data))
                 (settings_account(&user_setting))
@@ -364,7 +367,7 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
     }
 }
 
-fn settings_admin(user_settings: &UserSettingDetails) -> Markup {
+fn settings_admin(users: Vec<User>, user_settings: &UserSettingDetails) -> Markup {
     html! {
         div #settings-admin class="hidden p-3 md:max-h-96"  {
             div class="flex justify-between items-center text-sm" {
@@ -377,6 +380,33 @@ fn settings_admin(user_settings: &UserSettingDetails) -> Markup {
                     }
                 }
                 (themes_palette(true, &user_settings.default_theme, &user_settings.selected_theme))
+            }
+            div class="divider m-0" {}
+            div class="flex justify-between items-center text-sm" {
+                details class="w-full" {
+                    summary class="font-semibold cursor-default select-none" {
+                        "Users"
+                    }
+                    div class="overflow-x-auto overflow-y-auto max-h-96" {
+                        table class="table table-zebra table-sm" {
+                            tbody {
+                                @for (idx, user) in users.iter().enumerate() {
+                                    tr {
+                                        th { (idx + 1) }
+                                        td { (user.email) }
+                                        td { "" }
+                                        td class="grid grid-flow-col" {
+                                            (icon_pencil(true))
+                                            button type="submit" class="btn btn-ghost btn-square btn-xs" hx-delete=(format!("/admin/user/{}", user.id)) hx-confirm="Are you sure you want to delete this user? This action is irreversible." {
+                                                (icon_trash())
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

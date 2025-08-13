@@ -82,6 +82,17 @@ pub struct UserForAuth {
 }
 
 impl User {
+    /// Retrieves all of the users in the database.
+    pub async fn all(mm: &ModelManager) -> Result<Vec<User>> {
+        let mut conn = mm.pool.get().await?;
+
+        let all_users = schema::users::table
+            .select(User::as_select())
+            .load::<User>(&mut conn)
+            .await?;
+        Ok(all_users)
+    }
+
     /// Retrieves all of a user's recipe categories.
     pub async fn categories(mm: &ModelManager, user_id: i64) -> Result<Vec<Category>> {
         let mut conn = mm.pool.get().await?;
@@ -303,9 +314,32 @@ impl User {
 mod tests {
     use super::*;
 
-    use testing::utils::{TEST_USER_EMAIL, TestDb, create_app_state, insert_user};
+    use testing::utils::{
+        TEST_USER_EMAIL, TestDb, create_app_state, insert_other_user, insert_user,
+    };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod test_all {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_all_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let user1 = insert_user(config.clone()).await?;
+            let user2 = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
+
+            let got = User::all(&state.mm)
+                .await?
+                .iter()
+                .map(|u| u.email.clone())
+                .collect::<Vec<_>>();
+
+            pretty_assertions::assert_eq!(got, vec![user1.email, user2.email]);
+            Ok(())
+        }
+    }
 
     mod test_categories {
         use super::*;
