@@ -2,8 +2,7 @@ use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use super::core::{head, toast, toast_ws};
 use super::icons::{
-    icon_arrow_right_start_on_rectangle, icon_book_open, icon_building_library, icon_cog_6_tooth,
-    icon_flag, icon_pencil,
+    icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag, icon_pencil,
 };
 use models::data::Data;
 use models::settings::UserSettingDetails;
@@ -109,14 +108,6 @@ pub fn main(
                                 class="rounded-box z-10 shadow bg-base-200"
                                 _="on click if me.matches(':popover-open') then me.hidePopover()" {
                                 ul tabindex="0" class="menu" {
-                                    @if data.is_admin {
-                                        li onclick="document.activeElement?.blur()" {
-                                            a href="/admin" hx-get="/admin" hx-target="#content" hx-push-url="true" {
-                                                (icon_building_library())
-                                                "Admin"
-                                            }
-                                        }
-                                    }
                                     li onclick="document.activeElement?.blur()" {
                                         a href="/reports" hx-get="/reports" hx-target="#content" hx-push-url="true" {
                                             (icon_flag())

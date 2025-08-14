@@ -1,14 +1,7 @@
-use tracing::error;
-
-use app::state::AppState;
-use models::settings::UserSettingDetails;
-
-use crate::Error;
-use crate::handlers::message::broadcast_error;
-
 mod helpers;
 mod message;
 
+pub(crate) mod admin;
 pub(crate) mod auth;
 pub(crate) mod context;
 pub(crate) mod general;
@@ -17,6 +10,14 @@ pub(crate) mod settings;
 pub(crate) mod shared;
 
 pub mod static_files;
+
+use tracing::error;
+
+use app::state::AppState;
+use models::settings::UserSettingDetails;
+
+use crate::Error;
+use crate::handlers::message::broadcast_error;
 
 pub(crate) async fn get_settings(
     state: &AppState,

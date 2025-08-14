@@ -21,7 +21,7 @@ use models::user::User;
 use crate::auth_router::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
 };
-use crate::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message};
+use crate::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message, broadcast_error};
 use crate::middleware::mw_auth::CtxW;
 use crate::{Error, Result};
 use app::state::AppState;
@@ -36,27 +36,20 @@ pub async fn change_password_post_handler(
         return Error::ConfirmForbidden.into_response();
     }
 
+    let user_id = ctx.0.user_id();
+
     if form.password == form.new_password {
-        let toast = MessageWs::error("New password cannot be the same as the current.");
-
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state
-                .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                .await;
-        }
-
+        broadcast_error(
+            &state,
+            user_id,
+            "New password cannot be the same as the current.",
+        )
+        .await;
         return Error::Form.into_response();
     }
 
     if form.validate().is_err() {
-        let toast = MessageWs::error("Passwords do not match.");
-
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state
-                .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                .await;
-        }
-
+        broadcast_error(&state, user_id, "Passwords do not match.").await;
         return Error::Form.into_response();
     }
 
@@ -73,12 +66,7 @@ pub async fn change_password_post_handler(
             (StatusCode::NO_CONTENT, "").into_response()
         }
         Err(err) => {
-            let toast = MessageWs::error("Failed to update password.");
-
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
-            }
-
+            broadcast_error(&state, user_id, "Failed to update password.").await;
             Error::Model(err).into_response()
         }
     }
@@ -215,7 +203,6 @@ pub async fn forgot_password_reset_post_handler(
 
     if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
         error!("Failed to update password for user {user_id} - Error: {err}");
-
         let mut res = Error::Form.into_response();
         add_hx_message(&mut res, MessageHtmx::error("Failed to update password."));
         return res;
@@ -421,27 +408,20 @@ pub async fn user_delete_handler(
     cookies: Cookies,
 ) -> impl IntoResponse {
     let config = state.config.read().await;
+    let user_id = ctx.0.user_id();
 
     if config.is_autologin {
-        let toast = MessageWs::error("This account cannot be deleted.");
-
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state
-                .broadcast(ctx.0.user_id(), Message::Text(json.into()))
-                .await;
-        }
-
+        broadcast_error(&state, user_id, "This account cannot be deleted.").await;
         return Error::DeleteForbidden.into_response();
     }
 
-    let user_id = ctx.0.user_id();
     if config.is_demo && is_demo_user(&state, user_id).await {
-        let toast = MessageWs::error("Trump is Putin's lap dog. Remove him from office!");
-
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
-
+        broadcast_error(
+            &state,
+            user_id,
+            "Trump is Putin's lap dog. Remove him from office!",
+        )
+        .await;
         return Error::DeleteForbidden.into_response();
     }
 

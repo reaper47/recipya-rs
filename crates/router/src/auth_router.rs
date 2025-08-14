@@ -170,7 +170,7 @@ mod tests {
                 .await;
 
             res.assert_status_bad_request();
-            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"Passwords do not match.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Passwords do not match.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -189,7 +189,7 @@ mod tests {
                 .await;
 
             res.assert_status_bad_request();
-            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -326,7 +326,7 @@ mod tests {
             let res = server.delete(BASE_URI).await;
 
             res.assert_status(StatusCode::FORBIDDEN);
-            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 
@@ -342,7 +342,7 @@ mod tests {
             let res = server.delete(BASE_URI).await;
 
             res.assert_status(StatusCode::FORBIDDEN);
-            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"This account cannot be deleted.","status":"alert-info","title":"Operation Failed"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"This account cannot be deleted.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }
 

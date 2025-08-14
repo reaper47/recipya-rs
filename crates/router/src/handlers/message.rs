@@ -212,6 +212,14 @@ pub fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
     }
 }
 
+/// Broadcasts a success toast to all active WebSocket subscribers of a given user.
+pub async fn broadcast_success(state: &AppState, user_id: i64, message: &str) {
+    let toast = MessageHtmx::success(message);
+    if let Ok(json) = serde_json::to_string(&toast) {
+        state.broadcast(user_id, Message::Text(json.into())).await;
+    }
+}
+
 /// Broadcasts an error toast to all active WebSocket subscribers of a given user.
 pub async fn broadcast_error(state: &AppState, user_id: i64, message: &str) {
     let toast = MessageHtmx::error(message);

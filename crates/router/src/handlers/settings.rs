@@ -7,6 +7,7 @@ use tracing::error;
 use app::state::AppState;
 use models::data::{AboutData, Data};
 use models::settings::{Theme, UserSettingDetails};
+use models::user::User;
 use repository::ModelManager;
 use templates::settings::SettingsForView;
 
@@ -48,6 +49,12 @@ pub async fn settings_handler(
 
     let config = state.config.read().await;
 
+    let users = if user_id == 1 {
+        User::all(&state.mm).await.ok()
+    } else {
+        None
+    };
+
     let email_config = if config.is_demo {
         &email::Config {
             smtp_host: "smtp.gmail.com".into(),
@@ -75,6 +82,7 @@ pub async fn settings_handler(
             },
             ..Default::default()
         },
+        users,
         settings,
         categories,
         &SettingsForView {
