@@ -60,11 +60,12 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/user.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/admin_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/admin_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/testing/src/utils.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/testing/src/utils.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -141,11 +142,22 @@
     "Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_password_invalid_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_user::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_user_row::test_user_not_exist_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_user_row::test_valid_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_cannot_delete_admin_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_delete_user_not_exist_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_delete_user_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_must_be_admin_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_get::test_must_be_admin_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_get::test_valid_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_patch::test_empty_payload_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_patch::test_invalid_payload_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_patch::test_must_be_admin_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_patch::test_update_success_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_patch::test_user_does_not_exist_ok.executor": "Run",
     "Cargo.Test apps::kalorio::tests::test_recipes::test_txt.executor": "Run",
     "Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version.executor": "Run",
     "Cargo.Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03.executor": "Run",
@@ -649,6 +661,8 @@
     "Cargo.Test tests_unit_operations.executor": "Run",
     "Cargo.Test tests_unit_type.executor": "Run",
     "Cargo.Test tests_user.executor": "Run",
+    "Cargo.Test tests_user_row.executor": "Run",
+    "Cargo.Test tests_users.executor": "Run",
     "Cargo.Test unit::tests.executor": "Run",
     "Cargo.Test units::tests (1).executor": "Run",
     "Cargo.Test units::tests (2).executor": "Run",
@@ -656,6 +670,7 @@
     "Cargo.Test units::tests.executor": "Run",
     "Cargo.Test user::tests.executor": "Run",
     "Cargo.Test user::tests::test_all::test_all_ok.executor": "Run",
+    "Cargo.Test user::tests::test_count::test_num_users.executor": "Run",
     "Cargo.Test volume::tests.executor": "Run",
     "Cargo.Test website::tests.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -724,40 +739,6 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test admin_router::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib admin_router::tests" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test admin_router::tests::tests_user::test_add_user_email_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib admin_router::tests::tests_user::test_add_user_email_exists_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test admin_router::tests::tests_user::test_add_user_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package router --lib admin_router::tests::tests_user::test_add_user_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -775,8 +756,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test admin_router::tests::tests_user::test_add_user_password_invalid_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib admin_router::tests::tests_user::test_add_user_password_invalid_ok -- --exact" />
+    <configuration name="Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -792,8 +773,42 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_user" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib admin_router::tests::tests_user" />
+    <configuration name="Test admin_router::tests::tests_users::tests_get::test_valid_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_users::tests_get::test_valid_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test admin_router::tests::tests_users::tests_patch::test_update_success_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_users::tests_patch::test_update_success_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test tests_users" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_users" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -811,19 +826,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test admin_router::tests" />
-      <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok" />
       <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_ok" />
-      <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_password_invalid_ok" />
-      <item itemvalue="Cargo.Test tests_user" />
+      <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok" />
+      <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_valid_ok" />
+      <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_patch::test_update_success_ok" />
+      <item itemvalue="Cargo.Test tests_users" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_ok" />
-        <item itemvalue="Cargo.Test admin_router::tests" />
-        <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok" />
-        <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_password_invalid_ok" />
-        <item itemvalue="Cargo.Test tests_user" />
+        <item itemvalue="Cargo.Test tests_users" />
+        <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_valid_ok" />
+        <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok" />
+        <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_patch::test_update_success_ok" />
       </list>
     </recent_temporary>
   </component>

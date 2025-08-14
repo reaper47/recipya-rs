@@ -1,5 +1,5 @@
 use axum::Form;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use tracing::error;
@@ -9,8 +9,9 @@ use app::state::AppState;
 use models::user::{User, UserForCreate};
 
 use crate::Error;
+use crate::admin_router::{UpdatePasswordForm, UserRowParams};
 use crate::auth_router::RegisterForm;
-use crate::handlers::message::broadcast_error;
+use crate::handlers::message::{broadcast_error, broadcast_success};
 use crate::middleware::mw_auth::CtxW;
 
 /// Handles adding a user in the application.
@@ -78,4 +79,104 @@ pub async fn delete_user_handler(
             Error::DeleteUser.into_response()
         }
     }
+}
+
+/// Renders the form to update the user form from the admin table.
+pub async fn update_user_form_handler(
+    ctx: CtxW,
+    Path(user_id): Path<i64>,
+    Query(params): Query<UserRowParams>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let caller_user_id = ctx.0.user_id();
+
+    let user = match User::get_user_by_id(&state.mm, user_id).await {
+        Ok(user) => match user {
+            None => {
+                error!("User '{user_id}' not found in database.");
+                broadcast_error(&state, caller_user_id, "User not found.").await;
+                return Error::NoUser.into_response();
+            }
+            Some(user) => user,
+        },
+        Err(err) => {
+            error!("Error fetching user '{user_id}' as admin: {err}");
+            broadcast_error(&state, caller_user_id, "Error fetching user.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::settings::edit_user_row(params.row_index, &user).into_response()
+}
+
+/// Handles updating a user.
+pub async fn update_user_handler(
+    ctx: CtxW,
+    state: State<AppState>,
+    Path(user_id): Path<i64>,
+    Form(form): Form<UpdatePasswordForm>,
+) -> impl IntoResponse {
+    let caller_user_id = ctx.0.user_id();
+
+    if let Err(err) = form.validate() {
+        error!("Error validating update user form: {err}");
+        broadcast_error(&state, caller_user_id, "Payload cannot be empty.").await;
+        return Error::InvalidPayload.into_response();
+    }
+
+    match User::update_password_by_user_id(&state.mm, user_id, &form.new_password).await {
+        Ok(_) => {}
+        Err(err) => {
+            error!("Error updating user password for user #'{user_id}': {err}");
+            broadcast_error(&state, caller_user_id, "Failed to update user password.").await;
+            return Error::Database.into_response();
+        }
+    }
+
+    let user = match User::get_user_by_id(&state.mm, user_id).await {
+        Ok(user) => match user {
+            None => {
+                error!("User '{user_id}' not found in database.");
+                broadcast_error(&state, caller_user_id, "User not found.").await;
+                return Error::NoUser.into_response();
+            }
+            Some(user) => user,
+        },
+        Err(err) => {
+            error!("Error fetching user '{user_id}' as admin: {err}");
+            broadcast_error(&state, caller_user_id, "Error fetching user.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    broadcast_success(&state, caller_user_id, "User password updated.").await;
+    templates::settings::user_row(form.row_index, &user).into_response()
+}
+
+/// Renders a user row in the administrator's users panel.
+pub async fn user_row_handler(
+    ctx: CtxW,
+    Path(user_id): Path<i64>,
+    Query(params): Query<UserRowParams>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let caller_user_id = ctx.0.user_id();
+
+    let user = match User::get_user_by_id(&state.mm, user_id).await {
+        Ok(user) => match user {
+            None => {
+                error!("User '{user_id}' not found in database.");
+                broadcast_error(&state, caller_user_id, "User not found.").await;
+                return Error::NoUser.into_response();
+            }
+            Some(user) => user,
+        },
+        Err(err) => {
+            error!("Error fetching user '{user_id}' as admin: {err}");
+            broadcast_error(&state, caller_user_id, "Error fetching user.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::settings::user_row(params.row_index, &user).into_response()
 }

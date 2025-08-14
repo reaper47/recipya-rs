@@ -318,9 +318,10 @@ pub async fn assert_must_be_logged_in(method: axum::http::Method, uri: &str) -> 
     let server = build_server_anonymous(config).await?;
 
     let res = match method {
+        axum::http::Method::DELETE => server.delete(uri),
         axum::http::Method::GET => server.get(uri),
         axum::http::Method::POST => server.post(uri),
-        axum::http::Method::DELETE => server.delete(uri),
+        axum::http::Method::PATCH => server.patch(uri),
         _ => unimplemented!(),
     }
     .await;

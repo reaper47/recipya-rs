@@ -7,9 +7,10 @@ use models::user::User;
 use strum::IntoEnumIterator;
 
 use crate::templates::icons::{
-    icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_circle_stack, icon_cloud,
-    icon_cube_transparent, icon_download_cloud, icon_information_circle, icon_pencil,
-    icon_plus_circle, icon_rocket_launch, icon_server, icon_trash, icon_user_circle,
+    icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
+    icon_circle_stack, icon_cloud, icon_cube_transparent, icon_download_cloud,
+    icon_information_circle, icon_pencil, icon_plus_circle, icon_rocket_launch, icon_server,
+    icon_trash, icon_user_circle, icon_x_circle,
 };
 
 pub struct SettingsForView {
@@ -410,18 +411,70 @@ pub fn new_user_with_new_row(curr_idx: usize, user: &User) -> Markup {
     }
 }
 
-fn user_row(idx: usize, user: &User) -> Markup {
+pub fn user_row(idx: usize, user: &User) -> Markup {
+    let user_id = user.id;
+
     html! {
-        tr {
+        tr id=(format!("user-row-{user_id}")) {
             th { (idx + 1) }
             td { (user.email) }
             td { "" }
             td class="grid grid-flow-col gap-2" {
-                button type="button" class="btn btn-ghost btn-square btn-xs" {
+                button type="button" class="btn btn-ghost btn-square btn-xs" hx-get=(format!("/admin/user/{user_id}")) hx-target=(format!("#user-row-{user_id}")) hx-swap="outerHTML" hx-vals=(format!(r#"{{"row-index": "{idx}"}}"#)) {
                     (icon_pencil(true))
                 }
-                button type="submit" class="btn btn-ghost btn-square btn-xs" hx-delete=(format!("/admin/user/{}", user.id)) hx-confirm="Are you sure you want to delete this user? This action is irreversible." {
+                button type="submit" class="btn btn-ghost btn-square btn-xs" hx-delete=(format!("/admin/user/{user_id}")) hx-confirm="Are you sure you want to delete this user? This action is irreversible." {
                     (icon_trash())
+                }
+            }
+        }
+    }
+}
+
+pub fn edit_user_row(curr_idx: usize, user: &User) -> Markup {
+    let user_id = user.id;
+    let hx_target = format!("#user-row-{user_id}");
+
+    html! {
+        tr id=(format!("user-row-{user_id}")) {
+            th { (curr_idx + 1) }
+            td { (user.email) }
+            td {
+                input type="hidden" name="row-index" value=(curr_idx);
+                input #password type="password" required placeholder="New password"
+                       class="input input-sm mb-1" name="new-password" autocomplete="off"
+                       hx-post="/admin/user"
+                       hx-target="#new-row-user"
+                       hx-swap="outerHTML"
+                       hx-include="#email,#password,#confirm-password"
+                       hx-trigger="keydown[key=='Enter']"
+                       _="on htmx:afterRequest call document.activeElement.blur()";
+                input #confirm-password type="password" required placeholder="Retype password"
+                       class="input input-sm" name="new-password-confirm" autocomplete="off"
+                       hx-post="/admin/user"
+                       hx-target="#new-row-user"
+                       hx-swap="outerHTML"
+                       hx-include="#email,#password,#confirm-password"
+                       hx-trigger="keydown[key=='Enter']"
+                       _="on htmx:afterRequest call document.activeElement.blur()";
+            }
+            td class="grid grid-flow-col gap-2" {
+                button type="button"
+                       class="btn btn-ghost btn-square btn-xs hover:text-green-600"
+                       hx-patch=(format!("/admin/user/{user_id}"))
+                       hx-target=(hx_target)
+                       hx-swap="outerHTML"
+                       hx-include="closest tr" {
+                    (icon_check_circle())
+                }
+
+                button type="button"
+                       class="btn btn-ghost btn-square btn-xs hover:text-red-600"
+                       hx-get=(format!("/admin/user/{user_id}/row"))
+                       hx-target=(hx_target)
+                       hx-swap="outerHTML"
+                       hx-vals=(format!(r#"{{"row-index": "{curr_idx}"}}"#)) {
+                    (icon_x_circle())
                 }
             }
         }
