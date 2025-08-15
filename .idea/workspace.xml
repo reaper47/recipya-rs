@@ -62,11 +62,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/admin_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/admin_router.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/testing/src/utils.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/testing/src/utils.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,6 +146,7 @@
     "Cargo.Test admin_router::tests::tests_users::test_delete_user_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_must_be_admin_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test admin_router::tests::tests_users::tests_delete::test_delete_user_not_exist_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::tests_get::test_must_be_admin_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::tests_get::test_valid_ok.executor": "Run",
@@ -677,7 +674,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "154-add-users-to-admin-pane",
+    "git-widget-placeholder": "100-add-ability-to-mark-a-recipe-as-a-favorite",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -720,7 +717,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test admin_router::tests::tests_user::test_add_user_ok">
+  <component name="RunManager" selected="Cargo.Test admin_router::tests">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -730,6 +727,23 @@
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="true" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test admin_router::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
@@ -756,8 +770,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok -- --exact" />
+    <configuration name="Test admin_router::tests::tests_users::tests_delete::test_delete_user_not_exist_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib admin_router::tests::tests_users::tests_delete::test_delete_user_not_exist_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -775,23 +789,6 @@
     </configuration>
     <configuration name="Test admin_router::tests::tests_users::tests_get::test_valid_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package router --lib admin_router::tests::tests_users::tests_get::test_valid_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test admin_router::tests::tests_users::tests_patch::test_update_success_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib admin_router::tests::tests_users::tests_patch::test_update_success_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -826,19 +823,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test admin_router::tests" />
+      <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_delete::test_delete_user_not_exist_ok" />
       <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_ok" />
-      <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok" />
       <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_valid_ok" />
-      <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_patch::test_update_success_ok" />
       <item itemvalue="Cargo.Test tests_users" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test admin_router::tests" />
+        <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_delete::test_delete_user_not_exist_ok" />
         <item itemvalue="Cargo.Test admin_router::tests::tests_user::test_add_user_ok" />
         <item itemvalue="Cargo.Test tests_users" />
         <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_valid_ok" />
-        <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_get::test_user_does_not_exist_ok" />
-        <item itemvalue="Cargo.Test admin_router::tests::tests_users::tests_patch::test_update_success_ok" />
       </list>
     </recent_temporary>
   </component>

@@ -4,7 +4,7 @@ use models::data::Data;
 use models::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
-use strum::IntoEnumIterator;
+use strum::{IntoEnumIterator, VariantNames};
 
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
@@ -389,15 +389,34 @@ fn settings_admin(users: Vec<User>, user_settings: &UserSettingDetails) -> Marku
                         "Users"
                     }
                     div class="overflow-x-auto overflow-y-auto max-h-96" {
-                        table class="table table-zebra table-sm" {
-                            tbody {
-                                @for (idx, user) in users.iter().enumerate() {
-                                    (user_row(idx, user))
-                                }
-                                (new_user_row(users.len()))
-                            }
-                        }
+                        (render_users_table(users, false))
                     }
+                }
+            }
+        }
+    }
+}
+
+pub fn render_users_table(users: Vec<User>, is_swap_oob: bool) -> Markup {
+    if is_swap_oob {
+        html! {
+            table #users-table class="table table-zebra table-sm" hx-swap-oob="true" {
+                tbody {
+                    @for (idx, user) in users.iter().enumerate() {
+                        (user_row(idx + 1, user))
+                    }
+                    (new_user_row(users.len() + 1))
+                }
+            }
+        }
+    } else {
+        html! {
+            table #users-table class="table table-zebra table-sm" {
+                tbody {
+                    @for (idx, user) in users.iter().enumerate() {
+                        (user_row(idx + 1, user))
+                    }
+                    (new_user_row(users.len() + 1))
                 }
             }
         }
@@ -407,7 +426,7 @@ fn settings_admin(users: Vec<User>, user_settings: &UserSettingDetails) -> Marku
 pub fn new_user_with_new_row(curr_idx: usize, user: &User) -> Markup {
     html! {
         (user_row(curr_idx, user))
-        (new_user_row(curr_idx + 2))
+        (new_user_row(curr_idx + 1))
     }
 }
 
@@ -416,7 +435,7 @@ pub fn user_row(idx: usize, user: &User) -> Markup {
 
     html! {
         tr id=(format!("user-row-{user_id}")) {
-            th { (idx + 1) }
+            th { (idx) }
             td { (user.email) }
             td { "" }
             td class="grid grid-flow-col gap-2" {
