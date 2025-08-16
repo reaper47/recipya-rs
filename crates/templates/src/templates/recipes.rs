@@ -14,8 +14,8 @@ use support::fs::FsSupport;
 use super::helpers::cut_string;
 use super::icons::{
     icon_bars_3, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
-    icon_document_duplicate, icon_ellipsis_vertical, icon_information_circle, icon_pencil,
-    icon_plus_circle, icon_printer, icon_share, icon_trash,
+    icon_document_duplicate, icon_ellipsis_vertical, icon_heart, icon_information_circle,
+    icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,
 };
 use super::layouts;
 use super::layouts::{render_nav, render_recipe_button};
@@ -528,7 +528,7 @@ fn add_instruction(name: &str) -> Markup {
                 label class="w-11/12" {
                     textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full"
                         placeholder="Mix all ingredients together"
-                        _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))" {
+                        _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))" {
                         (name)
                     }
                 }
@@ -1500,7 +1500,7 @@ pub fn list_recipes(
                             src=(match view.recipe_details.all_images().first() {
                                 Some(&first_image) => {
                                     if !view.recipe_details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images) {
-                                        format!("/data/images/thumbnails/{}.webp", first_image)
+                                        format!("/data/images/thumbnails/{first_image}.webp")
                                     } else {
                                         "/data/images/Placeholders/placeholder.recipe.webp".into()
                                     }
@@ -1517,9 +1517,10 @@ pub fn list_recipes(
                                     Some(description) => (cut_string(description, 127)),
                                     None => ""
                                 }
-
                             }
                         }
+                        @let recipe = &view.recipe_details.recipe;
+                        (render_favourite_button(recipe.id, recipe.is_favourite))
                     }
                     div class="card-body justify-between" {
                         h2 class={
@@ -1593,6 +1594,24 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
                     }
                 }
             }
+        }
+    }
+}
+
+pub fn render_favourite_button(recipe_id: i64, is_favourite: bool) -> Markup {
+    let id = format!("favourite-{recipe_id}");
+
+    html! {
+        button id=(id)
+                class="btn btn-square absolute top-2 right-2 hover:text-secondary"
+                hx-post=(format!("/recipes/{recipe_id}/favourite"))
+                hx-target=(format!("#{id}"))
+                hx-swap="outerHTML"
+                hx-push-url="false"
+                aria-label="Add to favorites"
+                aria-pressed=(is_favourite.to_string())
+                _="on mousedown halt the event" {
+            (icon_heart(is_favourite))
         }
     }
 }

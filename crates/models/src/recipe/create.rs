@@ -84,6 +84,7 @@ impl Recipe {
                             yield_: recipe_c.yield_,
                             language: language.code().to_string(),
                             source: recipe_c.source.clone(),
+                            is_favourite: recipe_c.is_favourite,
                             user_id,
                         })
                         .returning(schema::recipes::id)
@@ -253,6 +254,7 @@ mod tests {
             images: vec![],
             yield_: Some(4),
             source: None,
+            is_favourite: false,
             videos: vec![],
             category: Some("uncategorized".into()),
             cuisine: None,
@@ -336,6 +338,7 @@ mod tests {
                 user_id: 1,
                 created_at: got.recipe.created_at,
                 updated_at: got.recipe.updated_at,
+                is_favourite: false,
             },
             additional_images,
             category: recipe.category.unwrap_or("uncategorized".into()),

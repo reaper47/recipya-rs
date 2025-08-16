@@ -385,11 +385,13 @@ where
 {
     let category_id = get_category_id(conn, category).await?;
 
-    diesel::update(schema::categories_recipes::table)
-        .filter(schema::categories_recipes::recipe_id.eq(recipe_id))
-        .set(schema::categories_recipes::category_id.eq(category_id))
-        .execute(&mut conn)
-        .await?;
+    diesel::update(
+        schema::categories_recipes::table
+            .filter(schema::categories_recipes::recipe_id.eq(recipe_id)),
+    )
+    .set(schema::categories_recipes::category_id.eq(category_id))
+    .execute(&mut conn)
+    .await?;
 
     diesel::insert_into(schema::users_categories::table)
         .values((

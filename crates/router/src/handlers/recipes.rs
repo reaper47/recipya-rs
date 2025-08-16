@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 
-use app::state::AppState;
 use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
@@ -11,24 +10,6 @@ use axum::http::{HeaderMap, HeaderValue};
 use axum::response::{Html, IntoResponse};
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
-use math::cooking::units;
-use models::Error::{DuplicateEntity, EntityNotFound};
-use models::Recipe;
-use models::data::{
-    AboutData, Data, PaginationData, PaginationHtmxData, PaginationSearchData, SearchbarData,
-    ShareData, ViewRecipe,
-};
-use models::params::SearchParams;
-use models::recipe::{
-    Category, Keyword, RecipeForCreate, RecipeForm, RecipeSearch, VideoForCreate,
-};
-use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
-use models::settings::UserSettingDetails;
-use models::share::ShareRecipe;
-use models::time::FormattedTimes;
-use models::user::User;
-use models::website::{ToHtmlTable, Website};
-use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
 use reqwest::StatusCode;
 use serde::Deserialize;
 use support::fs::FsSupport;
@@ -39,9 +20,29 @@ use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
+use app::state::AppState;
+use math::cooking::units;
+use models::Error::{DuplicateEntity, EntityNotFound};
+use models::Recipe;
+use models::data::{
+    AboutData, Data, PaginationData, PaginationHtmxData, PaginationSearchData, SearchbarData,
+    ShareData, ViewRecipe,
+};
+use models::params::SearchParams;
+use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
+use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
+use models::settings::UserSettingDetails;
+use models::share::ShareRecipe;
+use models::time::FormattedTimes;
+use models::user::User;
+use models::website::{ToHtmlTable, Website};
+use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
+
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
+use crate::handlers::message::{
+    IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success,
+};
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_routes::{
     ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
@@ -471,6 +472,28 @@ pub async fn share_recipe_post_handler(
     }
 }
 
+/// Toggles the favourite state of a recipe.
+pub async fn toggle_favourite_handler(
+    ctx: CtxW,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let is_favourite = match Recipe::toggle_favourite(&state.mm, user_id, recipe_id).await {
+        Ok(v) => v,
+        Err(err) => {
+            error!(
+                "Error toggling the favourite state of recipe '{recipe_id}' for user '{user_id}': {err}"
+            );
+            broadcast_error(&state, user_id, "Error toggling favourite.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::recipes::render_favourite_button(recipe_id, is_favourite).into_response()
+}
+
 /// Handles the add recipe page.
 pub async fn add_recipes_handler(
     ctx: CtxW,
@@ -727,6 +750,7 @@ pub async fn add_manual_recipe_post_handler(
             measurement_system_id,
             yield_: form.yield_,
             source: form.source,
+            is_favourite: false,
             videos,
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
