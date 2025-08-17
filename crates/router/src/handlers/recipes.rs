@@ -45,7 +45,7 @@ use crate::handlers::message::{
 };
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_routes::{
-    ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
+    FavouriteParams, ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
 };
 use crate::{Error, Result};
 
@@ -477,6 +477,7 @@ pub async fn toggle_favourite_handler(
     ctx: CtxW,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
+    Form(params): Form<FavouriteParams>,
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
@@ -491,7 +492,12 @@ pub async fn toggle_favourite_handler(
         }
     };
 
-    templates::recipes::render_favourite_button(recipe_id, is_favourite).into_response()
+    templates::recipes::render_favourite_button(
+        recipe_id,
+        is_favourite,
+        params.is_view_recipe.unwrap_or_default(),
+    )
+    .into_response()
 }
 
 /// Handles the add recipe page.

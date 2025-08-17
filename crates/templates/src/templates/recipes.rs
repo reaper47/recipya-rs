@@ -1520,7 +1520,7 @@ pub fn list_recipes(
                             }
                         }
                         @let recipe = &view.recipe_details.recipe;
-                        (render_favourite_button(recipe.id, recipe.is_favourite))
+                        (render_favourite_button(recipe.id, recipe.is_favourite, false))
                     }
                     div class="card-body justify-between" {
                         h2 class={
@@ -1598,16 +1598,23 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
     }
 }
 
-pub fn render_favourite_button(recipe_id: i64, is_favourite: bool) -> Markup {
+/// Renders the favourite button.
+pub fn render_favourite_button(recipe_id: i64, is_favourite: bool, is_view_recipe: bool) -> Markup {
     let id = format!("favourite-{recipe_id}");
+    let class = if is_view_recipe {
+        "mr-2 hidden sm:block hover:text-secondary"
+    } else {
+        "btn btn-square absolute top-2 right-2 cursor-default hover:text-secondary"
+    };
 
     html! {
         button id=(id)
-                class="btn btn-square absolute top-2 right-2 hover:text-secondary"
+                class=(class)
                 hx-post=(format!("/recipes/{recipe_id}/favourite"))
                 hx-target=(format!("#{id}"))
                 hx-swap="outerHTML"
                 hx-push-url="false"
+                hx-vals=(format!(r#"{{"view-recipe": {is_view_recipe}}}"#))
                 aria-label="Add to favorites"
                 aria-pressed=(is_favourite.to_string())
                 _="on mousedown halt the event" {
@@ -1704,7 +1711,7 @@ fn view_recipe_helper(
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
                     div class="card-body" style="padding: 0" {
-                        (view_recipe_header(recipe_id, &data, recipe_details))
+                        (view_recipe_header(recipe_id, &data, recipe_details, recipe.is_favourite))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
                             (view_recipe_media(fs_support, &view.recipe_details, &data_dir))
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
@@ -1900,7 +1907,12 @@ fn view_recipe_helper(
     })
 }
 
-fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetails) -> Markup {
+fn view_recipe_header(
+    recipe_id: i64,
+    data: &Data,
+    recipe_details: &RecipeDetails,
+    is_favourite: bool,
+) -> Markup {
     html! {
         h2 class="card-title bg-base-200 px-2 pt-2 place-content-center rounded-t-2xl print:border-b print:border-black" style="justify-content: space-between" {
             span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
@@ -1923,7 +1935,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                         hx-push-url="true"
                         hx-target="#content"
                         hx-swap="innerHTML transition:true" {
-                        (icon_pencil(false))
+                        (icon_pencil(true))
                     }
                 }
             }
@@ -1987,6 +1999,12 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                         }
                         @if matches!(&data.share, Some(share) if share.is_from_host) {
                             li {
+                                a title="Mark or unmark as favourite" {
+                                    "Favourite"
+                                }
+
+                            }
+                            li {
                                 a title="Delete recipe"
                                     hx-delete=(format!("/recipes/{recipe_id}"))
                                     hx-swap="none"
@@ -2011,6 +2029,7 @@ fn view_recipe_header(recipe_id: i64, data: &Data, recipe_details: &RecipeDetail
                         }
                     }
                 } @else {
+                    (render_favourite_button(recipe_id, is_favourite, true))
                     button title="Share recipe" class="mr-2 hidden sm:block"
                         hx-post=(format!("/recipes/{recipe_id}/share"))
                         hx-target="#share-dialog-result"

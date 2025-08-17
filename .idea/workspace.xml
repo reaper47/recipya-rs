@@ -60,21 +60,9 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/settings_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/settings_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/testing/src/utils.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/testing/src/utils.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -437,6 +425,8 @@
     "Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_already_favourite_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_twice_in_a_row_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_recipe_does_not_exist_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok.executor": "Run",
@@ -698,7 +688,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "100-add-ability-to-mark-a-recipe-as-a-favorite",
+    "git-widget-placeholder": "#158 on 100-add-ability-to-mark-a-recipe-…orite",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -741,7 +731,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_search::test_results_query2">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -760,8 +750,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_already_favourite_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_already_favourite_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -777,8 +767,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -794,8 +784,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -811,8 +801,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query1 -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_favourite_recipe::test_mark_twice_in_a_row_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_favourite_recipe::test_mark_twice_in_a_row_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -828,8 +818,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query2" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query2 -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_favourite_recipe::test_recipe_does_not_exist_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_favourite_recipe::test_recipe_does_not_exist_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -847,19 +837,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_already_favourite_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_twice_in_a_row_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_recipe_does_not_exist_ok" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_twice_in_a_row_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_already_favourite_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_recipe_does_not_exist_ok" />
       </list>
     </recent_temporary>
   </component>
