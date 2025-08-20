@@ -901,8 +901,9 @@ fn settings_about(data: Data) -> Markup {
                             (vec!["Ctrl", "S"], "Save the recipe"),
                         ]))
                         (render_shortcuts_table("View recipe", vec![
-                            (vec!["Ctrl", "D"], "Duplicate the recipe"),
+                            (vec!["Ctrl", "Alt", "D"], "Duplicate the recipe"),
                             (vec!["Ctrl", "E"], "Edit the recipe"),
+                            (vec!["Ctrl", "Shift", "F"], "Mark/unmark the recipe as favorite"),
                             (vec!["Ctrl", "P"], "Print the recipe"),
                             (vec!["Ctrl", "X"], "Share the recipe"),
                             (vec!["Ctrl", "Del"], "Delete the recipe"),

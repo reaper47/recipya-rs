@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
 use maud::{Markup, PreEscaped, html};
+use serde_json::json;
 use url::Url;
 
 use config::DataDir;
 use integrations::{FileFormat, all_apps};
 use models::RecipeDetails;
-use models::data::{Data, ViewRecipe};
+use models::data::{Data, PaginationData, ViewRecipe};
 use models::recipe::{Category, Keyword, ToolRecipe};
 use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
@@ -14,13 +15,14 @@ use support::fs::FsSupport;
 use super::helpers::cut_string;
 use super::icons::{
     icon_bars_3, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
-    icon_document_duplicate, icon_ellipsis_vertical, icon_heart, icon_information_circle,
-    icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,
+    icon_document_duplicate, icon_ellipsis_vertical, icon_information_circle, icon_pencil,
+    icon_plus_circle, icon_printer, icon_share, icon_star, icon_trash,
 };
 use super::layouts;
 use super::layouts::{render_nav, render_recipe_button};
 use super::pagination::pagination;
 use super::search::{search_help, searchbar};
+use crate::search::render_search_favourites_button;
 use crate::{Error, Result};
 
 /// Renders the add recipe manually page.
@@ -36,11 +38,10 @@ pub fn add_recipe_manual(
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe Manually | Recipya" }
-            (render_recipe_button(true, false))
-            (render_nav(path, true))
+            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (render_add_recipe_manual(view, categories, keywords))
         } @else {
-            (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords), user_setting))
+            (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords), user_setting, true))
         }
     }
 }
@@ -51,6 +52,8 @@ fn render_add_recipe_manual(
     keywords: Vec<Keyword>,
 ) -> Markup {
     html! {
+        span #data-layout data-layout="no-aside" {}
+
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
@@ -341,7 +344,7 @@ fn render_add_recipe_manual(
                                     }
                                     div class="col-span-3 min-h-40 md:h-full md:row-span-1" {
                                         label {
-                                            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none" {
+                                            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none" {
                                                 (
                                                     if let Some(v) = view {
                                                         if let Some(description) = &v.recipe_details.recipe.description {
@@ -558,11 +561,10 @@ pub fn add_page(path: &str, data: Data, user_setting: UserSettingDetails) -> Mar
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
-            (render_recipe_button(true, false))
-            (render_nav(path, true))
+            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (render_add_page())
         } @else {
-            (layouts::main("Add Recipe", path, &data, render_add_page(), user_setting))
+            (layouts::main("Add Recipe", path, &data, render_add_page(), user_setting, true))
         }
     }
 }
@@ -846,11 +848,10 @@ pub fn edit_recipe(
             title hx-swap-oob="true" {
                 (page_title) " | Recipya"
             }
-            (render_recipe_button(true, false))
-            (render_nav(&path, true))
+            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (render_edit_recipe(fs_support, view, &data_dir, categories, keywords))
         } @else {
-            (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords), user_setting))
+            (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords), user_setting, true))
         }
     })
 }
@@ -1312,7 +1313,7 @@ fn render_edit_recipe(
                                     }
                                     div class="col-span-3 min-h-40 md:h-full md:row-span-1" {
                                         label {
-                                            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none" {
+                                            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none" {
                                                 (view.recipe_details.recipe.description.as_ref().map_or(String::new(), ToString::to_string))
                                             }
                                         }
@@ -1390,29 +1391,30 @@ pub fn index(
 ) -> Markup {
     if data.is_hx_request {
         html! {
-            title hx-swap-oob="true" { "Recipes | Recipya" }
-            (render_recipe_button(true, true))
-            (render_nav(path, true))
-            (render_index(fs_support, &data, &data_dir))
+            (render_index(fs_support, path, &data, &data_dir))
         }
     } else {
         layouts::main(
             "Recipes",
             path,
             &data,
-            render_index(fs_support, &data, &data_dir),
+            render_index(fs_support, path, &data, &data_dir),
             user_setting,
+            false,
         )
     }
 }
 
 fn render_index(
     fs_support: Arc<dyn FsSupport + Sync + Send>,
+    path: &str,
     data: &Data,
     data_dir: &DataDir,
 ) -> Markup {
     if data.recipes.is_empty() {
         html! {
+            span #data-layout data-layout="with-aside" hx-swap-oob="true" {}
+
             div class="grid place-content-center text-sm h-full text-center md:text-base" {
                 div class="p-4 md:p-0" {
                     p class="pb-2" {
@@ -1428,70 +1430,65 @@ fn render_index(
         }
     } else {
         html! {
-            div class="flex flex-col" {
-                    section class="grid justify-center px-4 pt-4" {
-                        search {
-                            form
-                                class="w-72 flex md:w-96"
-                                hx-get="/recipes/search"
-                                hx-vals=(
-                                    if let Some(p) = &data.pagination {
-                                        PreEscaped(format!("{{\"page\": {}}}", p.search.current_page))
-                                    } else {
-                                        PreEscaped(String::new())
-                                    }
-                                )
-                                hx-target="#list-recipes"
-                                hx-push-url="true"
-                                hx-trigger="submit, change target:.sort-option" {
-                                @if let Some(s) = &data.searchbar {
-                                    (searchbar(s))
-                                }
+            span #data-layout data-layout="with-aside" hx-swap-oob="true" {}
+
+            (search_bar(&data))
+            div #list-recipes class="min-h-0" {
+                (list_recipes(fs_support, path, &data, &data_dir))
+            }
+        }
+    }
+}
+
+/// Renders the searchbar component.
+pub fn search_bar(data: &Data) -> Markup {
+    html! {
+        div class="flex flex-col" {
+            section class="grid justify-center px-4 pt-4" {
+                search {
+                    form
+                        class="w-72 flex md:w-96"
+                        hx-get="/recipes/search"
+                        hx-vals=(
+                            if let Some(p) = &data.pagination {
+                                json!({
+                                    "page": p.search.current_page
+                                }).to_string()
+                            } else {
+                                String::new()
                             }
+                        )
+                        hx-target="#list-recipes"
+                        hx-swap="outerHTML"
+                        hx-push-url="true"
+                        hx-trigger="submit, change target:.sort-option" {
+                        @if let Some(s) = &data.searchbar {
+                            (searchbar(s))
                         }
                     }
                 }
-                (search_help())
-                div #list-recipes class="min-h-[79vh]" {
-                    (list_recipes(fs_support, &data, &data_dir))
-                }
-                @if let Some(p) = &data.pagination {
-                    (pagination(p))
-                }
+            }
         }
+        (search_help())
     }
 }
 
 /// Renders a list of recipes.
 pub fn list_recipes(
     fs_support: Arc<dyn FsSupport + Sync + Send>,
+    path: &str,
     data: &Data,
     data_dir: &DataDir,
 ) -> Markup {
+    let is_tile_deletable = data.searchbar.clone().unwrap_or_default().is_favourites
+        && path.starts_with("/recipes/search");
+
     html! {
-        @if data.is_hx_request {
-            input #search-recipes .w-full type="search" hx-swap-oob="true" name="q"
-                 placeholder="Search for recipes..."
-                 value=(
-                    if let Some(search) = &data.searchbar {
-                        &search.term
-                    } else {
-                        ""
-                    }
-                 )
-                 _=(PreEscaped("on keyup
-                       if event.target.value !== '' then
-                           remove .md:block from #search_shortcut
-                       else
-                           add .md:block to #search_shortcut then
-                           if (event.key is not 'Delete' and not event.key.startsWith('Arrow')) then
-                               send submit to closest <form/> then
-                           end
-                       end"));
-        }
-        article class="grid gap-4 p-4 text-sm place-items-center grid-cols-1 sm:grid-cols-2 md:m-auto md:max-w-7xl md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:text-base" {
+        article #list-recipes
+                class="grid gap-4 p-4 text-sm place-items-center grid-cols-1 sm:grid-cols-2 md:m-auto md:max-w-7xl md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:text-base"
+                data-layout="with-aside" {
             @for view in data.recipes.iter() {
-                section class="card-side sm:card card-compact card-border bg-base-100 shadow-lg indicator w-full" {
+                section class="card-side sm:card card-compact card-border bg-base-200 shadow-lg indicator w-full" {
                     span class="hidden sm:block" {
                         (category_badge(&view.recipe_details.category, false))
                     }
@@ -1520,7 +1517,7 @@ pub fn list_recipes(
                             }
                         }
                         @let recipe = &view.recipe_details.recipe;
-                        (render_favourite_button(recipe.id, recipe.is_favourite, false))
+                        (render_favourite_button(recipe.id, recipe.is_favourite, is_tile_deletable, false))
                     }
                     div class="card-body justify-between" {
                         h2 class={
@@ -1541,8 +1538,10 @@ pub fn list_recipes(
                                     span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer"
                                         hx-get="/recipes/search" hx-target="#list-recipes"
                                         hx-push-url="true" hx-swap="innerHTML show:window:top transition:true"
-                                        hx-vals=(PreEscaped(format!("{{\"q\": \"tag\":{}}}", kw)))
-                                        _=(format!("on click put \"tag:{}\" into #search-recipes.value", kw)) {
+                                        hx-vals=(json!({
+                                            "q": format!(r#""tag": {kw}"#)
+                                        }))
+                                        _=(PreEscaped(format!("on click put \"tag:{}\" into #search-recipes.value", kw))) {
                                         (kw)
                                     }
                                 }
@@ -1572,8 +1571,10 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
                 hx-target="#list-recipes"
                 hx-push-url="true"
                 hx-swap="innerHTML show:window:top transition:true"
-                hx-vals=(PreEscaped(format!("{{\"q\": \"cat:{category}\"}}")))
-                _=(format!("on click put \"cat:{category}\" into #search_recipes.value")) {
+                hx-vals=(json!({
+                    "q": format!(r#""cat": {category}"#)
+                }))
+                _=(format!("on click put \"cat:{category}\" into #search-recipes.value")) {
                 (category)
             }
         } @else {
@@ -1588,8 +1589,10 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
                     span class="hover:bg-neutral"
                         hx-get="/recipes/search" hx-target="#list-recipes"
                         hx-push-url="true" hx-swap="innerHTML show:window:top transition:true"
-                        hx-vals=(PreEscaped(format!("{{\"q\": \"cat:{sub_cat}\"}}")))
-                        _=(format!("on click put 'cat:{sub_cat}' into #search_recipes.value")) {
+                        hx-vals=(json!({
+                            "q": format!(r#"cat:{sub_cat}"#)
+                        }))
+                        _=(format!("on click put 'cat:{sub_cat}' into #search-recipes.value")) {
                         (sub_cat)
                     }
                 }
@@ -1599,26 +1602,39 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
 }
 
 /// Renders the favourite button.
-pub fn render_favourite_button(recipe_id: i64, is_favourite: bool, is_view_recipe: bool) -> Markup {
+pub fn render_favourite_button(
+    recipe_id: i64,
+    is_favourite: bool,
+    is_deletable: bool,
+    is_view_recipe: bool,
+) -> Markup {
     let id = format!("favourite-{recipe_id}");
+
     let class = if is_view_recipe {
         "mr-2 hidden sm:block hover:text-secondary"
     } else {
-        "btn btn-square absolute top-2 right-2 cursor-default hover:text-secondary"
+        "btn btn-square btn-sm absolute top-2 right-2 cursor-default hover:text-secondary"
+    };
+
+    let (hx_target, hx_swap) = if is_deletable && is_favourite && !is_view_recipe {
+        ("closest section".to_string(), "delete".to_string())
+    } else {
+        (format!("#{id}"), "outerHTML".to_string())
     };
 
     html! {
-        button id=(id)
-                class=(class)
+        button id=(id) class=(class) title="Add to favourites"
                 hx-post=(format!("/recipes/{recipe_id}/favourite"))
-                hx-target=(format!("#{id}"))
-                hx-swap="outerHTML"
+                hx-target=(hx_target)
+                hx-swap=(hx_swap)
                 hx-push-url="false"
-                hx-vals=(format!(r#"{{"view-recipe": {is_view_recipe}}}"#))
+                hx-vals=(json!({
+                    "view-recipe": is_view_recipe
+                }))
                 aria-label="Add to favorites"
                 aria-pressed=(is_favourite.to_string())
                 _="on mousedown halt the event" {
-            (icon_heart(is_favourite))
+            (icon_star(is_favourite))
         }
     }
 }
@@ -1632,15 +1648,26 @@ pub fn search_results(
     user_setting: UserSettingDetails,
 ) -> Markup {
     if data.is_hx_request {
-        index(fs_support, path, data, data_dir, user_setting)
+        let is_fav = data
+            .searchbar
+            .as_ref()
+            .map(|sb| sb.is_favourites)
+            .unwrap_or(false);
+
+        html! {
+            (list_recipes(fs_support, path, &data, &data_dir))
+            (render_search_favourites_button(is_fav, true))
+            @if let Some(p) = &data.pagination {
+                (pagination(p))
+            }
+        }
     } else {
-        layouts::main(
-            "Recipes",
-            path,
-            &data,
-            list_recipes(fs_support, &data, &data_dir),
-            user_setting,
-        )
+        let content: Markup = html! {
+            (search_bar(&data))
+            (list_recipes(fs_support, path, &data, &data_dir))
+        };
+
+        layouts::main("Recipes", path, &data, content, user_setting, false)
     }
 }
 
@@ -1663,6 +1690,7 @@ pub fn view_recipe(
             title hx-swap-oob="true" {
                  (view.recipe_details.recipe.name) " | Recipya"
             }
+            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (view_recipe_helper(fs_support, data_dir, &data)?)
         } @else {
             (layouts::main(
@@ -1671,8 +1699,10 @@ pub fn view_recipe(
                 &data,
                 view_recipe_helper(fs_support, data_dir, &data)?,
                 user_setting,
+                true,
             ))
         }
+        (pagination(&PaginationData::hidden()))
     })
 }
 
@@ -1707,7 +1737,7 @@ fn view_recipe_helper(
             }
         }
 
-        section class="p-2" {
+        section class="p-2" data-layout="no-aside" {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
                     div class="card-body" style="padding: 0" {
@@ -1781,7 +1811,7 @@ fn view_recipe_helper(
                                     }
                                 }
                                 div class={
-                                        "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-y md:grid-cols-3 md:row-span-1 print:border-none"
+                                        "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:grid-cols-3 md:row-span-1 print:border-none"
                                         @if recipe_details.nutrition.is_none() { " print:hidden" }
                                     } {
                                     div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
@@ -1801,7 +1831,7 @@ fn view_recipe_helper(
                                 @if let Some(description) = &recipe.description {
                                     div class="col-span-3 min-h-40 md:h-full md:row-span-1 print:hidden" {
                                         label {
-                                            textarea class="textarea w-full h-full resize-none" readonly {
+                                            textarea class="textarea w-full h-full resize-none rounded-none" readonly {
                                                 (description)
                                             }
                                         }
@@ -1929,7 +1959,7 @@ fn view_recipe_header(
                 }
 
                 @if data.is_authenticated && matches!(&data.share, Some(share) if share.is_from_host) {
-                    button class="ml-2 hidden sm:block"
+                    button #edit-recipe class="ml-2 hidden sm:block"
                         title="Edit recipe"
                         hx-get=(format!("/recipes/{recipe_id}/edit"))
                         hx-push-url="true"
@@ -1953,7 +1983,7 @@ fn view_recipe_header(
                     _="on click if me.matches(':popover-open') then me.hidePopover()" {
                     ul tabindex="0" class="menu w-full" {
                         li {
-                            a title="Edit recipe"
+                            a #edit-recipe title="Edit recipe"
                                 hx-get=(format!("/recipes/{recipe_id}/edit"))
                                 hx-push-url="true"
                                 hx-target="#content"
@@ -1982,7 +2012,7 @@ fn view_recipe_header(
                                 }
                             }
                             li {
-                                a title="Duplicate recipe"
+                                a #duplicate-recipe title="Duplicate recipe"
                                     hx-push-url="/recipes/add/manual"
                                     hx-get=(format!("/recipes/{recipe_id}/duplicate"))
                                     hx-target="#content" {
@@ -2029,7 +2059,7 @@ fn view_recipe_header(
                         }
                     }
                 } @else {
-                    (render_favourite_button(recipe_id, is_favourite, true))
+                    (render_favourite_button(recipe_id, is_favourite, false, true))
                     button title="Share recipe" class="mr-2 hidden sm:block"
                         hx-post=(format!("/recipes/{recipe_id}/share"))
                         hx-target="#share-dialog-result"
@@ -2046,7 +2076,7 @@ fn view_recipe_header(
                         (icon_share())
                     }
                 }
-                button class="mr-2 hidden sm:block" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
+                button #duplicate-recipe class="mr-2 hidden sm:block" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
                     (icon_document_duplicate())
                 }
                 button class="mr-2 hidden sm:block" title="Print recipe" _="on click print()" {
@@ -2325,11 +2355,11 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                     }
                 }
                 h2 class="font-semibold text-center underline pb-1" { "Ingredients" }
-                ul class="grid gap-1" {
+                ul class="list grid gap-1" {
                     @for (_section, ingredients) in recipe.ingredients.iter() {
                         @for ingredient in ingredients.iter() {
-                             li class="grid py-1 hover:bg-gray-100 dark:hover:bg-gray-700" {
-                                label class="label justify-start" {
+                             li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                label class="flex items-center w-full" {
                                     input type="checkbox" class="checkbox";
                                     span class="pl-2" { (ingredient) }
                                 }
@@ -2343,7 +2373,7 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 ol class="grid list-decimal" {
                     @for (_section, instruction) in recipe.instructions.iter() {
                         @for instruction in instruction.iter() {
-                            li class="min-w-full py-2 select-none hover:bg-gray-100 dark:hover:bg-gray-700" _="on mousedown toggle .line-through" {
+                            li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through" {
                                 span class="whitespace-pre-line" { (instruction) }
                             }
                         }

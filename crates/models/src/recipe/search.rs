@@ -17,14 +17,16 @@ use crate::{Error, Recipe, RecipeDetails, Result};
 pub struct RecipeSearch {
     filters: SearchFilters,
     page: i64,
+    is_favourites: bool,
     user_id: i64,
 }
 
 impl RecipeSearch {
-    pub fn new(query: &str, page: i64, user_id: i64) -> Result<Self> {
+    pub fn new(query: &str, page: i64, is_favourites: bool, user_id: i64) -> Result<Self> {
         Ok(Self {
             filters: SearchFilters::from_str(query)?,
             page,
+            is_favourites,
             user_id,
         })
     }
@@ -65,6 +67,10 @@ impl RecipeSearch {
             ))
             .distinct_on(id)
             .into_boxed();
+
+        if self.is_favourites {
+            query = query.filter(is_favourite.eq(true))
+        }
 
         if let Some(text) = &self.filters.category {
             let ts_query = to_tsquery(text);
@@ -137,6 +143,7 @@ struct SearchFilters {
     cuisine: Option<String>,
     ingredients: Option<String>,
     instructions: Option<String>,
+    is_favourites: bool,
     keywords: Option<String>,
     tools: Option<String>,
     unclassified: Option<String>,
@@ -196,6 +203,7 @@ impl FromStr for SearchFilters {
             cuisine: cuisine.map(|s| normalize_to_ts_query(&s, "|", "<->")),
             ingredients: ingredients.map(|s| normalize_to_ts_query(&s, "&", "<->")),
             instructions: instructions.map(|s| normalize_to_ts_query(&s, "&", "&")),
+            is_favourites: false,
             keywords: keywords.map(|s| normalize_to_ts_query(&s, "&", "<->")),
             tools: tools.map(|s| normalize_to_ts_query(&s, "&", "<->")),
             unclassified: unclassified.map(|s| normalize_to_ts_query(&s, "|", "&")),
@@ -349,6 +357,7 @@ mod tests {
                     cuisine: Some("thai".to_string()),
                     ingredients: Some("blue<->cheese&paprika".to_string()),
                     instructions: Some("sprinkle&some&salt&and&pepper".to_string()),
+                    is_favourites: false,
                     keywords: Some("air<->fryer&healthy".to_string()),
                     tools: Some("steel<->pan&wok".to_string()),
                     unclassified: Some("rip&alexi&laiho".to_string()),
@@ -467,7 +476,7 @@ mod tests {
             a_recipe.name = "Taco Tuesday".to_string();
             let _ = Recipe::create(&state.mm, user.id, &a_recipe).await?;
 
-            let recipe_search = RecipeSearch::new("chinese", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("chinese", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -494,7 +503,7 @@ mod tests {
             recipe3.description = Some("The most authentic tacos recipe ever".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("chinese", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("chinese", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -521,7 +530,7 @@ mod tests {
             recipe3.category = Some("breakfast".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("cat:Breakfast", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("cat:Breakfast", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -548,7 +557,7 @@ mod tests {
             recipe3.category = Some("breakfast".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("tacos cat:Breakfast", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("tacos cat:Breakfast", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -575,7 +584,7 @@ mod tests {
             recipe3.cuisine = Some("Chinese".to_string());
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("cui:THAI", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("cui:THAI", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -611,7 +620,7 @@ mod tests {
             )]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("ing:cayenne pepper,chicken", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("ing:cayenne pepper,chicken", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -644,7 +653,8 @@ mod tests {
             ])]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("ins:melt butter medium heat", 1, user.id)?;
+            let recipe_search =
+                RecipeSearch::new("ins:melt butter medium heat", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -671,7 +681,7 @@ mod tests {
             recipe3.keywords = vec!["very fat".to_string(), "air fryer".to_string()];
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("kw:very fat,air fryer", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("kw:very fat,air fryer", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(
@@ -704,7 +714,7 @@ mod tests {
             }];
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
-            let recipe_search = RecipeSearch::new("tool:wok", 1, user.id)?;
+            let recipe_search = RecipeSearch::new("tool:wok", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
             pretty_assertions::assert_eq!(

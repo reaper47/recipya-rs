@@ -97,8 +97,9 @@ impl Recipe {
     ) -> Result<Vec<RecipeDetails>> {
         let query = search_params.q.as_deref().unwrap_or_default();
         let page = search_params.page.unwrap_or(1) as i64;
+        let is_favourites = search_params.is_favourites.unwrap_or(false);
 
-        let recipe_search = RecipeSearch::new(query, page, user_id)?;
+        let recipe_search = RecipeSearch::new(query, page, is_favourites, user_id)?;
         let recipes = recipe_search.search(mm).await?;
 
         Ok(recipes)
@@ -299,9 +300,8 @@ mod tests {
                 &state.mm,
                 1,
                 &SearchParams {
-                    q: None,
                     page: Some(1),
-                    sort: None,
+                    ..Default::default()
                 },
             )
             .await?;
@@ -327,9 +327,8 @@ mod tests {
                 &state.mm,
                 1,
                 &SearchParams {
-                    q: None,
                     page: Some(1),
-                    sort: None,
+                    ..Default::default()
                 },
             )
             .await?;

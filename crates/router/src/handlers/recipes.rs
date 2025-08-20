@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
-use axum::http::{HeaderMap, HeaderValue};
+use axum::http::{HeaderMap, HeaderValue, Uri};
 use axum::response::{Html, IntoResponse};
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
@@ -40,9 +40,7 @@ use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections}
 
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::{
-    IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success,
-};
+use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_routes::{
     FavouriteParams, ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
@@ -475,6 +473,7 @@ pub async fn share_recipe_post_handler(
 /// Toggles the favourite state of a recipe.
 pub async fn toggle_favourite_handler(
     ctx: CtxW,
+    uri: Uri,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     Form(params): Form<FavouriteParams>,
@@ -492,9 +491,26 @@ pub async fn toggle_favourite_handler(
         }
     };
 
+    if let Ok(r) = Recipe::get(&state.mm, user_id, recipe_id).await
+        && let Ok(times) = FormattedTimes::from_times(&r.times)
+    {
+        let cache_key = (user_id, recipe_id);
+        let view_recipe = ViewRecipe {
+            recipe_details: r,
+            formatted_times: times,
+        };
+
+        state.remove_cached_recipe(cache_key).await;
+        state.cache_recipe(cache_key, &view_recipe).await;
+    };
+
+    let path = uri.path();
+    let is_deletable = path.starts_with("/recipes/search") && path.contains("fav=true");
+
     templates::recipes::render_favourite_button(
         recipe_id,
         is_favourite,
+        is_deletable,
         params.is_view_recipe.unwrap_or_default(),
     )
     .into_response()
@@ -1200,24 +1216,9 @@ pub async fn view_recipe_handler(
                 last_updated_at: Default::default(),
                 version: "".to_string(),
             },
-            pagination: Some(PaginationData {
-                prev: 0,
-                selected: 0,
-                next: 0,
-                htmx: PaginationHtmxData {
-                    is_swap: false,
-                    target: "".to_string(),
-                },
-                search: PaginationSearchData { current_page: 0 },
-                slots: vec![],
-                is_hidden: false,
-                num_pages: 0,
-                num_results: 0,
-                results_per_page: 0,
-                url: "".to_string(),
-                url_queries: "".to_string(),
-            }),
+            pagination: Some(PaginationData::hidden()),
             searchbar: Some(SearchbarData {
+                is_favourites: false,
                 sort: "a-z".into(),
                 term: "a-z".into(),
             }),
@@ -1283,18 +1284,14 @@ pub async fn search_recipes_handler(
     };
 
     if recipes.is_empty() {
-        return Ok(templates::search::no_results().into_response());
-    }
+        let is_favourites = search_params.is_favourites.unwrap_or_default();
 
-    let hx_target_value = match search_params.q.as_ref() {
-        None => "#content",
-        Some(s) if s.is_empty() => "#content",
-        Some(_) => "#list-recipes",
-    };
+        return Ok(templates::search::no_results(is_favourites).into_response());
+    }
 
     let settings = get_settings(&state, user_id).await?;
 
-    let body = templates::recipes::search_results(
+    Ok(templates::recipes::search_results(
         state.fs_support,
         uri.path(),
         Data {
@@ -1313,7 +1310,7 @@ pub async fn search_recipes_handler(
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
                 recipes.len() as i64,
-                false,
+                headers.get(axum_htmx::HX_REQUEST).is_some(),
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
             share: None,
@@ -1321,15 +1318,8 @@ pub async fn search_recipes_handler(
         },
         state.data_dir,
         settings,
-    );
-
-    let mut extra_headers = HeaderMap::new();
-    extra_headers.insert(
-        axum_htmx::HX_RETARGET,
-        HeaderValue::from_static(hx_target_value),
-    );
-
-    Ok((extra_headers, body).into_response())
+    )
+    .into_response())
 }
 
 /// Handles the supported applications endpoint.

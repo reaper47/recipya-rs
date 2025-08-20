@@ -56,3 +56,7 @@ dialog::backdrop,
 .category-badge:has(button:hover) {
     background-color: oklch(50.5% 0.213 27.518);
 }
+
+.no-after::after {
+    content: none !important;
+}

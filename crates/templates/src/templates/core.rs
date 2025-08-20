@@ -39,7 +39,7 @@ pub(super) fn head(title: &str) -> Markup {
 /// Renders a notification toast.
 pub(super) fn toast() -> Markup {
     html! {
-        div #toast_container .toast.toast-top.toast-end.hidden.z-20.cursor-default {
+        div #toast-container .toast.toast-top.toast-end.hidden.z-20.cursor-default {
             div .hidden.alert-error.alert-info.alert-success.alert-warning {}
             div #toast_alert .alert.shadow-lg.hidden role="alert" {
                 svg #toast_icon .stroke-current.shrink-0.w-6.h-6 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {}

@@ -18,6 +18,7 @@ integrations = { workspace = true }
 maud = { version = "0.27.0", features = ["axum"] }
 math = { workspace = true }
 models = { workspace = true }
+serde_json = "1.0.143"
 strum = { workspace = true }
 support = { workspace = true }
 url = { workspace = true }
