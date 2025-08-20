@@ -8,7 +8,7 @@ use auth::pwd::{ContentToHash, hash_pwd};
 use repository::{ModelManager, schema};
 
 use crate::recipe::{Category, Keyword};
-use crate::{Error, Result};
+use crate::{Error, Recipe, Result};
 
 /// Represents a user in the system.
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable, Serialize)]
@@ -186,6 +186,20 @@ impl User {
         }
     }
 
+    /// Fetches all of the user's favourite recipes.
+    pub async fn favourite_recipes(mm: &ModelManager, user_id: i64) -> Result<Vec<Recipe>> {
+        let mut conn = mm.pool.get().await?;
+
+        let recipes = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .filter(schema::recipes::is_favourite.eq(true))
+            .select(Recipe::as_select())
+            .load::<Recipe>(&mut conn)
+            .await?;
+
+        Ok(recipes)
+    }
+
     /// Retrieves all of a user's recipe keywords.
     pub async fn keywords(mm: &ModelManager, user_id: i64) -> Result<Vec<Keyword>> {
         let mut conn = mm.pool.get().await?;
@@ -327,8 +341,10 @@ impl User {
 mod tests {
     use super::*;
 
+    use crate::recipe::test_utils::a_complete_recipe_for_create;
     use testing::utils::{
-        TEST_USER_EMAIL, TestDb, create_app_state, insert_other_user, insert_user,
+        TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state, insert_other_user,
+        insert_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -568,6 +584,33 @@ mod tests {
             Ok(_) => Ok(()),
             Err(err) => Err(err.into()),
         }
+    }
+
+    #[tokio::test]
+    async fn test_favourite_recipes() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let _ = build_server_logged_in(config.clone()).await?;
+        let state = create_app_state(config.clone()).await;
+        let recipe1 = a_complete_recipe_for_create();
+        let mut recipe2 = a_complete_recipe_for_create();
+        recipe2.name = "recipe 2".into();
+        recipe2.is_favourite = true;
+        let mut recipe3 = a_complete_recipe_for_create();
+        recipe3.name = "recipe 3".into();
+        recipe3.is_favourite = true;
+        let _ = Recipe::create(&state.mm, 1, &recipe1).await?;
+        let _ = Recipe::create(&state.mm, 1, &recipe2).await?;
+        let _ = Recipe::create(&state.mm, 1, &recipe3).await?;
+
+        let got = User::favourite_recipes(&state.mm, 1).await?;
+
+        let got = got.into_iter().map(|r| r.name).collect::<Vec<_>>();
+        let expected = vec![recipe2, recipe3]
+            .into_iter()
+            .map(|r| r.name)
+            .collect::<Vec<_>>();
+        pretty_assertions::assert_eq!(got, expected);
+        Ok(())
     }
 
     #[tokio::test]

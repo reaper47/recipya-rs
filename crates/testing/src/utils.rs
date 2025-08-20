@@ -322,6 +322,7 @@ pub async fn assert_must_be_logged_in(method: axum::http::Method, uri: &str) -> 
         axum::http::Method::GET => server.get(uri),
         axum::http::Method::POST => server.post(uri),
         axum::http::Method::PATCH => server.patch(uri),
+        axum::http::Method::PUT => server.put(uri),
         _ => unimplemented!(),
     }
     .await;

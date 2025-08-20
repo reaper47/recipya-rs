@@ -67,18 +67,30 @@ pub async fn delete_user_handler(
     Path(user_id): Path<i64>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
+    let caller_user_id = ctx.0.user_id();
+
     if user_id == 1 {
-        broadcast_error(&state, ctx.0.user_id(), "Cannot delete an admin.").await;
+        broadcast_error(&state, caller_user_id, "Cannot delete an admin.").await;
         return Error::DeleteForbidden.into_response();
     }
 
-    match User::delete(&state.mm, user_id).await {
-        Ok(_) => (StatusCode::NO_CONTENT, "").into_response(),
-        Err(err) => {
-            error!("Could not delete user with id {user_id}: {err}");
-            Error::DeleteUser.into_response()
-        }
+    if let Err(err) = User::delete(&state.mm, user_id).await {
+        error!("Could not delete user with id {user_id}: {err}");
+        broadcast_error(&state, caller_user_id, "Failed to delete user.").await;
+        return Error::DeleteUser.into_response();
     }
+
+    let users = match User::all(&state.mm).await {
+        Ok(users) => users,
+        Err(err) => {
+            error!("Error fetching users: {err}");
+            broadcast_error(&state, caller_user_id, "Failed to fetch users.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    broadcast_success(&state, caller_user_id, "User deleted.").await;
+    templates::settings::render_users_table(users, true).into_response()
 }
 
 /// Renders the form to update the user form from the admin table.

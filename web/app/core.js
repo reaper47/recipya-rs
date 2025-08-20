@@ -1,3 +1,18 @@
+document.addEventListener('DOMContentLoaded', function () {
+    initGlobalKeyboardShortcuts();
+    syncLayout();
+});
+
+document.body.addEventListener('htmx:afterSwap', (event) => {
+    if (event.target.id === 'content') {
+        syncLayout();
+    }
+});
+
+document.body.addEventListener('htmx:historyRestore', () => {
+    syncLayout();
+});
+
 function loadSortableJS() {
     return loadScript("https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js")
 }
@@ -415,10 +430,16 @@ async function reloadImg(url) {
 function initGlobalKeyboardShortcuts() {
     document.addEventListener("keydown", (event) => {
         const key = event.key.toLowerCase();
+        const viewRecipePage = window.location.pathname.match(/^\/recipes\/(\d+)$/);
 
         if (event.ctrlKey || event.metaKey) {
             if (event.altKey) {
                 switch (key) {
+                    case "d":
+                        if (viewRecipePage) {
+                            htmx.trigger("#duplicate-recipe", "click");
+                        }
+                        break;
                     case "i":
                         htmx.ajax("GET", "/recipes/add", {
                             target: "#content"
@@ -467,28 +488,22 @@ function initGlobalKeyboardShortcuts() {
                     default:
                         break;
                 }
-            } else {
-                let viewRecipePage = window.location.pathname.match(/^\/recipes\/(\d+)$/);
-
+            } else if (event.shiftKey) {
                 switch (key) {
-                    case "d":
+                    case 'f':
                         if (viewRecipePage) {
                             const id = parseInt(viewRecipePage[1], 10);
-                            htmx.ajax("GET", `/recipes/${id}/duplicate`, {
-                                target: "#content"
-                            }).then(() => {
-                                window.history.pushState({}, "", "/recipes/add/manual");
-                            });
+                            htmx.trigger(`#favourite-${id}`, "click");
                         }
                         break;
+                    default:
+                        break;
+                }
+            } else {
+                switch (key) {
                     case "e":
                         if (viewRecipePage) {
-                            const url = `/recipes/${parseInt(viewRecipePage[1], 10)}/edit`;
-                            htmx.ajax("GET", url, {
-                                target: "#content"
-                            }).then(() => {
-                                window.history.pushState({}, "", url)
-                            });
+                            htmx.trigger("#edit-recipe", "click");
                         }
                         break;
                     case "s":
@@ -533,6 +548,10 @@ function initTheme(themeDefault, themeSelected) {
     document.documentElement.setAttribute("data-theme", theme);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    initGlobalKeyboardShortcuts();
-});
+function syncLayout() {
+    const isAside = document.querySelector("#data-layout").attributes.getNamedItem("data-layout").value === "with-aside";
+
+    ["desktop-nav", "mobile-nav", "add-recipe", "pagination"].forEach((id) => {
+        document.getElementById(id)?.classList.toggle("hidden", !isAside);
+    });
+}

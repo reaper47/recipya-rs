@@ -1,3 +1,4 @@
+use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
@@ -49,17 +50,20 @@ impl Recipe {
             .await?
             .transaction::<_, Error, _>(|conn| {
                 async move {
-                    diesel::update(schema::recipes::table)
-                        .filter(schema::recipes::id.eq(recipe_id))
-                        .set(&recipe)
-                        .execute(conn)
-                        .await?;
+                    diesel::update(
+                        schema::recipes::table.filter(schema::recipes::id.eq(recipe_id)),
+                    )
+                    .set(&recipe)
+                    .execute(conn)
+                    .await?;
 
                     // Additional images
-                    diesel::delete(schema::additional_images_recipe::table)
-                        .filter(schema::additional_images_recipe::recipe_id.eq(recipe_id))
-                        .execute(conn)
-                        .await?;
+                    diesel::delete(
+                        schema::additional_images_recipe::table
+                            .filter(schema::additional_images_recipe::recipe_id.eq(recipe_id)),
+                    )
+                    .execute(conn)
+                    .await?;
 
                     insert_additional_images(conn, recipe_id, additional_images).await?;
 
@@ -79,17 +83,21 @@ impl Recipe {
                         Some(cuisine) if old_recipe.cuisine != new_recipe.cuisine => {
                             let cuisine_id = get_cuisine_id(conn, cuisine.into()).await?;
 
-                            diesel::update(schema::cuisines_recipes::table)
-                                .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id))
-                                .set(schema::cuisines_recipes::cuisine_id.eq(cuisine_id))
-                                .execute(conn)
-                                .await?;
+                            diesel::update(
+                                schema::cuisines_recipes::table
+                                    .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id)),
+                            )
+                            .set(schema::cuisines_recipes::cuisine_id.eq(cuisine_id))
+                            .execute(conn)
+                            .await?;
                         }
                         None => {
-                            diesel::delete(schema::cuisines_recipes::table)
-                                .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id))
-                                .execute(conn)
-                                .await?;
+                            diesel::delete(
+                                schema::cuisines_recipes::table
+                                    .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id)),
+                            )
+                            .execute(conn)
+                            .await?;
                         }
                         _ => {}
                     }
@@ -109,10 +117,12 @@ impl Recipe {
                         .flat_map(|(_, ing)| ing)
                         .collect::<Vec<_>>();
                     if old_ingredients != new_ingredients {
-                        diesel::delete(schema::ingredients_recipes::table)
-                            .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
-                            .execute(conn)
-                            .await?;
+                        diesel::delete(
+                            schema::ingredients_recipes::table
+                                .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id)),
+                        )
+                        .execute(conn)
+                        .await?;
 
                         insert_ingredients(conn, &sections_map, &new_recipe.ingredients, recipe_id)
                             .await?;
@@ -130,10 +140,12 @@ impl Recipe {
                         .flat_map(|(_, ing)| ing)
                         .collect::<Vec<_>>();
                     if old_instructions != new_instructions {
-                        diesel::delete(schema::instructions_recipes::table)
-                            .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
-                            .execute(conn)
-                            .await?;
+                        diesel::delete(
+                            schema::instructions_recipes::table
+                                .filter(schema::instructions_recipes::recipe_id.eq(recipe_id)),
+                        )
+                        .execute(conn)
+                        .await?;
 
                         insert_instructions(
                             conn,
@@ -150,10 +162,12 @@ impl Recipe {
                     new_recipe.keywords.dedup();
 
                     if old_recipe.keywords != new_recipe.keywords {
-                        diesel::delete(schema::keywords_recipes::table)
-                            .filter(schema::keywords_recipes::recipe_id.eq(recipe_id))
-                            .execute(conn)
-                            .await?;
+                        diesel::delete(
+                            schema::keywords_recipes::table
+                                .filter(schema::keywords_recipes::recipe_id.eq(recipe_id)),
+                        )
+                        .execute(conn)
+                        .await?;
 
                         insert_keywords(conn, &new_recipe.keywords, user_id, recipe_id).await?;
                     }
@@ -161,10 +175,12 @@ impl Recipe {
                     // Nutrition
                     match &new_recipe.nutrition {
                         None => {
-                            diesel::delete(schema::nutrition::table)
-                                .filter(schema::nutrition::recipe_id.eq(recipe_id))
-                                .execute(conn)
-                                .await?;
+                            diesel::delete(
+                                schema::nutrition::table
+                                    .filter(schema::nutrition::recipe_id.eq(recipe_id)),
+                            )
+                            .execute(conn)
+                            .await?;
                         }
                         Some(new_nutrition_c) => match old_recipe.nutrition {
                             None => insert_nutrition(conn, new_nutrition_c, recipe_id).await?,
@@ -186,11 +202,13 @@ impl Recipe {
                                     serving_size: new_nutrition_c.serving_size.clone(),
                                 };
                                 if new_nutrition != old_nutrition {
-                                    diesel::update(schema::nutrition::table)
-                                        .filter(schema::nutrition::recipe_id.eq(recipe_id))
-                                        .set(&new_nutrition)
-                                        .execute(conn)
-                                        .await?;
+                                    diesel::update(
+                                        schema::nutrition::table
+                                            .filter(schema::nutrition::recipe_id.eq(recipe_id)),
+                                    )
+                                    .set(&new_nutrition)
+                                    .execute(conn)
+                                    .await?;
                                 }
                             }
                         },
@@ -213,26 +231,31 @@ impl Recipe {
                         cook_seconds: new_recipe.times.clone().unwrap_or(times).cook_seconds,
                     };
                     if old_times_for_insert != new_times_for_insert {
-                        diesel::update(schema::times::table)
-                            .filter(schema::times::recipe_id.eq(recipe_id))
-                            .set(&new_times_for_insert)
-                            .execute(conn)
-                            .await?;
+                        diesel::update(
+                            schema::times::table.filter(schema::times::recipe_id.eq(recipe_id)),
+                        )
+                        .set(&new_times_for_insert)
+                        .execute(conn)
+                        .await?;
                     }
 
                     // Tools
-                    diesel::delete(schema::tools_recipes::table)
-                        .filter(schema::tools_recipes::recipe_id.eq(recipe_id))
-                        .execute(conn)
-                        .await?;
+                    diesel::delete(
+                        schema::tools_recipes::table
+                            .filter(schema::tools_recipes::recipe_id.eq(recipe_id)),
+                    )
+                    .execute(conn)
+                    .await?;
 
                     insert_tools(conn, &new_recipe.tools, recipe_id).await?;
 
                     // Videos
-                    diesel::delete(schema::videos_recipes::table)
-                        .filter(schema::videos_recipes::recipe_id.eq(recipe_id))
-                        .execute(conn)
-                        .await?;
+                    diesel::delete(
+                        schema::videos_recipes::table
+                            .filter(schema::videos_recipes::recipe_id.eq(recipe_id)),
+                    )
+                    .execute(conn)
+                    .await?;
 
                     insert_videos(conn, &new_recipe.videos, recipe_id).await?;
 
@@ -243,5 +266,66 @@ impl Recipe {
             .await?;
 
         Ok(())
+    }
+
+    /// Toggles whether the recipe is a favourite.
+    pub async fn toggle_favourite(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<bool> {
+        use schema::{recipes, users};
+
+        let mut conn = mm.pool.get().await?;
+
+        let new_value = diesel::update(
+            recipes::table
+                .filter(recipes::id.eq(recipe_id))
+                .filter(recipes::user_id.eq(user_id)),
+        )
+        .set(recipes::is_favourite.eq(not(recipes::is_favourite)))
+        .returning(recipes::is_favourite)
+        .get_result::<bool>(&mut conn)
+        .await?;
+
+        Ok(new_value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::recipe::test_utils::a_complete_recipe_for_create;
+    use testing::utils::{TestDb, create_app_state, insert_user};
+
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod tests_mark_favourite {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_user_does_not_exist_err() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let user = insert_user(config.clone()).await?;
+            let recipe = a_complete_recipe_for_create();
+            let id = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+            if Recipe::toggle_favourite(&state.mm, 1000, id).await.is_ok() {
+                panic!("Expected error");
+            }
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_valid_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let user = insert_user(config.clone()).await?;
+            let recipe = a_complete_recipe_for_create();
+            let initial_state = recipe.is_favourite;
+            let id = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+            let current_state = Recipe::toggle_favourite(&state.mm, user.id, id).await?;
+
+            pretty_assertions::assert_eq!(current_state, !initial_state);
+            Ok(())
+        }
     }
 }

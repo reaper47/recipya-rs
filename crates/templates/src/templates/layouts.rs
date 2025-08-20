@@ -4,6 +4,7 @@ use super::core::{head, toast, toast_ws};
 use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag, icon_pencil,
 };
+use crate::templates::pagination::pagination;
 use models::data::Data;
 use models::settings::UserSettingDetails;
 
@@ -28,14 +29,23 @@ pub fn main(
     data: &Data,
     content: Markup,
     user_settings: UserSettingDetails,
+    is_hide_nav: bool,
 ) -> Markup {
+    let data_layout = if is_hide_nav {
+        "no-aside"
+    } else {
+        "with-aside"
+    };
+
     html! {
         (DOCTYPE)
         html lang="en" class="h-full" {
             (head(title))
-            body class="min-h-full" hx-ext="ws" ws-connect="/ws"
+            body class="min-h-screen flex flex-col" hx-ext="ws" ws-connect="/ws"
                  _=(PreEscaped(format!("on load call initTheme('{}', '{}')", user_settings.default_theme, user_settings.selected_theme))) {
-                header class="navbar bg-base-200 shadow-sm print:hidden" {
+                span #data-layout data-layout=(data_layout) {}
+
+                header class="navbar bg-base-200 shadow-sm print:hidden shrink-0" {
                     div class="navbar-start" {
                         a class="btn btn-ghost text-lg" style="padding-left: 0"
                           hx-get=@if data.is_authenticated { "/" }
@@ -55,9 +65,9 @@ pub fn main(
 
                             @if path != "/admin" || path != "/cookbooks" || path != "/recipes/add" || path != "/recipes/add/manual" {
                                 @if path == "/" || path == "/recipes" {
-                                    (render_recipe_button(false, true))
+                                    (render_recipe_button())
                                 } @else {
-                                    (render_recipe_button(false, false))
+                                    (render_recipe_button())
                                 }
 
                                 @if path == "/cookbooks" {
@@ -170,13 +180,16 @@ pub fn main(
                     }
                 }
                 div #fullscreen-loader class="htmx-indicator" {}
-                main class="inline-flex w-full" {
+                main class="flex w-full flex-1 min-h-0" {
                     @if data.is_authenticated {
-                        (render_nav(path, false))
+                        (render_nav(path))
                     }
-                    div #content class="min-h-[92.5vh] w-full" {
+                    div #content class="flex-1 min-h-0" {
                         (content)
                     }
+                }
+                @if let Some(p) = &data.pagination {
+                    (pagination(p))
                 }
                 (toast())
                 (toast_ws("", "", false))
@@ -186,34 +199,24 @@ pub fn main(
 }
 
 /// Renders the button to go the add recipe page.
-pub(super) fn render_recipe_button(is_hx_swap_oob: bool, is_visible: bool) -> Markup {
+pub(super) fn render_recipe_button() -> Markup {
     html! {
         button
             #add-recipe
-            class={
-                "btn btn-primary btn-sm hover:btn-accent"
-                @if !is_visible { " hidden" } @else { "" }
-
-            }
+            class="btn btn-primary btn-sm hover:btn-accent"
             hx-get="/recipes/add"
             hx-target="#content"
             hx-trigger="mousedown"
-            hx-push-url="true"
-            hx-swap-oob=(is_hx_swap_oob) {
+            hx-push-url="true" {
             "Add recipe"
         }
     }
 }
 
 /// Renders the desktop navigation sidebar.
-pub(super) fn render_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
-    let is_visible = path == "/" || path == "/recipes";
-
+pub(super) fn render_nav(path: &str) -> Markup {
     html! {
-        aside #desktop-nav class={
-                @if is_visible { "hidden md:block" } @else { " hidden" }
-            }
-            hx-swap-oob=(is_hx_swap_oob) {
+        aside #desktop-nav {
             ul class="menu w-full menu-sm bg-base-300 rounded-box h-full gap-1" style="border-radius: 0" {
                 li #recipes-sidebar-recipes
                     class={
@@ -224,7 +227,6 @@ pub(super) fn render_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
                     hx-target="#content"
                     hx-trigger="mousedown"
                     hx-push-url="true"
-                    hx-swap-oob=(is_hx_swap_oob)
                     hx-swap="innerHTML transition:true" {
                     a class="tooltip tooltip-right active" data-tip="Recipes" {
                         (icon_pencil(false))
@@ -235,7 +237,6 @@ pub(super) fn render_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
                    hx-target="#content"
                    hx-trigger="mousedown"
                    hx-push-url="true"
-                   hx-swap-oob=(is_hx_swap_oob)
                    hx-swap="innerHTML transition:true" {
                      a class="tooltip tooltip-right" data-tip="Cookbooks" {
                         (icon_book_open())
@@ -244,14 +245,11 @@ pub(super) fn render_nav(path: &str, is_hx_swap_oob: bool) -> Markup {
             }
         }
 
-        aside #mobile-nav class={
-            "dock dock-sm md:hidden z-20"
-            @if is_visible { "hidden md:block" } @else { " hidden" }
-        } hx-swap-oob=(is_hx_swap_oob) {
-            button hx-get="/recipes" hx-target="#content" hx-push-url="true" hx-swap-oob=(is_hx_swap_oob) hx-swap="innerHTML transition:true" {
+        aside #mobile-nav class="dock dock-sm md:hidden z-20" {
+            button hx-get="/recipes" hx-target="#content" hx-push-url="true" hx-swap="innerHTML transition:true" {
                 "Recipes"
             }
-            button hx-get="/cookbooks" hx-target="#content" hx-push-url="true" hx-swap-oob=(is_hx_swap_oob) hx-swap="innerHTML transition:true" {
+            button hx-get="/cookbooks" hx-target="#content" hx-push-url="true" hx-swap="innerHTML transition:true" {
                 "Cookbooks"
             }
         }

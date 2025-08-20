@@ -16,7 +16,7 @@ rust-version.workspace = true
 
 [dependencies]
 base64 = { workspace = true }
-cooklang = "0.16.5"
+cooklang = "0.17.0"
 derive_more = { workspace = true }
 humantime = { workspace = true }
 iso8601 = { workspace = true }

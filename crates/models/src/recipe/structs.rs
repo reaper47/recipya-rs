@@ -4,6 +4,9 @@ use std::sync::Arc;
 use diesel::data_types::PgInterval;
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
+use tracing::warn;
+use uuid::Uuid;
+
 use math::cooking::units;
 use recipe_schema::{
     CreativeWorkOrText, DefinedTermOrTextOrUrl, HowToToolOrText, NutritionInformationSchema,
@@ -13,8 +16,6 @@ use repository::schema;
 use support::fs::FsSupport;
 use support::name_entity_with_relations;
 use support::strings::extract_number;
-use tracing::warn;
-use uuid::Uuid;
 
 use crate::recipe::RecipeForm;
 use crate::user::User;
@@ -45,6 +46,8 @@ pub struct Recipe {
     pub measurement_system_id: i16,
     /// An optional reference to the origin or inspiration of the recipe.
     pub source: Option<String>,
+    /// Specifies whether the recipe has been marked as favourite.
+    pub is_favourite: bool,
     /// The timestamp when the nutrition entry was created.
     pub created_at: chrono::NaiveDateTime,
     /// The timestamp when the nutrition entry was last updated.
@@ -63,6 +66,7 @@ pub struct RecipeForCreate {
     pub measurement_system_id: i16,
     pub yield_: Option<i16>,
     pub source: Option<String>,
+    pub is_favourite: bool,
     pub videos: Vec<VideoForCreate>,
 
     // For association tables
@@ -97,6 +101,7 @@ impl From<RecipeForm> for RecipeForCreate {
             images: vec![],
             yield_: form.yield_,
             source: form.source,
+            is_favourite: false,
             videos: vec![],
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
@@ -127,6 +132,7 @@ impl From<&RecipeSchema> for RecipeForCreate {
             images: vec![],
             yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
             source,
+            is_favourite: false,
             videos: vec![],
             category: String::try_from(schema.recipe_category.clone()).ok(),
             cuisine: schema.recipe_cuisine.clone().map(String::from),
@@ -176,6 +182,7 @@ pub(super) struct RecipeForInsert {
     pub yield_: Option<i16>,
     pub language: String,
     pub source: Option<String>,
+    pub is_favourite: bool,
     pub user_id: i64,
 }
 
@@ -748,6 +755,7 @@ pub mod test_utils {
                 language: "en".into(),
                 measurement_system_id: 2,
                 source: recipe_c.source,
+                is_favourite: false,
                 created_at: NaiveDateTime::new(created_date, time),
                 updated_at: NaiveDateTime::new(updated_date, time),
                 user_id: 1,
@@ -811,6 +819,7 @@ pub mod test_utils {
             source: Some(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
             ),
+            is_favourite: false,
             videos: vec![VideoForCreate {
                 video,
                 duration: Some(chrono::Duration::minutes(7)),
@@ -900,6 +909,7 @@ mod tests {
                     created_at: Default::default(),
                     updated_at: Default::default(),
                     user_id: 0,
+                    is_favourite: false,
                 },
                 additional_images: vec![],
                 category: "".to_string(),

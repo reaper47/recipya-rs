@@ -38,7 +38,7 @@ pub enum PageSlot {
 }
 
 /// PaginationData holds data related to pagination.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct PaginationData {
     pub prev: u64,
     pub selected: u64,
@@ -56,15 +56,29 @@ pub struct PaginationData {
     pub url_queries: String,
 }
 
+impl PaginationData {
+    /// Sets the visibility of the pagination footer to hidden.
+    pub fn hidden() -> Self {
+        Self {
+            htmx: PaginationHtmxData {
+                is_swap: true,
+                ..Default::default()
+            },
+            is_hidden: true,
+            ..Default::default()
+        }
+    }
+}
+
 /// PaginationHtmxData holds data related to htmx for pagination.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct PaginationHtmxData {
     pub is_swap: bool,
     pub target: String,
 }
 
 /// PaginationSearchData holds search data for the pagination.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct PaginationSearchData {
     pub current_page: u64,
 }
@@ -159,8 +173,9 @@ fn page_slots(curr: u64, total: u64) -> Vec<PageSlot> {
 }
 
 /// SearchbarData holds data related to the searchbar.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SearchbarData {
+    pub is_favourites: bool,
     pub sort: String,
     pub term: String,
 }
@@ -169,6 +184,7 @@ impl SearchbarData {
     /// Creates a SearchbarData from the query parameters.
     pub fn from_params(params: SearchParams) -> Self {
         Self {
+            is_favourites: params.is_favourites.unwrap_or_default(),
             term: params.q.unwrap_or_default(),
             sort: params.sort.unwrap_or_default(),
         }
@@ -263,6 +279,7 @@ mod tests {
         #[test]
         fn test_searchbar_data_from_query_none_ok() {
             let query = SearchParams {
+                is_favourites: None,
                 q: None,
                 sort: None,
                 page: None,
@@ -271,6 +288,7 @@ mod tests {
             let got = SearchbarData::from_params(query);
 
             let expected = SearchbarData {
+                is_favourites: false,
                 sort: "".into(),
                 term: "".into(),
             };
@@ -280,6 +298,7 @@ mod tests {
         #[test]
         fn test_searchbar_data_from_query_ok() {
             let query = SearchParams {
+                is_favourites: None,
                 q: Some("hamburger".into()),
                 sort: Some("z-a".into()),
                 page: Some(4),
@@ -288,6 +307,7 @@ mod tests {
             let got = SearchbarData::from_params(query);
 
             let expected = SearchbarData {
+                is_favourites: false,
                 sort: "z-a".into(),
                 term: "hamburger".into(),
             };

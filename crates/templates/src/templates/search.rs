@@ -3,7 +3,7 @@ use maud::{Markup, PreEscaped, html};
 use models::data::SearchbarData;
 
 use super::icons::{
-    icon_bars_3_bottom_left, icon_information_circle, icon_magnifying_glass, icon_x_mark,
+    icon_bars_3_bottom_left, icon_information_circle, icon_magnifying_glass, icon_star, icon_x_mark,
 };
 
 /// Renders the searchbar.
@@ -15,7 +15,7 @@ pub(super) fn searchbar(data: &SearchbarData) -> Markup {
                     (icon_information_circle())
                 }
 
-                input #search_recipes class="w-full" type="search" name="q" placeholder="Search for recipes..." value=(data.term)
+                input #search-recipes class="w-full" type="search" name="q" placeholder="Search for recipes..." value=(data.term)
                         _=(PreEscaped("on keyup
                              if event.target.value !== '' then
                                  remove .md:block from #search-shortcut
@@ -44,6 +44,25 @@ pub(super) fn searchbar(data: &SearchbarData) -> Markup {
                 (search_sort_option("Date created:", Some("Newest to oldest"), "new-old", &data.sort))
                 (search_sort_option("Date created:", Some("Oldest to newest"), "old-new", &data.sort))
                 (search_sort_option("Random", None, "random", &data.sort))
+            }
+        }
+        (render_search_favourites_button(data.is_favourites, false))
+    }
+}
+
+/// Renders the button to search recipes marked as favourites.
+pub fn render_search_favourites_button(is_show_favourites: bool, is_oob_swap: bool) -> Markup {
+    html! {
+        div #search-favourites
+            hx-swap-oob=[if is_oob_swap { Some("true") } else { None }] {
+            input #fav type="hidden" name="fav" value=(is_show_favourites);
+            button #toggle-favourites-button type="submit"
+                    title="View all recipes marked as favourites"
+                    class="btn btn-square btn-sm ml-1 hover:text-secondary"
+                    aria-label="Add to favorites"
+                    aria-pressed=(is_show_favourites)
+                    _=(format!("on mousedown set #fav.value to '{}'", !is_show_favourites)) {
+                (icon_star(is_show_favourites))
             }
         }
     }
@@ -147,10 +166,11 @@ pub(super) fn search_help() -> Markup {
 }
 
 /// Renders the component to display when there are no search results.
-pub fn no_results() -> Markup {
+pub fn no_results(is_favourites: bool) -> Markup {
     html! {
-        div class="grid place-content-center text-sm text-center h-3/5 md:text-base" {
-            p { "No results found." }
+        div #list-recipes class="grid place-content-center text-sm text-center h-3/5 md:text-base" {
+            p class="pt-2" { "No results found." }
         }
+        (render_search_favourites_button(is_favourites, true))
     }
 }

@@ -57,6 +57,7 @@ impl Recipe {
                     schema::recipes::language,
                     schema::recipes::measurement_system_id,
                     schema::recipes::source,
+                    schema::recipes::is_favourite,
                     schema::recipes::created_at,
                     schema::recipes::updated_at,
                     schema::recipes::user_id,
@@ -96,14 +97,16 @@ impl Recipe {
     ) -> Result<Vec<RecipeDetails>> {
         let query = search_params.q.as_deref().unwrap_or_default();
         let page = search_params.page.unwrap_or(1) as i64;
+        let is_favourites = search_params.is_favourites.unwrap_or(false);
 
-        let recipe_search = RecipeSearch::new(query, page, user_id)?;
+        let recipe_search = RecipeSearch::new(query, page, is_favourites, user_id)?;
         let recipes = recipe_search.search(mm).await?;
 
         Ok(recipes)
     }
 }
 
+/// Fetches all the details of a recipe.
 pub async fn fetch_recipe_details(
     conn: &mut PgPooledConn<'_>,
     recipe: Recipe,
@@ -297,9 +300,8 @@ mod tests {
                 &state.mm,
                 1,
                 &SearchParams {
-                    q: None,
                     page: Some(1),
-                    sort: None,
+                    ..Default::default()
                 },
             )
             .await?;
@@ -325,9 +327,8 @@ mod tests {
                 &state.mm,
                 1,
                 &SearchParams {
-                    q: None,
                     page: Some(1),
-                    sort: None,
+                    ..Default::default()
                 },
             )
             .await?;
