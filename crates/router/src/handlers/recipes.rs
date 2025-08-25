@@ -24,10 +24,7 @@ use app::state::AppState;
 use math::cooking::units;
 use models::Error::{DuplicateEntity, EntityNotFound};
 use models::Recipe;
-use models::data::{
-    AboutData, Data, PaginationData, PaginationHtmxData, PaginationSearchData, SearchbarData,
-    ShareData, ViewRecipe,
-};
+use models::data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe};
 use models::params::SearchParams;
 use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
@@ -773,6 +770,7 @@ pub async fn add_manual_recipe_post_handler(
             yield_: form.yield_,
             source: form.source,
             is_favourite: false,
+            rating: form.rating,
             videos,
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,

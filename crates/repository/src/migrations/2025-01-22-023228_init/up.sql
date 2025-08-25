@@ -131,6 +131,7 @@ CREATE TABLE recipes
     measurement_system_id SMALLINT  NOT NULL REFERENCES measurement_systems (id) ON DELETE CASCADE DEFAULT 2,
     source                TEXT,
     is_favourite          BOOL      NOT NULL                                                       DEFAULT FALSE,
+    rating                SMALLINT CHECK (rating BETWEEN 1 AND 5),
     created_at            TIMESTAMP NOT NULL                                                       DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP NOT NULL                                                       DEFAULT CURRENT_TIMESTAMP,
     user_id               BIGINT    NOT NULL REFERENCES users (id) ON DELETE CASCADE,

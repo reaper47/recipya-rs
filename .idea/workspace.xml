@@ -60,30 +60,23 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/data.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/params.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/params.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipya-cli/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-cli/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-scraper/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/layouts.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/layouts.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/pagination.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/pagination.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/app.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -427,6 +420,7 @@
     "Cargo.Test recipe::search::tests::tests_filters::test_filters_category_and_unclassified.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_filters::test_filters_category_only.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_filters::test_instructions_only.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_filters::test_rating_only.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_category.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_category_and_unclassified.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_cuisine.executor": "Run",
@@ -434,6 +428,7 @@
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_keywords.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_name.executor": "Run",
+    "Cargo.Test recipe::search::tests::tests_search::test_search_by_rating.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_tools.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_empty_string.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_one_name.executor": "Run",
@@ -442,9 +437,12 @@
     "Cargo.Test recipe::update::tests::tests_mark_favourite::test_valid_ok.executor": "Run",
     "Cargo.Test recipes_routes.executor": "Run",
     "Cargo.Test recipes_routes::tests.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_add::test_add_recipe_is_htmx_request_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_add::test_add_recipe_is_not_htmx_request_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_edit::test_put_submit_recipe_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_already_favourite_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok.executor": "Run",
@@ -455,9 +453,11 @@
     "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_post_submit_recipe_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_many_valid_urls_from_supported_websites_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_one_valid_url_from_supported_websites_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipes::test_get_recipe_has_no_rating.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files.executor": "Debug",
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_cannot_find_recipe_in_database.executor": "Run",
@@ -713,7 +713,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#158 on 100-add-ability-to-mark-a-recipe-…orite",
+    "git-widget-placeholder": "97-add-possibility-to-rate-a-recipe",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -756,7 +756,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_search::test_results_query3">
+  <component name="RunManager" selected="Cargo.Test tests_search">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -775,26 +775,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="buildProfileId" value="test" />
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_search::test_search_by_rating" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_rating -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -844,8 +826,25 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query3" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query3 -- --exact" />
+    <configuration name="Test search::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test tests_search" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -863,19 +862,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_rating" />
+      <item itemvalue="Cargo.Test search::tests" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query3" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok" />
+      <item itemvalue="Cargo.Test tests_search" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query3" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
+        <item itemvalue="Cargo.Test tests_search" />
         <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_view_recipe_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_rating" />
+        <item itemvalue="Cargo.Test search::tests" />
       </list>
     </recent_temporary>
   </component>

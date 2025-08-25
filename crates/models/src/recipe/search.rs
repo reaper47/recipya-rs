@@ -55,6 +55,7 @@ impl RecipeSearch {
                     measurement_system_id,
                     source,
                     is_favourite,
+                    rating,
                     created_at,
                     updated_at,
                     user_id,
@@ -95,6 +96,10 @@ impl RecipeSearch {
         if let Some(text) = &self.filters.keywords {
             let ts_query = to_tsquery(text);
             query = query.filter(fts_keywords.matches(ts_query));
+        }
+
+        if let Some(n) = self.filters.rating {
+            query = query.filter(rating.eq(n))
         }
 
         if let Some(text) = &self.filters.tools {
@@ -145,9 +150,18 @@ struct SearchFilters {
     instructions: Option<String>,
     is_favourites: bool,
     keywords: Option<String>,
+    rating: Option<i16>,
     tools: Option<String>,
     unclassified: Option<String>,
 }
+
+const PREFIX_CATEGORY: &str = "cat:";
+const PREFIX_CUISINE: &str = "cui:";
+const PREFIX_INGREDIENTS: &str = "ing:";
+const PREFIX_INSTRUCTIONS: &str = "ins:";
+const PREFIX_KEYWORDS: &str = "kw:";
+const PREFIX_RATING: &str = "stars:";
+const PREFIX_TOOLS: &str = "tool:";
 
 impl FromStr for SearchFilters {
     type Err = Error;
@@ -160,7 +174,15 @@ impl FromStr for SearchFilters {
         let input = s.to_lowercase();
         let mut input = input.as_str();
 
-        let prefixes = ["cat:", "cui:", "ing:", "ins:", "kw:", "tool:"];
+        let prefixes = [
+            PREFIX_CATEGORY,
+            PREFIX_CUISINE,
+            PREFIX_INGREDIENTS,
+            PREFIX_INSTRUCTIONS,
+            PREFIX_KEYWORDS,
+            PREFIX_RATING,
+            PREFIX_TOOLS,
+        ];
         let first_prefix_pos = prefixes.iter().filter_map(|p| input.find(p)).min();
         let mut unclassified: Option<String> = None;
 
@@ -181,17 +203,25 @@ impl FromStr for SearchFilters {
         let mut ingredients: Option<String> = None;
         let mut instructions: Option<String> = None;
         let mut keywords: Option<String> = None;
+        let mut rating: Option<i16> = None;
         let mut tools: Option<String> = None;
 
         while !input.is_empty() {
             match parse_any_section(&mut input) {
                 Ok((prefix, text)) => match prefix {
-                    "cat:" => category = Some(text),
-                    "cui:" => cuisine = Some(text),
-                    "ing:" => ingredients = Some(text),
-                    "ins:" => instructions = Some(text),
-                    "kw:" => keywords = Some(text),
-                    "tool:" => tools = Some(text),
+                    PREFIX_CATEGORY => category = Some(text),
+                    PREFIX_CUISINE => cuisine = Some(text),
+                    PREFIX_INGREDIENTS => ingredients = Some(text),
+                    PREFIX_INSTRUCTIONS => instructions = Some(text),
+                    PREFIX_KEYWORDS => keywords = Some(text),
+                    PREFIX_RATING => {
+                        rating = text
+                            .trim()
+                            .parse::<i16>()
+                            .ok()
+                            .filter(|r| *r >= 1 && *r <= 5)
+                    }
+                    PREFIX_TOOLS => tools = Some(text),
                     _ => unreachable!(),
                 },
                 Err(_) => break,
@@ -205,6 +235,7 @@ impl FromStr for SearchFilters {
             instructions: instructions.map(|s| normalize_to_ts_query(&s, "&", "&")),
             is_favourites: false,
             keywords: keywords.map(|s| normalize_to_ts_query(&s, "&", "<->")),
+            rating,
             tools: tools.map(|s| normalize_to_ts_query(&s, "&", "<->")),
             unclassified: unclassified.map(|s| normalize_to_ts_query(&s, "|", "&")),
         })
@@ -217,12 +248,13 @@ fn normalize_to_ts_query(s: &str, comma_char: &str, space_char: &str) -> String 
 
 fn parse_any_section<'a>(input: &mut &'a str) -> winnow::Result<(&'a str, String)> {
     alt((
-        parse_section("cat:"),
-        parse_section("cui:"),
-        parse_section("ing:"),
-        parse_section("ins:"),
-        parse_section("kw:"),
-        parse_section("tool:"),
+        parse_section(PREFIX_CATEGORY),
+        parse_section(PREFIX_CUISINE),
+        parse_section(PREFIX_INGREDIENTS),
+        parse_section(PREFIX_INSTRUCTIONS),
+        parse_section(PREFIX_KEYWORDS),
+        parse_section(PREFIX_RATING),
+        parse_section(PREFIX_TOOLS),
     ))
     .parse_next(input)
 }
@@ -234,7 +266,15 @@ fn parse_section<'a>(
         let _ = literal(prefix).parse_next(input)?;
 
         let remaining = *input;
-        let prefixes = ["cat:", "cui:", "ing:", "ins:", "kw:", "tool:"];
+        let prefixes = [
+            PREFIX_CATEGORY,
+            PREFIX_CUISINE,
+            PREFIX_INGREDIENTS,
+            PREFIX_INSTRUCTIONS,
+            PREFIX_KEYWORDS,
+            PREFIX_RATING,
+            PREFIX_TOOLS,
+        ];
 
         let end_pos = prefixes
             .iter()
@@ -333,6 +373,19 @@ mod tests {
         }
 
         #[test]
+        fn test_rating_only() {
+            let filters = SearchFilters::from_str("stars:4").unwrap();
+
+            pretty_assertions::assert_eq!(
+                filters,
+                SearchFilters {
+                    rating: Some(4),
+                    ..Default::default()
+                }
+            );
+        }
+
+        #[test]
         fn test_tools_only() {
             let filters = SearchFilters::from_str("tool:steel pan,wok").unwrap();
 
@@ -348,7 +401,7 @@ mod tests {
         #[test]
         fn test_all() {
             let filters =
-                SearchFilters::from_str("rip Alexi Laiho cat:Breakfast,midnight dinner cui:thai ing:blue cheese,paprika ins:sprinkle some salt and pepper kw:air fryer,healthy tool:steel pan,wok").unwrap();
+                SearchFilters::from_str("rip Alexi Laiho cat:Breakfast,midnight dinner cui:thai ing:blue cheese,paprika ins:sprinkle some salt and pepper stars:2 kw:air fryer,healthy tool:steel pan,wok").unwrap();
 
             pretty_assertions::assert_eq!(
                 filters,
@@ -359,6 +412,7 @@ mod tests {
                     instructions: Some("sprinkle&some&salt&and&pepper".to_string()),
                     is_favourites: false,
                     keywords: Some("air<->fryer&healthy".to_string()),
+                    rating: Some(2),
                     tools: Some("steel<->pan&wok".to_string()),
                     unclassified: Some("rip&alexi&laiho".to_string()),
                 }
@@ -394,6 +448,7 @@ mod tests {
                     measurement_system_id: 2,
                     source: recipe_c.source,
                     is_favourite: false,
+                    rating: recipe_c.rating,
                     created_at: Default::default(),
                     updated_at: Default::default(),
                     user_id: 1,
@@ -690,6 +745,32 @@ mod tests {
                     to_recipe_details(3, recipe3),
                     results[0].clone()
                 )]
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_search_by_rating() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let recipe1 = a_complete_recipe_for_create();
+            let mut recipe2 = a_complete_recipe_for_create();
+            recipe2.name = "Taco Tuesday".to_string();
+            recipe2.rating = Some(1);
+            let mut recipe3 = a_complete_recipe_for_create();
+            recipe3.name = "Chicken Jersey".to_string();
+            recipe3.rating = None;
+            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+
+            let recipe_search = RecipeSearch::new("stars:1", 1, false, user.id)?;
+            let results = recipe_search.search(&state.mm).await?;
+
+            pretty_assertions::assert_eq!(
+                results,
+                vec![
+                    adjust_recipe(to_recipe_details(2, recipe2), results[0].clone()),
+                ]
             );
             Ok(())
         }

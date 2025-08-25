@@ -22,6 +22,7 @@ pub struct RecipeForm {
     pub instructions: Vec<String>,
     pub keywords: Vec<String>,
     pub nutrition: Option<NutritionForCreate>,
+    pub rating: Option<i16>,
     pub source: Option<String>,
     pub times: Option<TimesForCreate>,
     pub title: String,
@@ -47,6 +48,7 @@ where
         let mut instructions: Vec<String> = Vec::new();
         let mut keywords: Vec<String> = Vec::new();
         let mut nutrition = NutritionForCreate::default();
+        let mut rating: Option<i16> = None;
         let mut source: Option<String> = None;
         let mut times: TimesForCreate = TimesForCreate {
             prep_seconds: 60 * 15,
@@ -150,6 +152,15 @@ where
                     .ok()
                     .iter()
                     .for_each(|s| nutrition.protein_g = s.parse().ok()),
+                "rating" => {
+                    rating = field
+                        .text()
+                        .await
+                        .unwrap_or_default()
+                        .trim()
+                        .parse::<i16>()
+                        .ok()
+                }
                 "source" => source = field.text().await.ok().filter(|s| !s.trim().is_empty()),
                 "sugars" => field
                     .text()
@@ -250,6 +261,7 @@ where
             instructions,
             keywords,
             nutrition: nutrition.is_empty().not().then_some(nutrition),
+            rating,
             source,
             times: (times.prep_seconds > 0 && times.cook_seconds > 0).then_some(times),
             tools,
