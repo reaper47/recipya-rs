@@ -15,11 +15,10 @@ use support::fs::FsSupport;
 use super::helpers::cut_string;
 use super::icons::{
     icon_bars_3, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
-    icon_document_duplicate, icon_ellipsis_vertical, icon_information_circle, icon_pencil,
-    icon_plus_circle, icon_printer, icon_share, icon_star, icon_trash,
+    icon_document_duplicate, icon_ellipsis_vertical, icon_heart, icon_information_circle,
+    icon_pencil, icon_plus_circle, icon_printer, icon_share, icon_trash,
 };
 use super::layouts;
-use super::layouts::{render_nav, render_recipe_button};
 use super::pagination::pagination;
 use super::search::{search_help, searchbar};
 use crate::search::render_search_favourites_button;
@@ -211,35 +210,40 @@ fn render_add_recipe_manual(
                                         }
                                     }
                                     div class="grid grid-flow-col col-span-6 py-1 md:grid-cols-2 md:row-span-1" {
-                                        div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
-                                            span data-tip="Prep time" class="tooltip tooltip-left" {
-                                                (icon_cutting_board())
+                                        div class="contents md:col-span-2" {
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
+                                                span data-tip="Prep time" class="tooltip tooltip-left" {
+                                                    (icon_cutting_board())
+                                                }
+                                                label {
+                                                    input type="text" name="time-prep"
+                                                        value=(
+                                                            view
+                                                                .map(|v| v.formatted_times.prep_edit.as_str())
+                                                                .filter(|s| !s.is_empty())
+                                                                .unwrap_or("00:15:00")
+                                                        )
+                                                        class="input input-xs max-w-24 html-duration-picker";
+                                                }
                                             }
-                                            label {
-                                                input type="text" name="time-prep"
-                                                    value=(
-                                                        view
-                                                            .map(|v| v.formatted_times.prep_edit.as_str())
-                                                            .filter(|s| !s.is_empty())
-                                                            .unwrap_or("00:15:00")
-                                                    )
-                                                    class="input input-xs max-w-24 html-duration-picker";
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
+                                                span data-tip="Cook time" class="tooltip tooltip-left" {
+                                                    (icon_cooking_pot())
+                                                }
+                                                label {
+                                                    input type="text" name="time-cook"
+                                                        value=(
+                                                            view
+                                                                .map(|v| v.formatted_times.cook_edit.as_str())
+                                                                .filter(|s| !s.is_empty())
+                                                                .unwrap_or("00:30:00")
+                                                        )
+                                                        class="input input-xs max-w-24 html-duration-picker";
+                                                }
                                             }
                                         }
-                                        div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
-                                            span data-tip="Cook time" class="tooltip tooltip-left" {
-                                                (icon_cooking_pot())
-                                            }
-                                            label {
-                                                input type="text" name="time-cook"
-                                                    value=(
-                                                        view
-                                                            .map(|v| v.formatted_times.cook_edit.as_str())
-                                                            .filter(|s| !s.is_empty())
-                                                            .unwrap_or("00:30:00")
-                                                    )
-                                                    class="input input-xs max-w-24 html-duration-picker";
-                                            }
+                                        div class="md:col-span-1" {
+                                            (rating("rating", Some(3), "", false))
                                         }
                                     }
                                     div class="grid grid-flow-col col-span-6 border-gray-700 border-y overflow-x-auto md:row-span-2" {
@@ -1144,26 +1148,31 @@ fn render_edit_recipe(
                                             (recipe_keyword_empty(keywords))
                                         }
                                     }
-                                    div class="grid grid-flow-col col-span-6 py-1 md:grid-cols-2 md:row-span-1" {
-                                        div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
-                                            span data-tip="Prep time" class="tooltip tooltip-left" {
-                                                (icon_cutting_board())
+                                    div class="grid grid-flow-col col-span-6 py-1 md:grid-cols-4 md:row-span-1" {
+                                        div class="contents md:col-span-3" {
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
+                                                span data-tip="Prep time" class="tooltip tooltip-left" {
+                                                    (icon_cutting_board())
+                                                }
+                                                label {
+                                                    input type="text" name="time-prep"
+                                                        value=(view.formatted_times.prep_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.prep_edit))
+                                                        class="input input-xs max-w-24 html-duration-picker";
+                                                }
                                             }
-                                            label {
-                                                input type="text" name="time-prep"
-                                                    value=(view.formatted_times.prep_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.prep_edit))
-                                                    class="input input-xs max-w-24 html-duration-picker";
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
+                                                span data-tip="Cook time" class="tooltip tooltip-left" {
+                                                    (icon_cooking_pot())
+                                                }
+                                                label {
+                                                    input type="text" name="time-cook"
+                                                        value=(view.formatted_times.cook_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.cook_edit))
+                                                        class="input input-xs max-w-24 html-duration-picker";
+                                                }
                                             }
                                         }
-                                        div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
-                                            span data-tip="Cook time" class="tooltip tooltip-left" {
-                                                (icon_cooking_pot())
-                                            }
-                                            label {
-                                                input type="text" name="time-cook"
-                                                    value=(view.formatted_times.cook_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.cook_edit))
-                                                    class="input input-xs max-w-24 html-duration-picker";
-                                            }
+                                        div class="flex justify-center items-center md:col-span-1" {
+                                            (rating("rating", view.recipe_details.recipe.rating, "", false))
                                         }
                                     }
                                     div class="grid grid-flow-col col-span-6 border-gray-700 border-y overflow-x-auto md:row-span-2" {
@@ -1488,15 +1497,18 @@ pub fn list_recipes(
                 class="grid gap-4 p-4 text-sm place-items-center grid-cols-1 sm:grid-cols-2 md:m-auto md:max-w-7xl md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:text-base"
                 data-layout="with-aside" {
             @for view in data.recipes.iter() {
-                section class="card-side sm:card card-compact card-border bg-base-200 shadow-lg indicator w-full" {
+                @let recipe = &view.recipe_details.recipe;
+                @let details = &view.recipe_details;
+
+                section class="card-side card-compact card-border bg-base-200 shadow-lg indicator w-full h-full flex flex-col sm:card" {
                     span class="hidden sm:block" {
-                        (category_badge(&view.recipe_details.category, false))
+                        (category_badge(&details.category, false))
                     }
-                    figure class="relative cursor-pointer" hx-get=(format!("/recipes/{}", view.recipe_details.recipe.id)) hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true" {
+                    figure class="relative cursor-pointer" hx-get=(format!("/recipes/{}", recipe.id)) hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true" {
                         img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full"
-                            src=(match view.recipe_details.all_images().first() {
+                            src=(match details.all_images().first() {
                                 Some(&first_image) => {
-                                    if !view.recipe_details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images) {
+                                    if !details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images) {
                                         format!("/data/images/thumbnails/{first_image}.webp")
                                     } else {
                                         "/data/images/Placeholders/placeholder.recipe.webp".into()
@@ -1506,49 +1518,47 @@ pub fn list_recipes(
                                     "/data/images/Placeholders/placeholder.recipe.webp".into()
                                 }
                             })
-                            alt=(format!("Image of the {} recipe", view.recipe_details.recipe.name));
+                            alt=(format!("Image of the {} recipe", recipe.name));
 
                         div class="hidden absolute inset-0 bg-black opacity-0 hover:opacity-80 transition-opacity duration-300 items-center justify-center text-white select-none rounded-t-lg sm:flex" {
                             p class="p-2 text-sm" {
-                                @match &view.recipe_details.recipe.description {
+                                @match &recipe.description {
                                     Some(description) => (cut_string(description, 127)),
                                     None => ""
                                 }
                             }
                         }
-                        @let recipe = &view.recipe_details.recipe;
                         (render_favourite_button(recipe.id, recipe.is_favourite, is_tile_deletable, false))
                     }
-                    div class="card-body justify-between" {
-                        h2 class={
-                            "sm:font-semibold sm:w-[25ch] sm:break-words sm:min-h-14"
-                            @if view.recipe_details.keywords.is_empty() { " sm:min-h-28" }
-                        } {
-                            (view.recipe_details.recipe.name)
+                    div class="card-body h-full flex flex-col gap-2" {
+                        h2 class="font-semibold line-clamp-2" {
+                            (details.recipe.name)
                         }
-                        div class={
-                            "sm:max-h-14 sm:overflow-y-auto sm:content-end"
-                            @if !view.recipe_details.keywords.is_empty() { " sm:min-h-14" }
-                        } {
+                        div class="h-5" {
+                            @if recipe.rating.is_some() {
+                                (rating(&format!("rating-{}", recipe.id), recipe.rating, "rating-sm", true))
+                            }
+                        }
+                        div class="max-h-16 overflow-y-auto" {
                             div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row" {
                                 span class="sm:hidden" {
-                                    (category_badge(&view.recipe_details.category, true))
+                                    (category_badge(&details.category, true))
                                 }
-                                @for kw in view.recipe_details.keywords.iter() {
+                                @for kw in details.keywords.iter() {
                                     span class="badge badge-neutral badge-sm select-none p-2 m-1 cursor-pointer"
                                         hx-get="/recipes/search" hx-target="#list-recipes"
                                         hx-push-url="true" hx-swap="innerHTML show:window:top transition:true"
                                         hx-vals=(json!({
                                             "q": format!(r#""tag": {kw}"#)
                                         }))
-                                        _=(PreEscaped(format!("on click put \"tag:{}\" into #search-recipes.value", kw))) {
+                                        _=(format!("on click put 'tag:{}' into #search-recipes.value", kw)) {
                                         (kw)
                                     }
                                 }
                             }
                         }
-                        div class="card-actions flex-col-reverse h-fit" {
-                            button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get=(format!("/recipes/{}", view.recipe_details.recipe.id))
+                        div class="card-actions mt-auto" {
+                            button class="btn btn-block btn-xs btn-outline sm:btn-sm" hx-get=(format!("/recipes/{}", recipe.id))
                             hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
                                 "View"
                             }
@@ -1613,7 +1623,7 @@ pub fn render_favourite_button(
     let class = if is_view_recipe {
         "mr-2 hidden sm:block hover:text-secondary"
     } else {
-        "btn btn-square btn-sm absolute top-2 right-2 cursor-default hover:text-secondary"
+        "btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary"
     };
 
     let (hx_target, hx_swap) = if is_deletable && is_favourite && !is_view_recipe {
@@ -1634,7 +1644,7 @@ pub fn render_favourite_button(
                 aria-label="Add to favorites"
                 aria-pressed=(is_favourite.to_string())
                 _="on mousedown halt the event" {
-            (icon_star(is_favourite))
+            (icon_heart(is_favourite))
         }
     }
 }
@@ -1811,20 +1821,25 @@ fn view_recipe_helper(
                                     }
                                 }
                                 div class={
-                                        "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:grid-cols-3 md:row-span-1 print:border-none"
+                                        "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:grid-cols-4 md:row-span-1 print:border-none"
                                         @if recipe_details.nutrition.is_none() { " print:hidden" }
                                     } {
-                                    div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
-                                        (icon_cutting_board())
-                                        time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }
+                                    div class="contents md:col-span-3" {
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
+                                                (icon_cutting_board())
+                                                time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }
+                                            }
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
+                                                (icon_cooking_pot())
+                                                time datetime=(view.formatted_times.cook_datetime) { (view.formatted_times.cook) }
+                                            }
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Total time" {
+                                                (icon_clock())
+                                                time datetime=(view.formatted_times.total_datetime) { (view.formatted_times.total) }
+                                            }
                                     }
-                                    div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
-                                        (icon_cooking_pot())
-                                        time datetime=(view.formatted_times.cook_datetime) { (view.formatted_times.cook) }
-                                    }
-                                    div class="flex justify-self-center items-center gap-1 cursor-default" title="Total time" {
-                                        (icon_clock())
-                                        time datetime=(view.formatted_times.total_datetime) { (view.formatted_times.total) }
+                                    div class="flex justify-center items-center md:col-span-1" {
+                                        (rating("rating", recipe.rating, "", true))
                                     }
                                 }
                                 (view_recipe_nutrition(&recipe_details))
@@ -2197,6 +2212,33 @@ fn view_recipe_media(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+fn rating(name: &str, value: Option<i16>, size: &str, is_ro: bool) -> Markup {
+    let value = value.unwrap_or(0);
+
+    if is_ro {
+        html! {
+            div class=(format!("rating {size}").trim()) {
+                div class="mask mask-star-2" aria-label="1 star" aria-current=[if value == 1 { Some("true") } else { None }]  {}
+                div class="mask mask-star-2" aria-label="2 star" aria-current=[if value == 2 { Some("true") } else { None }] {}
+                div class="mask mask-star-2" aria-label="3 star" aria-current=[if value == 3 { Some("true") } else { None }]  {}
+                div class="mask mask-star-2" aria-label="4 star" aria-current=[if value == 4 { Some("true") } else { None }] {}
+                div class="mask mask-star-2" aria-label="5 star" aria-current=[if value == 5 { Some("true") } else { None }] {}
+            }
+        }
+    } else {
+        html! {
+            div class="rating" {
+                input type="radio" name=(name) class="rating-hidden" value="" aria-label="clear" checked[value == 0];
+                input type="radio" name=(name) class="mask mask-star-2" value="1" aria-label="1 star" checked[value == 1];
+                input type="radio" name=(name) class="mask mask-star-2" value="2" aria-label="2 star"  checked[value == 2];
+                input type="radio" name=(name) class="mask mask-star-2" value="3" aria-label="3 star" checked[value == 3];
+                input type="radio" name=(name) class="mask mask-star-2" value="4" aria-label="4 star" checked[value == 4];
+                input type="radio" name=(name) class="mask mask-star-2" value="5" aria-label="5 star" checked[value == 5];
             }
         }
     }

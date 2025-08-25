@@ -4,7 +4,7 @@ use models::data::Data;
 use models::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
-use strum::{IntoEnumIterator, VariantNames};
+use strum::IntoEnumIterator;
 
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,

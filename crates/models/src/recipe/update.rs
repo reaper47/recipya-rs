@@ -44,6 +44,9 @@ impl Recipe {
         if recipe.source != new_recipe.source {
             recipe.source = new_recipe.source.clone();
         }
+        if recipe.rating != new_recipe.rating {
+            recipe.rating = new_recipe.rating;
+        }
 
         mm.pool
             .get()
@@ -270,7 +273,7 @@ impl Recipe {
 
     /// Toggles whether the recipe is a favourite.
     pub async fn toggle_favourite(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<bool> {
-        use schema::{recipes, users};
+        use schema::recipes;
 
         let mut conn = mm.pool.get().await?;
 

@@ -48,6 +48,8 @@ pub struct Recipe {
     pub source: Option<String>,
     /// Specifies whether the recipe has been marked as favourite.
     pub is_favourite: bool,
+    /// Optional 1-5 rating. None is used for no rating.
+    pub rating: Option<i16>,
     /// The timestamp when the nutrition entry was created.
     pub created_at: chrono::NaiveDateTime,
     /// The timestamp when the nutrition entry was last updated.
@@ -67,6 +69,7 @@ pub struct RecipeForCreate {
     pub yield_: Option<i16>,
     pub source: Option<String>,
     pub is_favourite: bool,
+    pub rating: Option<i16>,
     pub videos: Vec<VideoForCreate>,
 
     // For association tables
@@ -102,6 +105,7 @@ impl From<RecipeForm> for RecipeForCreate {
             yield_: form.yield_,
             source: form.source,
             is_favourite: false,
+            rating: form.rating,
             videos: vec![],
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
@@ -133,6 +137,7 @@ impl From<&RecipeSchema> for RecipeForCreate {
             yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
             source,
             is_favourite: false,
+            rating: None, // TODO: Look into it
             videos: vec![],
             category: String::try_from(schema.recipe_category.clone()).ok(),
             cuisine: schema.recipe_cuisine.clone().map(String::from),
@@ -183,6 +188,7 @@ pub(super) struct RecipeForInsert {
     pub language: String,
     pub source: Option<String>,
     pub is_favourite: bool,
+    pub rating: Option<i16>,
     pub user_id: i64,
 }
 
@@ -756,6 +762,7 @@ pub mod test_utils {
                 measurement_system_id: 2,
                 source: recipe_c.source,
                 is_favourite: false,
+                rating: None,
                 created_at: NaiveDateTime::new(created_date, time),
                 updated_at: NaiveDateTime::new(updated_date, time),
                 user_id: 1,
@@ -820,6 +827,7 @@ pub mod test_utils {
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
             ),
             is_favourite: false,
+            rating: Some(4),
             videos: vec![VideoForCreate {
                 video,
                 duration: Some(chrono::Duration::minutes(7)),
@@ -910,6 +918,7 @@ mod tests {
                     updated_at: Default::default(),
                     user_id: 0,
                     is_favourite: false,
+                    rating: None,
                 },
                 additional_images: vec![],
                 category: "".to_string(),

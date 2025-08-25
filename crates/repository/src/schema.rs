@@ -229,6 +229,7 @@ diesel::table! {
         measurement_system_id -> Int2,
         source -> Nullable<Text>,
         is_favourite -> Bool,
+        rating -> Nullable<Int2>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
         user_id -> Int8,

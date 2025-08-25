@@ -3,7 +3,8 @@ use maud::{Markup, PreEscaped, html};
 use models::data::SearchbarData;
 
 use super::icons::{
-    icon_bars_3_bottom_left, icon_information_circle, icon_magnifying_glass, icon_star, icon_x_mark,
+    icon_bars_3_bottom_left, icon_heart, icon_information_circle, icon_magnifying_glass, icon_star,
+    icon_x_mark,
 };
 
 /// Renders the searchbar.
@@ -62,7 +63,7 @@ pub fn render_search_favourites_button(is_show_favourites: bool, is_oob_swap: bo
                     aria-label="Add to favorites"
                     aria-pressed=(is_show_favourites)
                     _=(format!("on mousedown set #fav.value to '{}'", !is_show_favourites)) {
-                (icon_star(is_show_favourites))
+                (icon_heart(is_show_favourites))
             }
         }
     }

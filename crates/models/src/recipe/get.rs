@@ -58,6 +58,7 @@ impl Recipe {
                     schema::recipes::measurement_system_id,
                     schema::recipes::source,
                     schema::recipes::is_favourite,
+                    schema::recipes::rating,
                     schema::recipes::created_at,
                     schema::recipes::updated_at,
                     schema::recipes::user_id,
