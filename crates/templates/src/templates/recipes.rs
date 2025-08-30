@@ -1965,13 +1965,11 @@ pub fn view_recipe_helper(
                                     }
                                 }
                                 div class={
-                                        "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:grid-cols-4 md:row-span-1 print:border-none"
+                                        "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:row-span-1 print:border-none"
                                         @if recipe_details.nutrition.is_none() { " print:hidden" }
+                                        @if data.is_preview { " md:grid-cols-3" } @else { " md:grid-cols-4" }
                                     } {
-                                    div class={
-                                        "contents md:col-span-3"
-                                        @if data.is_preview { " hidden md:block md:col-span-6" }
-                                    } {
+                                    div class="contents md:col-span-3" {
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
                                                 (icon_cutting_board())
                                                 time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }

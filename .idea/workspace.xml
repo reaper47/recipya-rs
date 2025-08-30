@@ -59,46 +59,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/web/app/json-highlighter.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/app/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/app/src/state.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/paprika.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/paprika.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/data.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/export.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/export.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipe-schema/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipe-schema/src/common.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/context.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipe-schema/src/context.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipe-schema/src/nutrition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipe-schema/src/recipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/shared.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/shared.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/toast.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/toast.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/app.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/toast.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/toast.min.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/json-highlighter.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/json-highlighter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/js/json-highlighter.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/json-highlighter.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -708,6 +672,8 @@
     "Cargo.Test tests_normalise_vulgar_fractions.executor": "Run",
     "Cargo.Test tests_nutrition.executor": "Run",
     "Cargo.Test tests_pagination.executor": "Run",
+    "Cargo.Test tests_recipe_add_import_preview.executor": "Run",
+    "Cargo.Test tests_recipe_add_import_raw_json.executor": "Run",
     "Cargo.Test tests_recipe_add_manual.executor": "Run",
     "Cargo.Test tests_recipe_add_website.executor": "Run",
     "Cargo.Test tests_recipe_for_create.executor": "Run",

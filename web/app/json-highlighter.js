@@ -20,6 +20,7 @@ class JSONHighlighter {
         this.infoBar = root.querySelector("#info-bar");
         this.formatBtn = root.querySelector("#beautify");
         this.clearBtn = root.querySelector("#clear");
+        this.previewOutput = root.querySelector("#preview-output");
         this.isPreviewDisabled = false;
 
         if (!this.textarea || !this.highlightedContent || !this.infoBar) {
@@ -68,6 +69,7 @@ class JSONHighlighter {
         if (this.clearBtn) {
             this.clearBtn.addEventListener("click", () => {
                 this.textarea.value = "";
+                this.previewOutput.innerHTML = "";
                 this._scheduleUpdate(true);
             });
         }
