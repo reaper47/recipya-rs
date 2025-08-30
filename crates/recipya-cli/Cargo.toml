@@ -34,7 +34,7 @@ tokio = { workspace = true }
 tokio-cron-scheduler = "0.14.0"
 tower-cookies = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 
 [target.'x86_64-unknown-linux-musl'.dependencies]
 openssl = { version = "0.10.72", features = ["vendored"] }
