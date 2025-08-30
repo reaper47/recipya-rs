@@ -152,7 +152,15 @@ class JSONHighlighter {
             return;
         }
 
-        element.innerHTML = text.replace(this.TOKEN_RE, (m) => {
+        let result = '';
+        let lastIndex = 0;
+        const regex = this.TOKEN_RE;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                result += this._escape(text.slice(lastIndex, match.index));
+            }
+            let m = match[0];
             let cls = '';
             if (m[0] === '"') {
                 cls = m.endsWith(':') ? 'json-key' : 'json-string';
@@ -167,8 +175,14 @@ class JSONHighlighter {
             } else {
                 cls = 'json-punctuation';
             }
-            return `<span class="${cls}">${this._escape(m)}</span>`;
-        });
+            result += `<span class="${cls}">${this._escape(m)}</span>`;
+            lastIndex = regex.lastIndex;
+        }
+
+        if (lastIndex < text.length) {
+            result += this._escape(text.slice(lastIndex));
+        }
+        element.innerHTML = result;
     }
 
     _escape(str) {
