@@ -198,6 +198,27 @@ function updateMediaFromFetch(input, url) {
         });
 }
 
+async function copyText(buttonId, sourceId) {
+    const button = document.getElementById(buttonId);
+    const source = document.getElementById(sourceId);
+
+    if (!button || !source) return;
+
+    try {
+        await navigator.clipboard.writeText(source.value);
+        button.textContent = 'Copied!';
+    } catch (_) {
+        source.select();
+        document.execCommand('copy');
+        button.textContent = 'Copied!';
+    }
+
+    setTimeout(() => {
+        button.textContent = 'Copy';
+    }, 1200);
+}
+
+
 function pasteText(inputEl, values) {
     const ol = inputEl.closest('ol');
     const valueArray = values.split('\n').map(v => v.trim()).filter(v => v);

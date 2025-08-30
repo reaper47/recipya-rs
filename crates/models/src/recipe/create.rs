@@ -56,23 +56,6 @@ impl Recipe {
         let recipe_id = conn
             .transaction::<i64, Error, _>(|mut conn| {
                 Box::pin(async move {
-                    let language = whatlang::detect_lang(
-                        &[
-                            recipe_c.name.as_str(),
-                            recipe_c.description.as_deref().unwrap_or(""),
-                            &recipe_c
-                                .ingredients
-                                .iter()
-                                .chain(&recipe_c.instructions)
-                                .flat_map(|(_, items)| items)
-                                .cloned()
-                                .collect::<Vec<_>>()
-                                .join(" "),
-                        ]
-                        .join(" "),
-                    )
-                    .unwrap_or(whatlang::Lang::Eng);
-
                     // Images
                     let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
@@ -82,7 +65,7 @@ impl Recipe {
                             description: recipe_c.description.clone(),
                             image: main_image,
                             yield_: recipe_c.yield_,
-                            language: language.code().to_string(),
+                            language: recipe_c.detect_language().code().to_string(),
                             source: recipe_c.source.clone(),
                             is_favourite: recipe_c.is_favourite,
                             rating: recipe_c.rating,
@@ -254,7 +237,7 @@ mod tests {
             description: None,
             images: vec![],
             yield_: Some(4),
-            source: None,
+            source: String::new(),
             is_favourite: false,
             rating: Some(4),
             videos: vec![],

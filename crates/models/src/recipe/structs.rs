@@ -6,6 +6,7 @@ use diesel::internal::derives::multiconnection::chrono;
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
 use tracing::warn;
 use uuid::Uuid;
+use whatlang::Lang;
 
 use math::cooking::units;
 use recipe_schema::{
@@ -22,7 +23,7 @@ use crate::user::User;
 
 /// Represents a recipe entity stored in the database.
 #[derive(
-    AsChangeset, Associations, Clone, Debug, Queryable, Identifiable, PartialEq, Selectable,
+    Clone, Debug, Default, PartialEq, AsChangeset, Associations, Queryable, Identifiable, Selectable,
 )]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(MeasurementSystem))]
@@ -45,7 +46,7 @@ pub struct Recipe {
     /// The original measurement system the recipe is in.
     pub measurement_system_id: i16,
     /// An optional reference to the origin or inspiration of the recipe.
-    pub source: Option<String>,
+    pub source: String,
     /// Specifies whether the recipe has been marked as favourite.
     pub is_favourite: bool,
     /// Optional 1-5 rating. None is used for no rating.
@@ -67,7 +68,7 @@ pub struct RecipeForCreate {
     pub images: Vec<Uuid>,
     pub measurement_system_id: i16,
     pub yield_: Option<i16>,
-    pub source: Option<String>,
+    pub source: String,
     pub is_favourite: bool,
     pub rating: Option<i16>,
     pub videos: Vec<VideoForCreate>,
@@ -91,6 +92,26 @@ impl RecipeForCreate {
             [] => (None, Vec::new()),
         }
     }
+
+    /// Determines the recipe's language.
+    pub fn detect_language(&self) -> Lang {
+        whatlang::detect_lang(
+            &[
+                self.name.as_str(),
+                self.description.as_deref().unwrap_or(""),
+                &self
+                    .ingredients
+                    .iter()
+                    .chain(&self.instructions)
+                    .flat_map(|(_, items)| items)
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            ]
+            .join(" "),
+        )
+        .unwrap_or(Lang::Eng)
+    }
 }
 
 impl From<RecipeForm> for RecipeForCreate {
@@ -103,7 +124,7 @@ impl From<RecipeForm> for RecipeForCreate {
             description: form.description,
             images: vec![],
             yield_: form.yield_,
-            source: form.source,
+            source: form.source.unwrap_or_default(),
             is_favourite: false,
             rating: form.rating,
             videos: vec![],
@@ -135,7 +156,7 @@ impl From<&RecipeSchema> for RecipeForCreate {
             description: schema.description.clone().map(String::from),
             images: vec![],
             yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
-            source,
+            source: source.unwrap_or_default(),
             is_favourite: false,
             rating: None, // TODO: Look into it
             videos: vec![],
@@ -186,14 +207,14 @@ pub(super) struct RecipeForInsert {
     pub image: Option<Uuid>,
     pub yield_: Option<i16>,
     pub language: String,
-    pub source: Option<String>,
+    pub source: String,
     pub is_favourite: bool,
     pub rating: Option<i16>,
     pub user_id: i64,
 }
 
 /// Represents the full details of a recipe, including its metadata and related entities.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct RecipeDetails {
     pub recipe: Recipe,
     pub additional_images: Vec<Uuid>,
@@ -235,6 +256,41 @@ impl RecipeDetails {
             .chain(self.additional_images.iter())
             .copied()
             .collect()
+    }
+}
+
+impl From<RecipeForCreate> for RecipeDetails {
+    fn from(recipe_c: RecipeForCreate) -> Self {
+        Self {
+            recipe: Recipe {
+                name: recipe_c.name.clone(),
+                description: recipe_c.description.clone(),
+                yield_: recipe_c.yield_.unwrap_or(4),
+                language: recipe_c.detect_language().code().to_string(),
+                measurement_system_id: 1,
+                source: recipe_c.source,
+                ..Default::default()
+            },
+            category: recipe_c.category.clone().unwrap_or_default(),
+            cuisine: recipe_c.cuisine.clone(),
+            ingredients: recipe_c.ingredients.clone(),
+            instructions: recipe_c.instructions.clone(),
+            keywords: recipe_c.keywords.clone(),
+            nutrition: recipe_c.nutrition.clone().map(|n| Nutrition::from(&n)),
+            times: Times::from(recipe_c.times.clone().unwrap_or_default()),
+            tools: recipe_c
+                .tools
+                .clone()
+                .into_iter()
+                .enumerate()
+                .map(|(idx, t)| {
+                    let mut tool = ToolRecipe::from(&t);
+                    tool.tool_order = idx as i16;
+                    tool
+                })
+                .collect(),
+            ..Default::default()
+        }
     }
 }
 
@@ -331,6 +387,27 @@ impl Nutrition {
 
         result.push_str(&parts.join("; "));
         result
+    }
+}
+
+// TODO: Test
+impl From<&NutritionForCreate> for Nutrition {
+    fn from(n: &NutritionForCreate) -> Self {
+        Self {
+            calories_kcal: n.calories_kcal,
+            total_carbohydrates: n.total_carbohydrates,
+            sugars_g: n.sugars_g,
+            protein_g: n.protein_g,
+            total_fat_g: n.total_fat_g,
+            saturated_fat_g: n.saturated_fat_g,
+            unsaturated_fat_g: n.unsaturated_fat_g,
+            cholesterol_mg: n.cholesterol_mg,
+            sodium_mg: n.sodium_mg,
+            fiber_g: n.fiber_g,
+            trans_fat_g: n.trans_fat_g,
+            serving_size: n.serving_size.clone(),
+            ..Default::default()
+        }
     }
 }
 
@@ -439,7 +516,7 @@ pub(super) struct NutritionForInsert {
 }
 
 /// Represents a time components of a recipe.
-#[derive(Associations, Clone, Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Clone, Debug, Default, PartialEq, Associations, Queryable, Identifiable, Selectable)]
 #[diesel(belongs_to(Recipe))]
 #[diesel(table_name = schema::times)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -490,6 +567,17 @@ impl TimesForCreate {
     }
 }
 
+impl From<TimesForCreate> for Times {
+    fn from(times: TimesForCreate) -> Self {
+        Self {
+            prep_seconds: times.prep_seconds,
+            cook_seconds: times.cook_seconds,
+            total_seconds: times.prep_seconds + times.cook_seconds,
+            ..Default::default()
+        }
+    }
+}
+
 /// Represents the preparation and cooking times for a recipe stored in the database.
 #[derive(AsChangeset, Associations, Insertable, PartialEq)]
 #[diesel(table_name = schema::times)]
@@ -510,7 +598,7 @@ pub struct Tool {
 }
 
 /// Represents a tool being created in the recipe management system.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ToolForCreate {
     pub name: String,
     pub quantity: i16,
@@ -552,6 +640,16 @@ pub struct ToolRecipe {
     pub name: String,
     pub quantity: i16,
     pub tool_order: i16,
+}
+
+impl From<&ToolForCreate> for ToolRecipe {
+    fn from(tool: &ToolForCreate) -> Self {
+        Self {
+            name: tool.name.clone(),
+            quantity: tool.quantity,
+            tool_order: 1,
+        }
+    }
 }
 
 /// Represents the insertion of a tool-recipe relationship into the database.
@@ -823,9 +921,7 @@ pub mod test_utils {
             images: vec![main_image, secondary_image],
             measurement_system_id: 2,
             yield_: Some(4),
-            source: Some(
-                "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
-            ),
+            source: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
             is_favourite: false,
             rating: Some(4),
             videos: vec![VideoForCreate {
@@ -907,12 +1003,12 @@ mod tests {
             RecipeDetails {
                 recipe: Recipe {
                     id: 0,
-                    name: "".to_string(),
+                    name: "".into(),
                     description: None,
                     image: None,
                     yield_: 0,
-                    language: "".to_string(),
-                    source: None,
+                    language: "".into(),
+                    source: "".into(),
                     measurement_system_id: 2,
                     created_at: Default::default(),
                     updated_at: Default::default(),
@@ -921,7 +1017,7 @@ mod tests {
                     rating: None,
                 },
                 additional_images: vec![],
-                category: "".to_string(),
+                category: "".into(),
                 cuisine: None,
                 ingredients: vec![],
                 instructions: vec![],
@@ -1192,6 +1288,27 @@ mod tests {
 
             pretty_assertions::assert_eq!(first, None);
             assert!(rest.is_empty());
+        }
+
+        #[test]
+        fn test_detect_language_en_ok() {
+            let recipe_c = RecipeForCreate {
+                name: "The best hamburger ever".into(),
+                description: Some("This is the best hamburger ever".into()),
+                ingredients: Sections::from([(
+                    "".into(),
+                    vec!["1 cup of flour".into(), "1 cup of water".into()],
+                )]),
+                instructions: Sections::from([(
+                    "".into(),
+                    vec!["Mix all ingredients".into(), "Bake for 30 minutes".into()],
+                )]),
+                ..Default::default()
+            };
+
+            let got = recipe_c.detect_language();
+
+            pretty_assertions::assert_eq!(got, Lang::Eng);
         }
     }
 }

@@ -144,8 +144,8 @@ impl RecipeDetails {
             writeln!(&mut md)?;
         }
 
-        if let Some(source) = &self.recipe.source {
-            writeln!(&mut md, "Source: {}", source)?;
+        if !&self.recipe.source.is_empty() {
+            writeln!(&mut md, "Source: {}", self.recipe.source)?;
         }
 
         Ok(md)

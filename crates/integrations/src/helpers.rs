@@ -2,7 +2,7 @@ use iso8601::Duration;
 
 use recipe_schema::{
     AtType::HowToStep, CreativeWorkOrItemListOrText, CreativeWorkOrText, DefinedTermOrTextOrUrl,
-    HowTo, OrganizationType, QuantitativeValueOrText, QuantitativeValueType, RecipeSchema,
+    HowTo, OrganizationTypeOrText, QuantitativeValueOrText, QuantitativeValueType, RecipeSchema,
     Sections, TextOrTextObject,
 };
 
@@ -62,12 +62,8 @@ pub(super) fn to_text(value: String) -> Option<TextOrTextObject> {
     })
 }
 
-pub(super) fn to_organization_type(value: String) -> Option<OrganizationType> {
-    Some(OrganizationType {
-        name: Some(value),
-        ..Default::default()
-    })
-    .filter(|obj| obj.name.is_some() && !obj.name.as_ref().unwrap().is_empty())
+pub(super) fn to_organization_type(value: String) -> Option<OrganizationTypeOrText> {
+    (!value.is_empty()).then_some(OrganizationTypeOrText::Text(value))
 }
 
 pub(super) fn to_yield(value: i64) -> QuantitativeValueOrText {

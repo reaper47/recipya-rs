@@ -178,8 +178,9 @@ fn render_add_recipe_manual(
                                                     class="input input-sm w-11/12"
                                                     value=(
                                                         if let Some(v) = view {
-                                                            if let Some(src) = &v.recipe_details.recipe.source {
-                                                                src.to_string()
+                                                            let src = &v.recipe_details.recipe.source;
+                                                            if src.is_empty() {
+                                                                src.clone()
                                                             } else {
                                                                 String::new()
                                                             }
@@ -561,19 +562,31 @@ fn add_instruction(name: &str) -> Markup {
 }
 
 /// Renders the add recipe page.
-pub fn add_page(path: &str, data: Data, user_setting: UserSettingDetails) -> Markup {
+pub fn add_page(
+    path: &str,
+    data: Data,
+    recipe_schema: String,
+    user_setting: UserSettingDetails,
+) -> Markup {
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
             span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
-            (render_add_page())
+            (render_add_page(recipe_schema))
         } @else {
-            (layouts::main("Add Recipe", path, &data, render_add_page(), user_setting, true))
+            (layouts::main(
+                "Add Recipe",
+                path,
+                &data,
+                render_add_page(recipe_schema),
+                user_setting,
+                true
+            ))
         }
     }
 }
 
-fn render_add_page() -> Markup {
+fn render_add_page(recipe_schema: String) -> Markup {
     html! {
         div class="grid w-full h-full grid-cols-1 gap-4 p-4 md:grid-cols-2 md:grid-rows-[auto_1fr] xl:m-auto xl:max-w-6xl md:grid-flow-col" {
             div class="card card-border bg-base-200 h-96 shadow-sm rounded-xl" {
@@ -792,34 +805,169 @@ fn render_add_page() -> Markup {
                 }
             }
             dialog #import-recipes-dialog .modal {
-                div .modal-box.w-fit {
+                div #import-recipes-dialog-container class="modal-box w-[min(96vw,1100px)] max-h-[92vh] p-4 flex flex-col" {
                     form method="dialog" {
                         button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
                     }
                     h3 class="font-bold text-lg" { "Import Recipes" }
-                    form .py-4 hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()" {
-                        div {
-                            div class="grid mb-4" {
-                                label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1" {
-                                    "Select a file"
-                                }
-                                input #import-dialog-file type="file" name="file" required
-                                      accept=(FileFormat::extensions().join(","))
-                                      class="file-input";
-                            }
-                            div {
-                                label for="app-select" class="floating-label text-sm font-semibold mb-1" {
-                                    "Select the application"
-                                }
-                                select #app-select name="app" .select {
-                                    @for app in all_apps() {
-                                        option value=(app.to_string()) { (format!("{app:?}")) }
+                    div class="tabs tabs-lift pt-4" {
+                        // Tab #1: Import from applications
+                        label class="tab" {
+                            input type="radio" name="import-recipe-tab" checked _="on click remove .max-w-none from #import-recipes-dialog-container";
+                            "Software"
+                        }
+                        div class="tab-content bg-base-100 border-base-300 p-3" {
+                            form class="space-y-4 w-fit max-w-md" enctype="multipart/form-data"
+                                    hx-post="/recipes/add/import"
+                                    hx-indicator="#fullscreen-loader"
+                                    hx-swap="none"
+                                    hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()" {
+                                div .w-fit {
+                                    div .pb-2 {
+                                        label for="app-select" class="floating-label text-sm font-semibold mb-1" {
+                                            "Choose an application"
+                                        }
+                                        select #app-select name="app" .select {
+                                            @for app in all_apps() {
+                                                option value=(app.to_string()) { (format!("{app:?}")) }
+                                            }
+                                        }
                                     }
+                                    div class="grid mb-4" {
+                                        label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1" {
+                                            "Select a file"
+                                        }
+                                        input #import-dialog-file type="file" name="file" required
+                                              accept=(FileFormat::extensions().join(","))
+                                              class="file-input";
+                                    }
+                                }
+                                button type="submit" class="btn btn-block btn-sm btn-primary" {
+                                    "Submit"
                                 }
                             }
                         }
-                        button type="submit" class="btn btn-block btn-primary btn-sm mt-4" {
-                            "Submit"
+
+                        // Tab #2: Paste JSON
+                        label class="tab" {
+                            input type="radio" name="import-recipe-tab" _="on click add .max-w-none to #import-recipes-dialog-container then call initJSONHighlighter('import-recipes-json')";
+                            "JSON"
+                        }
+                        div #import-recipes-json class="tab-content bg-base-100 border-base-300 p-3" {
+                            form class="flex flex-col gap-3" hx-post="/recipes/add/import/raw-json"
+                                 hx-indicator="#fullscreen-loader" hx-swap="none"
+                                 hx-on:htmx:before-request="if(!this.checkValidity()) return false"
+                                 hx-on:htmx:after-request="if (event.detail.xhr && event.detail.xhr.status < 400) document.querySelector('#import-recipes-dialog').close()" {
+
+                                div class="flex flex-wrap items-center gap-2" {
+                                    button type="button" #beautify class="btn btn-xs" {
+                                        "Beautify"
+                                    }
+                                    button type="button" #clear class="btn btn-xs" {
+                                        "Clear"
+                                    }
+                                    label class="label cursor-pointer gap-2 text-xs" {
+                                        span class="text-base-content" {
+                                            "Wrap"
+                                        }
+                                        input type="checkbox" #wrap-toggle class="toggle toggle-xs" checked _="on change if me.checked then set #highlighted-content.style['white-space'] to 'pre-wrap' then set #json-input.style['white-space'] to 'pre-wrap' else set #highlighted-content.style['white-space'] to 'pre' then set #json-input.style['white-space'] to 'pre' end";
+                                    }
+                                }
+
+                                div class="min-h-[60vh] max-h-[70vh] flex flex-col overflow-hidden" {
+                                    div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch flex-1 min-h-0" {
+                                        div class="flex flex-col min-h-0" {
+                                            label for="json-input" class="floating-label text-sm font-semibold mb-1" {
+                                                "Paste JSON"
+                                            }
+
+                                            div class="rounded relative h-full border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600" {
+                                                div #highlighted-content class="highlighted-content text-gray-300 bg-neutral-900 pointer-events-none z-1 overflow-auto" {}
+                                                textarea #json-input name="json-input" required
+                                                    class="h-full w-full editor-textarea bg-transparent text-transparent caret-[#d4d4d4] z-2 overflow-auto [-webkit-text-fill-color:transparent]"
+                                                    autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" {}
+                                            }
+                                            div #info-bar class="px-3 py-2 bg-base-200 text-xs text-gray-600 border-l border-sky-600" {
+                                                "Ready - Start typing or paste JSON to see syntax highlighting"
+                                            }
+                                        }
+
+                                        div class="flex flex-col min-h-0" {
+                                            div class="flex items-center gap-2" {
+                                                p class="floating-label text-sm font-semibold" {
+                                                    "Preview"
+                                                }
+                                                button type="button" class="btn btn-xs ml-auto" _="on mousedown toggle .hidden on #preview-output then toggle .hidden on #schema-output then toggle .btn-active" {
+                                                    "Schema"
+                                                }
+                                            }
+                                            div class="flex-1 overflow-auto border border-base-300 rounded text-sm " {
+                                                div #preview-output class="min-h-screen" {
+                                                    div class="p-4" {
+                                                        p {
+                                                            "Paste JSON on the left to render a preview here. For example, try:"
+                                                        }
+                                                        div class="relative" {
+                                                            button #copy-btn type="button" aria-label="Copy example JSON"
+                                                                class="btn btn-xs btn-ghost absolute right-2 top-2 z-10"
+                                                                onclick="copyText('copy-btn', 'example-json')" { "Copy" }
+
+                                                            textarea #example-json class="textarea w-full h-full" rows="30" {
+                                                            r#"{
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      "author": "John Smith",
+      "cookTime": "PT1H",
+      "datePublished": "2009-05-08",
+      "description": "This classic banana bread recipe comes from my mom -- the walnuts add a nice texture and flavor to the banana bread.",
+      "image": "bananabread.jpg",
+      "recipeIngredient": [
+        "3 or 4 ripe bananas, smashed",
+        "1 egg",
+        "3/4 cup of sugar"
+      ],
+      "interactionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/Comment",
+        "userInteractionCount": "140"
+      },
+      "name": "Mom's World Famous Banana Bread",
+      "nutrition": {
+        "@type": "NutritionInformation",
+        "calories": "240 calories",
+        "fatContent": "9 grams fat"
+      },
+      "prepTime": "PT15M",
+      "recipeInstructions": "Preheat the oven to 350 degrees. Mix in the ingredients in a bowl. Add the flour last. Pour the mixture into a loaf pan and bake for one hour.",
+      "recipeYield": "1 loaf",
+      "suitableForDiet": "https://schema.org/LowFatDiet"
+    }"#
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                div #schema-output class="hidden min-h-screen" {
+                                                    div class="rounded relative min-h-screen border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600" {
+                                                        div #highlighted-content2 class="highlighted-content text-gray-300 bg-neutral-900 pointer-events-none z-1 overflow-auto" {}
+                                                        textarea #json-schema readonly
+                                                            class="h-full w-full editor-textarea bg-transparent text-transparent caret-[#d4d4d4] z-2 overflow-auto [-webkit-text-fill-color:transparent]"
+                                                            autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" {
+                                                            (recipe_schema)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            div #errors class="mt-2 text-xs text-error" {}
+                                        }
+                                    }
+
+                                    div class="flex gap-2 justify-end pt-2" {
+                                        button type="submit" class="btn btn-primary btn-sm btn-wide" {
+                                            "Submit"
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -1127,7 +1275,7 @@ fn render_edit_recipe(
                                                 label .label for="source" { "Source" }
                                                 input #source type="text" placeholder="Source" name="source"
                                                     class="input input-sm w-11/12"
-                                                    value=(&view.recipe_details.recipe.source.as_deref().unwrap_or(""));
+                                                    value=(&view.recipe_details.recipe.source);
                                             }
                                             button type="button" class="tooltip tooltip-left absolute top-1 right-1"
                                                 _="on click toggle .tooltip-open"
@@ -1716,7 +1864,7 @@ pub fn view_recipe(
     })
 }
 
-fn view_recipe_helper(
+pub fn view_recipe_helper(
     fs_support: Arc<dyn FsSupport + Sync + Send>,
     data_dir: DataDir,
     data: &Data,
@@ -1747,7 +1895,9 @@ fn view_recipe_helper(
             }
         }
 
-        section class="p-2" data-layout="no-aside" {
+        section class={
+            @if !data.is_preview { "p-2" }
+        } data-layout="no-aside" {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
                     div class="card-body" style="padding: 0" {
@@ -1757,12 +1907,15 @@ fn view_recipe_helper(
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
                                 div class="grid grid-flow-col col-span-6 md:row-span-1 md:border-y md:border-gray-700 print:row-span-1 print:grid-cols-2 print:border-b-black print:border" {
                                     div class="col-span-2 grid place-items-center md:col-span-1 print:col-span-1 print:float-left print:ml-2 print:border-r print:border-black" {
-                                        div class="badge badge-primary badge-outline" {
+                                        div class={
+                                            "badge badge-primary badge-outline"
+                                            @if data.is_preview { " badge-sm" }
+                                        } {
                                             (view.recipe_details.category)
                                         }
                                     }
                                     div class="grid col-span-2 border-gray-700 place-items-center text-sm border-x p-2 md:p-2 md:col-span-1 print:hidden" {
-                                        @if data.is_authenticated {
+                                        @if data.is_authenticated && !data.is_preview {
                                             form autocomplete="off" _="on submit halt the event" class="print:hidden" {
                                                 fieldset class="fieldset" {
                                                     legend { "Servings" }
@@ -1790,25 +1943,16 @@ fn view_recipe_helper(
                                     p class="hidden p-0 pt-2 print:grid print:text-center print:place-content-center" {
                                         (recipe.yield_.to_string()) " servings"
                                     }
-                                    div class="flex items-center justify-center col-span-2 text-sm md:col-span-1 print:hidden" {
-                                        @if let Some(source) = &recipe.source {
-                                           @if Url::parse(source).is_ok() {
-                                                a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
-                                                p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
-                                           } @else {
-                                                p class="text-center" {
-                                                    "Source:"
-                                                    br;
-                                                    (source)
-                                                }
-                                           }
-                                        } @else {
-                                            p class="text-center" {
-                                                "Source:"
-                                                br;
-                                                "Unknown"
-                                            }
-                                        }
+                                    div class={
+                                        "flex items-center justify-center col-span-2 text-sm md:col-span-1 print:hidden"
+                                        @if data.is_preview { " md:hidden" }
+                                    } {
+                                        (view_recipe_source(&recipe.source))
+                                    }
+                                }
+                                @if data.is_preview {
+                                    div class="col-span-6 border-b" {
+                                        (view_recipe_source(&recipe.source))
                                     }
                                 }
                                 @if !recipe_details.keywords.is_empty() {
@@ -1824,7 +1968,10 @@ fn view_recipe_helper(
                                         "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:grid-cols-4 md:row-span-1 print:border-none"
                                         @if recipe_details.nutrition.is_none() { " print:hidden" }
                                     } {
-                                    div class="contents md:col-span-3" {
+                                    div class={
+                                        "contents md:col-span-3"
+                                        @if data.is_preview { " hidden md:block md:col-span-6" }
+                                    } {
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
                                                 (icon_cutting_board())
                                                 time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }
@@ -1838,15 +1985,24 @@ fn view_recipe_helper(
                                                 time datetime=(view.formatted_times.total_datetime) { (view.formatted_times.total) }
                                             }
                                     }
-                                    div class="flex justify-center items-center md:col-span-1" {
+                                    div class={
+                                        "flex justify-center items-center md:col-span-1"
+                                        @if data.is_preview { " md:hidden" }
+                                    } {
                                         (rating("rating", recipe.rating, "", true))
                                     }
                                 }
+                                @if data.is_preview {
+                                    div class="col-span-6 text-center border-b " {
+                                        (rating("rating", recipe.rating, "", true))
+                                    }
+                                }
+
                                 (view_recipe_nutrition(&recipe_details))
                                 @if let Some(description) = &recipe.description {
                                     div class="col-span-3 min-h-40 md:h-full md:row-span-1 print:hidden" {
                                         label {
-                                            textarea class="textarea w-full h-full resize-none rounded-none" readonly {
+                                            textarea readonly class="textarea w-full h-full resize-none rounded-none" {
                                                 (description)
                                             }
                                         }
@@ -1931,10 +2087,10 @@ fn view_recipe_helper(
                             h1 class="print:mb-1" {
                                 b { "Source" }
                             }
-                            @if let Some(source) = &recipe.source {
-                                 @if Url::parse(source).is_ok() {
+                            @if !&recipe.source.is_empty() {
+                                 @if Url::parse(&recipe.source).is_ok() {
                                     p class="print:overflow-hidden" {
-                                        (source)
+                                        (&recipe.source)
                                     }
                                  } @else {
                                        p { "Source: Unknown" }
@@ -1947,8 +2103,6 @@ fn view_recipe_helper(
                 }
             }
         }
-
-        script defer src="/public/js/wakelock.min.js" {}
     })
 }
 
@@ -1960,153 +2114,195 @@ fn view_recipe_header(
 ) -> Markup {
     html! {
         h2 class="card-title bg-base-200 px-2 pt-2 place-content-center rounded-t-2xl print:border-b print:border-black" style="justify-content: space-between" {
-            span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
-                button title="Toggle screen lock"
-                    _="on load if not navigator.wakeLock hide me end
-                           on click
-                           if wakeLock wakeLock.release() then
-                                add @d='M 12.276 18.55 v -0.748 a 4.79 4.79 0 0 1 1.463 -3.458 a 5.763 5.763 0 0 0 1.804 -4.21 a 5.821 5.821 0 0 0 -6.475 -5.778 c -2.779 0.307 -4.99 2.65 -5.146 5.448 a 5.82 5.82 0 0 0 1.757 4.503 a 4.906 4.906 0 0 1 1.5 3.495 v 0.747 a 1.44 1.44 0 0 0 1.44 1.439 h 2.218 a 1.44 1.44 0 0 0 1.44 -1.439 z m -1.058 0 c 0 0.209 -0.17 0.38 -0.38 0.38 h -2.22 c -0.21 0 -0.38 -0.171 -0.38 -0.38 v -0.748 c 0 -1.58 -0.664 -3.13 -1.822 -4.254 A 4.762 4.762 0 0 1 4.98 9.863 c 0.127 -2.289 1.935 -4.204 4.205 -4.455 a 4.762 4.762 0 0 1 5.3 4.727 a 4.714 4.714 0 0 1 -1.474 3.443 a 5.853 5.853 0 0 0 -1.791 4.225 v 0.746 z M 11.45 20.51 H 8.006 a 0.397 0.397 0 1 0 0 0.795 h 3.444 a 0.397 0.397 0 1 0 0 -0.794 z M 11.847 22.162 a 0.397 0.397 0 0 0 -0.397 -0.397 H 8.006 a 0.397 0.397 0 1 0 0 0.794 h 3.444 c 0.22 0 0.397 -0.178 0.397 -0.397 z z z z z z z z M 10.986 23.416 H 8.867 a 0.397 0.397 0 1 0 0 0.794 h 1.722 c 0.22 0 0.397 -0.178 0.397 -0.397 z' to #icon-bulb
-                           else
-                                call initWakeLock() then
-                                add @d='M12.276 18.55v-.748a4.79 4.79 0 0 1 1.463-3.458 5.763 5.763 0 0 0 1.804-4.21 5.821 5.821 0 0 0-6.475-5.778c-2.779.307-4.99 2.65-5.146 5.448a5.82 5.82 0 0 0 1.757 4.503 4.906 4.906 0 0 1 1.5 3.495v.747a1.44 1.44 0 0 0 1.44 1.439h2.218a1.44 1.44 0 0 0 1.44-1.439zm-1.058 0c0 .209-.17.38-.38.38h-2.22c-.21 0-.38-.171-.38-.38v-.748c0-1.58-.664-3.13-1.822-4.254A4.762 4.762 0 0 1 4.98 9.863c.127-2.289 1.935-4.204 4.205-4.455a4.762 4.762 0 0 1 5.3 4.727 4.714 4.714 0 0 1-1.474 3.443 5.853 5.853 0 0 0-1.791 4.225v.746zM11.45 20.51H8.006a.397.397 0 1 0 0 .795h3.444a.397.397 0 1 0 0-.794zM11.847 22.162a.397.397 0 0 0-.397-.397H8.006a.397.397 0 1 0 0 .794h3.444c.22 0 .397-.178.397-.397zM.397 10.125h2.287a.397.397 0 1 0 0-.794H.397a.397.397 0 1 0 0 .794zM19.456 9.728a.397.397 0 0 0-.397-.397h-2.287a.397.397 0 1 0 0 .794h2.287c.22 0 .397-.178.397-.397zM9.331.397v2.287a.397.397 0 1 0 .794 0V.397a.397.397 0 1 0-.794 0zM16.045 2.85 14.43 4.465a.397.397 0 1 0 .561.561l1.617-1.617a.397.397 0 1 0-.562-.56zM5.027 14.429a.397.397 0 0 0-.56 0l-1.618 1.616a.397.397 0 1 0 .562.562l1.617-1.617a.397.397 0 0 0 0-.561zM4.466 5.027a.396.396 0 0 0 .562 0 .397.397 0 0 0 0-.56L3.41 2.848a.397.397 0 1 0-.561.561zM16.045 16.607a.396.396 0 0 0 .562 0 .397.397 0 0 0 0-.562L14.99 14.43a.397.397 0 1 0-.561.56zM10.986 23.416a.397.397 0 0 0-.397-.397H8.867a.397.397 0 1 0 0 .794h1.722c.22 0 .397-.178.397-.397z' to #icon-bulb
-                           end" {
-                    (icon_bulb_on())
-                }
-
-                @if data.is_authenticated && matches!(&data.share, Some(share) if share.is_from_host) {
-                    button #edit-recipe class="ml-2 hidden sm:block"
-                        title="Edit recipe"
-                        hx-get=(format!("/recipes/{recipe_id}/edit"))
-                        hx-push-url="true"
-                        hx-target="#content"
-                        hx-swap="innerHTML transition:true" {
-                        (icon_pencil(true))
-                    }
-                }
+            @if !data.is_preview {
+                (view_recipe_left_controls(recipe_id, data))
             }
-            span class="text-center pb-2 print:w-full" itemprop="name" {
+            span class={
+                "text-center pb-2 print:w-full"
+                @if data.is_preview { " w-full" }
+            } itemprop="name" {
                     (recipe_details.recipe.name)
             }
-            span class="md:hidden" {
-                button title="Open recipe options menu" popovertarget="recipe_menu" popovertargetaction="toggle" {
-                    (icon_ellipsis_vertical())
-                }
-                div #recipe-menu
-                    popover
-                    style="inset: unset; top: 3.5rem; right: 0.5rem;"
-                    class="rounded-box z-10 shadow bg-base-100"
-                    _="on click if me.matches(':popover-open') then me.hidePopover()" {
-                    ul tabindex="0" class="menu w-full" {
-                        li {
-                            a #edit-recipe title="Edit recipe"
-                                hx-get=(format!("/recipes/{recipe_id}/edit"))
-                                hx-push-url="true"
-                                hx-target="#content"
-                                hx-swap="innerHTML transition:true" {
-                                (icon_pencil(false))
-                                "Edit"
-                            }
-                        }
-                        @if !matches!(&data.share, Some(share) if share.is_shared) {
-                            li {
-                                a title="Share recipe"
-                                    hx-post=(format!("/recipes/{recipe_id}/share"))
-                                    hx-target="#share-dialog-result"
-                                    hx-push-url="false"
-                                    _="on htmx:afterRequest from me
-                                            if event.detail.successful
-                                                if navigator.canShare
-                                                    set name to document.querySelector('[itemprop=name]').textContent then
-                                                    set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
-                                                    call navigator.share(data)
-                                                else
-                                                    call share_dialog.showModal()
-                                            end" {
-                                    (icon_share())
-                                    "Share"
-                                }
-                            }
-                            li {
-                                a #duplicate-recipe title="Duplicate recipe"
-                                    hx-push-url="/recipes/add/manual"
-                                    hx-get=(format!("/recipes/{recipe_id}/duplicate"))
-                                    hx-target="#content" {
-                                    (icon_document_duplicate())
-                                    "Duplicate"
-                                }
-                            }
-                        }
-                        li title="Print recipe" _="on click print()" {
-                            a {
-                                (icon_printer())
-                                "Print"
-                            }
-                        }
-                        @if matches!(&data.share, Some(share) if share.is_from_host) {
-                            li {
-                                a title="Mark or unmark as favourite" {
-                                    "Favourite"
-                                }
+            @if !data.is_preview {
+                (view_recipe_right_controls(recipe_id, is_favourite, data))
+            }
+        }
+    }
+}
 
+fn view_recipe_left_controls(recipe_id: i64, data: &Data) -> Markup {
+    html! {
+        span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
+            button title="Toggle screen lock"
+                _="on load if not navigator.wakeLock hide me end
+                       on click
+                       if wakeLock wakeLock.release() then
+                            add @d='M 12.276 18.55 v -0.748 a 4.79 4.79 0 0 1 1.463 -3.458 a 5.763 5.763 0 0 0 1.804 -4.21 a 5.821 5.821 0 0 0 -6.475 -5.778 c -2.779 0.307 -4.99 2.65 -5.146 5.448 a 5.82 5.82 0 0 0 1.757 4.503 a 4.906 4.906 0 0 1 1.5 3.495 v 0.747 a 1.44 1.44 0 0 0 1.44 1.439 h 2.218 a 1.44 1.44 0 0 0 1.44 -1.439 z m -1.058 0 c 0 0.209 -0.17 0.38 -0.38 0.38 h -2.22 c -0.21 0 -0.38 -0.171 -0.38 -0.38 v -0.748 c 0 -1.58 -0.664 -3.13 -1.822 -4.254 A 4.762 4.762 0 0 1 4.98 9.863 c 0.127 -2.289 1.935 -4.204 4.205 -4.455 a 4.762 4.762 0 0 1 5.3 4.727 a 4.714 4.714 0 0 1 -1.474 3.443 a 5.853 5.853 0 0 0 -1.791 4.225 v 0.746 z M 11.45 20.51 H 8.006 a 0.397 0.397 0 1 0 0 0.795 h 3.444 a 0.397 0.397 0 1 0 0 -0.794 z M 11.847 22.162 a 0.397 0.397 0 0 0 -0.397 -0.397 H 8.006 a 0.397 0.397 0 1 0 0 0.794 h 3.444 c 0.22 0 0.397 -0.178 0.397 -0.397 z z z z z z z z M 10.986 23.416 H 8.867 a 0.397 0.397 0 1 0 0 0.794 h 1.722 c 0.22 0 0.397 -0.178 0.397 -0.397 z' to #icon-bulb
+                       else
+                            call initWakeLock() then
+                            add @d='M12.276 18.55v-.748a4.79 4.79 0 0 1 1.463-3.458 5.763 5.763 0 0 0 1.804-4.21 5.821 5.821 0 0 0-6.475-5.778c-2.779.307-4.99 2.65-5.146 5.448a5.82 5.82 0 0 0 1.757 4.503 4.906 4.906 0 0 1 1.5 3.495v.747a1.44 1.44 0 0 0 1.44 1.439h2.218a1.44 1.44 0 0 0 1.44-1.439zm-1.058 0c0 .209-.17.38-.38.38h-2.22c-.21 0-.38-.171-.38-.38v-.748c0-1.58-.664-3.13-1.822-4.254A4.762 4.762 0 0 1 4.98 9.863c.127-2.289 1.935-4.204 4.205-4.455a4.762 4.762 0 0 1 5.3 4.727 4.714 4.714 0 0 1-1.474 3.443 5.853 5.853 0 0 0-1.791 4.225v.746zM11.45 20.51H8.006a.397.397 0 1 0 0 .795h3.444a.397.397 0 1 0 0-.794zM11.847 22.162a.397.397 0 0 0-.397-.397H8.006a.397.397 0 1 0 0 .794h3.444c.22 0 .397-.178.397-.397zM.397 10.125h2.287a.397.397 0 1 0 0-.794H.397a.397.397 0 1 0 0 .794zM19.456 9.728a.397.397 0 0 0-.397-.397h-2.287a.397.397 0 1 0 0 .794h2.287c.22 0 .397-.178.397-.397zM9.331.397v2.287a.397.397 0 1 0 .794 0V.397a.397.397 0 1 0-.794 0zM16.045 2.85 14.43 4.465a.397.397 0 1 0 .561.561l1.617-1.617a.397.397 0 1 0-.562-.56zM5.027 14.429a.397.397 0 0 0-.56 0l-1.618 1.616a.397.397 0 1 0 .562.562l1.617-1.617a.397.397 0 0 0 0-.561zM4.466 5.027a.396.396 0 0 0 .562 0 .397.397 0 0 0 0-.56L3.41 2.848a.397.397 0 1 0-.561.561zM16.045 16.607a.396.396 0 0 0 .562 0 .397.397 0 0 0 0-.562L14.99 14.43a.397.397 0 1 0-.561.56zM10.986 23.416a.397.397 0 0 0-.397-.397H8.867a.397.397 0 1 0 0 .794h1.722c.22 0 .397-.178.397-.397z' to #icon-bulb
+                       end" {
+                (icon_bulb_on())
+            }
+
+            @if data.is_authenticated && matches!(&data.share, Some(share) if share.is_from_host) {
+                button #edit-recipe class="ml-2 hidden sm:block"
+                    title="Edit recipe"
+                    hx-get=(format!("/recipes/{recipe_id}/edit"))
+                    hx-push-url="true"
+                    hx-target="#content"
+                    hx-swap="innerHTML transition:true" {
+                    (icon_pencil(true))
+                }
+            }
+        }
+    }
+}
+
+fn view_recipe_right_controls(recipe_id: i64, is_favourite: bool, data: &Data) -> Markup {
+    html! {
+        span class="md:hidden" {
+            button title="Open recipe options menu" popovertarget="recipe_menu" popovertargetaction="toggle" {
+                (icon_ellipsis_vertical())
+            }
+            div #recipe-menu
+                popover
+                style="inset: unset; top: 3.5rem; right: 0.5rem;"
+                class="rounded-box z-10 shadow bg-base-100"
+                _="on click if me.matches(':popover-open') then me.hidePopover()" {
+                ul tabindex="0" class="menu w-full" {
+                    li {
+                        a #edit-recipe title="Edit recipe"
+                            hx-get=(format!("/recipes/{recipe_id}/edit"))
+                            hx-push-url="true"
+                            hx-target="#content"
+                            hx-swap="innerHTML transition:true" {
+                            (icon_pencil(false))
+                            "Edit"
+                        }
+                    }
+                    @if !matches!(&data.share, Some(share) if share.is_shared) {
+                        li {
+                            a title="Share recipe"
+                                hx-post=(format!("/recipes/{recipe_id}/share"))
+                                hx-target="#share-dialog-result"
+                                hx-push-url="false"
+                                _="on htmx:afterRequest from me
+                                        if event.detail.successful
+                                            if navigator.canShare
+                                                set name to document.querySelector('[itemprop=name]').textContent then
+                                                set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
+                                                call navigator.share(data)
+                                            else
+                                                call share_dialog.showModal()
+                                        end" {
+                                (icon_share())
+                                "Share"
                             }
-                            li {
-                                a title="Delete recipe"
-                                    hx-delete=(format!("/recipes/{recipe_id}"))
-                                    hx-swap="none"
-                                    hx-confirm="Are you sure you wish to delete this recipe?"
-                                    hx-indicator="#fullscreen-loader" {
-                                    (icon_trash())
-                                    "Delete"
-                                }
+                        }
+                        li {
+                            a #duplicate-recipe title="Duplicate recipe"
+                                hx-push-url="/recipes/add/manual"
+                                hx-get=(format!("/recipes/{recipe_id}/duplicate"))
+                                hx-target="#content" {
+                                (icon_document_duplicate())
+                                "Duplicate"
+                            }
+                        }
+                    }
+                    li title="Print recipe" _="on click print()" {
+                        a {
+                            (icon_printer())
+                            "Print"
+                        }
+                    }
+                    @if matches!(&data.share, Some(share) if share.is_from_host) {
+                        li {
+                            a title="Mark or unmark as favourite" {
+                                "Favourite"
+                            }
+
+                        }
+                        li {
+                            a title="Delete recipe"
+                                hx-delete=(format!("/recipes/{recipe_id}"))
+                                hx-swap="none"
+                                hx-confirm="Are you sure you wish to delete this recipe?"
+                                hx-indicator="#fullscreen-loader" {
+                                (icon_trash())
+                                "Delete"
                             }
                         }
                     }
                 }
             }
-            span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
-                @if matches!(&data.share, Some(share) if share.is_shared) {
-                    @if !matches!(&data.share, Some(share) if share.is_from_host) {
-                        button class="mr-2"
-                            title="Add recipe to collection"
-                            hx-get=(format!("/recipes/{recipe_id}/share"))
-                            hx-push-url="true" {
-                            (icon_plus_circle())
-                        }
-                    }
-                } @else {
-                    (render_favourite_button(recipe_id, is_favourite, false, true))
-                    button title="Share recipe" class="mr-2 hidden sm:block"
-                        hx-post=(format!("/recipes/{recipe_id}/share"))
-                        hx-target="#share-dialog-result"
-                        hx-push-url="false"
-                        _="on htmx:afterRequest from me
-                            if event.detail.successful
-                                if navigator.canShare
-                                    set name to document.querySelector('[itemprop=name]').textContent then
-                                    set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
-                                    call navigator.share(data)
-                                else
-                                    call share_dialog.showModal()
-                            end" {
-                        (icon_share())
+        }
+        span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
+            @if matches!(&data.share, Some(share) if share.is_shared) {
+                @if !matches!(&data.share, Some(share) if share.is_from_host) {
+                    button class="mr-2"
+                        title="Add recipe to collection"
+                        hx-get=(format!("/recipes/{recipe_id}/share"))
+                        hx-push-url="true" {
+                        (icon_plus_circle())
                     }
                 }
-                button #duplicate-recipe class="mr-2 hidden sm:block" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
-                    (icon_document_duplicate())
+            } @else {
+                (render_favourite_button(recipe_id, is_favourite, false, true))
+                button title="Share recipe" class="mr-2 hidden sm:block"
+                    hx-post=(format!("/recipes/{recipe_id}/share"))
+                    hx-target="#share-dialog-result"
+                    hx-push-url="false"
+                    _="on htmx:afterRequest from me
+                        if event.detail.successful
+                            if navigator.canShare
+                                set name to document.querySelector('[itemprop=name]').textContent then
+                                set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
+                                call navigator.share(data)
+                            else
+                                call share_dialog.showModal()
+                        end" {
+                    (icon_share())
                 }
-                button class="mr-2 hidden sm:block" title="Print recipe" _="on click print()" {
-                    (icon_printer())
+            }
+            button #duplicate-recipe class="mr-2 hidden sm:block" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
+                (icon_document_duplicate())
+            }
+            button class="mr-2 hidden sm:block" title="Print recipe" _="on click print()" {
+                (icon_printer())
+            }
+            @if !matches!(&data.share, Some(share) if share.is_shared) {
+                button title="Delete recipe"
+                    class="mr-2 hidden sm:block"
+                    hx-delete=(format!("/recipes/{recipe_id}"))
+                    hx-swap="none"
+                    hx-confirm="Are you sure you wish to delete this recipe?"
+                    hx-indicator="#fullscreen-loader" {
+                    (icon_trash())
                 }
-                @if !matches!(&data.share, Some(share) if share.is_shared) {
-                    button title="Delete recipe"
-                        class="mr-2 hidden sm:block"
-                        hx-delete=(format!("/recipes/{recipe_id}"))
-                        hx-swap="none"
-                        hx-confirm="Are you sure you wish to delete this recipe?"
-                        hx-indicator="#fullscreen-loader" {
-                        (icon_trash())
-                    }
+            }
+        }
+    }
+}
+
+fn view_recipe_source(source: &String) -> Markup {
+    html! {
+        @if !source.is_empty() {
+           @if Url::parse(source).is_ok() {
+                a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
+                p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
+           } @else {
+                p class="text-center" {
+                    "Source:"
+                    br;
+                    (source)
                 }
+           }
+        } @else {
+            p class="text-center" {
+                "Source:"
+                br;
+                "Unknown"
             }
         }
     }
@@ -2382,7 +2578,7 @@ fn view_recipe_nutrition(recipe_details: &RecipeDetails) -> Markup {
 pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
     html! {
         div #ingredients-instructions-container class="grid text-sm md:grid-flow-col md:col-span-6" {
-            div class="col-span-6 border-gray-700 px-4 py-2 border-y md:col-span-2 md:border-r md:border-y-0 print:hidden" {
+            div class="col-span-6 border-gray-700 border-y px-4 py-2 md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
                     h2 class="font-semibold text-center underline pb-1" { "Tools" }
                     ul class="grid gap-1" {

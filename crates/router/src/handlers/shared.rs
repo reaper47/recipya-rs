@@ -64,6 +64,7 @@ pub async fn share_recipe_handler(
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             // TODO: Populate AboutData with good values.
+            is_preview: false,
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,

@@ -299,13 +299,13 @@ impl From<Recipe> for RecipeSchema {
             description: to_text(r.description),
             is_accessible_for_free: false,
             is_based_on: to_is_based_on(source),
-            image: (!r.img.is_empty()).then_some(vec![ImageObjectOrUrl::ImageObject(Box::new(
+            image: (!r.img.is_empty()).then_some(ImageObjectOrUrl::ImageObject(Box::new(
                 ImageObjectType {
                     at_type: AtType::ImageObject,
                     at_id: Some(r.img),
                     ..Default::default()
                 },
-            ))]),
+            ))),
             keywords: to_defined_text(keywords.join(",")),
             name: Some(r.name),
             nutrition: parse_nutrition_schema(nutrition.split(";").collect()),

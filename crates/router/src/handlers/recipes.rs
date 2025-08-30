@@ -8,6 +8,7 @@ use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum::http::{HeaderMap, HeaderValue, Uri};
 use axum::response::{Html, IntoResponse};
+use axum_htmx::HX_REDIRECT;
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
@@ -23,7 +24,6 @@ use uuid::Uuid;
 use app::state::AppState;
 use math::cooking::units;
 use models::Error::{DuplicateEntity, EntityNotFound};
-use models::Recipe;
 use models::data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe};
 use models::params::SearchParams;
 use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
@@ -33,6 +33,7 @@ use models::share::ShareRecipe;
 use models::time::FormattedTimes;
 use models::user::User;
 use models::website::{ToHtmlTable, Website};
+use models::{Recipe, RecipeDetails};
 use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
 
 use crate::handlers::get_settings;
@@ -40,7 +41,8 @@ use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_routes::{
-    FavouriteParams, ImportFromAppForm, RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm,
+    FavouriteParams, ImportFromAppForm, PreviewForm, RecipeCategoryForm, RecipeScrapeForm,
+    ShareRecipeForm,
 };
 use crate::{Error, Result};
 
@@ -132,6 +134,7 @@ pub async fn recipes_handler(
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
             // TODO: Populate AboutData with good values.
+            is_preview: false,
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,
@@ -533,6 +536,7 @@ pub async fn add_recipes_handler(
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
+        RecipeSchema::schema(),
         settings,
     )
     .into_response())
@@ -681,6 +685,118 @@ async fn parse_recipes(
     Ok(recipes)
 }
 
+/// Handles generating a preview of the recipe based on the input JSON recipe schema.
+pub async fn add_recipe_import_preview_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<PreviewForm>,
+) -> Result<impl IntoResponse> {
+    match serde_json::from_str::<RecipeSchema>(&form.json_input) {
+        Ok(schema) => {
+            let user_id = ctx.0.user_id();
+
+            let recipe_c = RecipeForCreate::from(&schema);
+            let recipe_details = RecipeDetails::from(recipe_c);
+            let formatted_times = FormattedTimes::from_times(&recipe_details.times)?;
+            let view_recipe = ViewRecipe {
+                recipe_details,
+                formatted_times,
+            };
+
+            let fs_support = Arc::clone(&state.fs_support);
+            let data_dir = state.data_dir.clone();
+
+            match templates::recipes::view_recipe_helper(
+                fs_support,
+                data_dir,
+                &Data {
+                    is_admin: user_id == 1,
+                    is_authenticated: true,
+                    is_autologin: state.config.read().await.is_autologin,
+                    is_hx_request: true,
+                    is_preview: true,
+                    about: AboutData {
+                        is_update_available: false,
+                        is_check_update: false,
+                        last_checked_update_at: Default::default(),
+                        last_updated_at: Default::default(),
+                        version: "".to_string(),
+                    },
+                    pagination: Some(PaginationData::hidden()),
+                    searchbar: Some(SearchbarData {
+                        is_favourites: false,
+                        sort: "a-z".into(),
+                        term: "a-z".into(),
+                    }),
+                    share: Some(ShareData {
+                        is_from_host: true,
+                        is_shared: false,
+                    }),
+                    recipes: vec![view_recipe],
+                },
+            ) {
+                Ok(res) => Ok(res.into_response()),
+                Err(err) => {
+                    error!("Error rendering view recipe page preview for user {user_id}: {err}");
+                    broadcast_error(&state, user_id, "Error rendering recipe preview.").await;
+                    Err(Error::Templates)
+                }
+            }
+        }
+        Err(err) => {
+            error!("Error parsing recipe schema JSON: {err}");
+            Ok((
+                StatusCode::OK,
+                Html(format!(
+                    r#"<div class="text-error">Invalid JSON: {err}</div>"#
+                )),
+            )
+                .into_response())
+        }
+    }
+}
+
+/// Handles parsing a recipe from raw JSON.
+pub async fn add_recipe_import_raw_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<PreviewForm>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    match serde_json::from_str::<RecipeSchema>(&form.json_input) {
+        Ok(schema) => {
+            let recipe_c = RecipeForCreate::from(&schema);
+
+            match Recipe::create(&state.mm, user_id, &recipe_c).await {
+                Ok(recipe_id) => {
+                    let url = format!("/recipes/{recipe_id}");
+
+                    match HeaderValue::from_str(&url) {
+                        Ok(hv) => (StatusCode::OK, [(HX_REDIRECT, hv)]).into_response(),
+                        Err(_) => (StatusCode::BAD_REQUEST, "invalid redirect url").into_response(),
+                    }
+                }
+                Err(DuplicateEntity) => {
+                    warn!("Recipe exists: {}", recipe_c.name);
+                    broadcast_error(&state, user_id, "Recipe exists.").await;
+                    Error::EntityExists { entity: "recipe" }.into_response()
+                }
+                Err(err) => {
+                    error!("Error saving recipe '{}': {err}", recipe_c.name);
+                    broadcast_error(&state, user_id, "Failed to insert recipe.").await;
+                    Error::Database.into_response()
+                }
+            }
+        }
+        Err(err) => {
+            error!("Error parsing recipe schema JSON: {err}");
+            broadcast_error(&state, user_id, "Error parsing recipe schema JSON.").await;
+            Error::InvalidPayload.into_response()
+        }
+    }
+}
+
 /// Handles rendering the form to add a recipe manually.
 pub async fn add_manual_recipe_handler(
     ctx: CtxW,
@@ -768,7 +884,7 @@ pub async fn add_manual_recipe_post_handler(
             images,
             measurement_system_id,
             yield_: form.yield_,
-            source: form.source,
+            source: form.source.unwrap_or_default(),
             is_favourite: false,
             rating: form.rating,
             videos,
@@ -1032,35 +1148,46 @@ async fn extract_images(
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<Uuid> {
-    let mut vec = Vec::new();
+    let Some(images) = schema.image.as_ref() else {
+        return Vec::new();
+    };
 
-    for images in schema.image.iter() {
-        for image in images.iter() {
-            let url = match image {
-                ImageObjectOrUrl::Url(url) => Some(url),
-                ImageObjectOrUrl::ImageObject(obj) => obj.url.as_ref().or(obj.content_url.as_ref()),
-            };
-
-            if let Some(url) = url {
-                // TODO: Fetch the image using reqwest.
-                let path = PathBuf::new();
-
-                let file_name = Uuid::new_v4();
-                fs_support.upload_image(&path, file_name, &state.data_dir.images);
-                vec.push(
-                    state
-                        .fs_support
-                        .is_file_exists(file_name, &state.data_dir.images)
-                        .then_some(file_name),
-                );
+    let vec = match images {
+        ImageObjectOrUrl::ImageObject(obj) => {
+            let u = obj.url.as_ref().or(obj.content_url.as_ref());
+            if let Some(u) = u {
+                vec![fetch_image(state, fs_support, u.clone())]
+            } else {
+                Vec::new()
             }
         }
-    }
+        ImageObjectOrUrl::ImageObjects(objects) => objects
+            .iter()
+            .filter_map(|obj| obj.url.as_ref().or(obj.content_url.as_ref()))
+            .map(|u| fetch_image(state, fs_support.clone(), u.clone()))
+            .collect::<Vec<_>>(),
+        ImageObjectOrUrl::Text(_) => Vec::new(),
+        ImageObjectOrUrl::Urls(urls) => urls
+            .iter()
+            .map(|u| fetch_image(state, fs_support.clone(), u.clone()))
+            .collect::<Vec<_>>(),
+    };
 
     vec.into_iter()
         .map(|img| img.unwrap_or_default())
         .filter(|v| v != &Uuid::nil())
         .collect()
+}
+
+fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, url: Url) -> Option<Uuid> {
+    let path = PathBuf::new();
+
+    let file_name = Uuid::new_v4();
+    fs_support.upload_image(&path, file_name, &state.data_dir.images);
+    state
+        .fs_support
+        .is_file_exists(file_name, &state.data_dir.images)
+        .then_some(file_name)
 }
 
 async fn extract_videos(
@@ -1207,6 +1334,7 @@ pub async fn view_recipe_handler(
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
+            is_preview: false,
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,
@@ -1298,6 +1426,7 @@ pub async fn search_recipes_handler(
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
             // TODO: Populate AboutData with good values.
+            is_preview: false,
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,

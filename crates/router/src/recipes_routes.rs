@@ -11,14 +11,7 @@ use recipe_schema::RecipeSchema;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info, warn};
 
-use crate::handlers::recipes::{
-    add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipe_import_handler,
-    add_recipes_handler, add_website_post_handler, delete_recipe_categories_handler,
-    delete_recipe_handler, duplicate_recipe_handler, edit_recipe_handler, edit_recipe_put_handler,
-    post_recipe_categories_handler, recipes_handler, scale_recipe_handler, search_recipes_handler,
-    share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
-    toggle_favourite_handler, view_recipe_handler,
-};
+use crate::handlers::recipes::*;
 use crate::middleware::mw_auth;
 use crate::{AppState, Result as ServerResult};
 
@@ -125,6 +118,13 @@ pub struct FavouriteParams {
     pub is_view_recipe: Option<bool>,
 }
 
+/// Represents the content of a JSON preview form.
+#[derive(Deserialize, Serialize)]
+pub struct PreviewForm {
+    #[serde(rename = "json-input")]
+    pub(crate) json_input: String,
+}
+
 /// Defines the routes for endpoints related to recipes.
 pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
     Router::new()
@@ -148,6 +148,11 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
             "/add/import",
             post(add_recipe_import_handler).layer(DefaultBodyLimit::max(50 * 1024 * 1024)),
         )
+        .route(
+            "/add/import/preview",
+            post(add_recipe_import_preview_handler),
+        )
+        .route("/add/import/raw-json", post(add_recipe_import_raw_handler))
         .route(
             "/add/manual",
             get(add_manual_recipe_handler)
@@ -239,7 +244,7 @@ mod tests {
                     r##"<dialog id="supported-websites-dialog" class="modal"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search a website" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Website</th></tr></thead><tbody id="search-results"></tbody></table></div></div></dialog>"##,
                     r##"<dialog class="modal" id="supported-apps-import-dialog"><div class="modal-box h-2/3"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="mb-1"><label class="floating-label"><input type="search" placeholder="Search an application" class="input input-sm w-11/12" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label></h3><div class="overflow-x-auto"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1">Number</th><th class="py-1">Application</th><th class="py-1">File Formats</th></tr></thead><tbody id="application-results"></tbody></table></div></div></dialog>"##,
                     r##"<dialog class="modal" id="add-ocr-dialog"><div class="modal-box"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Scan Recipe</h3><form class="py-4" hx-post="/recipes/add/ocr" hx-encoding="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" _="on submit call document.querySelector('#add-ocr-dialog').close()"><div class="grid mb-4"><label for="add-ocr-files-input" class="floating-label text-sm font-medium mb-1">Select your recipe's images ordered by page or a recipe document in the PDF format.</label><input id="add-ocr-files-input" type="file" name="files" accept=".jpg, .jpeg, .png, .bmp, .tiff, .heif, .pdf" multiple class="p-2 border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-purple-600 dark:bg-gray-900 dark:border-none"></div><button class="btn btn-block btn-primary btn-sm">Submit</button></form></div></dialog>"##,
-                    r##"<dialog class="modal" id="import-recipes-dialog"><div class="modal-box w-fit"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Import Recipes</h3><form class="py-4" hx-post="/recipes/add/import" enctype="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()"><div><div class="grid mb-4"><label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1">Select a file</label><input id="import-dialog-file" type="file" name="file" required accept=".cook,.crumb,.json,.mcb,.md,.mmf,.mx2,.mxp,.mz2,.mm,.mmf,.paprikarecipes,.rzk,.rk,.rzk,.txt,.xml" class="file-input"></div><div><label for="app-select" class="floating-label text-sm font-semibold mb-1">Select the application</label><select class="select" id="app-select" name="app"><option value="accuchef">AccuChef</option><option value="bigoven">BigOven</option><option value="cheftap">ChefTap</option><option value="cooklang">Cooklang</option><option value="cookmate">CookMate</option><option value="crouton">Crouton</option><option value="kalorio">Kalorio</option><option value="mastercook">MasterCook</option><option value="mealmaster">MealMaster</option><option value="paprika">Paprika</option><option value="recipemd">RecipeMD</option><option value="recipesage">RecipeSage</option><option value="rezkonv">Rezkonv</option><option value="saffron">Saffron</option></select></div></div><button type="submit" class="btn btn-block btn-primary btn-sm mt-4">Submit</button></form></div></dialog>"##,
+                    r##"<dialog class="modal" id="import-recipes-dialog"><div id="import-recipes-dialog-container" class="modal-box w-[min(96vw,1100px)] max-h-[92vh] p-4 flex flex-col"><form method="dialog"><button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button></form><h3 class="font-bold text-lg">Import Recipes</h3><div class="tabs tabs-lift pt-4"><label class="tab"><input type="radio" name="import-recipe-tab" checked _="on click remove .max-w-none from #import-recipes-dialog-container">Software</label><div class="tab-content bg-base-100 border-base-300 p-3">"##,
                 ],
             )
         }
@@ -559,7 +564,7 @@ mod tests {
                 images: vec![Uuid::new_v4(), Uuid::new_v4()],
                 measurement_system_id: 2,
                 yield_: Some(12),
-                source: Some("My father's maple syrup recipes cookbook".into()),
+                source: "My father's maple syrup recipes cookbook".into(),
                 is_favourite: false,
                 rating: Some(4),
                 videos: vec![VideoForCreate {
@@ -1597,7 +1602,7 @@ mod tests {
                     r#"<div class="badge badge-sm badge-neutral m-1 flex-auto">tofu</div><div class="badge badge-sm badge-neutral m-1 flex-auto">vegetarian</div>"#,
                     r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
                     r#"<a class="btn btn-sm btn-outline no-underline print:hidden" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Source</a>"#,
-                    r#"<textarea class="textarea w-full h-full resize-none rounded-none" readonly>This is the most delicious recipe!</textarea>"#,
+                    r#"<textarea readonly class="textarea w-full h-full resize-none rounded-none">This is the most delicious recipe!</textarea>"#,
                     r#"<p class="text-xs">Per 100g: calories 300 kcal; total carbohydrates 55g; sugar 43g; protein 7g; total fat 6g; saturated fat 1g; unsaturated fat 2g; trans fat 3g; cholesterol 5mg; sodium 12mg; fiber 10g</p>"#,
                     r#"<div class="grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:grid-cols-4 md:row-span-1 print:border-none"><div class="contents md:col-span-3"><div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time">"#,
                     r#"<table class="table table-zebra table-xs print:hidden"><thead><tr><th>Nutrition (per 100g)</th><th>Amount</th></tr></thead><tbody><tr><td>Calories:</td><td>300 kcal</td></tr><tr><td>Total carbs:</td><td>55 g</td></tr><tr><td>Sugars:</td><td>43 g</td></tr><tr><td>Protein:</td><td>7 g</td></tr><tr><td>Total fat:</td><td>6 g</td></tr><tr><td>Saturated fat:</td><td>1 g</td></tr><tr><td>Unsaturated fat:</td><td>2 g</td></tr><tr><td>Trans fat:</td><td>3 g</td></tr><tr><td>Cholesterol:</td><td>5 mg</td></tr><tr><td>Sodium:</td><td>12 mg</td></tr><tr><td>Fiber:</td><td>10 g</td></tr></tbody></table>"#,
@@ -1619,8 +1624,31 @@ mod tests {
             HIDDEN_WS_NOTIFICATION, assert_ws_message, build_server_ws, create_app_state,
             open_test_file,
         };
+        use serde_json::json;
+        use crate::recipes_routes::PreviewForm;
 
         const BASE_URI: &str = "/recipes/add/import";
+
+        fn valid_preview_form() -> PreviewForm {
+            PreviewForm {
+                json_input: json!({
+  "@context": "https://schema.org",
+  "@type": "Recipe",
+  "cookTime": "PT1H",
+  "description": "This classic banana bread recipe comes from my mom -- the walnuts add a nice texture and flavor to the banana bread.",
+  "image": "bananabread.jpg",
+  "recipeIngredient": [
+    "3 or 4 ripe bananas, smashed",
+    "1 egg",
+    "3/4 cup of sugar"
+  ],
+  "name": "Mom's World Famous Banana Bread",
+  "prepTime": "PT15M",
+  "recipeInstructions": "Preheat the oven to 350 degrees. Mix in the ingredients in a bowl. Add the flour last. Pour the mixture into a loaf pan and bake for one hour.",
+  "recipeYield": "1 loaf",
+}).to_string(),
+            }
+        }
 
         #[tokio::test]
         async fn test_must_be_logged_in() -> Result<()> {
@@ -1711,6 +1739,110 @@ mod tests {
             pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 3);
             Ok(())
         }
+
+        mod tests_recipe_add_import_preview {
+            use super::*;
+
+            const BASE_URI: &str = "/recipes/add/import/preview";
+
+            #[tokio::test]
+            async fn test_must_be_logged_in_ok() -> Result<()> {
+                assert_must_be_logged_in(Method::POST, BASE_URI).await
+            }
+
+            #[tokio::test]
+            async fn test_post_payload_invalid_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let server = build_server_logged_in(config).await?;
+
+                let res = server
+                    .post(BASE_URI)
+                    .form(&PreviewForm {
+                        json_input: "{1234567}".to_string(),
+                    })
+                    .await;
+
+                res.assert_status_ok();
+                assert_html(
+                    res,
+                    vec![
+                        r#"<div class="text-error">Invalid JSON: key must be a string at line 1 column 2</div>"#,
+                    ],
+                );
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_post_payload_valid_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let server = build_server_logged_in(config).await?;
+
+                let res = server.post(BASE_URI).form(&valid_preview_form()).await;
+
+                res.assert_status_ok();
+                assert_html(
+                    res,
+                    vec![
+                        r#"<h2 class="card-title bg-base-200 px-2 pt-2 place-content-center rounded-t-2xl print:border-b print:border-black" style="justify-content: space-between"><span class="text-center pb-2 print:w-full w-full" itemprop="name">Mom's World Famous Banana Bread</span></h2>"#,
+                    ],
+                );
+                Ok(())
+            }
+        }
+
+        mod tests_recipe_add_import_raw_json {
+            use super::*;
+
+            const BASE_URI: &str = "/recipes/add/import/raw-json";
+
+            #[tokio::test]
+            async fn test_must_be_logged_in_ok() -> Result<()> {
+                assert_must_be_logged_in(Method::POST, BASE_URI).await
+            }
+
+            #[tokio::test]
+            async fn test_post_payload_invalid_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config).await?;
+
+                let res = server
+                    .post(BASE_URI)
+                    .form(&PreviewForm {
+                        json_input: "{1234567}".to_string(),
+                    })
+                    .await;
+
+                res.assert_status_bad_request();
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Error parsing recipe schema JSON.","status":"alert-error","title":"Operation Failed"}}"#).await;
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_post_payload_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let server = build_server_logged_in(config).await?;
+
+                let res = server.post(BASE_URI).form(&valid_preview_form()).await;
+
+                res.assert_status_ok();
+                res.assert_header(axum_htmx::headers::HX_REDIRECT, "/recipes/1");
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_post_payload_double_insert_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config).await?;
+                let _ = server.post(BASE_URI).form(&valid_preview_form()).await;
+
+                let res = server.post(BASE_URI).form(&valid_preview_form()).await;
+
+                res.assert_status_conflict();
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe exists.","status":"alert-error","title":"Operation Failed"}}"#).await;
+                Ok(())
+            }
+        }
+
     }
 
     mod tests_recipe_add_manual {
@@ -1732,7 +1864,7 @@ mod tests {
         const BASE_URI: &str = "/recipes/add/manual";
 
         #[tokio::test]
-        async fn test_get_must_be_logged_in_ok() -> Result<()> {
+        async fn test_must_be_logged_in_ok() -> Result<()> {
             let _ = assert_must_be_logged_in(Method::GET, BASE_URI).await;
             assert_must_be_logged_in(Method::POST, BASE_URI).await
         }
@@ -1963,7 +2095,7 @@ mod tests {
                 images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
                 measurement_system_id: 2,
                 yield_: Some(6),
-                source: Some("My mother's maple syrup recipes cookbook".into()),
+                source: "My mother's maple syrup recipes cookbook".into(),
                 is_favourite: false,
                 rating: Some(4),
                 videos: vec![VideoForCreate {
@@ -2838,8 +2970,8 @@ mod tests {
             form = form.add_part("description", Part::text(v))
         }
 
-        if let Some(v) = &recipe.source {
-            form = form.add_part("source", Part::text(v))
+        if !&recipe.source.is_empty() {
+            form = form.add_part("source", Part::text(&recipe.source))
         }
 
         if let Some(n) = &recipe.nutrition {

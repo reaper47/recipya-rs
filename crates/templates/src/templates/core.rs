@@ -31,6 +31,7 @@ pub(super) fn head(title: &str) -> Markup {
             script src="https://unpkg.com/htmx-ext-ws@2.0.2/ws.js" {}
             script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js" {}
             script defer src="/public/js/core.min.js" {}
+            script defer src="/public/js/json-highlighter.min.js" {}
             script defer src="/public/js/toast.min.js" {}
         }
     }
@@ -41,8 +42,8 @@ pub(super) fn toast() -> Markup {
     html! {
         div #toast-container .toast.toast-top.toast-end.hidden.z-20.cursor-default {
             div .hidden.alert-error.alert-info.alert-success.alert-warning {}
-            div #toast_alert .alert.shadow-lg.hidden role="alert" {
-                svg #toast_icon .stroke-current.shrink-0.w-6.h-6 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {}
+            div #toast-alert .alert.shadow-lg.hidden role="alert" {
+                svg #toast-icon .stroke-current.shrink-0.w-6.h-6 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {}
                 div .text-left {
                     h3 #toast-title .font-bold {}
                     div #toast-message .text-xs {}

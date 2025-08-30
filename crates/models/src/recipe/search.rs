@@ -768,9 +768,10 @@ mod tests {
 
             pretty_assertions::assert_eq!(
                 results,
-                vec![
-                    adjust_recipe(to_recipe_details(2, recipe2), results[0].clone()),
-                ]
+                vec![adjust_recipe(
+                    to_recipe_details(2, recipe2),
+                    results[0].clone()
+                ),]
             );
             Ok(())
         }

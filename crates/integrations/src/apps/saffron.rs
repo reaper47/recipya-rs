@@ -7,11 +7,11 @@ use nom::combinator::{eof, map, map_opt, opt};
 use nom::multi::many1;
 use nom::sequence::{preceded, terminated};
 use nom::{IResult, Parser};
-use recipe_schema::{AtType, ImageObjectOrUrl, RecipeSchema, Sections};
+use recipe_schema::{AtType, RecipeSchema, Sections};
 use support::time::parse_duration;
 use url::Url;
 
-use crate::apps::helpers::read_file;
+use crate::apps::helpers::{read_file, urls_to_image_object};
 use crate::error::Result;
 use crate::helpers::{
     seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
@@ -77,14 +77,7 @@ impl From<SaffronRecipe> for RecipeSchema {
             cook_time: seconds_to_duration(r.cook_seconds.unwrap_or_default()),
             description: to_text(r.description.unwrap_or_default()),
             headline: r.cookbook,
-            image: Some(
-                vec![r.image.unwrap_or_default()]
-                    .into_iter()
-                    .filter_map(|img| Url::parse(&img).ok())
-                    .map(ImageObjectOrUrl::Url)
-                    .collect::<Vec<_>>(),
-            )
-            .filter(|v| !v.is_empty()),
+            image: urls_to_image_object(vec![r.image.unwrap_or_default()]),
             name: Some(r.title),
             is_based_on: to_is_based_on(r.source.unwrap_or_default()),
             prep_time: seconds_to_duration(r.prep_seconds.unwrap_or_default()),

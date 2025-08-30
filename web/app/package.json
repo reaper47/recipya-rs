@@ -7,14 +7,14 @@
   "scripts": {
     "build": "npm run build:css && npm run build:js",
     "build:css": "npx @tailwindcss/cli -i ./tailwind-custom.css -o ../public/css/tailwind.css --minify",
-    "build:js": "uglifyjs --compress --mangle -o ../public/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../public/js/toast.min.js -- toast.js && uglifyjs --compress --mangle -o ../public/js/wakelock.min.js -- wakelock.js"
+    "build:js": "uglifyjs --compress --mangle -o ../public/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../public/js/toast.min.js -- toast.js && uglifyjs --compress --mangle -o ../public/js/wakelock.min.js -- wakelock.js && uglifyjs --compress --mangle -o ../public/js/json-highlighter.min.js -- json-highlighter.js"
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.11",
     "@tailwindcss/typography": "^0.5.16",
     "copyfiles": "^2.4.1",
-    "daisyui": "^5.0.46",
+    "daisyui": "^5.0.54",
     "esbuild": "^0.25.8",
     "mjml": "^4.15.3",
     "tailwindcss": "^4.1.11",

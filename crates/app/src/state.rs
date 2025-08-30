@@ -97,32 +97,41 @@ impl AppState {
 
     /// Broadcasts a message to all active WebSocket subscribers of a given user.
     pub async fn broadcast(&self, user_id: i64, message: Message) {
+        use std::time::Duration;
+        use tokio::time::timeout;
+
         let send_timeout = Duration::from_secs(10);
 
-        if let Some(vec) = self.subscribers.lock().await.get_mut(&user_id) {
-            let mut to_remove: Vec<usize> = Vec::new();
-            for (idx, ws) in vec.iter_mut().enumerate() {
-                if ws.send(Message::Ping(Vec::new().into())).await.is_err() {
-                    to_remove.push(idx);
-                }
+        // Temporarily take connections for this user so we don't hold the lock across awaits
+        let mut conns = {
+            let mut subs = self.subscribers.lock().await;
+            subs.remove(&user_id).unwrap_or_default()
+        };
 
-                match timeout(send_timeout, ws.send(message.clone())).await {
-                    Ok(Ok(())) => {}
-                    Ok(Err(err)) => {
-                        error!("Failed to send broadcast message to user {user_id}: {err}");
-                    }
-                    Err(_) => {
-                        error!("Send broadcast message to user {user_id} timed out");
-                    }
-                }
+        let mut alive = Vec::with_capacity(conns.len());
+        for mut ws in conns {
+            // ping: if it fails or times out, drop the socket
+            if timeout(send_timeout, ws.send(Message::Ping(Vec::new().into())))
+                .await
+                .is_err()
+            {
+                continue;
             }
 
-            for &idx in to_remove.iter().rev() {
-                vec.remove(idx);
+            match timeout(send_timeout, ws.send(message.clone())).await {
+                Ok(Ok(())) => alive.push(ws),
+                _ => {
+                    // Broken pipe / timeout / other: drop silently or at debug level
+                }
             }
         }
-    }
 
+        // Put back the ones that survived
+        if !alive.is_empty() {
+            let mut subs = self.subscribers.lock().await;
+            subs.entry(user_id).or_default().extend(alive);
+        }
+    }
     /// Gets a recipe from the cache if present.
     pub async fn get_cached_recipe(&self, key: RecipeCacheKey) -> Option<ViewRecipe> {
         let mut cache = self.recipe_cache.lock().await;
