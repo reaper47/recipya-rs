@@ -60,9 +60,8 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/json-highlighter.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/json-highlighter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/json-highlighter.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/json-highlighter.min.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -754,7 +753,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test tests_recipe_add_import_preview">
+  <component name="RunManager" selected="Cargo.Test shared_router::tests::test_shared_anonymous_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -773,8 +772,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipe_add_import_raw_json::test_post_payload_invalid_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_import_raw_json::test_post_payload_invalid_ok -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -807,8 +806,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_ok -- --exact" />
+    <configuration name="Test shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib shared_router::tests::test_shared_anonymous_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -860,19 +859,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_import_raw_json::test_post_payload_invalid_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_ok" />
+      <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
       <item itemvalue="Cargo.Test tests_recipe_add_import_preview" />
       <item itemvalue="Cargo.Test tests_recipe_add_import_raw_json" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
         <item itemvalue="Cargo.Test tests_recipe_add_import_preview" />
         <item itemvalue="Cargo.Test tests_recipe_add_import_raw_json" />
         <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_import_raw_json::test_post_payload_invalid_ok" />
       </list>
     </recent_temporary>
   </component>
