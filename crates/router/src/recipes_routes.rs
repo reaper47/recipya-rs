@@ -1619,13 +1619,13 @@ mod tests {
 
         use axum_test::http::StatusCode;
 
+        use crate::recipes_routes::PreviewForm;
         use models::Recipe;
+        use serde_json::json;
         use testing::utils::{
             HIDDEN_WS_NOTIFICATION, assert_ws_message, build_server_ws, create_app_state,
             open_test_file,
         };
-        use serde_json::json;
-        use crate::recipes_routes::PreviewForm;
 
         const BASE_URI: &str = "/recipes/add/import";
 
@@ -1842,7 +1842,6 @@ mod tests {
                 Ok(())
             }
         }
-
     }
 
     mod tests_recipe_add_manual {
