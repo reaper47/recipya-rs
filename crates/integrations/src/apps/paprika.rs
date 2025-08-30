@@ -69,42 +69,44 @@ impl ToRecipeSchema for Recipe {
             None
         };
 
-        let pictures = self
-            .photos
-            .iter()
-            .filter_map(|p| {
-                base64::engine::general_purpose::STANDARD
-                    .decode(&p.data)
-                    .ok()
-            })
-            .filter_map(|bytes| {
-                let path = format!(
-                    "{}/{}.image",
-                    temp_dir().to_str().unwrap_or_default(),
-                    Uuid::new_v4()
-                );
-                match File::create(path.clone()) {
-                    Ok(mut file) => {
-                        if file.write_all(&bytes).is_ok() {
-                            Some(path)
-                        } else {
+        let pictures = {
+            let items = self
+                .photos
+                .iter()
+                .filter_map(|p| {
+                    base64::engine::general_purpose::STANDARD
+                        .decode(&p.data)
+                        .ok()
+                })
+                .filter_map(|bytes| {
+                    let path = format!(
+                        "{}/{}.image",
+                        temp_dir().to_str().unwrap_or_default(),
+                        Uuid::new_v4()
+                    );
+                    match File::create(path.clone()) {
+                        Ok(mut file) => {
+                            if file.write_all(&bytes).is_ok() {
+                                Some(path)
+                            } else {
+                                None
+                            }
+                        }
+                        Err(err) => {
+                            error!("Failed to create file for paprika photo: {err:?}");
                             None
                         }
                     }
-                    Err(err) => {
-                        error!("Failed to create file for paprika photo: {err:?}");
-                        None
-                    }
-                }
-            })
-            .map(|s| {
-                ImageObjectOrUrl::ImageObject(Box::new(ImageObjectType {
+                })
+                .map(|s| ImageObjectType {
                     at_type: AtType::ImageObject,
                     at_id: Some(s),
                     ..Default::default()
-                }))
-            })
-            .collect::<Vec<_>>();
+                })
+                .collect::<Vec<_>>();
+
+            (!items.is_empty()).then_some(ImageObjectOrUrl::ImageObjects(items))
+        };
 
         RecipeSchema {
             at_context: Default::default(),
@@ -124,11 +126,7 @@ impl ToRecipeSchema for Recipe {
                     .unwrap_or_default(),
             )),
             description: to_text(self.description.clone()),
-            image: if pictures.is_empty() {
-                None
-            } else {
-                Some(pictures)
-            },
+            image: pictures,
             is_based_on: to_is_based_on(if !self.source.is_empty() {
                 format!("{} [Imported from Paprika]", self.source)
             } else {
@@ -309,21 +307,6 @@ mod tests {
                     ]),
                 ])),
                 recipe_yield: to_yield(16),
-                review: None,
-                same_as: None,
-                step: None,
-                suitable_for_diet: vec![],
-                supply: None,
-                text: None,
-                tool: None,
-                total_time: None,
-                total_yield: None,
-                thumbnail: None,
-                thumbnail_url: None,
-                translation_of_work: None,
-                video: None,
-                work_example: None,
-                work_translation: None,
                 ..Default::default()
             }]
         }

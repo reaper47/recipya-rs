@@ -1,3 +1,5 @@
+mod helpers;
+
 pub mod accuchef;
 pub mod bigoven;
 pub mod cheftap;
@@ -5,7 +7,6 @@ pub mod cooklang;
 pub mod cookmate;
 pub mod cookml;
 pub mod crouton;
-mod helpers;
 pub mod kalorio;
 pub mod mastercook;
 pub mod mealmaster;

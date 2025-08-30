@@ -1,5 +1,4 @@
 use iso8601::DateTime;
-
 use repository::extensions::pagination::DEFAULT_PER_PAGE;
 
 use crate::RecipeDetails;
@@ -13,6 +12,7 @@ pub struct Data {
     pub is_authenticated: bool,
     pub is_autologin: bool,
     pub is_hx_request: bool,
+    pub is_preview: bool,
 
     pub about: AboutData,
     pub pagination: Option<PaginationData>,

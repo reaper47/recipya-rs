@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::de::SeqAccess;
 use serde::{Deserialize, Deserializer, de};
 
 /// Enumeration of all possible @context values.
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, JsonSchema)]
 pub enum AtContext {
     #[default]
     SchemaDotOrg,
@@ -26,7 +27,7 @@ impl<'de> Deserialize<'de> for AtContext {
 }
 
 /// Enumeration of all possible @type values.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, JsonSchema)]
 pub enum AtType {
     AggregateRating,
     Article,
@@ -35,6 +36,7 @@ pub enum AtType {
     HowToStep,
     HowToTool,
     ImageObject,
+    InteractionCounter,
     ListItem,
     NewsArticle,
     NutritionInformation,

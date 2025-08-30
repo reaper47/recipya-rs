@@ -227,7 +227,7 @@ diesel::table! {
         #[max_length = 3]
         language -> Bpchar,
         measurement_system_id -> Int2,
-        source -> Nullable<Text>,
+        source -> Text,
         is_favourite -> Bool,
         rating -> Nullable<Int2>,
         created_at -> Timestamp,

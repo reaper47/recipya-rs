@@ -2,14 +2,14 @@ use std::io::{Read, Seek};
 
 use cooklang::{Content, CooklangParser, Item, Value};
 use recipe_schema::{
-    AtType, DefinedTermOrTextOrUrl, HowToToolOrText, HowToToolType, ImageObjectOrUrl,
-    RecipeCategory, RecipeCuisine, RecipeSchema, RestrictedDiet, Sections,
+    AtType, DefinedTermOrTextOrUrl, Diets, HowToToolOrText, HowToToolType, RecipeCategory,
+    RecipeCuisine, RecipeSchema, RestrictedDiet, Sections,
 };
 use support::time::parse_duration;
 use tracing::{error, warn};
 use url::Url;
 
-use super::helpers::read_file;
+use super::helpers::{read_file, urls_to_image_object};
 use crate::Result;
 use crate::common::{Times, Tool};
 use crate::helpers::{
@@ -61,13 +61,7 @@ impl From<CooklangRecipe> for RecipeSchema {
                     RecipeCuisine::Text(s) => !s.is_empty(),
                 }
             }),
-            image: Some(
-                r.images
-                    .into_iter()
-                    .filter_map(|image| Url::parse(&image).ok())
-                    .map(ImageObjectOrUrl::Url)
-                    .collect::<Vec<_>>(),
-            ),
+            image: urls_to_image_object(r.images),
             recipe_ingredient: sections_to_vec(r.ingredients),
             recipe_instructions: sections_to_itemlist(r.instructions),
             recipe_yield: to_yield(r.servings.map(i64::from).unwrap_or_default()),
@@ -77,10 +71,10 @@ impl From<CooklangRecipe> for RecipeSchema {
                     diets
                         .into_iter()
                         .map(RestrictedDiet::from)
-                        .filter(|diet| diet != &RestrictedDiet::UnspecifiedDiet)
-                        .collect()
+                        .filter(|d| !matches!(d, RestrictedDiet::UnspecifiedDiet))
+                        .collect::<Vec<_>>()
                 })
-                .unwrap_or_default(),
+                .and_then(|v| (!v.is_empty()).then_some(Diets::RestrictedDiet(v))),
             tool: Some(
                 r.tools
                     .into_iter()
@@ -339,7 +333,7 @@ impl CookLang {
                         None => 1,
                         Some(q) => match q.value() {
                             Value::Number(v) => v.value() as i16,
-                            Value::Range { start, end } => start.value() as i16,
+                            Value::Range { start, end: _ } => start.value() as i16,
                             Value::Text(s) => s.parse().unwrap_or(1),
                         },
                     },
@@ -379,8 +373,9 @@ impl ParserBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use recipe_schema::ImageObjectOrUrl;
     use recipe_schema::{
-        OrganizationType, QuantitativeValueOrText, QuantitativeValueType, RecipeCuisine,
+        OrganizationTypeOrText, QuantitativeValueOrText, QuantitativeValueType, RecipeCuisine,
         TextOrTextObject,
     };
     use std::io::Cursor;
@@ -428,16 +423,15 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
             vec![RecipeSchema {
                 at_context: Default::default(),
                 at_type: Some(AtType::Recipe),
-                author: Some(OrganizationType {
-                    name: Some("John Doe".into()),
-                    ..Default::default()
-                }),
+                author: Some(OrganizationTypeOrText::Text("John Doe".into())),
                 cook_time: seconds_to_duration(60*60),
                 description: Some(TextOrTextObject::Text("This is the best recipe!".into())),
-                image: Some(vec![
-                    ImageObjectOrUrl::Url(Url::parse("https://example.org/recipe_image.jpg")?),
-                    ImageObjectOrUrl::Url(Url::parse("https://example.org/recipe_image2.jpg")?),
-                ]),
+                image: Some(
+                    ImageObjectOrUrl::Urls(vec![
+                        Url::parse("https://example.org/recipe_image.jpg")?,
+                        Url::parse("https://example.org/recipe_image2.jpg")?,
+                    ]),
+                ),
                 is_based_on: to_is_based_on("https://example.org/recipe".into()),
                 keywords: Some(DefinedTermOrTextOrUrl::Text(["2022", "baking", "summer"].join(","))),
                 name: Some("Spaghetti Carbonara".into()),
@@ -467,7 +461,7 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                 recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType {
                     value: 1
                 }),
-                suitable_for_diet: vec![RestrictedDiet::GlutenFreeDiet],
+                suitable_for_diet: Some(Diets::RestrictedDiet(vec![RestrictedDiet::GlutenFreeDiet])),
                 tool: Some(vec![
                     HowToToolOrText::HowToTool(HowToToolType {
                         r#type: AtType::HowToTool,

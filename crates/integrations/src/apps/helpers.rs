@@ -4,11 +4,12 @@ use std::env::temp_dir;
 use std::fs::File;
 use std::io;
 use std::io::{Read, Seek};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use recipe_schema::{ImageObjectOrUrl, RecipeSchema, Sections};
+use recipe_schema::{ImageObjectOrUrl, ImageObjectType, RecipeSchema, Sections};
 use support::strings::auto_convert_to_utf8;
 use tracing::log::warn;
+use url::Url;
 use uuid::Uuid;
 use zip::ZipArchive;
 
@@ -199,23 +200,43 @@ pub(super) fn update_recipe_image_paths(
     images: &HashMap<String, std::path::PathBuf>,
 ) {
     for recipe in recipes {
-        let Some(recipe_images) = &mut recipe.image else {
+        let Some(recipe_images) = recipe.image.as_mut() else {
             continue;
         };
 
-        for image in recipe_images.iter_mut() {
-            if let ImageObjectOrUrl::ImageObject(obj) = image {
-                if let Some(id) = &obj.at_id {
-                    let name = Path::new(id)
-                        .file_name()
-                        .and_then(|s| s.to_str())
-                        .unwrap_or_default();
-
-                    if let Some(path) = images.get(name) {
-                        obj.at_id = Some(path.to_string_lossy().into_owned());
-                    }
-                }
+        match recipe_images {
+            ImageObjectOrUrl::ImageObject(obj) => rewrite_image_id(obj, images),
+            ImageObjectOrUrl::ImageObjects(objects) => {
+                objects
+                    .iter_mut()
+                    .for_each(|obj| rewrite_image_id(obj, images));
             }
+            _ => {}
         }
     }
+}
+
+fn rewrite_image_id(obj: &mut ImageObjectType, images: &HashMap<String, PathBuf>) {
+    let Some(id) = obj.at_id.as_deref() else {
+        return;
+    };
+
+    let Some(name) = Path::new(id).file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+
+    let Some(path) = images.get(name) else {
+        return;
+    };
+
+    obj.at_id = Some(path.to_string_lossy().into_owned());
+}
+
+pub(super) fn urls_to_image_object(urls: Vec<String>) -> Option<ImageObjectOrUrl> {
+    let urls: Vec<Url> = urls
+        .into_iter()
+        .filter_map(|image| Url::parse(&image).ok())
+        .collect();
+
+    (!urls.is_empty()).then_some(ImageObjectOrUrl::Urls(urls))
 }

@@ -1,16 +1,16 @@
-use std::{collections::HashMap, fmt::Formatter, str::FromStr, vec::Vec};
-
+use schemars::JsonSchema;
 use serde::{
     Deserialize, Deserializer, de,
     de::{Error, MapAccess, SeqAccess},
 };
+use std::{collections::HashMap, fmt::Formatter, str::FromStr, vec::Vec};
 use tracing::warn;
 use url::Url;
 
 use super::AtType;
 
 /// Enumeration of all possible action values.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum Action {
     Item(ActionType),
     Items(Vec<ActionType>),
@@ -20,11 +20,11 @@ pub enum Action {
 /// happens at a location with the help of an inanimate instrument. The execution of the action
 /// may produce a result. Specific action sub-type documentation specifies the exact expectation
 /// of each argument/role.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ActionType {
     #[serde(rename = "@type")]
-    pub at_type: Option<String>,
+    pub r#type: Option<String>,
     pub name: Option<String>,
     pub target: Vec<String>,
 }
@@ -70,7 +70,7 @@ impl<'de> Deserialize<'de> for Action {
 }
 
 /// The average rating based on multiple ratings or reviews.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct AggregateRating {
     #[serde(rename = "@type", default = "set_aggregate_rating_type")]
@@ -145,7 +145,7 @@ where
 }
 
 /// Enumeration of all possible values related to audio.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum AudioObjectOrClipOrMusicRecording {
     AudioObject(AudioObjectType),
     Clip(ClipType),
@@ -153,17 +153,17 @@ pub enum AudioObjectOrClipOrMusicRecording {
 }
 
 /// An audio file.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct AudioObjectType {}
 
 /// A short TV or radio program or a segment/part of a program.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ClipType {}
 
 /// A music recording (track), usually a single song.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MusicRecordingType {}
 
@@ -215,7 +215,7 @@ impl<'de> Deserialize<'de> for AudioObjectOrClipOrMusicRecording {
 
 /// A comment on an item - for example, a comment on a blog post. The comment's content is expressed
 /// via the text property, and its topic via about, properties shared with all CreativeWorks.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CommentType {
     #[serde(rename = "@type")]
@@ -225,7 +225,7 @@ pub struct CommentType {
 }
 
 /// Enumeration of all possible values related to video.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum ClipOrVideoObject {
     Clip(ClipType),
     VideoObject(Box<VideoObjectType>),
@@ -297,11 +297,11 @@ impl<'de> Deserialize<'de> for ClipOrVideoObject {
 }
 
 /// A country.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CountryType {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum CreativeWorkOrHowToSectionOrHowToStepOrText {
     CreativeWork(CreativeWorkType),
     HowToSection(HowToSectionType),
@@ -369,7 +369,7 @@ impl<'de> Deserialize<'de> for CreativeWorkOrHowToSectionOrHowToStepOrText {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum CreativeWorkOrItemListOrText {
     CreativeWork(Box<CreativeWorkType>),
     ItemList(Vec<HowTo>),
@@ -449,7 +449,7 @@ fn deserialize_trim(mut s: String) -> String {
     s.trim().to_string()
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum CreativeWorkOrText {
     CreativeWork(Box<CreativeWorkType>),
     Text(String),
@@ -498,8 +498,9 @@ impl<'de> Deserialize<'de> for CreativeWorkOrText {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum CreativeWorkOrUrl {
+    #[schemars(with = "String", description = "A valid URL")]
     Url(Url),
     CreativeWork(Box<CreativeWorkType>),
 }
@@ -552,9 +553,10 @@ impl<'de> Deserialize<'de> for CreativeWorkOrUrl {
 }
 
 /// The most generic kind of creative work, including books, movies, photographs, software programs, etc.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 pub struct CreativeWorkType {
     #[serde(rename = "@id")]
+    #[schemars(with = "String", description = "A valid URL")]
     pub at_id: Option<Url>,
 
     #[serde(rename = "@type", default = "set_creative_work_type")]
@@ -576,9 +578,14 @@ fn set_creative_work_type() -> AtType {
 }
 
 /// Enumeration of all possible date data types.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum DateOrDateTime {
+    #[schemars(
+        with = "String",
+        description = "RFC3339 date-time, e.g. 2025-08-30T12:34:56Z"
+    )]
     DateTime(iso8601::DateTime),
+    #[schemars(with = "String", description = "RFC3339 full-date, e.g. 2025-08-30")]
     Date(iso8601::Date),
 }
 
@@ -639,10 +646,11 @@ impl<'de> Deserialize<'de> for DateOrDateTime {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum DefinedTermOrTextOrUrl {
     DefinedTerm(DefinedTermType),
     Text(String),
+    #[schemars(with = "String", description = "A valid URL")]
     Url(Url),
 }
 
@@ -660,7 +668,7 @@ impl From<DefinedTermOrTextOrUrl> for String {
 /// category or subject classification, glossaries or dictionaries, product or creative work types,
 /// etc. Use the name property for the term being defined, use termCode if the term has an
 /// alpha-numeric code allocated, use description to provide the definition of the term.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct DefinedTermType {}
 
@@ -725,14 +733,14 @@ impl<'de> Deserialize<'de> for DefinedTermOrTextOrUrl {
 }
 
 /// Enumeration of values related to measurements..
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum DistanceOrQuantitativeValue {
     Distance(DistanceType),
     QuantitativeValue(QuantitativeValueType),
 }
 
 /// Properties that take Distances as values are of the form '<Number> <Length unit of measure>'. E.g., '7 ft'.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct DistanceType {
     pub value: String,
@@ -789,32 +797,44 @@ impl<'de> Deserialize<'de> for DistanceOrQuantitativeValue {
     }
 }
 
+/// The number of interactions for the CreativeWork using the WebSite or SoftwareApplication.
+/// The most specific child type of InteractionCounter should be used.
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct InteractionStatistic {
+    #[serde(rename = "@type")]
+    r#type: AtType,
+    interaction_type: String,
+    user_interaction_count: Option<NumberOrQuantitativeValueTypeOrText>,
+}
+
 /// A sub-grouping of steps in the instructions for how to achieve a result (e.g. steps for
 /// making a pie crust within a pie recipe).
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct HowToSectionType {}
 
 /// Instructions that explain how to achieve a result by performing a sequence of steps.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct HowTo {
     #[serde(rename = "@type")]
     pub at_type: AtType,
     pub name: Option<String>,
     pub text: String,
+    #[schemars(with = "String", description = "A valid URL")]
     pub url: Option<Url>,
     pub image: Option<ImageObjectOrUrl>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum HowToSupplyOrText {
     HowToSupply(HowToSupplyType),
     Text(String),
 }
 
 /// A sub-property of instrument. A supply consumed when performing instructions or a direction.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct HowToSupplyType {}
 
@@ -862,14 +882,14 @@ impl<'de> Deserialize<'de> for HowToSupplyOrText {
 }
 
 /// Enumeration of containers to store tools.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum HowToToolOrText {
     HowToTool(HowToToolType),
     Text(String),
 }
 
 /// A tool used (but not consumed) when performing instructions for how to achieve a result.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct HowToToolType {
     pub r#type: AtType,
@@ -935,35 +955,17 @@ impl<'de> Deserialize<'de> for HowToToolOrText {
 }
 
 /// Enumeration of containers to store an image.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum ImageObjectOrUrl {
-    Url(Url),
     ImageObject(Box<ImageObjectType>),
-}
-
-impl TryFrom<ImageObjectOrUrl> for Url {
-    type Error = String;
-
-    fn try_from(value: ImageObjectOrUrl) -> Result<Self, Self::Error> {
-        match value {
-            ImageObjectOrUrl::Url(url) => Ok(url.into()),
-            ImageObjectOrUrl::ImageObject(object) => {
-                if let Some(url) = object.url {
-                    return Ok(url);
-                }
-
-                if let Some(url) = object.content_url {
-                    return Ok(url);
-                }
-
-                Err("No URL in image".into())
-            }
-        }
-    }
+    ImageObjects(Vec<ImageObjectType>),
+    Text(String),
+    #[schemars(with = "String", description = "A valid URL")]
+    Urls(Vec<Url>),
 }
 
 /// An image file.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ImageObjectType {
     #[serde(rename = "@type", default = "set_image_object")]
@@ -977,6 +979,7 @@ pub struct ImageObjectType {
     pub caption: Option<MediaObjectOrText>,
 
     /// Actual bytes of the media object, for example the image file or video file.
+    #[schemars(with = "String", description = "A valid URL")]
     pub content_url: Option<Url>,
 
     /// The height of the item.
@@ -987,6 +990,7 @@ pub struct ImageObjectType {
     pub in_language: Option<LanguageOrText>,
 
     /// URL of the item.
+    #[schemars(with = "String", description = "A valid URL")]
     pub url: Option<Url>,
 
     /// The width of the item.
@@ -1022,9 +1026,10 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                 }
 
                 if let Ok(url) = url::Url::parse(v) {
-                    return Ok(Url(url));
+                    return Ok(Urls(vec![url]));
                 }
-                Err(Error::invalid_value(de::Unexpected::Str(v), &self))
+
+                Ok(Text(v.to_owned()))
             }
 
             fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
@@ -1036,9 +1041,10 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                 }
 
                 if let Ok(url) = url::Url::parse(&v) {
-                    return Ok(Url(url));
+                    return Ok(Urls(vec![url]));
                 }
-                Err(Error::invalid_value(de::Unexpected::Str(&v), &self))
+
+                Ok(Text(v))
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -1055,8 +1061,8 @@ impl<'de> Deserialize<'de> for ImageObjectOrUrl {
                     Some(v) => v,
                 };
 
-                let url = url::Url::parse(&v).map_err(|ex| Error::custom(ex.to_string()))?;
-                Ok(Url(url))
+                let url = Url::parse(&v).map_err(|ex| Error::custom(ex.to_string()))?;
+                Ok(Urls(vec![url]))
             }
 
             fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
@@ -1208,7 +1214,7 @@ impl<'de> Deserialize<'de> for ListItemOrTextOrThing {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum LanguageOrText {
     Language(LanguageType),
     Text(String),
@@ -1218,7 +1224,7 @@ pub enum LanguageOrText {
 /// expressed in BCP 47 can be used via the alternateName property. The Language type previously
 /// also covered programming languages such as Scheme and Lisp, which are now best represented
 /// using ComputerLanguage.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct LanguageType {}
 
@@ -1265,7 +1271,7 @@ impl<'de> Deserialize<'de> for LanguageOrText {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum MediaObjectOrText {
     MediaObject(MediaObjectType),
     Text(String),
@@ -1275,7 +1281,7 @@ pub enum MediaObjectOrText {
 /// downloadable dataset i.e. DataDownload. Note that a creative work may have many media objects
 /// associated with it on the same web page. For example, a page about a single song (MusicRecording)
 /// may have a music video (VideoObject), and a high and low bandwidth audio stream (2 AudioObject's).
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MediaObjectType {}
 
@@ -1323,7 +1329,7 @@ impl<'de> Deserialize<'de> for MediaObjectOrText {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum MonetaryAmountOrText {
     MonetaryAmount(MonetaryAmountType),
     Text(String),
@@ -1333,7 +1339,7 @@ pub enum MonetaryAmountOrText {
 /// $50 USD, or a range as in describing a bank account being suitable for a balance between
 /// £1,000 and £1,000,000 GBP, or the value of a salary, etc. It is recommended to use PriceSpecification
 /// Types to describe the price of an Offer, Invoice, etc.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MonetaryAmountType {}
 
@@ -1381,7 +1387,7 @@ impl<'de> Deserialize<'de> for MonetaryAmountOrText {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum NumberOrText {
     Number(f64),
     Text(String),
@@ -1436,7 +1442,7 @@ impl<'de> Deserialize<'de> for NumberOrText {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum NumberOrQuantitativeValueTypeOrText {
     Number(i64),
     QuantitativeValue(QuantitativeValueType),
@@ -1499,7 +1505,7 @@ impl<'de> Deserialize<'de> for NumberOrQuantitativeValueTypeOrText {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum OrganizationOrPerson {
     Organization(OrganizationType),
     Person(PersonType),
@@ -1511,11 +1517,70 @@ impl Default for OrganizationOrPerson {
     }
 }
 
+/// Enumeration of containers to store an organization.
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
+pub enum OrganizationTypeOrText {
+    OrganizationType(Box<OrganizationType>),
+    Text(String),
+}
+
+impl<'de> Deserialize<'de> for OrganizationTypeOrText {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use super::common::OrganizationTypeOrText::*;
+
+        struct Visitor;
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = OrganizationTypeOrText;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("an OrganizationType object or text")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                if v.is_empty() {
+                    return Ok(OrganizationType(Box::default()));
+                }
+
+                Ok(Text(v.to_owned()))
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                if v.is_empty() {
+                    return Ok(OrganizationType(Box::default()));
+                }
+
+                Ok(Text(v))
+            }
+
+            fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let org = Deserialize::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                Ok(OrganizationType(Box::new(org)))
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
+    }
+}
+
 /// An organization such as a school, NGO, corporation, club, etc.
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OrganizationType {
     #[serde(rename = "@id")]
+    #[schemars(with = "String", description = "A valid URL")]
     pub at_id: Option<Url>,
     #[serde(rename = "@type")]
     pub at_type: AtType,
@@ -1527,18 +1592,21 @@ pub struct OrganizationType {
     pub logo: Option<ImageObjectOrUrl>,
 
     /// URL of the item.
+    #[schemars(with = "String", description = "A valid URL")]
     pub url: Option<Url>,
 }
 
 /// A person (alive, dead, undead, or fictional).
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PersonType {
     #[serde(rename = "@id")]
+    #[schemars(with = "String", description = "A valid URL")]
     pub at_id: Option<Url>,
     #[serde(rename = "@type")]
     pub at_type: Option<AtType>,
     pub name: Option<String>,
+    #[schemars(with = "String", description = "A valid URL")]
     pub url: Option<Url>,
 }
 
@@ -1583,21 +1651,22 @@ impl<'de> Deserialize<'de> for OrganizationOrPerson {
 }
 
 /// Entities that have a somewhat fixed, physical extension.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PlaceType {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum PropertyValueOrTextOrUrl {
     PropertyValue(PropertyValueType),
     Text(String),
+    #[schemars(with = "String", description = "A valid URL")]
     Url(Url),
 }
 
 /// A property-value pair, e.g. representing a feature of a product or place. Use the 'name'
 /// property for the name of the property. If there is an additional human-readable version of
 /// the value, put that into the 'description' property.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PropertyValueType {}
 
@@ -1651,7 +1720,7 @@ impl<'de> Deserialize<'de> for PropertyValueOrTextOrUrl {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum QuantitativeValueOrText {
     QuantitativeValue(QuantitativeValueType),
     Text(String),
@@ -1680,7 +1749,7 @@ impl TryFrom<QuantitativeValueOrText> for i16 {
 }
 
 /// A point value or interval for product characteristics and other purposes.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, JsonSchema)]
 pub struct QuantitativeValueType {
     pub value: i64,
 }
@@ -1750,14 +1819,14 @@ impl<'de> Deserialize<'de> for QuantitativeValueOrText {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum RatingOrText {
     Rating(RatingType),
     Text(String),
 }
 
 /// A rating is an evaluation on a numeric scale, such as 1 to 5 stars.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RatingType {}
 
@@ -1805,7 +1874,7 @@ impl<'de> Deserialize<'de> for RatingOrText {
 }
 
 /// A review of an item - for example, of a restaurant, movie, or store.
-#[derive(Debug, Default, PartialEq, Deserialize)]
+#[derive(Debug, Default, PartialEq, Deserialize, JsonSchema)]
 pub struct ReviewType {
     #[serde(rename = "@type")]
     pub at_type: AtType,
@@ -1819,7 +1888,7 @@ pub struct ReviewType {
 }
 
 /// A rating is an evaluation on a numeric scale, such as 1 to 5 stars.
-#[derive(Debug, Default, PartialEq, Deserialize)]
+#[derive(Debug, Default, PartialEq, Deserialize, JsonSchema)]
 pub struct ReviewRating {
     #[serde(rename = "@type")]
     pub at_type: AtType,
@@ -1827,7 +1896,7 @@ pub struct ReviewRating {
     pub rating_value: String,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum TextOrTextObject {
     Text(String),
     TextObject(TextObjectType),
@@ -1844,7 +1913,7 @@ impl From<TextOrTextObject> for String {
 }
 
 /// A text file. The text can be unformatted or contain markup, html, etc.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct TextObjectType {}
 
@@ -1986,13 +2055,14 @@ impl<'de> Deserialize<'de> for Video {
 }
 
 /// A video file.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct VideoObjectType {
     #[serde(rename = "@type")]
     pub at_type: AtType,
 
     /// Actual bytes of the media object, for example the image file or video file.
+    #[schemars(with = "String", description = "A valid URL")]
     pub content_url: Url,
 
     /// A description of the item.
@@ -2001,19 +2071,26 @@ pub struct VideoObjectType {
     /// Approximate or typical time it usually takes to work with or through the content of this
     /// work for the typical or target audience.
     #[serde(deserialize_with = "deserialize_duration")]
+    #[schemars(with = "String", description = "ISO 8601 duration string, e.g. PT20M")]
     pub duration: Option<iso8601::Duration>,
 
     /// A URL pointing to a player for a specific video. In general, this is the information in
     /// the src element of an embed tag and should not be the same as the content of the loc tag.
+    #[schemars(with = "String", description = "A valid URL")]
     pub embed_url: Url,
 
     /// The name of the item.
     pub name: String,
 
     /// A thumbnail image relevant to the Thing.
+    #[schemars(with = "String", description = "A valid URL")]
     pub thumbnail_url: Vec<Url>,
 
     /// Date (including time if available) when this media object was uploaded to this site.
+    #[schemars(
+        with = "String",
+        description = "RFC3339 date-time, e.g. 2025-08-30T12:34:56Z"
+    )]
     pub upload_date: Option<iso8601::DateTime>,
 }
 

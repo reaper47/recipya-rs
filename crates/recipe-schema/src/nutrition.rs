@@ -1,6 +1,6 @@
-use std::fmt::Formatter;
-
+use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, de};
+use std::fmt::Formatter;
 
 use support::strings::extract_number;
 
@@ -11,7 +11,7 @@ use super::RestrictedDiet::{
 };
 
 /// Nutritional information about the recipe as described in the [schema](https://schema.org/NutritionInformation).
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct NutritionInformationSchema {
     #[serde(rename = "@type", default = "default_nutrition_type")]
@@ -85,7 +85,7 @@ impl NutritionInformationSchema {
 }
 
 /// Properties that take Energy as values are of the form '<Number> <Energy unit of measure>'.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum Energy {
     Str(String),
 }
@@ -138,7 +138,7 @@ impl<'de> Deserialize<'de> for Energy {
 }
 
 /// Properties that take Mass as values are of the form '<Number> <Mass unit of measure>'. E.g., '7 kg'.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum Mass {
     Str(String),
 }
@@ -190,8 +190,20 @@ impl<'de> Deserialize<'de> for Mass {
     }
 }
 
+/// Enumeration of all possible containers that hold restricted diets.
+#[derive(Debug, PartialEq, JsonSchema)]
+pub enum Diets {
+    RestrictedDiet(Vec<RestrictedDiet>),
+}
+
+impl Default for Diets {
+    fn default() -> Self {
+        Self::RestrictedDiet(vec![RestrictedDiet::UnspecifiedDiet])
+    }
+}
+
 /// A diet restricted to certain foods or preparations for cultural, religious, health or lifestyle reasons.
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, JsonSchema)]
 pub enum RestrictedDiet {
     DiabeticDiet,
     GlutenFreeDiet,
@@ -206,6 +218,75 @@ pub enum RestrictedDiet {
     VegetarianDiet,
     #[default]
     UnspecifiedDiet,
+}
+
+impl<'de> Deserialize<'de> for Diets {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use super::nutrition::RestrictedDiet::*;
+
+        struct Visitor;
+
+        fn find_diet(url: &str) -> RestrictedDiet {
+            let key = url.rsplit('/').next().unwrap_or(&url);
+            match key {
+                "DiabeticDiet" => DiabeticDiet,
+                "GlutenFreeDiet" => GlutenFreeDiet,
+                "HalalDiet" => HalalDiet,
+                "HinduDiet" => HinduDiet,
+                "KosherDiet" => KosherDiet,
+                "LowCalorieDiet" => LowCalorieDiet,
+                "LowFatDiet" => LowFatDiet,
+                "LowLactoseDiet" => LowLactoseDiet,
+                "LowSaltDiet" => LowSaltDiet,
+                "VeganDiet" => VeganDiet,
+                "VegetarianDiet" => VegetarianDiet,
+                _ => UnspecifiedDiet,
+            }
+        }
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = Diets;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("one or many RestrictedDiet URLs")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Diets::RestrictedDiet(vec![find_diet(v)]))
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Diets::RestrictedDiet(vec![find_diet(v.as_str())]))
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: de::SeqAccess<'de>,
+            {
+                let mut vec: Vec<String> = Vec::new();
+                while let Some(s) = seq.next_element()? {
+                    vec.push(s)
+                }
+
+                let diets = vec
+                    .iter()
+                    .map(|s| find_diet(s.as_str()))
+                    .collect::<Vec<_>>();
+                Ok(Diets::RestrictedDiet(diets))
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
+    }
 }
 
 impl From<String> for RestrictedDiet {

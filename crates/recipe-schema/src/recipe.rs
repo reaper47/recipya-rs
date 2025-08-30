@@ -1,27 +1,28 @@
 use std::fmt::Formatter;
 
 use reqwest::Url;
+use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, de};
 use tracing::warn;
 
 use super::common::*;
-use super::nutrition::{NutritionInformationSchema, RestrictedDiet};
-use super::{AtContext, AtType};
+use super::nutrition::NutritionInformationSchema;
+use super::{AtContext, AtType, Diets};
 
 /// Enumeration of possible values for the @graph field in JSON-LD used to group
 /// multiple related entities in a single document.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum GraphObject {
     Recipe(Box<RecipeSchema>),
     Unknown(UnknownType),
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 pub struct UnknownType {}
 
 /// The recipe schema as described in the [schema](https://schema.org/Recipe).
-#[derive(Debug, Default, Deserialize, PartialEq)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct RecipeSchema {
     /// The context of the JSON.
@@ -56,7 +57,7 @@ pub struct RecipeSchema {
     /// The author of this content or rating. Please note that author is special in that HTML 5
     /// provides a special mechanism for indicating authorship via the rel tag. That is equivalent
     /// to this and may be used interchangeably.
-    pub author: Option<OrganizationType>,
+    pub author: Option<OrganizationTypeOrText>,
 
     /// An award won by or for this item. Supersedes awards.
     pub award: Option<String>,
@@ -82,6 +83,7 @@ pub struct RecipeSchema {
 
     /// The time it takes to actually cook the dish, in ISO 8601 duration format.
     #[serde(alias = "CookTime")]
+    #[schemars(with = "String", description = "ISO 8601 duration, e.g. PT20M")]
     pub cook_time: Option<iso8601::Duration>,
 
     /// The method of cooking, such as Frying, Steaming, etc.
@@ -127,11 +129,15 @@ pub struct RecipeSchema {
     pub identifier: Option<PropertyValueOrTextOrUrl>,
 
     /// An image of the item. This can be a URL or a fully described ImageObject.
-    pub image: Option<Vec<ImageObjectOrUrl>>,
+    pub image: Option<ImageObjectOrUrl>,
 
     /// The language of the content or performance or used in an action. Please use one of the
     /// language codes from the IETF BCP 47 standard. See also availableLanguage. Supersedes language.
     pub in_language: Option<LanguageOrText>,
+
+    /// The number of interactions for the CreativeWork using the WebSite or SoftwareApplication.
+    /// The most specific child type of InteractionCounter should be used.
+    pub interaction_statistic: Option<InteractionStatistic>,
 
     /// A flag to signal that the item, event, or place is accessible for free. Supersedes free.
     #[serde(default, deserialize_with = "deserialize_bool")]
@@ -167,6 +173,7 @@ pub struct RecipeSchema {
 
     /// The length of time it takes to perform instructions or a direction (not including time to
     /// prepare the supplies), in ISO 8601 duration format.
+    #[schemars(with = "String", description = "ISO 8601 duration, e.g. PT20M")]
     pub perform_time: Option<iso8601::Duration>,
 
     /// Indicates a potential Action, which describes an idealized action in which this thing
@@ -176,6 +183,7 @@ pub struct RecipeSchema {
     /// The length of time it takes to prepare the items to be used in instructions or a
     /// direction, in ISO 8601 duration format.
     #[serde(alias = "PrepTime", deserialize_with = "deserialize_iso8601_duration")]
+    #[schemars(with = "String", description = "ISO 8601 duration, e.g. PT20M")]
     pub prep_time: Option<iso8601::Duration>,
 
     /// The publisher of the creative work.
@@ -206,6 +214,7 @@ pub struct RecipeSchema {
 
     /// URL of a reference Web page that unambiguously indicates the item's identity. E.g. the URL
     /// of the item's Wikipedia page, Wikidata entry, or official website.
+    #[schemars(with = "String", description = "A valid URL")]
     pub same_as: Option<Url>,
 
     /// A single step item (as HowToStep, text, document, video, etc.) or a HowToSection.
@@ -215,7 +224,7 @@ pub struct RecipeSchema {
     /// Indicates a dietary restriction or guideline for which this recipe or menu item
     /// is suitable, e.g. diabetic, halal etc.
     #[serde(default)]
-    pub suitable_for_diet: Vec<RestrictedDiet>,
+    pub suitable_for_diet: Option<Diets>,
 
     /// A sub-property of instrument. A supply consumed when performing instructions or a direction.
     pub supply: Option<HowToSupplyOrText>,
@@ -229,7 +238,8 @@ pub struct RecipeSchema {
 
     /// The total time required to perform instructions or a direction (including time to prepare
     /// the supplies), in ISO 8601 duration format.
-    #[serde(deserialize_with = "deserialize_iso8601_duration")]
+    #[serde(default, deserialize_with = "deserialize_iso8601_duration")]
+    #[schemars(with = "String", description = "ISO 8601 duration, e.g. PT20M")]
     pub total_time: Option<iso8601::Duration>,
 
     /// The quantity that results by performing instructions. For example, a paper airplane,
@@ -241,6 +251,7 @@ pub struct RecipeSchema {
     pub thumbnail: Option<ImageObjectType>,
 
     /// A thumbnail image relevant to the Thing.
+    #[schemars(with = "String", description = "A valid URL")]
     pub thumbnail_url: Option<Url>,
 
     /// The work that this work has been translated from. E.g. 物种起源 is a translationOf
@@ -248,6 +259,7 @@ pub struct RecipeSchema {
     pub translation_of_work: Option<CreativeWorkType>,
 
     /// URL of the item.
+    #[schemars(with = "String", description = "A valid URL")]
     pub url: Option<Url>,
 
     /// An embedded video object.
@@ -266,14 +278,17 @@ pub struct RecipeSchema {
 impl RecipeSchema {
     /// Extracts image URLs from image objects.
     pub fn extract_image_urls(&self) -> Option<Vec<Url>> {
-        self.image.clone().map(|vec| {
-            vec.into_iter()
-                .filter_map(|img| match img {
-                    ImageObjectOrUrl::Url(url) => Some(url),
-                    ImageObjectOrUrl::ImageObject(obj) => obj.url,
-                })
-                .collect::<Vec<_>>()
-        })
+        self.image
+            .clone()
+            .map(|obj| match obj {
+                ImageObjectOrUrl::Urls(url) => Some(url),
+                ImageObjectOrUrl::ImageObject(obj) => obj.url.map(|v| vec![v]),
+                ImageObjectOrUrl::ImageObjects(objs) => {
+                    objs.into_iter().map(|obj| obj.url).collect()
+                }
+                ImageObjectOrUrl::Text(_) => None,
+            })
+            .unwrap_or_default()
     }
 
     /// Extracts content URLs from video objects, filtering out clip objects.
@@ -308,6 +323,12 @@ impl RecipeSchema {
                 })
                 .collect()
         })
+    }
+
+    /// Generates the schema definition of RecipeSchema.
+    pub fn schema() -> String {
+        let schema = schema_for!(RecipeSchema);
+        serde_json::to_string_pretty(&schema).unwrap_or_default()
     }
 }
 
@@ -350,7 +371,7 @@ where
 }
 
 /// Enumeration of different containers used to store a category.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 pub enum RecipeCategory {
     Text(String),
 }
@@ -423,7 +444,7 @@ impl<'de> Deserialize<'de> for RecipeCategory {
 }
 
 /// Enumeration of different containers used to store a cuisine.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, JsonSchema)]
 pub enum RecipeCuisine {
     Text(String),
 }
@@ -493,17 +514,9 @@ fn deserialize_iso8601_duration<'de, D>(
 where
     D: Deserializer<'de>,
 {
-    use serde::de::Error;
-    use serde_json::Value;
-
-    let value: Value = Deserialize::deserialize(deserializer)?;
-
-    match value {
-        Value::Null => Ok(None),
-        Value::String(ref s) if s.trim().is_empty() => Ok(None),
-        Value::String(ref s) => iso8601::duration(s).map(Some).map_err(D::Error::custom),
-        other => Err(D::Error::custom(format!(
-            "Expected a string or null for ISO 8601 duration, got: {other}"
-        ))),
+    let opt: Option<String> = Option::<String>::deserialize(deserializer)?;
+    match opt.as_deref().map(str::trim) {
+        None | Some("") => Ok(None),
+        Some(s) => iso8601::duration(s).map(Some).map_err(de::Error::custom),
     }
 }

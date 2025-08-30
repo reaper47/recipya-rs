@@ -3,8 +3,7 @@ use std::io::{Read, Seek};
 use humantime::parse_duration;
 use recipe_schema::{
     AggregateRating, AtType, ClipOrVideoObject, CommentType, DefinedTermOrTextOrUrl,
-    ImageObjectOrUrl, ImageObjectType, NumberOrText, RecipeCategory, RecipeSchema, Sections,
-    VideoObjectType,
+    ImageObjectOrUrl, NumberOrText, RecipeCategory, RecipeSchema, Sections, VideoObjectType,
 };
 use serde::Deserialize;
 use support::strings::extract_number;
@@ -96,21 +95,14 @@ impl From<Recipe> for RecipeSchema {
                 }
             },
             description: to_text(r.description),
-            image: Some(
-                vec![r.imageurl, r.imagepath]
+            image: {
+                let urls = vec![r.imageurl, r.imagepath]
                     .into_iter()
-                    .filter(|s| !s.is_empty())
-                    .map(|img| match Url::parse(&img) {
-                        Ok(url) => ImageObjectOrUrl::Url(url),
-                        Err(_) => ImageObjectOrUrl::ImageObject(Box::new(ImageObjectType {
-                            at_type: AtType::ImageObject,
-                            at_id: Some(img.to_string()),
-                            ..Default::default()
-                        })),
-                    })
-                    .collect::<Vec<_>>(),
-            )
-            .filter(|v| !v.is_empty()),
+                    .filter_map(|image| Url::parse(&image).ok())
+                    .collect::<Vec<_>>();
+
+                (!urls.is_empty()).then_some(ImageObjectOrUrl::Urls(urls))
+            },
             is_based_on: if !r.source.is_empty() {
                 to_is_based_on(r.source)
             } else {
@@ -652,11 +644,6 @@ mod tests {
                     at_type: Some(AtType::Recipe),
                     is_accessible_for_free: false,
                     is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    image: Some(vec![ImageObjectOrUrl::ImageObject(Box::new(ImageObjectType {
-                        at_type: AtType::ImageObject,
-                        at_id: Some("/storage/emulated/0/Android/data/fr.cookbook/files/Pictures/Aunt_Julias_Paella.jpg".into()),
-                        ..Default::default()
-                    }))]),
                     keywords: Some(DefinedTermOrTextOrUrl::Text(["Poultry", "Fish/sea", "Spanish"].join(","))),
                     name: Some("Aunt Julia's Paella".into()),
                     recipe_category: RecipeCategory::Text("Pork/ham".into()),

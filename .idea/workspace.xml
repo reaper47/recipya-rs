@@ -59,24 +59,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/admin.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/json-highlighter.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/json-highlighter.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -169,6 +152,7 @@
     "Cargo.Test admin_router::tests::tests_users::tests_patch::test_must_be_admin_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::tests_patch::test_update_success_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::tests_patch::test_user_does_not_exist_ok.executor": "Run",
+    "Cargo.Test apps::crouton::tests::test_all_fields_ok.executor": "Run",
     "Cargo.Test apps::kalorio::tests::test_recipes::test_txt.executor": "Run",
     "Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version.executor": "Run",
     "Cargo.Test apps::rezkonv::tests::test_recipes::test_kalorio_v4_03.executor": "Run",
@@ -432,6 +416,7 @@
     "Cargo.Test recipe::search::tests::tests_search::test_search_by_tools.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_empty_string.executor": "Run",
     "Cargo.Test recipe::search::tests::tests_search_filters::tests_from_str::test_one_name.executor": "Run",
+    "Cargo.Test recipe::structs::tests::tests_recipe_for_create::test_detect_language_en_ok.executor": "Run",
     "Cargo.Test recipe::update::tests::tests_mark_favourite::test_recipe_does_not_exist.executor": "Run",
     "Cargo.Test recipe::update::tests::tests_mark_favourite::test_user_does_not_exist.executor": "Run",
     "Cargo.Test recipe::update::tests::tests_mark_favourite::test_valid_ok.executor": "Run",
@@ -451,6 +436,11 @@
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_recipe_does_not_exist_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_import_preview::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_import_preview::test_post_payload_invalid_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_import_preview::test_post_payload_valid_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_import_raw_json::test_must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe_add_import_raw_json::test_post_payload_invalid_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_post_submit_recipe_ok.executor": "Run",
@@ -460,6 +450,8 @@
     "Cargo.Test recipes_routes::tests::tests_recipes::test_get_recipe_has_no_rating.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipes::test_get_user_has_recipes_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipes_add_import::test_post_error_parsing_files.executor": "Debug",
+    "Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_cannot_find_recipe_in_database.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_must_be_logged_in.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_scale_recipe::test_query_param_must_be_greater_than_0.executor": "Run",
@@ -633,6 +625,7 @@
     "Cargo.Test shared_router::tests.executor": "Run",
     "Cargo.Test shared_router::tests::test_recipe_not_shared_ok.executor": "Debug",
     "Cargo.Test shared_router::tests::test_shared_anonymous_ok.executor": "Run",
+    "Cargo.Test shared_router::tests::test_shared_logged_in_ok.executor": "Run",
     "Cargo.Test strings::tests.executor": "Run",
     "Cargo.Test strings::tests::tests_auto_convert_to_utf8::test_fallback_to_lossy_conversion.executor": "Run",
     "Cargo.Test strings::tests::tests_auto_convert_to_utf8::test_invalid_utf8_fallback_to_windows_1252.executor": "Debug",
@@ -676,6 +669,8 @@
     "Cargo.Test tests_normalise_vulgar_fractions.executor": "Run",
     "Cargo.Test tests_nutrition.executor": "Run",
     "Cargo.Test tests_pagination.executor": "Run",
+    "Cargo.Test tests_recipe_add_import_preview.executor": "Run",
+    "Cargo.Test tests_recipe_add_import_raw_json.executor": "Run",
     "Cargo.Test tests_recipe_add_manual.executor": "Run",
     "Cargo.Test tests_recipe_add_website.executor": "Run",
     "Cargo.Test tests_recipe_for_create.executor": "Run",
@@ -713,7 +708,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "97-add-possibility-to-rate-a-recipe",
+    "git-widget-placeholder": "161-add-ability-to-paste-raw-json-during-import",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -756,7 +751,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test tests_search">
+  <component name="RunManager" selected="Cargo.Test shared_router::tests::test_shared_anonymous_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -775,8 +770,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::search::tests::tests_search::test_search_by_rating" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_rating -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -792,8 +787,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query1 -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -809,8 +804,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_search::test_results_query2" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search::test_results_query2 -- --exact" />
+    <configuration name="Test shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib shared_router::tests::test_shared_anonymous_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -826,8 +821,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test search::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::search::tests" />
+    <configuration name="Test tests_recipe_add_import_preview" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_preview" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -843,8 +838,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test tests_search" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_search" />
+    <configuration name="Test tests_recipe_add_import_raw_json" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -862,19 +857,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_rating" />
-      <item itemvalue="Cargo.Test search::tests" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
-      <item itemvalue="Cargo.Test tests_search" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" />
+      <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
+      <item itemvalue="Cargo.Test tests_recipe_add_import_preview" />
+      <item itemvalue="Cargo.Test tests_recipe_add_import_raw_json" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test tests_search" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query1" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_search::test_results_query2" />
-        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_rating" />
-        <item itemvalue="Cargo.Test search::tests" />
+        <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
+        <item itemvalue="Cargo.Test tests_recipe_add_import_preview" />
+        <item itemvalue="Cargo.Test tests_recipe_add_import_raw_json" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" />
       </list>
     </recent_temporary>
   </component>
