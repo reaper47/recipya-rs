@@ -58,28 +58,7 @@
     </cargoProject>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add_page.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/common.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/edit.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/index.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/search.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/app/media.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/tailwind-custom.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/tailwind-custom.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/app.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
-    </list>
+    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -42,7 +42,7 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 whatlang = "0.16.4"
-winnow = "0.7.12"
+winnow = "0.7.13"
 
 [dev-dependencies]
 app = { workspace = true }
