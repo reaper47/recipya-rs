@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @source "../../crates/templates/src/templates/*.rs";
+@source "../../crates/templates/src/templates/recipes/*.rs";
 
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {

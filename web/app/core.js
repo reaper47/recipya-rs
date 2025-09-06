@@ -38,82 +38,9 @@ function loadRecipesManualScripts() {
                 }
             });
         });
-}
 
-function addMedia(event) {
-    let media = document.querySelectorAll("#media label");
-    for (let i = 0; i < media.length; i++) {
-        if (media[i].querySelector('input[type="file"]').files.length === 0) {
-            alert(`Please select an image or video for 'Media ${i + 1}'`);
-            return;
-        }
-    }
-
-    const buttons = document.querySelectorAll(".buttons-container button");
-    buttons.forEach(el => el.classList.remove("btn-active"));
-
-    const cloneMedia = media[media.length - 1].cloneNode(true);
-    media.forEach(label => label.classList.add("hidden"));
-    cloneMedia.querySelector("input").value = '';
-    cloneMedia.id = `media-${media.length + 1}`;
-
-    let n = cloneMedia.querySelector("img");
-    if (n) {
-        n.src = '';
-    } else {
-        n = cloneMedia.querySelector("video");
-        n.src = '';
-    }
-
-    cloneMedia.querySelector("div").classList.remove("hidden");
-    cloneMedia.querySelector("input[type='url']").value = '';
-    const subButtons = cloneMedia.querySelectorAll("button");
-    subButtons[subButtons.length - 1].classList.add("hidden");
-    document.querySelector("#media").appendChild(cloneMedia);
-    const video = cloneMedia.querySelector('video');
-    if (video) {
-        n.classList.remove("hidden");
-        video.parentNode.removeChild(video);
-    }
-    media = document.querySelectorAll("#media label");
-    media[media.length - 1].classList.remove("hidden");
-    _hyperscript.processNode(cloneMedia);
-
-    let target = event.target;
-    if (["svg", "circle"].includes(target.tagName)) {
-        target = event.target.parentElement;
-    }
-
-    const cloneButton = target.previousElementSibling.cloneNode(true);
-    cloneButton.id = `media-button-${buttons.length}`;
-    cloneButton.classList.add("btn-active");
-    cloneButton.textContent = `Media ${buttons.length}`;
-    cloneButton.setAttribute("onclick", "switchMedia(event)");
-    target.previousElementSibling.parentNode.insertBefore(cloneButton, target);
-    _hyperscript.processNode(cloneButton);
-    htmx.process(cloneMedia);
-}
-
-function deleteMedia(event) {
-    let parent = event.target.parentElement;
-    if (parent.tagName === "SPAN") {
-        parent = parent.parentElement;
-    }
-
-    const img = parent.querySelector("img");
-    img.src = "";
-    img.value = "";
-
-    if (img.nextElementSibling.tagName === "VIDEO") {
-        img.parentElement.removeChild(img.nextElementSibling);
-        img.classList.remove("hidden");
-    }
-
-    const span = parent.querySelector("span");
-    span.querySelector("input[type=file]").value = null;
-    span.querySelector("input[type=file]").files = (new DataTransfer()).files;
-    span.children[0].classList.remove("hidden");
-    event.target.classList.add("hidden");
+    loadScript("https://unpkg.com/cropperjs@2.0.1/dist/cropper.min.js").then(() => {})
+    loadScript("/public/js/media.min.js").then(() => {})
 }
 
 function addKeyword(event) {
@@ -135,67 +62,6 @@ function addKeyword(event) {
 
     input.value = '';
     input.focus();
-}
-
-function switchMedia(event) {
-    let target = event.target;
-    if (target.tagName === "svg") {
-        target = event.target.parentElement;
-    }
-
-    const media = document.querySelectorAll("#media label");
-    for (let i = 0; i < media.length; i++) {
-        if (media[i].id === target.id.replace("button-", "")) {
-            media.forEach(label => label.classList.add("hidden"));
-            media[i].classList.remove("hidden");
-            document.querySelectorAll(".buttons-container button").forEach(el => el.classList.remove("btn-active"));
-            document.getElementById(event.target.id).classList.add("btn-active");
-            return;
-        }
-    }
-}
-
-function isUrl(event) {
-    let url;
-    try {
-        url = new URL(event.target.previousElementSibling.value);
-    } catch (_) {
-        return false;
-    }
-    return url.protocol === "http:" || url.protocol === "https:";
-}
-
-function updateMediaFromFetch(input, url) {
-    if (url === window.location.href) {
-        input.value = '';
-        return;
-    }
-
-    const pathRegexImage = /^\/data\/images\/([\da-z]{8}-([\da-z]{4}-){3}[\da-z]{12}).webp$/;
-    const pathRegexVideo = /^\/data\/videos\/([\da-z]{8}-([\da-z]{4}-){3}[\da-z]{12}).webm$/;
-    const urlObject = new URL(url);
-
-    let uuid;
-    if (pathRegexImage.test(urlObject.pathname)) {
-        uuid = urlObject.pathname.match(pathRegexImage)[1];
-    } else if (pathRegexVideo.test(urlObject.pathname)) {
-        uuid = urlObject.pathname.match(pathRegexVideo)[1];
-    } else {
-        uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-    fetch(url)
-        .then(response => response.blob())
-        .then(blob => {
-            const file = new File([blob], uuid, {type: blob.type});
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            input.files = dataTransfer.files;
-            input.dispatchEvent(new Event('change'));
-        });
 }
 
 async function copyText(buttonId, sourceId) {
