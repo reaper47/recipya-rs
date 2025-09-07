@@ -1,24 +1,28 @@
 use std::collections::HashSet;
 use std::env::temp_dir;
 use std::fs;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::software::is_ffmpeg_installed;
-use crate::impl_display_as_debug;
 use async_trait::async_trait;
 use axum::body::Bytes;
 use chrono::Duration;
 use derive_more::derive::From;
 use futures_util::future::join_all;
-use image::{DynamicImage, ImageReader};
+use image::codecs::webp::WebPEncoder;
+use image::imageops::FilterType;
+use image::{DynamicImage, ExtendedColorType, GenericImageView, ImageEncoder, ImageReader};
 use regex::Regex;
 use tokio::process::Command;
 use tokio::task;
 use tokio::time::Instant;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 use webp::Encoder;
+
+use super::software::is_ffmpeg_installed;
+use crate::impl_display_as_debug;
 
 /// A trait defining functionality for interacting with the filesystem.
 #[async_trait]
@@ -33,7 +37,7 @@ pub trait FsSupport: Send + Sync {
     async fn convert_videos(&self, input_paths: Vec<PathBuf>, output_dir: &Path) -> Result<()>;
 
     /// Checks whether the media file exists in the file system.
-    fn is_file_exists(&self, media_file: Uuid, dir: &Path) -> bool;
+    fn is_file_exists(&self, media_file: Uuid, dir: &Path, ext: &str) -> bool;
 
     /// Collects the paths of all files in the specified directory.
     fn files_in_directory(&self, root: &Path) -> Result<HashSet<PathBuf>>;
@@ -43,6 +47,10 @@ pub trait FsSupport: Send + Sync {
 
     /// Uploads an image to the user's image directory. Only available outside testing.
     fn upload_image(&self, path: &Path, file_name: Uuid, output_path: &Path);
+
+    /// Generates a thumbnail and uploads it in the user's thumbnails directory.
+    /// Only available outside testing.
+    fn generate_thumbnail(&self, path: &Path, file_name: Uuid, output_path: &Path);
 
     /// Uploads a video to the user's video directory. Only available outside testing.
     fn upload_videos(self: Arc<Self>, videos: Vec<PathBuf>, output_path: &Path);
@@ -68,13 +76,14 @@ impl FsSupport for AppFs {
         mut file_name: String,
         output_dir: &Path,
     ) -> Result<()> {
-        let image = ImageReader::open(input_path)?.decode()?;
-        let webp_data = encode_webp(&image)?;
+        let img = ImageReader::open(input_path)?
+            .with_guessed_format()?
+            .decode()?;
+
+        let webp_bytes = encode_webp(&img)?;
 
         file_name.push_str(".webp");
-        let output_path = output_dir.join(file_name);
-        fs::write(&output_path, webp_data)?;
-
+        fs::write(output_dir.join(file_name), webp_bytes)?;
         Ok(())
     }
 
@@ -185,8 +194,8 @@ impl FsSupport for AppFs {
         Ok(())
     }
 
-    fn is_file_exists(&self, media_file: Uuid, dir: &Path) -> bool {
-        Path::new(dir).join(media_file.to_string()).exists()
+    fn is_file_exists(&self, media_file: Uuid, dir: &Path, ext: &str) -> bool {
+        Path::new(dir).join(format!("{media_file}{ext}")).exists()
     }
 
     fn files_in_directory(&self, root: &Path) -> Result<HashSet<PathBuf>> {
@@ -217,6 +226,58 @@ impl FsSupport for AppFs {
     fn upload_image(&self, path: &Path, file_name: Uuid, output_path: &Path) {
         if let Err(err) = self.convert_image(path, file_name.to_string(), output_path) {
             error!("Error converting image '{file_name}' to WebP: {err}");
+        }
+    }
+
+    fn generate_thumbnail(&self, path: &Path, file_name: Uuid, output_path: &Path) {
+        let res: Result<()> = (|| {
+            let buf: Vec<u8> = {
+                let img = ImageReader::open(&path)?.with_guessed_format()?.decode()?;
+
+                let thumb = {
+                    let (w, h) = img.dimensions();
+                    let scale = (480f32 / w as f32).min(480f32 / h as f32).min(1.0);
+                    let new_w = (w as f32 * scale).round().max(1.0) as u32;
+                    let new_h = (h as f32 * scale).round().max(1.0) as u32;
+                    if new_w == w && new_h == h {
+                        img
+                    } else {
+                        image::DynamicImage::from(image::imageops::resize(
+                            &img,
+                            new_w,
+                            new_h,
+                            FilterType::CatmullRom,
+                        ))
+                    }
+                };
+
+                let rgba = thumb.to_rgba8();
+                let (tw, th) = rgba.dimensions();
+
+                let mut out = Vec::new();
+                WebPEncoder::new_lossless(&mut Cursor::new(&mut out)).write_image(
+                    &rgba,
+                    tw,
+                    th,
+                    ExtendedColorType::Rgba8,
+                )?;
+                out
+            };
+
+            let tmp_out: PathBuf = temp_dir().join(format!("{}-thumb.webp", file_name));
+            fs::write(&tmp_out, &buf)?;
+            if let Err(err) = self.convert_image(&tmp_out, file_name.to_string(), output_path) {
+                error!("Error generating thumbnail image '{file_name}' to WebP: {err}");
+            }
+
+            let _ = fs::remove_file(&tmp_out);
+            let _ = fs::remove_file(&path);
+
+            Ok(())
+        })();
+
+        if let Err(err) = res {
+            warn!("thumbnail generation failed for {:?}: {err:#}", path);
         }
     }
 
@@ -262,7 +323,7 @@ impl FsSupport for MockFs {
         Ok(())
     }
 
-    fn is_file_exists(&self, media_file: Uuid, _dir: &Path) -> bool {
+    fn is_file_exists(&self, media_file: Uuid, _dir: &Path, _ext: &str) -> bool {
         media_file != Uuid::nil()
     }
 
@@ -275,6 +336,8 @@ impl FsSupport for MockFs {
     }
 
     fn upload_image(&self, _path: &Path, _file_name: Uuid, _output_path: &Path) {}
+
+    fn generate_thumbnail(&self, _path: &Path, _file_name: Uuid, _output_path: &Path) {}
 
     fn upload_videos(self: Arc<Self>, _videos: Vec<PathBuf>, _output_path: &Path) {}
 }

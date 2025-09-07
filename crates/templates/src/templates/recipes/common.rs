@@ -133,7 +133,7 @@ pub fn list_recipes(
                         img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full"
                             src=(match details.all_images().first() {
                                 Some(&first_image) => {
-                                    if !details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images) {
+                                    if !details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images, ".webp") {
                                         format!("/data/images/thumbnails/{first_image}.webp")
                                     } else {
                                         "/data/images/Placeholders/placeholder.recipe.webp".into()

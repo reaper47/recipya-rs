@@ -145,13 +145,24 @@ class ImageEditor {
     apply() {
         this._selection().$toCanvas().then(canvas => {
             this.originalImage.src = canvas.toDataURL("image/png");
+
+            canvas.toBlob(blob => {
+                const file = new File([blob], "edited-image.png", {type: blob.type});
+
+                const hiddenInput = this.container.querySelector('input[name="media"]');
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                hiddenInput.files = dt.files;
+            }, "image/png");
+
             this.destroy();
         })
     }
 
     destroy() {
-        this._canvas().remove(), this._toggleToolboxActions(!1), this.originalImage.style.display = "block", setTimeout(() => {
-            this._setWrapperDimensions(this.originalImage)
+        this._canvas().remove(), this._toggleToolboxActions(!1), this.originalImage.style.display = "block";
+        setTimeout(() => {
+            this._setWrapperDimensions(this.originalImage);
         }, 50)
     }
 
@@ -172,7 +183,7 @@ class ImageEditor {
     }
 
     _init() {
-        var img = this.container.querySelector("img");
+        const img = this.container.querySelector("img");
         this._setWrapperDimensions(img);
         this._toggleToolboxActions(true);
 
@@ -246,17 +257,20 @@ function getLabel(event) {
 function toggleMediaButtons(isEnabled) {
     const mediaButtons = document.querySelectorAll("[id^='media-button-']");
     const addMediaButton = document.querySelector("#add-media-button");
+    const input = document.querySelector('input[name="media"]');
 
     if (isEnabled) {
         mediaButtons.forEach(button => {
             button.removeAttribute("disabled");
         });
         addMediaButton.removeAttribute("disabled");
+        input.removeAttribute("disabled");
     } else {
         mediaButtons.forEach(button => {
             button.setAttribute("disabled", "true");
         });
         addMediaButton.setAttribute("disabled", "true");
+        input.setAttribute("disabled", "true");
     }
 }
 

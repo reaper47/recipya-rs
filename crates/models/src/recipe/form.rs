@@ -8,8 +8,6 @@ use axum::extract::{FromRequest, Multipart, Request};
 use tracing::{error, warn};
 use uuid::Uuid;
 
-use support::fs::new_fs_support;
-
 use super::{NutritionForCreate, TimesForCreate, ToolForCreate};
 
 /// Represents a form used to create or update a recipe.
@@ -60,155 +58,32 @@ where
         let mut yield_: Option<i16> = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
-            error!("Failed to read multipart field in recipe: {err}");
+            error!("Failed to read multipart field in recipe: {err:?}");
             InvalidBoundary::default()
         })? {
             let name = field.name().unwrap_or("");
+
             match name {
-                "calories" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.calories_kcal = s.parse().ok()),
-                "category" => category = field.text().await.ok().filter(|s| !s.trim().is_empty()),
-                "cholesterol" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.cholesterol_mg = s.parse().ok()),
-                "cuisine" => cuisine = field.text().await.ok().filter(|s| !s.trim().is_empty()),
-                "description" => {
-                    description = field.text().await.ok().filter(|s| !s.trim().is_empty())
-                }
-                "fiber" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.fiber_g = s.parse().ok()),
-                "ingredient" => field.text().await.ok().map_or_else(
-                    || (),
-                    |text| {
-                        if !text.trim().is_empty() {
-                            ingredients.push(text);
-                        }
-                    },
-                ),
-                "instruction" => field.text().await.ok().map_or_else(
-                    || (),
-                    |text| {
-                        if !text.trim().is_empty() {
-                            instructions.push(text);
-                        }
-                    },
-                ),
-                "keyword" => field.text().await.ok().map_or_else(
-                    || (),
-                    |text| {
-                        if !text.trim().is_empty() {
-                            keywords.push(text);
-                        }
-                    },
-                ),
+                "category" => category = text_trim(field).await,
+                "cuisine" => cuisine = text_trim(field).await,
+                "description" => description = text_trim(field).await,
+                "ingredient" => push_non_empty(field, &mut ingredients).await,
+                "instruction" => push_non_empty(field, &mut instructions).await,
+                "keyword" => push_non_empty(field, &mut keywords).await,
                 "media" => {
-                    if let Some(file_name) = field.file_name() {
-                        let (stem, ext) = file_name
-                            .split('.')
-                            .collect::<Vec<_>>()
-                            .split_first()
-                            .map_or(("".to_string(), ""), |(f, rest)| {
-                                ((*f).to_string(), rest.last().unwrap_or(f))
-                            });
-                        let file_uuid = Uuid::new_v4();
-                        let new_filename = format!("{file_uuid}.{ext}");
-                        let temp = temp_dir().join(&new_filename);
-
-                        if let Ok(bytes) = field.bytes().await {
-                            let mime_type = if let Some(kind) = infer::get(&bytes) {
-                                kind.mime_type()
-                            } else {
-                                "application/octet-stream"
-                            };
-
-                            let fs_support = new_fs_support();
-                            fs_support
-                                .upload_to_temp(bytes)
-                                .await
-                                .map_err(|_| InvalidBoundary::default())?;
-
-                            if mime_type.starts_with("video/") {
-                                videos.insert(stem, temp.clone());
-                            } else {
-                                images.insert(stem, temp.clone());
-                            }
-                        }
+                    if let Err(err) = save_media_field(field, &mut images, &mut videos).await {
+                        error!("Saving media failed: {err:?}");
                     }
                 }
-                "protein" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.protein_g = s.parse().ok()),
-                "rating" => {
-                    rating = field
-                        .text()
-                        .await
-                        .unwrap_or_default()
-                        .trim()
-                        .parse::<i16>()
-                        .ok()
-                }
-                "source" => source = field.text().await.ok().filter(|s| !s.trim().is_empty()),
-                "sugars" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.sugars_g = s.parse().ok()),
+                "rating" => rating = parse_i16(field).await,
+                "source" => source = text_trim(field).await,
                 "time-prep" => times.prep_seconds = calc_time_from_field(field).await,
                 "time-cook" => times.cook_seconds = calc_time_from_field(field).await,
-                "total-carbohydrates" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.total_carbohydrates = s.parse().ok()),
-                "total-fat" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.total_fat_g = s.parse().ok()),
-                "saturated-fat" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.saturated_fat_g = s.parse().ok()),
-                "serving-size" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.serving_size = s.parse().ok()),
-                "sodium" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.sodium_mg = s.parse().ok()),
                 "title" => {
-                    title = Some(
-                        field
-                            .text()
-                            .await
-                            .ok()
-                            .filter(|s| !s.trim().is_empty())
-                            .ok_or(InvalidBoundary::default())?,
-                    )
+                    title = text_trim(field)
+                        .await
+                        .ok_or(InvalidBoundary::default())?
+                        .into()
                 }
                 "tool" => field.text().await.ok().iter().for_each(|tool| {
                     let quantity = tool
@@ -222,27 +97,71 @@ where
                         tools.push(ToolForCreate { name, quantity })
                     }
                 }),
-                "trans-fat" => field
+                "yield" => yield_ = parse_i16(field).await,
+
+                "calories" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.calories_kcal = Some(v);
+                    }
+                }
+                "cholesterol" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.cholesterol_mg = Some(v);
+                    }
+                }
+                "fiber" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.fiber_g = Some(v);
+                    }
+                }
+                "protein" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.protein_g = Some(v);
+                    }
+                }
+                "total-carbohydrates" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.total_carbohydrates = Some(v);
+                    }
+                }
+                "total-fat" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.total_fat_g = Some(v);
+                    }
+                }
+                "saturated-fat" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.saturated_fat_g = Some(v);
+                    }
+                }
+                "serving-size" => field
                     .text()
                     .await
                     .ok()
                     .iter()
-                    .for_each(|s| nutrition.trans_fat_g = s.parse().ok()),
-                "unsaturated-fat" => field
-                    .text()
-                    .await
-                    .ok()
-                    .iter()
-                    .for_each(|s| nutrition.unsaturated_fat_g = s.parse().ok()),
-                "yield" => {
-                    yield_ = field
-                        .text()
-                        .await
-                        .ok()
-                        .map(|text| text.trim().parse::<i16>().ok().unwrap_or(4))
+                    .for_each(|s| nutrition.serving_size = s.parse().ok()),
+                "sodium" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.sodium_mg = Some(v);
+                    }
+                }
+                "sugars" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.sugars_g = Some(v);
+                    }
+                }
+                "trans-fat" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.trans_fat_g = Some(v);
+                    }
+                }
+                "unsaturated-fat" => {
+                    if let Some(v) = parse_i16(field).await {
+                        nutrition.unsaturated_fat_g = Some(v);
+                    }
                 }
                 _ => {
-                    warn!("Field '{name}' is not processed")
+                    warn!("Ignoring unknown multipart field: '{name}'");
                 }
             }
         }
@@ -271,6 +190,30 @@ where
     }
 }
 
+async fn text_trim(field: Field<'_>) -> Option<String> {
+    match field.text().await {
+        Ok(s) => {
+            let s = s.trim();
+            if s.is_empty() {
+                None
+            } else {
+                Some(s.to_owned())
+            }
+        }
+        Err(_) => None,
+    }
+}
+
+async fn push_non_empty(field: Field<'_>, vec: &mut Vec<String>) {
+    if let Some(s) = text_trim(field).await {
+        vec.push(s);
+    }
+}
+
+async fn parse_i16(field: Field<'_>) -> Option<i16> {
+    text_trim(field).await.and_then(|s| s.parse::<i16>().ok())
+}
+
 async fn calc_time_from_field(field: Field<'_>) -> i32 {
     if let Ok(text) = field.text().await {
         let parts: Vec<&str> = text.split(':').collect();
@@ -289,4 +232,37 @@ async fn calc_time_from_field(field: Field<'_>) -> i32 {
     } else {
         0
     }
+}
+
+async fn save_media_field(
+    field: Field<'_>,
+    images: &mut HashMap<String, PathBuf>,
+    videos: &mut HashMap<String, PathBuf>,
+) -> Result<(), InvalidBoundary> {
+    let base = field
+        .file_name()
+        .and_then(|n| n.rsplit_once('.').map(|(b, _)| b).or(Some(n)))
+        .unwrap_or("upload")
+        .to_owned();
+
+    let bytes = field.bytes().await.unwrap_or_default();
+    if bytes.is_empty() {
+        return Ok(());
+    }
+
+    let mime = infer::get(&bytes)
+        .map(|k| k.mime_type())
+        .unwrap_or("application/octet-stream");
+
+    let path = temp_dir().join(format!("{}", Uuid::new_v4()));
+    tokio::fs::write(&path, &bytes)
+        .await
+        .map_err(|_| InvalidBoundary::default())?;
+
+    if mime.starts_with("video/") {
+        videos.insert(base.to_string(), path.clone());
+    } else {
+        images.insert(base.to_string(), path.clone());
+    }
+    Ok(())
 }

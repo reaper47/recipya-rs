@@ -47,7 +47,9 @@ fn render_add_recipe_manual(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body style="padding: 0" enctype="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader" {
+                    form .card-body style="padding: 0"
+                         enctype="multipart/form-data" hx-encoding="multipart/form-data"
+                         hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader" {
                         h2 class="card-title place-content-center rounded-t-2xl" {
                             label .w-full {
                                 input required type="text" name="title" placeholder="Title of the recipe*"
@@ -122,7 +124,6 @@ fn render_add_recipe_manual(
                 }
             }
         }
-        (PreEscaped("<script defer>window.onload = () => loadRecipesManualScripts()</script>"))
     }
 }
 fn render_categories(view: Option<&ViewRecipe>, categories: Vec<Category>) -> Markup {
@@ -261,8 +262,7 @@ fn render_media() -> Markup {
                                  remove .hidden from the first <.cropper-wrap/> in root
                                  remove .hidden from the first <.image-actions/> in root
                                  add .hidden to the first <.image-selector/> in root
-                                 add .hidden to the first <.edit-toolbox/> in root
-                                 add @disabled"));
+                                 add .hidden to the first <.edit-toolbox/> in root"));
 
                         div class="divider" { "OR" }
                         span class="hidden input-error" {}

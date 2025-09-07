@@ -308,7 +308,7 @@ pub async fn edit_recipe_put_handler(
                 Ok(name)
                     if state
                         .fs_support
-                        .is_file_exists(name, &state.data_dir.images) =>
+                        .is_file_exists(name, &state.data_dir.images, ".webp") =>
                 {
                     name
                 }
@@ -339,15 +339,17 @@ pub async fn edit_recipe_put_handler(
 
             async move {
                 match Uuid::parse_str(original_file_stem) {
-                    Ok(name) if fs_support.is_file_exists(name, &dir_videos) => VideoForCreate {
-                        video: name,
-                        duration: fs_support
-                            .calc_video_duration(path.to_str().unwrap_or_default())
-                            .await
-                            .ok(),
-                        content_url: None,
-                        embed_url: None,
-                    },
+                    Ok(name) if fs_support.is_file_exists(name, &dir_videos, ".webm") => {
+                        VideoForCreate {
+                            video: name,
+                            duration: fs_support
+                                .calc_video_duration(path.to_str().unwrap_or_default())
+                                .await
+                                .ok(),
+                            content_url: None,
+                            embed_url: None,
+                        }
+                    }
                     _ => VideoForCreate::from_path(fs_support, path).await,
                 }
             }
@@ -851,6 +853,13 @@ pub async fn add_manual_recipe_post_handler(
                 .unwrap_or_default();
 
             fs_support.upload_image(&path, file_name, &state.data_dir.images);
+
+            let thumbnails_dir = state.data_dir.thumbnails.clone();
+            let fs_support = Arc::clone(&state.fs_support);
+            tokio::spawn(async move {
+                fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+            });
+
             file_name
         })
         .collect::<Vec<_>>();
@@ -1186,7 +1195,7 @@ fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, url: Url) -> Op
     fs_support.upload_image(&path, file_name, &state.data_dir.images);
     state
         .fs_support
-        .is_file_exists(file_name, &state.data_dir.images)
+        .is_file_exists(file_name, &state.data_dir.images, ".webp")
         .then_some(file_name)
 }
 
@@ -1214,7 +1223,7 @@ async fn extract_videos(
                             .clone()
                             .upload_videos(vec![path.clone()], &state.data_dir.images);
 
-                        if fs_support.is_file_exists(file_name, &state.data_dir.videos) {
+                        if fs_support.is_file_exists(file_name, &state.data_dir.videos, ".webp") {
                             videos.push(VideoForCreate {
                                 video: file_name,
                                 duration: fs_support

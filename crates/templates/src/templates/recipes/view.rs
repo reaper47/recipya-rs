@@ -504,7 +504,7 @@ fn render_media(
                             iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                         } @else if let Some(url) = &video.content_url {
                             video controls preload="metadata" src=(url) {}
-                        } @else if fs_support.is_file_exists(video.video, &data_dir.videos) {
+                        } @else if fs_support.is_file_exists(video.video, &data_dir.videos, ".webm") {
                             video controls preload="metadata" src=(format!("/data/videos/{}.webm",video.video)) type="video/webm" {}
                         } @else {
                             p {
@@ -519,7 +519,7 @@ fn render_media(
                     div class="carousel w-full" {
                         @for (idx, &img) in recipe_details.all_images().iter().enumerate() {
                             div id=(format!("media-{idx}")) class="carousel-item relative w-full" {
-                                @if fs_support.is_file_exists(img, &data_dir.images) {
+                                @if fs_support.is_file_exists(img, &data_dir.images, ".webp") {
                                      img style="object-fit: cover"
                                     alt="Image of the recipe"
                                     class="w-full max-h-80 md:max-h-[34rem]"
@@ -554,7 +554,7 @@ fn render_media(
                                     iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                                 } @else if let Some(url) = &v.content_url {
                                     video controls preload="metadata" src=(url) {}
-                                } @else if fs_support.is_file_exists(v.video, &data_dir.videos) {
+                                } @else if fs_support.is_file_exists(v.video, &data_dir.videos, ".webm") {
                                     video controls preload="metadata" src=(format!("/data/videos/{}.webm", v.video)) type="video/webm" {}
                                 } @else {
                                     p class="grid place-self-center" {
@@ -704,7 +704,7 @@ fn render_tools(recipe_details: &RecipeDetails) -> Markup {
                 }) {
                 @for t in recipe_details.tools.iter() {
                     li class="text-sm" {
-                        label {
+                        label class="flex items-center w-full" {
                             input type="checkbox";
                         }
                         span class="pl-2" {
@@ -724,10 +724,10 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
             div class="col-span-6 border-gray-700 border-y px-4 py-2 md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
                     h2 class="font-semibold text-center underline pb-1" { "Tools" }
-                    ul class="grid gap-1" {
+                    ul class="list grid gap-1" {
                         @for tool in recipe.tools.iter() {
-                            li class="grid py-1 hover:bg-gray-100 dark:hover:bg-gray-700" {
-                                label class="label justify-start" {
+                            li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                label class="flex items-center w-full" {
                                     input type="checkbox" class="checkbox";
                                     span class="pl-2" { (tool.quantity.to_string()) " " (tool.name) }
                                 }

@@ -277,7 +277,7 @@ fn render_media(
                     }
                 } @else {
                     @for (idx, &image) in view.recipe_details.all_images().iter().enumerate() {
-                        @let image_exists = fs_support.is_file_exists(image, &data_dir.images);
+                        @let image_exists = fs_support.is_file_exists(image, &data_dir.images, ".webp");
                         @let image_url = format!("/data/images/{image}.webp");
 
                         label id=(format!("media-{}", idx+1)) class={
@@ -347,7 +347,7 @@ fn render_media(
                         }
                     }
                     @for (idx, video) in view.recipe_details.videos.iter().enumerate() {
-                        @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos);
+                        @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
                         @let video_url = format!("/data/videos/{}.webp", video.video);
                         @let num_images = view.recipe_details.num_images();
 
