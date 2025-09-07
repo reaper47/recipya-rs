@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function () {
     initGlobalKeyboardShortcuts();
     syncLayout();
     loadRecipesManualScripts();
-    console.log("FUCK YOPU")
 });
 
 document.body.addEventListener('htmx:afterSwap', (event) => {

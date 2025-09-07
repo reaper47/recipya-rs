@@ -76,7 +76,8 @@ function deleteMedia(event) {
 
     span.children[0].classList.remove("hidden");
     span.querySelector(".image-actions")?.classList.add("hidden");
-    label.querySelector("cropper-canvas")?.remove()
+    label.querySelector("cropper-canvas")?.remove();
+    label.parentElement.querySelector("input[name='media-existing-image']").remove();
 }
 
 function switchMedia(event) {
@@ -156,15 +157,19 @@ class ImageEditor {
                 hiddenInput.files = dt.files;
             }, "image/png");
 
+            this.originalImage.parentElement.querySelector("input").remove();
+
             this.destroy();
         })
     }
 
     destroy() {
-        this._canvas().remove(), this._toggleToolboxActions(!1), this.originalImage.style.display = "block";
+        this._canvas().remove();
+        this._toggleToolboxActions(false);
+        this.originalImage.style.display = "block";
         setTimeout(() => {
             this._setWrapperDimensions(this.originalImage);
-        }, 50)
+        }, 50);
     }
 
     setHandle(mode) {
@@ -248,18 +253,13 @@ class ImageEditor {
 
 function editImage(event) {
     window.imageEditor = new ImageEditor(getLabel(event));
-    toggleMediaButtons(false);
+    toggleMediaButtons(event, false);
 }
 
-function getLabel(event) {
-    return event.target.closest("label")
-}
-
-function toggleMediaButtons(isEnabled) {
+function toggleMediaButtons(event, isEnabled) {
     const mediaButtons = document.querySelectorAll("[id^='media-button-']");
     const addMediaButton = document.querySelector("#add-media-button");
-    const inputs = document.querySelectorAll('input[name="media"]');
-    const input = inputs[inputs.length - 1];
+    const input = getLabel(event).querySelector('input[name="media"]');
 
     if (isEnabled) {
         mediaButtons.forEach(button => {
@@ -276,14 +276,18 @@ function toggleMediaButtons(isEnabled) {
     }
 }
 
-function cancelCropper() {
-    window.imageEditor.destroy();
-    toggleMediaButtons(true)
+function getLabel(event) {
+    return event.target.closest("label")
 }
 
-function applyCropper() {
+function cancelCropper(event) {
+    window.imageEditor.destroy();
+    toggleMediaButtons(event, true)
+}
+
+function applyCropper(event) {
     window.imageEditor.apply();
     window.imageEditor = null;
-    toggleMediaButtons(true);
+    toggleMediaButtons(event, true);
 }
 

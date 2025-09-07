@@ -75,6 +75,34 @@ where
                         error!("Saving media failed: {err:?}");
                     }
                 }
+                "media-existing-image" => {
+                    let filename = text_trim(field).await.ok_or(InvalidBoundary::default())?;
+                    let path = PathBuf::from(filename);
+
+                    let uuid = path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .replace(".webp", "")
+                        .parse::<Uuid>()
+                        .unwrap_or_default();
+
+                    images.insert(uuid.into(), path);
+                }
+                "media-existing-video" => {
+                    let filename = text_trim(field).await.ok_or(InvalidBoundary::default())?;
+                    let path = PathBuf::from(filename);
+
+                    let uuid = path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .replace(".webm", "")
+                        .parse::<Uuid>()
+                        .unwrap_or_default();
+
+                    videos.insert(uuid.into(), path);
+                }
                 "rating" => rating = parse_i16(field).await,
                 "source" => source = text_trim(field).await,
                 "time-prep" => times.prep_seconds = calc_time_from_field(field).await,

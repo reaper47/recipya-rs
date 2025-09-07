@@ -5,7 +5,7 @@ use models::recipe::{Category, Keyword};
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty,
+    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty, render_media_editor,
 };
 use crate::templates::icons::{
     icon_arrow_uturn_left, icon_arrow_uturn_right, icon_arrows_right_left, icon_arrows_up_down,
@@ -69,7 +69,9 @@ fn render_add_recipe_manual(
                                             "Add"
                                         }
                                     }
-                                    (render_media())
+                                    div #media .col-span-6 {
+                                        (render_media_editor(1, ""))
+                                    }
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
@@ -229,109 +231,6 @@ fn render_keywords(view: Option<&ViewRecipe>, keywords: Vec<Keyword>) -> Markup 
             }
         }
         (recipe_keyword_empty(keywords))
-    }
-}
-
-fn render_media() -> Markup {
-    html! {
-        div #media .col-span-6 {
-            label #media-1 .block {
-                div class="cropper-wrap mb-2 w-full max-h-[39rem] relative overflow-hidden hidden" {
-                    img src="" alt="" class="block w-full h-full object-contain";
-                }
-
-                span class="grid gap-1" {
-                    div class="mr-1 image-selector" {
-                        input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm"
-                              _=(PreEscaped("on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
-                                 on dragleave or drop set the target's style.background to ''
-                                 on drop or change
-                                 make an FileReader called reader
-                                 if event.dataTransfer
-                                    get event.dataTransfer.files[0]
-                                 else
-                                    get event.target.files[0]
-                                 end
-                                 if it.type.startsWith('video')
-                                    put `<video controls class='object-cover mb-2 w-full max-h-[39rem]' src='${window.URL.createObjectURL(it)}'</video>` after previous <img/> then
-                                    add .hidden to previous <img/>
-                                 else
-                                    set {src: window.URL.createObjectURL(it)} on previous <img/>
-                                 end
-                                 set root to the closest <label/>
-                                 remove .hidden from the first <.cropper-wrap/> in root
-                                 remove .hidden from the first <.image-actions/> in root
-                                 add .hidden to the first <.image-selector/> in root
-                                 add .hidden to the first <.edit-toolbox/> in root"));
-
-                        div class="divider" { "OR" }
-                        span class="hidden input-error" {}
-                        div class="flex join" {
-                           div class="w-full" {
-                                input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
-                           }
-                           button type="button" class="btn btn-sm join-item" hx-get="/fetch" hx-vals="js:{url: event.target.previousElementSibling.value}" hx-swap="none" _="on htmx:afterRequest
-                              if event.detail.successful then
-                              set a to first in event.target.parentElement.parentElement.children then
-                              call updateMediaFromFetch(a, event.detail.xhr.responseURL)
-                              end" { "Fetch" }
-                        }
-                        div _="on load if not navigator.clipboard hide me" {
-                           div class="divider" { "OR" }
-                           button type="button" class="btn btn-sm" onclick="pasteImage(event)" { "Paste copied image" }
-                        }
-                    }
-                    div class="image-actions hidden" {
-                        div class="main-toolbox flex gap-2 justify-between" {
-                           button type="button" class="btn btn-sm" onclick="editImage(event)" {
-                              (icon_pencil(false))
-                              "Edit"
-                           }
-                           button type="button" class="btn btn-sm btn-error" onclick="deleteMedia(event)" {
-                              (icon_trash())
-                              "Delete"
-                           }
-                        }
-                        div class="edit-toolbox flex items-center w-full" {
-                           div class="join" {
-                              button type="button" title="Move" class="btn join-item btn-square btn-sm" _=(PreEscaped("on click remove .btn-active from next <button/> then add .btn-active then call window.imageEditor.setHandle('move')")) {
-                                 (icon_move_thin())
-                              }
-                              button type="button" title="Crop" class="btn join-item btn-square btn-sm btn-active" _=(PreEscaped("on click remove .btn-active from previous <button/> then add .btn-active then call window.imageEditor.setHandle('select')")) {
-                                 (icon_crop())
-                              }
-                              button type="button" title="Zoom in" class="btn join-item btn-square btn-sm" _="on click call window.imageEditor.zoom(0.05)" {
-                                 (icon_magnifying_glass_plus())
-                              }
-                              button type="button" title="Zoom out" class="btn join-item btn-square btn-sm" _="on click call window.imageEditor.zoom(-0.05)" {
-                                 (icon_magnifying_glass_minus())
-                              }
-                              button type="button" title="Rotate left" class="btn join-item btn-square btn-sm" _="on click call window.imageEditor.rotate('-90deg')" {
-                                 (icon_arrow_uturn_left())
-                              }
-                              button type="button" title="Rotate right" class="btn join-item btn-square btn-sm" _="on click call window.imageEditor.rotate('90deg')" {
-                                 (icon_arrow_uturn_right())
-                              }
-                              button type="button" title="Flip horizontal" class="btn join-item btn-square btn-sm" _="on click call window.imageEditor.scale(-1, 1)" {
-                                 (icon_arrows_right_left())
-                              }
-                              button type="button" title="Flip vertical" class="btn join-item btn-square btn-sm" _="on click call window.imageEditor.scale(1, -1)" {
-                                 (icon_arrows_up_down())
-                              }
-                           }
-                           div class="join ml-auto" {
-                              button type="button" title="Cancel" class="btn join-item btn-square btn-sm" onclick="cancelCropper()" {
-                                 (icon_x_mark())
-                              }
-                              button type="button" title="Apply" class="btn join-item btn-square btn-sm" onclick="applyCropper()" {
-                                 (icon_check())
-                              }
-                           }
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 

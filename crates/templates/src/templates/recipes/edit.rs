@@ -9,7 +9,7 @@ use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty,
+    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty, render_media_editor,
 };
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
@@ -66,7 +66,29 @@ fn render_edit_recipe(
                         (render_title(&view))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
-                                (render_media(&view, fs_support, data_dir))
+                                div #media-container class="grid grid-flow-col w-full text-center grid-cols-7 md:col-span-3 md:border-r dark:border-gray-700" {
+                                    div class="buttons-container flex flex-col gap-1 p-1" {
+                                        @if view.recipe_details.videos.is_empty() && view.recipe_details.recipe.image.is_none() {
+                                            button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event)" {
+                                                "Media 1"
+                                            }
+                                        } @else {
+                                            @for i in 0..view.recipe_details.num_media() {
+                                                button id=(format!("media-button-{}", i+1)) type="button" class={
+                                                    "btn btn-sm btn-ghost"
+                                                    @if i == 0 { " btn-active" }
+                                                } onclick="switchMedia(event)" {
+                                                    (format!("Media {}", i + 1))
+                                                }
+                                            }
+                                        }
+                                        button #add-media-button type="button" class="btn btn-sm btn-ghost" onclick="addMedia(event)" {
+                                            (icon_plus_circle())
+                                            "Add"
+                                        }
+                                    }
+                                    (render_media(&view, fs_support, data_dir))
+                                }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
                                         div class="grid grid-flow-col grid-cols-3 gap-2 border-b border-t border-gray-700 px-2 md:col-span-2 md:border-b-0 md:border-r md:border-t-0 md:px-0" {
@@ -122,7 +144,6 @@ fn render_edit_recipe(
                 }
             }
         }
-        (PreEscaped("<script defer>window.onload = () => loadRecipesManualScripts()</script>"))
     }
 }
 
@@ -204,32 +225,41 @@ fn render_media(
     data_dir: &DataDir,
 ) -> Markup {
     html! {
-        div #media-container class="grid grid-flow-col w-full text-center grid-cols-7 md:col-span-3 md:border-r dark:border-gray-700" {
-            div class="buttons-container flex flex-col gap-1 p-1" {
-                @if view.recipe_details.videos.is_empty() && view.recipe_details.recipe.image.is_none() {
-                    button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event)" {
-                        "Media 1"
-                    }
-                } @else {
-                    @for i in 0..view.recipe_details.num_media() {
-                        button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event)" {
-                            (format!("Media {}", i + 1))
+        div #media .col-span-6 {
+            @if view.recipe_details.videos.is_empty() && view.recipe_details.recipe.image.is_none() {
+                (render_media_editor(1, ""))
+            } @else {
+                @for (idx, &image) in view.recipe_details.all_images().iter().enumerate() {
+                    @let image_exists = fs_support.is_file_exists(image, &data_dir.images, ".webp");
+                    @let image_src = if image_exists {
+                        &format!("/data/images/{image}.webp")
+                    } else {
+                        ""
+                    };
+
+                    (render_media_editor(idx+1, image_src))
+                }
+                @for (idx, video) in view.recipe_details.videos.iter().enumerate() {
+                    @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
+                    @let video_url = format!("/data/videos/{}.webp", video.video);
+                    @let num_images = view.recipe_details.num_images();
+
+                    label id=(format!("media-{}", idx+1+num_images)) class={
+                        @if num_images > 0 || idx > 0 { "hidden" }
+                    } {
+                        img src="" alt="" class="mb-2";
+                        @if video_exists {
+                            video controls class="mb-2" src=(format!("/data/videos/{}.webm", video.video)) type="video/webm" {}
                         }
-                    }
-                }
-                button #add-media-button type="button" class="btn btn-sm btn-ghost" onclick="addMedia(event)" {
-                    (icon_plus_circle())
-                    "Add"
-                }
-            }
-            div #media class="col-span-6" {
-                @if view.recipe_details.videos.is_empty() && view.recipe_details.recipe.image.is_none() {
-                    label #media-1 {
-                        img src="" alt="" class="object-cover mb-2 w-full max-h-[39rem]";
                         span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;" {
-                            div class="mr-1" {
+                            div class="mr-1 hidden" {
                                 input type="file" accept="image/*,video/*" name="media"
                                     class="file-input file-input-sm file-input-bordered w-full max-w-sm"
+                                    value=(if video_exists {
+                                        &video_url
+                                    } else {
+                                        ""
+                                    })
                                     _=(PreEscaped("on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
                                           on dragleave or drop set the target's style.background to ''
                                           on drop or change
@@ -270,146 +300,8 @@ fn render_media(
                                     }
                                 }
                             }
-                            button type="button" class="hidden btn btn-sm btn-error btn-outline" onclick="deleteMedia(event)" {
+                            button type="button" class="btn btn-sm btn-error btn-outline" onclick="deleteMedia(event)" {
                                 "Delete"
-                            }
-                        }
-                    }
-                } @else {
-                    @for (idx, &image) in view.recipe_details.all_images().iter().enumerate() {
-                        @let image_exists = fs_support.is_file_exists(image, &data_dir.images, ".webp");
-                        @let image_url = format!("/data/images/{image}.webp");
-
-                        label id=(format!("media-{}", idx+1)) class={
-                            @if idx > 0 { "hidden" }
-                        } {
-                            img src=(if image_exists {
-                                    &image_url
-                                } else {
-                                    ""
-                                })
-                                alt=(format!("Image #{} of the recipe", idx+1)) class="object-cover mb-2 w-full max-h-[39rem]";
-                            span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;" {
-                                div class="mr-1" {
-                                    input type="file" accept="image/*,video/*" name="media"
-                                        class="file-input file-input-sm file-input-bordered w-full max-w-sm"
-                                        value=(if image_exists {
-                                            &image_url
-                                        } else {
-                                            ""
-                                        })
-                                        _=(PreEscaped("on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
-                                              on dragleave or drop set the target's style.background to ''
-                                              on drop or change
-                                                make an FileReader called reader then
-                                                if event.dataTransfer
-                                                    get event.dataTransfer.files[0]
-                                                else
-                                                    get event.target.files[0]
-                                                end then
-                                                if it.type.startsWith('video')
-                                                    put `<video controls class='object-cover mb-2 w-full max-h-[39rem]' src='${window.URL.createObjectURL(it)}'></video>` after previous <img/> then
-                                                    add .hidden to previous <img/>
-                                                else
-                                                    set {src: window.URL.createObjectURL(it)} on previous <img/>
-                                                end then
-                                                remove .hidden from me.parentElement.parentElement.querySelectorAll('button') then
-                                                add .hidden to the parentElement of me"));
-                                    div .divider { "OR" }
-                                    span class="hidden input-error" {}
-                                    div .flex.join {
-                                        div .w-full {
-                                            input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
-                                        }
-                                        button type="button" class="btn btn-sm join-item"
-                                            hx-get="/fetch"
-                                            hx-vals="js:{url: event.target.previousElementSibling.value}"
-                                            hx-swap="none"
-                                            _="on htmx:afterRequest
-                                                if event.detail.successful then
-                                                    set a to first in event.target.parentElement.parentElement.children then
-                                                    call updateMediaFromFetch(a, event.detail.xhr.responseURL)
-                                                end" { "Fetch" }
-                                    }
-                                    div _="on load if not navigator.clipboard hide me" {
-                                        div .divider { "OR" }
-                                        button type="button" class="btn btn-sm" onclick="pasteImage(event)" {
-                                            "Paste copied image"
-                                        }
-                                    }
-                                }
-                                button type="button" class={
-                                        "btn btn-sm btn-error btn-outline"
-                                        @if image_exists { " hidden" }
-                                    }
-                                    onclick="deleteMedia(event)" { "Delete" }
-                            }
-                        }
-                    }
-                    @for (idx, video) in view.recipe_details.videos.iter().enumerate() {
-                        @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
-                        @let video_url = format!("/data/videos/{}.webp", video.video);
-                        @let num_images = view.recipe_details.num_images();
-
-                        label id=(format!("media-{}", idx+1+num_images)) class={
-                            @if num_images > 0 || idx > 0 { "hidden" }
-                        } {
-                            img src="" alt="" class="mb-2";
-                            @if video_exists {
-                                video controls class="mb-2" src=(format!("/data/videos/{}.webm", video.video)) type="video/webm" {}
-                            }
-                            span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;" {
-                                div class="mr-1 hidden" {
-                                    input type="file" accept="image/*,video/*" name="media"
-                                        class="file-input file-input-sm file-input-bordered w-full max-w-sm"
-                                        value=(if video_exists {
-                                            &video_url
-                                        } else {
-                                            ""
-                                        })
-                                        _=(PreEscaped("on dragover or dragenter halt the event then set the target's style.background to 'lightgray'
-                                              on dragleave or drop set the target's style.background to ''
-                                              on drop or change
-                                                make an FileReader called reader then
-                                                if event.dataTransfer
-                                                    get event.dataTransfer.files[0]
-                                                else
-                                                    get event.target.files[0]
-                                                end then
-                                                if it.type.startsWith('video')
-                                                    put `<video controls class='object-cover mb-2 w-full max-h-[39rem]' src='${window.URL.createObjectURL(it)}'></video>` after previous <img/> then
-                                                    add .hidden to previous <img/>
-                                                else
-                                                    set {src: window.URL.createObjectURL(it)} on previous <img/>
-                                                end then
-                                                remove .hidden from me.parentElement.parentElement.querySelectorAll('button') then
-                                                add .hidden to the parentElement of me"));
-                                    div .divider { "OR" }
-                                    span class="hidden input-error" {}
-                                    div .flex.join {
-                                        div .w-full {
-                                            input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
-                                        }
-                                        button type="button" class="btn btn-sm join-item"
-                                            hx-get="/fetch"
-                                            hx-vals="js:{url: event.target.previousElementSibling.value}"
-                                            hx-swap="none"
-                                            _="on htmx:afterRequest
-                                                if event.detail.successful then
-                                                    set a to first in event.target.parentElement.parentElement.children then
-                                                    call updateMediaFromFetch(a, event.detail.xhr.responseURL)
-                                                end" { "Fetch" }
-                                    }
-                                    div _="on load if not navigator.clipboard hide me" {
-                                        div .divider { "OR" }
-                                        button type="button" class="btn btn-sm" onclick="pasteImage(event)" {
-                                            "Paste copied image"
-                                        }
-                                    }
-                                }
-                                button type="button" class="btn btn-sm btn-error btn-outline" onclick="deleteMedia(event)" {
-                                    "Delete"
-                                }
                             }
                         }
                     }

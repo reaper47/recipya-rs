@@ -124,6 +124,7 @@ pub struct PreviewForm {
     #[serde(rename = "json-input")]
     pub(crate) json_input: String,
 }
+const FIFTY_MB: usize = 50 * 1024 * 1024;
 
 /// Defines the routes for endpoints related to recipes.
 pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
@@ -138,7 +139,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
             "/{:recipe_id}/edit",
             get(edit_recipe_handler)
                 .put(edit_recipe_put_handler)
-                .layer(DefaultBodyLimit::max(50 * 1024 * 1024)),
+                .layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route("/{:recipe_id}/favourite", post(toggle_favourite_handler))
         .route("/{:recipe_id}/scale", get(scale_recipe_handler))
@@ -146,7 +147,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
         .route("/add", get(add_recipes_handler))
         .route(
             "/add/import",
-            post(add_recipe_import_handler).layer(DefaultBodyLimit::max(50 * 1024 * 1024)),
+            post(add_recipe_import_handler).layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route(
             "/add/import/preview",
@@ -157,7 +158,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
             "/add/manual",
             get(add_manual_recipe_handler)
                 .post(add_manual_recipe_post_handler)
-                .layer(DefaultBodyLimit::max(50 * 1024 * 1024)),
+                .layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route("/add/website", post(add_website_post_handler))
         .route(
@@ -297,7 +298,7 @@ mod tests {
                 r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
                 r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
                 r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale (copy)">"#,
-                r#"<img src="" alt="" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
+                r#"<img src="" alt="Image #1 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="4" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value="dinner"><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option><option>dinner</option></datalist>"#,
                 r#"<textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none">This is the most delicious recipe!</textarea>"#,
@@ -706,8 +707,8 @@ mod tests {
                 r#"<title hx-swap-oob="true">Edit Best Chinese Kale | Recipya</title>"#,
                 r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/1/edit" hx-indicator="#fullscreen-loader">"##,
                 r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale">"#,
-                r#"<img src="" alt="Image #1 of the recipe" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="""#,
-                r#"<img src="" alt="Image #2 of the recipe" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="""#,
+                r#"<img src="" alt="Image #1 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
+                r#"<img src="" alt="Image #2 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<img src="" alt="" class="mb-2"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1 hidden"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="4" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value="dinner"><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option><option>dinner</option></datalist>"#,
@@ -2242,7 +2243,7 @@ mod tests {
                 r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
                 r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
                 r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200">"#,
-                r#"<img src="" alt="" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
+                r#"<img src="" alt="Image #1 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="1" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value=""><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option></datalist>"#,
                 r#"<textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none"></textarea>"#,

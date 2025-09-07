@@ -114,6 +114,33 @@ impl RecipeForCreate {
     }
 }
 
+impl From<&RecipeForm> for RecipeForCreate {
+    fn from(form: &RecipeForm) -> Self {
+        let ingredients = &form.ingredients;
+        let measurement_system_id = units::MeasurementSystem::from(ingredients.clone()).id();
+
+        Self {
+            name: form.title.clone(),
+            description: form.description.clone(),
+            images: vec![],
+            yield_: form.yield_,
+            source: form.source.clone().unwrap_or_default(),
+            is_favourite: false,
+            rating: form.rating,
+            videos: vec![],
+            category: form.category.clone().or(Some("uncategorized".into())),
+            cuisine: form.cuisine.clone(),
+            ingredients: Sections::from([("".into(), ingredients.to_vec())]),
+            instructions: Sections::from([("".into(), form.instructions.clone())]),
+            keywords: form.keywords.clone(),
+            measurement_system_id,
+            nutrition: form.nutrition.clone(),
+            times: form.times.clone(),
+            tools: form.tools.clone(),
+        }
+    }
+}
+
 impl From<RecipeForm> for RecipeForCreate {
     fn from(form: RecipeForm) -> Self {
         let ingredients = form.ingredients;
