@@ -148,22 +148,44 @@ class ImageEditor {
     }
 
     apply() {
-        this._selection().$toCanvas().then(canvas => {
-            this.originalImage.src = canvas.toDataURL("image/png");
+        const selection = this._selection();
+        const devicePixelRatio = window.devicePixelRatio || 1;
+
+        selection.$toCanvas({
+            width: Math.round(selection.width * devicePixelRatio),
+            height: Math.round(selection.height * devicePixelRatio),
+            beforeDraw: (context, canvas) => {
+                context.imageSmoothingEnabled = true;
+                context.imageSmoothingQuality = 'high';
+            }
+        }).then(canvas => {
+            canvas.style.width = `${selection.width}px`;
+            canvas.style.height = `${selection.height}px`;
 
             canvas.toBlob(blob => {
-                const file = new File([blob], "edited-image.png", {type: blob.type});
+                const objectURL = URL.createObjectURL(blob);
+                this.originalImage.src = objectURL;
+
+                if (this.originalImage.dataset.objectUrl) {
+                    URL.revokeObjectURL(this.originalImage.dataset.objectUrl);
+                }
+                this.originalImage.dataset.objectUrl = objectURL;
+
+                const file = new File([blob], "edited-image.png", {
+                    type: "image/png",
+                    lastModified: Date.now()
+                });
 
                 const hiddenInput = this.container.querySelector('input[name="media"]');
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 hiddenInput.files = dt.files;
-            }, "image/png");
+
+            }, "image/png", 1.0);
 
             this.originalImage.parentElement.querySelector("input")?.remove();
-
             this.destroy();
-        })
+        });
     }
 
     destroy() {
