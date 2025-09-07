@@ -236,7 +236,7 @@ fn render_media() -> Markup {
     html! {
         div #media .col-span-6 {
             label #media-1 .block {
-                div class="cropper-wrap mb-2 w-full max-h-[39rem] relative overflow-hidden" {
+                div class="cropper-wrap mb-2 w-full max-h-[39rem] relative overflow-hidden hidden" {
                     img src="" alt="" class="block w-full h-full object-contain";
                 }
 

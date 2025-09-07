@@ -1,7 +1,7 @@
 function addMedia(event) {
-    let media = document.querySelectorAll("#media label.media");
-    for (let i = 0; i < media.length; i++) {
-        if (media[i].querySelector('input[type="file"]').files.length === 0) {
+    let labels = document.querySelectorAll("#media label");
+    for (let i = 0; i < labels.length; i++) {
+        if (labels[i].querySelector('input[type="file"]').files.length === 0) {
             alert(`Please select an image or video for 'Media ${i + 1}'`);
             return;
         }
@@ -10,10 +10,10 @@ function addMedia(event) {
     const buttons = document.querySelectorAll(".buttons-container button");
     buttons.forEach(btn => btn.classList.remove("btn-active"));
 
-    const cloneMedia = media[media.length - 1].cloneNode(true);
-    media.forEach(label => label.classList.add("hidden"));
+    const cloneMedia = labels[labels.length - 1].cloneNode(true);
+    labels.forEach(label => label.classList.add("hidden"));
     cloneMedia.querySelector("input").value = "";
-    cloneMedia.id = `media-${media.length + 1}`;
+    cloneMedia.id = `media-${labels.length + 1}`;
 
     let img = cloneMedia.querySelector("img");
     if (!img) {
@@ -27,6 +27,7 @@ function addMedia(event) {
     cloneMedia.querySelector("input[type='url']").value = "";
     cloneMedia.querySelector("span > div").classList.remove("hidden");
     cloneMedia.querySelector(".image-actions").classList.add("hidden");
+    cloneMedia.querySelector(".cropper-wrap")?.classList.add("hidden")
     document.querySelector("#media").appendChild(cloneMedia);
 
     const video = cloneMedia.querySelector("video");
@@ -34,8 +35,8 @@ function addMedia(event) {
         img.classList.remove("hidden");
         video.parentNode.removeChild(video);
     }
-    media = document.querySelectorAll("#media label");
-    media[media.length - 1].classList.remove("hidden");
+    labels = document.querySelectorAll("#media label");
+    labels[labels.length - 1].classList.remove("hidden");
     _hyperscript.processNode(cloneMedia);
 
     let target = event.target;
@@ -257,7 +258,8 @@ function getLabel(event) {
 function toggleMediaButtons(isEnabled) {
     const mediaButtons = document.querySelectorAll("[id^='media-button-']");
     const addMediaButton = document.querySelector("#add-media-button");
-    const input = document.querySelector('input[name="media"]');
+    const inputs = document.querySelectorAll('input[name="media"]');
+    const input = inputs[inputs.length - 1];
 
     if (isEnabled) {
         mediaButtons.forEach(button => {

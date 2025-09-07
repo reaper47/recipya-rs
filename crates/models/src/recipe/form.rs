@@ -239,11 +239,7 @@ async fn save_media_field(
     images: &mut HashMap<String, PathBuf>,
     videos: &mut HashMap<String, PathBuf>,
 ) -> Result<(), InvalidBoundary> {
-    let base = field
-        .file_name()
-        .and_then(|n| n.rsplit_once('.').map(|(b, _)| b).or(Some(n)))
-        .unwrap_or("upload")
-        .to_owned();
+    let filename = Uuid::new_v4();
 
     let bytes = field.bytes().await.unwrap_or_default();
     if bytes.is_empty() {
@@ -254,15 +250,15 @@ async fn save_media_field(
         .map(|k| k.mime_type())
         .unwrap_or("application/octet-stream");
 
-    let path = temp_dir().join(format!("{}", Uuid::new_v4()));
+    let path = temp_dir().join(filename.to_string());
     tokio::fs::write(&path, &bytes)
         .await
         .map_err(|_| InvalidBoundary::default())?;
 
     if mime.starts_with("video/") {
-        videos.insert(base.to_string(), path.clone());
+        videos.insert(filename.to_string(), path.clone());
     } else {
-        images.insert(base.to_string(), path.clone());
+        images.insert(filename.to_string(), path.clone());
     }
     Ok(())
 }
