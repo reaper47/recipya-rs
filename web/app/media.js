@@ -1,7 +1,9 @@
 function addMedia(event) {
     let labels = document.querySelectorAll("#media label");
     for (let i = 0; i < labels.length; i++) {
-        if (labels[i].querySelector('input[type="file"]').files.length === 0) {
+        const fileEl = labels[i].querySelector('input[type="file"]');
+        const existingEl = labels[i].querySelector('input[name="media-existing-image"]');
+        if (fileEl.files.length === 0 && !existingEl) {
             alert(`Please select an image or video for 'Media ${i + 1}'`);
             return;
         }
@@ -77,7 +79,8 @@ function deleteMedia(event) {
     span.children[0].classList.remove("hidden");
     span.querySelector(".image-actions")?.classList.add("hidden");
     label.querySelector("cropper-canvas")?.remove();
-    label.parentElement.querySelector("input[name='media-existing-image']").remove();
+    console.log(label.parentElement.querySelector("input[name='media-existing-image']"))
+    label.querySelector("input[name='media-existing-image']")?.remove();
 }
 
 function switchMedia(event) {
@@ -157,7 +160,7 @@ class ImageEditor {
                 hiddenInput.files = dt.files;
             }, "image/png");
 
-            this.originalImage.parentElement.querySelector("input").remove();
+            this.originalImage.parentElement.querySelector("input")?.remove();
 
             this.destroy();
         })
