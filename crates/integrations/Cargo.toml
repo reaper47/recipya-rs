@@ -33,7 +33,7 @@ support = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
-zip = "4.3.0"
+zip = "5.0.0"
 
 [dev-dependencies]
 pretty_assertions = { workspace = true }

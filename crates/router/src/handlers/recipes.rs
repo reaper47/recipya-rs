@@ -59,7 +59,7 @@ pub async fn delete_recipe_handler(
             state.remove_cached_recipe((user_id, recipe_id)).await;
             (
                 StatusCode::NO_CONTENT,
-                [(axum_htmx::headers::HX_REDIRECT, "/")],
+                [(HX_REDIRECT, "/")],
             )
                 .into_response()
         }
@@ -299,20 +299,18 @@ pub async fn edit_recipe_put_handler(
     form: RecipeForm,
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
+    let fs_support = Arc::clone(&state.fs_support);
 
-    let images = form
+    let mut recipe_c = RecipeForCreate::from(&form);
+    recipe_c.images = form
         .images
-        .iter()
+        .into_iter()
         .map(
-            |(original_file_stem, path)| match Uuid::parse_str(original_file_stem) {
-                Ok(name)
-                    if state
-                        .fs_support
-                        .is_file_exists(name, &state.data_dir.images) =>
-                {
+            |(original_file_stem, path)| match Uuid::parse_str(&original_file_stem) {
+                Ok(name) if fs_support.is_file_exists(name, &state.data_dir.images, ".webp") => {
                     name
                 }
-                _ => {
+                Ok(_) | Err(_) => {
                     let file_name = path
                         .file_stem()
                         .unwrap_or_default()
@@ -321,16 +319,21 @@ pub async fn edit_recipe_put_handler(
                         .parse::<Uuid>()
                         .unwrap_or_default();
 
-                    state
-                        .fs_support
-                        .upload_image(path, file_name, &state.data_dir.images);
+                    fs_support.upload_image(&path, file_name, &state.data_dir.images);
+
+                    let thumbnails_dir = state.data_dir.thumbnails.clone();
+                    let fs_support = Arc::clone(&state.fs_support);
+                    tokio::spawn(async move {
+                        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                    });
+
                     file_name
                 }
             },
         )
         .collect::<Vec<_>>();
 
-    let videos = if form.videos.is_empty() {
+    recipe_c.videos = if form.videos.is_empty() {
         Vec::new()
     } else {
         let videos = join_all(form.videos.iter().map(|(original_file_stem, path)| {
@@ -339,15 +342,17 @@ pub async fn edit_recipe_put_handler(
 
             async move {
                 match Uuid::parse_str(original_file_stem) {
-                    Ok(name) if fs_support.is_file_exists(name, &dir_videos) => VideoForCreate {
-                        video: name,
-                        duration: fs_support
-                            .calc_video_duration(path.to_str().unwrap_or_default())
-                            .await
-                            .ok(),
-                        content_url: None,
-                        embed_url: None,
-                    },
+                    Ok(name) if fs_support.is_file_exists(name, &dir_videos, ".webm") => {
+                        VideoForCreate {
+                            video: name,
+                            duration: fs_support
+                                .calc_video_duration(path.to_str().unwrap_or_default())
+                                .await
+                                .ok(),
+                            content_url: None,
+                            embed_url: None,
+                        }
+                    }
                     _ => VideoForCreate::from_path(fs_support, path).await,
                 }
             }
@@ -360,10 +365,6 @@ pub async fn edit_recipe_put_handler(
         );
         videos
     };
-
-    let mut recipe_c = RecipeForCreate::from(form);
-    recipe_c.images = images;
-    recipe_c.videos = videos;
 
     match Recipe::update(&state.mm, user_id, recipe_id, &mut recipe_c).await {
         Ok(_) => {
@@ -379,7 +380,7 @@ pub async fn edit_recipe_put_handler(
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
     if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
         res.headers_mut()
-            .insert(axum_htmx::headers::HX_REDIRECT, value);
+            .insert(HX_REDIRECT, value);
     }
     res
 }
@@ -851,6 +852,13 @@ pub async fn add_manual_recipe_post_handler(
                 .unwrap_or_default();
 
             fs_support.upload_image(&path, file_name, &state.data_dir.images);
+
+            let thumbnails_dir = state.data_dir.thumbnails.clone();
+            let fs_support = Arc::clone(&state.fs_support);
+            tokio::spawn(async move {
+                fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+            });
+
             file_name
         })
         .collect::<Vec<_>>();
@@ -911,7 +919,7 @@ pub async fn add_manual_recipe_post_handler(
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
     if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
         res.headers_mut()
-            .insert(axum_htmx::headers::HX_REDIRECT, value);
+            .insert(HX_REDIRECT, value);
     }
     res
 }
@@ -1186,7 +1194,7 @@ fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, url: Url) -> Op
     fs_support.upload_image(&path, file_name, &state.data_dir.images);
     state
         .fs_support
-        .is_file_exists(file_name, &state.data_dir.images)
+        .is_file_exists(file_name, &state.data_dir.images, ".webp")
         .then_some(file_name)
 }
 
@@ -1214,7 +1222,7 @@ async fn extract_videos(
                             .clone()
                             .upload_videos(vec![path.clone()], &state.data_dir.images);
 
-                        if fs_support.is_file_exists(file_name, &state.data_dir.videos) {
+                        if fs_support.is_file_exists(file_name, &state.data_dir.videos, ".webp") {
                             videos.push(VideoForCreate {
                                 video: file_name,
                                 duration: fs_support

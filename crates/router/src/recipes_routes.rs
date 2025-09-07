@@ -124,6 +124,7 @@ pub struct PreviewForm {
     #[serde(rename = "json-input")]
     pub(crate) json_input: String,
 }
+const FIFTY_MB: usize = 50 * 1024 * 1024;
 
 /// Defines the routes for endpoints related to recipes.
 pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
@@ -138,7 +139,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
             "/{:recipe_id}/edit",
             get(edit_recipe_handler)
                 .put(edit_recipe_put_handler)
-                .layer(DefaultBodyLimit::max(1024 * 512)),
+                .layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route("/{:recipe_id}/favourite", post(toggle_favourite_handler))
         .route("/{:recipe_id}/scale", get(scale_recipe_handler))
@@ -146,7 +147,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
         .route("/add", get(add_recipes_handler))
         .route(
             "/add/import",
-            post(add_recipe_import_handler).layer(DefaultBodyLimit::max(50 * 1024 * 1024)),
+            post(add_recipe_import_handler).layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route(
             "/add/import/preview",
@@ -157,7 +158,7 @@ pub(super) fn recipes_routes(state: AppState) -> Router<AppState> {
             "/add/manual",
             get(add_manual_recipe_handler)
                 .post(add_manual_recipe_post_handler)
-                .layer(DefaultBodyLimit::max(1024 * 512)),
+                .layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route("/add/website", post(add_website_post_handler))
         .route(
@@ -295,9 +296,9 @@ mod tests {
         fn assert_recipe_form(res: TestResponse) {
             let expected = [
                 r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
-                r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
+                r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
                 r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale (copy)">"#,
-                r#"<img src="" alt="" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
+                r#"<img src="" alt="Image #1 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="4" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value="dinner"><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option><option>dinner</option></datalist>"#,
                 r#"<textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none">This is the most delicious recipe!</textarea>"#,
@@ -706,8 +707,8 @@ mod tests {
                 r#"<title hx-swap-oob="true">Edit Best Chinese Kale | Recipya</title>"#,
                 r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/1/edit" hx-indicator="#fullscreen-loader">"##,
                 r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale">"#,
-                r#"<img src="" alt="Image #1 of the recipe" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="""#,
-                r#"<img src="" alt="Image #2 of the recipe" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="""#,
+                r#"<img src="" alt="Image #1 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
+                r#"<img src="" alt="Image #2 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<img src="" alt="" class="mb-2"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1 hidden"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="4" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value="dinner"><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option><option>dinner</option></datalist>"#,
@@ -1606,8 +1607,8 @@ mod tests {
                     r#"<p class="text-xs">Per 100g: calories 300 kcal; total carbohydrates 55g; sugar 43g; protein 7g; total fat 6g; saturated fat 1g; unsaturated fat 2g; trans fat 3g; cholesterol 5mg; sodium 12mg; fiber 10g</p>"#,
                     r#"<div class="grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:row-span-1 print:border-none md:grid-cols-4"><div class="contents md:col-span-3"><div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time">"#,
                     r#"<table class="table table-zebra table-xs print:hidden"><thead><tr><th>Nutrition (per 100g)</th><th>Amount</th></tr></thead><tbody><tr><td>Calories:</td><td>300 kcal</td></tr><tr><td>Total carbs:</td><td>55 g</td></tr><tr><td>Sugars:</td><td>43 g</td></tr><tr><td>Protein:</td><td>7 g</td></tr><tr><td>Total fat:</td><td>6 g</td></tr><tr><td>Saturated fat:</td><td>1 g</td></tr><tr><td>Unsaturated fat:</td><td>2 g</td></tr><tr><td>Trans fat:</td><td>3 g</td></tr><tr><td>Cholesterol:</td><td>5 mg</td></tr><tr><td>Sodium:</td><td>12 mg</td></tr><tr><td>Fiber:</td><td>10 g</td></tr></tbody></table>"#,
-                    r#"<h1 class="text-sm print:mb-1"><b>Tools</b></h1><ol class="col-span-6 w-full mb-4" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1wok</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1frying pan</span></li></ol>"#,
-                    r#"<div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden"><h2 class="font-semibold text-center underline pb-1">Instructions</h2><ol class="grid list-decimal"><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Mix all these ingredients</span></li><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Turn the oven at 300 F</span></li><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Soak the chicken in the lemon juice</span></li><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Bake for 35 minutes</span></li></ol></div></div><div class="hidden print:grid col-span-6 ml-2 my-1"><h1 class="text-sm print:mb-1"><b>Tools</b></h1><ol class="col-span-6 w-full mb-4" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1wok</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1frying pan</span></li></ol><h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><ol class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1 cup blue spinach</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1/2 tbsp cinnamon</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">4 pounds top quality chicken filet</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1/8 cup lemon juice</span></li></ol></div><div class="hidden col-span-5 overflow-visible print:inline"><h1 class="text-sm print:ml-2 print:mb-1"><b>Instructions</b></h1><ol class="col-span-6 list-decimal w-full ml-6"><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Mix all these ingredients</span></li><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Turn the oven at 300 F</span></li><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Soak the chicken in the lemon juice</span></li><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Bake for 35 minutes</span></li></ol></div>"#,
+                    r#"<h1 class="text-sm print:mb-1"><b>Tools</b></h1><ol class="col-span-6 w-full mb-4" style="column-count: 1"><li class="text-sm"><label class="flex items-center w-full"><input type="checkbox"></label><span class="pl-2">1wok</span></li><li class="text-sm"><label class="flex items-center w-full"><input type="checkbox"></label><span class="pl-2">1frying pan</span></li></ol>"#,
+                    r#"<div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden"><h2 class="font-semibold text-center underline pb-1">Instructions</h2><ol class="grid list-decimal"><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Mix all these ingredients</span></li><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Turn the oven at 300 F</span></li><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Soak the chicken in the lemon juice</span></li><li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through"><span class="whitespace-pre-line">Bake for 35 minutes</span></li></ol></div></div><div class="hidden print:grid col-span-6 ml-2 my-1"><h1 class="text-sm print:mb-1"><b>Tools</b></h1><ol class="col-span-6 w-full mb-4" style="column-count: 1"><li class="text-sm"><label class="flex items-center w-full"><input type="checkbox"></label><span class="pl-2">1wok</span></li><li class="text-sm"><label class="flex items-center w-full"><input type="checkbox"></label><span class="pl-2">1frying pan</span></li></ol><h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><ol class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1 cup blue spinach</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1/2 tbsp cinnamon</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">4 pounds top quality chicken filet</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1/8 cup lemon juice</span></li></ol></div><div class="hidden col-span-5 overflow-visible print:inline"><h1 class="text-sm print:ml-2 print:mb-1"><b>Instructions</b></h1><ol class="col-span-6 list-decimal w-full ml-6"><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Mix all these ingredients</span></li><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Turn the oven at 300 F</span></li><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Soak the chicken in the lemon juice</span></li><li class="print:mr-4"><span class="text-sm whitespace-pre-line">Bake for 35 minutes</span></li></ol></div>"#,
                     r#"<h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><ol class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">"#,
                 ],
             )
@@ -2240,9 +2241,9 @@ mod tests {
         fn assert_recipe_form(res: TestResponse) {
             let expected = [
                 r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
-                r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
+                r##"<form class="card-body" style="padding: 0" enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
                 r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200">"#,
-                r#"<img src="" alt="" class="object-cover mb-2 w-full max-h-[39rem]"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
+                r#"<img src="" alt="Image #1 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
                 r#"<input id="servings" type="number" min="1" name="yield" value="1" class="input input-sm w-11/12">"#,
                 r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value=""><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option></datalist>"#,
                 r#"<textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none"></textarea>"#,

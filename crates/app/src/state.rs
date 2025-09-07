@@ -102,15 +102,13 @@ impl AppState {
 
         let send_timeout = Duration::from_secs(10);
 
-        // Temporarily take connections for this user so we don't hold the lock across awaits
-        let mut conns = {
+        let connections = {
             let mut subs = self.subscribers.lock().await;
             subs.remove(&user_id).unwrap_or_default()
         };
 
-        let mut alive = Vec::with_capacity(conns.len());
-        for mut ws in conns {
-            // ping: if it fails or times out, drop the socket
+        let mut alive = Vec::with_capacity(connections.len());
+        for mut ws in connections {
             if timeout(send_timeout, ws.send(Message::Ping(Vec::new().into())))
                 .await
                 .is_err()
@@ -121,7 +119,7 @@ impl AppState {
             match timeout(send_timeout, ws.send(message.clone())).await {
                 Ok(Ok(())) => alive.push(ws),
                 _ => {
-                    // Broken pipe / timeout / other: drop silently or at debug level
+                    // Broken pipe / timeout / other: drop silently
                 }
             }
         }

@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 
 use regex::Regex;
 
-use crate::{Error, Result};
+use crate::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Temperature {

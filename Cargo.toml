@@ -39,7 +39,7 @@ templates = { path = "./crates/templates" }
 # non-local crates
 async-trait = "0.1.89"
 axum = { version = "0.8.4", features = ["multipart", "ws"] }
-axum-test = { version = "17.2.0", features = ["ws"] }
+axum-test = { version = "18.1.0", features = ["ws"] }
 base64 = "0.22.1"
 chrono = "0.4.41"
 derive_more = { version = "2.0.1", features = ["from", "display"] }

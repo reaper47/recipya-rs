@@ -59,7 +59,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/web/app/json-highlighter.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/json-highlighter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/media.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/media.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/js/media.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/media.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,6 +72,7 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="JavaScript File" />
         <option value="Rust File" />
       </list>
     </option>
@@ -130,7 +133,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Cargo.Run.executor": "Run",
+    "Cargo.Run.executor": "Debug",
     "Cargo.Test admin_router::tests.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_ok.executor": "Run",
@@ -624,7 +627,7 @@
     "Cargo.Test share::tests::tests_fetch_by_link::test_exists_err.executor": "Run",
     "Cargo.Test shared_router::tests.executor": "Run",
     "Cargo.Test shared_router::tests::test_recipe_not_shared_ok.executor": "Debug",
-    "Cargo.Test shared_router::tests::test_shared_anonymous_ok.executor": "Run",
+    "Cargo.Test shared_router::tests::test_shared_anonymous_ok.executor": "Debug",
     "Cargo.Test shared_router::tests::test_shared_logged_in_ok.executor": "Run",
     "Cargo.Test strings::tests.executor": "Run",
     "Cargo.Test strings::tests::tests_auto_convert_to_utf8::test_fallback_to_lossy_conversion.executor": "Run",
@@ -708,7 +711,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "161-add-ability-to-paste-raw-json-during-import",
+    "git-widget-placeholder": "#165 on 160-add-ability-to-rotate-and-cro…cipes",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -740,18 +743,18 @@
       <recent name="$PROJECT_DIR$/crates/foundation/src/macros" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/crates/templates/src/templates/recipes" />
       <recent name="$PROJECT_DIR$/crates/testing" />
       <recent name="$PROJECT_DIR$/crates/math/src/cooking/units" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/crates/app/src" />
-      <recent name="$PROJECT_DIR$/crates" />
     </key>
   </component>
   <component name="RsExternalLinterProjectSettings">
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test shared_router::tests::test_shared_anonymous_ok">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -761,6 +764,41 @@
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="true" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_get_recipe_exists_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
@@ -787,8 +825,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -805,41 +843,8 @@
       </method>
     </configuration>
     <configuration name="Test shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
       <option name="command" value="test --package router --lib shared_router::tests::test_shared_anonymous_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test tests_recipe_add_import_preview" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_preview" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test tests_recipe_add_import_raw_json" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -857,19 +862,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" />
       <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
-      <item itemvalue="Cargo.Test tests_recipe_add_import_preview" />
-      <item itemvalue="Cargo.Test tests_recipe_add_import_raw_json" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
         <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
         <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
-        <item itemvalue="Cargo.Test tests_recipe_add_import_preview" />
-        <item itemvalue="Cargo.Test tests_recipe_add_import_raw_json" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipes_add_import::tests_recipe_add_import_raw_json::test_post_payload_double_insert_ok" />
       </list>
     </recent_temporary>
   </component>
@@ -905,6 +910,20 @@
     <option name="LAST_COMMIT_MESSAGE" value="" />
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/crates/models/src/recipe/form.rs</url>
+          <line>92</line>
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/crates/models/src/recipe/form.rs</url>
+          <line>89</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
       <configuration name="CargoCommandRunConfiguration">
         <watch expression="v[1].0" />

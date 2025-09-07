@@ -20,7 +20,7 @@ chrono = { workspace = true }
 derive_more = { workspace = true }
 encoding_rs = "0.8.35"
 futures-util = { workspace = true }
-image = "0.25.6"
+image = { version = "0.25", features = ["webp"] }
 nom = { workspace = true }
 regex = { workspace = true }
 time = { workspace = true, features = ["formatting", "parsing"] }
