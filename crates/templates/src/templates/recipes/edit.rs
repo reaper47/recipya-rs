@@ -8,9 +8,7 @@ use models::recipe::{Category, Keyword};
 use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
 
-use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty, render_media_editor,
-};
+use crate::recipes::common::{add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating, recipe_keyword_empty, render_media_editor};
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
 };
@@ -46,6 +44,7 @@ pub fn edit_recipe(
         } @else {
             (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords), user_setting, true))
         }
+        (init_recipe_form_js())
     })
 }
 

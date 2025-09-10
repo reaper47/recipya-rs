@@ -240,6 +240,12 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
     }
 }
 
+pub(super) fn init_recipe_form_js() -> Markup {
+    html! {
+        (PreEscaped(r#"<script defer>document.addEventListener("DOMContentLoaded", () => initRecipeFormJS())</script>"#))
+    }
+}
+
 pub(super) fn rating(name: &str, value: Option<i16>, size: &str, is_ro: bool) -> Markup {
     let value = value.unwrap_or(0);
 

@@ -1,18 +1,11 @@
-use maud::{Markup, PreEscaped, html};
+use maud::{html, Markup, PreEscaped};
 
 use models::data::{Data, ViewRecipe};
 use models::recipe::{Category, Keyword};
 use models::settings::UserSettingDetails;
 
-use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty, render_media_editor,
-};
-use crate::templates::icons::{
-    icon_arrow_uturn_left, icon_arrow_uturn_right, icon_arrows_right_left, icon_arrows_up_down,
-    icon_check, icon_cooking_pot, icon_crop, icon_cutting_board, icon_information_circle,
-    icon_magnifying_glass_minus, icon_magnifying_glass_plus, icon_move_thin, icon_pencil,
-    icon_plus_circle, icon_trash, icon_x_mark,
-};
+use crate::recipes::common::{add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating, recipe_keyword_empty, render_media_editor};
+use crate::templates::icons::{icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle};
 use crate::templates::layouts;
 
 /// Renders the add recipe manually page.
@@ -33,6 +26,7 @@ pub fn add_recipe_manual(
         } @else {
             (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords), user_setting, true))
         }
+        (init_recipe_form_js())
     }
 }
 
