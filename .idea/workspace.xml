@@ -60,16 +60,14 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/admin_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/admin_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/common.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/edit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/edit.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/app.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -635,8 +633,9 @@
     &quot;Cargo.Test share::tests::tests_fetch_by_link::test_exists_err.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test shared_router::tests.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test shared_router::tests::test_recipe_not_shared_ok.executor&quot;: &quot;Debug&quot;,
-    &quot;Cargo.Test shared_router::tests::test_shared_anonymous_ok.executor&quot;: &quot;Debug&quot;,
+    &quot;Cargo.Test shared_router::tests::test_shared_anonymous_ok.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test shared_router::tests::test_shared_logged_in_ok.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test shared_router::tests::test_shared_logged_in_other_user_ok.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test strings::tests.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test strings::tests::tests_auto_convert_to_utf8::test_fallback_to_lossy_conversion.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test strings::tests::tests_auto_convert_to_utf8::test_invalid_utf8_fallback_to_windows_1252.executor&quot;: &quot;Debug&quot;,
@@ -719,7 +718,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
     &quot;SHELLCHECK.PATH&quot;: &quot;/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;90-add-notes&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#166 on 90-add-notes&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/macpoule/Documents/Projects/recipya-rs/crates/shit&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -762,7 +761,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok">
+  <component name="RunManager" selected="Cargo.Test shared_router::tests::test_shared_logged_in_other_user_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -781,60 +780,25 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="buildProfileId" value="test" />
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_get_recipe_exists_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -868,21 +832,55 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test shared_router::tests::test_shared_logged_in_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib shared_router::tests::test_shared_logged_in_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test shared_router::tests::test_shared_logged_in_other_user_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib shared_router::tests::test_shared_logged_in_other_user_ok -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
+      <item itemvalue="Cargo.Test shared_router::tests::test_shared_logged_in_ok" />
+      <item itemvalue="Cargo.Test shared_router::tests::test_shared_logged_in_other_user_ok" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
       <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
+        <item itemvalue="Cargo.Test shared_router::tests::test_shared_logged_in_other_user_ok" />
+        <item itemvalue="Cargo.Test shared_router::tests::test_shared_logged_in_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_website::test_add_a_website_that_has_already_been_added_ok" />
         <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
         <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
       </list>
     </recent_temporary>
   </component>

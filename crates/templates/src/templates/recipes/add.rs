@@ -68,6 +68,11 @@ fn render_add_recipe_manual(
                                     }
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
+                                    div class="grid grid-flow-col border-gray-700 col-span-6 py-2 md:border-t md:row-span-1 print:border-none" {
+                                        div class="flex justify-center items-center md:col-span-1" {
+                                            (rating("rating", Some(3), "", false))
+                                        }
+                                    }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
                                         div class="grid grid-flow-col grid-cols-3 gap-2 border-b border-t border-gray-700 px-2 md:col-span-2 md:border-b-0 md:border-r md:border-t-0 md:px-0" {
                                             div class="col-span-2 border-r border-gray-700 pb-2 px-2" {
@@ -86,19 +91,18 @@ fn render_add_recipe_manual(
                                             (render_keywords(view, keywords))
                                         }
                                     }
-                                    div class="grid grid-flow-col col-span-6 py-1 md:grid-cols-2 md:row-span-1" {
+                                    div class="grid grid-flow-col col-span-6 py-1 md:border-b md:grid-cols-2 md:row-span-1" {
                                         div class="contents md:col-span-2" {
                                             (render_times(view))
                                         }
-                                        div class="md:col-span-1" {
-                                            (rating("rating", Some(3), "", false))
+                                    }
+                                    div class="grid grid-flow-col col-span-6 md:border-b md:row-span-2" {
+                                        div class="col-span-6 min-h-40 border-r md:h-full md:col-span-1" {
+                                            (render_description(view))
                                         }
-                                    }
-                                    div class="grid grid-flow-col col-span-6 border-gray-700 border-y overflow-x-auto md:row-span-2" {
-                                        (render_nutrition_table())
-                                    }
-                                    div class="col-span-3 min-h-40 md:h-full md:row-span-1" {
-                                        (render_description(view))
+                                        div class="col-span-6 md:col-span-1" {
+                                            (render_nutrition_table())
+                                        }
                                     }
                                 }
                             }
@@ -147,20 +151,18 @@ fn render_categories(view: Option<&ViewRecipe>, categories: Vec<Category>) -> Ma
 
 fn render_description(view: Option<&ViewRecipe>) -> Markup {
     html! {
-        label {
-            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none" {
-                (
-                    if let Some(v) = view {
-                        if let Some(description) = &v.recipe_details.recipe.description {
-                            description.to_string()
-                        } else {
-                            String::new()
-                        }
+        textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {
+            (
+                if let Some(v) = view {
+                    if let Some(description) = &v.recipe_details.recipe.description {
+                        description.to_string()
                     } else {
                         String::new()
                     }
-                )
-            }
+                } else {
+                    String::new()
+                }
+            )
         }
     }
 }
