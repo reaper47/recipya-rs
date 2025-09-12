@@ -320,7 +320,7 @@ pub(super) fn render_media_editor(image_num: usize, image_src: &str) -> Markup {
 
             span class="grid gap-1" {
                 div class={
-                    "mr-1 image-selector"
+                    "mr-1 image-selector p-4"
                     @if !image_src.is_empty() { " hidden" }
                 } {
                     input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm"

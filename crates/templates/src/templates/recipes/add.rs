@@ -41,7 +41,7 @@ fn render_add_recipe_manual(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body style="padding: 0"
+                    form .card-body.contents style="padding: 0"
                          enctype="multipart/form-data" hx-encoding="multipart/form-data"
                          hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader" {
                         h2 class="card-title place-content-center rounded-t-2xl" {
@@ -68,8 +68,8 @@ fn render_add_recipe_manual(
                                     }
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
-                                    div class="grid grid-flow-col border-gray-700 col-span-6 py-2 md:border-t md:row-span-1 print:border-none" {
-                                        div class="flex justify-center items-center md:col-span-1" {
+                                    div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
+                                        div class="flex justify-center items-center" {
                                             (rating("rating", Some(3), "", false))
                                         }
                                     }
@@ -96,7 +96,7 @@ fn render_add_recipe_manual(
                                             (render_times(view))
                                         }
                                     }
-                                    div class="grid grid-flow-col col-span-6 md:border-b md:row-span-2" {
+                                    div class="grid grid-flow-col col-span-6" {
                                         div class="col-span-6 min-h-40 border-r md:h-full md:col-span-1" {
                                             (render_description(view))
                                         }

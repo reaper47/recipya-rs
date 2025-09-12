@@ -61,7 +61,7 @@ fn render_edit_recipe(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
+                    form .card-body.contents style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
                         (render_title(&view))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
@@ -89,8 +89,8 @@ fn render_edit_recipe(
                                     (render_media(&view, fs_support, data_dir))
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
-                                    div class="grid grid-flow-col border-gray-700 col-span-6 py-2 md:border-t md:row-span-1 print:border-none" {
-                                        div class="flex justify-center items-center md:col-span-1" {
+                                    div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
+                                        div class="flex justify-center items-center" {
                                             (rating("rating", view.recipe_details.recipe.rating, "", false))
                                         }
                                     }
@@ -110,18 +110,18 @@ fn render_edit_recipe(
                                     div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
                                         (render_keywords(&view, keywords))
                                     }
-                                    div class="grid grid-flow-col col-span-6 py-1 md:row-span-1" {
+                                    div class="grid grid-flow-col col-span-6 py-1 border-b" {
                                         div class="contents grid grid-flow-col" {
                                             (render_times(&view))
                                         }
                                     }
-                                    div class="grid grid-flow-col col-span-6 md:row-span-2" {
-                                        div class="grid grid-flow-col col-span-6 border-gray-700 border-y" {
+                                    div class="grid grid-flow-col col-span-6" {
+                                        div class="grid grid-flow-col col-span-6 border-gray-700" {
                                             textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none focus:outline-none" {
                                                 (view.recipe_details.recipe.description.as_ref().map_or(String::new(), ToString::to_string))
                                             }
                                         }
-                                         div class="grid grid-flow-col col-span-6 border-gray-700 border-y overflow-x-auto" {
+                                         div class="grid grid-flow-col col-span-6 border-gray-700 overflow-x-auto" {
                                             (render_nutrition(&view))
                                         }
                                     }

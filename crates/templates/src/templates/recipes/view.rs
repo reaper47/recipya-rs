@@ -91,14 +91,14 @@ pub fn view_recipe_helper(
         } data-layout="no-aside" {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
-                    div class="card-body" style="padding: 0" {
+                    div class="card-body contents" style="padding: 0" {
                         (render_header(recipe_id, &data, recipe_details, recipe.is_favourite))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
                             (render_media(fs_support, &view.recipe_details, &data_dir))
-                            div class="grid grid-cols-3 col-span-3 md:grid-flow-row print:grid-rows-2" style="grid-template-rows: auto" {
-                                div class="grid grid-flow-col border-gray-700 col-span-6 py-2 md:border-t md:row-span-1 print:border-none" {
+                            div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
+                                div class="grid grid-flow-col border-gray-700 col-span-6 md:border-t md:row-span-1 print:border-none" {
                                     div class={
-                                        "flex justify-center items-center md:col-span-1"
+                                        "flex justify-center items-center"
                                         @if data.is_preview { " md:hidden" }
                                     } {
                                         (rating("rating", recipe.rating, "", true))
@@ -189,7 +189,7 @@ pub fn view_recipe_helper(
                                     }
                                 }
                                 div class={
-                                    "grid grid-flow-col border-gray-700 border-b col-span-6 md:border-t-0 md:row-span-2 print:border-none"
+                                    "grid grid-flow-col border-gray-700 col-span-6 print:border-none"
                                     @if recipe_details.nutrition.is_none() { " print:hidden" }
                                 } {
                                     div class="col-span-3 min-h-40 md:h-full md:border-r md:row-span-1 print:hidden" {
@@ -533,8 +533,8 @@ fn render_media(
                                       img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]"
                                           src="/data/images/Placeholders/placeholder.recipe.webp";
                                 }
-                                div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2" {
-                                    a class="btn btn-circle"
+                                div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
+                                    a class="btn btn-soft btn-sm"
                                         href=(if idx == 0 {
                                             format!("#media-{}", recipe_details.num_media() - 1)
                                         } else {
@@ -542,7 +542,7 @@ fn render_media(
                                         }) {
                                         "❮"
                                     }
-                                    a class="btn btn-circle"
+                                    a class="btn btn-soft btn-sm"
                                       href=(if idx == recipe_details.num_media() - 1 {
                                             "#media-0".into()
                                       } else {
@@ -568,9 +568,9 @@ fn render_media(
                                         "Please refresh the page later."
                                     }
                                 }
-                                div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2" {
-                                    a class="btn btn-circle" href=(format!("#media-{}", idx.checked_add(recipe_details.num_images()).and_then(|val| val.checked_sub(1)).unwrap_or(1))) { "❮" }
-                                    a class="btn btn-circle"
+                                div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
+                                    a class="btn btn-soft btn-sm" href=(format!("#media-{}", idx.checked_add(recipe_details.num_images()).and_then(|val| val.checked_sub(1)).unwrap_or(1))) { "❮" }
+                                    a class="btn btn-soft btn-sm"
                                       href=(if idx == recipe_details.num_videos() - 1 {
                                             "#media-0".into()
                                         } else {
