@@ -8,7 +8,10 @@ use models::recipe::{Category, Keyword};
 use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
 
-use crate::recipes::common::{add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating, recipe_keyword_empty, render_media_editor};
+use crate::recipes::common::{
+    add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating, recipe_keyword_empty,
+    render_media_editor,
+};
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
 };
@@ -138,6 +141,12 @@ fn render_edit_recipe(
                                 (render_instructions(&view))
                             }
                         }
+                        @let mut notes = view.recipe_details.recipe.notes.as_ref().map_or(String::new(), ToString::to_string);
+                        div class="col-span-6 dark:border-gray-700"
+                            data-notes=(notes)
+                            _="on load call initNotes(me.dataset.notes)" {
+                             textarea #notes name="notes" placeholder="Write some notes about the recipe..." rows="8" class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {}
+                        }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" { "Submit" }
                         }
@@ -231,7 +240,7 @@ fn render_media(
                 (render_media_editor(1, ""))
             } @else {
                 @for (idx, &image) in view.recipe_details.all_images().iter().enumerate() {
-                    @let image_exists = fs_support.is_file_exists(image, &data_dir.images, ".webp");
+                    @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
                     @let image_src = if image_exists {
                         &format!("/data/images/{image}.webp")
                     } else {
@@ -361,7 +370,7 @@ fn render_source(view: &ViewRecipe) -> Markup {
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"
-            data-tip="The source can be a website, name of a cookbook, from a relative or friend, a magazine, etc." {
+            data-tip="The source can be a website, name of a cookbook, a relative or friend, a magazine, etc." {
             (icon_information_circle())
         }
     }

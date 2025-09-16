@@ -66,6 +66,7 @@ impl Recipe {
                             image: main_image,
                             yield_: recipe_c.yield_,
                             language: recipe_c.detect_language().code().to_string(),
+                            notes: recipe_c.notes.clone(),
                             source: recipe_c.source.clone(),
                             is_favourite: recipe_c.is_favourite,
                             rating: recipe_c.rating,
@@ -234,15 +235,9 @@ mod tests {
     fn a_bare_minimum_recipe() -> RecipeForCreate {
         RecipeForCreate {
             name: "Best Chinese Kale".into(),
-            description: None,
-            images: vec![],
             yield_: Some(4),
-            source: String::new(),
-            is_favourite: false,
             rating: Some(4),
-            videos: vec![],
             category: Some("uncategorized".into()),
-            cuisine: None,
             ingredients: Sections::from([
                 (
                     "Sauce".into(),
@@ -270,11 +265,8 @@ mod tests {
                     ]),
                 ),
             ]),
-            keywords: vec![],
             measurement_system_id: 2,
-            nutrition: None,
-            times: None,
-            tools: vec![],
+            ..Default::default()
         }
     }
 
@@ -320,6 +312,7 @@ mod tests {
                 language: "eng".into(),
                 source: recipe.source,
                 measurement_system_id: 2,
+                notes: recipe.notes,
                 user_id: 1,
                 created_at: got.recipe.created_at,
                 updated_at: got.recipe.updated_at,

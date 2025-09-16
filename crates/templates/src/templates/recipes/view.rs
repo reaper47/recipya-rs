@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use maud::{Markup, html};
+use maud::{Markup, html, PreEscaped};
 use serde_json::json;
 use url::Url;
 
@@ -219,6 +219,14 @@ pub fn view_recipe_helper(
                             }
                         }
                         (print_source(recipe))
+                        @if let Some(notes) = &recipe_details.recipe.notes {
+                            details class="border-t w-full" {
+                                summary class="font-semibold p-2 select-none" { "Notes" }
+                                div class="prose gap-2 py-2 px-4" {
+                                    (PreEscaped(markdown::to_html(notes)))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -524,7 +532,7 @@ fn render_media(
                     div class="carousel w-full" {
                         @for (idx, &img) in recipe_details.all_images().iter().enumerate() {
                             div id=(format!("media-{idx}")) class="carousel-item relative w-full" {
-                                @if fs_support.is_file_exists(img, &data_dir.images, ".webp") {
+                                @if fs_support.is_file_exists(img, &data_dir.images.root, ".webp") {
                                      img style="object-fit: cover"
                                     alt="Image of the recipe"
                                     class="w-full max-h-80 md:max-h-[34rem]"

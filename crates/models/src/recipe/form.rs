@@ -19,6 +19,7 @@ pub struct RecipeForm {
     pub ingredients: Vec<String>,
     pub instructions: Vec<String>,
     pub keywords: Vec<String>,
+    pub notes: Option<String>,
     pub nutrition: Option<NutritionForCreate>,
     pub rating: Option<i16>,
     pub source: Option<String>,
@@ -45,6 +46,7 @@ where
         let mut ingredients: Vec<String> = Vec::new();
         let mut instructions: Vec<String> = Vec::new();
         let mut keywords: Vec<String> = Vec::new();
+        let mut notes: Option<String> = None;
         let mut nutrition = NutritionForCreate::default();
         let mut rating: Option<i16> = None;
         let mut source: Option<String> = None;
@@ -103,6 +105,7 @@ where
 
                     videos.insert(uuid.into(), path);
                 }
+                "notes" => notes  = text_trim(field).await,
                 "rating" => rating = parse_i16(field).await,
                 "source" => source = text_trim(field).await,
                 "time-prep" => times.prep_seconds = calc_time_from_field(field).await,
@@ -188,9 +191,7 @@ where
                         nutrition.unsaturated_fat_g = Some(v);
                     }
                 }
-                _ => {
-                    warn!("Ignoring unknown multipart field: '{name}'");
-                }
+                _ => {}
             }
         }
 
@@ -207,6 +208,7 @@ where
             ingredients,
             instructions,
             keywords,
+            notes,
             nutrition: nutrition.is_empty().not().then_some(nutrition),
             rating,
             source,

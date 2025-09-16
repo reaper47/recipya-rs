@@ -23,8 +23,13 @@ pub async fn clean_media(
     let videos = fetch_videos(&mut conn, &data_dir).await?;
     let images = fetch_images(&mut conn, &data_dir).await?;
 
-    let (num_images_deleted, images_space_reclaimed_bytes) =
-        clean_files(&data_dir.images, &images, true, Arc::clone(&fs_support)).await?;
+    let (num_images_deleted, images_space_reclaimed_bytes) = clean_files(
+        &data_dir.images.root,
+        &images,
+        true,
+        Arc::clone(&fs_support),
+    )
+    .await?;
 
     let (num_videos_deleted, videos_space_reclaimed_bytes) =
         clean_files(&data_dir.videos, &videos, false, fs_support).await?;
@@ -82,7 +87,7 @@ async fn fetch_images(
         })
         .into_iter()
         .flatten()
-        .map(|uuid| PathBuf::from(format!("{:?}/{uuid}.webp", &data_dir.images)))
+        .map(|uuid| PathBuf::from(format!("{:?}/{uuid}.webp", &data_dir.images.root)))
         .collect())
 }
 

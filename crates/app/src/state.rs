@@ -1,12 +1,9 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
-use std::time::Duration;
 
 use axum::extract::ws::{Message, WebSocket};
 use tokio::sync::{Mutex, RwLock};
-use tokio::time::timeout;
-use tracing::error;
 use url::Url;
 
 use config::{Config, DataDir};

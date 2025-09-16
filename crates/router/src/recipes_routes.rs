@@ -314,10 +314,10 @@ mod tests {
                 r#"<input required type="text" name="ingredient" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
                 r#"<input required type="text" name="ingredient" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
                 r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Instructions</span><sup class="text-red-600">*</sup></h2>"#,
-                r##"<ol id="instructions-list" class="grid list-decimal"><li class="pt-2 md:pl-0"><div class="flex"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""##,
-                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea>"#,
-                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea>"#,
-                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,
+                r##"<ol id="instructions-list" class="grid list-decimal"><li class="pt-2 md:pl-0"><div class="flex"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""##,
+                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea>"#,
+                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea>"#,
+                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,
                 r#"<button class="btn btn-primary btn-block btn-sm">Submit</button>"#,
             ];
             for want in expected {
@@ -482,7 +482,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
             let mut recipe = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+            Recipe::create(&state.mm, 1, &recipe).await?;
             recipe.name = "Maple Syrup Korean Chicken".into();
             recipe.ingredients = Sections::from([("".into(), vec!["4 apples".to_string()])]);
             recipe.instructions = Sections::from([("".into(), vec!["Drink juice".to_string()])]);
@@ -586,6 +586,7 @@ mod tests {
                     ),
                 ]),
                 keywords: vec!["blueberries".into(), "vegan".into()],
+                notes: Some("# Ze notes\n\nbip bop".into()),
                 nutrition: Some(NutritionForCreate {
                     calories_kcal: Some(100),
                     total_carbohydrates: Some(20),
@@ -725,10 +726,10 @@ mod tests {
                 r#"<input required type="text" name="ingredient" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
                 r#"<input required type="text" name="ingredient" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
                 r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Instructions</span><sup class="text-red-600">*</sup></h2>"#,
-                r##"<textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""##,
-                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea>"#,
-                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea>"#,
-                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,
+                r##"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""##,
+                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea>"#,
+                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea>"#,
+                r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,
                 r#"<div class="rating"><input type="radio" name="rating" class="rating-hidden" value="" aria-label="clear"><input type="radio" name="rating" class="mask mask-star-2" value="1" aria-label="1 star"><input type="radio" name="rating" class="mask mask-star-2" value="2" aria-label="2 star"><input type="radio" name="rating" class="mask mask-star-2" value="3" aria-label="3 star"><input type="radio" name="rating" class="mask mask-star-2" value="4" aria-label="4 star" checked><input type="radio" name="rating" class="mask mask-star-2" value="5" aria-label="5 star"></div></div>"#,
                 r#"<button class="btn btn-primary btn-block btn-sm">Submit</button>"#,
             ];
@@ -753,6 +754,7 @@ mod tests {
                     yield_: recipe_c.yield_.unwrap_or(4),
                     language: "eng".into(),
                     measurement_system_id: 2,
+                    notes: recipe_c.notes,
                     source: recipe_c.source,
                     is_favourite: false,
                     rating: Some(4),
@@ -2116,6 +2118,7 @@ mod tests {
                     ),
                 ]),
                 keywords: vec!["fruits".into(), "strawberries".into(), "healthy".into()],
+                notes: Some("# Test\n\nSome notes".into()),
                 nutrition: Some(NutritionForCreate {
                     calories_kcal: Some(1),
                     total_carbohydrates: Some(2),
@@ -2172,6 +2175,7 @@ mod tests {
                         yield_: 6,
                         language: "eng".into(),
                         measurement_system_id: 2,
+                        notes: Some("# Test\n\nSome notes".into()),
                         source: recipe.source,
                         is_favourite: false,
                         rating: Some(4),
@@ -2255,7 +2259,7 @@ mod tests {
                 r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Ingredients</span><sup class="text-red-600">*</sup></h2>"#,
                 r#"<ol id="ingredients-list" class="pl-4"><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient" value="" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
                 r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Instructions</span><sup class="text-red-600">*</sup></h2>"#,
-                r#"<ol id="instructions-list" class="grid list-decimal"><li class="pt-2 md:pl-0"><div class="flex"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
+                r#"<ol id="instructions-list" class="grid list-decimal"><li class="pt-2 md:pl-0"><div class="flex"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
                 r#"<div class="rating"><input type="radio" name="rating" class="rating-hidden" value="" aria-label="clear"><input type="radio" name="rating" class="mask mask-star-2" value="1" aria-label="1 star"><input type="radio" name="rating" class="mask mask-star-2" value="2" aria-label="2 star"><input type="radio" name="rating" class="mask mask-star-2" value="3" aria-label="3 star" checked><input type="radio" name="rating" class="mask mask-star-2" value="4" aria-label="4 star"><input type="radio" name="rating" class="mask mask-star-2" value="5" aria-label="5 star"></div></div>"#,
                 r#"<button class="btn btn-primary btn-block btn-sm">Submit</button>"#,
             ];
@@ -2936,6 +2940,10 @@ mod tests {
 
         if let Some(n) = &recipe.rating {
             form = form.add_part("rating", Part::text(n.to_string()))
+        }
+
+        if let Some(n) = &recipe.notes {
+            form = form.add_part("notes", Part::text(n))
         }
 
         for image in &recipe.images {

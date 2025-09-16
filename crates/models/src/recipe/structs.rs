@@ -45,6 +45,8 @@ pub struct Recipe {
     pub language: String,
     /// The original measurement system the recipe is in.
     pub measurement_system_id: i16,
+    /// Optional notes of the recipe.
+    pub notes: Option<String>,
     /// An optional reference to the origin or inspiration of the recipe.
     pub source: String,
     /// Specifies whether the recipe has been marked as favourite.
@@ -66,12 +68,13 @@ pub struct RecipeForCreate {
     pub name: String,
     pub description: Option<String>,
     pub images: Vec<Uuid>,
-    pub measurement_system_id: i16,
-    pub yield_: Option<i16>,
-    pub source: String,
     pub is_favourite: bool,
+    pub measurement_system_id: i16,
+    pub notes: Option<String>,
+    pub source: String,
     pub rating: Option<i16>,
     pub videos: Vec<VideoForCreate>,
+    pub yield_: Option<i16>,
 
     // For association tables
     pub category: Option<String>,
@@ -137,6 +140,7 @@ impl From<&RecipeForm> for RecipeForCreate {
             nutrition: form.nutrition.clone(),
             times: form.times.clone(),
             tools: form.tools.clone(),
+            notes: form.notes.clone(),
         }
     }
 }
@@ -164,6 +168,7 @@ impl From<RecipeForm> for RecipeForCreate {
             nutrition: form.nutrition,
             times: form.times,
             tools: form.tools,
+            notes: form.notes,
         }
     }
 }
@@ -185,7 +190,7 @@ impl From<&RecipeSchema> for RecipeForCreate {
             yield_: i16::try_from(schema.recipe_yield.clone()).ok(),
             source: source.unwrap_or_default(),
             is_favourite: false,
-            rating: None, // TODO: Look into it
+            rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             videos: vec![],
             category: String::try_from(schema.recipe_category.clone()).ok(),
             cuisine: schema.recipe_cuisine.clone().map(String::from),
@@ -208,6 +213,7 @@ impl From<&RecipeSchema> for RecipeForCreate {
                 },
             },
             measurement_system_id,
+            notes: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             nutrition: schema.nutrition.clone().map(NutritionForCreate::from),
             times: Some(TimesForCreate::from_components(
                 schema.prep_time,
@@ -234,6 +240,7 @@ pub(super) struct RecipeForInsert {
     pub image: Option<Uuid>,
     pub yield_: Option<i16>,
     pub language: String,
+    pub notes: Option<String>,
     pub source: String,
     pub is_favourite: bool,
     pub rating: Option<i16>,
@@ -885,6 +892,7 @@ pub mod test_utils {
                 yield_: recipe_c.yield_.ok_or(4).expect("a yield found"),
                 language: "en".into(),
                 measurement_system_id: 2,
+                notes: Some("# Notes\n\nHere are some notes".into()),
                 source: recipe_c.source,
                 is_favourite: false,
                 rating: None,
@@ -987,6 +995,7 @@ pub mod test_utils {
                 ),
             ]),
             keywords: Vec::<String>::from(["vegetarian".into(), "tofu".into()]),
+            notes: Some("# My Recipe Notes\n\nThis dish should be served medium-cold".into()),
             nutrition: Some(NutritionForCreate {
                 calories_kcal: Some(300),
                 total_carbohydrates: Some(55),
@@ -1029,36 +1038,10 @@ mod tests {
         fn a_recipe() -> RecipeDetails {
             RecipeDetails {
                 recipe: Recipe {
-                    id: 0,
-                    name: "".into(),
-                    description: None,
-                    image: None,
-                    yield_: 0,
-                    language: "".into(),
-                    source: "".into(),
                     measurement_system_id: 2,
-                    created_at: Default::default(),
-                    updated_at: Default::default(),
-                    user_id: 0,
-                    is_favourite: false,
-                    rating: None,
+                    ..Default::default()
                 },
-                additional_images: vec![],
-                category: "".into(),
-                cuisine: None,
-                ingredients: vec![],
-                instructions: vec![],
-                keywords: vec![],
-                nutrition: None,
-                times: Times {
-                    id: 0,
-                    recipe_id: 0,
-                    prep_seconds: 0,
-                    cook_seconds: 0,
-                    total_seconds: 0,
-                },
-                tools: vec![],
-                videos: vec![],
+                ..Default::default()
             }
         }
 

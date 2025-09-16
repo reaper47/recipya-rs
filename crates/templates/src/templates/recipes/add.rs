@@ -1,11 +1,16 @@
-use maud::{html, Markup, PreEscaped};
+use maud::{Markup, PreEscaped, html};
 
 use models::data::{Data, ViewRecipe};
 use models::recipe::{Category, Keyword};
 use models::settings::UserSettingDetails;
 
-use crate::recipes::common::{add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating, recipe_keyword_empty, render_media_editor};
-use crate::templates::icons::{icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle};
+use crate::recipes::common::{
+    add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating,
+    recipe_keyword_empty, render_media_editor,
+};
+use crate::templates::icons::{
+    icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
+};
 use crate::templates::layouts;
 
 /// Renders the add recipe manually page.
@@ -91,13 +96,13 @@ fn render_add_recipe_manual(
                                             (render_keywords(view, keywords))
                                         }
                                     }
-                                    div class="grid grid-flow-col col-span-6 py-1 md:border-b md:grid-cols-2 md:row-span-1" {
+                                    div class="grid grid-flow-col col-span-6 py-1 md:border-b md:grid-cols-2 md:row-span-1 dark:border-gray-700" {
                                         div class="contents md:col-span-2" {
                                             (render_times(view))
                                         }
                                     }
                                     div class="grid grid-flow-col col-span-6" {
-                                        div class="col-span-6 min-h-40 border-r md:h-full md:col-span-1" {
+                                        div class="col-span-6 min-h-40 border-r md:h-full md:col-span-1 dark:border-gray-700" {
                                             (render_description(view))
                                         }
                                         div class="col-span-6 md:col-span-1" {
@@ -107,7 +112,7 @@ fn render_add_recipe_manual(
                                 }
                             }
                         }
-                        div #ingredients-instructions-container class="md:border-t grid text-sm md:grid-flow-col md:col-span-6 dark:border-gray-700" {
+                        div #ingredients-instructions-container class="md:border-y grid text-sm md:grid-flow-col md:col-span-6 dark:border-gray-700" {
                             div class="col-span-6 px-2 py-2 border-y md:col-span-2 md:border-r md:border-y-0 dark:border-gray-700" {
                                 (render_tools(view))
                                 div .divider {}
@@ -116,6 +121,9 @@ fn render_add_recipe_manual(
                             div class="col-span-6 px-6 py-2 border-gray-700 md:rounded-bl-none md:col-span-4" {
                                 (render_instructions(view))
                             }
+                        }
+                        div class="col-span-6 dark:border-gray-700" _="on load call initNotes()" {
+                            textarea #notes name="notes" placeholder="Write some notes about the recipe..." rows="8" class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {}
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" { "Submit" }
@@ -287,7 +295,7 @@ fn render_source(view: Option<&ViewRecipe>) -> Markup {
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"
-            data-tip="The source can be a website, name of a cookbook, from a relative or friend, a magazine, etc." {
+            data-tip="The source can be a website, name of a cookbook, a relative or friend, a magazine, etc." {
             (icon_information_circle())
         }
     }

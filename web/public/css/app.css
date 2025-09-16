@@ -141,3 +141,81 @@ body.dragging #ingredients-list {
 .handle {
     cursor: grab !important;
 }
+
+/* EasyMDE x daisyUI theme bridge */
+.EasyMDEContainer {
+    background-color: var(--color-base-100) !important;
+    color: var(--color-base-content) !important;
+}
+
+.EasyMDEContainer .CodeMirror {
+    background-color: var(--color-base-100) !important;
+    color: var(--color-base-content) !important;
+    border: 1px solid var(--color-base-300) !important;
+    border-radius: 0.5rem !important;
+}
+
+.EasyMDEContainer .CodeMirror-wrap {
+    border: 1px solid var(--color-base-300) !important;
+    border-radius: 0.5rem !important;
+    background: transparent !important;
+}
+
+.EasyMDEContainer .CodeMirror-cursor {
+    border-left-color: var(--color-base-content) !important;
+}
+.EasyMDEContainer .CodeMirror-selected,
+.EasyMDEContainer .CodeMirror.CodeMirror-focused .CodeMirror-selected {
+    background: Highlight !important;
+}
+.EasyMDEContainer .CodeMirror ::selection,
+.EasyMDEContainer .CodeMirror ::-moz-selection {
+    background: Highlight !important;
+    color: HighlightText !important;
+}
+
+.EasyMDEContainer .CodeMirror-gutters {
+    background-color: var(--color-base-200) !important;
+}
+
+.EasyMDEContainer .editor-toolbar {
+    background-color: var(--color-base-200) !important;
+    border: 1px solid var(--color-base-300) !important;
+    border-bottom: none !important;
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+.EasyMDEContainer .editor-toolbar button {
+    color: var(--color-base-content) !important;
+    background: transparent !important;
+    transition: background-color 0.15s;
+    border-radius: 0.375rem;
+}
+.EasyMDEContainer .editor-toolbar button:hover,
+.EasyMDEContainer .editor-toolbar button.active {
+    background-color: var(--color-base-300) !important;
+    color: var(--color-base-content) !important;
+    box-shadow: none !important;
+}
+
+.EasyMDEContainer .editor-statusbar {
+    background: var(--color-base-200) !important;
+    border: 1px solid var(--color-base-300) !important;
+    border-radius: 0 0 0.5rem 0.5rem !important;
+}
+
+.EasyMDEContainer .CodeMirror .CodeMirror-scroll {
+    border: none !important;
+}
+
+.EasyMDEContainer:has(.editor-preview.editor-preview-active):not(.sided--by--side) .CodeMirror-scroll {
+    visibility: hidden;
+}
+
+.editor-preview {
+    background: transparent !important;
+}
+
+.editor-preview-active-side {
+    border: 1px solid var(--color-base-300) !important;
+    border-left: 1px solid rebeccapurple !important;
+}

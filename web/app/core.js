@@ -13,6 +13,44 @@ document.body.addEventListener('htmx:historyRestore', () => {
     syncLayout();
 });
 
+function initNotes(initialValue) {
+    const easyMDE = new EasyMDE({
+        autoDownloadFontAwesome: true,
+        direction: "ltr",
+        element: document.getElementById("notes"),
+        forceSync: true,
+        imageAccept: ["image/png", "image/jpeg", "image/webp"],
+        imageMaxSize: 1024 * 1024 * 10,
+        imageUploadEndpoint: "/upload/note-image",
+        initialValue,
+        previewClass: ["editor-preview", "prose", "dark:prose-invert"],
+        promptURLs: true,
+        showIcons: ["upload-image"],
+        sideBySideFullscreen: false,
+        spellChecker: false,
+        toolbar: [
+            "bold", "italic", "heading", "|",
+            "quote", "unordered-list", "ordered-list", "|",
+            "link", "image", {
+                name: "upload-image",
+                action: EasyMDE.drawUploadedImage,
+                className: "fa fa-upload",
+                title: "Upload image"
+            }, "|",
+            "preview", "side-by-side", "|", "guide",
+        ],
+        uploadImage: true,
+    });
+
+    easyMDE.codemirror.on("paste", (cm, event) => {
+        const text = (event.clipboardData || window.clipboardData).getData("text");
+        if (text && /^https?:\/\/.+\.(png|jpe?g|gif|webp|svg)$/i.test(text)) {
+            cm.replaceSelection(`![alt text](${text})`);
+            event.preventDefault();
+        }
+    });
+}
+
 function initRecipeFormJS() {
     HtmlDurationPicker.init()
 
