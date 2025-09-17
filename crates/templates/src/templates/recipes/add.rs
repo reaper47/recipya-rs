@@ -5,13 +5,11 @@ use models::recipe::{Category, Keyword};
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty, render_media_editor,
+    add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating,
+    recipe_keyword_empty, render_media_editor,
 };
 use crate::templates::icons::{
-    icon_arrow_uturn_left, icon_arrow_uturn_right, icon_arrows_right_left, icon_arrows_up_down,
-    icon_check, icon_cooking_pot, icon_crop, icon_cutting_board, icon_information_circle,
-    icon_magnifying_glass_minus, icon_magnifying_glass_plus, icon_move_thin, icon_pencil,
-    icon_plus_circle, icon_trash, icon_x_mark,
+    icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
 };
 use crate::templates::layouts;
 
@@ -33,6 +31,7 @@ pub fn add_recipe_manual(
         } @else {
             (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords), user_setting, true))
         }
+        (init_recipe_form_js())
     }
 }
 
@@ -47,7 +46,7 @@ fn render_add_recipe_manual(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body style="padding: 0"
+                    form .card-body.contents style="padding: 0"
                          enctype="multipart/form-data" hx-encoding="multipart/form-data"
                          hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader" {
                         h2 class="card-title place-content-center rounded-t-2xl" {
@@ -74,6 +73,11 @@ fn render_add_recipe_manual(
                                     }
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
+                                    div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
+                                        div class="flex justify-center items-center" {
+                                            (rating("rating", Some(3), "", false))
+                                        }
+                                    }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
                                         div class="grid grid-flow-col grid-cols-3 gap-2 border-b border-t border-gray-700 px-2 md:col-span-2 md:border-b-0 md:border-r md:border-t-0 md:px-0" {
                                             div class="col-span-2 border-r border-gray-700 pb-2 px-2" {
@@ -92,24 +96,23 @@ fn render_add_recipe_manual(
                                             (render_keywords(view, keywords))
                                         }
                                     }
-                                    div class="grid grid-flow-col col-span-6 py-1 md:grid-cols-2 md:row-span-1" {
+                                    div class="grid grid-flow-col col-span-6 py-1 md:border-b md:grid-cols-2 md:row-span-1 dark:border-gray-700" {
                                         div class="contents md:col-span-2" {
                                             (render_times(view))
                                         }
-                                        div class="md:col-span-1" {
-                                            (rating("rating", Some(3), "", false))
+                                    }
+                                    div class="grid grid-flow-col col-span-6" {
+                                        div class="col-span-6 min-h-40 border-r md:h-full md:col-span-1 dark:border-gray-700" {
+                                            (render_description(view))
                                         }
-                                    }
-                                    div class="grid grid-flow-col col-span-6 border-gray-700 border-y overflow-x-auto md:row-span-2" {
-                                        (render_nutrition_table())
-                                    }
-                                    div class="col-span-3 min-h-40 md:h-full md:row-span-1" {
-                                        (render_description(view))
+                                        div class="col-span-6 md:col-span-1" {
+                                            (render_nutrition_table())
+                                        }
                                     }
                                 }
                             }
                         }
-                        div #ingredients-instructions-container class="md:border-t grid text-sm md:grid-flow-col md:col-span-6 dark:border-gray-700" {
+                        div #ingredients-instructions-container class="md:border-y grid text-sm md:grid-flow-col md:col-span-6 dark:border-gray-700" {
                             div class="col-span-6 px-2 py-2 border-y md:col-span-2 md:border-r md:border-y-0 dark:border-gray-700" {
                                 (render_tools(view))
                                 div .divider {}
@@ -118,6 +121,9 @@ fn render_add_recipe_manual(
                             div class="col-span-6 px-6 py-2 border-gray-700 md:rounded-bl-none md:col-span-4" {
                                 (render_instructions(view))
                             }
+                        }
+                        div class="col-span-6 dark:border-gray-700" _="on load call initNotes()" {
+                            textarea #notes name="notes" placeholder="Write some notes about the recipe..." rows="8" class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {}
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" { "Submit" }
@@ -153,20 +159,18 @@ fn render_categories(view: Option<&ViewRecipe>, categories: Vec<Category>) -> Ma
 
 fn render_description(view: Option<&ViewRecipe>) -> Markup {
     html! {
-        label {
-            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none" {
-                (
-                    if let Some(v) = view {
-                        if let Some(description) = &v.recipe_details.recipe.description {
-                            description.to_string()
-                        } else {
-                            String::new()
-                        }
+        textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {
+            (
+                if let Some(v) = view {
+                    if let Some(description) = &v.recipe_details.recipe.description {
+                        description.to_string()
                     } else {
                         String::new()
                     }
-                )
-            }
+                } else {
+                    String::new()
+                }
+            )
         }
     }
 }
@@ -291,7 +295,7 @@ fn render_source(view: Option<&ViewRecipe>) -> Markup {
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"
-            data-tip="The source can be a website, name of a cookbook, from a relative or friend, a magazine, etc." {
+            data-tip="The source can be a website, name of a cookbook, a relative or friend, a magazine, etc." {
             (icon_information_circle())
         }
     }

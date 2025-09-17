@@ -9,7 +9,8 @@ use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, rating, recipe_keyword_empty, render_media_editor,
+    add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating, recipe_keyword_empty,
+    render_media_editor,
 };
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
@@ -46,6 +47,7 @@ pub fn edit_recipe(
         } @else {
             (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords), user_setting, true))
         }
+        (init_recipe_form_js())
     })
 }
 
@@ -62,7 +64,7 @@ fn render_edit_recipe(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
+                    form .card-body.contents style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
                         (render_title(&view))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
@@ -90,6 +92,11 @@ fn render_edit_recipe(
                                     (render_media(&view, fs_support, data_dir))
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
+                                    div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
+                                        div class="flex justify-center items-center" {
+                                            (rating("rating", view.recipe_details.recipe.rating, "", false))
+                                        }
+                                    }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
                                         div class="grid grid-flow-col grid-cols-3 gap-2 border-b border-t border-gray-700 px-2 md:col-span-2 md:border-b-0 md:border-r md:border-t-0 md:px-0" {
                                             div class="col-span-2 border-r border-gray-700 pb-2 px-2" {
@@ -106,22 +113,19 @@ fn render_edit_recipe(
                                     div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
                                         (render_keywords(&view, keywords))
                                     }
-                                    div class="grid grid-flow-col col-span-6 py-1 md:grid-cols-4 md:row-span-1" {
-                                        div class="contents md:col-span-3" {
+                                    div class="grid grid-flow-col col-span-6 py-1 border-b" {
+                                        div class="contents grid grid-flow-col" {
                                             (render_times(&view))
                                         }
-                                        div class="flex justify-center items-center md:col-span-1" {
-                                            (rating("rating", view.recipe_details.recipe.rating, "", false))
-                                        }
                                     }
-                                    div class="grid grid-flow-col col-span-6 border-gray-700 border-y overflow-x-auto md:row-span-2" {
-                                        (render_nutrition(&view))
-                                    }
-                                    div class="col-span-3 min-h-40 md:h-full md:row-span-1" {
-                                        label {
-                                            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none" {
+                                    div class="grid grid-flow-col col-span-6" {
+                                        div class="grid grid-flow-col col-span-6 border-gray-700" {
+                                            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none focus:outline-none" {
                                                 (view.recipe_details.recipe.description.as_ref().map_or(String::new(), ToString::to_string))
                                             }
+                                        }
+                                         div class="grid grid-flow-col col-span-6 border-gray-700 overflow-x-auto" {
+                                            (render_nutrition(&view))
                                         }
                                     }
                                 }
@@ -136,6 +140,12 @@ fn render_edit_recipe(
                             div class="col-span-6 px-6 py-2 border-gray-700 md:rounded-bl-none md:col-span-4" {
                                 (render_instructions(&view))
                             }
+                        }
+                        @let mut notes = view.recipe_details.recipe.notes.as_ref().map_or(String::new(), ToString::to_string);
+                        div class="col-span-6 dark:border-gray-700"
+                            data-notes=(notes)
+                            _="on load call initNotes(me.dataset.notes)" {
+                             textarea #notes name="notes" placeholder="Write some notes about the recipe..." rows="8" class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {}
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" { "Submit" }
@@ -230,7 +240,7 @@ fn render_media(
                 (render_media_editor(1, ""))
             } @else {
                 @for (idx, &image) in view.recipe_details.all_images().iter().enumerate() {
-                    @let image_exists = fs_support.is_file_exists(image, &data_dir.images, ".webp");
+                    @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
                     @let image_src = if image_exists {
                         &format!("/data/images/{image}.webp")
                     } else {
@@ -360,7 +370,7 @@ fn render_source(view: &ViewRecipe) -> Markup {
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"
-            data-tip="The source can be a website, name of a cookbook, from a relative or friend, a magazine, etc." {
+            data-tip="The source can be a website, name of a cookbook, a relative or friend, a magazine, etc." {
             (icon_information_circle())
         }
     }
@@ -368,7 +378,7 @@ fn render_source(view: &ViewRecipe) -> Markup {
 
 fn render_times(view: &ViewRecipe) -> Markup {
     html! {
-        div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
+        div class="flex justify-self-center items-center gap-1 cursor-default" {
             span data-tip="Prep time" class="tooltip tooltip-left" {
                 (icon_cutting_board())
             }
@@ -378,7 +388,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
                     class="input input-xs max-w-24 html-duration-picker";
             }
         }
-        div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
+        div class="flex justify-self-center items-center gap-1 cursor-default" {
             span data-tip="Cook time" class="tooltip tooltip-left" {
                 (icon_cooking_pot())
             }

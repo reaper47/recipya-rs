@@ -23,6 +23,7 @@ derive_more = { workspace = true }
 email = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
+infer = { workspace = true }
 integrations = { workspace = true }
 mime_guess = "2.0.5"
 math = { workspace = true }
@@ -49,6 +50,7 @@ validator = { workspace = true }
 axum-test = { workspace = true }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
+image = "0.25.8"
 pretty_assertions = { workspace = true }
 serial_test = "3.2.0"
 testing = { path = "../testing", features = ["test-utils"] }

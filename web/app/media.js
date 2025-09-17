@@ -30,6 +30,7 @@ function addMedia(event) {
     cloneMedia.querySelector("span > div").classList.remove("hidden");
     cloneMedia.querySelector(".image-actions").classList.add("hidden");
     cloneMedia.querySelector(".cropper-wrap")?.classList.add("hidden")
+    cloneMedia.querySelector("input[name='media-existing-image']")?.remove();
     document.querySelector("#media").appendChild(cloneMedia);
 
     const video = cloneMedia.querySelector("video");

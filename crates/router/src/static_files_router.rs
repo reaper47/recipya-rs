@@ -19,10 +19,10 @@ pub fn static_files_routes(state: AppState) -> Router<AppState> {
         .route("/safari-pinned-tab.svg", get(static_files_handler))
         .route("/site.webmanifest", get(static_files_handler))
         .route("/public/{*file}", get(static_files_handler))
-        .nest_service("/data/images", ServeDir::new(state.data_dir.images))
+        .nest_service("/data/images", ServeDir::new(state.data_dir.images.root))
         .nest_service(
             "/data/images/thumbnails",
-            ServeDir::new(state.data_dir.thumbnails),
+            ServeDir::new(state.data_dir.images.thumbnails),
         )
         .nest_service("/data/videos", ServeDir::new(state.data_dir.videos))
 }

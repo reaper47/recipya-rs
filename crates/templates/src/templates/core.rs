@@ -18,21 +18,31 @@ pub(super) fn head(title: &str) -> Markup {
             meta name="keywords" content="Cooking, Lifestyle, Recipes, Groceries, Fast";
             meta name="msapplication-TileColor" content="#da532c";
             meta name="theme-color" content="#ffffff";
+
             link rel="canonical" href="https://recipes.musicavis.com/";
             link rel="stylesheet" href="/public/css/tailwind.css";
             link rel="stylesheet" href="/public/css/app.css";
+            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css";
+            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css"
             link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png";
             link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png";
             link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png";
             link rel="manifest" href="/public/site.webmanifest";
             link rel="mask-icon" href="/public/safari-pinned-tab.svg" color="#5bbad5";
+
             script src="https://unpkg.com/htmx.org@2.0.6"{}
             script src="https://unpkg.com/hyperscript.org@0.9.14" {}
             script src="https://unpkg.com/htmx-ext-ws@2.0.2/ws.js" {}
             script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js" {}
+            script src="https://cdn.jsdelivr.net/npm/html-duration-picker@latest/dist/html-duration-picker.min.js" {}
+            script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" {}
+            script src="https://unpkg.com/cropperjs@2.0.1/dist/cropper.min.js" {}
+            script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js" {}
+
             script defer src="/public/js/core.min.js" {}
             script defer src="/public/js/json-highlighter.min.js" {}
             script defer src="/public/js/toast.min.js" {}
+            script defer src="/public/js/media.min.js" {}
         }
     }
 }

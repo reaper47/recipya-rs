@@ -56,6 +56,7 @@ impl Recipe {
                     schema::recipes::yield_,
                     schema::recipes::language,
                     schema::recipes::measurement_system_id,
+                    schema::recipes::notes,
                     schema::recipes::source,
                     schema::recipes::is_favourite,
                     schema::recipes::rating,

@@ -36,6 +36,9 @@ impl Recipe {
         if recipe.image != main_image {
             recipe.image = main_image;
         }
+        if recipe.notes != new_recipe.notes {
+            recipe.notes = new_recipe.notes.clone();
+        }
         if let Some(n) = new_recipe.yield_ {
             if recipe.yield_ != n {
                 recipe.yield_ = n;

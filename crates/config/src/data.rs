@@ -11,11 +11,18 @@ use super::{Error, Result};
 pub struct DataDir {
     pub backup: PathBuf,
     pub debug: PathBuf,
-    pub images: PathBuf,
+    pub images: ImagesDir,
     pub logs: PathBuf,
+    pub videos: PathBuf,
+}
+
+#[derive(Clone)]
+pub struct ImagesDir {
+    pub root: PathBuf,
+    // TODO: Clean notes directory
+    pub notes: PathBuf,
     pub placeholders: PathBuf,
     pub thumbnails: PathBuf,
-    pub videos: PathBuf,
 }
 
 /// Gets the base directory where the application's data is stored.
@@ -35,14 +42,24 @@ impl DataDir {
         let media_dir = base_dir.join("Media");
         let images_dir = media_dir.join("Images");
 
+        let images_notes = images_dir.join("Notes");
+        let images_placeholders = images_dir.join("Placeholders");
+        let images_thumbnails = images_dir.join("Thumbnails");
+
         let backup = base_dir.join("Backup");
         let debug = base_dir.join("Debug");
         let logs = base_dir.join("Logs");
-        let placeholders = images_dir.join("Placeholders");
-        let thumbnails = images_dir.join("Thumbnails");
         let videos = media_dir.join("Videos");
 
-        let paths = [&backup, &debug, &logs, &placeholders, &thumbnails, &videos];
+        let paths = [
+            &backup,
+            &debug,
+            &logs,
+            &images_notes,
+            &images_placeholders,
+            &images_thumbnails,
+            &videos,
+        ];
         for path in &paths {
             fs::create_dir_all(path)?;
         }
@@ -50,23 +67,24 @@ impl DataDir {
         Ok(Self {
             backup,
             debug,
-            images: images_dir,
+            images: ImagesDir {
+                root: images_dir,
+                notes: images_notes,
+                placeholders: images_placeholders,
+                thumbnails: images_thumbnails,
+            },
             logs,
-            placeholders,
-            thumbnails,
             videos,
         })
     }
 
-    /// Logs the paths.
+    /// Logs the data directory paths.
     pub fn log(&self) {
         info!("File locations:");
         info!("\t- Backups: {:?}", self.backup);
         info!("\t- Debug: {:?}", self.debug);
-        info!("\t- Images: {:?}", self.images);
+        info!("\t- Images: {:?}", self.images.root);
         info!("\t- Logs: {:?}", self.logs);
-        info!("\t- Placeholders: {:?}", self.placeholders);
-        info!("\t- Thumbnails: {:?}", self.thumbnails);
         info!("\t- Videos: {:?}", self.videos);
     }
 }
@@ -90,7 +108,7 @@ mod tests {
             format!("{base_dir_str}/Recipya/Backup")
         );
         pretty_assertions::assert_eq!(
-            got.images.to_str().expect("a path"),
+            got.images.root.to_str().expect("a path"),
             format!("{base_dir_str}/Recipya/Media/Images")
         );
         pretty_assertions::assert_eq!(
@@ -98,11 +116,15 @@ mod tests {
             format!("{base_dir_str}/Recipya/Logs")
         );
         pretty_assertions::assert_eq!(
-            got.placeholders.to_str().expect("a path"),
+            got.images.notes.to_str().expect("a path"),
+            format!("{base_dir_str}/Recipya/Media/Images/Notes")
+        );
+        pretty_assertions::assert_eq!(
+            got.images.placeholders.to_str().expect("a path"),
             format!("{base_dir_str}/Recipya/Media/Images/Placeholders")
         );
         pretty_assertions::assert_eq!(
-            got.thumbnails.to_str().expect("a path"),
+            got.images.thumbnails.to_str().expect("a path"),
             format!("{base_dir_str}/Recipya/Media/Images/Thumbnails")
         );
         pretty_assertions::assert_eq!(

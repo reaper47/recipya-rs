@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     initGlobalKeyboardShortcuts();
     syncLayout();
-    loadRecipesManualScripts();
 });
 
 document.body.addEventListener('htmx:afterSwap', (event) => {
@@ -14,34 +13,71 @@ document.body.addEventListener('htmx:historyRestore', () => {
     syncLayout();
 });
 
-function loadSortableJS() {
-    return loadScript("https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js")
+function initNotes(initialValue) {
+    const easyMDE = new EasyMDE({
+        autoDownloadFontAwesome: true,
+        direction: "ltr",
+        element: document.getElementById("notes"),
+        forceSync: true,
+        imageAccept: ["image/png", "image/jpeg", "image/webp"],
+        imageMaxSize: 1024 * 1024 * 10,
+        imageUploadEndpoint: "/upload/note-image",
+        initialValue,
+        previewClass: ["editor-preview", "prose", "dark:prose-invert"],
+        promptURLs: true,
+        showIcons: ["upload-image"],
+        sideBySideFullscreen: false,
+        spellChecker: false,
+        toolbar: [
+            "bold", "italic", "heading", "|",
+            "quote", "unordered-list", "ordered-list", "|",
+            "link", "image", {
+                name: "upload-image",
+                action: EasyMDE.drawUploadedImage,
+                className: "fa fa-upload",
+                title: "Upload image"
+            }, "|",
+            "preview", "side-by-side", "|", "guide",
+        ],
+        uploadImage: true,
+    });
+
+    easyMDE.codemirror.on("paste", (cm, event) => {
+        const text = (event.clipboardData || window.clipboardData).getData("text");
+        if (text && /^https?:\/\/.+\.(png|jpe?g|gif|webp|svg)$/i.test(text)) {
+            cm.replaceSelection(`![alt text](${text})`);
+            event.preventDefault();
+        }
+    });
 }
 
-function loadRecipesManualScripts() {
-    loadScript("https://cdn.jsdelivr.net/npm/html-duration-picker@latest/dist/html-duration-picker.min.js")
-        .then(() => HtmlDurationPicker.init())
+function initRecipeFormJS() {
+    HtmlDurationPicker.init()
 
-    loadScript("https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js")
-        .then(() => {
-            const inputs = [
-                {name: 'tool', type: 'input'},
-                {name: 'ingredient', type: 'input'},
-                {name: 'instruction', type: 'textarea'},
-            ];
-            inputs.forEach(({name, type}) => {
-                const list = document.querySelector(`#${name}s-list`);
-                if (list) {
-                    new Sortable.create(list, {
-                        handle: '.handle',
-                        animation: 150,
-                    });
-                }
+    const inputs = [
+        {name: 'tool', type: 'input'},
+        {name: 'ingredient', type: 'input'},
+        {name: 'instruction', type: 'textarea'},
+    ];
+    inputs.forEach(({name, type}) => {
+        const list = document.querySelector(`#${name}s-list`);
+        if (list) {
+            new Sortable.create(list, {
+                handle: '.handle',
+                animation: 150,
+                forceFallback: true,
+                chosenClass: 'is-chosen',
+                dragClass: 'is-dragging',
+                ghostClass: 'is-ghost',
+                onStart(_event) {
+                    document.body.classList.add('dragging');
+                },
+                onEnd(_event) {
+                    document.body.classList.remove('dragging');
+                },
             });
-        });
-
-    loadScript("https://unpkg.com/cropperjs@2.0.1/dist/cropper.min.js").then(() => {})
-    loadScript("/public/js/media.min.js").then(() => {})
+        }
+    });
 }
 
 function addKeyword(event) {
@@ -196,17 +232,6 @@ async function pasteImage(event) {
         console.error(err.name, err.message);
         alert("No image in clipboard or ould not paste image.");
     }
-}
-
-function loadScript(url) {
-    const script = document.createElement("script");
-    script.src = url;
-    document.body.appendChild(script);
-
-    return new Promise((res, rej) => {
-        script.onload = () => res();
-        script.onerror = () => rej();
-    });
 }
 
 function downloadFile(data, filename, mime) {

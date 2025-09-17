@@ -1,3 +1,13 @@
+use std::sync::Arc;
+
+use maud::{Markup, PreEscaped, html};
+use serde_json::json;
+
+use config::DataDir;
+use models::data::Data;
+use models::recipe::{Keyword, ToolRecipe};
+use support::fs::FsSupport;
+
 use crate::recipes::render_favourite_button;
 use crate::templates::helpers::cut_string;
 use crate::templates::icons::{
@@ -5,13 +15,6 @@ use crate::templates::icons::{
     icon_bars_3, icon_check, icon_crop, icon_magnifying_glass_minus, icon_magnifying_glass_plus,
     icon_move_thin, icon_pencil, icon_trash, icon_x_mark,
 };
-use config::DataDir;
-use maud::{Markup, PreEscaped, html};
-use models::data::Data;
-use models::recipe::{Keyword, ToolRecipe};
-use serde_json::json;
-use std::sync::Arc;
-use support::fs::FsSupport;
 
 pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
     html! {
@@ -84,7 +87,7 @@ pub(super) fn add_instruction(name: &str) -> Markup {
         li class="pt-2 md:pl-0" {
             div .flex {
                 label class="w-11/12" {
-                    textarea required name="instruction" rows="4" class="textarea textarea-bordered w-full"
+                    textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full"
                         placeholder="Mix all ingredients together"
                         _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))" {
                         (name)
@@ -137,7 +140,7 @@ pub fn list_recipes(
                         img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full"
                             src=(match details.all_images().first() {
                                 Some(&first_image) => {
-                                    if !details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images, ".webp") {
+                                    if !details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images.root, ".webp") {
                                         format!("/data/images/thumbnails/{first_image}.webp")
                                     } else {
                                         "/data/images/Placeholders/placeholder.recipe.webp".into()
@@ -240,6 +243,12 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
     }
 }
 
+pub(super) fn init_recipe_form_js() -> Markup {
+    html! {
+        (PreEscaped(r#"<script defer>document.addEventListener("DOMContentLoaded", () => initRecipeFormJS())</script>"#))
+    }
+}
+
 pub(super) fn rating(name: &str, value: Option<i16>, size: &str, is_ro: bool) -> Markup {
     let value = value.unwrap_or(0);
 
@@ -314,7 +323,7 @@ pub(super) fn render_media_editor(image_num: usize, image_src: &str) -> Markup {
 
             span class="grid gap-1" {
                 div class={
-                    "mr-1 image-selector"
+                    "mr-1 image-selector p-4"
                     @if !image_src.is_empty() { " hidden" }
                 } {
                     input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm"

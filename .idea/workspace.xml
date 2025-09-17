@@ -59,9 +59,39 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/web/app/media.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/media.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/app/src/jobs/clean_media.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/app/src/jobs/clean_media.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/app/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/app/src/state.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/config/src/data.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/config/src/data.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/migrations/2025-01-22-023228_init/up.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/repository/src/schema.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/repository/src/schema.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/general_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/general_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/general.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/general.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/static_files_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/static_files_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/core.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/common.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/edit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/edit.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/core.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/core.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/app.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/media.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/media.min.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/js/core.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/core.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -133,7 +163,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Cargo.Run.executor": "Debug",
+    "Cargo.Run.executor": "Run",
     "Cargo.Test admin_router::tests.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_ok.executor": "Run",
@@ -389,6 +419,10 @@
     "Cargo.Test fileformat::tests.executor": "Run",
     "Cargo.Test from_filename.executor": "Run",
     "Cargo.Test general_router::tests.executor": "Run",
+    "Cargo.Test general_router::tests::tests_upload_note_image::must_be_logged_in_ok.executor": "Run",
+    "Cargo.Test general_router::tests::tests_upload_note_image::test_image_ok.executor": "Run",
+    "Cargo.Test general_router::tests::tests_upload_note_image::test_image_type_not_supported_ok.executor": "Run",
+    "Cargo.Test general_router::tests::tests_upload_note_image::test_no_image_in_form_ok.executor": "Run",
     "Cargo.Test helpers::tests (1).executor": "Run",
     "Cargo.Test helpers::tests.executor": "Run",
     "Cargo.Test length::tests.executor": "Run",
@@ -397,7 +431,10 @@
     "Cargo.Test mealmaster::tests.executor": "Run",
     "Cargo.Test operations::tests.executor": "Run",
     "Cargo.Test pwd::tests.executor": "Run",
+    "Cargo.Test recipe::create::tests::test_create_bare_minimum_ok.executor": "Run",
     "Cargo.Test recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
+    "Cargo.Test recipe::create::tests::test_create_duplicates_err.executor": "Run",
+    "Cargo.Test recipe::create::tests::test_create_ok.executor": "Run",
     "Cargo.Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok.executor": "Debug",
     "Cargo.Test recipe::search::tests::test_search_by_category.executor": "Run",
     "Cargo.Test recipe::search::tests::test_search_by_name.executor": "Run",
@@ -430,6 +467,7 @@
     "Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_edit::test_put_missing_fields_defaults_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_edit::test_put_submit_recipe_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_already_favourite_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_as_favourite_ok.executor": "Run",
@@ -437,6 +475,9 @@
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_mark_twice_in_a_row_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_must_be_logged_in_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_favourite_recipe::test_recipe_does_not_exist_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_0_images_2_videos_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_2_images_0_video_ok.executor": "Run",
+    "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_2_images_2_videos_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_recipe_add_import_preview::test_must_be_logged_in_ok.executor": "Run",
@@ -627,8 +668,9 @@
     "Cargo.Test share::tests::tests_fetch_by_link::test_exists_err.executor": "Run",
     "Cargo.Test shared_router::tests.executor": "Run",
     "Cargo.Test shared_router::tests::test_recipe_not_shared_ok.executor": "Debug",
-    "Cargo.Test shared_router::tests::test_shared_anonymous_ok.executor": "Debug",
+    "Cargo.Test shared_router::tests::test_shared_anonymous_ok.executor": "Run",
     "Cargo.Test shared_router::tests::test_shared_logged_in_ok.executor": "Run",
+    "Cargo.Test shared_router::tests::test_shared_logged_in_other_user_ok.executor": "Run",
     "Cargo.Test strings::tests.executor": "Run",
     "Cargo.Test strings::tests::tests_auto_convert_to_utf8::test_fallback_to_lossy_conversion.executor": "Run",
     "Cargo.Test strings::tests::tests_auto_convert_to_utf8::test_invalid_utf8_fallback_to_windows_1252.executor": "Debug",
@@ -692,6 +734,7 @@
     "Cargo.Test tests_themes.executor": "Run",
     "Cargo.Test tests_unit_operations.executor": "Run",
     "Cargo.Test tests_unit_type.executor": "Run",
+    "Cargo.Test tests_upload_note_image.executor": "Run",
     "Cargo.Test tests_user.executor": "Run",
     "Cargo.Test tests_user_row.executor": "Run",
     "Cargo.Test tests_users.executor": "Run",
@@ -711,7 +754,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#165 on 160-add-ability-to-rotate-and-cro…cipes",
+    "git-widget-placeholder": "#166 on 90-add-notes",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -754,7 +797,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok">
+  <component name="RunManager" selected="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -773,8 +816,25 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+    <configuration name="Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
@@ -808,8 +868,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok -- --exact" />
+    <configuration name="Test recipes_routes::tests::tests_edit::test_put_missing_fields_defaults_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_routes::tests::tests_edit::test_put_missing_fields_defaults_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -842,39 +902,21 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="buildProfileId" value="test" />
-      <option name="command" value="test --package router --lib shared_router::tests::test_shared_anonymous_ok -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_put_missing_fields_defaults_ok" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
+      <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
       <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
-      <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
-      <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
-        <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
         <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe_add_manual::test_get_logged_in_htmx_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_put_missing_fields_defaults_ok" />
         <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_ok" />
-        <item itemvalue="Cargo.Test recipes_routes::tests::tests_recipe::test_get_recipe_exists_from_htmx_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_edit::test_get_recipe_exists_htmx_request_ok" />
+        <item itemvalue="Cargo.Test recipes_routes::tests::tests_duplicate_recipes::test_get_recipe_exists" />
       </list>
     </recent_temporary>
   </component>
@@ -913,14 +955,9 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/crates/models/src/recipe/form.rs</url>
-          <line>92</line>
-          <option name="timeStamp" value="16" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/crates/models/src/recipe/form.rs</url>
-          <line>89</line>
-          <option name="timeStamp" value="17" />
+          <url>file://$PROJECT_DIR$/crates/models/src/recipe/create.rs</url>
+          <line>61</line>
+          <option name="timeStamp" value="26" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
