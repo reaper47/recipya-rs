@@ -28,7 +28,7 @@ pub struct DbPool(pub PgPool);
 
 impl DbPool {
     /// Asynchronously retrieves a pooled connection from the pool.
-    pub async fn get(&self) -> Result<PgPooledConn, bb8::RunError> {
+    pub async fn get(&self) -> Result<PgPooledConn<'_>, bb8::RunError> {
         self.0.get().await
     }
 }

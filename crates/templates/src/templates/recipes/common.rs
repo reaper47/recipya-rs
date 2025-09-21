@@ -168,7 +168,7 @@ pub fn list_recipes(
                         }
                         div class="h-5" {
                             @if recipe.rating.is_some() {
-                                (rating(&format!("rating-{}", recipe.id), recipe.rating, "rating-sm", true))
+                                (render_rating(&format!("rating-{}", recipe.id), recipe.rating, "rating-sm", true))
                             }
                         }
                         div class="max-h-16 overflow-y-auto" {
@@ -249,7 +249,7 @@ pub(super) fn init_recipe_form_js() -> Markup {
     }
 }
 
-pub(super) fn rating(name: &str, value: Option<i16>, size: &str, is_ro: bool) -> Markup {
+pub(super) fn render_rating(name: &str, value: Option<i16>, size: &str, is_ro: bool) -> Markup {
     let value = value.unwrap_or(0);
 
     if is_ro {

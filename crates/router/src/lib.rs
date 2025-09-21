@@ -3,7 +3,7 @@ mod auth_router;
 mod error;
 mod general_router;
 mod handlers;
-mod recipes_routes;
+mod recipes_router;
 mod settings_router;
 mod shared_router;
 mod static_files_router;
@@ -20,7 +20,7 @@ use app::state::AppState;
 use crate::admin_router::admin_routes;
 use crate::auth_router::auth_routes;
 use crate::general_router::general_routes;
-use crate::recipes_routes::recipes_routes;
+use crate::recipes_router::recipes_routes;
 use crate::shared_router::shared_routes;
 use crate::static_files_router::static_files_routes;
 

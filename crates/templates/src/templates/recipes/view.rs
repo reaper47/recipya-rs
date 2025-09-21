@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use maud::{Markup, html, PreEscaped};
+use maud::{Markup, PreEscaped, html};
 use serde_json::json;
 use url::Url;
 
@@ -10,11 +10,12 @@ use models::settings::UserSettingDetails;
 use models::{Recipe, RecipeDetails};
 use support::fs::FsSupport;
 
-use crate::recipes::common::rating;
+use crate::recipes::common::render_rating;
+use crate::recipes::timeline::render_timeline_dialog;
 use crate::templates::icons::{
     icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
     icon_ellipsis_vertical, icon_heart, icon_pencil, icon_plus_circle, icon_printer, icon_share,
-    icon_trash,
+    icon_timeline, icon_trash,
 };
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
@@ -101,7 +102,7 @@ pub fn view_recipe_helper(
                                         "flex justify-center items-center"
                                         @if data.is_preview { " md:hidden" }
                                     } {
-                                        (rating("rating", recipe.rating, "", true))
+                                        (render_rating("rating", recipe.rating, "", true))
                                     }
                                 }
                                 div class="grid grid-flow-col col-span-6 md:col-span-3 md:row-span-1 md:border-y md:border-gray-700 print:row-span-1 print:grid-cols-2 print:border-b-black print:border" {
@@ -185,7 +186,7 @@ pub fn view_recipe_helper(
                                 }
                                 @if data.is_preview {
                                     div class="col-span-6 text-center border-b " {
-                                        (rating("rating", recipe.rating, "", true))
+                                        (render_rating("rating", recipe.rating, "", true))
                                     }
                                 }
                                 div class={
@@ -231,6 +232,8 @@ pub fn view_recipe_helper(
                 }
             }
         }
+
+        (render_timeline_dialog(vec![]))
     })
 }
 
@@ -356,7 +359,7 @@ fn render_right_controls(recipe_id: i64, is_favourite: bool, data: &Data) -> Mar
                                                 set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
                                                 call navigator.share(data)
                                             else
-                                                call share_dialog.showModal()
+                                                call #share-dialog.showModal()
                                         end" {
                                 (icon_share())
                                 "Share"
@@ -411,36 +414,61 @@ fn render_right_controls(recipe_id: i64, is_favourite: bool, data: &Data) -> Mar
                 }
             } @else {
                 (render_favourite_button(recipe_id, is_favourite, false, true))
-                button title="Share recipe" class="mr-2 hidden sm:block"
-                    hx-post=(format!("/recipes/{recipe_id}/share"))
-                    hx-target="#share-dialog-result"
-                    hx-push-url="false"
-                    _="on htmx:afterRequest from me
-                        if event.detail.successful
-                            if navigator.canShare
-                                set name to document.querySelector('[itemprop=name]').textContent then
-                                set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
-                                call navigator.share(data)
-                            else
-                                call share_dialog.showModal()
-                        end" {
-                    (icon_share())
+                button type="button" title="Open timeline" aria-label="Open timeline" class="btn btn-xs btn-ghost"
+                        hx-get=(format!("/recipes/{recipe_id}/timeline"))
+                        hx-target="#timeline-dialog-result"
+                        hx-push-url="false"
+                        _="on htmx:afterRequest from me call #timeline-dialog.showModal()" {
+                    (icon_timeline())
                 }
             }
-            button #duplicate-recipe class="mr-2 hidden sm:block" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
-                (icon_document_duplicate())
-            }
-            button class="mr-2 hidden sm:block" title="Print recipe" _="on click print()" {
-                (icon_printer())
-            }
-            @if !matches!(&data.share, Some(share) if share.is_shared) {
-                button title="Delete recipe"
-                    class="mr-2 hidden sm:block"
-                    hx-delete=(format!("/recipes/{recipe_id}"))
-                    hx-swap="none"
-                    hx-confirm="Are you sure you wish to delete this recipe?"
-                    hx-indicator="#fullscreen-loader" {
-                    (icon_trash())
+            div class="dropdown" {
+                div tabindex="0" role="button" class="btn btn-xs btn-ghost" {
+                    (icon_ellipsis_vertical())
+                }
+                ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-40 p-2 shadow-sm" {
+                    @if matches!(&data.share, Some(share) if !share.is_shared) {
+                        li _="on click document.activeElement.blur()" {
+                            button hx-post=(format!("/recipes/{recipe_id}/share"))
+                                hx-target="#share-dialog-result"
+                                hx-push-url="false"
+                                _="on htmx:afterRequest from me
+                                    if event.detail.successful
+                                        if navigator.canShare
+                                            set name to document.querySelector('[itemprop=name]').textContent then
+                                            set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
+                                            call navigator.share(data)
+                                        else
+                                            call #share-dialog.showModal()
+                                    end" {
+                                (icon_share())
+                                "Share"
+                            }
+                        }
+                    }
+                    li  _="on click document.activeElement.blur()" {
+                        button #duplicate-recipe hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
+                            (icon_document_duplicate())
+                            "Duplicate"
+                        }
+                    }
+                    li {
+                        button _="on click print()" {
+                            (icon_printer())
+                            "Print"
+                        }
+                    }
+                    @if !matches!(&data.share, Some(share) if share.is_shared) {
+                        li {
+                            button hx-delete=(format!("/recipes/{recipe_id}"))
+                                hx-swap="none"
+                                hx-confirm="Are you sure you wish to delete this recipe?"
+                                hx-indicator="#fullscreen-loader" {
+                                (icon_trash())
+                                "Delete"
+                            }
+                        }
+                    }
                 }
             }
         }

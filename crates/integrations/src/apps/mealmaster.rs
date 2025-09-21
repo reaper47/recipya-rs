@@ -149,7 +149,7 @@ fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
     Ok(res)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             many0(line_ending),
@@ -319,11 +319,11 @@ fn author(input: &str) -> IResult<&str, &str> {
     .parse(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     alt((twocolumn, onecolumn)).parse(input)
 }
 
-fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     many0(alt((
         map(section, |s| Ingredient::Section(Cow::Borrowed(s))),
         terminated(ingredone, eol),
@@ -332,7 +332,7 @@ fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
     .parse(input)
 }
 
-fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     many1(alt((
         map(section, |s| vec![Ingredient::Section(Cow::Borrowed(s))]),
         map(
@@ -345,7 +345,7 @@ fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
     .map(|(rest, nested)| (rest, nested.into_iter().flatten().collect()))
 }
 
-fn ingredone(input: &str) -> IResult<&str, Ingredient> {
+fn ingredone(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(
         recognize((
             amount,
@@ -359,7 +359,7 @@ fn ingredone(input: &str) -> IResult<&str, Ingredient> {
     .parse(input)
 }
 
-fn ingredtwo(input: &str) -> IResult<&str, Ingredient> {
+fn ingredtwo(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(
         recognize((
             amount,
@@ -450,7 +450,7 @@ fn units4(input: &str) -> IResult<&str, &str> {
     .parse(input)
 }
 
-fn ingredient_notes(input: &str) -> IResult<&str, Ingredient> {
+fn ingredient_notes(input: &str) -> IResult<&str, Ingredient<'_>> {
     let delim = "*----------------------------------------------------------------------*";
     let delim2 = "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
 
@@ -482,7 +482,7 @@ fn ingredient_notes(input: &str) -> IResult<&str, Ingredient> {
     .parse(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
+fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
     many0(alt((
         map((multispace0, section), |(_, s)| {
             Instruction::Section(Cow::Borrowed(s))
@@ -511,11 +511,11 @@ fn take_until_earliest_of(patterns: &[&str]) -> impl Fn(&str) -> IResult<&str, &
         let mut found_pattern = None;
 
         for &pattern in patterns {
-            if let Some(pos) = input.find(pattern) {
-                if pos < earliest_pos {
-                    earliest_pos = pos;
-                    found_pattern = Some(pattern);
-                }
+            if let Some(pos) = input.find(pattern)
+                && pos < earliest_pos
+            {
+                earliest_pos = pos;
+                found_pattern = Some(pattern);
             }
         }
 

@@ -298,7 +298,7 @@ impl From<RecipeSageXMLRecipe> for RecipeSchema {
                 })
             }),
             description: to_text(r.description),
-            is_based_on: if url.is_none() && r.url != "" {
+            is_based_on: if url.is_none() && !r.url.is_empty() {
                 to_is_based_on(r.url)
             } else {
                 to_is_based_on(r.source)
@@ -369,7 +369,7 @@ where
         Error::Parse(err.to_string())
     })?;
 
-    Ok(res.into_iter().map(RecipeSchema::from).collect())
+    Ok(res.into_iter().collect())
 }
 
 fn parse_text_file(input: &str) -> Result<Vec<RecipeSage>> {
@@ -381,7 +381,7 @@ fn parse_text_file(input: &str) -> Result<Vec<RecipeSage>> {
     .map(|(_, r)| r)?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             (id, opt(line_ending)),
@@ -425,9 +425,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
                 image: images,
                 ingredients,
                 instructions,
-                keywords: items
-                    .map(|(_a, b)| b.iter().copied().collect())
-                    .unwrap_or_default(),
+                keywords: items.map(|(_a, b)| b.to_vec()).unwrap_or_default(),
                 notes,
                 servings: servings
                     .filter(|s| !s.is_empty())

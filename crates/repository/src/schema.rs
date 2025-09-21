@@ -217,6 +217,21 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    recipe_timelines (id) {
+        id -> Int8,
+        recipe_id -> Int8,
+        user_id -> Int8,
+        comment -> Nullable<Text>,
+        rating -> Nullable<Int2>,
+        image -> Nullable<Uuid>,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     recipes (id) {
         id -> Int8,
         name -> Text,
@@ -477,6 +492,8 @@ diesel::joinable!(instructions_recipes -> sections (section_id));
 diesel::joinable!(keywords_recipes -> keywords (keyword_id));
 diesel::joinable!(keywords_recipes -> recipes (recipe_id));
 diesel::joinable!(nutrition -> recipes (recipe_id));
+diesel::joinable!(recipe_timelines -> recipes (recipe_id));
+diesel::joinable!(recipe_timelines -> users (user_id));
 diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
 diesel::joinable!(recipes -> users (user_id));
 diesel::joinable!(reports -> report_types (report_type_id));
@@ -519,6 +536,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     keywords_recipes,
     measurement_systems,
     nutrition,
+    recipe_timelines,
     recipes,
     report_types,
     reports,

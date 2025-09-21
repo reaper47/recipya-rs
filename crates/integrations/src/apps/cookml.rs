@@ -237,10 +237,10 @@ impl From<Recipe> for RecipeSchema {
                                 parts.push(format!("gram={}", gram));
                             }
 
-                            if let Some(inote) = ing.inote {
-                                if !inote.is_empty() {
-                                    parts.push(format!("[{}]", inote.join(",")));
-                                }
+                            if let Some(inote) = ing.inote
+                                && !inote.is_empty()
+                            {
+                                parts.push(format!("[{}]", inote.join(",")));
                             }
 
                             parts.join(" ")
@@ -301,7 +301,7 @@ impl From<Recipe> for RecipeSchema {
                     }
                     MonetaryAmountOrText::Text(s) => !s.is_empty(),
                 }),
-            image: (!images.is_empty()).then(|| ImageObjectOrUrl::Urls(images)),
+            image: (!images.is_empty()).then_some(ImageObjectOrUrl::Urls(images)),
             in_language: Some(LanguageOrText::Text(r.lang.unwrap_or_default())).filter(
                 |s| match s {
                     LanguageOrText::Language(_) => {

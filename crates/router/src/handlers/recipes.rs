@@ -21,11 +21,21 @@ use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
+use crate::handlers::get_settings;
+use crate::handlers::helpers::is_hx_request;
+use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
+use crate::middleware::mw_auth::CtxW;
+use crate::recipes_router::params::{
+    FavouriteParams, ImportFromAppForm, PreviewForm, RecipeCategoryForm, RecipeScrapeForm,
+    ShareRecipeForm,
+};
+use crate::{Error, Result};
 use app::state::AppState;
 use math::cooking::units;
 use models::Error::{DuplicateEntity, EntityNotFound};
 use models::data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe};
 use models::params::SearchParams;
+use models::recipe::timeline::RecipeTimeline;
 use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
 use models::settings::UserSettingDetails;
@@ -35,16 +45,7 @@ use models::user::User;
 use models::website::{ToHtmlTable, Website};
 use models::{Recipe, RecipeDetails};
 use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
-
-use crate::handlers::get_settings;
-use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
-use crate::middleware::mw_auth::CtxW;
-use crate::recipes_routes::{
-    FavouriteParams, ImportFromAppForm, PreviewForm, RecipeCategoryForm, RecipeScrapeForm,
-    ShareRecipeForm,
-};
-use crate::{Error, Result};
+use templates::recipes::timeline::Event;
 
 /// Handles deleting a user's recipe.
 pub async fn delete_recipe_handler(
@@ -467,6 +468,96 @@ pub async fn share_recipe_post_handler(
         }
     }
 }
+
+/// Handles getting a recipe's timeline.
+pub async fn timeline_get_handler(
+    ctx: CtxW,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+        Ok(recipe) => recipe,
+        Err(err) => {
+            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
+            broadcast_error(&state, user_id, "Recipe not found.").await;
+            return Error::Model(EntityNotFound {
+                id: recipe_id,
+                entity: "recipe",
+            })
+            .into_response();
+        }
+    };
+
+    let events = match RecipeTimeline::all(&state.mm, user_id, recipe_id).await {
+        Ok(components) => components.into_iter().map(|c| Event {
+            date: c.created_at.date().format("%x").to_string(),
+            title: "Recipe made",
+            image: c.image.map(|u| format!("/data/images/Timeline/{u}.webp")),
+            description: c.comment,
+            rating: c.rating,
+        }).collect::<Vec<_>>(),
+        Err(err) => {
+            error!(
+                "Error fetching timeline components for recipe '{recipe_id}' of user '{user_id}': {err}"
+            );
+            broadcast_error(&state, user_id, "Failed to fetch timeline components.").await;
+            return Error::Model(EntityNotFound {
+                id: recipe_id,
+                entity: "timeline",
+            })
+            .into_response();
+        }
+    };
+
+    let static_events = vec![
+        Event {
+            date: recipe.recipe.created_at.date().format("%x").to_string(),
+            title: "Recipe created",
+            ..Default::default()
+        },
+        Event {
+            date: "1998".into(),
+            title: "iMac",
+            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
+            description: Some("All-in-one design that revitalized Apple.".into()),
+            rating: Some(5),
+        },
+        Event {
+            date: "2001".into(),
+            title: "iPhone",
+            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
+            description: Some("All-in-one design that revitalized Apple.".into()),
+            rating: Some(3),
+        },
+        Event {
+            date: "2007".into(),
+            title: "iPhone Flip",
+            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
+            description: Some("All-in-one design that revitalized Apple.".into()),
+            rating: Some(4),
+        },
+        Event {
+            date: "2025".into(),
+            title: "iPhone Air",
+            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
+            description: Some("All-in-one design that revitalized Apple.".into()),
+            rating: Some(1),
+        },
+    ];
+
+    let mut all_events = static_events;
+    all_events.extend(events);
+
+    templates::recipes::timeline::render_timeline_events(all_events).into_response()
+}
+
+/// Handles adding a timeline component to the recipe.
+pub async fn timeline_post_handler(ctx: CtxW, Path(recipe_id): Path<i64>) -> impl IntoResponse {}
+
+/// Handles updating a timeline component of the recipe.
+pub async fn timeline_put_handler(ctx: CtxW, Path(recipe_id): Path<i64>) -> impl IntoResponse {}
 
 /// Toggles the favourite state of a recipe.
 pub async fn toggle_favourite_handler(

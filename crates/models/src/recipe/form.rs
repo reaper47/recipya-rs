@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use axum::extract::multipart::{Field, InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
-use tracing::{error, warn};
+use tracing::error;
 use uuid::Uuid;
 
 use super::{NutritionForCreate, TimesForCreate, ToolForCreate};
@@ -105,7 +105,7 @@ where
 
                     videos.insert(uuid.into(), path);
                 }
-                "notes" => notes  = text_trim(field).await,
+                "notes" => notes = text_trim(field).await,
                 "rating" => rating = parse_i16(field).await,
                 "source" => source = text_trim(field).await,
                 "time-prep" => times.prep_seconds = calc_time_from_field(field).await,

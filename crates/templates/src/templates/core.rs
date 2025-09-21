@@ -43,6 +43,7 @@ pub(super) fn head(title: &str) -> Markup {
             script defer src="/public/js/json-highlighter.min.js" {}
             script defer src="/public/js/toast.min.js" {}
             script defer src="/public/js/media.min.js" {}
+            script defer src="/public/js/wakelock.min.js" {}
         }
     }
 }

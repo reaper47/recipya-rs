@@ -10,6 +10,7 @@ pub use add_page::*;
 pub use edit::*;
 pub use index::*;
 pub use search::*;
+pub mod timeline;
 pub use view::*;
 
 pub(super) mod common;

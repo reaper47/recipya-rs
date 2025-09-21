@@ -9,8 +9,8 @@ use strum::IntoEnumIterator;
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
     icon_circle_stack, icon_cloud, icon_cube_transparent, icon_download_cloud,
-    icon_information_circle, icon_pencil, icon_plus_circle, icon_rocket_launch, icon_server,
-    icon_trash, icon_user_circle, icon_x_circle,
+    icon_information_circle, icon_pencil, icon_plus_circle, icon_server, icon_trash,
+    icon_user_circle, icon_x_circle,
 };
 
 pub struct SettingsForView {
