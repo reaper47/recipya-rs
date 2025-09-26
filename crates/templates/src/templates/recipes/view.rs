@@ -11,11 +11,11 @@ use models::{Recipe, RecipeDetails};
 use support::fs::FsSupport;
 
 use crate::recipes::common::render_rating;
-use crate::recipes::timeline::render_timeline_dialog;
+use crate::recipes::timeline::render_dialog;
 use crate::templates::icons::{
     icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
-    icon_ellipsis_vertical, icon_heart, icon_pencil, icon_plus_circle, icon_printer, icon_share,
-    icon_timeline, icon_trash,
+    icon_ellipsis_vertical, icon_fire, icon_heart, icon_pencil, icon_plus_circle, icon_printer,
+    icon_share, icon_timeline, icon_trash,
 };
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
@@ -233,7 +233,7 @@ pub fn view_recipe_helper(
             }
         }
 
-        (render_timeline_dialog(vec![]))
+        (render_dialog(recipe.id, vec![]))
     })
 }
 
@@ -428,6 +428,12 @@ fn render_right_controls(recipe_id: i64, is_favourite: bool, data: &Data) -> Mar
                 }
                 ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-40 p-2 shadow-sm" {
                     @if matches!(&data.share, Some(share) if !share.is_shared) {
+                        li _="on click document.activeElement.blur()" {
+                            button _="on click call #timeline-new-event-dialog.showModal()" {
+                                (icon_fire())
+                                "Recipe made"
+                            }
+                        }
                         li _="on click document.activeElement.blur()" {
                             button hx-post=(format!("/recipes/{recipe_id}/share"))
                                 hx-target="#share-dialog-result"

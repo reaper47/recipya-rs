@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -21,21 +22,13 @@ use tracing::{error, info, warn};
 use url::Url;
 use uuid::Uuid;
 
-use crate::handlers::get_settings;
-use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error};
-use crate::middleware::mw_auth::CtxW;
-use crate::recipes_router::params::{
-    FavouriteParams, ImportFromAppForm, PreviewForm, RecipeCategoryForm, RecipeScrapeForm,
-    ShareRecipeForm,
-};
-use crate::{Error, Result};
 use app::state::AppState;
+use config::DataDir;
 use math::cooking::units;
 use models::Error::{DuplicateEntity, EntityNotFound};
 use models::data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe};
 use models::params::SearchParams;
-use models::recipe::timeline::RecipeTimeline;
+use models::recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate};
 use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
 use models::settings::UserSettingDetails;
@@ -46,6 +39,18 @@ use models::website::{ToHtmlTable, Website};
 use models::{Recipe, RecipeDetails};
 use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
 use templates::recipes::timeline::Event;
+
+use crate::handlers::get_settings;
+use crate::handlers::helpers::is_hx_request;
+use crate::handlers::message::{
+    IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success,
+};
+use crate::middleware::mw_auth::CtxW;
+use crate::recipes_router::params::{
+    FavouriteParams, ImportFromAppForm, OrderParams, PreviewForm, RecipeCategoryForm,
+    RecipeScrapeForm, ShareRecipeForm, TimelineEventForm,
+};
+use crate::{Error, Result};
 
 /// Handles deleting a user's recipe.
 pub async fn delete_recipe_handler(
@@ -477,7 +482,7 @@ pub async fn timeline_get_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+    let recipe = match Recipe::get_recipe_only(&state.mm, user_id, recipe_id).await {
         Ok(recipe) => recipe,
         Err(err) => {
             error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
@@ -491,13 +496,7 @@ pub async fn timeline_get_handler(
     };
 
     let events = match RecipeTimeline::all(&state.mm, user_id, recipe_id).await {
-        Ok(components) => components.into_iter().map(|c| Event {
-            date: c.created_at.date().format("%x").to_string(),
-            title: "Recipe made",
-            image: c.image.map(|u| format!("/data/images/Timeline/{u}.webp")),
-            description: c.comment,
-            rating: c.rating,
-        }).collect::<Vec<_>>(),
+        Ok(components) => components.into_iter().map(Event::from).collect::<Vec<_>>(),
         Err(err) => {
             error!(
                 "Error fetching timeline components for recipe '{recipe_id}' of user '{user_id}': {err}"
@@ -511,53 +510,176 @@ pub async fn timeline_get_handler(
         }
     };
 
-    let static_events = vec![
-        Event {
-            date: recipe.recipe.created_at.date().format("%x").to_string(),
-            title: "Recipe created",
-            ..Default::default()
-        },
-        Event {
-            date: "1998".into(),
-            title: "iMac",
-            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
-            description: Some("All-in-one design that revitalized Apple.".into()),
-            rating: Some(5),
-        },
-        Event {
-            date: "2001".into(),
-            title: "iPhone",
-            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
-            description: Some("All-in-one design that revitalized Apple.".into()),
-            rating: Some(3),
-        },
-        Event {
-            date: "2007".into(),
-            title: "iPhone Flip",
-            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
-            description: Some("All-in-one design that revitalized Apple.".into()),
-            rating: Some(4),
-        },
-        Event {
-            date: "2025".into(),
-            title: "iPhone Air",
-            image: Some("https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp".into()),
-            description: Some("All-in-one design that revitalized Apple.".into()),
-            rating: Some(1),
-        },
-    ];
+    let static_events = vec![Event {
+        date: recipe.created_at.date().format("%x").to_string(),
+        title: "Recipe created".into(),
+        ..Default::default()
+    }];
 
     let mut all_events = static_events;
     all_events.extend(events);
 
-    templates::recipes::timeline::render_timeline_events(all_events).into_response()
+    templates::recipes::timeline::render_events(recipe_id, all_events).into_response()
 }
 
 /// Handles adding a timeline component to the recipe.
-pub async fn timeline_post_handler(ctx: CtxW, Path(recipe_id): Path<i64>) -> impl IntoResponse {}
+pub async fn timeline_post_handler(
+    ctx: CtxW,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+    form: TimelineEventForm,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    if let Err(err) = RecipeTimeline::create(
+        &state.mm,
+        recipe_id,
+        user_id,
+        &RecipeTimelineForCreate {
+            title: form.title,
+            comment: form.comment,
+            rating: form.rating,
+            image: upload_image(form.image, Arc::clone(&state.fs_support), &state.data_dir).await,
+            created_at: form.date,
+        },
+    )
+    .await
+    {
+        error!(
+            "Error creating timeline event for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+        );
+        broadcast_error(&state, user_id, "Could not create timeline event.").await;
+        return Error::Database.into_response();
+    }
+
+    broadcast_success(&state, user_id, "Timeline event created.").await;
+    (StatusCode::CREATED, "").into_response()
+}
+
+async fn upload_image(
+    map: HashMap<String, PathBuf>,
+    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    data_dir: &DataDir,
+) -> Option<Uuid> {
+    map.into_iter()
+        .map(
+            |(original_file_stem, path)| match Uuid::parse_str(&original_file_stem) {
+                Ok(name) if fs_support.is_file_exists(name, &data_dir.images.timeline, ".webp") => {
+                    name
+                }
+                Ok(_) | Err(_) => {
+                    let file_name = path
+                        .file_stem()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .into_owned()
+                        .parse::<Uuid>()
+                        .unwrap_or_default();
+
+                    fs_support.upload_image(&path, file_name, &data_dir.images.timeline);
+                    file_name
+                }
+            },
+        )
+        .collect::<Vec<_>>()
+        .first()
+        .cloned()
+}
+
+/// Handles getting a timeline event for view.
+pub async fn timeline_event_get_handler(
+    ctx: CtxW,
+    Path((recipe_id, timeline_id)): Path<(i64, i64)>,
+    State(state): State<AppState>,
+    Query(q): Query<OrderParams>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await {
+        Ok(t) => Event::from(t),
+        Err(err) => {
+            error!(
+                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+            );
+            broadcast_error(&state, user_id, "Could not fetch timeline event.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::recipes::timeline::render_event(&event, q.index, q.max_index, recipe_id)
+        .into_response()
+}
+
+/// Handles getting a timeline event for edit.
+pub async fn timeline_event_get_edit_handler(
+    ctx: CtxW,
+    Path((recipe_id, timeline_id)): Path<(i64, i64)>,
+    State(state): State<AppState>,
+    Query(q): Query<OrderParams>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await {
+        Ok(t) => t,
+        Err(err) => {
+            error!(
+                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+            );
+            broadcast_error(&state, user_id, "Could not fetch timeline event.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::recipes::timeline::render_edit(event, q.index, q.max_index, recipe_id)
+        .into_response()
+}
 
 /// Handles updating a timeline component of the recipe.
-pub async fn timeline_put_handler(ctx: CtxW, Path(recipe_id): Path<i64>) -> impl IntoResponse {}
+pub async fn timeline_put_handler(
+    ctx: CtxW,
+    Path((recipe_id, timeline_id)): Path<(i64, i64)>,
+    State(state): State<AppState>,
+    form: TimelineEventForm,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let original_event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await
+    {
+        Ok(t) => t,
+        Err(err) => {
+            error!(
+                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+            );
+            broadcast_error(&state, user_id, "Could not fetch timeline event.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    let new_event = RecipeTimeline {
+        id: original_event.id,
+        recipe_id: original_event.recipe_id,
+        user_id: original_event.user_id,
+        title: form.title,
+        comment: form.comment,
+        rating: form.rating,
+        image: upload_image(form.image, Arc::clone(&state.fs_support), &state.data_dir).await,
+        created_at: Default::default(),
+    };
+
+    if let Err(err) = RecipeTimeline::edit(&state.mm, user_id, &new_event).await {
+        error!("Failed to edit timeline event '{new_event:?}': {err}");
+        broadcast_error(&state, user_id, "Failed to edit timeline event.").await;
+        return Error::Database.into_response();
+    };
+
+    templates::recipes::timeline::render_event(
+        &Event::from(new_event),
+        form.index.unwrap_or_default(),
+        form.max_index.unwrap_or_default(),
+        recipe_id,
+    )
+    .into_response()
+}
 
 /// Toggles the favourite state of a recipe.
 pub async fn toggle_favourite_handler(

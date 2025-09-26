@@ -39,7 +39,7 @@ mod tests {
         let res = server.get(&base_uri(1)).await;
 
         res.assert_status_not_found();
-        assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
         Ok(())
     }
 

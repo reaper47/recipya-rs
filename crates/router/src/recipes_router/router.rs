@@ -13,26 +13,34 @@ pub fn recipes_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(recipes_handler))
         .route(
-            "/{:recipe_id}",
+            "/{recipe_id}",
             get(view_recipe_handler).delete(delete_recipe_handler),
         )
-        .route("/{:recipe_id}/duplicate", get(duplicate_recipe_handler))
+        .route("/{recipe_id}/duplicate", get(duplicate_recipe_handler))
         .route(
-            "/{:recipe_id}/edit",
+            "/{recipe_id}/edit",
             get(edit_recipe_handler)
                 .put(edit_recipe_put_handler)
                 .layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
-        .route("/{:recipe_id}/favourite", post(toggle_favourite_handler))
-        .route("/{:recipe_id}/scale", get(scale_recipe_handler))
-        .route("/{:recipe_id}/share", post(share_recipe_post_handler))
+        .route("/{recipe_id}/favourite", post(toggle_favourite_handler))
+        .route("/{recipe_id}/scale", get(scale_recipe_handler))
+        .route("/{recipe_id}/share", post(share_recipe_post_handler))
         .route(
-            "/{:recipe_id}/timeline",
+            "/{recipe_id}/timeline",
             get(timeline_get_handler)
                 .post(timeline_post_handler)
-                .put(timeline_put_handler)
                 .layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
+        .route(
+            "/{recipe_id}/timelines/{timeline_id}",
+            get(timeline_event_get_handler).put(timeline_put_handler),
+        )
+        .route(
+            "/{recipe_id}/timelines/{timeline_id}/edit",
+            get(timeline_event_get_edit_handler),
+        )
+        .layer(DefaultBodyLimit::max(FIFTY_MB))
         .route("/add", get(add_recipes_handler))
         .route(
             "/add/import",

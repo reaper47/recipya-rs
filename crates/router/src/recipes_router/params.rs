@@ -1,11 +1,17 @@
+use std::collections::HashMap;
+use std::io::Cursor;
+use std::path::PathBuf;
+use std::str::FromStr;
+
 use axum::extract::multipart::{InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
-use integrations::{App, FileFormat, parse_recipe};
-use recipe_schema::RecipeSchema;
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
-use std::io::Cursor;
-use std::str::FromStr;
-use tracing::{error, info, warn};
+use tracing::{error, info};
+
+use integrations::{App, FileFormat, parse_recipe};
+use models::recipe::{save_media_field, text_trim};
+use recipe_schema::RecipeSchema;
 
 /// Represents the content of the "Add Recipe -> Import from an app" form.
 #[derive(Default)]
@@ -60,9 +66,7 @@ where
 
                     form.file_format = FileFormat::from_filename(&filename);
                 }
-                _ => {
-                    warn!("Import recipes from app form field '{name}' is not processed")
-                }
+                _ => {}
             }
         }
 
@@ -110,9 +114,76 @@ pub struct FavouriteParams {
     pub is_view_recipe: Option<bool>,
 }
 
+/// Stores parameters for order.
+#[derive(Deserialize, Serialize)]
+pub struct OrderParams {
+    pub index: usize,
+    #[serde(rename = "max-index")]
+    pub max_index: usize,
+}
+
 /// Represents the content of a JSON preview form.
 #[derive(Deserialize, Serialize)]
 pub struct PreviewForm {
     #[serde(rename = "json-input")]
     pub(crate) json_input: String,
+}
+
+/// Represents the components of the form used to add a new event to the timeline.
+#[derive(Default)]
+pub struct TimelineEventForm {
+    pub title: String,
+    pub date: Option<NaiveDateTime>,
+    pub image: HashMap<String, PathBuf>,
+    pub comment: Option<String>,
+    pub rating: Option<i16>,
+
+    pub index: Option<usize>,
+    pub max_index: Option<usize>,
+}
+
+impl<S> FromRequest<S> for TimelineEventForm
+where
+    S: Send + Sync,
+{
+    type Rejection = MultipartRejection;
+
+    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
+        let mut multipart = Multipart::from_request(req, state).await?;
+
+        let mut form = TimelineEventForm::default();
+
+        let mut images: HashMap<String, PathBuf> = HashMap::new();
+        let mut videos: HashMap<String, PathBuf> = HashMap::new();
+
+        while let Some(field) = multipart.next_field().await.map_err(|err| {
+            error!("Failed to read multipart field in timeline event form: {err}");
+            InvalidBoundary::default()
+        })? {
+            let name = field.name().unwrap_or("");
+            match name {
+                "title" => form.title = text_trim(field).await.unwrap_or_default(),
+                "date" => {
+                    form.date = text_trim(field).await.and_then(|s| {
+                        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
+                            .ok()
+                            .and_then(|d| d.and_hms_opt(0, 0, 0))
+                    });
+                }
+                "image" => {
+                    if let Err(err) = save_media_field(field, &mut images, &mut videos).await {
+                        error!("Saving media failed: {err:?}");
+                    }
+                }
+                "comment" => form.comment = text_trim(field).await,
+                "rating-event" => form.rating = text_trim(field).await.and_then(|s| s.parse().ok()),
+                "index" => form.index = text_trim(field).await.and_then(|s| s.parse().ok()),
+                "max-index" => form.max_index = text_trim(field).await.and_then(|s| s.parse().ok()),
+                _ => {}
+            }
+        }
+
+        form.image = images;
+        Ok(form)
+    }
 }

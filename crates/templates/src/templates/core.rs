@@ -38,6 +38,7 @@ pub(super) fn head(title: &str) -> Markup {
             script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" {}
             script src="https://unpkg.com/cropperjs@2.0.1/dist/cropper.min.js" {}
             script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js" {}
+            script type="module" src="https://unpkg.com/cally" {}
 
             script defer src="/public/js/core.min.js" {}
             script defer src="/public/js/json-highlighter.min.js" {}

@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env::temp_dir;
 use std::ops::Not;
 use std::path::PathBuf;
 
@@ -8,7 +7,8 @@ use axum::extract::{FromRequest, Multipart, Request};
 use tracing::error;
 use uuid::Uuid;
 
-use super::{NutritionForCreate, TimesForCreate, ToolForCreate};
+use super::{NutritionForCreate, TimesForCreate, ToolForCreate, save_media_field};
+use crate::recipe::helpers::text_trim;
 
 /// Represents a form used to create or update a recipe.
 pub struct RecipeForm {
@@ -220,20 +220,6 @@ where
     }
 }
 
-async fn text_trim(field: Field<'_>) -> Option<String> {
-    match field.text().await {
-        Ok(s) => {
-            let s = s.trim();
-            if s.is_empty() {
-                None
-            } else {
-                Some(s.to_owned())
-            }
-        }
-        Err(_) => None,
-    }
-}
-
 async fn push_non_empty(field: Field<'_>, vec: &mut Vec<String>) {
     if let Some(s) = text_trim(field).await {
         vec.push(s);
@@ -262,33 +248,4 @@ async fn calc_time_from_field(field: Field<'_>) -> i32 {
     } else {
         0
     }
-}
-
-async fn save_media_field(
-    field: Field<'_>,
-    images: &mut HashMap<String, PathBuf>,
-    videos: &mut HashMap<String, PathBuf>,
-) -> Result<(), InvalidBoundary> {
-    let filename = Uuid::new_v4();
-
-    let bytes = field.bytes().await.unwrap_or_default();
-    if bytes.is_empty() {
-        return Ok(());
-    }
-
-    let mime = infer::get(&bytes)
-        .map(|k| k.mime_type())
-        .unwrap_or("application/octet-stream");
-
-    let path = temp_dir().join(filename.to_string());
-    tokio::fs::write(&path, &bytes)
-        .await
-        .map_err(|_| InvalidBoundary::default())?;
-
-    if mime.starts_with("video/") {
-        videos.insert(filename.to_string(), path.clone());
-    } else {
-        images.insert(filename.to_string(), path.clone());
-    }
-    Ok(())
 }

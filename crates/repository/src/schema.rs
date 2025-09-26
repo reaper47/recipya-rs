@@ -221,6 +221,7 @@ diesel::table! {
         id -> Int8,
         recipe_id -> Int8,
         user_id -> Int8,
+        title -> Text,
         comment -> Nullable<Text>,
         rating -> Nullable<Int2>,
         image -> Nullable<Uuid>,

@@ -21,6 +21,7 @@ pub struct RecipeTimeline {
     pub id: i64,
     pub recipe_id: i64,
     pub user_id: i64,
+    pub title: String,
     pub comment: Option<String>,
     pub rating: Option<i16>,
     pub image: Option<Uuid>,
@@ -28,7 +29,9 @@ pub struct RecipeTimeline {
 }
 
 /// The minimal struct for creating a new timeline into the database.
+#[derive(Default)]
 pub struct RecipeTimelineForCreate {
+    pub title: String,
     pub comment: Option<String>,
     pub rating: Option<i16>,
     pub image: Option<Uuid>,
@@ -40,6 +43,7 @@ pub struct RecipeTimelineForCreate {
 struct TimelineForInsert {
     recipe_id: i64,
     user_id: i64,
+    title: String,
     comment: Option<String>,
     rating: Option<i16>,
     image: Option<Uuid>,
@@ -80,6 +84,7 @@ impl RecipeTimeline {
             .values(&TimelineForInsert {
                 recipe_id,
                 user_id,
+                title: timeline_c.title.clone(),
                 comment: timeline_c.comment.clone(),
                 rating: timeline_c.rating,
                 image: timeline_c.image,
@@ -94,32 +99,40 @@ impl RecipeTimeline {
     /// Updates the fields of an existing timeline.
     pub async fn edit(
         mm: &ModelManager,
-        timeline_id: i64,
         user_id: i64,
-        timeline_c: &RecipeTimelineForCreate,
+        new_timeline: &RecipeTimeline,
     ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        diesel::update(
+            schema::recipe_timelines::table
+                .filter(schema::recipe_timelines::id.eq(new_timeline.id))
+                .filter(schema::recipe_timelines::user_id.eq(user_id)),
+        )
+        .set(new_timeline)
+        .execute(&mut conn)
+        .await?;
+
+        Ok(())
+    }
+
+    /// Gets a single timeline event.
+    pub async fn get(
+        mm: &ModelManager,
+        timeline_id: i64,
+        recipe_id: i64,
+        user_id: i64,
+    ) -> Result<RecipeTimeline> {
         let mut conn = mm.pool.get().await?;
 
         let timeline = schema::recipe_timelines::table
             .filter(schema::recipe_timelines::id.eq(timeline_id))
+            .filter(schema::recipe_timelines::recipe_id.eq(recipe_id))
             .filter(schema::recipe_timelines::user_id.eq(user_id))
             .first::<RecipeTimeline>(&mut conn)
             .await?;
 
-        diesel::update(schema::recipe_timelines::table)
-            .set(&RecipeTimeline {
-                id: timeline.id,
-                recipe_id: timeline.recipe_id,
-                user_id,
-                comment: timeline_c.comment.clone(),
-                rating: timeline_c.rating,
-                image: timeline_c.image,
-                created_at: timeline_c.created_at.unwrap_or(timeline.created_at),
-            })
-            .execute(&mut conn)
-            .await?;
-
-        Ok(())
+        Ok(timeline)
     }
 }
 
@@ -143,24 +156,14 @@ mod tests {
             let user2 = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
             let recipe_id1 = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
             let recipe_id2 = Recipe::create(&state.mm, 2, &a_complete_recipe_for_create()).await?;
-            RecipeTimeline::create(
-                &state.mm,
-                1,
-                1,
-                &RecipeTimelineForCreate {
-                    comment: None,
-                    rating: None,
-                    image: None,
-                    created_at: None,
-                },
-            )
-            .await?;
+            RecipeTimeline::create(&state.mm, 1, 1, &RecipeTimelineForCreate::default()).await?;
             let image = Uuid::new_v4();
             RecipeTimeline::create(
                 &state.mm,
                 1,
                 1,
                 &RecipeTimelineForCreate {
+                    title: "A title".into(),
                     comment: Some("A comment".into()),
                     rating: Some(5),
                     image: Some(image),
@@ -175,12 +178,7 @@ mod tests {
                 &state.mm,
                 recipe_id2,
                 user2.id,
-                &RecipeTimelineForCreate {
-                    comment: None,
-                    rating: None,
-                    image: None,
-                    created_at: None,
-                },
+                &RecipeTimelineForCreate::default(),
             )
             .await?;
 
@@ -201,6 +199,7 @@ mod tests {
             let _ = build_server_anonymous(config.clone()).await?;
             let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
             let timeline_c = RecipeTimelineForCreate {
+                title: "A title".into(),
                 comment: Some("hello".into()),
                 rating: Some(4),
                 image: None,
@@ -211,7 +210,21 @@ mod tests {
             };
             let timeline_id = RecipeTimeline::create(&state.mm, recipe_id, 1, &timeline_c).await?;
 
-            RecipeTimeline::edit(&state.mm, timeline_id, 1, &timeline_c).await?;
+            RecipeTimeline::edit(
+                &state.mm,
+                timeline_id,
+                &RecipeTimeline {
+                    id: timeline_id,
+                    recipe_id,
+                    user_id: 1,
+                    title: timeline_c.title.clone(),
+                    comment: timeline_c.comment.clone(),
+                    rating: timeline_c.rating,
+                    image: timeline_c.image,
+                    created_at: timeline_c.created_at.unwrap(),
+                },
+            )
+            .await?;
 
             let got = RecipeTimeline::all(&state.mm, recipe_id, 1).await?;
             pretty_assertions::assert_eq!(
@@ -220,6 +233,7 @@ mod tests {
                     id: 1,
                     recipe_id,
                     user_id: 1,
+                    title: timeline_c.title.clone(),
                     comment: timeline_c.comment.clone(),
                     rating: timeline_c.rating,
                     image: None,
@@ -235,7 +249,8 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
-            let original_timeline_c = RecipeTimelineForCreate {
+            let timeline_c = RecipeTimelineForCreate {
+                title: "A title".into(),
                 comment: Some("hello".into()),
                 rating: Some(4),
                 image: None,
@@ -245,19 +260,22 @@ mod tests {
                 )?),
             };
             let image = Uuid::new_v4();
-            let new_timeline_c = RecipeTimelineForCreate {
+            let timeline_id = RecipeTimeline::create(&state.mm, recipe_id, 1, &timeline_c).await?;
+            let new_timeline = RecipeTimeline {
+                id: timeline_id,
+                recipe_id,
+                user_id: 1,
+                title: "A title 2".into(),
                 comment: Some("bye".into()),
                 rating: Some(1),
                 image: Some(image),
-                created_at: Some(chrono::NaiveDateTime::parse_from_str(
+                created_at: chrono::NaiveDateTime::parse_from_str(
                     "2025-01-30 02:32:28",
                     "%Y-%m-%d %H:%M:%S",
-                )?),
+                )?,
             };
-            let timeline_id =
-                RecipeTimeline::create(&state.mm, recipe_id, 1, &original_timeline_c).await?;
 
-            RecipeTimeline::edit(&state.mm, timeline_id, 1, &new_timeline_c).await?;
+            RecipeTimeline::edit(&state.mm, timeline_id, &new_timeline).await?;
 
             let got = RecipeTimeline::all(&state.mm, recipe_id, 1).await?;
             pretty_assertions::assert_eq!(
@@ -266,10 +284,11 @@ mod tests {
                     id: 1,
                     recipe_id,
                     user_id: 1,
-                    comment: new_timeline_c.comment.clone(),
-                    rating: new_timeline_c.rating,
-                    image: new_timeline_c.image,
-                    created_at: new_timeline_c.created_at.unwrap(),
+                    title: new_timeline.title.clone(),
+                    comment: new_timeline.comment.clone(),
+                    rating: new_timeline.rating,
+                    image: new_timeline.image,
+                    created_at: new_timeline.created_at,
                 }],
             );
             Ok(())

@@ -1,15 +1,16 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
     initGlobalKeyboardShortcuts();
     syncLayout();
+    window.todayISO = () => (new Date()).toISOString().split("T")[0];
 });
 
-document.body.addEventListener('htmx:afterSwap', (event) => {
-    if (event.target.id === 'content') {
+document.body.addEventListener("htmx:afterSwap", (event) => {
+    if (event.target.id === "content") {
         syncLayout();
     }
 });
 
-document.body.addEventListener('htmx:historyRestore', () => {
+document.body.addEventListener("htmx:historyRestore", () => {
     syncLayout();
 });
 

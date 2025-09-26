@@ -251,10 +251,11 @@ pub(super) fn init_recipe_form_js() -> Markup {
 
 pub(super) fn render_rating(name: &str, value: Option<i16>, size: &str, is_ro: bool) -> Markup {
     let value = value.unwrap_or(0);
+    let class = format!("rating {size}");
 
     if is_ro {
         html! {
-            div class=(format!("rating {size}").trim()) {
+            div class=(class.trim()) {
                 div class="mask mask-star-2" aria-label="1 star" aria-current=[if value == 1 { Some("true") } else { None }]  {}
                 div class="mask mask-star-2" aria-label="2 star" aria-current=[if value == 2 { Some("true") } else { None }] {}
                 div class="mask mask-star-2" aria-label="3 star" aria-current=[if value == 3 { Some("true") } else { None }]  {}
@@ -264,7 +265,7 @@ pub(super) fn render_rating(name: &str, value: Option<i16>, size: &str, is_ro: b
         }
     } else {
         html! {
-            div class="rating" {
+            div class=(class.trim()) {
                 input type="radio" name=(name) class="rating-hidden" value="" aria-label="clear" checked[value == 0];
                 input type="radio" name=(name) class="mask mask-star-2" value="1" aria-label="1 star" checked[value == 1];
                 input type="radio" name=(name) class="mask mask-star-2" value="2" aria-label="2 star"  checked[value == 2];

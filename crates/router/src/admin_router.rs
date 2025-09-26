@@ -98,7 +98,7 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::BAD_REQUEST);
-            assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"Email is invalid or passwords do not match.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Email is invalid or passwords do not match.","status":"alert-error","title":"Operation Failed"}}"# ).await;
             Ok(())
         }
 
@@ -117,7 +117,7 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::CONFLICT);
-            assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"A user with this email exists.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"A user with this email exists.","status":"alert-error","title":"Operation Failed"}}"# ).await;
             Ok(())
         }
 
@@ -187,7 +187,7 @@ mod tests {
                 let res = server.delete(&base_uri(1)).await;
 
                 res.assert_status_forbidden();
-                assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"Cannot delete an admin.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Cannot delete an admin.","status":"alert-error","title":"Operation Failed"}}"# ).await;
                 Ok(())
             }
 
@@ -199,7 +199,7 @@ mod tests {
                 let res = server.delete(&base_uri(5)).await;
 
                 res.assert_status_internal_server_error();
-                assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"Failed to delete user.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Failed to delete user.","status":"alert-error","title":"Operation Failed"}}"# ).await;
                 Ok(())
             }
 
@@ -212,7 +212,7 @@ mod tests {
                 let res = server.delete(&base_uri(user2.id.try_into().unwrap())).await;
 
                 res.assert_status_ok();
-                assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"User deleted.","status":"alert-info","title":"Operation Successful"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User deleted.","status":"alert-info","title":"Operation Successful"}}"# ).await;
                 let state = create_app_state(config.clone()).await;
                 let user = User::get_user_by_id(&state.mm, user2.id).await;
                 if user.is_ok() && user.unwrap().is_some() {
@@ -252,7 +252,7 @@ mod tests {
                     .await;
 
                 res.assert_status_bad_request();
-                assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"Payload cannot be empty.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Payload cannot be empty.","status":"alert-error","title":"Operation Failed"}}"# ).await;
                 Ok(())
             }
 
@@ -272,7 +272,7 @@ mod tests {
                     .await;
 
                 res.assert_status_internal_server_error();
-                assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"Failed to update user password.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Failed to update user password.","status":"alert-error","title":"Operation Failed"}}"# ).await;
                 Ok(())
             }
 
@@ -293,7 +293,7 @@ mod tests {
                     .await;
 
                 res.assert_status_ok();
-                assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"User password updated.","status":"alert-info","title":"Operation Successful"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User password updated.","status":"alert-info","title":"Operation Successful"}}"# ).await;
                 assert_html(
                     res,
                     vec![
@@ -327,7 +327,7 @@ mod tests {
                 let res = server.get(&format!("{}?row-index=1", base_uri(99))).await;
 
                 res.assert_status_internal_server_error();
-                assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
                 Ok(())
             }
 
@@ -381,7 +381,7 @@ mod tests {
             let res = server.get(&base_uri(6, 3)).await;
 
             res.assert_status_internal_server_error();
-            assert_ws_message(&mut ws_server,r#"{"showMessageHtmx":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
             Ok(())
         }
 

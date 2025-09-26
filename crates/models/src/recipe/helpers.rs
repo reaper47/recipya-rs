@@ -1,5 +1,8 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::env::temp_dir;
+use std::path::PathBuf;
 
+use axum::extract::multipart::{Field, InvalidBoundary};
 use diesel::data_types::PgInterval;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
@@ -372,6 +375,49 @@ where
     }
 
     Ok(())
+}
+
+pub async fn save_media_field(
+    field: Field<'_>,
+    images: &mut HashMap<String, PathBuf>,
+    videos: &mut HashMap<String, PathBuf>,
+) -> std::result::Result<(), InvalidBoundary> {
+    let filename = Uuid::new_v4();
+
+    let bytes = field.bytes().await.unwrap_or_default();
+    if bytes.is_empty() {
+        return Ok(());
+    }
+
+    let mime = infer::get(&bytes)
+        .map(|k| k.mime_type())
+        .unwrap_or("application/octet-stream");
+
+    let path = temp_dir().join(filename.to_string());
+    tokio::fs::write(&path, &bytes)
+        .await
+        .map_err(|_| InvalidBoundary::default())?;
+
+    if mime.starts_with("video/") {
+        videos.insert(filename.to_string(), path.clone());
+    } else {
+        images.insert(filename.to_string(), path.clone());
+    }
+    Ok(())
+}
+
+pub async fn text_trim(field: Field<'_>) -> Option<String> {
+    match field.text().await {
+        Ok(s) => {
+            let s = s.trim();
+            if s.is_empty() {
+                None
+            } else {
+                Some(s.to_owned())
+            }
+        }
+        Err(_) => None,
+    }
 }
 
 pub(super) async fn update_category<C>(

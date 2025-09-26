@@ -91,6 +91,24 @@ impl Recipe {
         .await
     }
 
+    /// Gets the recipe only.
+    pub async fn get_recipe_only(
+        mm: &ModelManager,
+        user_id: i64,
+        recipe_id: i64,
+    ) -> Result<Recipe> {
+        let mut conn = mm.pool.get().await?;
+
+        let recipe = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .filter(schema::recipes::id.eq(recipe_id))
+            .select(Recipe::as_select())
+            .first::<Recipe>(&mut conn)
+            .await?;
+
+        Ok(recipe)
+    }
+
     /// Gets a page of recipes belonging to the user.
     pub async fn get_page(
         mm: &ModelManager,
