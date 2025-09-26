@@ -1,4 +1,5 @@
 use maud::{Markup, PreEscaped, html};
+
 use models::recipe::timeline::RecipeTimeline;
 
 use crate::recipes::common::render_rating;
