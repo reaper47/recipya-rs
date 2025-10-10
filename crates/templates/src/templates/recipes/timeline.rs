@@ -2,7 +2,7 @@ use maud::{Markup, PreEscaped, html};
 
 use models::recipe::timeline::RecipeTimeline;
 
-use crate::recipes::common::render_rating;
+use crate::recipes::common::{RatingSize, render_rating};
 use crate::templates::icons::{icon_check, icon_pencil, icon_x_mark};
 
 #[derive(Default)]
@@ -86,7 +86,7 @@ pub fn render_dialog(recipe_id: i64, events: Vec<Event>) -> Markup {
                                 textarea #event-comment name="comment" placeholder="How did your dish go today?" rows="5" class="textarea w-full h-full resize-none rounded-none focus:outline-none" {}
 
                                 label class="label" { "Rating" }
-                                (render_rating("rating-event", Some(3), "", false))
+                                (render_rating("rating-event", Some(3), None, false, None))
                             }
                         }
                     }
@@ -135,7 +135,7 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
                         }
                         @if let Some(rating) = event.rating {
                             div class="flex justify-between items-baseline" {
-                                (render_rating(&format!("rating-timeline-{index}"), Some(rating), "rating-sm", true))
+                                (render_rating(&format!("rating-timeline-{index}"), Some(rating), Some(RatingSize::Small), true, None))
                                 (edit_button(&timeline_edit_url, &timeline_event_id))
                             }
                         } @else if index > 0 {
@@ -152,7 +152,7 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
                 }
             }
             div class="timeline-end" {
-                p .text-center {
+                p .text-center.pb-2 {
                     (event.date)
                 }
                 @if let Some(image) = event.image.clone() {
@@ -185,74 +185,104 @@ pub fn render_edit(
     num_events: usize,
     recipe_id: i64,
 ) -> Markup {
+    let event_id = event.id;
     let local_time = event.created_at.format("%Y-%m-%dT%H:%M:%S").to_string();
-    let timeline_id = format!("timeline-event-{}", event.id);
+    let timeline_id = format!("timeline-event-{event_id}");
+    let form_id = format!("{timeline_id}-edit");
+    let date_id = format!("event-date-{event_id}");
+    let cally_timeline_id = format!("cally-timeline-{event_id}");
 
     html! {
         li id=(timeline_id) {
             hr;
-            form hx-put=(format!("/recipes/{recipe_id}/timelines/{}", event.id)) hx-encoding="multipart/form-data" hx-target=(format!("#{timeline_id}")) hx-indicator="#fullscreen-loader" hx-swap="outerHTML" {
-                input type="hidden" name="index" value=(index);
-                input type="hidden" name="max-index" value=(num_events);
+            form id=(form_id) hx-put=(format!("/recipes/{recipe_id}/timelines/{event_id}")) hx-encoding="multipart/form-data" hx-target=(format!("#{timeline_id}")) hx-indicator="#fullscreen-loader" hx-swap="outerHTML" {}
 
-                div class="timeline-start timeline-box p-0" {
-                    div class="card lg:card-side card-sm bg-base-100 shadow-sm max-w-md" {
-                        div class="card-body max-w-60" {
-                            h2 class="card-title" {
-                                input type="text" name="title" class="input w-full" value=(event.title);
-                            }
-                            textarea #event-comment name="comment" placeholder="How did your dish go today?" rows="5" class="textarea w-full h-full resize-none rounded-none focus:outline-none" {
-                                (event.comment.unwrap_or_default())
-                            }
-                            div class="flex items-baseline justify-between" {
-                                (render_rating(&format!("rating-timeline-{}", event.id), event.rating, "rating-sm", false))
-                                div class="join" {
-                                    button type="button" class="btn btn-ghost btn-square btn-sm join-item"
-                                            hx-get=(format!("/recipes/{recipe_id}/timelines/{}?index={index}&max-index={num_events}", event.id))
-                                            hx-target=(format!("#{timeline_id}"))
-                                            hx-swap="outerHTML" {
-                                        (icon_x_mark())
-                                    }
-                                    button class="btn btn-ghost btn-square btn-sm join-item" {
-                                        (icon_check())
-                                    }
+            input type="hidden" name="index" value=(index) form=(form_id);
+            input type="hidden" name="max-index" value=(num_events) form=(form_id);
+
+            div class="timeline-start timeline-box p-0" {
+                div class="card lg:card-side card-sm bg-base-100 shadow-sm max-w-md" {
+                    div class="card-body max-w-60" {
+                        h2 class="card-title" {
+                            input type="text" name="title" class="input w-full" value=(event.title) form=(form_id);
+                        }
+                        textarea #event-comment name="comment" placeholder="How did your dish go today?" rows="5" class="textarea w-full h-full resize-none rounded-none focus:outline-none" form=(form_id) {
+                            (event.comment.unwrap_or_default())
+                        }
+                        div class="flex items-baseline justify-between" {
+                            (render_rating("rating-event", event.rating, Some(RatingSize::Small), false, Some(&form_id)))
+                            div class="join" {
+                                button type="button" class="btn btn-ghost btn-square btn-sm join-item"
+                                        hx-get=(format!("/recipes/{recipe_id}/timelines/{event_id}?index={index}&max-index={num_events}"))
+                                        hx-target=(format!("#{timeline_id}"))
+                                        hx-swap="outerHTML" {
+                                    (icon_x_mark())
+                                }
+                                button form=(form_id) class="btn btn-ghost btn-square btn-sm join-item" {
+                                    (icon_check())
                                 }
                             }
                         }
                     }
                 }
-                div class="timeline-middle" {
-                     button id=(format!("cally-timeline-{}", event.id)) type="button" popovertarget="cally-popover-timeline" class="input input-border w-full" style="anchor-name:--cally-timeline" {
-                        ("")
-                    }
-                    div popover #cally-popover-timeline class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor:--cally-timeline" {
-                        calendar-date class="cally" _="
-                            on change
-                                put my value into #event-date's value
-                                put my value into #cally-timeline's innerText
-                                call #cally-popover-timeline.hidePopover()" {
-                            svg aria-label="Previous" class="fill-current size-6" slot="previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
-                                path d="M15.75 19.5 8.25 12l7.5-7.5" {}
-                            }
-                            svg aria-label="Next" class="fill-current size-6" slot="next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
-                                path d="m8.25 4.5 7.5 7.5-7.5 7.5" {}
-                            }
-                            calendar-month {}
+            }
+            div class="timeline-middle" {
+                button id=(cally_timeline_id) type="button" popovertarget="cally-popover-timeline" class="cally-timeline input input-border w-full" style="anchor-name:--cally-timeline" {
+                    ("")
+                }
+                div popover #cally-popover-timeline class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor:--cally-timeline" {
+                    calendar-date class="cally" _=(format!(r#"
+                        on change
+                            put my value into value of #{date_id}
+                            put my value into innerText of #{cally_timeline_id}
+                            call #cally-popover-timeline.hidePopover()"#)) {
+                        svg aria-label="Previous" class="fill-current size-6" slot="previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
+                            path d="M15.75 19.5 8.25 12l7.5-7.5" {}
                         }
+                        svg aria-label="Next" class="fill-current size-6" slot="next" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
+                            path d="m8.25 4.5 7.5 7.5-7.5 7.5" {}
+                        }
+                        calendar-month {}
                     }
                 }
-                div class="timeline-end" {
-                    input type="hidden" id=(format!("event-date-{}", event.id)) name="date" value=("");
+            }
+            div class="timeline-end lg:w-60" {
+                input type="hidden" id=(date_id) class="event-date" name="date" value=("") form=(form_id);
+
+                figure class="image-preview" {
                     @if let Some(image) = event.image {
-                        figure {
-                            img src=(image) alt="Event image" class="w-full lg:w-60 h-60 object-cover";
+                        @let image = format!("/data/images/Timelines/{image}.webp");
+                        img src=(image) alt="Event image" class="w-full h-60 object-cover";
+                    } @else {
+                        div class="w-full h-60 bg-base-200 flex items-center justify-center" {
+                            span class="text-base-content/50" { "No image" }
                         }
                     }
-                    (PreEscaped(format!(r##"<script>
-                        document.querySelector('#event-date-{}').value = (new Date('{local_time}')).toISOString().split('T')[0];
-                        document.querySelector('#cally-timeline-{}').innerText = (new Date('{local_time}')).toISOString().split('T')[0];
-                    </script>"##, event.id, event.id)))
                 }
+                @let file_id = format!("image-upload-{event_id}");
+                input type="file" id=(file_id) name="image" accept="image/*" form=(form_id)
+                        class="file-input file-input-sm file-input-bordered w-full max-w-sm"
+                        _=(format!(r#"
+                            on change
+                                set img to the first <img/> in the previous <figure/>
+                                make an FileReader called reader
+                                if event.dataTransfer
+                                    get event.dataTransfer.files[0]
+                                else
+                                    get event.target.files[0]
+                                end
+                                set {{src: window.URL.createObjectURL(it)}} on img
+                            on load
+                                set img to the first <img/> in the previous <figure/>
+                                if img exists
+                                    call loadURLToInputField(img.src, '{file_id}')
+                                end"#,
+                        ));
+
+                (PreEscaped(format!(r##"<script>
+                    document.querySelector('#{date_id}').value = (new Date('{local_time}')).toISOString().split('T')[0];
+                    document.querySelector('#{cally_timeline_id}').innerText = (new Date('{local_time}')).toISOString().split('T')[0];
+                </script>"##)))
             }
             @if index != num_events - 1 {
                 hr;

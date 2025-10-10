@@ -655,6 +655,16 @@ pub async fn timeline_put_handler(
         }
     };
 
+    let image = if let Some(img) = form.original_image_filename
+        && state
+            .fs_support
+            .is_file_exists(img, &state.data_dir.images.timeline, ".webp")
+    {
+        Some(img)
+    } else {
+        upload_image(form.image, Arc::clone(&state.fs_support), &state.data_dir).await
+    };
+
     let new_event = RecipeTimeline {
         id: original_event.id,
         recipe_id: original_event.recipe_id,
@@ -662,8 +672,8 @@ pub async fn timeline_put_handler(
         title: form.title,
         comment: form.comment,
         rating: form.rating,
-        image: upload_image(form.image, Arc::clone(&state.fs_support), &state.data_dir).await,
-        created_at: Default::default(),
+        image,
+        created_at: form.date.unwrap_or_default(),
     };
 
     if let Err(err) = RecipeTimeline::edit(&state.mm, user_id, &new_event).await {

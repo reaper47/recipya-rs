@@ -8,6 +8,7 @@ use axum::extract::{FromRequest, Multipart, Request};
 use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
+use uuid::Uuid;
 
 use integrations::{App, FileFormat, parse_recipe};
 use models::recipe::{save_media_field, text_trim};
@@ -135,6 +136,7 @@ pub struct TimelineEventForm {
     pub title: String,
     pub date: Option<NaiveDateTime>,
     pub image: HashMap<String, PathBuf>,
+    pub original_image_filename: Option<Uuid>,
     pub comment: Option<String>,
     pub rating: Option<i16>,
 
@@ -171,6 +173,15 @@ where
                     });
                 }
                 "image" => {
+                    form.original_image_filename = field.file_name().map(|s| {
+                        let stem = PathBuf::from(s)
+                            .file_stem()
+                            .map(|s| s.to_string_lossy().into_owned())
+                            .unwrap_or_default();
+
+                        Uuid::parse_str(&stem).unwrap_or_default()
+                    });
+
                     if let Err(err) = save_media_field(field, &mut images, &mut videos).await {
                         error!("Saving media failed: {err:?}");
                     }

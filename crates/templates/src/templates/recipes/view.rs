@@ -102,7 +102,7 @@ pub fn view_recipe_helper(
                                         "flex justify-center items-center"
                                         @if data.is_preview { " md:hidden" }
                                     } {
-                                        (render_rating("rating", recipe.rating, "", true))
+                                        (render_rating("rating", recipe.rating, None, true, None))
                                     }
                                 }
                                 div class="grid grid-flow-col col-span-6 md:col-span-3 md:row-span-1 md:border-y md:border-gray-700 print:row-span-1 print:grid-cols-2 print:border-b-black print:border" {
@@ -186,7 +186,7 @@ pub fn view_recipe_helper(
                                 }
                                 @if data.is_preview {
                                     div class="col-span-6 text-center border-b " {
-                                        (render_rating("rating", recipe.rating, "", true))
+                                        (render_rating("rating", recipe.rating, None, true, None))
                                     }
                                 }
                                 div class={

@@ -94,7 +94,7 @@ fn render_edit_recipe(
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
                                         div class="flex justify-center items-center" {
-                                            (render_rating("rating", view.recipe_details.recipe.rating, "", false))
+                                            (render_rating("rating", view.recipe_details.recipe.rating, None, false, None))
                                         }
                                     }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {

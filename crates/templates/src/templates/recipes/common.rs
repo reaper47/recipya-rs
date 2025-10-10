@@ -168,7 +168,7 @@ pub fn list_recipes(
                         }
                         div class="h-5" {
                             @if recipe.rating.is_some() {
-                                (render_rating(&format!("rating-{}", recipe.id), recipe.rating, "rating-sm", true))
+                                (render_rating(&format!("rating-{}", recipe.id), recipe.rating, Some(RatingSize::Small), true, None))
                             }
                         }
                         div class="max-h-16 overflow-y-auto" {
@@ -249,29 +249,56 @@ pub(super) fn init_recipe_form_js() -> Markup {
     }
 }
 
-pub(super) fn render_rating(name: &str, value: Option<i16>, size: &str, is_ro: bool) -> Markup {
-    let value = value.unwrap_or(0);
-    let class = format!("rating {size}");
+const RATING_MIN: i16 = 1;
+const RATING_MAX: i16 = 5;
 
-    if is_ro {
-        html! {
-            div class=(class.trim()) {
-                div class="mask mask-star-2" aria-label="1 star" aria-current=[if value == 1 { Some("true") } else { None }]  {}
-                div class="mask mask-star-2" aria-label="2 star" aria-current=[if value == 2 { Some("true") } else { None }] {}
-                div class="mask mask-star-2" aria-label="3 star" aria-current=[if value == 3 { Some("true") } else { None }]  {}
-                div class="mask mask-star-2" aria-label="4 star" aria-current=[if value == 4 { Some("true") } else { None }] {}
-                div class="mask mask-star-2" aria-label="5 star" aria-current=[if value == 5 { Some("true") } else { None }] {}
+pub(super) enum RatingSize {
+    Small,
+}
+
+impl RatingSize {
+    pub fn to_class<'a>(&self) -> &'a str {
+        match self {
+            RatingSize::Small => "rating-sm",
+        }
+    }
+}
+
+pub(super) fn render_rating(
+    name: &str,
+    value: Option<i16>,
+    size: Option<RatingSize>,
+    is_readonly: bool,
+    form_id: Option<&str>,
+) -> Markup {
+    let value = value.unwrap_or(0).clamp(0, RATING_MAX);
+    let size = size.map(|v| v.to_class()).unwrap_or_default();
+
+    if is_readonly {
+        render_readonly_rating(size, value)
+    } else {
+        render_writable_rating(size, name, value, form_id)
+    }
+}
+
+fn render_readonly_rating(size: &str, value: i16) -> Markup {
+    html! {
+        div class={"rating " (size)} {
+            @for i in RATING_MIN..=RATING_MAX {
+                div class="mask mask-star-2"
+                    aria-label="1 star"
+                    aria-current=[if value == i { Some("true") } else { None }] {}
             }
         }
-    } else {
-        html! {
-            div class=(class.trim()) {
-                input type="radio" name=(name) class="rating-hidden" value="" aria-label="clear" checked[value == 0];
-                input type="radio" name=(name) class="mask mask-star-2" value="1" aria-label="1 star" checked[value == 1];
-                input type="radio" name=(name) class="mask mask-star-2" value="2" aria-label="2 star"  checked[value == 2];
-                input type="radio" name=(name) class="mask mask-star-2" value="3" aria-label="3 star" checked[value == 3];
-                input type="radio" name=(name) class="mask mask-star-2" value="4" aria-label="4 star" checked[value == 4];
-                input type="radio" name=(name) class="mask mask-star-2" value="5" aria-label="5 star" checked[value == 5];
+    }
+}
+
+fn render_writable_rating(size: &str, name: &str, value: i16, form_id: Option<&str>) -> Markup {
+    html! {
+        div class={"rating " (size)} {
+            input type="radio" name=(name) class="rating-hidden" value="" aria-label="clear" checked[value == 0] form=[form_id];
+            @for i in RATING_MIN..=RATING_MAX {
+                input type="radio" name=(name) class="mask mask-star-2" value=(i) aria-label={(i) " star"} checked[value == i] form=[form_id];
             }
         }
     }
