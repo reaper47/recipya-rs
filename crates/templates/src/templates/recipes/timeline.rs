@@ -50,7 +50,9 @@ pub fn render_dialog(recipe_id: i64, events: Vec<Event>) -> Markup {
                     button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
                 }
                 h3 class="font-bold text-lg" { "Add event to timeline" }
-                form .py-4 hx-post=(format!("/recipes/{recipe_id}/timeline")) hx-encoding="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none" _="on submit call document.querySelector('#timeline-new-event-dialog').close()" {
+                form .py-4 hx-post=(format!("/recipes/{recipe_id}/timeline")) hx-encoding="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none"
+                     _="on submit call document.querySelector('#timeline-new-event-dialog').close()
+                        on htmx:afterRequest[detail.successful] reset() me" {
                     div #timeline-event-card class="card card-sm bg-base-100 shadow-sm max-w-md" {
                         div class="card-body p-0" {
                             fieldset class="fieldset border-base-300 rounded-box border p-4" {

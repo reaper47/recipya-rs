@@ -495,7 +495,7 @@ pub async fn timeline_get_handler(
         }
     };
 
-    let events = match RecipeTimeline::all(&state.mm, user_id, recipe_id).await {
+    let events = match RecipeTimeline::all(&state.mm, recipe_id, user_id).await {
         Ok(components) => components.into_iter().map(Event::from).collect::<Vec<_>>(),
         Err(err) => {
             error!(

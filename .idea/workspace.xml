@@ -60,17 +60,8 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/timeline.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/timeline.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/add_manual.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/add_manual.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/recipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/timeline.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/timeline.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/common.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/timeline.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/timeline.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -443,6 +434,7 @@
     "Cargo.Test recipe::update::tests::tests_mark_favourite::test_recipe_does_not_exist.executor": "Run",
     "Cargo.Test recipe::update::tests::tests_mark_favourite::test_user_does_not_exist.executor": "Run",
     "Cargo.Test recipe::update::tests::tests_mark_favourite::test_valid_ok.executor": "Run",
+    "Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_ok.executor": "Debug",
     "Cargo.Test recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok.executor": "Run",
@@ -954,7 +946,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/crates/templates/src/templates/recipes/timeline.rs</url>
-          <line>163</line>
+          <line>165</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
