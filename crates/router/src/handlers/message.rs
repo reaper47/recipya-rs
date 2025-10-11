@@ -227,3 +227,11 @@ pub async fn broadcast_error(state: &AppState, user_id: i64, message: &str) {
         state.broadcast(user_id, Message::Text(json.into())).await;
     }
 }
+
+/// Broadcasts a warning toast to all active WebSocket subscribers of a given user.
+pub async fn broadcast_warning(state: &AppState, user_id: i64, message: &str) {
+    let toast = MessageHtmx::warning(message);
+    if let Ok(json) = serde_json::to_string(&toast) {
+        state.broadcast(user_id, Message::Text(json.into())).await;
+    }
+}

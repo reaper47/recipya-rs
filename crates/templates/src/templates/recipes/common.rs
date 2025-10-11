@@ -286,7 +286,7 @@ fn render_readonly_rating(size: &str, value: i16) -> Markup {
         div class={"rating " (size)} {
             @for i in RATING_MIN..=RATING_MAX {
                 div class="mask mask-star-2"
-                    aria-label="1 star"
+                    aria-label={(i) " star"}
                     aria-current=[if value == i { Some("true") } else { None }] {}
             }
         }
@@ -295,7 +295,7 @@ fn render_readonly_rating(size: &str, value: i16) -> Markup {
 
 fn render_writable_rating(size: &str, name: &str, value: i16, form_id: Option<&str>) -> Markup {
     html! {
-        div class={"rating " (size)} {
+        div class=(format!("rating {size}").trim()) {
             input type="radio" name=(name) class="rating-hidden" value="" aria-label="clear" checked[value == 0] form=[form_id];
             @for i in RATING_MIN..=RATING_MAX {
                 input type="radio" name=(name) class="mask mask-star-2" value=(i) aria-label={(i) " star"} checked[value == i] form=[form_id];

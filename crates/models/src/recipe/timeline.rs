@@ -6,8 +6,8 @@ use uuid::Uuid;
 use repository::{ModelManager, schema};
 
 use crate::Recipe;
-use crate::Result;
 use crate::user::User;
+use crate::{Error, Result};
 
 /// Represents the timeline entity of a recipe stored in the database.
 #[derive(
@@ -26,6 +26,16 @@ pub struct RecipeTimeline {
     pub rating: Option<i16>,
     pub image: Option<Uuid>,
     pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = schema::recipe_timelines)]
+struct RecipeTimelinePatch<'a> {
+    title: Option<&'a str>,
+    comment: Option<&'a str>,
+    rating: Option<i16>,
+    image: Option<Option<Uuid>>,
+    created_at: Option<chrono::NaiveDateTime>,
 }
 
 /// The minimal struct for creating a new timeline into the database.
@@ -101,19 +111,28 @@ impl RecipeTimeline {
         mm: &ModelManager,
         user_id: i64,
         new_timeline: &RecipeTimeline,
-    ) -> Result<()> {
+    ) -> Result<RecipeTimeline> {
         let mut conn = mm.pool.get().await?;
 
-        diesel::update(
+        let patch = RecipeTimelinePatch {
+            title: Some(&new_timeline.title),
+            comment: new_timeline.comment.as_deref(),
+            rating: new_timeline.rating,
+            image: Some(new_timeline.image),
+            created_at: (new_timeline.created_at != chrono::NaiveDateTime::default())
+                .then_some(new_timeline.created_at),
+        };
+
+        let result = diesel::update(
             schema::recipe_timelines::table
                 .filter(schema::recipe_timelines::id.eq(new_timeline.id))
                 .filter(schema::recipe_timelines::user_id.eq(user_id)),
         )
-        .set(new_timeline)
-        .execute(&mut conn)
+        .set(&patch)
+        .get_result::<RecipeTimeline>(&mut conn)
         .await?;
 
-        Ok(())
+        Ok(result)
     }
 
     /// Gets a single timeline event.
@@ -125,12 +144,22 @@ impl RecipeTimeline {
     ) -> Result<RecipeTimeline> {
         let mut conn = mm.pool.get().await?;
 
-        let timeline = schema::recipe_timelines::table
+        let timeline = match schema::recipe_timelines::table
             .filter(schema::recipe_timelines::id.eq(timeline_id))
             .filter(schema::recipe_timelines::recipe_id.eq(recipe_id))
             .filter(schema::recipe_timelines::user_id.eq(user_id))
             .first::<RecipeTimeline>(&mut conn)
-            .await?;
+            .await
+        {
+            Ok(v) => v,
+            Err(diesel::NotFound) => {
+                return Err(Error::EntityNotFound {
+                    entity: "RecipeTimeline",
+                    id: timeline_id,
+                });
+            }
+            Err(e) => return Err(e.into()),
+        };
 
         Ok(timeline)
     }

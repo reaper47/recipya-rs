@@ -43,7 +43,7 @@ use templates::recipes::timeline::Event;
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{
-    IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success,
+    IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success, broadcast_warning,
 };
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_router::params::{
@@ -597,6 +597,10 @@ pub async fn timeline_event_get_handler(
 
     let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await {
         Ok(t) => Event::from(t),
+        Err(EntityNotFound { entity, .. }) => {
+            broadcast_warning(&state, user_id, "Timeline event does not exist.").await;
+            return Error::EntityNotFound { entity }.into_response();
+        }
         Err(err) => {
             error!(
                 "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
@@ -621,6 +625,10 @@ pub async fn timeline_event_get_edit_handler(
 
     let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await {
         Ok(t) => t,
+        Err(EntityNotFound { entity, .. }) => {
+            broadcast_warning(&state, user_id, "Timeline event does not exist.").await;
+            return Error::EntityNotFound { entity }.into_response();
+        }
         Err(err) => {
             error!(
                 "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
@@ -646,6 +654,10 @@ pub async fn timeline_put_handler(
     let original_event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await
     {
         Ok(t) => t,
+        Err(EntityNotFound { entity, .. }) => {
+            broadcast_warning(&state, user_id, "Timeline event does not exist.").await;
+            return Error::EntityNotFound { entity }.into_response();
+        }
         Err(err) => {
             error!(
                 "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
@@ -665,7 +677,7 @@ pub async fn timeline_put_handler(
         upload_image(form.image, Arc::clone(&state.fs_support), &state.data_dir).await
     };
 
-    let new_event = RecipeTimeline {
+    let new_event_params = RecipeTimeline {
         id: original_event.id,
         recipe_id: original_event.recipe_id,
         user_id: original_event.user_id,
@@ -676,10 +688,13 @@ pub async fn timeline_put_handler(
         created_at: form.date.unwrap_or_default(),
     };
 
-    if let Err(err) = RecipeTimeline::edit(&state.mm, user_id, &new_event).await {
-        error!("Failed to edit timeline event '{new_event:?}': {err}");
-        broadcast_error(&state, user_id, "Failed to edit timeline event.").await;
-        return Error::Database.into_response();
+    let new_event = match RecipeTimeline::edit(&state.mm, user_id, &new_event_params).await {
+        Ok(t) => t,
+        Err(err) => {
+            error!("Failed to edit timeline event '{new_event_params:?}': {err}");
+            broadcast_error(&state, user_id, "Failed to edit timeline event.").await;
+            return Error::Database.into_response();
+        }
     };
 
     templates::recipes::timeline::render_event(
