@@ -22,6 +22,8 @@ pub struct ImagesDir {
     // TODO: Clean notes directory
     pub notes: PathBuf,
     pub placeholders: PathBuf,
+    // TODO: Clean timeline directory
+    pub timeline: PathBuf,
     pub thumbnails: PathBuf,
 }
 
@@ -44,6 +46,7 @@ impl DataDir {
 
         let images_notes = images_dir.join("Notes");
         let images_placeholders = images_dir.join("Placeholders");
+        let images_timelines = images_dir.join("Timelines");
         let images_thumbnails = images_dir.join("Thumbnails");
 
         let backup = base_dir.join("Backup");
@@ -57,6 +60,7 @@ impl DataDir {
             &logs,
             &images_notes,
             &images_placeholders,
+            &images_timelines,
             &images_thumbnails,
             &videos,
         ];
@@ -71,6 +75,7 @@ impl DataDir {
                 root: images_dir,
                 notes: images_notes,
                 placeholders: images_placeholders,
+                timeline: images_timelines,
                 thumbnails: images_thumbnails,
             },
             logs,
@@ -122,6 +127,10 @@ mod tests {
         pretty_assertions::assert_eq!(
             got.images.placeholders.to_str().expect("a path"),
             format!("{base_dir_str}/Recipya/Media/Images/Placeholders")
+        );
+        pretty_assertions::assert_eq!(
+            got.images.timeline.to_str().expect("a path"),
+            format!("{base_dir_str}/Recipya/Media/Images/Timelines")
         );
         pretty_assertions::assert_eq!(
             got.images.thumbnails.to_str().expect("a path"),

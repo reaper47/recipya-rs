@@ -346,7 +346,7 @@ impl From<Recipe> for RecipeSchema {
                 r.directions
                     .directions
                     .into_iter()
-                    .map(|d| format!("{}", d.text))
+                    .map(|d| d.text.to_string())
                     .collect(),
             )])),
             recipe_yield: to_yield(r.serving.qty.parse().unwrap_or_default()),
@@ -451,11 +451,11 @@ where
     Ok(recipes)
 }
 
-fn parse_mxp_helper(input: &str) -> Result<Vec<RecipeComponents>> {
+fn parse_mxp_helper(input: &str) -> Result<Vec<RecipeComponents<'_>>> {
     Ok(many1(map(recipe_mxp, |r| r)).parse(input).map(|(_, r)| r)?)
 }
 
-fn recipe_mxp(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe_mxp(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             header_mxp,
@@ -526,7 +526,7 @@ fn categories_mxp(input: &str) -> IResult<&str, Vec<&str>> {
     .parse(input)
 }
 
-fn instructions_mxp(input: &str) -> IResult<&str, Vec<Instruction>> {
+fn instructions_mxp(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
     map(
         take_until("- - - - - - - - - - - - - - - - - -"),
         |content: &str| {
@@ -561,11 +561,11 @@ where
     Ok(recipes)
 }
 
-fn parse_txt_helper(input: &str) -> Result<Vec<RecipeComponents>> {
+fn parse_txt_helper(input: &str) -> Result<Vec<RecipeComponents<'_>>> {
     Ok(many1(map(recipe_txt, |r| r)).parse(input).map(|(_, r)| r)?)
 }
 
-fn recipe_txt(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe_txt(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             header,
@@ -663,7 +663,7 @@ fn categories(input: &str) -> IResult<&str, Vec<&str>> {
     .parse(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     map(
         (
             (
@@ -681,14 +681,14 @@ fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
     .parse(input)
 }
 
-fn ingredient(input: &str) -> IResult<&str, Ingredient> {
+fn ingredient(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(delimited(space1, take_until("\n"), line_ending), |s| {
         Ingredient::Line(Cow::Borrowed(s))
     })
     .parse(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
+fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
     map(take_until("Description:"), |content: &str| {
         content
             .split("\n\n")

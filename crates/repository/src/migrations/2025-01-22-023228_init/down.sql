@@ -42,6 +42,7 @@ DROP TABLE IF EXISTS tools_recipes;
 DROP TABLE IF EXISTS times_recipes;
 DROP TABLE IF EXISTS shares_recipes;
 DROP TABLE IF EXISTS shares_cookbooks;
+DROP TABLE IF EXISTS recipe_timelines;
 DROP TABLE IF EXISTS keywords_recipes;
 DROP TABLE IF EXISTS instructions_recipes;
 DROP TABLE IF EXISTS ingredients_recipes;

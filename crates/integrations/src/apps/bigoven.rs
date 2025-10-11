@@ -169,7 +169,7 @@ fn parse_text_file(input: &str) -> Result<RecipeSchema> {
         .map(|(_, r)| r.into())?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             header,
@@ -181,7 +181,7 @@ fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
             effort_rating,
             appearance_rating,
             affordability_rating,
-            ingredientss,
+            ingredients,
             active_minutes,
             total_minutes,
             categories,
@@ -275,7 +275,7 @@ fn affordability_rating(input: &str) -> IResult<&str, u8> {
     .parse(input)
 }
 
-fn ingredientss(input: &str) -> IResult<&str, Vec<IngredientType>> {
+fn ingredients(input: &str) -> IResult<&str, Vec<IngredientType<'_>>> {
     delimited(
         (tag("<INGREDIENTLIST>"), line_ending),
         many1(map(

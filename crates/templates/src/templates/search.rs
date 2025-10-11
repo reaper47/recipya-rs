@@ -3,7 +3,7 @@ use maud::{Markup, PreEscaped, html};
 use models::data::SearchbarData;
 
 use super::icons::{
-    icon_bars_3_bottom_left, icon_heart, icon_information_circle, icon_magnifying_glass, icon_star,
+    icon_bars_3_bottom_left, icon_heart, icon_information_circle, icon_magnifying_glass,
     icon_x_mark,
 };
 

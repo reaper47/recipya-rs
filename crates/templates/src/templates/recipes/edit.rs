@@ -9,8 +9,8 @@ use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating, recipe_keyword_empty,
-    render_media_editor,
+    add_ingredient, add_instruction, add_tool, init_recipe_form_js, recipe_keyword_empty,
+    render_media_editor, render_rating,
 };
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
@@ -94,7 +94,7 @@ fn render_edit_recipe(
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
                                         div class="flex justify-center items-center" {
-                                            (rating("rating", view.recipe_details.recipe.rating, "", false))
+                                            (render_rating("rating", view.recipe_details.recipe.rating, None, false, None))
                                         }
                                     }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
@@ -141,7 +141,7 @@ fn render_edit_recipe(
                                 (render_instructions(&view))
                             }
                         }
-                        @let mut notes = view.recipe_details.recipe.notes.as_ref().map_or(String::new(), ToString::to_string);
+                        @let notes = view.recipe_details.recipe.notes.as_ref().map_or(String::new(), ToString::to_string);
                         div class="col-span-6 dark:border-gray-700"
                             data-notes=(notes)
                             _="on load call initNotes(me.dataset.notes)" {

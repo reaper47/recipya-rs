@@ -5,8 +5,8 @@ use models::recipe::{Category, Keyword};
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, init_recipe_form_js, rating,
-    recipe_keyword_empty, render_media_editor,
+    add_ingredient, add_instruction, add_tool, init_recipe_form_js, recipe_keyword_empty,
+    render_media_editor, render_rating,
 };
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
@@ -75,7 +75,7 @@ fn render_add_recipe_manual(
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
                                         div class="flex justify-center items-center" {
-                                            (rating("rating", Some(3), "", false))
+                                            (render_rating("rating", Some(3), None, false, None))
                                         }
                                     }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {

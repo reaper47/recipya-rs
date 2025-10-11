@@ -1,17 +1,21 @@
 var wakeLock = null;
-initWakeLock();
+initWakeLock(false);
 
-function initWakeLock() {
+function initWakeLock(displayToast = true) {
     navigator.wakeLock?.request("screen")
         .then((lock) => {
             wakeLock = lock;
             wakeLock.onrelease = () => {
                 wakeLock = null;
-                console.info("Screen lock deactivated.");
+                showToast("", "Screen lock deactivated.", "alert-warning");
             };
-            console.info("Screen lock activated.");
+
+            if (displayToast) {
+                showToast("", "Screen lock activated.", "alert-info");
+            }
         })
         .catch((err) => {
+            showToast("", "Failed to toggle screen lock.", "alert-error");
             console.log(`Screen lock error: ${err.name}, ${err.message}`);
         });
 }

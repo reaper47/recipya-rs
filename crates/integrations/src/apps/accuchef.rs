@@ -127,7 +127,7 @@ fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
         .map(|(_, recipes)| recipes.into_iter().flatten().collect())?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             header,
@@ -185,11 +185,11 @@ fn prep_time(input: &str) -> IResult<&str, Option<&str>> {
     .parse(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     many1(ingredient).parse(input)
 }
 
-fn ingredient(input: &str) -> IResult<&str, Ingredient> {
+fn ingredient(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(
         (
             preceded(char('H'), not_line_ending),

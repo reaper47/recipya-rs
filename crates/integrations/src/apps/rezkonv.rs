@@ -34,6 +34,7 @@ struct RecipeComponents<'a> {
     instructions: Vec<Instruction<'a>>,
     keywords: Vec<&'a str>,
     author: Option<&'a str>,
+    #[allow(unused)]
     erfasst: Option<&'a str>,
 }
 
@@ -120,13 +121,13 @@ where
         .collect())
 }
 
-fn parse_recipes(input: &str) -> Result<Vec<RecipeComponents>> {
+fn parse_recipes(input: &str) -> Result<Vec<RecipeComponents<'_>>> {
     Ok(many1(recipe)
         .parse(input)
         .map(|(_, recipes)| recipes.into_iter().collect())?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             terminated(header, line_ending),
@@ -222,7 +223,7 @@ fn servings(input: &str) -> IResult<&str, i16> {
     .parse(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     terminated(
         alt((ingredients_list, ingredient_sections)),
         many1(line_ending),
@@ -230,11 +231,11 @@ fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
     .parse(input)
 }
 
-fn ingredients_list(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn ingredients_list(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     many1(ingredient).parse(input)
 }
 
-fn ingredient_sections(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn ingredient_sections(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     many1(preceded(not(stopping_section), alt((section, ingredient)))).parse(input)
 }
 
@@ -249,7 +250,7 @@ fn stopping_section(input: &str) -> IResult<&str, &str> {
     .parse(input)
 }
 
-fn section(input: &str) -> IResult<&str, Ingredient> {
+fn section(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(
         delimited(
             (
@@ -266,7 +267,7 @@ fn section(input: &str) -> IResult<&str, Ingredient> {
     .parse(input)
 }
 
-fn ingredient(input: &str) -> IResult<&str, Ingredient> {
+fn ingredient(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(
         delimited(
             alt(((tag("    "), space0), (tag("  "), space0))),
@@ -294,7 +295,7 @@ fn tabbed_line(input: &str) -> IResult<&str, &str> {
     delimited(space1, take_till(|c: char| c == '\n'), line_ending).parse(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
+fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
     preceded(
         not(metadata_stop),
         map(paragraphs, |s| {

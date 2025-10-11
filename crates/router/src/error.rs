@@ -41,6 +41,9 @@ pub enum Error {
     EntityExists {
         entity: &'static str,
     },
+    EntityNotFound {
+        entity: &'static str,
+    },
     FailParse,
     Form,
     InvalidPayload,
@@ -93,6 +96,10 @@ impl Error {
             DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DELETE_FORBIDDEN),
             EntityExists { entity } => (
                 StatusCode::CONFLICT,
+                ClientError::ENTITY_NOT_FOUND { entity, id: -1 },
+            ),
+            EntityNotFound { entity } => (
+                StatusCode::NOT_FOUND,
                 ClientError::ENTITY_NOT_FOUND { entity, id: -1 },
             ),
             FailParse => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),

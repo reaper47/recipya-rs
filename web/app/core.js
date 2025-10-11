@@ -1,15 +1,17 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
     initGlobalKeyboardShortcuts();
     syncLayout();
+    window.todayISO = () => (new Date()).toISOString().split("T")[0];
+    window.currentTime = () => (new Date()).getTime();
 });
 
-document.body.addEventListener('htmx:afterSwap', (event) => {
-    if (event.target.id === 'content') {
+document.body.addEventListener("htmx:afterSwap", (event) => {
+    if (event.target.id === "content") {
         syncLayout();
     }
 });
 
-document.body.addEventListener('htmx:historyRestore', () => {
+document.body.addEventListener("htmx:historyRestore", () => {
     syncLayout();
 });
 
@@ -467,4 +469,30 @@ function syncLayout() {
     ["desktop-nav", "mobile-nav", "add-recipe", "pagination"].forEach((id) => {
         document.getElementById(id)?.classList.toggle("hidden", !isAside);
     });
+}
+
+async function loadURLToInputField(url, containerId) {
+    const input = document.getElementById(containerId);
+    if (!input) {
+        throw new Error(`Element "${containerId}" not found`);
+    }
+
+    const blob = await fetch(url).then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+        return res.blob();
+    });
+
+    const filename = url.split('/').pop() || "image.webp";
+    const file = new File([blob], filename, {
+        type: blob.type || "image/webp",
+        lastModified: Date.now()
+    });
+
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+
+    return file;
 }

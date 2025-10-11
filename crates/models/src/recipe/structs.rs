@@ -1046,7 +1046,7 @@ mod tests {
         }
 
         #[test]
-        fn test_num_images_no_images_ok() {
+        fn test_num_images_no_images() {
             let recipe = a_recipe();
 
             let got = recipe.num_images();
@@ -1055,7 +1055,7 @@ mod tests {
         }
 
         #[test]
-        fn test_num_images_only_main_image_ok() {
+        fn test_num_images_only_main_image() {
             let mut recipe = a_recipe();
             recipe.recipe.image = Some(Uuid::new_v4());
 
@@ -1086,7 +1086,7 @@ mod tests {
         }
 
         #[test]
-        fn test_num_media_no_images_ok() {
+        fn test_num_media_no_images() {
             let mut recipe = a_recipe();
             recipe.videos = vec![Video::default(), Video::default()];
 
@@ -1096,7 +1096,7 @@ mod tests {
         }
 
         #[test]
-        fn test_num_media_ok() {
+        fn test_num_media() {
             let mut recipe = a_recipe();
             recipe.recipe.image = Some(Uuid::new_v4());
             recipe.additional_images = vec![Uuid::new_v4(), Uuid::new_v4()];
@@ -1108,7 +1108,7 @@ mod tests {
         }
 
         #[test]
-        fn test_num_videos_ok() {
+        fn test_num_videos() {
             let mut recipe = a_recipe();
             recipe.videos = vec![Video::default(), Video::default(), Video::default()];
 
@@ -1118,7 +1118,7 @@ mod tests {
         }
 
         #[test]
-        fn test_all_images_no_images_ok() {
+        fn test_all_images_no_images() {
             let recipe = a_recipe();
 
             let got = recipe.all_images();
@@ -1128,7 +1128,7 @@ mod tests {
         }
 
         #[test]
-        fn test_all_images_only_main_image_ok() {
+        fn test_all_images_only_main_image() {
             let mut recipe = a_recipe();
             let an_image = Uuid::new_v4();
             recipe.recipe.image = Some(an_image);
@@ -1140,7 +1140,7 @@ mod tests {
         }
 
         #[test]
-        fn test_all_images_ok() {
+        fn test_all_images() {
             let mut recipe = a_recipe();
             let an_image = Uuid::new_v4();
             let an_image2 = Uuid::new_v4();
@@ -1301,7 +1301,7 @@ mod tests {
         }
 
         #[test]
-        fn test_detect_language_en_ok() {
+        fn test_detect_language_en() {
             let recipe_c = RecipeForCreate {
                 name: "The best hamburger ever".into(),
                 description: Some("This is the best hamburger ever".into()),

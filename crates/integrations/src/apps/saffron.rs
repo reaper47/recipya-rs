@@ -109,7 +109,7 @@ fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
         .map(|(_, r)| r)?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             title,

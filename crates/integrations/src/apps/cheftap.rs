@@ -81,7 +81,7 @@ fn parse_cheftap_recipe(input: &str) -> Result<ChefTapRecipe> {
         .map(|(_, r)| r)?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (title, source, servings, ingredients, instructions),
         |(title, source, servings, ingredients, instructions)| RecipeComponents {

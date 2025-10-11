@@ -145,7 +145,7 @@ fn parse_txt(input: &str) -> Result<Vec<KalorioTextRecipe>> {
     .map(|(_, recipes)| recipes.into_iter().flatten().collect())?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents> {
+fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
     map(
         (
             line_ending,
@@ -177,11 +177,11 @@ fn title(input: &str) -> IResult<&str, &str> {
     preceded(space1, terminated(take_until("\n"), many1(line_ending))).parse(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     alt((twocolumn, onecolumn)).parse(input)
 }
 
-fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     many1(alt((
         map(section, |s| vec![Ingredient::Section(Cow::Borrowed(s))]),
         map(
@@ -197,7 +197,7 @@ fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
     .map(|(rest, nested)| (rest, nested.into_iter().flatten().collect()))
 }
 
-fn ingredtwo(input: &str) -> IResult<&str, Ingredient> {
+fn ingredtwo(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(
         recognize((
             amount,
@@ -211,7 +211,7 @@ fn ingredtwo(input: &str) -> IResult<&str, Ingredient> {
     .parse(input)
 }
 
-fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
+fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
     many0(alt((
         map(section, |s| Ingredient::Section(Cow::Borrowed(s))),
         terminated(ingredone, line_ending),
@@ -222,7 +222,7 @@ fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient>> {
     .parse(input)
 }
 
-fn ingredone(input: &str) -> IResult<&str, Ingredient> {
+fn ingredone(input: &str) -> IResult<&str, Ingredient<'_>> {
     map(
         recognize((
             amount,
@@ -259,7 +259,7 @@ fn unit(input: &str) -> IResult<&str, &str> {
     take_while_m_n(2, 2, is_vchar_or_space).parse(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction>> {
+fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
     many1(map(instruction, |s| Instruction::Line(Cow::Borrowed(s)))).parse(input)
 }
 

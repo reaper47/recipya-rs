@@ -129,10 +129,10 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
             })
             .into_iter()
             .map(|(section, mut lines)| {
-                if let Some(l) = lines.last() {
-                    if l.is_empty() {
-                        lines.pop();
-                    }
+                if let Some(l) = lines.last()
+                    && l.is_empty()
+                {
+                    lines.pop();
                 }
                 (section, lines)
             })
@@ -146,7 +146,7 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
 
 pub(super) fn extract_archive_contents<R>(
     mut archive: ZipArchive<R>,
-) -> Result<(Vec<RecipeSchema>, HashMap<String, std::path::PathBuf>)>
+) -> Result<(Vec<RecipeSchema>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,
 {
@@ -197,7 +197,7 @@ where
 
 pub(super) fn update_recipe_image_paths(
     recipes: &mut [RecipeSchema],
-    images: &HashMap<String, std::path::PathBuf>,
+    images: &HashMap<String, PathBuf>,
 ) {
     for recipe in recipes {
         let Some(recipe_images) = recipe.image.as_mut() else {
