@@ -17,11 +17,11 @@ derive_more = { workspace = true }
 diesel = { workspace = true }
 diesel-async = { workspace = true }
 diesel_full_text_search = { workspace = true }
-diesel_migrations = { version = "2.2", features = ["postgres"] }
+diesel_migrations = { version = "2.3.0", features = ["postgres"] }
 futures-util = { workspace = true }
 postgres_rustls = "0.1.4"
 rustls = { workspace = true }
 tokio = { workspace = true }
-tokio-postgres = { version = "0.7.13", features = ["with-serde_json-1", "with-time-0_3", "with-uuid-1"] }
-tokio-rustls = { version = "0.26.2", default-features = false, features = ["logging", "tls12", "ring"] }
+tokio-postgres = { version = "0.7.15", features = ["with-serde_json-1", "with-time-0_3", "with-uuid-1"] }
+tokio-rustls = { version = "0.26.4", default-features = false, features = ["logging", "tls12", "ring"] }
 tracing = { workspace = true }
