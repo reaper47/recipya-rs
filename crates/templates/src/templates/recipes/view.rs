@@ -13,9 +13,9 @@ use support::fs::FsSupport;
 use crate::recipes::common::render_rating;
 use crate::recipes::timeline::render_dialog;
 use crate::templates::icons::{
-    icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
-    icon_ellipsis_vertical, icon_fire, icon_heart, icon_pencil, icon_plus_circle, icon_printer,
-    icon_share, icon_timeline, icon_trash,
+    icon_alarm_clock, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
+    icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart, icon_pencil,
+    icon_plus_circle, icon_printer, icon_share, icon_timeline, icon_trash,
 };
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
@@ -173,10 +173,16 @@ pub fn view_recipe_helper(
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
                                                 (icon_cutting_board())
                                                 time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }
+                                                button class="btn btn-xs btn-circle btn-ghost" title="Start prep timer" {
+                                                    (icon_alarm_clock())
+                                                }
                                             }
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
                                                 (icon_cooking_pot())
                                                 time datetime=(view.formatted_times.cook_datetime) { (view.formatted_times.cook) }
+                                                button class="btn btn-xs btn-circle btn-ghost" title="Start cooking timer" {
+                                                    (icon_alarm_clock())
+                                                }
                                             }
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Total time" {
                                                 (icon_clock())

@@ -18,33 +18,33 @@ rust-version.workspace = true
 test-utils = []
 
 [dependencies]
-auth = { workspace = true }
-axum = { workspace = true }
-chrono = { workspace = true }
-config = { workspace = true }
-derive_more = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-diesel_full_text_search = { workspace = true }
-humantime = { workspace = true }
-infer = { workspace = true }
-iso8601 = { workspace = true }
-lru = { workspace = true }
-math = { workspace = true }
+auth.workspace = true
+axum.workspace = true
+chrono.workspace = true
+config.workspace = true
+derive_more.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
+diesel_full_text_search.workspace = true
+humantime.workspace = true
+infer.workspace = true
+iso8601.workspace = true
+lru.workspace = true
+math.workspace = true
 paste = "1.0.15"
-recipe-schema = { workspace = true }
-recipya-scraper = { workspace = true }
-repository = { workspace = true }
-serde = { workspace = true }
-strum = { workspace = true }
-support = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
-whatlang = "0.16.4"
+recipe-schema.workspace = true
+recipya-scraper.workspace = true
+repository.workspace = true
+serde.workspace = true
+strum.workspace = true
+support.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+whatlang.workspace = true
 winnow = "0.7.13"
 
 [dev-dependencies]
-app = { workspace = true }
-pretty_assertions = { workspace = true }
+app.workspace = true
+pretty_assertions.workspace = true
 testing = { path = "../testing", features = ["test-utils"] }

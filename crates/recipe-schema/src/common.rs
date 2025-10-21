@@ -2112,7 +2112,12 @@ where
 }
 
 /// Represents a collection of sections, where each section has a title and a list of associated items.
-pub type Sections = Vec<(String, Vec<String>)>;
+pub type Sections = Vec<(String, SectionItem)>;
+
+pub struct SectionItem {
+    pub text: String,
+    pub duration_minutes: Option<i16>,
+}
 
 impl From<CreativeWorkOrItemListOrText> for Sections {
     fn from(value: CreativeWorkOrItemListOrText) -> Self {

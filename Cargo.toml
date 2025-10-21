@@ -12,7 +12,7 @@ keywords = ["food", "recipes", "recipe-manager"]
 license = "AGPL-3.0-or-later"
 readme = "README.md"
 repository = "https://github.com/reaper47/recipya-rs"
-rust-version = "1.88.0"
+rust-version = "1.90.0"
 
 [profile.release]
 lto = true
@@ -50,7 +50,7 @@ futures-util = "0.3.31"
 humantime = "2.3.0"
 infer = "0.19.0"
 iso8601 = { version = "0.6.3", features = ["serde"] }
-lru = "0.16.1"
+lru = "0.16.2"
 nom = "8.0.0"
 pretty_assertions = "1.4.1"
 regex = "1.12.2"
@@ -61,13 +61,14 @@ serde_json = "1.0.145"
 strum = { version = "0.27.2", features = ["derive"] }
 strum_macros = "0.27.2"
 time = "0.3.44"
-tokio = { version = "1.47.1", features = ["full"] }
+tokio = { version = "1.48.0", features = ["full"] }
 tower-cookies = "0.11.0"
 tower-http = { version = "0.6.6", features = ["fs"] }
 tracing = "0.1.41"
 url = { version = "2.5.7", features = ["serde"] }
 uuid = { version = "1.18.1", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
+whatlang = "0.16.4"
 
 [workspace.metadata.tasks]
 web-install-deps = "npm --prefix ./web/app install"

@@ -180,13 +180,14 @@ pub async fn fetch_recipe_details(
             schema::instructions::name,
             schema::sections::name,
             schema::instructions_recipes::section_id,
+            schema::instructions::duration_minutes,
         ))
-        .load::<(String, String, i64)>(conn)
+        .load::<(String, String, i64, Option<i32>)>(conn)
         .await?
         .into_iter()
         .fold(
             BTreeMap::new(),
-            |mut acc, (instruction, section, section_id)| {
+            |mut acc, (instruction, section, section_id, timer_min)| {
                 acc.entry(section_id)
                     .and_modify(|entry: &mut (String, Vec<String>)| {
                         entry.1.push(instruction.clone())
