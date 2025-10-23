@@ -1,7 +1,8 @@
 use std::io::{Read, Seek};
 
-use recipe_schema::{AtType, RecipeSchema, Sections};
 use recipemd::{Factor, Ingredient, Recipe};
+
+use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
 
 use crate::apps::helpers::read_file;
 use crate::error::Result;
@@ -40,7 +41,7 @@ where
                 .unwrap_or_default()
                 .replace("\r\n", "\n\n")
                 .split("\n\n")
-                .map(|s| s.replace("\n", " "))
+                .map(|s| SectionItem::new(s.replace("\n", " ")))
                 .collect(),
         )])),
         recipe_yield: to_yield(
@@ -58,11 +59,11 @@ where
     }])
 }
 
-fn ingredients_to_string(ingredients: Vec<Ingredient>) -> Vec<String> {
+fn ingredients_to_string(ingredients: Vec<Ingredient>) -> Vec<SectionItem> {
     ingredients.into_iter().map(ingredient_to_string).collect()
 }
 
-fn ingredient_to_string(ingredient: Ingredient) -> String {
+fn ingredient_to_string(ingredient: Ingredient) -> SectionItem {
     let amount = ingredient
         .amount
         .map(|amount| {
@@ -81,7 +82,7 @@ fn ingredient_to_string(ingredient: Ingredient) -> String {
         Some(link) => format!("[{link}]"),
     };
 
-    format!("{amount} {} {link}", ingredient.name).trim().into()
+    SectionItem::new(format!("{amount} {} {link}", ingredient.name).trim())
 }
 
 #[cfg(test)]
@@ -120,27 +121,36 @@ Eat, mix and sleep!
 
         let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, vec![RecipeSchema {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            description: to_text("Some people call it guac.".into()),
-            keywords: to_defined_text(["sauce", "vegan"].join(",")),
-            name: Some("Guacamole".into()),
-            recipe_ingredient: sections_to_vec(Sections::from([("".into(), vec![
-                "1 avocado".into(),
-                "0.5 teaspoon salt".into(),
-                "1.5 pinches red pepper flakes".into(),
-                "lemon juice".into(),
-            ])])),
-            recipe_instructions: sections_to_itemlist(Sections::from([
-                ("".into(), vec![
-                    "Remove flesh from avocado and roughly mash with fork. Season to taste with salt, pepper and lemon juice.".into(),
-                    "Eat, mix and sleep!".into(),
-                ])
-            ])),
-            recipe_yield: to_yield(4),
-            ..Default::default()
-        }]);
+        pretty_assertions::assert_eq!(
+            got,
+            vec![RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                description: to_text("Some people call it guac.".into()),
+                keywords: to_defined_text(["sauce", "vegan"].join(",")),
+                name: Some("Guacamole".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new("1 avocado"),
+                        SectionItem::new("0.5 teaspoon salt"),
+                        SectionItem::new("1.5 pinches red pepper flakes"),
+                        SectionItem::new("lemon juice"),
+                    ]
+                )])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "Remove flesh from avocado and roughly mash with fork. Season to taste with salt, pepper and lemon juice."
+                        ),
+                        SectionItem::new("Eat, mix and sleep!"),
+                    ]
+                )])),
+                recipe_yield: to_yield(4),
+                ..Default::default()
+            }]
+        );
         Ok(())
     }
 }

@@ -15,7 +15,7 @@ pub(super) fn sections_to_vec(sections: Sections) -> Option<Vec<String>> {
     let mut elements = vec![];
     sections.into_iter().for_each(|(section_name, els)| {
         elements.push(format!("<section>{section_name}</section>"));
-        elements.extend(els);
+        elements.extend(els.into_iter().map(|item| item.text));
     });
     Some(elements).filter(|v| !v.is_empty())
 }
@@ -24,10 +24,10 @@ pub(super) fn sections_to_itemlist(sections: Sections) -> Option<CreativeWorkOrI
     let elements = sections
         .into_iter()
         .flat_map(|(section_name, els)| {
-            els.into_iter().map(move |value| HowTo {
+            els.into_iter().map(move |item| HowTo {
                 at_type: HowToStep,
                 name: Some(section_name.clone()).filter(|s| !s.is_empty()),
-                text: value,
+                text: item.text,
                 ..Default::default()
             })
         })

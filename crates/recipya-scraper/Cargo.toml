@@ -15,12 +15,12 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-async-trait = { workspace = true }
-axum = { workspace = true }
-derive_more = { workspace = true }
-recipe-schema = { workspace = true }
-reqwest = { workspace = true }
+async-trait.workspace = true
+axum.workspace = true
+derive_more.workspace = true
+recipe-schema.workspace = true
+reqwest.workspace = true
 scraper = "0.24.0"
-serde_json = { workspace = true }
-support = { workspace = true }
-tracing = { workspace = true }
+serde_json.workspace = true
+support.workspace = true
+tracing.workspace = true

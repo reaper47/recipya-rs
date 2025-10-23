@@ -12,6 +12,7 @@ use axum::response::{Html, IntoResponse};
 use axum_htmx::HX_REDIRECT;
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
+use itertools::izip;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use support::fs::FsSupport;
@@ -37,7 +38,7 @@ use models::time::FormattedTimes;
 use models::user::User;
 use models::website::{ToHtmlTable, Website};
 use models::{Recipe, RecipeDetails};
-use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, Sections};
+use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, SectionItem, Sections};
 use templates::recipes::timeline::Event;
 
 use crate::handlers::get_settings;
@@ -417,7 +418,12 @@ pub async fn scale_recipe_handler(
             let factor = params.yield_param as f64 / recipe.recipe.yield_ as f64;
 
             for (_name, ingredients) in recipe.ingredients.iter_mut() {
-                *ingredients = measurement_system.scale(ingredients.clone(), factor);
+                let strings = ingredients.iter().map(|item| item.text.clone()).collect();
+                let scaled_items = measurement_system.scale(strings, factor);
+
+                for (x, y) in izip!(ingredients, scaled_items) {
+                    x.text = y;
+                }
             }
 
             recipe
@@ -433,7 +439,7 @@ pub async fn scale_recipe_handler(
         }
     };
 
-    templates::recipes::ingredients_instructions(&recipe).into_response()
+    templates::recipes::render_ingredients_instructions(&recipe).into_response()
 }
 
 /// Handles generating a link for the recipe to share.
@@ -1133,8 +1139,20 @@ pub async fn add_manual_recipe_post_handler(
             videos,
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: Sections::from([("".into(), ingredients)]),
-            instructions: Sections::from([("".into(), form.instructions)]),
+            ingredients: Sections::from([(
+                "".into(),
+                ingredients.iter().map(SectionItem::new).collect(),
+            )]),
+            instructions: Sections::from([(
+                "".into(),
+                form.instructions
+                    .iter()
+                    .map(|s| SectionItem {
+                        text: s.to_string(),
+                        duration_seconds: None,
+                    })
+                    .collect(),
+            )]),
             keywords: form.keywords,
             notes: form.notes,
             nutrition: form.nutrition,

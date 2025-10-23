@@ -6,6 +6,8 @@ use diesel_async::RunQueryDsl;
 use repository::{ModelManager, PgPooledConn, schema};
 use uuid::Uuid;
 
+use recipe_schema::SectionItem;
+
 use crate::params::SearchParams;
 use crate::recipe::{
     Nutrition, RecipeDetails, RecipeSearch, Times, ToolRecipe, Video, VideoRecipe,
@@ -161,10 +163,10 @@ pub async fn fetch_recipe_details(
             BTreeMap::new(),
             |mut acc, (ingredient, section, section_id)| {
                 acc.entry(section_id)
-                    .and_modify(|entry: &mut (String, Vec<String>)| {
-                        entry.1.push(ingredient.clone())
+                    .and_modify(|entry: &mut (String, Vec<SectionItem>)| {
+                        entry.1.push(SectionItem::new(ingredient.clone()))
                     })
-                    .or_insert_with(|| (section, vec![ingredient]));
+                    .or_insert_with(|| (section, vec![SectionItem::new(ingredient)]));
                 acc
             },
         )
@@ -180,19 +182,30 @@ pub async fn fetch_recipe_details(
             schema::instructions::name,
             schema::sections::name,
             schema::instructions_recipes::section_id,
-            schema::instructions::duration_minutes,
+            schema::instructions::duration_seconds,
         ))
         .load::<(String, String, i64, Option<i32>)>(conn)
         .await?
         .into_iter()
         .fold(
             BTreeMap::new(),
-            |mut acc, (instruction, section, section_id, timer_min)| {
+            |mut acc, (instruction, section, section_id, duration_seconds)| {
                 acc.entry(section_id)
-                    .and_modify(|entry: &mut (String, Vec<String>)| {
-                        entry.1.push(instruction.clone())
+                    .and_modify(|entry: &mut (String, Vec<SectionItem>)| {
+                        entry.1.push(SectionItem {
+                            text: instruction.clone(),
+                            duration_seconds,
+                        })
                     })
-                    .or_insert_with(|| (section, vec![instruction]));
+                    .or_insert_with(|| {
+                        (
+                            section,
+                            vec![SectionItem {
+                                text: instruction,
+                                duration_seconds,
+                            }],
+                        )
+                    });
                 acc
             },
         )

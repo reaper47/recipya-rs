@@ -186,7 +186,7 @@ fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
                  @if !v.recipe_details.ingredients.is_empty() {
                     @for (_section, ingredients) in &v.recipe_details.ingredients {
                         @for ing in ingredients.iter() {
-                            (add_ingredient(&ing))
+                            (add_ingredient(&ing.text))
                         }
                     }
                 } @else {
@@ -210,7 +210,7 @@ fn render_instructions(view: Option<&ViewRecipe>) -> Markup {
                  @if !v.recipe_details.instructions.is_empty() {
                     @for (_section, instructions) in &v.recipe_details.instructions {
                         @for ins in instructions.iter() {
-                            (add_instruction(&ins))
+                            (add_instruction(&ins.text))
                         }
                     }
                 } @else {

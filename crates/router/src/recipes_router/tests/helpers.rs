@@ -7,13 +7,13 @@ pub(super) fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
 
     for (_section, ingredients) in &recipe.ingredients {
         for ingredient in ingredients {
-            form = form.add_part("ingredient", Part::text(ingredient));
+            form = form.add_part("ingredient", Part::text(&ingredient.text));
         }
     }
 
     for (_section, instructions) in &recipe.instructions {
         for instruction in instructions {
-            form = form.add_part("instruction", Part::text(instruction));
+            form = form.add_part("instruction", Part::text(&instruction.text));
         }
     }
 

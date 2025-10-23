@@ -8,14 +8,15 @@ use nom::combinator::{map, opt};
 use nom::multi::{many_till, many1, separated_list0};
 use nom::sequence::{preceded, terminated};
 use nom::{IResult, Parser};
-use recipe_schema::{
-    AtType, CommentType, CreativeWorkOrItemListOrText, CreativeWorkOrText, DateOrDateTime,
-    QuantitativeValueOrText, RecipeCategory, RecipeSchema, Sections, TextOrTextObject,
-};
 use serde::Deserialize;
 use support::strings::extract_number;
 use tracing::{error, warn};
 use url::Url;
+
+use recipe_schema::{
+    AtType, CommentType, CreativeWorkOrItemListOrText, CreativeWorkOrText, DateOrDateTime,
+    QuantitativeValueOrText, RecipeCategory, RecipeSchema, SectionItem, Sections, TextOrTextObject,
+};
 
 use crate::apps::helpers::read_file;
 use crate::error::{Error, Result};
@@ -102,13 +103,13 @@ impl From<RecipeComponents<'_>> for RecipeSage {
             description: r.description.map(|s| s.into()),
             ingredients: Sections::from([(
                 "".into(),
-                r.ingredients.into_iter().map(String::from).collect(),
+                r.ingredients.into_iter().map(SectionItem::new).collect(),
             )]),
             instructions: Sections::from([(
                 "".into(),
                 r.instructions
                     .split_terminator("\n\n")
-                    .map(|s| s.trim().replace("\n", " ").to_string())
+                    .map(|s| SectionItem::new(s.trim().replace("\n", " ")))
                     .collect(),
             )]),
             keywords: r
@@ -135,13 +136,13 @@ impl From<RecipeSageXMLRecipe> for RecipeSage {
             description: Some(r.description).filter(|s| !s.is_empty()),
             ingredients: Sections::from([(
                 "".into(),
-                r.ingredients.lines().map(String::from).collect(),
+                r.ingredients.lines().map(SectionItem::new).collect(),
             )]),
             instructions: Sections::from([(
                 "".into(),
                 r.instructions
                     .split_terminator("\n\n")
-                    .map(|s| s.trim().replace("\n", " ").to_string())
+                    .map(|s| SectionItem::new(s.trim().replace("\n", " ")))
                     .collect(),
             )]),
             keywords: items
@@ -175,15 +176,19 @@ impl From<RecipeSchema> for RecipeSage {
                     }
                 })
                 .filter(|s| !s.is_empty()),
-            ingredients: Sections::from([("".into(), r.recipe_ingredient.unwrap_or_default())]),
+            ingredients: Sections::from([(
+                "".into(),
+                r.recipe_ingredient
+                    .map(|v| v.iter().map(SectionItem::new).collect())
+                    .unwrap_or_default(),
+            )]),
             instructions: Sections::from([(
                 "".into(),
                 r.recipe_instructions
-                    .clone()
                     .into_iter()
-                    .map(|ins| match ins {
+                    .flat_map(|ins| match ins {
                         CreativeWorkOrItemListOrText::CreativeWork(obj) => {
-                            vec![obj.name.unwrap_or_default()]
+                            obj.name.into_iter().collect::<Vec<_>>()
                         }
                         CreativeWorkOrItemListOrText::ItemList(item) => {
                             item.into_iter().map(|obj| obj.text).collect()
@@ -191,8 +196,8 @@ impl From<RecipeSchema> for RecipeSage {
                         CreativeWorkOrItemListOrText::Text(s) => vec![s],
                     })
                     .filter(|s| !s.is_empty())
-                    .flatten()
-                    .collect(),
+                    .map(SectionItem::new)
+                    .collect::<Vec<_>>(),
             )]),
             keywords: vec![],
             source: r.is_based_on.map(|c| match c {
@@ -318,13 +323,13 @@ impl From<RecipeSageXMLRecipe> for RecipeSchema {
             ),
             recipe_ingredient: sections_to_vec(Sections::from([(
                 "".into(),
-                r.ingredients.lines().map(String::from).collect(),
+                r.ingredients.lines().map(SectionItem::new).collect(),
             )])),
             recipe_instructions: sections_to_itemlist(Sections::from([(
                 "".into(),
                 r.instructions
                     .split_terminator("\n\n")
-                    .map(|s| s.trim().replace("\n", " ").to_string())
+                    .map(|s| SectionItem::new(s.trim().replace("\n", " ")))
                     .collect(),
             )])),
             recipe_yield: to_yield(extract_number(r.r#yield).unwrap_or_default()),
@@ -1070,147 +1075,202 @@ Posted by Fred Peters</instructions>
         use super::*;
 
         pub(crate) fn all_recipes() -> Vec<RecipeSchema> {
-            vec![RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                keywords: to_defined_text(["soups/stews", "vegetables"].join(",")),
-                is_based_on: to_is_based_on("MMF".into()),
-                name: Some("Asparagus Soup (Zuppa Di Asparagi)".into()),
-                recipe_category: RecipeCategory::Text("italian".into()),
-                recipe_ingredient: Some(vec![
-                    "<section></section>".into(),
-                    "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
-                    "2 Cloves garlic, minced 4 Eggs".into(),
-                    "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
-                    "-and cut (1 inch pieces) -pecorino cheese".into(),
-                    "Salt and pepper 6 sl Italian bread, toasted".into(),
-                ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
+            vec![
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    keywords: to_defined_text(["soups/stews", "vegetables"].join(",")),
+                    is_based_on: to_is_based_on("MMF".into()),
+                    name: Some("Asparagus Soup (Zuppa Di Asparagi)".into()),
+                    recipe_category: RecipeCategory::Text("italian".into()),
+                    recipe_ingredient: Some(vec![
                         "<section></section>".into(),
-                        "Heat the oil and garlic in a soup pot until the garlic is golden. Add the asparagus and cook until they begin to color. Season with salt and pepper. Add the broth and bring to a boil; reduce the heat and simmer for 15 minutes, or until the asparagus is tender.".into(),
-                        "Beat the eggs and cheese together. When the asparagus is tender, reduce the heat so the soup is no longer simmering. Very slowly ladle some of the hot soup into the beaten eggs, stirring continuously. After adding about 2 cups of the hot soup to the eggs, reverse the process and gradually stir the eggs mixture into the soup pot. The soup must not boil or the eggs will scramble. Heat until thickened.".into(),
-                        "Put one slice of toasted bread into each soup dish. Ladle the hot soup on top and pass additional grated cheese.".into(),
-                        "Serves 6.".into(),
-                        "NOTE: To trim asparagus, hold the tip in one hand and the base of the stalk in the other. Bend gently. The asparagus will snap, leaving the tender part with the tip.".into(),
-                        "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]".into(),
-                        "Posted by Fred Peters.".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(6),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                keywords: to_defined_text(["greek", "vegetarian"].join(",")),
-                is_based_on: to_is_based_on("MMF".into()),
-                name: Some("Aubergine and Sesame Pate".into()),
-                recipe_category: RecipeCategory::Text("appetizers".into()),
-                recipe_ingredient: Some(vec![
-                    "<section></section>".into(),
-                    "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
-                    "1 Crushed garlic cloves 1 tb Olive oil".into(),
-                    "1 1/2 tb Tahini Seasoning".into(),
-                    "Toasted Sesame seeds Flatleaf Parsley".into(),
-                    "Cayenne Pepper".into(),
-                    "25-30 minutes until tender. Cool slightly , then peel and".into(),
-                ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for puree the flesh in a blender or processor.".into(),
-                        "Add the garlic, tahini and lemon juice and process until mixed. With the motor running, drizzle in the oil to make a smooth paste. Season to taste.".into(),
-                        "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(2),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                keywords: to_defined_text(["french", "casseroles"].join(",")),
-                is_based_on: to_is_based_on("MMF".into()),
-                name: Some("Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()),
-                recipe_category: RecipeCategory::Text("vegetables".into()),
-                recipe_ingredient: Some(vec![
-                    "<section></section>".into(),
-                    "1 md Eggplant 2 tb Snipped parsley".into(),
-                    "1/4 c Salad oil 1 cl Galic, minced".into(),
-                    "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
-                    "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
-                ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper towels; sprinkle each generously with salt. let stand for 30 minutes; then blot dry with paper towels. Start heating oven to 400 deg. F. Saute eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2 inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper. Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread cubes are golden and eggplant is tender.".into(),
-                        "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book Publishers Chicago 1, Illinois 1958".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(4),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                keywords: to_defined_text("beef".into()),
-                is_based_on: to_is_based_on("MMF".into()),
-                name: Some("August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()),
-                recipe_category: RecipeCategory::Text("german".into()),
-                recipe_ingredient: Some(vec![
-                    "<section></section>".into(),
-                    "1 Shallot or small onion cut 1 pn Mace".into(),
-                    "-into small pieces 1 lg Steak (just over 1 lb), at".into(),
-                    "Freshly ground black pepper -least 1 1/4 inches".into(),
-                ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "((Note: Per Horst Scharfenberg, this recipe originated in the town of Idar-Oberstein in the 19 th century, when gemstone prospectors returning from South America created their own version of gaucho-grilled steaks. The dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))".into(),
-                        "Per person: thick, trimmed".into(),
-                        "Mix together the shallot or onion with the pepper and mace. Insert a few shallot pieces into the steak using the point of a small knife. Coat the steak with the shallot mixture, pressing it in so it will adhere.".into(),
-                        "Remove the loose shallot pieces and grill the steak (over a fire of oak logs, says August Goerg, from which the bark has been removed).* Take the steaks off the grill while they are still pink inside. Sprinkle them with salt.".into(),
-                        "*Note: A special grill is used, suspended with 3 chains from an iron tripod and constantly swinging through the flames.".into(),
-                        "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon & Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking Echo, 8/92".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(6),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                keywords: to_defined_text("pork/ham,poultry,spanish".into()),
-                is_based_on: to_is_based_on("MMF".into()),
-                name: Some("Aunt Julia's Paella".into()),
-                recipe_category: RecipeCategory::Text("fish/sea".into()),
-                recipe_ingredient: Some(vec![
-                    "<section></section>".into(),
-                   "1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into(),
-                   "-and legs) 2 ts Capers, with juice".into(),
-                   "Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into(),
-                   "1 lb Lean pork, cut into 1-inch -olives".into(),
-                   "-cubes 1/2 lb Calamari (squid), cleaned".into(),
-                   "1 md Onion, minced -and sliced".into(),
-                   "2 Toes garlic, minced 5 c Water".into(),
-                   "Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into(),
-                   "-strips: 1 ts Saffron threads".into(),
-                   "1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into(),
-                   "1 lg Carrot -uncooked".into(),
-                   "1 Stalk celery 3 Hard boiled eggs, sliced".into(),
-                   "1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into(),
-                   "1 1/2 lb Peeled shrimp Oil for frying".into(),
-                ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }".into(),
-                        "In a large electric skillet or paella pan, brown the chicken pieces (that have been seasoned with salt and pepper) in a little oil. Remove from the pan. Add the pork cubes to the drippinfs and brown for about 5 minutes. Remove from the pan. To the pan drippings (add a little more oil if necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry for 2 minutes.".into(),
-                        "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork. Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.".into(),
-                        "Gently stir the rice into the skillet mixture. Slowly pour in enough of the bouillon mixture to cover the rice and chicken pieces. Cover and cook over low heat for about 20 minutes. Uncover and decoaratively arrange the egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary to keep the rice moist.".into(),
-                        "Cover and steam for another 10 minutes until the shrimp are cooked and the rice is tender. (Paella should be moist but not wet!) Place the pan on a hot pad on the serving table and let everyone help themselves.".into(),
-                        "Serve with a mixed green salad, red ripe tomatoes and some French bread. Also mix up a pitcher of Sangria and enjoy!".into(),
-                        "Serves: 12.".into(),
-                        "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]".into(),
-                        "Posted by Fred Peters".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(6),
-                ..Default::default()
-            }]
+                        "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
+                        "2 Cloves garlic, minced 4 Eggs".into(),
+                        "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
+                        "-and cut (1 inch pieces) -pecorino cheese".into(),
+                        "Salt and pepper 6 sl Italian bread, toasted".into(),
+                    ]),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("<section></section>"),
+                            SectionItem::new(
+                                "Heat the oil and garlic in a soup pot until the garlic is golden. Add the asparagus and cook until they begin to color. Season with salt and pepper. Add the broth and bring to a boil; reduce the heat and simmer for 15 minutes, or until the asparagus is tender.",
+                            ),
+                            SectionItem::new(
+                                "Beat the eggs and cheese together. When the asparagus is tender, reduce the heat so the soup is no longer simmering. Very slowly ladle some of the hot soup into the beaten eggs, stirring continuously. After adding about 2 cups of the hot soup to the eggs, reverse the process and gradually stir the eggs mixture into the soup pot. The soup must not boil or the eggs will scramble. Heat until thickened.",
+                            ),
+                            SectionItem::new(
+                                "Put one slice of toasted bread into each soup dish. Ladle the hot soup on top and pass additional grated cheese.",
+                            ),
+                            SectionItem::new("Serves 6."),
+                            SectionItem::new(
+                                "NOTE: To trim asparagus, hold the tip in one hand and the base of the stalk in the other. Bend gently. The asparagus will snap, leaving the tender part with the tip.",
+                            ),
+                            SectionItem::new(
+                                "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]",
+                            ),
+                            SectionItem::new("Posted by Fred Peters."),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(6),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    keywords: to_defined_text(["greek", "vegetarian"].join(",")),
+                    is_based_on: to_is_based_on("MMF".into()),
+                    name: Some("Aubergine and Sesame Pate".into()),
+                    recipe_category: RecipeCategory::Text("appetizers".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
+                        "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
+                        "1 Crushed garlic cloves 1 tb Olive oil".into(),
+                        "1 1/2 tb Tahini Seasoning".into(),
+                        "Toasted Sesame seeds Flatleaf Parsley".into(),
+                        "Cayenne Pepper".into(),
+                        "25-30 minutes until tender. Cool slightly , then peel and".into(),
+                    ]),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for puree the flesh in a blender or processor.",
+                            ),
+                            SectionItem::new(
+                                "Add the garlic, tahini and lemon juice and process until mixed. With the motor running, drizzle in the oil to make a smooth paste. Season to taste.",
+                            ),
+                            SectionItem::new(
+                                "Transfer to a serving dish, garnish and serve cold with pitta bread.",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(2),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    keywords: to_defined_text(["french", "casseroles"].join(",")),
+                    is_based_on: to_is_based_on("MMF".into()),
+                    name: Some("Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()),
+                    recipe_category: RecipeCategory::Text("vegetables".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
+                        "1 md Eggplant 2 tb Snipped parsley".into(),
+                        "1/4 c Salad oil 1 cl Galic, minced".into(),
+                        "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
+                        "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
+                    ]),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper towels; sprinkle each generously with salt. let stand for 30 minutes; then blot dry with paper towels. Start heating oven to 400 deg. F. Saute eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2 inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper. Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread cubes are golden and eggplant is tender.",
+                            ),
+                            SectionItem::new(
+                                "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book Publishers Chicago 1, Illinois 1958",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(4),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    keywords: to_defined_text("beef".into()),
+                    is_based_on: to_is_based_on("MMF".into()),
+                    name: Some("August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()),
+                    recipe_category: RecipeCategory::Text("german".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
+                        "1 Shallot or small onion cut 1 pn Mace".into(),
+                        "-into small pieces 1 lg Steak (just over 1 lb), at".into(),
+                        "Freshly ground black pepper -least 1 1/4 inches".into(),
+                    ]),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "((Note: Per Horst Scharfenberg, this recipe originated in the town of Idar-Oberstein in the 19 th century, when gemstone prospectors returning from South America created their own version of gaucho-grilled steaks. The dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))",
+                            ),
+                            SectionItem::new("Per person: thick, trimmed"),
+                            SectionItem::new(
+                                "Mix together the shallot or onion with the pepper and mace. Insert a few shallot pieces into the steak using the point of a small knife. Coat the steak with the shallot mixture, pressing it in so it will adhere.",
+                            ),
+                            SectionItem::new(
+                                "Remove the loose shallot pieces and grill the steak (over a fire of oak logs, says August Goerg, from which the bark has been removed).* Take the steaks off the grill while they are still pink inside. Sprinkle them with salt.",
+                            ),
+                            SectionItem::new(
+                                "*Note: A special grill is used, suspended with 3 chains from an iron tripod and constantly swinging through the flames.",
+                            ),
+                            SectionItem::new(
+                                "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon & Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking Echo, 8/92",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(6),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    keywords: to_defined_text("pork/ham,poultry,spanish".into()),
+                    is_based_on: to_is_based_on("MMF".into()),
+                    name: Some("Aunt Julia's Paella".into()),
+                    recipe_category: RecipeCategory::Text("fish/sea".into()),
+                    recipe_ingredient: Some(vec![
+                        "<section></section>".into(),
+                        "1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into(),
+                        "-and legs) 2 ts Capers, with juice".into(),
+                        "Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into(),
+                        "1 lb Lean pork, cut into 1-inch -olives".into(),
+                        "-cubes 1/2 lb Calamari (squid), cleaned".into(),
+                        "1 md Onion, minced -and sliced".into(),
+                        "2 Toes garlic, minced 5 c Water".into(),
+                        "Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into(),
+                        "-strips: 1 ts Saffron threads".into(),
+                        "1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into(),
+                        "1 lg Carrot -uncooked".into(),
+                        "1 Stalk celery 3 Hard boiled eggs, sliced".into(),
+                        "1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into(),
+                        "1 1/2 lb Peeled shrimp Oil for frying".into(),
+                    ]),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }",
+                            ),
+                            SectionItem::new(
+                                "In a large electric skillet or paella pan, brown the chicken pieces (that have been seasoned with salt and pepper) in a little oil. Remove from the pan. Add the pork cubes to the drippinfs and brown for about 5 minutes. Remove from the pan. To the pan drippings (add a little more oil if necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry for 2 minutes.",
+                            ),
+                            SectionItem::new(
+                                "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork. Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.",
+                            ),
+                            SectionItem::new(
+                                "Gently stir the rice into the skillet mixture. Slowly pour in enough of the bouillon mixture to cover the rice and chicken pieces. Cover and cook over low heat for about 20 minutes. Uncover and decoaratively arrange the egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary to keep the rice moist.",
+                            ),
+                            SectionItem::new(
+                                "Cover and steam for another 10 minutes until the shrimp are cooked and the rice is tender. (Paella should be moist but not wet!) Place the pan on a hot pad on the serving table and let everyone help themselves.",
+                            ),
+                            SectionItem::new(
+                                "Serve with a mixed green salad, red ripe tomatoes and some French bread. Also mix up a pitcher of Sangria and enjoy!",
+                            ),
+                            SectionItem::new("Serves: 12."),
+                            SectionItem::new(
+                                "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]",
+                            ),
+                            SectionItem::new("Posted by Fred Peters"),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(6),
+                    ..Default::default()
+                },
+            ]
         }
     }
 }

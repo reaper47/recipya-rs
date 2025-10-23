@@ -8,8 +8,9 @@ use nom::character::complete::{digit1, line_ending, not_line_ending, space0};
 use nom::combinator::{map, map_res, opt};
 use nom::multi::{many_till, many1};
 use nom::sequence::{preceded, terminated};
-use recipe_schema::{AtType, RecipeSchema, Sections};
 use url::Url;
+
+use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
 
 use super::helpers::read_file;
 use crate::Result;
@@ -54,11 +55,11 @@ impl From<RecipeComponents<'_>> for ChefTapRecipe {
             yield_: c.servings,
             ingredients: Sections::from([(
                 "".into(),
-                c.ingredients.into_iter().map(String::from).collect(),
+                c.ingredients.into_iter().map(SectionItem::new).collect(),
             )]),
             instructions: Sections::from([(
                 "".into(),
-                c.instructions.into_iter().map(String::from).collect(),
+                c.instructions.into_iter().map(SectionItem::new).collect(),
             )]),
             source: c.source.map(String::from),
         }
@@ -156,33 +157,47 @@ mod tests {
 
         let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, vec![RecipeSchema {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            is_based_on: to_is_based_on("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()),
-            name: Some("Deviled Eggs".into()),
-            recipe_ingredient: sections_to_vec(Sections::from([
-                ("".into(), vec![
-                    "6 large eggs".into(),
-                    "¼ cup mayonnaise".into(),
-                    "2 tablespoons finely chopped onion".into(),
-                    "1 tablespoon prepared horseradish".into(),
-                    "1 tablespoon prepared mustard".into(),
-                    "1/4 teaspoon paprika, or as needed, for garnish".into(),
-                    "salt and pepper to taste".into(),
-                ])
-            ])),
-            recipe_instructions: sections_to_itemlist(Sections::from([
-                ("".into(), vec![
-                    "Place eggs in a medium saucepan and cover with cold water. Bring water to a boil and immediately remove from heat. Cover and let eggs stand in hot water for 10 to 12 minutes. Remove from hot water, cool, and peel.".into(),
-                    "Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined.".into(),
-                    "Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving.".into(),
-                ])
-            ])),
-            recipe_yield: to_yield(6),
-            url: Url::parse("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/").ok(),
-            ..Default::default()
-        }]);
+        pretty_assertions::assert_eq!(
+            got,
+            vec![RecipeSchema {
+                at_context: Default::default(),
+                at_type: Some(AtType::Recipe),
+                is_based_on: to_is_based_on(
+                    "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()
+                ),
+                name: Some("Deviled Eggs".into()),
+                recipe_ingredient: sections_to_vec(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new("6 large eggs"),
+                        SectionItem::new("¼ cup mayonnaise"),
+                        SectionItem::new("2 tablespoons finely chopped onion"),
+                        SectionItem::new("1 tablespoon prepared horseradish"),
+                        SectionItem::new("1 tablespoon prepared mustard"),
+                        SectionItem::new("1/4 teaspoon paprika, or as needed, for garnish"),
+                        SectionItem::new("salt and pepper to taste"),
+                    ]
+                )])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "Place eggs in a medium saucepan and cover with cold water. Bring water to a boil and immediately remove from heat. Cover and let eggs stand in hot water for 10 to 12 minutes. Remove from hot water, cool, and peel."
+                        ),
+                        SectionItem::new(
+                            "Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined."
+                        ),
+                        SectionItem::new(
+                            "Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving."
+                        ),
+                    ]
+                )])),
+                recipe_yield: to_yield(6),
+                url: Url::parse("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/")
+                    .ok(),
+                ..Default::default()
+            }]
+        );
         Ok(())
     }
 

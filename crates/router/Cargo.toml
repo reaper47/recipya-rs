@@ -13,47 +13,48 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-app = { workspace = true }
-auth = { workspace = true }
-axum = { workspace = true }
+app.workspace = true
+auth.workspace = true
+axum.workspace = true
 axum-htmx = "0.8.1"
-chrono = { workspace = true }
-config = { workspace = true }
-derive_more = { workspace = true }
-email = { workspace = true }
-futures-util = { workspace = true }
-humantime = { workspace = true }
-infer = { workspace = true }
-integrations = { workspace = true }
+chrono.workspace = true
+config.workspace = true
+derive_more.workspace = true
+email.workspace = true
+futures-util.workspace = true
+humantime.workspace = true
+infer.workspace = true
+integrations.workspace = true
+itertools.workspace = true
 mime_guess = "2.0.5"
-math = { workspace = true }
+math.workspace = true
 models = { workspace = true, features = ["test-utils"] }
-recipe-schema = { workspace = true }
-recipya-scraper = { workspace = true }
-repository = { workspace = true }
-reqwest = { workspace = true }
+recipe-schema.workspace = true
+recipya-scraper.workspace = true
+repository.workspace = true
+reqwest.workspace = true
 rust-embed = { version = "8.7.2", features = ["axum-ex"] }
-serde = { workspace = true }
-serde_json = { workspace = true }
-strum_macros = { workspace = true }
-support = { workspace = true }
-templates = { workspace = true }
-tokio = { workspace = true }
-tower-cookies = { workspace = true }
-tower-http = { workspace = true }
-tracing = { workspace = true }
-url = { workspace = true }
-uuid = { workspace = true }
-validator = { workspace = true }
+serde.workspace = true
+serde_json.workspace = true
+strum_macros.workspace = true
+support.workspace = true
+templates.workspace = true
+tokio.workspace = true
+tower-cookies.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+url.workspace = true
+uuid.workspace = true
+validator.workspace = true
 
 [dev-dependencies]
-axum-test = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
+axum-test.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
 image = "0.25.8"
-pretty_assertions = { workspace = true }
+pretty_assertions.workspace = true
 serial_test = "3.2.0"
 testing = { path = "../testing", features = ["test-utils"] }
-time = { workspace = true }
-tokio = { workspace = true }
+time.workspace = true
+tokio.workspace = true
 tower = "0.5.2"

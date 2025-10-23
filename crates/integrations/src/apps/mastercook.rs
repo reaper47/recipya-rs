@@ -9,11 +9,12 @@ use nom::character::complete::{digit1, line_ending, space0, space1};
 use nom::combinator::{map, opt, recognize, rest};
 use nom::multi::{many1, separated_list0};
 use nom::sequence::{delimited, preceded, terminated};
+use serde::Deserialize;
+
 use recipe_schema::{
     AggregateRating, AtType, Energy, ImageObjectOrUrl, ImageObjectType, Mass, NumberOrText,
-    NutritionInformationSchema, RecipeCategory, RecipeSchema, Sections,
+    NutritionInformationSchema, RecipeCategory, RecipeSchema, SectionItem, Sections,
 };
-use serde::Deserialize;
 
 use crate::apps::helpers::{
     Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
@@ -118,14 +119,19 @@ impl From<RecipeComponents<'_>> for RecipeSchema {
                         Ingredient::Section(s) => s.to_string(),
                     })
                     .map(|s| {
-                        s.split_whitespace()
-                            .collect::<Vec<_>>()
-                            .join(" ")
-                            .replace(" --", ",")
+                        SectionItem::new(
+                            s.split_whitespace()
+                                .collect::<Vec<_>>()
+                                .join(" ")
+                                .replace(" --", ","),
+                        )
                     })
                     .collect(),
             )])),
-            recipe_instructions: sections_to_itemlist(Sections::from([("".into(), instructions)])),
+            recipe_instructions: sections_to_itemlist(Sections::from([(
+                "".into(),
+                instructions.iter().map(SectionItem::new).collect(),
+            )])),
             recipe_yield: to_yield(r.r#yield),
             total_time: seconds_to_duration(total_secs),
             ..Default::default()
@@ -321,7 +327,7 @@ impl From<Recipe> for RecipeSchema {
                 r.ingredients
                     .into_iter()
                     .map(|ing| {
-                        format!(
+                        SectionItem::new(format!(
                             "{}{}{}{}",
                             ing.qty,
                             match ing.unit {
@@ -337,7 +343,7 @@ impl From<Recipe> for RecipeSchema {
                                 None => String::new(),
                                 Some(s) => format!(", {s}"),
                             }
-                        )
+                        ))
                     })
                     .collect(),
             )])),
@@ -346,7 +352,7 @@ impl From<Recipe> for RecipeSchema {
                 r.directions
                     .directions
                     .into_iter()
-                    .map(|d| d.text.to_string())
+                    .map(|d| SectionItem::new(d.text.to_string()))
                     .collect(),
             )])),
             recipe_yield: to_yield(r.serving.qty.parse().unwrap_or_default()),
@@ -1114,23 +1120,27 @@ Nutr. Assoc. : 0 0 0
                     recipe_ingredient: sections_to_vec(Sections::from([(
                         "".into(),
                         vec![
-                           "Apples, thinly sliced".into(),
-                           "2 tablespoons Lemon Juice".into(),
-                           "3 cups Shredded Cabbage".into(),
-                           "Stalk Celery, chopped".into(),
-                           "Carrot, grated".into(),
-                           "Med Onion, thinly sliced".into(),
-                           "1/2 cup Sour Cream".into(),
-                           "1/4 cup Mayonnaise".into(),
-                           "3/4 teaspoon Celery Salt".into(),
+                            SectionItem::new("Apples, thinly sliced"),
+                            SectionItem::new("2 tablespoons Lemon Juice"),
+                            SectionItem::new("3 cups Shredded Cabbage"),
+                            SectionItem::new("Stalk Celery, chopped"),
+                            SectionItem::new("Carrot, grated"),
+                            SectionItem::new("Med Onion, thinly sliced"),
+                            SectionItem::new("1/2 cup Sour Cream"),
+                            SectionItem::new("1/4 cup Mayonnaise"),
+                            SectionItem::new("3/4 teaspoon Celery Salt"),
                         ],
                     )])),
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
-                            "Sprinkle sliced apples with lemon juice. Mix with cabbage, celery, carrot, and onion.".into(),
-                            "Combine sour cream, mayonnaise and celery salt. Toss with apple mixture and serve.".into(),
-                            "Lemon juice keeps apples from discoloring.".into(),
+                            SectionItem::new(
+                                "Sprinkle sliced apples with lemon juice. Mix with cabbage, celery, carrot, and onion.",
+                            ),
+                            SectionItem::new(
+                                "Combine sour cream, mayonnaise and celery salt. Toss with apple mixture and serve.",
+                            ),
+                            SectionItem::new("Lemon juice keeps apples from discoloring."),
                         ],
                     )])),
                     recipe_yield: to_yield(5),
@@ -1144,19 +1154,23 @@ Nutr. Assoc. : 0 0 0
                     recipe_ingredient: sections_to_vec(Sections::from([(
                         "".into(),
                         vec![
-                            "2 cups Noodles, cooked and drained".into(),
-                            "Apples, peeled and sliced".into(),
-                            "1 dash Cinnamon".into(),
-                            "4 tablespoons Brown Sugar".into(),
-                            "4 tablespoons Butter".into(),
+                            SectionItem::new("2 cups Noodles, cooked and drained"),
+                            SectionItem::new("Apples, peeled and sliced"),
+                            SectionItem::new("1 dash Cinnamon"),
+                            SectionItem::new("4 tablespoons Brown Sugar"),
+                            SectionItem::new("4 tablespoons Butter"),
                         ],
                     )])),
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
-                            "Preheat oven to 350 deg F.".into(),
-                            "Place half of the noodles and apples in a buttered baking dish.".into(),
-                            "Sprinkle with half the brown sugar and a dash of cinnamon. Dot with half the butter. Repeat. Cover and bake 30 minutes. Stir well before serving (or, leave uncovered toward the end of baking to give the top a nice crunchy texture.)".into(),
+                            SectionItem::new("Preheat oven to 350 deg F."),
+                            SectionItem::new(
+                                "Place half of the noodles and apples in a buttered baking dish.",
+                            ),
+                            SectionItem::new(
+                                "Sprinkle with half the brown sugar and a dash of cinnamon. Dot with half the butter. Repeat. Cover and bake 30 minutes. Stir well before serving (or, leave uncovered toward the end of baking to give the top a nice crunchy texture.)",
+                            ),
                         ],
                     )])),
                     recipe_yield: to_yield(4),
@@ -1171,16 +1185,18 @@ Nutr. Assoc. : 0 0 0
                     recipe_ingredient: sections_to_vec(Sections::from([(
                         "".into(),
                         vec![
-                            "2 lg Artichokes".into(),
-                            "1 Lemon (juice only)".into(),
-                            "2 tablespoons Virgin olive oil".into(),
+                            SectionItem::new("2 lg Artichokes"),
+                            SectionItem::new("1 Lemon (juice only)"),
+                            SectionItem::new("2 tablespoons Virgin olive oil"),
                         ],
                     )])),
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
-                            "lg Basil leaves; - sliced in strips 1 lg Onion, white or yellow - sliced 1/4-in thick Salt 1 lb Fresh pod peas; -=OR=- 1 c  Frozen peas Finely chopped parsley Freshly milled pepper 1 tb Sweet butter -=OR=-Extra-Virgin Olive Oil Lemon juice; to taste -=OR=- Champagne Vinegar  SLICE THE UPPER 2/3 of the leaves off the artichokes, then break off the remaining leaves, snapping them off at the base. Trim off the dark green stubs, going around the artichoke with a paring knife. Cut them in quarters, remove the fuzzy choke and slice each quarter into pieces 1/4-to-1/2-inch thick. As you work, rub the cut surfaces with lemon and put them in a bowl with the lemon juice and water to cover. Gently warm the olive oil with half the basil. When it is fairly hot, but not sizzling, add the onions and the sliced artichokes. Salt lightly and give them a stir to coat them with the oil, then add 3/4 cup water and cook over a medium-low flame. As the water cooks off, add more, in 1/2-cup increments until the artichokes are cooked, about 25 minutes. Add the peas and continue cooking until they are done. Let any liquids reduce until they are syrupy. Taste and season with salt. Add the rest of the basil, the parsley and the butter or olive oil. To brighten the flavors, stir in a little lemon juice or champagne vinegar to taste.".into(),
-                            "DEBORAH MADISON - PRODIGY GUEST CHEFS COOKBOOK".into(),
+                            SectionItem::new(
+                                "lg Basil leaves; - sliced in strips 1 lg Onion, white or yellow - sliced 1/4-in thick Salt 1 lb Fresh pod peas; -=OR=- 1 c  Frozen peas Finely chopped parsley Freshly milled pepper 1 tb Sweet butter -=OR=-Extra-Virgin Olive Oil Lemon juice; to taste -=OR=- Champagne Vinegar  SLICE THE UPPER 2/3 of the leaves off the artichokes, then break off the remaining leaves, snapping them off at the base. Trim off the dark green stubs, going around the artichoke with a paring knife. Cut them in quarters, remove the fuzzy choke and slice each quarter into pieces 1/4-to-1/2-inch thick. As you work, rub the cut surfaces with lemon and put them in a bowl with the lemon juice and water to cover. Gently warm the olive oil with half the basil. When it is fairly hot, but not sizzling, add the onions and the sliced artichokes. Salt lightly and give them a stir to coat them with the oil, then add 3/4 cup water and cook over a medium-low flame. As the water cooks off, add more, in 1/2-cup increments until the artichokes are cooked, about 25 minutes. Add the peas and continue cooking until they are done. Let any liquids reduce until they are syrupy. Taste and season with salt. Add the rest of the basil, the parsley and the butter or olive oil. To brighten the flavors, stir in a little lemon juice or champagne vinegar to taste.",
+                            ),
+                            SectionItem::new("DEBORAH MADISON - PRODIGY GUEST CHEFS COOKBOOK"),
                         ],
                     )])),
                     recipe_yield: to_yield(4),
@@ -1195,22 +1211,22 @@ Nutr. Assoc. : 0 0 0
                     recipe_ingredient: sections_to_vec(Sections::from([(
                         "".into(),
                         vec![
-                            "6 pounds Fresh chicken livers".into(),
-                            "12 each Eggs, hard cooked".into(),
-                            "1 each Large apple, peeled".into(),
-                            "3 each Bermuda onions, chopped".into(),
-                            "1 each Bunch celery, (hearts only)".into(),
-                            "Chicken fat".into(),
-                            "1 each Large pineapple".into(),
-                            "1 each Jar of lg pimento green oliv".into(),
-                            "Salt and pepper to taste".into(),
+                            SectionItem::new("6 pounds Fresh chicken livers"),
+                            SectionItem::new("12 each Eggs, hard cooked"),
+                            SectionItem::new("1 each Large apple, peeled"),
+                            SectionItem::new("3 each Bermuda onions, chopped"),
+                            SectionItem::new("1 each Bunch celery, (hearts only)"),
+                            SectionItem::new("Chicken fat"),
+                            SectionItem::new("1 each Large pineapple"),
+                            SectionItem::new("1 each Jar of lg pimento green oliv"),
+                            SectionItem::new("Salt and pepper to taste"),
                         ],
                     )])),
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
-                        vec![
-                            r#"I just have to pass this along to you. I don't want you to prepare this bec none of us need the bad cholesterol ingredients. I just wanted you to have pleasure of reading it. Saute liver, one chopped onion, and celery in generous amount of chicken >> fat; cooking until liver is just done, with no pink showing, but while live are still soft. Put everything through a meat grinder, adding salt and pepper to taste. Bl well, adding chicken fat if necessary. Chill well. Cut the top off the pineapple and reserve top. Mold liver on a large servi tray, copying the fresh >>>>>> pineapple shape as closely as possible. Score diamond shapes and press olive slices into each diamond.  Place pineapple top onto top of liver mold. Surround "Pineapple" with curly lettu buffet rye bread and cherry tomatoes."#.into(),
-                        ],
+                        vec![SectionItem::new(
+                            r#"I just have to pass this along to you. I don't want you to prepare this bec none of us need the bad cholesterol ingredients. I just wanted you to have pleasure of reading it. Saute liver, one chopped onion, and celery in generous amount of chicken >> fat; cooking until liver is just done, with no pink showing, but while live are still soft. Put everything through a meat grinder, adding salt and pepper to taste. Bl well, adding chicken fat if necessary. Chill well. Cut the top off the pineapple and reserve top. Mold liver on a large servi tray, copying the fresh >>>>>> pineapple shape as closely as possible. Score diamond shapes and press olive slices into each diamond.  Place pineapple top onto top of liver mold. Surround "Pineapple" with curly lettu buffet rye bread and cherry tomatoes."#,
+                        )],
                     )])),
                     recipe_yield: to_yield(25),
                     ..Default::default()
@@ -1248,17 +1264,17 @@ Nutr. Assoc. : 0 0 0
                     recipe_ingredient: sections_to_vec(Sections::from([(
                         "".into(),
                         vec![
-                            "6 pounds chicken breast, for braising meat".into(),
-                            "12 tablespoons oil, flaked".into(),
+                            SectionItem::new("6 pounds chicken breast, for braising meat"),
+                            SectionItem::new("12 tablespoons oil, flaked"),
                         ],
                     )])),
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
-                            "Cut the chicken into many pieces".into(),
-                            "Mix it with love".into(),
-                            "Kiss it".into(),
-                            "Eat".into(),
+                            SectionItem::new("Cut the chicken into many pieces"),
+                            SectionItem::new("Mix it with love"),
+                            SectionItem::new("Kiss it"),
+                            SectionItem::new("Eat"),
                         ],
                     )])),
                     recipe_yield: to_yield(18),
@@ -1287,17 +1303,17 @@ Nutr. Assoc. : 0 0 0
                     recipe_ingredient: sections_to_vec(Sections::from([(
                         "".into(),
                         vec![
-                            "4 egg".into(),
-                            "12 heads Algood Preserves, Strawberry".into(),
-                            "1 teaspoon salt".into(),
+                            SectionItem::new("4 egg"),
+                            SectionItem::new("12 heads Algood Preserves, Strawberry"),
+                            SectionItem::new("1 teaspoon salt"),
                         ],
                     )])),
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
-                            "Cook for 12 hours".into(),
-                            "Make sure to boil".into(),
-                            "Mix all ingredients together and eat".into(),
+                            SectionItem::new("Cook for 12 hours"),
+                            SectionItem::new("Make sure to boil"),
+                            SectionItem::new("Mix all ingredients together and eat"),
                         ],
                     )])),
                     recipe_yield: to_yield(24),

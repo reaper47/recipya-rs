@@ -7,9 +7,10 @@ use nom::combinator::{eof, map, map_opt, opt};
 use nom::multi::many1;
 use nom::sequence::{preceded, terminated};
 use nom::{IResult, Parser};
-use recipe_schema::{AtType, RecipeSchema, Sections};
-use support::time::parse_duration;
 use url::Url;
+
+use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
+use support::time::parse_duration;
 
 use crate::apps::helpers::{read_file, urls_to_image_object};
 use crate::error::Result;
@@ -84,7 +85,7 @@ impl From<SaffronRecipe> for RecipeSchema {
             recipe_ingredient: Some(r.ingredients).filter(|v| !v.is_empty()),
             recipe_instructions: sections_to_itemlist(Sections::from([(
                 "".into(),
-                r.instructions,
+                r.instructions.iter().map(SectionItem::new).collect(),
             )])),
             recipe_yield: to_yield(r.servings.unwrap_or_default() as i64),
             url: r.original_url,
@@ -270,10 +271,10 @@ mod tests {
             ]),
             recipe_instructions: sections_to_itemlist(Sections::from([
                 ("".into(), vec![
-                    "Preheat the oven to 425 degrees F (220 degrees C).".into(),
-                    "Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.".into(),
-                    "Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.".into(),
-                    "Bake in the preheated oven until puffed and lightly browned, about 20 minutes.".into(),
+                    SectionItem::new("Preheat the oven to 425 degrees F (220 degrees C)."),
+                    SectionItem::new("Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside."),
+                    SectionItem::new("Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top."),
+                    SectionItem::new("Bake in the preheated oven until puffed and lightly browned, about 20 minutes."),
                 ])
             ])),
             recipe_yield: to_yield(9),
@@ -303,7 +304,11 @@ mod tests {
                 recipe_ingredient: Some(vec!["1 kg chicken".into(), "1 egg".into()]),
                 recipe_instructions: sections_to_itemlist(Sections::from([(
                     "".into(),
-                    vec!["Mix stuff".into(), "Eat a melon".into(), "Profit".into()]
+                    vec![
+                        SectionItem::new("Mix stuff"),
+                        SectionItem::new("Eat a melon"),
+                        SectionItem::new("Profit"),
+                    ]
                 )])),
                 recipe_yield: to_yield(0),
                 ..Default::default()

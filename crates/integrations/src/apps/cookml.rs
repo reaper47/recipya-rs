@@ -5,7 +5,7 @@ use iso8601::{DateTime, Duration};
 use recipe_schema::{
     AggregateRating, AtType, DateOrDateTime, ImageObjectOrUrl, LanguageOrText, Mass,
     MonetaryAmountOrText, NumberOrText, NutritionInformationSchema, QuantitativeValueOrText,
-    RecipeCategory, RecipeCuisine, RecipeSchema, Sections,
+    RecipeCategory, RecipeCuisine, RecipeSchema, SectionItem, Sections,
 };
 use serde::Deserialize;
 use support::strings::extract_number;
@@ -234,7 +234,7 @@ impl From<Recipe> for RecipeSchema {
                             }
 
                             if let Some(gram) = ing.gram {
-                                parts.push(format!("gram={}", gram));
+                                parts.push(format!("gram={gram}"));
                             }
 
                             if let Some(inote) = ing.inote
@@ -243,7 +243,7 @@ impl From<Recipe> for RecipeSchema {
                                 parts.push(format!("[{}]", inote.join(",")));
                             }
 
-                            parts.join(" ")
+                            SectionItem::new(parts.join(" "))
                         })
                         .collect(),
                 )
@@ -255,7 +255,7 @@ impl From<Recipe> for RecipeSchema {
             r.preparation
                 .text
                 .split("\n\n")
-                .map(|s| s.replace("\n", " "))
+                .map(|s| SectionItem::new(s.replace("\n", " ")))
                 .collect(),
         )]);
 
@@ -639,10 +639,10 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     ("".into(), vec![
-                        "Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und unter die Brösel mischen. Den Boden einer Springform (24 cm Durchmesser) mit Backpapier auslegen. Die Brösel als Boden darauf verteilen und gut andrücken. Kalt stellen.".into(),
-                        "Frischkäse, saure Sahne und 100 g Zucker mit den Quirlen des Handrührers glattrühren. Nacheinander die Eier dazugeben. Die Limettenschale fein abreiben, die Limette auspressen. Limettensaft und Mehl unter die Käsemasse heben. Die Masse auf dem Boden in der Springform verteilen. Im heissen Backofen auf der 2. Einschubleiste von unten bei 160GradC 15 Minuten backen. Dann die Temperatur auf 150GradC reduzieren und weitere 35 Minuten backen. Den Kuchen in der Form auf einem Gitter auskühlen lassen und dann mindestens 2 Stunden kalt stellen.".into(),
-                        "3. Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren.".into(),
-                        "Das restliche Ananaskompott extra zum Kuchen servieren.".into(),
+                        SectionItem::new("Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und unter die Brösel mischen. Den Boden einer Springform (24 cm Durchmesser) mit Backpapier auslegen. Die Brösel als Boden darauf verteilen und gut andrücken. Kalt stellen."),
+                        SectionItem::new("Frischkäse, saure Sahne und 100 g Zucker mit den Quirlen des Handrührers glattrühren. Nacheinander die Eier dazugeben. Die Limettenschale fein abreiben, die Limette auspressen. Limettensaft und Mehl unter die Käsemasse heben. Die Masse auf dem Boden in der Springform verteilen. Im heissen Backofen auf der 2. Einschubleiste von unten bei 160GradC 15 Minuten backen. Dann die Temperatur auf 150GradC reduzieren und weitere 35 Minuten backen. Den Kuchen in der Form auf einem Gitter auskühlen lassen und dann mindestens 2 Stunden kalt stellen."),
+                        SectionItem::new("3. Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren."),
+                        SectionItem::new("Das restliche Ananaskompott extra zum Kuchen servieren."),
                     ])
                 ])),
                 recipe_yield: QuantitativeValueOrText::Text("1 Kuchen".into()),
@@ -676,10 +676,10 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     ("".into(), vec![
-                        "1. ) Kirschen gut abtropfen lassen. 125g Butter und 125g Zucker schaumig schlagen. Eier nacheinander unterrühren 1-2 Essl. Milch zufügen. Mehl und Backpulver mischen und unterrühren. Die Hälfte des Teiges in eine gefettete, mit Mehl ausgestreute Springform streichen. Kakao unter den restlichen Teig rühren und vorsichtig auf den hellen Teig verstreichen. Abgetropfte Kirschen auf dem Teig verteilen und im vorgeheizten Backofen ( E- Herd: 175° / Gasherd stufe 2) 30 bis 35 Minuten backen, in der Form abkühlen lassen.".into(),
-                        "2. ) Inzwischen Puddingpulver restlichen Zucker und 5-6 Esslöffel Milch glatt rühren. Restliche Milch aufkochen, Puddingpulver einrühren und nochmals aufkochen lassen. In eine Schüssel geben, Oberfläche mit Folie bedecken und abkühlen lassen.".into(),
-                        "3. ) Restliche Butter cremig aufschlagen. Pudding nochmals durchrühren und Esslöffelweise unter die Butter rühren. Buttercreme auf den Kuchen streichen und ca. 2 Stunden kühl stellen.".into(),
-                        "4. ) Kuvertüre und Kokosfett im heissen Wasserbad schmelzen. Kuvertüre gleichmässig auf der Buttercreme verteilen und mit einem Tortenkamm wellenartig durchziehen. Torte nochmals kühl stellen, bis der Guss fest ist. Torte evtl. mit einem Sahnetuff, Cocktailkirschen und Melisseblättchen verzieren.".into(),
+                        SectionItem::new("1. ) Kirschen gut abtropfen lassen. 125g Butter und 125g Zucker schaumig schlagen. Eier nacheinander unterrühren 1-2 Essl. Milch zufügen. Mehl und Backpulver mischen und unterrühren. Die Hälfte des Teiges in eine gefettete, mit Mehl ausgestreute Springform streichen. Kakao unter den restlichen Teig rühren und vorsichtig auf den hellen Teig verstreichen. Abgetropfte Kirschen auf dem Teig verteilen und im vorgeheizten Backofen ( E- Herd: 175° / Gasherd stufe 2) 30 bis 35 Minuten backen, in der Form abkühlen lassen."),
+                        SectionItem::new("2. ) Inzwischen Puddingpulver restlichen Zucker und 5-6 Esslöffel Milch glatt rühren. Restliche Milch aufkochen, Puddingpulver einrühren und nochmals aufkochen lassen. In eine Schüssel geben, Oberfläche mit Folie bedecken und abkühlen lassen."),
+                        SectionItem::new("3. ) Restliche Butter cremig aufschlagen. Pudding nochmals durchrühren und Esslöffelweise unter die Butter rühren. Buttercreme auf den Kuchen streichen und ca. 2 Stunden kühl stellen."),
+                        SectionItem::new("4. ) Kuvertüre und Kokosfett im heissen Wasserbad schmelzen. Kuvertüre gleichmässig auf der Buttercreme verteilen und mit einem Tortenkamm wellenartig durchziehen. Torte nochmals kühl stellen, bis der Guss fest ist. Torte evtl. mit einem Sahnetuff, Cocktailkirschen und Melisseblättchen verzieren."),
                     ])
                 ])),
                 recipe_yield: QuantitativeValueOrText::Text("16 Stücke".into()),
@@ -705,31 +705,31 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 recipe_category: RecipeCategory::Text("Frankreich".into()),
                 recipe_ingredient: sections_to_vec(Sections::from([
                     ("Für den Brotteig:".into(), vec![
-                        "6 tb Mehl C200011 gram=24".into(),
-                        "0.5 ts Salz R111011".into(),
-                        "1 pn Pfeffer R258011".into(),
-                        "0.5  Würfel Hefe J731000 gram=10".into(),
-                        "0.25 l Wasser N110000 [(lauwarm)]".into(),
+                        SectionItem::new("6 tb Mehl C200011 gram=24"),
+                        SectionItem::new("0.5 ts Salz R111011"),
+                        SectionItem::new("1 pn Pfeffer R258011"),
+                        SectionItem::new("0.5  Würfel Hefe J731000 gram=10"),
+                        SectionItem::new("0.25 l Wasser N110000 [(lauwarm)]"),
                     ]),
                     ("Für den Belag".into(), vec![
-                        "250 g Quark M713200 [40% Fett]".into(),
-                        "1 ct Saure Sahne M172500 gram=40".into(),
-                        "0.5 ts Salz R111011".into(),
-                        "1 pn Pfeffer R258011".into(),
-                        "1  Zitrone F601600 gram=30".into(),
+                        SectionItem::new("250 g Quark M713200 [40% Fett]"),
+                        SectionItem::new("1 ct Saure Sahne M172500 gram=40"),
+                        SectionItem::new("0.5 ts Salz R111011"),
+                        SectionItem::new("1 pn Pfeffer R258011"),
+                        SectionItem::new("1  Zitrone F601600 gram=30"),
                     ]),
                     ("Für die Garnitur".into(), vec![
-                        "5 lg Zwiebel G480111 gram=150".into(),
-                        "125 g Durchwachsener Speck W411011".into(),
-                        "125 g Reibkäse M600300 [(optional)]".into(),
+                        SectionItem::new("5 lg Zwiebel G480111 gram=150"),
+                        SectionItem::new("125 g Durchwachsener Speck W411011"),
+                        SectionItem::new("125 g Reibkäse M600300 [(optional)]"),
                     ])
                 ])),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     ("".into(), vec![
-                        "Zuerst den Teig vorbereiten: Mehl,Salz und Pfeffer in eine Schüssel geben. Die Hefe im Wasser auflösen und anschließend über das Mehl gießen, dabei mit einem Handmixer oder gleich mit der Hand kneten. Den Teig rühren bis er nicht mehr klebt (eventuell noch etwas mehr Mehl beimischen). Den Teig aus der Schüssel herrausnehmen und mit den Händen auf der Arbeitsplatte weiter verarbeiten, bis er schön geschmeidig wird. Dabei immer ein bißchen Mehl auf die Platte streuen damit der Teig nicht kleben bleibt ! Den Teig während der Zubereitung der Sauce und Garnitur ruhen lassen.".into(),
-                        "Für die Sauce (Belag), den Quark, die saure Sahne, Salz und Pfeffer in einer Schüssel mischen. Damit diese Sauce einen noch sauerlicheren Geschmack bekommt, wird der Saft einer Zitrone untergerührt.".into(),
-                        "Die Zwiebeln schälen und halbieren, dann in dünne Scheiben (1 bis 2 mm dick) schneiden. Den Speck in kleine Würfel schneiden. Den Teigballen in 2 gleichgroße Hälften teilen. Jede Hälfte so dünn wie möglich ausrollen (je dünner, umso schmackhafter !). Die Teigplatten auf Backbleche mit Backpapier legen. Die Sauce dünn auftragen. Die Zwiebeln gleichmäßig darauf verteilen. Ebenso die Speckwürfel. Eventuell auch Käse dazu. (Traditioneller Flammenkuchen ist ohne Käse !)".into(),
-                        "Backzeit: 20 Minuten im vorgeheizten Backofen bei 200°C (oder bis der Teig an den Rändern goldbraun wird) Dazu ein Kerner Spätlese halbtrocken aus der Pfalz oder ganz einfach ein schönes elsäßisches Bier (Fischer Ambré). Und jetzt: \"A güata !\" wie man bei uns sagt".into(),
+                        SectionItem::new("Zuerst den Teig vorbereiten: Mehl,Salz und Pfeffer in eine Schüssel geben. Die Hefe im Wasser auflösen und anschließend über das Mehl gießen, dabei mit einem Handmixer oder gleich mit der Hand kneten. Den Teig rühren bis er nicht mehr klebt (eventuell noch etwas mehr Mehl beimischen). Den Teig aus der Schüssel herrausnehmen und mit den Händen auf der Arbeitsplatte weiter verarbeiten, bis er schön geschmeidig wird. Dabei immer ein bißchen Mehl auf die Platte streuen damit der Teig nicht kleben bleibt ! Den Teig während der Zubereitung der Sauce und Garnitur ruhen lassen."),
+                        SectionItem::new("Für die Sauce (Belag), den Quark, die saure Sahne, Salz und Pfeffer in einer Schüssel mischen. Damit diese Sauce einen noch sauerlicheren Geschmack bekommt, wird der Saft einer Zitrone untergerührt."),
+                        SectionItem::new("Die Zwiebeln schälen und halbieren, dann in dünne Scheiben (1 bis 2 mm dick) schneiden. Den Speck in kleine Würfel schneiden. Den Teigballen in 2 gleichgroße Hälften teilen. Jede Hälfte so dünn wie möglich ausrollen (je dünner, umso schmackhafter !). Die Teigplatten auf Backbleche mit Backpapier legen. Die Sauce dünn auftragen. Die Zwiebeln gleichmäßig darauf verteilen. Ebenso die Speckwürfel. Eventuell auch Käse dazu. (Traditioneller Flammenkuchen ist ohne Käse !)"),
+                        SectionItem::new("Backzeit: 20 Minuten im vorgeheizten Backofen bei 200°C (oder bis der Teig an den Rändern goldbraun wird) Dazu ein Kerner Spätlese halbtrocken aus der Pfalz oder ganz einfach ein schönes elsäßisches Bier (Fischer Ambré). Und jetzt: \"A güata !\" wie man bei uns sagt"),
                     ])
                 ])),
                 recipe_yield: QuantitativeValueOrText::Text("2 Backbleche".into()),

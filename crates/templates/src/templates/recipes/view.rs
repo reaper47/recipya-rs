@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use maud::{Markup, PreEscaped, html};
 use serde_json::json;
@@ -173,16 +174,10 @@ pub fn view_recipe_helper(
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
                                                 (icon_cutting_board())
                                                 time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }
-                                                button class="btn btn-xs btn-circle btn-ghost" title="Start prep timer" {
-                                                    (icon_alarm_clock())
-                                                }
                                             }
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
                                                 (icon_cooking_pot())
                                                 time datetime=(view.formatted_times.cook_datetime) { (view.formatted_times.cook) }
-                                                button class="btn btn-xs btn-circle btn-ghost" title="Start cooking timer" {
-                                                    (icon_alarm_clock())
-                                                }
                                             }
                                             div class="flex justify-self-center items-center gap-1 cursor-default" title="Total time" {
                                                 (icon_clock())
@@ -216,7 +211,7 @@ pub fn view_recipe_helper(
                         }
                         (print_description(&recipe))
                         div class="border-gray-700 md:border-t" {
-                            (ingredients_instructions(&recipe_details))
+                            (render_ingredients_instructions(&recipe_details))
                             div class="hidden print:grid col-span-6 ml-2 my-1" {
                                 (render_tools(recipe_details))
                                 (render_ingredients(recipe_details))
@@ -504,7 +499,7 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
                         label {
                             input type="checkbox";
                         }
-                        span class="pl-2" { (ing) }
+                        span class="pl-2" { (ing.text) }
                     }
                 }
             }
@@ -522,7 +517,7 @@ fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
                 @for ins in instructions.iter() {
                     li class="print:mr-4" {
                         span class="text-sm whitespace-pre-line" {
-                            (ins)
+                            (ins.text)
                         }
                     }
                 }
@@ -766,7 +761,7 @@ fn render_tools(recipe_details: &RecipeDetails) -> Markup {
 }
 
 /// Renders the ingredient and the instruction lists.
-pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
+pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
     html! {
         div #ingredients-instructions-container class="grid text-sm md:grid-flow-col md:col-span-6" {
             div class="col-span-6 border-gray-700 border-y px-4 py-2 md:col-span-2 md:border-r md:border-y-0 print:hidden" {
@@ -790,7 +785,7 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                              li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
                                 label class="flex items-center w-full" {
                                     input type="checkbox" class="checkbox";
-                                    span class="pl-2" { (ingredient) }
+                                    span class="pl-2" { (ingredient.text) }
                                 }
                             }
                         }
@@ -802,8 +797,16 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 ol class="grid list-decimal" {
                     @for (_section, instruction) in recipe.instructions.iter() {
                         @for instruction in instruction.iter() {
-                            li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through" {
-                                span class="whitespace-pre-line" { (instruction) }
+                            li class="min-w-full py-2 select-none hover:bg-base-300"
+                                _="on mousedown if target matches <button/> or target matches <svg/> or target matches <path/> halt end toggle .line-through" {
+                                div class="flex whitespace-pre-line" {
+                                    (instruction.text)
+                                    @if let Some(d) = instruction.duration_seconds {
+                                        button class="btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d)) {
+                                            (icon_alarm_clock())
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -811,6 +814,11 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
             }
         }
     }
+}
+
+fn format_timer_label(minutes: i32) -> String {
+    let duration = Duration::from_secs((minutes * 60) as u64);
+    format!("Start {} timer", humantime::format_duration(duration))
 }
 
 /// Renders the favourite button.

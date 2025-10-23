@@ -15,12 +15,12 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-derive_more = { workspace = true }
+derive_more.workspace = true
 lettre = { version = "0.11.19", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
 mrml = "5.0.0"
-support = { workspace = true }
-tracing = { workspace = true }
+support.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
-pretty_assertions = { workspace = true }
+pretty_assertions.workspace = true
 temp-env = "0.3.6"

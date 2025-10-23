@@ -172,7 +172,7 @@ impl TimeParser {
         Self
     }
 
-    pub fn parse_max_time(&self, text: &str) -> Option<u32> {
+    pub fn parse_max_time(&self, text: &str) -> Option<i32> {
         let lang = detect_lang(text)?;
 
         let pattern = match LANGUAGE_PATTERNS.get(&lang) {
@@ -183,7 +183,7 @@ impl TimeParser {
         self.extract_time(text, pattern, lang)
     }
 
-    fn extract_time(&self, text: &str, pattern: &Regex, lang: Lang) -> Option<u32> {
+    fn extract_time(&self, text: &str, pattern: &Regex, lang: Lang) -> Option<i32> {
         pattern
             .captures_iter(text)
             .filter_map(|cap| {
@@ -194,7 +194,7 @@ impl TimeParser {
             .max()
     }
 
-    fn normalize_to_minutes(&self, value: f32, unit: &str, lang: Lang) -> Option<u32> {
+    fn normalize_to_minutes(&self, value: f32, unit: &str, lang: Lang) -> Option<i32> {
         match lang {
             Lang::Cmn => match unit {
                 s if s.starts_with("秒钟") || s.starts_with("秒") => self.to_seconds(value),
@@ -478,16 +478,16 @@ impl TimeParser {
         }
     }
 
-    const fn to_seconds(&self, value: f32) -> Option<u32> {
-        Some((value as u32).saturating_add(59) / 60)
+    const fn to_seconds(&self, value: f32) -> Option<i32> {
+        Some((value as i32).saturating_add(59) / 60)
     }
 
-    const fn to_minutes(&self, value: f32) -> Option<u32> {
-        Some(value.round() as u32)
+    const fn to_minutes(&self, value: f32) -> Option<i32> {
+        Some(value.round() as i32)
     }
 
-    const fn to_hours(&self, value: f32) -> Option<u32> {
-        Some((value * 60.0).round() as u32)
+    const fn to_hours(&self, value: f32) -> Option<i32> {
+        Some((value * 60.0).round() as i32)
     }
 }
 

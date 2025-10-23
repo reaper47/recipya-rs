@@ -171,6 +171,7 @@ impl Recipe {
 mod tests {
     use self::test_utils::a_complete_recipe_for_create;
     use super::*;
+    use recipe_schema::SectionItem;
 
     use app::state::AppState;
     use recipe_schema::Sections;
@@ -241,28 +242,31 @@ mod tests {
             ingredients: Sections::from([
                 (
                     "Sauce".into(),
-                    Vec::<String>::from(["1 cup blue spinach".into(), "1/2 tbsp cinnamon".into()]),
+                    vec![
+                        SectionItem::new("1 cup blue spinach"),
+                        SectionItem::new("1/2 tbsp cinnamon"),
+                    ],
                 ),
                 (
                     "Main".into(),
-                    Vec::<String>::from([
-                        "4 pounds top quality chicken filet".into(),
-                        "1/8 cup lemon juice".into(),
-                    ]),
+                    vec![
+                        SectionItem::new("4 pounds top quality chicken filet"),
+                        SectionItem::new("1/8 cup lemon juice"),
+                    ],
                 ),
             ]),
             instructions: Sections::from([
                 (
                     "Sauce".into(),
-                    Vec::<String>::from(["Mix all these ingredients".into()]),
+                    vec![SectionItem::new("Mix all these ingredients")],
                 ),
                 (
                     "Chicken".into(),
-                    Vec::<String>::from([
-                        "Turn the oven at 300 F".into(),
-                        "Soak the chicken in the lemon juice".into(),
-                        "Bake for 35 minutes".into(),
-                    ]),
+                    vec![
+                        SectionItem::new("Turn the oven at 300 F"),
+                        SectionItem::new("Soak the chicken in the lemon juice"),
+                        SectionItem::new("Bake for 35 minutes"),
+                    ],
                 ),
             ]),
             measurement_system_id: 2,
@@ -476,6 +480,49 @@ mod tests {
                 }
             ]
         );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_create_parse_duration_seconds_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let user = insert_user(config.clone()).await?;
+        let mut recipe = a_bare_minimum_recipe();
+        recipe.instructions = Sections::from([(
+            "".to_string(),
+            vec![
+                SectionItem::new("Heat oil on medium heat in a large"),
+                SectionItem::new(
+                    "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
+                ),
+                SectionItem::new(
+                    "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.",
+                ),
+            ],
+        )]);
+
+        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
+        pretty_assertions::assert_eq!(
+            got.instructions,
+            Sections::from([
+            ("".to_string(), vec![
+                SectionItem {
+                    text: "Heat oil on medium heat in a large".into(),
+                    duration_seconds: None,
+                },
+                SectionItem {
+                    text: "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil".into(),
+                    duration_seconds: Some(5*60),
+                },
+                SectionItem {
+                    text: "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.".into(),
+                    duration_seconds: Some(360*60),
+                }
+            ])
+        ]));
         Ok(())
     }
 }

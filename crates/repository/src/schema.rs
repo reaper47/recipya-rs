@@ -145,7 +145,7 @@ diesel::table! {
     instructions (id) {
         id -> Int8,
         name -> Text,
-        duration_minutes -> Nullable<Int4>,
+        duration_seconds -> Nullable<Int4>,
     }
 }
 

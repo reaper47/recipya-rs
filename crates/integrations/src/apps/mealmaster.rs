@@ -25,8 +25,9 @@ use nom::combinator::{map, map_res, opt, peek, recognize, verify};
 use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema, Sections};
 use url::Url;
+
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema, SectionItem, Sections};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::Result;
@@ -66,7 +67,13 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
         if let Some(Ingredient::Line(ref s)) = r.ingredient_notes {
             let line = s.split_whitespace().collect::<Vec<_>>().join(" ");
             let line = format!("*{}", line.trim());
-            instructions.push(("Notes".to_string(), split_by_asterisks(&line)));
+            instructions.push((
+                "Notes".to_string(),
+                split_by_asterisks(&line)
+                    .iter()
+                    .map(SectionItem::new)
+                    .collect(),
+            ));
         }
 
         Self {
@@ -1560,309 +1567,394 @@ Typed for you by Karen Mintzias
                     "6 oz Semisweet Chocolate Chips".into(),
                     "1/2 c Walnuts; Chopped".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "Combine dates, baking soda, and boiling water in a small bowl. Cool to room temperature. Sift together the flour, cocoa, and salt; set aside. Cream the shortening and sugar together in a mixing bowl until light and fluffy, using an electric mixer at medium speed. Add eggs, one at a time, beating well after each addition. Blend in date mixture. Then stir in dry ingredients. Pour into a greased 13 x 9 x 2-inch baking pan. Bake in preheated 350 degree F. oven for 35 minutes or until cake tests done. Cool in pan on rack. Cut into squares and serve with a scoop of vanilla ice cream on top.".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![SectionItem::new(
+                        "Combine dates, baking soda, and boiling water in a small bowl. Cool to room temperature. Sift together the flour, cocoa, and salt; set aside. Cream the shortening and sugar together in a mixing bowl until light and fluffy, using an electric mixer at medium speed. Add eggs, one at a time, beating well after each addition. Blend in date mixture. Then stir in dry ingredients. Pour into a greased 13 x 9 x 2-inch baking pan. Bake in preheated 350 degree F. oven for 35 minutes or until cake tests done. Cool in pan on rack. Cut into squares and serve with a scoop of vanilla ice cream on top.",
+                    )],
+                )])),
                 recipe_yield: to_yield(16),
                 ..Default::default()
             }
         }
 
         pub fn recipes_unspecified_version() -> Vec<RecipeSchema> {
-            vec![RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                name: Some("Apfelkuchen".into()),
-                recipe_category: RecipeCategory::Text("dessert".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "2/3 c butter;softened".into(),
-                        "2/3 c sugar".into(),
-                        "2 ts vanilla sugar".into(),
-                        "1 pn salt".into(),
-                        "2 dr almond extract".into(),
-                        "2 eggs".into(),
-                        "1 c flour".into(),
-                        "1 ts baking powder".into(),
-                        "1/2 c ground almonds".into(),
-                        "8 apples".into(),
-                        "1 lemon of juice".into(),
-                        "1/3 c currant".into(),
-                        "1/4 c slivered almond".into(),
-                        "1 ts icing sugar;for dusting".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Preheat oven to 350°F.".into(),
-                        "Beat the butter with a wooden spoon or mixer until creamy. Slowly add the sugar, together with the vanilla sugar, salt and almond extract, alternating with the eggs. Mix the dough until it is very foamy and the sugar has been thoroughly dissolved. Sift in the flour with the baking powder, add the ground almonds, and mix everything together quickly.".into(),
-                        "Carefully coat a springform with butter or margarine. Pour the batter in and smooth down the surface. Peel the apples, cut in half lengthwise, and remove the cores. Cut into the outer surface a few times with a knife, but donï¿œt cut all the way through. Brush apples with the lemon juice. Place the apples close together onto the batter, core side down. Soak the currants for a short time in hot water, wash thoroughly and rub dry in a cloth. Sprinkle the currants, together with the slivered almonds over the apples. Bake the cake at 350°F for 75-80 minutes or until golden brown. Remove from the oven and let cool before dusting with icing sugar.".into(),
-                        "Serve with whipped cream.".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(1),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                name: Some("Apple & Mango Curried Chicken Salad".into()),
-                recipe_category: RecipeCategory::Text("salad".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "1/2 lb boneless skinless chicken b".into(),
-                        "- reast".into(),
-                        "6 tb low low-fat yogurt ;eqty plus 2 tbsptablespoo".into(),
-                        "- ns".into(),
-                        "2 tb low low-fat mayonnaise;tablespoons".into(),
-                        "2 tb salsa".into(),
-                        "1 tb lime juice;freshly squeezed".into(),
-                        "1 ts curry powder".into(),
-                        "1 mango ;substitute mandarin orange".into(),
-                        "- slices, if desired,ripe".into(),
-                        "1 apple ;if you would like more tan".into(),
-                        "- g, use a less-sweet apple such as Granny Smith,a small Fiji apple".into(),
-                        "1 sk celery;medium sized".into(),
-                        "4 oz fresh mozzarella cheese".into(),
-                        "6 sp cilantro".into(),
-                        "1 c greens ;field greens, about two sm".into(),
-                        "- all handfuls".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Cook the chicken breast in an oven preheated to 350 degrees for 20-30 minutes (until no longer pink in the center). 2 As the chicken is baking, combine the yogurt, mayonnaise, salsa, lime juice and curry powder in a medium bowl. Stir to combine. 3 Peel and de-seed the mango then chop into half-inch chunks (I haven?t tried this salad with mandarin orange slices, but I think they would make a nice substitution if mango is unavailable). 4 Remove the apple?s core and chop into one-inch chunks. Chop the celery into 1/4-1/2 inch chunks. Cut the fresh mozzarella into one-inch chunks. 5 Add the mango, apple, celery and mozzarella to the bowl. Toss to combine. 6 Finely chop the cilantro. Add the cilantro and field greens to the bowl and stir to combine. 7 Shred the cooked chicken after it has cooled (cutting the chicken into small cubes would work as well, but shredded chicken adds a nice texture to the dish). Add to the bowl and toss. 8 Serves four as a small dish or serves two as a large dish.".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(1),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                name: Some("Apple And Sausage Stuffing".into()),
-                recipe_category: RecipeCategory::Text("casserole".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "1 lb sweet Italian sausage".into(),
-                        "1/4 c butter".into(),
-                        "2 c celery;chopped".into(),
-                        "5 c onion;chopped".into(),
-                        "5 1/2 c herbed cubed stuffing mix".into(),
-                        "8 c tart green apples;diced cored".into(),
-                        "1 tb dried rubbed sage".into(),
-                        "2 ts dried thyme".into(),
-                        "1/2 ts ground allspice".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Saute sausage in heavy large skillet over medium-high heat until cooked through, crumbling sausage with back of spoon, about 10 minutes. Using slotted spoon, transfer sausage to large bowl. Add butter, onions and celery to skillet saute until onions are tender, about 15 minutes. Add apples saute until apples are tender but still hold shape, about 10 minutes. Add sage, thyme and allspice saute 1 minute. Add to sausage. Stir in stuffing mix. Season with salt and pepper. (Can be made 1 day ahead. Cover chill.)".into(),
-                        "Preheat oven to 325°F. Generously butter 5x10-inch glass baking dish. Fill center of crown roast of pork with stuffing. Transfer remaining stuffing to prepared dish. Cover with foil and bake until heated through, about 40 minutes.".into(),
-                    ])
-                ])),
-                recipe_yield: to_yield(1),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                keywords: to_defined_text(["Dip"].join(",")),
-                name: Some("Artichoke And Basil Dip".into()),
-                recipe_category: RecipeCategory::Text("appetizers".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "4 oz artichoke hearts;(1/2 of a 14 oz can)".into(),
-                        "1 tb olive oil".into(),
-                        "1 tb shallot;minced".into(),
-                        "2 ts Garlic;minced".into(),
-                        "1 bay leaf".into(),
-                        "2 tb fresh thyme,(2 to 3 sprigs)".into(),
-                        "1 c cottage cheese".into(),
-                        "1/4 c fresh basil;finely chopped".into(),
-                        "Salt and pepper".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Heat olive oil in saute pan over medium heat. Add the shallots, garlic, bay leaf and fresh thyme. Saute, stirring until the shallots and garlic are soft. Add the artichoke hearts and stir gently to coat them with the seasonings. Remove from heat and remove the bay leaf.".into(),
-                        "Transfer the contents of the saute pan to a blender or food processor fitted with a metal blade. Add the cottage cheese. Process until smooth.".into(),
-                        "Transfer to a mixing bowl or serving bowl. Stir in the basil and season with salt and black pepper.".into(),
-                        "Garnish with basil leaves or thyme sprigs and serve immediately or cover and chill until ready to serve. Tip, This dip can be made up to one day ahead, through step".into(),
-                        "Keep covered and chilled. Stir before serving, adjust seasoning and garnish with fresh herbs.".into(),
-                    ]),
-                ])),
-                recipe_yield: to_yield(2),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                name: Some("Apple Crisp".into()),
-                recipe_category: RecipeCategory::Text("dessert".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("APPLE MIXTURE".into(), vec![
-                        "10 c apples;peeled and sliced".into(),
-                        "1/4 c lemon juice".into(),
-                        "1 tb lemon zest".into(),
-                        "3/4 c sugar".into(),
-                        "1/2 c Golden raisins".into(),
-                    ]),
-                    ("MIXTURE".into(), vec![
-                        "1 1/2 st butter".into(),
-                        "1 1/4 c all-purpose flour".into(),
-                        "1 1/2 c light brown sugar".into(),
-                        "1 1/2 c oats".into(),
-                        "1 tb lemon zest".into(),
-                        "1 tb ground cinnamon".into(),
-                        "1 ts ground nutmeg".into(),
-                        "1 ts ground cardamom".into(),
-                        "vegetable oil".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Preheat the oven to 350°F.".into(),
-                        "Place the apples in a large, shallow baking dish and toss with the lemon juice and sugar. Combine all of the ingredients for the apple mixture in a bowl.".into(),
-                        "In another bowl, cut the butter into the flour and stir in the remaining topping ingredients.".into(),
-                        "Cover with the oat mixture. Bake until the top is nicely browned and the apples are tender, about 45 minutes. Serve warm or at room temperature.".into(),
-                    ]),
-                ])),
-                recipe_yield: to_yield(8),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                author: to_organization_type("Leah Koenig".into()),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                keywords: to_defined_text(["Chicken", "holiday", "Yom Kipper"].join(",")),
-                name: Some("Apple Cider-Braised Chicken".into()),
-                recipe_category: RecipeCategory::Text("meat".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "4 lb chicken;quartered".into(),
-                        "Kosher salt and black peppe".into(),
-                        "- r;freshly ground".into(),
-                        "2 tb avocado oil".into(),
-                        "3 apples".into(),
-                        "6 sp fresh thyme ;plus 1 tbsp finely chopped".into(),
-                        "- fresh thyme leaves".into(),
-                        "6 md shallots;thinly sliced".into(),
-                        "1 c apple cider".into(),
-                        "1/2 c apple cider vinegar".into(),
-                        "2 c chicken or vegetable broth".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Sprinkle the chicken pieces with salt and pepper. Heat 2 tablespoons of the olive oil in a large pan set over medium-high heat until shimmering. Working in batches, brown the chicken pieces, starting skin-side down and flipping once, until browned on both sides, about 10 minutes per batch. Add up to 2 tablespoons more oil, if needed. Transfer the chicken to a large oven proof baking dish and top with the apples and thyme sprigs. Preheat oven to 375F.".into(),
-                        "Meanwhile, set the pan you cooked the chicken in over medium heat. Add the shallots, season with salt and pepper, and cook, stirring occasionally, until browned, about 5 minutes. Add the chopped thyme and cook, stirring often, for 1 minute.s Stir in the apple cider and cider vinegar, scraping up any browned bits at the bottom of the pan. Raise the heat to high and cook until the liquid has reduced by half, 4 to 5 minutes. Stir in the broth and bring to a boil, then carefully pour the braising liquid over the chicken and apples. Cover the baking dish with aluminum foil. Braise in the oven until the chicken is fork-tender, 45-55 minutes. Use tongs or a slotted spoon to transfer the chicken and apples to a serving platter, and let rest.".into(),
-                        "Meanwhile, if desired, make a sauce by transferring 1 1/2 cups of the braising liquid to a saucepan set over high heat. Bring to a boil and cook, stirring often, until the liquid reduces by two-thirds, 10 to 15 minutes. Spoon the sauce over the chicken and serve warm.".into(),
-                    ]),
-                ])),
-                recipe_yield: to_yield(4),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                author: to_organization_type("Nina MacDowall".into()),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                keywords: to_defined_text(["culinaria", "Jewish", "pastry", "Tarts"].join(",")),
-                name: Some("Apple Galette".into()),
-                recipe_category: RecipeCategory::Text("nina original".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "1 recipe Pate Brisee".into(),
-                        "4 Granny Smith apples ;peeled, cored and sliced 1".into(),
-                        "- /8 inch".into(),
-                        "3 tb butter;softened".into(),
-                        "3 tb butter;melted".into(),
-                        "3 tb sugar".into(),
-                        "2 oz apricot jam".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Roll the chilled brisée into a rectangle to fit a 1/4 sheet pan about 1/8 inch thick. Be careful to work quickly and not over-work the dough or allow it to become warm.".into(),
-                        "Fold one inch of the dough over to form a border.".into(),
-                        "Return to refrigerator to chill for another 30-60 minutes.".into(),
-                        "Peel apples, cut in half and core. Slice in even 1/8 inch slices.".into(),
-                        "Fan apples slightly and place on parchment on baking sheet. Place 1/2 T softened butter on each apple and bake at 400°F for 15 minutes.".into(),
-                        "Remove from oven and cool on parchment to allow juices to return to apples.".into(),
-                        "Remove the rolled brisée from the refrigerator and brush a thin coat of butter over the brisée.".into(),
-                        "Sprinkle with 1 tbs of the sugar.".into(),
-                        "Arrange the apple slices over the brisée.".into(),
-                        "Brush the apples and dough border with the remaining butter and sprinkle with the remaining sugar.".into(),
-                        "Bake at 425°F until the galette begins to color, about 10-15 minutes.".into(),
-                        "Reduce the oven temperature to 375°F and continue to cook until the pastry is golden brown, about 20 minutes longer.".into(),
-                        "Slightly warm the apricot glaze and brush on warm tart when it is finished baking.".into(),
-                    ]),
-                ])),
-                recipe_yield: to_yield(2),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                author: to_organization_type("Nina MacDowall".into()),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                keywords: to_defined_text(["nina original", "pastry", "Puff", "culinaria", "Puff"].join(",")),
-                name: Some("Apple-ginger Turnovers".into()),
-                recipe_category: RecipeCategory::Text("fruit".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "2 Granny Smith apple;small dice".into(),
-                        "1 Tb lemon juice".into(),
-                        "1/2 ts Chinese five-spice powder".into(),
-                        "2 Tb brown sugar".into(),
-                        "4 ts crystallized ginger;finely minced".into(),
-                        "1 Tb unsalted butter".into(),
-                        "PUFF PASTRY".into(),
-                        "EGG WASH".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "In a medium bowl, coat the apples with lemon juice. 2. Add brown sugar, five-spice powder and ginger. 3. Melt butter in skillet and add apple mixture. 4. Cook for several minutes until apples start to soften but are still slightly firm. Set aside. 5. Roll puff pastry to 1/4 inch thickness and cut into 3 or 4 inch squares. 6. Brush egg wash around perimeter. 7. Place small amount of filling on center and fold over the diagonal. 8. Crimp edges to seal and make a small slit in the top of each turnover to vent. 9. Chill for 30 minutes (or freeze.) 10. Bake at 400°F for 20 minutes or until medium golden brown.".into(),
-                    ]),
-                ])),
-                recipe_yield: to_yield(4),
-                ..Default::default()
-            }, RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                is_based_on: to_is_based_on("Meal-Master".into()),
-                name: Some("3-minute Italian Dressing".into()),
-                recipe_category: RecipeCategory::Text("dressing".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([
-                    ("".into(), vec![
-                        "1/4 c white vinegar".into(),
-                        "1/4 c lemon juice".into(),
-                        "2 ts sugar".into(),
-                        "1 ts dry mustard".into(),
-                        "1 ts kosher salt".into(),
-                        "1/2 ts red pepper flakes".into(),
-                        "1/4 ts black pepper".into(),
-                        "4 cv garlic".into(),
-                        "1 c neutral oil or extra-virgin".into(),
-                        "- olive oil".into(),
-                        "1/3 c Parmesan cheese;either fresh or from a can".into(),
-                        "3/4 ts Italian seasoning;add more if needed".into(),
-                    ]),
-                ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "Place vinegar, lemon juice, sugar, mustard, salt, red pepper flakes, black pepper, and garlic in the jar of a blender and blend until smooth. While the blender is running, add the oil in a steady stream. Remove the blender jar from the blender and mix in the cheese and Italian seasoning by hand. Transfer to a storage or serving container and refrigerate for at least 1 hour before serving.".into(),
-                    ]),
-                ])),
-                recipe_yield: to_yield(4),
-                ..Default::default()
-            }]
+            vec![
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    name: Some("Apfelkuchen".into()),
+                    recipe_category: RecipeCategory::Text("dessert".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("2/3 c butter;softened"),
+                            SectionItem::new("2/3 c sugar"),
+                            SectionItem::new("2 ts vanilla sugar"),
+                            SectionItem::new("1 pn salt"),
+                            SectionItem::new("2 dr almond extract"),
+                            SectionItem::new("2 eggs"),
+                            SectionItem::new("1 c flour"),
+                            SectionItem::new("1 ts baking powder"),
+                            SectionItem::new("1/2 c ground almonds"),
+                            SectionItem::new("8 apples"),
+                            SectionItem::new("1 lemon of juice"),
+                            SectionItem::new("1/3 c currant"),
+                            SectionItem::new("1/4 c slivered almond"),
+                            SectionItem::new("1 ts icing sugar;for dusting"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("Preheat oven to 350°F."),
+                            SectionItem::new(
+                                "Beat the butter with a wooden spoon or mixer until creamy. Slowly add the sugar, together with the vanilla sugar, salt and almond extract, alternating with the eggs. Mix the dough until it is very foamy and the sugar has been thoroughly dissolved. Sift in the flour with the baking powder, add the ground almonds, and mix everything together quickly.",
+                            ),
+                            SectionItem::new(
+                                "Carefully coat a springform with butter or margarine. Pour the batter in and smooth down the surface. Peel the apples, cut in half lengthwise, and remove the cores. Cut into the outer surface a few times with a knife, but donï¿œt cut all the way through. Brush apples with the lemon juice. Place the apples close together onto the batter, core side down. Soak the currants for a short time in hot water, wash thoroughly and rub dry in a cloth. Sprinkle the currants, together with the slivered almonds over the apples. Bake the cake at 350°F for 75-80 minutes or until golden brown. Remove from the oven and let cool before dusting with icing sugar.",
+                            ),
+                            SectionItem::new("Serve with whipped cream."),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(1),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    name: Some("Apple & Mango Curried Chicken Salad".into()),
+                    recipe_category: RecipeCategory::Text("salad".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("1/2 lb boneless skinless chicken b"),
+                            SectionItem::new("- reast"),
+                            SectionItem::new("6 tb low low-fat yogurt ;eqty plus 2 tbsptablespoo"),
+                            SectionItem::new("- ns"),
+                            SectionItem::new("2 tb low low-fat mayonnaise;tablespoons"),
+                            SectionItem::new("2 tb salsa"),
+                            SectionItem::new("1 tb lime juice;freshly squeezed"),
+                            SectionItem::new("1 ts curry powder"),
+                            SectionItem::new("1 mango ;substitute mandarin orange"),
+                            SectionItem::new("- slices, if desired,ripe"),
+                            SectionItem::new("1 apple ;if you would like more tan"),
+                            SectionItem::new(
+                                "- g, use a less-sweet apple such as Granny Smith,a small Fiji apple",
+                            ),
+                            SectionItem::new("1 sk celery;medium sized"),
+                            SectionItem::new("4 oz fresh mozzarella cheese"),
+                            SectionItem::new("6 sp cilantro"),
+                            SectionItem::new("1 c greens ;field greens, about two sm"),
+                            SectionItem::new("- all handfuls"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![SectionItem::new(
+                            "Cook the chicken breast in an oven preheated to 350 degrees for 20-30 minutes (until no longer pink in the center). 2 As the chicken is baking, combine the yogurt, mayonnaise, salsa, lime juice and curry powder in a medium bowl. Stir to combine. 3 Peel and de-seed the mango then chop into half-inch chunks (I haven?t tried this salad with mandarin orange slices, but I think they would make a nice substitution if mango is unavailable). 4 Remove the apple?s core and chop into one-inch chunks. Chop the celery into 1/4-1/2 inch chunks. Cut the fresh mozzarella into one-inch chunks. 5 Add the mango, apple, celery and mozzarella to the bowl. Toss to combine. 6 Finely chop the cilantro. Add the cilantro and field greens to the bowl and stir to combine. 7 Shred the cooked chicken after it has cooled (cutting the chicken into small cubes would work as well, but shredded chicken adds a nice texture to the dish). Add to the bowl and toss. 8 Serves four as a small dish or serves two as a large dish.",
+                        )],
+                    )])),
+                    recipe_yield: to_yield(1),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    name: Some("Apple And Sausage Stuffing".into()),
+                    recipe_category: RecipeCategory::Text("casserole".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("1 lb sweet Italian sausage"),
+                            SectionItem::new("1/4 c butter"),
+                            SectionItem::new("2 c celery;chopped"),
+                            SectionItem::new("5 c onion;chopped"),
+                            SectionItem::new("5 1/2 c herbed cubed stuffing mix"),
+                            SectionItem::new("8 c tart green apples;diced cored"),
+                            SectionItem::new("1 tb dried rubbed sage"),
+                            SectionItem::new("2 ts dried thyme"),
+                            SectionItem::new("1/2 ts ground allspice"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "Saute sausage in heavy large skillet over medium-high heat until cooked through, crumbling sausage with back of spoon, about 10 minutes. Using slotted spoon, transfer sausage to large bowl. Add butter, onions and celery to skillet saute until onions are tender, about 15 minutes. Add apples saute until apples are tender but still hold shape, about 10 minutes. Add sage, thyme and allspice saute 1 minute. Add to sausage. Stir in stuffing mix. Season with salt and pepper. (Can be made 1 day ahead. Cover chill.)",
+                            ),
+                            SectionItem::new(
+                                "Preheat oven to 325°F. Generously butter 5x10-inch glass baking dish. Fill center of crown roast of pork with stuffing. Transfer remaining stuffing to prepared dish. Cover with foil and bake until heated through, about 40 minutes.",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(1),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    keywords: to_defined_text(["Dip"].join(",")),
+                    name: Some("Artichoke And Basil Dip".into()),
+                    recipe_category: RecipeCategory::Text("appetizers".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("4 oz artichoke hearts;(1/2 of a 14 oz can)"),
+                            SectionItem::new("1 tb olive oil"),
+                            SectionItem::new("1 tb shallot;minced"),
+                            SectionItem::new("2 ts Garlic;minced"),
+                            SectionItem::new("1 bay leaf"),
+                            SectionItem::new("2 tb fresh thyme,(2 to 3 sprigs)"),
+                            SectionItem::new("1 c cottage cheese"),
+                            SectionItem::new("1/4 c fresh basil;finely chopped"),
+                            SectionItem::new("Salt and pepper"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "Heat olive oil in saute pan over medium heat. Add the shallots, garlic, bay leaf and fresh thyme. Saute, stirring until the shallots and garlic are soft. Add the artichoke hearts and stir gently to coat them with the seasonings. Remove from heat and remove the bay leaf.",
+                            ),
+                            SectionItem::new(
+                                "Transfer the contents of the saute pan to a blender or food processor fitted with a metal blade. Add the cottage cheese. Process until smooth.",
+                            ),
+                            SectionItem::new(
+                                "Transfer to a mixing bowl or serving bowl. Stir in the basil and season with salt and black pepper.",
+                            ),
+                            SectionItem::new(
+                                "Garnish with basil leaves or thyme sprigs and serve immediately or cover and chill until ready to serve. Tip, This dip can be made up to one day ahead, through step",
+                            ),
+                            SectionItem::new(
+                                "Keep covered and chilled. Stir before serving, adjust seasoning and garnish with fresh herbs.",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(2),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    name: Some("Apple Crisp".into()),
+                    recipe_category: RecipeCategory::Text("dessert".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([
+                        (
+                            "APPLE MIXTURE".into(),
+                            vec![
+                                SectionItem::new("10 c apples;peeled and sliced"),
+                                SectionItem::new("1/4 c lemon juice"),
+                                SectionItem::new("1 tb lemon zest"),
+                                SectionItem::new("3/4 c sugar"),
+                                SectionItem::new("1/2 c Golden raisins"),
+                            ],
+                        ),
+                        (
+                            "MIXTURE".into(),
+                            vec![
+                                SectionItem::new("1 1/2 st butter"),
+                                SectionItem::new("1 1/4 c all-purpose flour"),
+                                SectionItem::new("1 1/2 c light brown sugar"),
+                                SectionItem::new("1 1/2 c oats"),
+                                SectionItem::new("1 tb lemon zest"),
+                                SectionItem::new("1 tb ground cinnamon"),
+                                SectionItem::new("1 ts ground nutmeg"),
+                                SectionItem::new("1 ts ground cardamom"),
+                                SectionItem::new("vegetable oil"),
+                            ],
+                        ),
+                    ])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("Preheat the oven to 350°F."),
+                            SectionItem::new(
+                                "Place the apples in a large, shallow baking dish and toss with the lemon juice and sugar. Combine all of the ingredients for the apple mixture in a bowl.",
+                            ),
+                            SectionItem::new(
+                                "In another bowl, cut the butter into the flour and stir in the remaining topping ingredients.",
+                            ),
+                            SectionItem::new(
+                                "Cover with the oat mixture. Bake until the top is nicely browned and the apples are tender, about 45 minutes. Serve warm or at room temperature.",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(8),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    author: to_organization_type("Leah Koenig".into()),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    keywords: to_defined_text(["Chicken", "holiday", "Yom Kipper"].join(",")),
+                    name: Some("Apple Cider-Braised Chicken".into()),
+                    recipe_category: RecipeCategory::Text("meat".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("4 lb chicken;quartered"),
+                            SectionItem::new("Kosher salt and black peppe"),
+                            SectionItem::new("- r;freshly ground"),
+                            SectionItem::new("2 tb avocado oil"),
+                            SectionItem::new("3 apples"),
+                            SectionItem::new("6 sp fresh thyme ;plus 1 tbsp finely chopped"),
+                            SectionItem::new("- fresh thyme leaves"),
+                            SectionItem::new("6 md shallots;thinly sliced"),
+                            SectionItem::new("1 c apple cider"),
+                            SectionItem::new("1/2 c apple cider vinegar"),
+                            SectionItem::new("2 c chicken or vegetable broth"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "Sprinkle the chicken pieces with salt and pepper. Heat 2 tablespoons of the olive oil in a large pan set over medium-high heat until shimmering. Working in batches, brown the chicken pieces, starting skin-side down and flipping once, until browned on both sides, about 10 minutes per batch. Add up to 2 tablespoons more oil, if needed. Transfer the chicken to a large oven proof baking dish and top with the apples and thyme sprigs. Preheat oven to 375F.",
+                            ),
+                            SectionItem::new(
+                                "Meanwhile, set the pan you cooked the chicken in over medium heat. Add the shallots, season with salt and pepper, and cook, stirring occasionally, until browned, about 5 minutes. Add the chopped thyme and cook, stirring often, for 1 minute.s Stir in the apple cider and cider vinegar, scraping up any browned bits at the bottom of the pan. Raise the heat to high and cook until the liquid has reduced by half, 4 to 5 minutes. Stir in the broth and bring to a boil, then carefully pour the braising liquid over the chicken and apples. Cover the baking dish with aluminum foil. Braise in the oven until the chicken is fork-tender, 45-55 minutes. Use tongs or a slotted spoon to transfer the chicken and apples to a serving platter, and let rest.",
+                            ),
+                            SectionItem::new(
+                                "Meanwhile, if desired, make a sauce by transferring 1 1/2 cups of the braising liquid to a saucepan set over high heat. Bring to a boil and cook, stirring often, until the liquid reduces by two-thirds, 10 to 15 minutes. Spoon the sauce over the chicken and serve warm.",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(4),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    author: to_organization_type("Nina MacDowall".into()),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    keywords: to_defined_text(["culinaria", "Jewish", "pastry", "Tarts"].join(",")),
+                    name: Some("Apple Galette".into()),
+                    recipe_category: RecipeCategory::Text("nina original".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("1 recipe Pate Brisee"),
+                            SectionItem::new("4 Granny Smith apples ;peeled, cored and sliced 1"),
+                            SectionItem::new("- /8 inch"),
+                            SectionItem::new("3 tb butter;softened"),
+                            SectionItem::new("3 tb butter;melted"),
+                            SectionItem::new("3 tb sugar"),
+                            SectionItem::new("2 oz apricot jam"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "Roll the chilled brisée into a rectangle to fit a 1/4 sheet pan about 1/8 inch thick. Be careful to work quickly and not over-work the dough or allow it to become warm.",
+                            ),
+                            SectionItem::new("Fold one inch of the dough over to form a border."),
+                            SectionItem::new(
+                                "Return to refrigerator to chill for another 30-60 minutes.",
+                            ),
+                            SectionItem::new(
+                                "Peel apples, cut in half and core. Slice in even 1/8 inch slices.",
+                            ),
+                            SectionItem::new(
+                                "Fan apples slightly and place on parchment on baking sheet. Place 1/2 T softened butter on each apple and bake at 400°F for 15 minutes.",
+                            ),
+                            SectionItem::new(
+                                "Remove from oven and cool on parchment to allow juices to return to apples.",
+                            ),
+                            SectionItem::new(
+                                "Remove the rolled brisée from the refrigerator and brush a thin coat of butter over the brisée.",
+                            ),
+                            SectionItem::new("Sprinkle with 1 tbs of the sugar."),
+                            SectionItem::new("Arrange the apple slices over the brisée."),
+                            SectionItem::new(
+                                "Brush the apples and dough border with the remaining butter and sprinkle with the remaining sugar.",
+                            ),
+                            SectionItem::new(
+                                "Bake at 425°F until the galette begins to color, about 10-15 minutes.",
+                            ),
+                            SectionItem::new(
+                                "Reduce the oven temperature to 375°F and continue to cook until the pastry is golden brown, about 20 minutes longer.",
+                            ),
+                            SectionItem::new(
+                                "Slightly warm the apricot glaze and brush on warm tart when it is finished baking.",
+                            ),
+                        ],
+                    )])),
+                    recipe_yield: to_yield(2),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    author: to_organization_type("Nina MacDowall".into()),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    keywords: to_defined_text(
+                        ["nina original", "pastry", "Puff", "culinaria", "Puff"].join(","),
+                    ),
+                    name: Some("Apple-ginger Turnovers".into()),
+                    recipe_category: RecipeCategory::Text("fruit".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("2 Granny Smith apple;small dice"),
+                            SectionItem::new("1 Tb lemon juice"),
+                            SectionItem::new("1/2 ts Chinese five-spice powder"),
+                            SectionItem::new("2 Tb brown sugar"),
+                            SectionItem::new("4 ts crystallized ginger;finely minced"),
+                            SectionItem::new("1 Tb unsalted butter"),
+                            SectionItem::new("PUFF PASTRY"),
+                            SectionItem::new("EGG WASH"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![SectionItem::new(
+                            "In a medium bowl, coat the apples with lemon juice. 2. Add brown sugar, five-spice powder and ginger. 3. Melt butter in skillet and add apple mixture. 4. Cook for several minutes until apples start to soften but are still slightly firm. Set aside. 5. Roll puff pastry to 1/4 inch thickness and cut into 3 or 4 inch squares. 6. Brush egg wash around perimeter. 7. Place small amount of filling on center and fold over the diagonal. 8. Crimp edges to seal and make a small slit in the top of each turnover to vent. 9. Chill for 30 minutes (or freeze.) 10. Bake at 400°F for 20 minutes or until medium golden brown.",
+                        )],
+                    )])),
+                    recipe_yield: to_yield(4),
+                    ..Default::default()
+                },
+                RecipeSchema {
+                    at_context: Default::default(),
+                    at_type: Some(AtType::Recipe),
+                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    name: Some("3-minute Italian Dressing".into()),
+                    recipe_category: RecipeCategory::Text("dressing".into()),
+                    recipe_ingredient: sections_to_vec(Sections::from([(
+                        "".into(),
+                        vec![
+                            SectionItem::new("1/4 c white vinegar"),
+                            SectionItem::new("1/4 c lemon juice"),
+                            SectionItem::new("2 ts sugar"),
+                            SectionItem::new("1 ts dry mustard"),
+                            SectionItem::new("1 ts kosher salt"),
+                            SectionItem::new("1/2 ts red pepper flakes"),
+                            SectionItem::new("1/4 ts black pepper"),
+                            SectionItem::new("4 cv garlic"),
+                            SectionItem::new("1 c neutral oil or extra-virgin"),
+                            SectionItem::new("- olive oil"),
+                            SectionItem::new("1/3 c Parmesan cheese;either fresh or from a can"),
+                            SectionItem::new("3/4 ts Italian seasoning;add more if needed"),
+                        ],
+                    )])),
+                    recipe_instructions: sections_to_itemlist(Sections::from([(
+                        "".into(),
+                        vec![SectionItem::new(
+                            "Place vinegar, lemon juice, sugar, mustard, salt, red pepper flakes, black pepper, and garlic in the jar of a blender and blend until smooth. While the blender is running, add the oil in a steady stream. Remove the blender jar from the blender and mix in the cheese and Italian seasoning by hand. Transfer to a storage or serving container and refrigerate for at least 1 hour before serving.",
+                        )],
+                    )])),
+                    recipe_yield: to_yield(4),
+                    ..Default::default()
+                },
+            ]
         }
 
         pub fn recipe_v6_14() -> RecipeSchema {
@@ -1871,7 +1963,9 @@ Typed for you by Karen Mintzias
                 at_type: Some(AtType::Recipe),
                 is_based_on: to_is_based_on("Meal-Master (tm) v6.14".into()),
                 name: Some("Poppin' Fresh Barbe Cups".into()),
-                recipe_category: RecipeCategory::Text("Breads Cheese Main dish Meats Sandwiches".into()),
+                recipe_category: RecipeCategory::Text(
+                    "Breads Cheese Main dish Meats Sandwiches".into(),
+                ),
                 recipe_ingredient: Some(vec![
                     "<section></section>".into(),
                     "3/4 lb Ground Beef; Lean".into(),
@@ -1882,15 +1976,27 @@ Typed for you by Karen Mintzias
                     "3/4 c Cheddar; Sharp, Shredded".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        "In a skillet brown the ground beef and then drain off the excess fat. Add the bbq sauce, onion and brown sugar and set aside. Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup. Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese. Bake in a preheated 400 degrees F. oven for 12 minutes. Serve hot.".into(),
-                        "VARIATIONS:".into(),
-                        "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture. You can also add green bell pepper or a hot pepper to the above recipe with good results.".into(),
-                    ]),
-                    ("Notes".into(), vec![
-                        "- Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe.\n".into(),
-                        "- Use store bought sauce or your favorite recipe.\n".into(),
-                    ]),
+                    (
+                        "".into(),
+                        vec![
+                            SectionItem::new(
+                                "In a skillet brown the ground beef and then drain off the excess fat. Add the bbq sauce, onion and brown sugar and set aside. Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup. Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese. Bake in a preheated 400 degrees F. oven for 12 minutes. Serve hot.",
+                            ),
+                            SectionItem::new("VARIATIONS:"),
+                            SectionItem::new(
+                                "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture. You can also add green bell pepper or a hot pepper to the above recipe with good results.",
+                            ),
+                        ],
+                    ),
+                    (
+                        "Notes".into(),
+                        vec![
+                            SectionItem::new(
+                                "- Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe.\n",
+                            ),
+                            SectionItem::new("- Use store bought sauce or your favorite recipe.\n"),
+                        ],
+                    ),
                 ])),
                 recipe_yield: to_yield(6),
                 ..Default::default()
@@ -1919,14 +2025,12 @@ Typed for you by Karen Mintzias
                     "1/8 ts Tabasco sauce".into(),
                     "1 ea Egg yolk".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "Shaking constantly, toast almonds in skillet over low heat till golden brown (about 5 minutes). Was and dry lettuce. Tear into bite size pieces. Place with green onions and mandarin oranges in large salad bowl. Dressing: Combine all ingredients but egg and vinegar, add in thin stream and process till well blended. MAKES : 1 cup Just before serving, toss well. Leftover dressing keeps up to 1 week in fridge. from Best Recipes Under the Sun".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![SectionItem::new(
+                        "Shaking constantly, toast almonds in skillet over low heat till golden brown (about 5 minutes). Was and dry lettuce. Tear into bite size pieces. Place with green onions and mandarin oranges in large salad bowl. Dressing: Combine all ingredients but egg and vinegar, add in thin stream and process till well blended. MAKES : 1 cup Just before serving, toss well. Leftover dressing keeps up to 1 week in fridge. from Best Recipes Under the Sun",
+                    )],
+                )])),
                 recipe_yield: to_yield(6),
                 ..Default::default()
             }
@@ -1951,14 +2055,12 @@ Typed for you by Karen Mintzias
                     "1 Pkg. corn tortillas".into(),
                     "1 lb Cheese, grated".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "1-2 c Oil for cooking corn tortillas Brown hamburger and 1 chopped onion (add 2 cloves garlic, chopped, if desired) and drain. Add tomatoes, crushed, kidney beans and spices. Simmer. Heat oil, and cook tortillas to desired degree. (Soft seems to work best) Drain on paper towels. Put 1 tortilla on plate, spoon \"sauce\" over it and sprinkle some of raw onion and cheese on sauce. Put on another tortilla and repeat untill large enough for you. Stop with layer of onion and cheese.".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![SectionItem::new(
+                        "1-2 c Oil for cooking corn tortillas Brown hamburger and 1 chopped onion (add 2 cloves garlic, chopped, if desired) and drain. Add tomatoes, crushed, kidney beans and spices. Simmer. Heat oil, and cook tortillas to desired degree. (Soft seems to work best) Drain on paper towels. Put 1 tortilla on plate, spoon \"sauce\" over it and sprinkle some of raw onion and cheese on sauce. Put on another tortilla and repeat untill large enough for you. Stop with layer of onion and cheese.",
+                    )],
+                )])),
                 recipe_yield: to_yield(4),
                 ..Default::default()
             }
@@ -1982,15 +2084,17 @@ Typed for you by Karen Mintzias
                     "1 ts Sugar".into(),
                     "Cinnamon".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "Cook the chops using melted fat trimmed from the meat and 1 tsp butter. (Note those concerned about their fat intake may chose to use corn oil or some other vegetable oil rather than the pork fat). Season to taste and set on hot platter. Keep warm. Slice the apples 1/2\" thick and add to the pan with 1 tsp butter, the sugar and a few pinches of cinnamon or cloves. Cook over medium heat for about 10 minutes, turning once or twice until some of apples are browned. Arrange them around the chops and serve. Serves: 4-6".into(),
-                            "To quote Mme. Benoit, \"The apples keep the chops moist and tender. I sometimes use 6 to 7 apples, then I use 1 Tablespoon sugar. Serve very hot.\" Source\" _The Canadiana Cookbook_ by Mme. Jehane Benoit".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "Cook the chops using melted fat trimmed from the meat and 1 tsp butter. (Note those concerned about their fat intake may chose to use corn oil or some other vegetable oil rather than the pork fat). Season to taste and set on hot platter. Keep warm. Slice the apples 1/2\" thick and add to the pan with 1 tsp butter, the sugar and a few pinches of cinnamon or cloves. Cook over medium heat for about 10 minutes, turning once or twice until some of apples are browned. Arrange them around the chops and serve. Serves: 4-6",
+                        ),
+                        SectionItem::new(
+                            "To quote Mme. Benoit, \"The apples keep the chops moist and tender. I sometimes use 6 to 7 apples, then I use 1 Tablespoon sugar. Serve very hot.\" Source\" _The Canadiana Cookbook_ by Mme. Jehane Benoit",
+                        ),
+                    ],
+                )])),
                 recipe_yield: to_yield(1),
                 ..Default::default()
             }
@@ -2027,18 +2131,24 @@ Typed for you by Karen Mintzias
                     "3 tb Orange juice".into(),
                     "2 tb Sugar".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "If dates are dry, soak to make them moist. Chop squash in processor. Add dates and orange zest. Blend well. Sift flour with baking powder, soda and salt. Blend dry ingredients. Beat egg. Add yogurt, sugar and vanilla. Add alternately dry mix and egg mix alternately to zucchini. Pour batter into lightly greased and floured bundt pan. Bake at 350 about 45 minutes, or til tests done. Cool on wire rack 10 minutes. Unmold onto serving platter. If using glaze, peirce top and sides with with toothpicks. Spoon glaze over cake, allowing to soak in until cake is moist but not wet. Cool completely. Drizzle icing over cake and sprinkle with almonds".into(),
-                            "Icing: combine powdered sugar, cinnamon, orange juice and liqueur in bowl. Mix til smooth. Use immediately.".into(),
-                            "Orange Glaze: Stir together til smooth.".into(),
-                            "Note: Avoid using dry old dates. For slightly softer cake texture, add 2 Tbsp melted butter to batter before folding into squash. This will add 2 grams fat per serving. From: The Spectator....Aug 12/92 There is yellow squash hidden in this cake, but you'd never guess it. It's delicate, faintly sweet flavor blends right in. You can use crook neck, straight neck or even yellow zucchini, but be sure to select young squach with soft, thin skins. (why not green zucchini?) This cake, with its accent of chopped dates, needs only a simple icing to dress it up To add extra moistness and a sweet citrus flavour, poke all over the warm cake and pour optional glaze over the cake til it soaks in.".into(),
-                            "Adapted from a rich recipe with sour cream and pecans created by the late Bert Greene.".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "If dates are dry, soak to make them moist. Chop squash in processor. Add dates and orange zest. Blend well. Sift flour with baking powder, soda and salt. Blend dry ingredients. Beat egg. Add yogurt, sugar and vanilla. Add alternately dry mix and egg mix alternately to zucchini. Pour batter into lightly greased and floured bundt pan. Bake at 350 about 45 minutes, or til tests done. Cool on wire rack 10 minutes. Unmold onto serving platter. If using glaze, peirce top and sides with with toothpicks. Spoon glaze over cake, allowing to soak in until cake is moist but not wet. Cool completely. Drizzle icing over cake and sprinkle with almonds",
+                        ),
+                        SectionItem::new(
+                            "Icing: combine powdered sugar, cinnamon, orange juice and liqueur in bowl. Mix til smooth. Use immediately.",
+                        ),
+                        SectionItem::new("Orange Glaze: Stir together til smooth."),
+                        SectionItem::new(
+                            "Note: Avoid using dry old dates. For slightly softer cake texture, add 2 Tbsp melted butter to batter before folding into squash. This will add 2 grams fat per serving. From: The Spectator....Aug 12/92 There is yellow squash hidden in this cake, but you'd never guess it. It's delicate, faintly sweet flavor blends right in. You can use crook neck, straight neck or even yellow zucchini, but be sure to select young squach with soft, thin skins. (why not green zucchini?) This cake, with its accent of chopped dates, needs only a simple icing to dress it up To add extra moistness and a sweet citrus flavour, poke all over the warm cake and pour optional glaze over the cake til it soaks in.",
+                        ),
+                        SectionItem::new(
+                            "Adapted from a rich recipe with sour cream and pecans created by the late Bert Greene.",
+                        ),
+                    ],
+                )])),
                 recipe_yield: to_yield(10),
                 ..Default::default()
             }
@@ -2070,14 +2180,12 @@ Typed for you by Karen Mintzias
                     "Tomatoes, cherry".into(),
                     "Parsley sprigs".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "Skin and bone chicken breasts. On hard surface, with meat mallet or similar flattening utensil, pound chicken to 1/4 in thickness. In shallow dish, mix together cornstarch, cumin and garlic salt. Add chicken on piece at a time, dredging to coat. In a small bowl, mix egg and water. Place cornmeal in another bowl. Dip chicken, first in egg and then in cornmeal turning to coat. In large frying pan, place oil and heat to medium temp.; add chicken and cook 2 minutes on each side. Remove chicken to shallow baking pan; place avocado slices over chicken and sprinkle with cheese. Bake in 350øF oven about 15 minutes or until fork can be inserted in chicken with ease and cheese melts. Top chicken with sour cream, dividing equally; sprinkle with chopped green onion and red pepper.".into(),
-                        ],
-                    ),
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![SectionItem::new(
+                        "Skin and bone chicken breasts. On hard surface, with meat mallet or similar flattening utensil, pound chicken to 1/4 in thickness. In shallow dish, mix together cornstarch, cumin and garlic salt. Add chicken on piece at a time, dredging to coat. In a small bowl, mix egg and water. Place cornmeal in another bowl. Dip chicken, first in egg and then in cornmeal turning to coat. In large frying pan, place oil and heat to medium temp.; add chicken and cook 2 minutes on each side. Remove chicken to shallow baking pan; place avocado slices over chicken and sprinkle with cheese. Bake in 350øF oven about 15 minutes or until fork can be inserted in chicken with ease and cheese melts. Top chicken with sour cream, dividing equally; sprinkle with chopped green onion and red pepper.",
+                    )],
+                )])),
                 recipe_yield: to_yield(2),
                 ..Default::default()
             }
@@ -2095,40 +2203,50 @@ Typed for you by Karen Mintzias
                     (
                         "FILLING".into(),
                         vec![
-                            "1 1/2 c Whole-milk ricotta cheese; - well drained".into(),
-                            "1 1/2 c Milk chocolate; - coarsely chopped".into(),
-                            "3 tb Sugar".into(),
-                            "1/4 c Pistachio nuts; - coarsely chopped".into(),
-                            "1 1/2 ts Cinnamon".into(),
+                            SectionItem::new("1 1/2 c Whole-milk ricotta cheese; - well drained"),
+                            SectionItem::new("1 1/2 c Milk chocolate; - coarsely chopped"),
+                            SectionItem::new("3 tb Sugar"),
+                            SectionItem::new("1/4 c Pistachio nuts; - coarsely chopped"),
+                            SectionItem::new("1 1/2 ts Cinnamon"),
                         ],
                     ),
                     (
                         "DOUGH".into(),
                         vec![
-                            "1 c All-purpose flour".into(),
-                            "- or dry white wine".into(),
-                            "1 tb Sugar".into(),
-                            "2 c Vegetable oil".into(),
-                            "1 tb Butter or lard".into(),
-                            "Colored sprinkles".into(),
-                            "4 tb To 5 Tbl sweet Marsala wine".into(),
+                            SectionItem::new("1 c All-purpose flour"),
+                            SectionItem::new("- or dry white wine"),
+                            SectionItem::new("1 tb Sugar"),
+                            SectionItem::new("2 c Vegetable oil"),
+                            SectionItem::new("1 tb Butter or lard"),
+                            SectionItem::new("Colored sprinkles"),
+                            SectionItem::new("4 tb To 5 Tbl sweet Marsala wine"),
                         ],
                     ),
                 ])),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "In a bowl, combine all the filling ingredients and mix well. Refreigerate, covered, until ready to fill the cannoli shells.".into(),
-                            "To make the dough, place the flour in a bowl or food processor. Add the butter or lard and sugar and mix with a fork, or pulse, until the mixture resembles coarse meal. Slowly add the 1/4 cup of wine and shape the mixture into a ball; add a little more wine if the dough appears too dry. It should be soft but not sticky. Knead the dough on a floured surface until smooth, about 10 minutes. Wrap the dough and refrigerate for 45 minutes.".into(),
-                            "Place the chilled dough on a floured work surface. Divide the dough in half. Work with 1 piece of dough at a time; keep the remaining dough refrigerated. Roll the dough out to a very thin long rectangle about 14 inches long and 3 inches wide, either by hand or using a pasta machine set to the finest setting. Cut the dough into 3-inch squares. Place a cannoli form diagnoally across 1 square. Roll the dough up around the form so the points meet in the center. Seal the points with a little water. Continue making cylinders until all the dough is used.".into(),
-                            "In an electric skillet, heat the vegetable oil to 375F. Fry the cannoli 3 or 4 at a time, turning them as they brown and blister, until golden brown on all sides. Drain them on brown paper. When they are cool enough to handle, carefully slide the cannoli off the forms.".into(),
-                            "To serve, use a long iced tea spoon or a pastry bag without a tip to fill the cannoli with the ricotta cheese mixture. Dip the ends into colored sprinkles, arrange them on a tray, and sprinkle confectioner's sugar over fill the cannoli just before serving - any sooner will make the shells soggy. the tops. Serve at once.".into(),
-                            "NOTE: If you prefer, you can fry the cannoli in a deep fryer. Be sure to".into(),
-                            "This recipe from CIAO ITALIA by Mary Ann Esposito".into(),
-                        ],
-                    ),
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "In a bowl, combine all the filling ingredients and mix well. Refreigerate, covered, until ready to fill the cannoli shells.",
+                        ),
+                        SectionItem::new(
+                            "To make the dough, place the flour in a bowl or food processor. Add the butter or lard and sugar and mix with a fork, or pulse, until the mixture resembles coarse meal. Slowly add the 1/4 cup of wine and shape the mixture into a ball; add a little more wine if the dough appears too dry. It should be soft but not sticky. Knead the dough on a floured surface until smooth, about 10 minutes. Wrap the dough and refrigerate for 45 minutes.",
+                        ),
+                        SectionItem::new(
+                            "Place the chilled dough on a floured work surface. Divide the dough in half. Work with 1 piece of dough at a time; keep the remaining dough refrigerated. Roll the dough out to a very thin long rectangle about 14 inches long and 3 inches wide, either by hand or using a pasta machine set to the finest setting. Cut the dough into 3-inch squares. Place a cannoli form diagnoally across 1 square. Roll the dough up around the form so the points meet in the center. Seal the points with a little water. Continue making cylinders until all the dough is used.",
+                        ),
+                        SectionItem::new(
+                            "In an electric skillet, heat the vegetable oil to 375F. Fry the cannoli 3 or 4 at a time, turning them as they brown and blister, until golden brown on all sides. Drain them on brown paper. When they are cool enough to handle, carefully slide the cannoli off the forms.",
+                        ),
+                        SectionItem::new(
+                            "To serve, use a long iced tea spoon or a pastry bag without a tip to fill the cannoli with the ricotta cheese mixture. Dip the ends into colored sprinkles, arrange them on a tray, and sprinkle confectioner's sugar over fill the cannoli just before serving - any sooner will make the shells soggy. the tops. Serve at once.",
+                        ),
+                        SectionItem::new(
+                            "NOTE: If you prefer, you can fry the cannoli in a deep fryer. Be sure to",
+                        ),
+                        SectionItem::new("This recipe from CIAO ITALIA by Mary Ann Esposito"),
+                    ],
+                )])),
                 recipe_yield: to_yield(16),
                 ..Default::default()
             }
@@ -2161,20 +2279,32 @@ Typed for you by Karen Mintzias
                     "1/2 c Freshly grated Parmesan".into(),
                     "-cheese".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "(From \"Perla Meyers' Art of Seasonal Cooking,\" Simon and Schuster).".into(),
-                            "Place the peas in a vegetable steamer, set over simmering water, and steam, covered, for 3-5 minutes or until just tender. Remove and run under cold water to stop further cooking. Drain and set aside.".into(),
-                            "Add the asparagus to the vegetable steamer. Cover and steam for 3-5 minutes or until just tender. Remove and run under cold water to stop further cooking. Drain and set aside.".into(),
-                            "Add asparagus to the vegetable steamer. Cover and steam for 3-5 minutes or until just tender. Run under cold water, drain and reserve.".into(),
-                            "In a large heavy skillet, melt the butter over medium heat and whisk in the cream. Bring to a boil, reduce the heat, and simmer until reduced by one-third. Add the lemon juice and rind. Season with salt and white pepper and keep warm.".into(),
-                            "Bring plenty of salted water to a boil in a large casserole. Add the ziti and cook until just tender, al dente. Add 2 cups of cold water to stop further cooking. Drain thoroughly, and add to the lemon cream together with the peas, asparagus and Bibb lettuce and simmer until the sauce lightly coats the pasta and the lettuce has just wilted. Add the Parmesan and toss gently. Taste and correct the seasoning and serve at once.".into(),
-                            "Nutritional analysis per serving: 642.3 calories; 52.6 grams total fat; (33.7 grams saturated fat); 10.9 grams protein; 26.5 grams carbohydrates; 179 milligrams cholesterol; 230.5 milligrams sodium.".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "(From \"Perla Meyers' Art of Seasonal Cooking,\" Simon and Schuster).",
+                        ),
+                        SectionItem::new(
+                            "Place the peas in a vegetable steamer, set over simmering water, and steam, covered, for 3-5 minutes or until just tender. Remove and run under cold water to stop further cooking. Drain and set aside.",
+                        ),
+                        SectionItem::new(
+                            "Add the asparagus to the vegetable steamer. Cover and steam for 3-5 minutes or until just tender. Remove and run under cold water to stop further cooking. Drain and set aside.",
+                        ),
+                        SectionItem::new(
+                            "Add asparagus to the vegetable steamer. Cover and steam for 3-5 minutes or until just tender. Run under cold water, drain and reserve.",
+                        ),
+                        SectionItem::new(
+                            "In a large heavy skillet, melt the butter over medium heat and whisk in the cream. Bring to a boil, reduce the heat, and simmer until reduced by one-third. Add the lemon juice and rind. Season with salt and white pepper and keep warm.",
+                        ),
+                        SectionItem::new(
+                            "Bring plenty of salted water to a boil in a large casserole. Add the ziti and cook until just tender, al dente. Add 2 cups of cold water to stop further cooking. Drain thoroughly, and add to the lemon cream together with the peas, asparagus and Bibb lettuce and simmer until the sauce lightly coats the pasta and the lettuce has just wilted. Add the Parmesan and toss gently. Taste and correct the seasoning and serve at once.",
+                        ),
+                        SectionItem::new(
+                            "Nutritional analysis per serving: 642.3 calories; 52.6 grams total fat; (33.7 grams saturated fat); 10.9 grams protein; 26.5 grams carbohydrates; 179 milligrams cholesterol; 230.5 milligrams sodium.",
+                        ),
+                    ],
+                )])),
                 recipe_yield: to_yield(4),
                 ..Default::default()
             }
@@ -2202,14 +2332,12 @@ Typed for you by Karen Mintzias
                     "1/4 c chopped cilantro".into(),
                     "2 ea cloves garlic, minced".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "In a large skillet, melt butter. Brown meat, a few pieces at a time. Remove from skillet as they brown. Saute zucchini in skillet 7-10 minutes. Return meat and add corn, chilies, garlic, salt, oregano and cumin. Simmer, stirring occassionally, about 12-15 minutes or until meat is tender. Stir in cheese until melted. Garnish with chopped cilantro and serve. Serves 6".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![SectionItem::new(
+                        "In a large skillet, melt butter. Brown meat, a few pieces at a time. Remove from skillet as they brown. Saute zucchini in skillet 7-10 minutes. Return meat and add corn, chilies, garlic, salt, oregano and cumin. Simmer, stirring occassionally, about 12-15 minutes or until meat is tender. Stir in cheese until melted. Garnish with chopped cilantro and serve. Serves 6",
+                    )],
+                )])),
                 recipe_yield: to_yield(6),
                 ..Default::default()
             }
@@ -2251,17 +2379,23 @@ Typed for you by Karen Mintzias
                     "Pimiento strips".into(),
                     "Parsley bouquets".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "Use a 3-quart casserole with lid. An earthenware casserole is preferable, especially if you wish to add a touch of Spain to a dinner party. However, I know that good earthenware is hard to find today. I have 2 casseroles that I've had for 15 years.".into(),
-                            "Heat oil in casserole. Saute onion and pepper until transparent. Add garlic, parsley, tomato, bay leaf, nutmeg, cumin and thyme. Mix well, cover, and cook over low heat until mushy (about 15 minutes). The saffron should be toasting on the lid in the little brown paper.".into(),
-                            "Add the shrimp to the saute and cook until it turns pink. Dissolve the saffron in the 1 cup hot water. Combine with wine, lemon juice, salt and hot sauce. Pour into casserole, stir to mix, and cook covered 10 minutes more. Now add the rice and the 2 1/2 cups of water. Distribute ingredients well in casserole. Bring to a quick boil, STIR ONCE, and place in preheated 325 degree F. oven for only 20 minutes - NI UN MINUTO MAS! Remove from oven, uncover, and garnish with peas, pimientos, and parsley. Pour beer over all. Cover again and allow to stand 15 minutes longer, before serving.".into(),
-                            "Source: Clarita's Cocina - by Clarita Garcia (ISBN: 0-942084-74-8) Typos provided by: Karen Mintzias".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "Use a 3-quart casserole with lid. An earthenware casserole is preferable, especially if you wish to add a touch of Spain to a dinner party. However, I know that good earthenware is hard to find today. I have 2 casseroles that I've had for 15 years.",
+                        ),
+                        SectionItem::new(
+                            "Heat oil in casserole. Saute onion and pepper until transparent. Add garlic, parsley, tomato, bay leaf, nutmeg, cumin and thyme. Mix well, cover, and cook over low heat until mushy (about 15 minutes). The saffron should be toasting on the lid in the little brown paper.",
+                        ),
+                        SectionItem::new(
+                            "Add the shrimp to the saute and cook until it turns pink. Dissolve the saffron in the 1 cup hot water. Combine with wine, lemon juice, salt and hot sauce. Pour into casserole, stir to mix, and cook covered 10 minutes more. Now add the rice and the 2 1/2 cups of water. Distribute ingredients well in casserole. Bring to a quick boil, STIR ONCE, and place in preheated 325 degree F. oven for only 20 minutes - NI UN MINUTO MAS! Remove from oven, uncover, and garnish with peas, pimientos, and parsley. Pour beer over all. Cover again and allow to stand 15 minutes longer, before serving.",
+                        ),
+                        SectionItem::new(
+                            "Source: Clarita's Cocina - by Clarita Garcia (ISBN: 0-942084-74-8) Typos provided by: Karen Mintzias",
+                        ),
+                    ],
+                )])),
                 recipe_yield: to_yield(6),
                 ..Default::default()
             }
@@ -2318,7 +2452,9 @@ SOURCE: Gourmet, December 1992
             RecipeSchema {
                 at_context: Default::default(),
                 at_type: Some(AtType::Recipe),
-                is_based_on: to_is_based_on("Now You're Cooking! v4.72 [Meal-Master Export Format]".into()),
+                is_based_on: to_is_based_on(
+                    "Now You're Cooking! v4.72 [Meal-Master Export Format]".into(),
+                ),
                 keywords: to_defined_text("italian".into()),
                 name: Some("Biscotti Di Greve ( Orange Almond Biscotti)".into()),
                 recipe_category: RecipeCategory::Text("cookies".into()),
@@ -2326,32 +2462,34 @@ SOURCE: Gourmet, December 1992
                     (
                         "".into(),
                         vec![
-                            "2 c flour; unbleached, all purp".into(),
-                            "1 c sugar".into(),
-                            "1 ts baking soda salt".into(),
-                            "2 eggs, large".into(),
-                            "1 egg yolk, large".into(),
-                            "1 ts vanilla".into(),
-                            "1 tb orange zest; freshly grated".into(),
-                            "1 1/2 c almonds, whole; toasted".into(),
-                            "-lightly & chopped".into(),
-                        ]
+                            SectionItem::new("2 c flour; unbleached, all purp"),
+                            SectionItem::new("1 c sugar"),
+                            SectionItem::new("1 ts baking soda salt"),
+                            SectionItem::new("2 eggs, large"),
+                            SectionItem::new("1 egg yolk, large"),
+                            SectionItem::new("1 ts vanilla"),
+                            SectionItem::new("1 tb orange zest; freshly grated"),
+                            SectionItem::new("1 1/2 c almonds, whole; toasted"),
+                            SectionItem::new("-lightly & chopped"),
+                        ],
                     ),
                     (
                         "EGG WASH".into(),
                         vec![
-                            "1 egg, large; beaten with".into(),
-                            "-water".into(),
+                            SectionItem::new("1 egg, large; beaten with"),
+                            SectionItem::new("-water"),
                         ],
                     ),
                 ])),
                 recipe_instructions: sections_to_itemlist(Sections::from([(
                     "".into(),
                     vec![
-                        "From the bakery in Greve, in Chianti, Italy.".into(),
-                        "In the bowl of an electric mixer, fitted with a paddle attachment, blend the flour, the sugar, the baking soda and the salt until the mixture is combined well. In a small bowl whisk together the whole eggs, the yolk, thevanilla and the zest, add the mixture to the flour mixture, beating until adough is formed and stir in the almonds. Turn the dough out onto a lightly floured surface, knead it several times and halve it. Working on a large buttered and floured baking sheet, with floured hands form each piece of dough into a flattish log 12 inches long and 2 inches wide, arrange the logs at least 3 inches apart on the sheet, and brush them with the egg wash. Bake the logs in the middle of a preheated 300F for 50 minutes and them cool on the baking rack for 10 minutes. On a cutting board, cut the logs crosswise on the diagonal into 1/2 inch thick slices, arrange the biscotti, cut sides down, on the baking sheet andbake them, in the 300F oven for 15 minutes on each side. Transfer the biscotti to racks to cool and store them in airtight containers. MAKES: about 48 BISCOTTI".into(),
-                        "SOURCE: Gourmet, December 1992".into(),
-                    ]
+                        SectionItem::new("From the bakery in Greve, in Chianti, Italy."),
+                        SectionItem::new(
+                            "In the bowl of an electric mixer, fitted with a paddle attachment, blend the flour, the sugar, the baking soda and the salt until the mixture is combined well. In a small bowl whisk together the whole eggs, the yolk, thevanilla and the zest, add the mixture to the flour mixture, beating until adough is formed and stir in the almonds. Turn the dough out onto a lightly floured surface, knead it several times and halve it. Working on a large buttered and floured baking sheet, with floured hands form each piece of dough into a flattish log 12 inches long and 2 inches wide, arrange the logs at least 3 inches apart on the sheet, and brush them with the egg wash. Bake the logs in the middle of a preheated 300F for 50 minutes and them cool on the baking rack for 10 minutes. On a cutting board, cut the logs crosswise on the diagonal into 1/2 inch thick slices, arrange the biscotti, cut sides down, on the baking sheet andbake them, in the 300F oven for 15 minutes on each side. Transfer the biscotti to racks to cool and store them in airtight containers. MAKES: about 48 BISCOTTI",
+                        ),
+                        SectionItem::new("SOURCE: Gourmet, December 1992"),
+                    ],
                 )])),
                 recipe_yield: to_yield(48),
                 ..Default::default()
@@ -2381,14 +2519,12 @@ SOURCE: Gourmet, December 1992
                     "1/2 c Zwieback crumbs 1 lb".into(),
                     "4 tb Granulated sugar 1 1/2 c".into(),
                 ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    (
-                        "".into(),
-                        vec![
-                            "*Note: Either toasted blanched almonds, or walnut meats, or half of each, (finely chopped) may be used. Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat in the confectioners' sugar and continue to beat until mixture is fluffy. Add egg yolk and vanilla or almond extract and blend well. Work in about 4 cups flour to make a medium-soft dough. Set aside and make syrup. Syrup: In a saucepan combine the granulated sugar and water. Bring to a boil and boil for 15 minutes or until syrup is slightly thick. Add honey and again bring to the boiling point. Add lemon juice to taste, and cool. Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly with butter and sprinkle with nut mixture. Place 2 buttered sheets of phyllo on top and sprinkle with nut mixture. Shape a portion of cooky filling into a 1/2-inch-thick roll and place the roll along one edge of the pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices in a buttered cake pan. (Continue in this method until all phyllo pastry and/or cooky filling is used.) Brush tops of each slice with butter and bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot baklava slices, one at a time, in cold syrup, allowing each piece to remain in the syrup for a few minutes. From: \"The Art of Greek Cookery\" by The Women of St. Paul's Greek Orthodox Church (Hempstead, NY) Typed for you by Karen Mintzias".into(),
-                        ],
-                    )
-                ])),
+                recipe_instructions: sections_to_itemlist(Sections::from([(
+                    "".into(),
+                    vec![SectionItem::new(
+                        "*Note: Either toasted blanched almonds, or walnut meats, or half of each, (finely chopped) may be used. Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat in the confectioners' sugar and continue to beat until mixture is fluffy. Add egg yolk and vanilla or almond extract and blend well. Work in about 4 cups flour to make a medium-soft dough. Set aside and make syrup. Syrup: In a saucepan combine the granulated sugar and water. Bring to a boil and boil for 15 minutes or until syrup is slightly thick. Add honey and again bring to the boiling point. Add lemon juice to taste, and cool. Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly with butter and sprinkle with nut mixture. Place 2 buttered sheets of phyllo on top and sprinkle with nut mixture. Shape a portion of cooky filling into a 1/2-inch-thick roll and place the roll along one edge of the pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices in a buttered cake pan. (Continue in this method until all phyllo pastry and/or cooky filling is used.) Brush tops of each slice with butter and bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot baklava slices, one at a time, in cold syrup, allowing each piece to remain in the syrup for a few minutes. From: \"The Art of Greek Cookery\" by The Women of St. Paul's Greek Orthodox Church (Hempstead, NY) Typed for you by Karen Mintzias",
+                    )],
+                )])),
                 recipe_yield: to_yield(36),
                 ..Default::default()
             }

@@ -106,10 +106,10 @@ where
             .values(
                 ingredients
                     .iter()
-                    .map(|name| IngredientForInsert {
-                        name: normalise_vulgar_fractions(name),
+                    .map(|item| IngredientForInsert {
+                        name: normalise_vulgar_fractions(&item.text),
                     })
-                    .filter(|s| uniques.insert(s.name.clone()))
+                    .filter(|item| uniques.insert(item.name.clone()))
                     .collect::<Vec<_>>(),
             )
             .on_conflict(schema::ingredients::name)
@@ -154,7 +154,7 @@ where
                 .values(
                     instructions
                         .iter()
-                        .map(|name| InstructionForInsert { name: name.into() })
+                        .map(InstructionForInsert::from)
                         .filter(|s| uniques.insert(s.name.clone()))
                         .collect::<Vec<_>>(),
                 )

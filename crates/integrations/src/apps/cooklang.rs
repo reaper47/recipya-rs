@@ -3,7 +3,7 @@ use std::io::{Read, Seek};
 use cooklang::{Content, CooklangParser, Item, Value};
 use recipe_schema::{
     AtType, DefinedTermOrTextOrUrl, Diets, HowToToolOrText, HowToToolType, RecipeCategory,
-    RecipeCuisine, RecipeSchema, RestrictedDiet, Sections,
+    RecipeCuisine, RecipeSchema, RestrictedDiet, SectionItem, Sections,
 };
 use support::time::parse_duration;
 use tracing::{error, warn};
@@ -258,7 +258,7 @@ impl CookLang {
                     .into_iter()
                     .map(|ing| {
                         let name = ing.display_name().to_string();
-                        match ing.quantity {
+                        let s = match ing.quantity {
                             None => name,
                             Some(q) => {
                                 let unit = q.unit().unwrap_or_default();
@@ -270,7 +270,8 @@ impl CookLang {
                                     Value::Text(s) => format!("{s} {unit} {name}"),
                                 }
                             }
-                        }
+                        };
+                        SectionItem::new(s)
                     })
                     .collect(),
             )]),
@@ -283,16 +284,42 @@ impl CookLang {
                         section
                             .content
                             .into_iter()
-                            .map(|content| match content {
-                                Content::Step(s) => s
-                                    .items
-                                    .into_iter()
-                                    .map(|item| match item {
-                                        Item::Text { value } => value,
-                                        _ => "".to_string(),
-                                    })
-                                    .collect(),
-                                Content::Text(s) => s,
+                            .filter_map(|content| {
+                                let s = match content {
+                                    Content::Step(s) => {
+                                        let parts: Vec<&str> = s
+                                            .items
+                                            .iter()
+                                            .filter_map(|item| match item {
+                                                Item::Text { value } => {
+                                                    let trimmed = value.trim();
+                                                    (!trimmed.is_empty()).then_some(trimmed)
+                                                }
+                                                _ => None,
+                                            })
+                                            .collect();
+
+                                        if parts.is_empty() {
+                                            return None;
+                                        }
+                                        parts.join(" ")
+                                    }
+                                    Content::Text(s) => {
+                                        let trimmed = s.trim();
+                                        if trimmed.is_empty() {
+                                            return None;
+                                        }
+                                        trimmed.to_string()
+                                    }
+                                };
+
+                                let cleaned = if s.contains(" ,") {
+                                    s.replace(" ,", ",")
+                                } else {
+                                    s
+                                };
+
+                                Some(SectionItem::new(cleaned))
                             })
                             .collect(),
                     )
@@ -424,18 +451,18 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                 at_context: Default::default(),
                 at_type: Some(AtType::Recipe),
                 author: Some(OrganizationTypeOrText::Text("John Doe".into())),
-                cook_time: seconds_to_duration(60*60),
+                cook_time: seconds_to_duration(60 * 60),
                 description: Some(TextOrTextObject::Text("This is the best recipe!".into())),
-                image: Some(
-                    ImageObjectOrUrl::Urls(vec![
-                        Url::parse("https://example.org/recipe_image.jpg")?,
-                        Url::parse("https://example.org/recipe_image2.jpg")?,
-                    ]),
-                ),
+                image: Some(ImageObjectOrUrl::Urls(vec![
+                    Url::parse("https://example.org/recipe_image.jpg")?,
+                    Url::parse("https://example.org/recipe_image2.jpg")?,
+                ]),),
                 is_based_on: to_is_based_on("https://example.org/recipe".into()),
-                keywords: Some(DefinedTermOrTextOrUrl::Text(["2022", "baking", "summer"].join(","))),
+                keywords: Some(DefinedTermOrTextOrUrl::Text(
+                    ["2022", "baking", "summer"].join(",")
+                )),
                 name: Some("Spaghetti Carbonara".into()),
-                prep_time: seconds_to_duration(2*60*60+30*60),
+                prep_time: seconds_to_duration(2 * 60 * 60 + 30 * 60),
                 recipe_category: RecipeCategory::Text("dinner".into()),
                 recipe_cuisine: Some(RecipeCuisine::Text("French".into())),
                 recipe_ingredient: Some(vec![
@@ -451,17 +478,28 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                     "salt".into(),
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([(
-                    "".into(), vec![
-                        "Peel and chop the ,  and  into chunks. The potatoes will need to be cut a bit smaller.".into(),
-                        "Heat a  over a medium heat with a little  and sauté the vegetables until golden. Season with ,  and chopped fresh .".into(),
-                        "Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender.".into(),
-                        "Remove the soup from the heat and blend with a , add the  and  to taste. Garnish with freshly cracked black pepper.".into(),
-                    ]),
-                ])),
+                    "".into(),
+                    vec![
+                        SectionItem::new(
+                            "Peel and chop the, and into chunks. The potatoes will need to be cut a bit smaller."
+                        ),
+                        SectionItem::new(
+                            "Heat a over a medium heat with a little and sauté the vegetables until golden. Season with, and chopped fresh ."
+                        ),
+                        SectionItem::new(
+                            "Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender."
+                        ),
+                        SectionItem::new(
+                            "Remove the soup from the heat and blend with a, add the and to taste. Garnish with freshly cracked black pepper."
+                        ),
+                    ]
+                ),])),
                 recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType {
                     value: 1
                 }),
-                suitable_for_diet: Some(Diets::RestrictedDiet(vec![RestrictedDiet::GlutenFreeDiet])),
+                suitable_for_diet: Some(Diets::RestrictedDiet(vec![
+                    RestrictedDiet::GlutenFreeDiet
+                ])),
                 tool: Some(vec![
                     HowToToolOrText::HowToTool(HowToToolType {
                         r#type: AtType::HowToTool,
@@ -476,8 +514,8 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                 ]),
                 url: Url::parse("https://example.org/recipe").ok(),
                 ..Default::default()
-            }
-        ]);
+            }]
+        );
         Ok(())
     }
 }

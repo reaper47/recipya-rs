@@ -15,9 +15,9 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-derive_more = { workspace = true }
+derive_more.workspace = true
 directories = "6.0.0"
-tracing = { workspace = true }
+tracing.workspace = true
 
 [dev-dependencies]
-pretty_assertions = { workspace = true }
+pretty_assertions.workspace = true

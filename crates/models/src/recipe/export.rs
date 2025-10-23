@@ -64,8 +64,8 @@ impl RecipeDetails {
                 writeln!(&mut md, "### {section}")?;
                 writeln!(&mut md)?;
 
-                for ingredient in ingredients {
-                    writeln!(&mut md, "* {ingredient}")?;
+                for item in ingredients {
+                    writeln!(&mut md, "* {}", item.text)?;
                 }
                 writeln!(&mut md)?;
             }
@@ -79,8 +79,8 @@ impl RecipeDetails {
                 writeln!(&mut md, "### {section}")?;
                 writeln!(&mut md)?;
 
-                for (idx, instruction) in instructions.iter().enumerate() {
-                    writeln!(&mut md, "{}. {instruction}", idx + 1)?;
+                for (idx, item) in instructions.iter().enumerate() {
+                    writeln!(&mut md, "{}. {}", idx + 1, item.text)?;
                 }
                 writeln!(&mut md)?;
             }
