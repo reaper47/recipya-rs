@@ -15,8 +15,9 @@ use crate::recipes::common::render_rating;
 use crate::recipes::timeline::render_dialog;
 use crate::templates::icons::{
     icon_alarm_clock, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
-    icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart, icon_pencil,
-    icon_plus_circle, icon_printer, icon_share, icon_timeline, icon_trash,
+    icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart, icon_pause,
+    icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share, icon_stop, icon_timeline,
+    icon_trash,
 };
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
@@ -796,15 +797,20 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 h2 class="font-semibold text-center underline pb-1" { "Instructions" }
                 ol class="grid list-decimal" {
                     @for (_section, instruction) in recipe.instructions.iter() {
-                        @for instruction in instruction.iter() {
-                            li class="min-w-full py-2 select-none hover:bg-base-300"
-                                _="on mousedown if target matches <button/> or target matches <svg/> or target matches <path/> halt end toggle .line-through" {
-                                div class="flex whitespace-pre-line" {
+                        @for (idx, instruction) in instruction.iter().enumerate() {
+                            li class="min-w-full py-2 select-none flex hover:bg-base-300" {
+                                div class="flex whitespace-pre-line" _="on mousedown toggle .line-through" {
                                     (instruction.text)
-                                    @if let Some(d) = instruction.duration_seconds {
-                                        button class="btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d)) {
+                                }
+                                 @if let Some(d) = instruction.duration_seconds {
+                                    div id=(format!("timer-container-{idx}")) class="timer-container" {
+                                        button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                                               _="on click add .hidden to me
+                                                  remove .hidden from the next <div/>
+                                                  call initTimer(event)" {
                                             (icon_alarm_clock())
                                         }
+                                        (render_countdown(&format!("countdown-step-{idx}")))
                                     }
                                 }
                             }
@@ -819,6 +825,44 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
 fn format_timer_label(minutes: i32) -> String {
     let duration = Duration::from_secs((minutes * 60) as u64);
     format!("Start {} timer", humantime::format_duration(duration))
+}
+
+fn render_countdown(id: &str) -> Markup {
+    html! {
+        div class="countdown-container hidden flex flex-col gap-2 items-center" {
+            div id=(id) class="countdown font-mono text-2xl" {
+                span style="--value:10;" aria-live="polite" aria-label="10" { "10" }
+                ":"
+                span style="--value:24; --digits: 2;" aria-live="polite" aria-label="24" { "24" }
+                ":"
+                span style="--value:59; --digits: 2;" aria-live="polite" aria-label="59" { "59" }
+            }
+            div class="flex gap-2" {
+                button class="timer-play hidden btn btn-sm btn-soft btn-success btn-square"
+                    _="on click
+                       add .hidden to me
+                       remove .hidden from next <button/>
+                       call playTimer(event)"
+                { (icon_play()) }
+
+                button class="timer-pause btn btn-sm btn-soft btn-warning btn-square"
+                    _="on click
+                       add .hidden to me
+                       remove .hidden from previous <button/>
+                       call pauseTimer(event)"
+                { (icon_pause()) }
+
+                button class="timer-stop btn btn-sm btn-soft btn-error btn-square"
+                    _="on click
+                       remove .hidden from .timer-pause
+                       add .hidden to .timer-play
+                       add .hidden to closest .countdown-container
+                       remove .hidden from the first <button/> in closest .timer-container
+                       call stopTimer(event)"
+                { (icon_stop()) }
+            }
+        }
+    }
 }
 
 /// Renders the favourite button.

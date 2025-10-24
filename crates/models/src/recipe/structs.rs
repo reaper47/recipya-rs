@@ -771,7 +771,7 @@ impl From<&SectionItem> for InstructionForInsert {
     fn from(item: &SectionItem) -> Self {
         Self {
             name: item.text.clone(),
-            duration_seconds: TimeParser::new().parse_max_time(&item.text),
+            duration_seconds: TimeParser::new().parse_max_time_seconds(&item.text),
         }
     }
 }

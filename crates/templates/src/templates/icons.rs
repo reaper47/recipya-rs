@@ -363,6 +363,15 @@ pub(super) fn icon_move_thin() -> Markup {
     }
 }
 
+/// Renders the 'pause' hero icon.
+pub(super) fn icon_pause() -> Markup {
+    html! {
+        svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" {
+            path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5";
+        }
+    }
+}
+
 /// Renders the 'pencil' hero icon.
 pub(super) fn icon_pencil(is_hover_highlight: bool) -> Markup {
     html! {
@@ -375,11 +384,11 @@ pub(super) fn icon_pencil(is_hover_highlight: bool) -> Markup {
     }
 }
 
-/// Renders the 'printer' hero icon.
-pub(super) fn icon_printer() -> Markup {
+/// Renders the 'play' hero icon.
+pub(super) fn icon_play() -> Markup {
     html! {
-        svg xmlns="http://www.w3.org/2000/svg" class="size-6 hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" {
-            path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" {}
+        svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" {
+          path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z";
         }
     }
 }
@@ -391,6 +400,15 @@ pub(super) fn icon_plus_circle() -> Markup {
             circle cx="12" cy="12" r="10" {}
             line x1="12" y1="8" x2="12" y2="16" {}
             line x1="8" y1="12" x2="16" y2="12" {}
+        }
+    }
+}
+
+/// Renders the 'printer' hero icon.
+pub(super) fn icon_printer() -> Markup {
+    html! {
+        svg xmlns="http://www.w3.org/2000/svg" class="size-6 hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" {
+            path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" {}
         }
     }
 }
@@ -427,6 +445,15 @@ pub(super) fn icon_star(is_filled: bool) -> Markup {
     html! {
         svg xmlns="http://www.w3.org/2000/svg" fill=(format!("{}", if !is_filled { "none"} else { "currentColor" })) viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" {
             path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z";
+        }
+    }
+}
+
+/// Renders the 'stop' hero icon.
+pub(super) fn icon_stop() -> Markup {
+    html! {
+        svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" {
+            path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z";
         }
     }
 }
