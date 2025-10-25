@@ -47,6 +47,7 @@ class Timer {
 
         this.mainContainer = root.lastElementChild;
         this.countdownContainer = this.mainContainer.firstElementChild;
+        this.buttonsContainer = this.countdownContainer.nextSibling;
 
         const [hoursEl, minutesEl, secondsEl] = this.countdownContainer.querySelectorAll("span");
         this.hoursEl = hoursEl;
@@ -64,6 +65,7 @@ class Timer {
         this.isTimerInitialized = false;
         this.interval = null;
         this.isRunning = false;
+        this.isMelodyPlaying = false;
 
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.activeOscillators = [];
@@ -135,6 +137,7 @@ class Timer {
                 oscillator.stop(audioContext.currentTime + 0.5);
             },
             playMelody: () => {
+                this.isMelodyPlaying = true;
                 this._stopSound();
                 const audioContext = this.audioContext;
 
@@ -181,6 +184,7 @@ class Timer {
                 ];
 
                 let currentTime = audioContext.currentTime;
+                let totalDuration = 0;
 
                 melody.forEach((tone) => {
                     const oscillator = this.audioContext.createOscillator();
@@ -215,7 +219,12 @@ class Timer {
                     };
 
                     currentTime += tone.duration;
+                    totalDuration += tone.duration;
                 });
+
+                setTimeout(() => {
+                    this.isMelodyPlaying = false;
+                }, totalDuration * 1000);
             },
             playStartBeep: () => {
                 this._stopSound();
@@ -276,11 +285,18 @@ class Timer {
 
     _tick() {
         if (this.hours === 0 && this.minutes === 0 && this.seconds === 0) {
-            this.alarmSound.playMelody();
             clearInterval(this.interval);
+            this.interval = setInterval(() => {
+                if (!this.isMelodyPlaying) {
+                    this.alarmSound.playMelody();
+                }
+            }, 2000);
+            this.alarmSound.playMelody();
             this.interval = null;
             this.isRunning = false;
-            this.alarmSound.play();
+            this.buttonsContainer.querySelector(".timer-pause").classList.add("hidden");
+            this.buttonsContainer.querySelector(".timer-stop").classList.add("hidden");
+            this.buttonsContainer.querySelector(".timer-end").classList.remove("hidden");
             return;
         }
 
