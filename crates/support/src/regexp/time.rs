@@ -701,7 +701,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Afr, "354 sekondes"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -709,7 +709,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Afr, "10 minute"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -717,7 +717,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Afr, "1.5 uur"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -729,7 +729,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Aka, "354 sikɔne"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -737,7 +737,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Aka, "10 simma"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -745,7 +745,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Aka, "1.5 nnɔnhwerew"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -757,7 +757,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Amh, "354 ሰከንድ"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -765,7 +765,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Amh, "10 ደቂቃዎች"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -773,7 +773,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Amh, "1.5 ሰዓታት"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -785,7 +785,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ara, "354 ثانية"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -793,7 +793,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ara, "10 دقيقتان"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -801,7 +801,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ara, "1.5 ساعة واحدة"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -813,7 +813,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Hye, "354 վայրկյան"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -821,7 +821,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hye, "10 րոպե"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -829,7 +829,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hye, "1.5 ժամ"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -841,7 +841,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Aze, "354 saniyə"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -849,7 +849,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Aze, "10 dəqiqə"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -857,7 +857,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Aze, "1.5 saat"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -869,7 +869,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Bel, "354 секунд"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -877,7 +877,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Bel, "10 хвілін"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -885,7 +885,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Bel, "1.5 гадзін"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -897,7 +897,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Bul, "354 секунди"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -905,7 +905,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Bul, "10 минути"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -913,7 +913,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Bul, "1.5 часа"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -925,7 +925,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Mya, "354 စက္ကန့်"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -933,7 +933,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Mya, "10 မိနစ်"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -941,7 +941,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Mya, "1.5 နာရီ"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -953,7 +953,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Cat, "354 segons"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -961,7 +961,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Cat, "10 minuts"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -969,7 +969,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Cat, "1.5 hores"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -981,7 +981,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Hrv, "354 sekundi"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -989,7 +989,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Hrv, "10 minuta"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -997,7 +997,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hrv, "1.5 sati"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1009,7 +1009,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Dan, "354 sekunder"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1017,7 +1017,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Dan, "10 minutter"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1025,7 +1025,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Dan, "1.5 timer"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1037,7 +1037,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Nld, "354 seconden"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1045,7 +1045,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Nld, "10 minuten"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1053,7 +1053,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Nld, "1.5 uur"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1065,7 +1065,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ces, "354 sekund"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1073,7 +1073,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ces, "10 minut"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1081,7 +1081,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ces, "1.5 hodin"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1093,7 +1093,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Eng, "354 seconds"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1101,7 +1101,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Eng, "10m"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1109,7 +1109,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Eng, "1.5 hours"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1121,7 +1121,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Epo, "345 sekundoj"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(345));
                 }
 
                 #[test]
@@ -1129,7 +1129,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Epo, "10 minutoj"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1137,7 +1137,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Epo, "1.5 horoj"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1149,7 +1149,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Est, "345 sekundit"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(345));
                 }
 
                 #[test]
@@ -1157,7 +1157,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Est, "10 minutit"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1165,7 +1165,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Est, "1.5 tundi"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1177,7 +1177,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Fin, "354 sekuntia"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1185,7 +1185,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Fin, "10 minuutti"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1193,7 +1193,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Fin, "1.5 tunti"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1205,7 +1205,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Fra, "50 seconds"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -1213,7 +1213,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Fra, "50 minutes"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1221,7 +1221,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Fra, "1.5 heures"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1233,7 +1233,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Guj, "50 સેકન્ડ"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -1241,7 +1241,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Guj, "50 મિનિટ"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1249,7 +1249,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Guj, "1.5 કલાક"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1261,7 +1261,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ind, "50 detik"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -1269,7 +1269,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ind, "50 menit"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1277,7 +1277,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ind, "1.5 jam"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1289,7 +1289,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ita, "50 secondi"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -1297,7 +1297,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ita, "50 minuto"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1305,7 +1305,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ita, "1.5 ora"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1317,7 +1317,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Kat, "354 წამი"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1325,7 +1325,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Kat, "10 წუთი"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1333,7 +1333,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Kat, "1.5 საათი"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1345,7 +1345,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Deu, "354 Sekunden"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1353,7 +1353,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Deu, "10 Minuten"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1361,7 +1361,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Deu, "1.5 Stunden"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1373,7 +1373,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ell, "354 δευτερόλεπτα"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1381,7 +1381,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ell, "10 λεπτά"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1389,7 +1389,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ell, "1.5 ώρες"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1401,7 +1401,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Heb, "354 שניות"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1409,7 +1409,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Heb, "10 דקות"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1417,7 +1417,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Heb, "1.5 שעות"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1429,7 +1429,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hin, "354 सेकंड"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1437,7 +1437,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hin, "10 मिनटों"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1445,7 +1445,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hin, "1.5 घंटे"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1457,7 +1457,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Hun, "354 másodperc"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1465,7 +1465,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hun, "10 perc"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1473,7 +1473,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Hun, "1.5 óra"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1485,7 +1485,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lat, "354 secunda"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1493,7 +1493,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lat, "10 minuta"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1501,7 +1501,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lat, "1.5 horae"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1513,7 +1513,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lav, "354 sekundes"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1521,7 +1521,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lav, "10 minūtes"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1529,7 +1529,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lav, "1.5 stundas"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1541,7 +1541,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lit, "354 sekundės"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1549,7 +1549,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lit, "10 minutės"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1557,7 +1557,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Lit, "1.5 valandos"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1569,7 +1569,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Jav, "354 detik"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1577,7 +1577,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Jav, "10 menit"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1585,7 +1585,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Jav, "1.5 jam"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1597,7 +1597,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Jpn, "354 秒"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1605,7 +1605,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Jpn, "10 分"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1613,7 +1613,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Jpn, "1.5 時間"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1625,7 +1625,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Kan, "354 ಸೆಕೆಂಡುಗಳು"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1633,7 +1633,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Kan, "10 ನಿಮಿಷಗಳು"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1641,7 +1641,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Kan, "1.5 ಗಂಟೆಗಳು"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1653,7 +1653,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Khm, "354 វិនាទី"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1661,7 +1661,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Khm, "10 នាទី។"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1669,7 +1669,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Khm, "1.5 ម៉ោង។"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1681,7 +1681,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Kor, "354초"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1689,7 +1689,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Kor, "10분"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1697,7 +1697,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Kor, "1.5시간"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1709,7 +1709,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Mkd, "354 секунди"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1717,7 +1717,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Mkd, "50 минути"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1725,7 +1725,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Mkd, "1.5 часа"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1737,7 +1737,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Mal, "354 സെക്കൻഡ്"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1745,7 +1745,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Mal, "50 മിനിറ്റ്"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1753,7 +1753,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Mal, "1.5 മണിക്കൂർ"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1765,7 +1765,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Cmn, "354秒"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1773,7 +1773,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Cmn, "50分钟"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1781,7 +1781,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Cmn, "1.5小时"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1793,7 +1793,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Mar, "354 सेकंद"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1801,7 +1801,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Mar, "50 मिनिटे"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1809,7 +1809,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Mar, "1.5 तास"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1821,7 +1821,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Nep, "354 सेकेन्ड"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1829,7 +1829,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Nep, "50 मिनेट"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -1837,7 +1837,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Nep, "1.5 घण्टा"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1849,7 +1849,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Nob, "354 sekunder"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1857,7 +1857,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Nob, "10 minutter"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1865,7 +1865,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Nob, "1.5 timer"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1877,7 +1877,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ori, "354 ସେକେଣ୍ଡ"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1885,7 +1885,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ori, "10 ମିନିଟ୍"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1893,7 +1893,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ori, "1.5 ଘଣ୍ଟା"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1905,7 +1905,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Pes, "354 ثانیه"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1913,7 +1913,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Pes, "10 دقیقه"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1921,7 +1921,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Pes, "1.5 ساعت"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1933,7 +1933,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Pol, "354 sekundy"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1941,7 +1941,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Pol, "10 minuty"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1949,7 +1949,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Pol, "1.5 godziny"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1961,7 +1961,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Pan, "354 ਸਕਿੰਟ"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1969,7 +1969,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Pan, "10 ਮਿੰਟ"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -1977,7 +1977,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Pan, "1.5 ਘੰਟੇ"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -1989,7 +1989,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Por, "354 segundos"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -1997,7 +1997,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Por, "10 minutos"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2005,7 +2005,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Por, "1.5 horas"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2017,7 +2017,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Srp, "354 секунди"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2025,7 +2025,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Srp, "10 минута"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2033,7 +2033,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Srp, "1.5 сати"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2045,7 +2045,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Slk, "354 sekúnd"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2053,7 +2053,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Slk, "10 minút"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2061,7 +2061,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Slk, "1.5 hodín"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2073,7 +2073,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Slv, "354 sekund"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2081,7 +2081,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Slv, "10 minut"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2089,7 +2089,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Slv, "1.5 ur"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2101,7 +2101,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Spa, "354 segundos"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2109,7 +2109,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Spa, "10 minutos"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2117,7 +2117,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Spa, "1.5 horas"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2129,7 +2129,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Swe, "354 sekunder"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2137,7 +2137,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Swe, "10 minuter"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2145,7 +2145,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Swe, "1.5 timmar"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2157,7 +2157,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ron, "354 secunde"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2165,7 +2165,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ron, "10 minute"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2173,7 +2173,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Ron, "1.5 ore"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2185,7 +2185,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Rus, "50 секунд"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2193,7 +2193,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Rus, "50 минут"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2201,7 +2201,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Rus, "1.5 часа"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2213,7 +2213,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Sin, "50 තත්පර"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2221,7 +2221,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Sin, "50 විනාඩි"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2229,7 +2229,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Sin, "1.5 පැය"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2241,7 +2241,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Sna, "50 masekonzi"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2249,7 +2249,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Sna, "50 maminitsi"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2257,7 +2257,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Sna, "1.5 maawa"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2269,7 +2269,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tgl, "354 segundo"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2277,7 +2277,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tgl, "10 minuto"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2285,7 +2285,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Tgl, "1.5 oras"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2297,7 +2297,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tam, "354 வினாடிகள்"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2305,7 +2305,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tam, "10 நிமிடங்கள்"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2313,7 +2313,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tam, "1.5 மணி நேரம்"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2325,7 +2325,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tel, "354 సెకన్లు"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2333,7 +2333,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Tel, "10 నిమిషాలు"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2341,7 +2341,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tel, "1.5 గంటలు"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2353,7 +2353,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Tha, "354 วินาที"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2361,7 +2361,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Tha, "10 นาที"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2369,7 +2369,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tha, "1.5 ชั่วโมง"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2381,7 +2381,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tuk, "354 sekunt"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2389,7 +2389,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Tuk, "10 minut"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2397,7 +2397,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tuk, "1.5 sagat"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2409,7 +2409,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tur, "354 saniye"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2417,7 +2417,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Tur, "10 dakika"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2425,7 +2425,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Tur, "1.5 saat"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2437,7 +2437,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Urd, "354 سیکنڈ"));
 
-                    assert_eq!(got, Some(6));
+                    assert_eq!(got, Some(354));
                 }
 
                 #[test]
@@ -2445,7 +2445,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Urd, "10 منٹ"));
 
-                    assert_eq!(got, Some(10));
+                    assert_eq!(got, Some(600));
                 }
 
                 #[test]
@@ -2453,7 +2453,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Urd, "1.5  گھنٹے"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2465,7 +2465,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ukr, "50 секунд"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2473,7 +2473,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ukr, "50 хвилин"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2481,7 +2481,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Ukr, "1.5 години"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2493,7 +2493,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Uzb, "50 soniya"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2501,7 +2501,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Uzb, "50 daqiqa"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2509,7 +2509,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Uzb, "1.5 soat"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2521,7 +2521,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Vie, "50 giây"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2529,7 +2529,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Vie, "50 phút"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2537,7 +2537,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Vie, "1.5 giờ"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2549,7 +2549,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Yid, "50 סעקונדעס"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2557,7 +2557,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Yid, "50 מינוט"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2565,7 +2565,7 @@ mod tests {
                     let got =
                         TimeParser::new().parse_max_time_seconds(&base_text(Lang::Yid, "1.5 שעה"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
 
@@ -2577,7 +2577,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Zul, "50 imizuzwana"));
 
-                    assert_eq!(got, Some(1));
+                    assert_eq!(got, Some(50));
                 }
 
                 #[test]
@@ -2585,7 +2585,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Zul, "50 amaminithi"));
 
-                    assert_eq!(got, Some(50));
+                    assert_eq!(got, Some(50*60));
                 }
 
                 #[test]
@@ -2593,7 +2593,7 @@ mod tests {
                     let got = TimeParser::new()
                         .parse_max_time_seconds(&base_text(Lang::Zul, "1.5 amahora"));
 
-                    assert_eq!(got, Some(90));
+                    assert_eq!(got, Some(5400));
                 }
             }
         }

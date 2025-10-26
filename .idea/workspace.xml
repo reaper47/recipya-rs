@@ -58,12 +58,7 @@
     </cargoProject>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/wakelock.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/wakelock.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/wakelock.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/wakelock.min.js" afterDir="false" />
-    </list>
+    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -900,7 +895,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok">
+  <component name="RunManager" selected="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -953,8 +948,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok -- --exact" />
+    <configuration name="Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package support --lib regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -970,8 +965,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::recipe::tests::test_get_recipe_exists_ok -- --exact" />
+    <configuration name="Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package support --lib regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -987,8 +982,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib shared_router::tests::test_shared_anonymous_ok -- --exact" />
+    <configuration name="Test time::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package support --lib regexp::time::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -1008,17 +1003,17 @@
       <item itemvalue="Cargo.Run" />
       <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
       <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
-      <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" />
-      <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok" />
-      <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
+      <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
+      <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
+      <item itemvalue="Cargo.Test time::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
+        <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
+        <item itemvalue="Cargo.Test time::tests" />
         <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
         <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
-        <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" />
-        <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok" />
-        <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
       </list>
     </recent_temporary>
   </component>
