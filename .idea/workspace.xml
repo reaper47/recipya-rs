@@ -60,16 +60,19 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/timer.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/timer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/timer.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/timer.min.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/edit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/edit.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -442,7 +445,10 @@
     "Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_ok.executor": "Debug",
     "Cargo.Test recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok.executor": "Run",
+    "Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok.executor": "Debug",
+    "Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok.executor": "Debug",
     "Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok.executor": "Run",
+    "Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::timeline::tests::test_get_edit_timeline_event_not_exist_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::timeline::tests::test_get_edit_timeline_event_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::timeline::tests::test_get_recipe_exists_ok.executor": "Run",
@@ -897,7 +903,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Run">
+  <component name="RunManager" selected="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -916,8 +922,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test apps::cooklang::tests::test_complete_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package integrations --lib apps::cooklang::tests::test_complete_recipe_ok -- --exact" />
+    <configuration name="Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_submit_recipe_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -933,8 +939,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test apps::recipesage::tests::test_recipes::test_txt_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package integrations --lib apps::recipesage::tests::test_recipes::test_txt_ok -- --exact" />
+    <configuration name="Test recipes_router::tests::edit::tests::test_put_update_image_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_update_image_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -950,8 +956,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test apps::recipesage::tests::test_recipes::test_xml_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package integrations --lib apps::recipesage::tests::test_recipes::test_xml_ok -- --exact" />
+    <configuration name="Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -967,8 +973,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::create::tests::test_create_parse_duration_minutes_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::create::tests::test_create_parse_duration_minutes_ok -- --exact" />
+    <configuration name="Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_router::tests::recipe::tests::test_get_recipe_exists_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -984,8 +990,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipe::create::tests::test_create_parse_duration_seconds_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package models --lib recipe::create::tests::test_create_parse_duration_seconds_ok -- --exact" />
+    <configuration name="Test shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib shared_router::tests::test_shared_anonymous_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -1003,19 +1009,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipe::create::tests::test_create_parse_duration_seconds_ok" />
-      <item itemvalue="Cargo.Test recipe::create::tests::test_create_parse_duration_minutes_ok" />
-      <item itemvalue="Cargo.Test apps::cooklang::tests::test_complete_recipe_ok" />
-      <item itemvalue="Cargo.Test apps::recipesage::tests::test_recipes::test_txt_ok" />
-      <item itemvalue="Cargo.Test apps::recipesage::tests::test_recipes::test_xml_ok" />
+      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
+      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
+      <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" />
+      <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok" />
+      <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipe::create::tests::test_create_parse_duration_seconds_ok" />
-        <item itemvalue="Cargo.Test recipe::create::tests::test_create_parse_duration_minutes_ok" />
-        <item itemvalue="Cargo.Test apps::recipesage::tests::test_recipes::test_txt_ok" />
-        <item itemvalue="Cargo.Test apps::recipesage::tests::test_recipes::test_xml_ok" />
-        <item itemvalue="Cargo.Test apps::cooklang::tests::test_complete_recipe_ok" />
+        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
+        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
+        <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" />
+        <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok" />
+        <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
       </list>
     </recent_temporary>
   </component>

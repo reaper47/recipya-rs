@@ -1016,7 +1016,10 @@ pub mod test_utils {
                     vec![
                         SectionItem::new("Turn the oven at 300 F"),
                         SectionItem::new("Soak the chicken in the lemon juice"),
-                        SectionItem::new("Bake for 35 minutes"),
+                        SectionItem {
+                            text: "Bake for 35 minutes".into(),
+                            duration_seconds: Some(2100),
+                        }
                     ],
                 ),
             ]),

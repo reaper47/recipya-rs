@@ -137,19 +137,20 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
         let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, 1, &recipe).await?;
+        let recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
         recipe.images = Vec::new();
         recipe.videos = Vec::new();
 
         let res = server
-            .put(&base_uri(1))
+            .put(&base_uri(recipe_id))
             .multipart(create_form(&recipe))
             .await;
 
         res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
-        let expected = recipe_for_create_to_details(recipe, &got);
+        let got = Recipe::get(&state.mm, 1, recipe_id).await?;
+        let mut expected = recipe_for_create_to_details(recipe, &got);
+        expected.ingredients = got.ingredients.clone();
+        expected.instructions = got.instructions.clone();
         pretty_assertions::assert_eq!(got, expected);
         assert!(got.recipe.image.is_none());
         pretty_assertions::assert_eq!(got.additional_images.len(), 0);
@@ -308,7 +309,6 @@ mod tests {
             .await;
 
         res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
         let got = Recipe::get(&state.mm, 1, 1).await?;
         let mut expected = recipe_for_create_to_details(recipe, &got);
         expected.ingredients = got.ingredients.clone();

@@ -704,12 +704,14 @@ mod tests {
             recipe2.instructions = Sections::from([(
                 "".into(),
                 vec![
-                    SectionItem::new(
-                        "Sauté veggies: In a large pot, melt butter over medium heat. Add onions and garlic, cooking until soft (about 5 minutes). Add mushrooms and cook until they release moisture and begin to brown ",
-                    ),
-                    SectionItem::new(
-                        "Make roux: Sprinkle flour over the mushrooms and stir well to coat. Cook for 1–2 minutes to eliminate the raw flour taste.",
-                    ),
+                    SectionItem {
+                        text: "Sauté veggies: In a large pot, melt butter over medium heat. Add onions and garlic, cooking until soft (about 5 minutes). Add mushrooms and cook until they release moisture and begin to brown ".into(),
+                        duration_seconds: Some(300),
+                    },
+                    SectionItem {
+                        text: "Make roux: Sprinkle flour over the mushrooms and stir well to coat. Cook for 1–2 minutes to eliminate the raw flour taste.".into(),
+                        duration_seconds: Some(120),
+                    },
                 ],
             )]);
             let mut recipe3 = a_complete_recipe_for_create();
@@ -717,12 +719,11 @@ mod tests {
             recipe3.instructions = Sections::from([(
                 "".into(),
                 vec![
-                    SectionItem::new(
-                        "Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining.",
-                    ),
-                    SectionItem::new(
-                        "Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.",
-                    ),
+                    SectionItem::new("Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining."),
+                    SectionItem {
+                        text: "Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.".into(),
+                        duration_seconds: Some(120),
+                    },
                 ],
             )]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
