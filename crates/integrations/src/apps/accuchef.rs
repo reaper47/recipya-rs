@@ -9,9 +9,10 @@ use nom::combinator::{map, opt, recognize};
 use nom::multi::{many0, many1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema, Sections};
 use tracing::error;
 use url::Url;
+
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema, SectionItem, Sections};
 
 use super::helpers::read_file;
 use crate::Result;
@@ -78,7 +79,7 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                 "".into(),
                 r.ingredients
                     .into_iter()
-                    .map(|ing| format!("{} {}", ing.quantity, ing.name))
+                    .map(|ing| SectionItem::new(format!("{} {}", ing.quantity, ing.name)))
                     .collect(),
             )]),
             times: Times {
@@ -104,7 +105,7 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             },
             instructions: Sections::from([(
                 "".into(),
-                r.instructions.into_iter().map(String::from).collect(),
+                r.instructions.into_iter().map(SectionItem::new).collect(),
             )]),
             source: r.header.into(),
         }

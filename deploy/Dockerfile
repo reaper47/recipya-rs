@@ -1,7 +1,7 @@
 # ---------------------------------------------------
 # 1 - Build Stage
 # ---------------------------------------------------
-FROM rust:1.88.0-slim AS build
+FROM rust:1.90.0-slim AS build
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \

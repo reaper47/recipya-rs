@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use maud::{Markup, PreEscaped, html};
 use serde_json::json;
@@ -13,9 +14,10 @@ use support::fs::FsSupport;
 use crate::recipes::common::render_rating;
 use crate::recipes::timeline::render_dialog;
 use crate::templates::icons::{
-    icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate,
-    icon_ellipsis_vertical, icon_fire, icon_heart, icon_pencil, icon_plus_circle, icon_printer,
-    icon_share, icon_timeline, icon_trash,
+    icon_alarm_clock, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board,
+    icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart, icon_pause,
+    icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share, icon_stop, icon_timeline,
+    icon_trash,
 };
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
@@ -210,7 +212,7 @@ pub fn view_recipe_helper(
                         }
                         (print_description(&recipe))
                         div class="border-gray-700 md:border-t" {
-                            (ingredients_instructions(&recipe_details))
+                            (render_ingredients_instructions(&recipe_details))
                             div class="hidden print:grid col-span-6 ml-2 my-1" {
                                 (render_tools(recipe_details))
                                 (render_ingredients(recipe_details))
@@ -498,7 +500,7 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
                         label {
                             input type="checkbox";
                         }
-                        span class="pl-2" { (ing) }
+                        span class="pl-2" { (ing.text) }
                     }
                 }
             }
@@ -516,7 +518,7 @@ fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
                 @for ins in instructions.iter() {
                     li class="print:mr-4" {
                         span class="text-sm whitespace-pre-line" {
-                            (ins)
+                            (ins.text)
                         }
                     }
                 }
@@ -760,9 +762,9 @@ fn render_tools(recipe_details: &RecipeDetails) -> Markup {
 }
 
 /// Renders the ingredient and the instruction lists.
-pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
+pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
     html! {
-        div #ingredients-instructions-container class="grid text-sm md:grid-flow-col md:col-span-6" {
+        div #ingredients-instructions-container class="grid text-sm md:grid-cols-6 md:col-span-6" {
             div class="col-span-6 border-gray-700 border-y px-4 py-2 md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
                     h2 class="font-semibold text-center underline pb-1" { "Tools" }
@@ -784,7 +786,7 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                              li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
                                 label class="flex items-center w-full" {
                                     input type="checkbox" class="checkbox";
-                                    span class="pl-2" { (ingredient) }
+                                    span class="pl-2" { (ingredient.text) }
                                 }
                             }
                         }
@@ -795,13 +797,86 @@ pub fn ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 h2 class="font-semibold text-center underline pb-1" { "Instructions" }
                 ol class="grid list-decimal" {
                     @for (_section, instruction) in recipe.instructions.iter() {
-                        @for instruction in instruction.iter() {
-                            li class="min-w-full py-2 select-none hover:bg-base-300" _="on mousedown toggle .line-through" {
-                                span class="whitespace-pre-line" { (instruction) }
+                        @for (idx, instruction) in instruction.iter().enumerate() {
+                            li class="min-w-full py-2 select-none hover:bg-base-300" {
+                                div class="flex" {
+                                    div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
+                                        (instruction.text)
+                                    }
+                                     @if let Some(d) = instruction.duration_seconds {
+                                        div id=(format!("timer-container-{idx}")) class="timer-container" {
+                                            button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                                                   _="on click add .hidden to me
+                                                      remove .hidden from the next <div/>
+                                                      call initTimer(event)" {
+                                                (icon_alarm_clock())
+                                            }
+                                            (render_countdown(&format!("countdown-step-{idx}"), d))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+fn format_timer_label(seconds: i32) -> String {
+    let duration = Duration::from_secs(seconds as u64);
+    format!("Start {} timer", humantime::format_duration(duration))
+}
+
+fn render_countdown(id: &str, num_seconds: i32) -> Markup {
+    let hours = num_seconds / 3600;
+    let minutes = (num_seconds % 3600) / 60;
+    let seconds = num_seconds % 60;
+
+    html! {
+        div class="countdown-container hidden flex flex-col gap-2 items-center" {
+            div id=(id) class="countdown font-mono text-2xl" {
+                span style=(format!("--value:{hours};")) aria-live="polite" aria-label=(hours) { (hours) }
+                ":"
+                span style=(format!("--value:{minutes}; --digits: 2;")) aria-live="polite" aria-label=(minutes) { (minutes) }
+                ":"
+                span style=(format!("--value:{seconds}; --digits: 2;")) aria-live="polite" aria-label=(seconds) { (seconds) }
+            }
+            div class="flex gap-2 w-full justify-center" {
+                button class="timer-play hidden btn btn-sm btn-soft btn-success btn-square"
+                    _="on click
+                       add .hidden to me
+                       remove .hidden from next <button/>
+                       call playTimer(event)"
+                { (icon_play()) }
+
+                button class="timer-pause btn btn-sm btn-soft btn-warning btn-square"
+                    _="on click
+                       add .hidden to me
+                       remove .hidden from previous <button/>
+                       call pauseTimer(event)"
+                { (icon_pause()) }
+
+                button class="timer-stop btn btn-sm btn-soft btn-error btn-square"
+                    _="on click
+                       remove .hidden from previous <button.timer-pause/>
+                       add .hidden to previous <button.timer-play/>
+                       add .hidden to closest .countdown-container
+                       remove .hidden from the first <button/> in closest .timer-container
+                       call stopTimer(event)"
+                { (icon_stop()) }
+
+                button class="timer-end btn btn-sm btn-soft btn-error btn-square btn-block hidden"
+                    _="on click
+                       add .hidden to me
+                       remove .hidden from previous <button.timer-pause/>
+                        remove .hidden from previous <button.timer-stop/>
+                       add .hidden to previous <button.timer-play/>
+                       add .hidden to closest .countdown-container
+                       remove .hidden from the first <button/> in closest .timer-container
+                       call stopTimer(event)"
+                { "End" }
             }
         }
     }

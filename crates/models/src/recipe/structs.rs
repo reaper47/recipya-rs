@@ -11,11 +11,12 @@ use whatlang::Lang;
 use math::cooking::units;
 use recipe_schema::{
     CreativeWorkOrText, DefinedTermOrTextOrUrl, HowToToolOrText, NutritionInformationSchema,
-    RecipeSchema, Sections,
+    RecipeSchema, SectionItem, Sections,
 };
 use repository::schema;
 use support::fs::FsSupport;
 use support::name_entity_with_relations;
+use support::regexp::time::TimeParser;
 use support::strings::extract_number;
 
 use crate::recipe::RecipeForm;
@@ -102,14 +103,14 @@ impl RecipeForCreate {
             &[
                 self.name.as_str(),
                 self.description.as_deref().unwrap_or(""),
-                &self
-                    .ingredients
-                    .iter()
-                    .chain(&self.instructions)
-                    .flat_map(|(_, items)| items)
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .join(" "),
+                &itertools::Itertools::intersperse(
+                    self.ingredients
+                        .iter()
+                        .chain(&self.instructions)
+                        .flat_map(|(_, items)| items.iter().map(|v| v.text.as_str())),
+                    " ",
+                )
+                .collect::<String>(),
             ]
             .join(" "),
         )
@@ -133,8 +134,14 @@ impl From<&RecipeForm> for RecipeForCreate {
             videos: vec![],
             category: form.category.clone().or(Some("uncategorized".into())),
             cuisine: form.cuisine.clone(),
-            ingredients: Sections::from([("".into(), ingredients.to_vec())]),
-            instructions: Sections::from([("".into(), form.instructions.clone())]),
+            ingredients: Sections::from([(
+                "".into(),
+                ingredients.iter().map(SectionItem::new).collect(),
+            )]),
+            instructions: Sections::from([(
+                "".into(),
+                form.instructions.iter().map(SectionItem::new).collect(),
+            )]),
             keywords: form.keywords.clone(),
             measurement_system_id,
             nutrition: form.nutrition.clone(),
@@ -161,8 +168,14 @@ impl From<RecipeForm> for RecipeForCreate {
             videos: vec![],
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: Sections::from([("".into(), ingredients)]),
-            instructions: Sections::from([("".into(), form.instructions)]),
+            ingredients: Sections::from([(
+                "".into(),
+                ingredients.iter().map(SectionItem::new).collect(),
+            )]),
+            instructions: Sections::from([(
+                "".into(),
+                form.instructions.iter().map(SectionItem::new).collect(),
+            )]),
             keywords: form.keywords,
             measurement_system_id,
             nutrition: form.nutrition,
@@ -194,7 +207,10 @@ impl From<&RecipeSchema> for RecipeForCreate {
             videos: vec![],
             category: String::try_from(schema.recipe_category.clone()).ok(),
             cuisine: schema.recipe_cuisine.clone().map(String::from),
-            ingredients: Sections::from([("".into(), ingredients)]),
+            ingredients: Sections::from([(
+                "".into(),
+                ingredients.iter().map(SectionItem::new).collect(),
+            )]),
             instructions: Sections::from(schema.recipe_instructions.clone().unwrap_or_default()),
             keywords: match &schema.keywords {
                 None => vec![],
@@ -305,16 +321,15 @@ impl From<RecipeForCreate> for RecipeDetails {
                 source: recipe_c.source,
                 ..Default::default()
             },
-            category: recipe_c.category.clone().unwrap_or_default(),
-            cuisine: recipe_c.cuisine.clone(),
-            ingredients: recipe_c.ingredients.clone(),
-            instructions: recipe_c.instructions.clone(),
-            keywords: recipe_c.keywords.clone(),
-            nutrition: recipe_c.nutrition.clone().map(|n| Nutrition::from(&n)),
-            times: Times::from(recipe_c.times.clone().unwrap_or_default()),
+            category: recipe_c.category.unwrap_or_default(),
+            cuisine: recipe_c.cuisine,
+            ingredients: recipe_c.ingredients,
+            instructions: recipe_c.instructions,
+            keywords: recipe_c.keywords,
+            nutrition: recipe_c.nutrition.map(|n| Nutrition::from(&n)),
+            times: Times::from(recipe_c.times.unwrap_or_default()),
             tools: recipe_c
                 .tools
-                .clone()
                 .into_iter()
                 .enumerate()
                 .map(|(idx, t)| {
@@ -746,8 +761,19 @@ pub(super) struct IngredientRecipeForInsert {
 /// Represents the data required to insert an instruction into the `instructions` table.
 #[derive(Insertable)]
 #[diesel(table_name = schema::instructions)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
 pub(super) struct InstructionForInsert {
     pub name: String,
+    pub duration_seconds: Option<i32>,
+}
+
+impl From<&SectionItem> for InstructionForInsert {
+    fn from(item: &SectionItem) -> Self {
+        Self {
+            name: item.text.clone(),
+            duration_seconds: TimeParser::new().parse_max_time_seconds(&item.text),
+        }
+    }
 }
 
 /// Represents the data required to insert an instruction-recipe association into the
@@ -861,16 +887,13 @@ pub(super) struct VideoForInsert {
 
 #[cfg(feature = "test-utils")]
 pub mod test_utils {
+    use super::*;
     use crate::recipe::{
         Nutrition, NutritionForCreate, RecipeForCreate, Times, TimesForCreate, ToolForCreate,
         ToolRecipe, VideoForCreate,
     };
     use crate::{Recipe, RecipeDetails};
-
     use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-    use uuid::Uuid;
-
-    use recipe_schema::Sections;
 
     /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.
     pub fn a_complete_recipe() -> RecipeDetails {
@@ -970,28 +993,34 @@ pub mod test_utils {
             ingredients: Sections::from([
                 (
                     "Sauce".into(),
-                    Vec::<String>::from(["1 cup blue spinach".into(), "1/2 tbsp cinnamon".into()]),
+                    vec![
+                        SectionItem::new("1 cup blue spinach"),
+                        SectionItem::new("1/2 tbsp cinnamon"),
+                    ],
                 ),
                 (
                     "Main".into(),
-                    Vec::<String>::from([
-                        "4 pounds top quality chicken filet".into(),
-                        "1/8 cup lemon juice".into(),
-                    ]),
+                    vec![
+                        SectionItem::new("4 pounds top quality chicken filet"),
+                        SectionItem::new("1/8 cup lemon juice"),
+                    ],
                 ),
             ]),
             instructions: Sections::from([
                 (
                     "Sauce".into(),
-                    Vec::<String>::from(["Mix all these ingredients".into()]),
+                    vec![SectionItem::new("Mix all these ingredients")],
                 ),
                 (
                     "Chicken".into(),
-                    Vec::<String>::from([
-                        "Turn the oven at 300 F".into(),
-                        "Soak the chicken in the lemon juice".into(),
-                        "Bake for 35 minutes".into(),
-                    ]),
+                    vec![
+                        SectionItem::new("Turn the oven at 300 F"),
+                        SectionItem::new("Soak the chicken in the lemon juice"),
+                        SectionItem {
+                            text: "Bake for 35 minutes".into(),
+                            duration_seconds: Some(2100),
+                        }
+                    ],
                 ),
             ]),
             keywords: Vec::<String>::from(["vegetarian".into(), "tofu".into()]),
@@ -1307,11 +1336,17 @@ mod tests {
                 description: Some("This is the best hamburger ever".into()),
                 ingredients: Sections::from([(
                     "".into(),
-                    vec!["1 cup of flour".into(), "1 cup of water".into()],
+                    vec![
+                        SectionItem::new("1 cup of flour"),
+                        SectionItem::new("1 cup of water"),
+                    ],
                 )]),
                 instructions: Sections::from([(
                     "".into(),
-                    vec!["Mix all ingredients".into(), "Bake for 30 minutes".into()],
+                    vec![
+                        SectionItem::new("Mix all ingredients"),
+                        SectionItem::new("Bake for 30 minutes"),
+                    ],
                 )]),
                 ..Default::default()
             };

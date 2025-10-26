@@ -7,17 +7,17 @@
   "scripts": {
     "build": "npm run build:css && npm run build:js",
     "build:css": "npx @tailwindcss/cli -i ./tailwind-custom.css -o ../public/css/tailwind.css --minify",
-    "build:js": "uglifyjs --compress --mangle -o ../public/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../public/js/toast.min.js -- toast.js && uglifyjs --compress --mangle -o ../public/js/wakelock.min.js -- wakelock.js && uglifyjs --compress --mangle -o ../public/js/json-highlighter.min.js -- json-highlighter.js && uglifyjs --compress --mangle -o ../public/js/media.min.js -- media.js"
+    "build:js": "uglifyjs --compress --mangle -o ../public/js/core.min.js -- core.js && uglifyjs --compress --mangle -o ../public/js/toast.min.js -- toast.js && uglifyjs --compress --mangle -o ../public/js/wakelock.min.js -- wakelock.js && uglifyjs --compress --mangle -o ../public/js/json-highlighter.min.js -- json-highlighter.js && uglifyjs --compress --mangle -o ../public/js/media.min.js -- media.js && uglifyjs --compress --mangle -o ../public/js/timer.min.js -- timer.js"
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.14",
+    "@tailwindcss/cli": "^4.1.16",
     "@tailwindcss/typography": "^0.5.19",
     "copyfiles": "^2.4.1",
-    "daisyui": "^5.2.2",
-    "esbuild": "^0.25.10",
+    "daisyui": "^5.3.9",
+    "esbuild": "^0.25.11",
     "mjml": "^4.16.1",
-    "tailwindcss": "^4.1.14",
+    "tailwindcss": "^4.1.16",
     "uglify-js": "^3.19.3"
   }
 }

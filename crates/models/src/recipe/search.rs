@@ -424,7 +424,7 @@ mod tests {
     mod tests_search {
         use super::*;
         use crate::recipe::ToolForCreate;
-        use recipe_schema::Sections;
+        use recipe_schema::{SectionItem, Sections};
 
         fn to_recipe_details(id: i64, recipe_c: RecipeForCreate) -> RecipeDetails {
             let mut keywords = recipe_c.keywords;
@@ -664,15 +664,18 @@ mod tests {
             recipe2.name = "Taco Tuesday".to_string();
             recipe2.ingredients = Sections::from([(
                 "".into(),
-                vec!["tomato".to_string(), "1/2 cups of lettuce".to_string()],
+                vec![
+                    SectionItem::new("tomato"),
+                    SectionItem::new("1/2 cups of lettuce"),
+                ],
             )]);
             let mut recipe3 = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
             recipe3.ingredients = Sections::from([(
                 "".into(),
                 vec![
-                    "1 tbsp of hot cayenne pepper".to_string(),
-                    "3 lbs of chicken breasts".to_string(),
+                    SectionItem::new("1 tbsp of hot cayenne pepper"),
+                    SectionItem::new("3 lbs of chicken breasts"),
                 ],
             )]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
@@ -698,16 +701,31 @@ mod tests {
             let recipe1 = a_complete_recipe_for_create();
             let mut recipe2 = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
-            recipe2.instructions = Sections::from([("".into(), vec![
-                "Sauté veggies: In a large pot, melt butter over medium heat. Add onions and garlic, cooking until soft (about 5 minutes). Add mushrooms and cook until they release moisture and begin to brown ".to_string(),
-                "Make roux: Sprinkle flour over the mushrooms and stir well to coat. Cook for 1–2 minutes to eliminate the raw flour taste.".to_string(),
-            ])]);
+            recipe2.instructions = Sections::from([(
+                "".into(),
+                vec![
+                    SectionItem {
+                        text: "Sauté veggies: In a large pot, melt butter over medium heat. Add onions and garlic, cooking until soft (about 5 minutes). Add mushrooms and cook until they release moisture and begin to brown ".into(),
+                        duration_seconds: Some(300),
+                    },
+                    SectionItem {
+                        text: "Make roux: Sprinkle flour over the mushrooms and stir well to coat. Cook for 1–2 minutes to eliminate the raw flour taste.".into(),
+                        duration_seconds: Some(120),
+                    },
+                ],
+            )]);
             let mut recipe3 = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
-            recipe3.instructions = Sections::from([("".into(), vec![
-                "Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining.".to_string(),
-                "Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.".to_string(),
-            ])]);
+            recipe3.instructions = Sections::from([(
+                "".into(),
+                vec![
+                    SectionItem::new("Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining."),
+                    SectionItem {
+                        text: "Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.".into(),
+                        duration_seconds: Some(120),
+                    },
+                ],
+            )]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
             let recipe_search =

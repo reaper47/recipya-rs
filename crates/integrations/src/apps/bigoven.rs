@@ -7,11 +7,12 @@ use nom::combinator::{map, map_res, opt};
 use nom::multi::many1;
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
+use url::Url;
+
 use recipe_schema::{
     AggregateRating, AtType, DefinedTermOrTextOrUrl, NumberOrText, RecipeCategory, RecipeSchema,
-    Sections,
+    SectionItem, Sections,
 };
-use url::Url;
 
 use super::helpers::read_file;
 use crate::Result;
@@ -94,9 +95,9 @@ impl From<RecipeComponents<'_>> for BigOvenRecipe {
                             .replace("  ", " ");
 
                             if let Some((_, lines)) = acc.last_mut() {
-                                lines.push(s);
+                                lines.push(SectionItem::new(s));
                             } else {
-                                acc.push(("".into(), vec![s.trim().to_string()]));
+                                acc.push(("".into(), vec![SectionItem::new(s.trim())]));
                             }
                         }
                         IngredientType::Section(ing) => {
@@ -145,7 +146,7 @@ impl From<BigOvenRecipe> for RecipeSchema {
             recipe_ingredient: sections_to_vec(r.ingredients),
             recipe_instructions: sections_to_itemlist(Sections::from([(
                 "".into(),
-                r.instructions,
+                r.instructions.iter().map(SectionItem::new).collect(),
             )])),
             recipe_yield: to_yield(r.servings.round() as i64),
             url,
@@ -814,23 +815,23 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
                 ]),
                 recipe_instructions: sections_to_itemlist(Sections::from([
                     ("".into(), vec![
-                        "Below assumes you are making your own chicken tenders, whereas the recipe above uses pre-packaged chicken tenders.".into(),
-                        "Directions".into(),
-                        "Preheat oil in deep fryer or deep pan over medium heat.".into(),
-                        "You want the temperature of the oil to be around 350 degrees.".into(),
-                        "Blend together all ingredients for dressing in a small bowl with an electric mixer.".into(),
-                        "Put dressing in refrigerator to chill while you prepare the salad.".into(),
-                        "In a small, shallow bowl beat egg, add milk, and mix well.".into(),
-                        "In another bowl, combine flour with corn flake crumbs, salt and pepper.".into(),
-                        "Cut chicken breast into 4 or 5 long strips.".into(),
-                        "Dip each strip of chicken first into egg mixture then into the flour mixture, coating each piece completely.".into(),
-                        "Fry each chicken finger for 5 minutes or until coating has darkened to brown.".into(),
-                        "Prepare salad by tossing the chopped romaine with the chopped red cabbage, Napa cabbage, and carrots.".into(),
-                        "Sprinkle sliced green onion on top of the lettuce.".into(),
-                        "Sprinkle almonds over the salad, then the chow mein noodles.".into(),
-                        "Cut the chicken into small bite-size chunks.".into(),
-                        "Place the chicken onto the salad forming a pile in the middle.".into(),
-                        "Serve with salad dressing drizzled over it or on the side.".into(),
+                        SectionItem::new("Below assumes you are making your own chicken tenders, whereas the recipe above uses pre-packaged chicken tenders."),
+                        SectionItem::new("Directions"),
+                        SectionItem::new("Preheat oil in deep fryer or deep pan over medium heat."),
+                        SectionItem::new("You want the temperature of the oil to be around 350 degrees."),
+                        SectionItem::new("Blend together all ingredients for dressing in a small bowl with an electric mixer."),
+                        SectionItem::new("Put dressing in refrigerator to chill while you prepare the salad."),
+                        SectionItem::new("In a small, shallow bowl beat egg, add milk, and mix well."),
+                        SectionItem::new("In another bowl, combine flour with corn flake crumbs, salt and pepper."),
+                        SectionItem::new("Cut chicken breast into 4 or 5 long strips."),
+                        SectionItem::new("Dip each strip of chicken first into egg mixture then into the flour mixture, coating each piece completely."),
+                        SectionItem::new("Fry each chicken finger for 5 minutes or until coating has darkened to brown."),
+                        SectionItem::new("Prepare salad by tossing the chopped romaine with the chopped red cabbage, Napa cabbage, and carrots."),
+                        SectionItem::new("Sprinkle sliced green onion on top of the lettuce."),
+                        SectionItem::new("Sprinkle almonds over the salad, then the chow mein noodles."),
+                        SectionItem::new("Cut the chicken into small bite-size chunks."),
+                        SectionItem::new("Place the chicken onto the salad forming a pile in the middle."),
+                        SectionItem::new("Serve with salad dressing drizzled over it or on the side."),
                     ])
                 ])),
                 recipe_yield: to_yield(4),

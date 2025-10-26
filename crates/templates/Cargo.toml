@@ -13,16 +13,17 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-config = { workspace = true }
-integrations = { workspace = true }
+config.workspace = true
+humantime.workspace = true
+integrations.workspace = true
 markdown = "1.0.0"
 maud = { version = "0.27.0", features = ["axum"] }
-math = { workspace = true }
-models = { workspace = true }
-serde_json = { workspace = true }
-strum = { workspace = true }
-support = { workspace = true }
-url = { workspace = true }
+math.workspace = true
+models.workspace = true
+serde_json.workspace = true
+strum.workspace = true
+support.workspace = true
+url.workspace = true
 
 [dev-dependencies]
-pretty_assertions = { workspace = true }
+pretty_assertions.workspace = true

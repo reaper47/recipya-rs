@@ -2,18 +2,20 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::io::Read;
 
+use serde::Deserialize;
+use url::Url;
+
+use recipe_schema::{
+    AtType, DefinedTermOrTextOrUrl, Energy, ImageObjectOrUrl, Mass, NutritionInformationSchema,
+    RecipeCategory, RecipeSchema, SectionItem, Sections,
+};
+use support::strings::extract_number;
+
 use crate::common::Nutrition;
 use crate::error::Result;
 use crate::helpers::{
     seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
 };
-use recipe_schema::{
-    AtType, DefinedTermOrTextOrUrl, Energy, ImageObjectOrUrl, Mass, NutritionInformationSchema,
-    RecipeCategory, RecipeSchema, Sections,
-};
-use serde::Deserialize;
-use support::strings::extract_number;
-use url::Url;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -195,9 +197,9 @@ where
                 if step.is_section {
                     acc.push((step.step, Vec::new()));
                 } else if let Some((_, steps)) = acc.last_mut() {
-                    steps.push(step.step);
+                    steps.push(SectionItem::new(step.step));
                 } else {
-                    acc.push(("".into(), vec![step.step]));
+                    acc.push(("".into(), vec![SectionItem::new(step.step)]));
                 }
                 acc
             },
@@ -260,30 +262,30 @@ mod tests {
             ]),
             recipe_instructions: sections_to_itemlist(Sections::from([
                 ("Sponge".into(), vec![
-                    "Preheat the oven to 140°C fan forced/ 150°C convection".into(),
-                    "Line the bottom of an 8-inch cake tin with parchment paper".into(),
-                    "In a medium-sized bowl whisk the egg yolks, mil, and oil".into(),
-                    "Sift the flour into the egg yolk mixture and mix until combined".into(),
-                    "In another bowl with an electric whisk, or in the bowl of a stand mixer fitted with a whisk attachment, whip the egg whites with sugar until stiff peaks".into(),
-                    "Add 1/3 of the meringue into the egg yolk mixture and mix until smooth".into(),
-                    "Transfer the lightened egg yolk mixture to the remaining meringue and fold carefully until just combined".into(),
-                    "Transfer the batter to the cake tin".into(),
-                    "Place the cake tin in a water bath (a tray/tin of boiling water) and bake for 70 minutes".into(),
-                    "Remove from the oven and allow it to cool completely".into(),
-                    "Once cooled run a knife around the edge of the cake tin and invert the pan".into(),
-                    "Wrap in cling wrap and place in the fridge until assembly".into(),
+                    SectionItem::new("Preheat the oven to 140°C fan forced/ 150°C convection"),
+                    SectionItem::new("Line the bottom of an 8-inch cake tin with parchment paper"),
+                    SectionItem::new("In a medium-sized bowl whisk the egg yolks, mil, and oil"),
+                    SectionItem::new("Sift the flour into the egg yolk mixture and mix until combined"),
+                    SectionItem::new("In another bowl with an electric whisk, or in the bowl of a stand mixer fitted with a whisk attachment, whip the egg whites with sugar until stiff peaks"),
+                    SectionItem::new("Add 1/3 of the meringue into the egg yolk mixture and mix until smooth"),
+                    SectionItem::new("Transfer the lightened egg yolk mixture to the remaining meringue and fold carefully until just combined"),
+                    SectionItem::new("Transfer the batter to the cake tin"),
+                    SectionItem::new("Place the cake tin in a water bath (a tray/tin of boiling water) and bake for 70 minutes"),
+                    SectionItem::new("Remove from the oven and allow it to cool completely"),
+                    SectionItem::new("Once cooled run a knife around the edge of the cake tin and invert the pan"),
+                    SectionItem::new("Wrap in cling wrap and place in the fridge until assembly"),
                 ]), ("Whipped Cream".into(), vec![
-                    "Whip the cream with an electric whisk and slowly stream the sugar in".into(),
-                    "Beat until stiff peaks".into(),
+                    SectionItem::new("Whip the cream with an electric whisk and slowly stream the sugar in"),
+                    SectionItem::new("Beat until stiff peaks"),
                 ]), ("Assembly".into(), vec![
-                    "Combine the sugar and water in a small bowl and microwave for 30 seconds until melted, cool".into(),
-                    "Slice half the punnet of strawberries".into(),
-                    "Slice the cooled cake into three layers".into(),
-                    "Lay one layer of cake down and brush with the sugar syrup".into(),
-                    "Spread on a layer of cream, a layer of strawberries and then cover with another layer of cream, repeat".into(),
-                    "Place the last layer of sponge on top and give the cake a thin crumb coat before icing the entire cake with cream".into(),
-                    "Place star tip into a piping bag and fill it with the remaining cream".into(),
-                    "Pipe a border around the edge of the cake and decorate with the remaining strawberries".into(),
+                    SectionItem::new("Combine the sugar and water in a small bowl and microwave for 30 seconds until melted, cool"),
+                    SectionItem::new("Slice half the punnet of strawberries"),
+                    SectionItem::new("Slice the cooled cake into three layers"),
+                    SectionItem::new("Lay one layer of cake down and brush with the sugar syrup"),
+                    SectionItem::new("Spread on a layer of cream, a layer of strawberries and then cover with another layer of cream, repeat"),
+                    SectionItem::new("Place the last layer of sponge on top and give the cake a thin crumb coat before icing the entire cake with cream"),
+                    SectionItem::new("Place star tip into a piping bag and fill it with the remaining cream"),
+                    SectionItem::new("Pipe a border around the edge of the cake and decorate with the remaining strawberries"),
                 ]),
             ])),
             recipe_yield: to_yield(1),

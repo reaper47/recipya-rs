@@ -58,11 +58,7 @@
     </cargoProject>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/timeline.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/timeline.rs" afterDir="false" />
-    </list>
+    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -72,8 +68,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="JavaScript File" />
         <option value="Rust File" />
+        <option value="JavaScript File" />
       </list>
     </option>
   </component>
@@ -133,7 +129,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Cargo.Run.executor": "Debug",
+    "Cargo.Run.executor": "Run",
     "Cargo.Test admin_router::tests.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_ok.executor": "Run",
@@ -155,6 +151,8 @@
     "Cargo.Test admin_router::tests::tests_users::tests_patch::test_must_be_admin_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::tests_patch::test_update_success_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_users::tests_patch::test_user_does_not_exist_ok.executor": "Run",
+    "Cargo.Test apps::bigoven::tests::tests_recipes::test_recipe1_ok.executor": "Run",
+    "Cargo.Test apps::cooklang::tests::test_complete_recipe_ok.executor": "Run",
     "Cargo.Test apps::crouton::tests::test_all_fields_ok.executor": "Run",
     "Cargo.Test apps::kalorio::tests::test_recipes::test_txt.executor": "Run",
     "Cargo.Test apps::mealmaster::tests::tests_recipes::test_recipes_unspecified_version.executor": "Run",
@@ -406,6 +404,8 @@
     "Cargo.Test recipe::create::tests::test_create_duplicate_name_err.executor": "Run",
     "Cargo.Test recipe::create::tests::test_create_duplicates_err.executor": "Run",
     "Cargo.Test recipe::create::tests::test_create_ok.executor": "Run",
+    "Cargo.Test recipe::create::tests::test_create_parse_duration_minutes_ok.executor": "Run",
+    "Cargo.Test recipe::create::tests::test_create_parse_duration_seconds_ok.executor": "Run",
     "Cargo.Test recipe::delete::tests::tests_delete::test_delete_recipe_found_ok.executor": "Debug",
     "Cargo.Test recipe::search::tests::test_search_by_category.executor": "Run",
     "Cargo.Test recipe::search::tests::test_search_by_name.executor": "Run",
@@ -437,7 +437,10 @@
     "Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_ok.executor": "Debug",
     "Cargo.Test recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok.executor": "Run",
+    "Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok.executor": "Debug",
+    "Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok.executor": "Run",
+    "Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::timeline::tests::test_get_edit_timeline_event_not_exist_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::timeline::tests::test_get_edit_timeline_event_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::timeline::tests::test_get_recipe_exists_ok.executor": "Run",
@@ -499,6 +502,62 @@
     "Cargo.Test recipes_routes::tests::tests_search::test_results_query1.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_search::test_results_query2.executor": "Run",
     "Cargo.Test recipes_routes::tests::tests_search::test_results_query3.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::test_parse_max_time_english.executor": "Debug",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_amharic_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_amharic_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_amharic_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_arabic_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_arabic_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_arabic_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_bengali_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_danish_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_danish_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_danish_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_english_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_english_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_esperanto_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_finnish_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_finnish_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_finnish_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_french_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_hebrew_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_hebrew_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_hebrew_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_hindi_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_hindi_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_hindi_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_italian_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_italian_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_italian_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_japanese_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_japanese_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_japanese_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_javanese_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_javanese_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_javanese_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_korean_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_korean_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_korean_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_norwegian_bokmal_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_norwegian_bokmal_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_norwegian_bokmal_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_polish_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_polish_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_polish_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_swedish_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_swedish_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_swedish_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_turkish_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_turkish_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_turkish_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_ukrainian_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_yiddish_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_yiddish_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::test_yiddish_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_akan::test_hours.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_shona::test_seconds.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_sinhalese::test_minutes.executor": "Run",
+    "Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_sinhalese::test_seconds.executor": "Run",
     "Cargo.Test report::tests.executor": "Run",
     "Cargo.Test scale::tests.executor": "Run",
     "Cargo.Test search::tests.executor": "Run",
@@ -681,15 +740,31 @@
     "Cargo.Test tests_abbrev.executor": "Run",
     "Cargo.Test tests_add.executor": "Run",
     "Cargo.Test tests_add_category.executor": "Run",
+    "Cargo.Test tests_afrikaans.executor": "Run",
+    "Cargo.Test tests_akan.executor": "Run",
+    "Cargo.Test tests_amharic.executor": "Run",
+    "Cargo.Test tests_arabic.executor": "Run",
+    "Cargo.Test tests_armenian.executor": "Run",
     "Cargo.Test tests_auto_convert_to_utf8.executor": "Run",
+    "Cargo.Test tests_azerbaijani.executor": "Run",
+    "Cargo.Test tests_belarusian.executor": "Run",
+    "Cargo.Test tests_bermese.executor": "Run",
+    "Cargo.Test tests_bulgarian.executor": "Run",
+    "Cargo.Test tests_burmese.executor": "Run",
+    "Cargo.Test tests_catalan.executor": "Run",
     "Cargo.Test tests_change_password.executor": "Run",
     "Cargo.Test tests_confirm.executor": "Run",
     "Cargo.Test tests_conversion.executor": "Run",
     "Cargo.Test tests_conversions.executor": "Run",
+    "Cargo.Test tests_croatian.executor": "Run",
+    "Cargo.Test tests_czech.executor": "Run",
+    "Cargo.Test tests_danish.executor": "Run",
     "Cargo.Test tests_delete_recipe_category.executor": "Run",
     "Cargo.Test tests_delete_user.executor": "Run",
     "Cargo.Test tests_display.executor": "Run",
+    "Cargo.Test tests_dutch.executor": "Run",
     "Cargo.Test tests_edit.executor": "Run",
+    "Cargo.Test tests_estonian.executor": "Run",
     "Cargo.Test tests_extract_number.executor": "Run",
     "Cargo.Test tests_favourite_recipe.executor": "Run",
     "Cargo.Test tests_filters.executor": "Run",
@@ -698,11 +773,26 @@
     "Cargo.Test tests_from_str_vec.executor": "Run",
     "Cargo.Test tests_from_unit.executor": "Run",
     "Cargo.Test tests_get_page.executor": "Run",
+    "Cargo.Test tests_gujarati.executor": "Run",
+    "Cargo.Test tests_hungarian.executor": "Run",
+    "Cargo.Test tests_indonesian.executor": "Run",
+    "Cargo.Test tests_kannada.executor": "Run",
+    "Cargo.Test tests_khmer.executor": "Run",
+    "Cargo.Test tests_latin.executor": "Run",
+    "Cargo.Test tests_latvian.executor": "Run",
+    "Cargo.Test tests_lithuanian.executor": "Run",
     "Cargo.Test tests_login.executor": "Run",
+    "Cargo.Test tests_macedonian.executor": "Run",
+    "Cargo.Test tests_malayalam.executor": "Run",
+    "Cargo.Test tests_marathi.executor": "Run",
     "Cargo.Test tests_mark_favourite.executor": "Run",
+    "Cargo.Test tests_nepali.executor": "Run",
     "Cargo.Test tests_normalise_vulgar_fractions.executor": "Run",
     "Cargo.Test tests_nutrition.executor": "Run",
+    "Cargo.Test tests_oriya.executor": "Run",
     "Cargo.Test tests_pagination.executor": "Run",
+    "Cargo.Test tests_persian.executor": "Run",
+    "Cargo.Test tests_punjabi.executor": "Run",
     "Cargo.Test tests_recipe_add_import_preview.executor": "Run",
     "Cargo.Test tests_recipe_add_import_raw_json.executor": "Run",
     "Cargo.Test tests_recipe_add_manual.executor": "Run",
@@ -712,21 +802,38 @@
     "Cargo.Test tests_recipes_add_import.executor": "Run",
     "Cargo.Test tests_register.executor": "Run",
     "Cargo.Test tests_replace.executor": "Run",
+    "Cargo.Test tests_romanian.executor": "Run",
     "Cargo.Test tests_scale (1).executor": "Run",
     "Cargo.Test tests_scale (2).executor": "Run",
     "Cargo.Test tests_scale.executor": "Run",
     "Cargo.Test tests_scale_recipe.executor": "Run",
     "Cargo.Test tests_search.executor": "Run",
     "Cargo.Test tests_searchbar.executor": "Run",
+    "Cargo.Test tests_serbian.executor": "Run",
     "Cargo.Test tests_share_recipe.executor": "Run",
+    "Cargo.Test tests_shona.executor": "Run",
+    "Cargo.Test tests_sinhalese.executor": "Run",
+    "Cargo.Test tests_slovak.executor": "Run",
+    "Cargo.Test tests_slovenian.executor": "Run",
     "Cargo.Test tests_supported_websites.executor": "Run",
+    "Cargo.Test tests_tagalog.executor": "Run",
+    "Cargo.Test tests_tamil.executor": "Run",
+    "Cargo.Test tests_telugu.executor": "Run",
+    "Cargo.Test tests_thai.executor": "Run",
     "Cargo.Test tests_themes.executor": "Run",
+    "Cargo.Test tests_time_parser.executor": "Run",
+    "Cargo.Test tests_turkmen.executor": "Run",
     "Cargo.Test tests_unit_operations.executor": "Run",
     "Cargo.Test tests_unit_type.executor": "Run",
     "Cargo.Test tests_upload_note_image.executor": "Run",
+    "Cargo.Test tests_urdu.executor": "Run",
     "Cargo.Test tests_user.executor": "Run",
     "Cargo.Test tests_user_row.executor": "Run",
     "Cargo.Test tests_users.executor": "Run",
+    "Cargo.Test tests_uzbek.executor": "Run",
+    "Cargo.Test tests_vietnamese.executor": "Run",
+    "Cargo.Test tests_zulu.executor": "Run",
+    "Cargo.Test time::tests.executor": "Run",
     "Cargo.Test timeline::tests (1).executor": "Run",
     "Cargo.Test timeline::tests.executor": "Run",
     "Cargo.Test unit::tests.executor": "Run",
@@ -745,7 +852,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#167 on 98-add-timeline-function-for-cooked-recipes",
+    "git-widget-placeholder": "#168 on 99-add-timer-function",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -788,7 +895,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok">
+  <component name="RunManager" selected="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -807,8 +914,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok -- --exact" />
+    <configuration name="Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_submit_recipe_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -824,8 +931,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::add_manual::tests::test_get_logged_in_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::add_manual::tests::test_get_logged_in_ok -- --exact" />
+    <configuration name="Test recipes_router::tests::edit::tests::test_put_update_image_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_update_image_ok -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -841,8 +948,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok -- --exact" />
+    <configuration name="Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package support --lib regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -858,8 +965,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok -- --exact" />
+    <configuration name="Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package support --lib regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -875,8 +982,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test shared_router::tests::test_shared_anonymous_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib shared_router::tests::test_shared_anonymous_ok -- --exact" />
+    <configuration name="Test time::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package support --lib regexp::time::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -894,19 +1001,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok" />
-      <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" />
-      <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
-      <item itemvalue="Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_ok" />
-      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok" />
+      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
+      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
+      <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
+      <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
+      <item itemvalue="Cargo.Test time::tests" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_htmx_ok" />
-        <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
-        <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" />
-        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok" />
-        <item itemvalue="Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_ok" />
+        <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
+        <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
+        <item itemvalue="Cargo.Test time::tests" />
+        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
+        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
       </list>
     </recent_temporary>
   </component>
@@ -942,15 +1049,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/crates/templates/src/templates/recipes/timeline.rs</url>
-          <line>165</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="CargoCommandRunConfiguration">
         <watch expression="v[1].0" />

@@ -11,7 +11,7 @@ mod tests {
         ToolRecipe, VideoForCreate,
     };
     use models::{Recipe, RecipeDetails};
-    use recipe_schema::Sections;
+    use recipe_schema::{SectionItem, Sections};
     use testing::utils::{
         TestDb, assert_must_be_logged_in, build_server_logged_in, create_app_state,
     };
@@ -61,8 +61,8 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
-            ingredients: Sections::from([("".into(), vec!["1 apple".to_string()])]),
-            instructions: Sections::from([("".into(), vec!["Mix the apples".to_string()])]),
+            ingredients: Sections::from([("".into(), vec![SectionItem::new("1 apple")])]),
+            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -79,7 +79,7 @@ mod tests {
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec!["Mix the apples".to_string()])]),
+            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -96,7 +96,7 @@ mod tests {
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            ingredients: Sections::from([("".into(), vec!["8 apples".to_string()])]),
+            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -113,8 +113,8 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec!["Mix the apples".to_string()])]),
-            ingredients: Sections::from([("".into(), vec!["8 apples".to_string()])]),
+            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
+            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -135,8 +135,8 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec!["Mix the apples".to_string()])]),
-            ingredients: Sections::from([("".into(), vec!["8 apples".to_string()])]),
+            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
+            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
             category: Some("breakfast,dinner".into()),
             ..Default::default()
         };
@@ -160,17 +160,17 @@ mod tests {
             instructions: Sections::from([(
                 "".into(),
                 vec![
-                    "Mix the apples".to_string(),
-                    "Eat".to_string(),
-                    "Mix the apples".to_string(),
+                    SectionItem::new("Mix the apples"),
+                    SectionItem::new("Eat"),
+                    SectionItem::new("Mix the apples"),
                 ],
             )]),
             ingredients: Sections::from([(
                 "".into(),
                 vec![
-                    "8 apples".to_string(),
-                    "4 oranges".to_string(),
-                    "8 apples".to_string(),
+                    SectionItem::new("8 apples"),
+                    SectionItem::new("4 oranges"),
+                    SectionItem::new("8 apples"),
                 ],
             )]),
             keywords: vec!["drinks".into(), "vodka".into(), "drinks".into()],
@@ -201,14 +201,14 @@ mod tests {
             got.ingredients,
             Sections::from([(
                 "".into(),
-                vec!["8 apples".to_string(), "4 oranges".to_string()]
+                vec![SectionItem::new("8 apples"), SectionItem::new("4 oranges")]
             )])
         );
         pretty_assertions::assert_eq!(
             got.instructions,
             Sections::from([(
                 "".into(),
-                vec!["Mix the apples".to_string(), "Eat".to_string()]
+                vec![SectionItem::new("Mix the apples"), SectionItem::new("Eat")]
             )])
         );
         pretty_assertions::assert_eq!(
@@ -228,8 +228,8 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec!["Mix the apples".to_string()])]),
-            ingredients: Sections::from([("".into(), vec!["8 apples".to_string()])]),
+            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
+            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
             category: Some("drinks:vodka".into()),
             ..Default::default()
         };
@@ -267,11 +267,16 @@ mod tests {
             instructions: Sections::from([
                 (
                     "Prepare".into(),
-                    vec!["Mix the apples".into(), "Mix the blueberries".into()],
+                    vec![
+                        SectionItem::new("Mix the apples"),
+                        SectionItem::new("Mix the blueberries"),
+                    ],
                 ),
                 (
                     "Execution".into(),
-                    vec!["Add whip cream and whisk the fruits until smooth".into()],
+                    vec![SectionItem::new(
+                        "Add whip cream and whisk the fruits until smooth",
+                    )],
                 ),
             ]),
             keywords: vec!["fruits".into(), "strawberries".into(), "healthy".into()],
@@ -297,9 +302,15 @@ mod tests {
             ingredients: Sections::from([
                 (
                     "Prepare".into(),
-                    vec!["8 apples".into(), "5 lbs blueberries".into()],
+                    vec![
+                        SectionItem::new("8 apples"),
+                        SectionItem::new("5 lbs blueberries"),
+                    ],
                 ),
-                ("Execution".into(), vec!["200g 30% whip cream".into()]),
+                (
+                    "Execution".into(),
+                    vec![SectionItem::new("200g 30% whip cream")],
+                ),
             ]),
             cuisine: Some("japanese".into()),
             tools: vec![
@@ -348,16 +359,16 @@ mod tests {
                     recipe
                         .ingredients
                         .iter()
-                        .flat_map(|(_, xs)| xs.iter().cloned()) // Flatten ingredients
-                        .collect::<Vec<String>>()
+                        .flat_map(|(_, xs)| xs.iter().cloned())
+                        .collect::<Vec<_>>()
                 )]),
                 instructions: Sections::from([(
                     "".into(),
                     recipe
                         .instructions
                         .iter()
-                        .flat_map(|(_, xs)| xs.iter().cloned()) // Flatten ingredients
-                        .collect::<Vec<String>>()
+                        .flat_map(|(_, xs)| xs.iter().cloned())
+                        .collect::<Vec<_>>()
                 )]),
                 keywords: vec!["fruits".into(), "healthy".into(), "strawberries".into()],
                 nutrition: Some(Nutrition {

@@ -16,18 +16,18 @@ rust-version.workspace = true
 test-utils = []
 
 [dependencies]
-app = { workspace = true }
-auth = { workspace = true }
-axum = { workspace = true }
-axum-test = { workspace = true }
-config = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-models = { workspace = true }
-recipya-scraper = { workspace = true }
-repository = { workspace = true }
-router = { workspace = true }
-support = { workspace = true }
-tower-cookies = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
+app.workspace = true
+auth.workspace = true
+axum.workspace = true
+axum-test.workspace = true
+config.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
+models.workspace = true
+recipya-scraper.workspace = true
+repository.workspace = true
+router.workspace = true
+support.workspace = true
+tower-cookies.workspace = true
+tracing.workspace = true
+uuid.workspace = true

@@ -2111,8 +2111,24 @@ where
     }
 }
 
-/// Represents a collection of sections, where each section has a title and a list of associated items.
-pub type Sections = Vec<(String, Vec<String>)>;
+/// Collection of sections, where each section has a title and a list of associated items.
+pub type Sections = Vec<(String, Vec<SectionItem>)>;
+
+/// Represents an individual item within a section.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SectionItem {
+    pub text: String,
+    pub duration_seconds: Option<i32>,
+}
+
+impl SectionItem {
+    pub fn new(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            duration_seconds: None,
+        }
+    }
+}
 
 impl From<CreativeWorkOrItemListOrText> for Sections {
     fn from(value: CreativeWorkOrItemListOrText) -> Self {
@@ -2124,7 +2140,7 @@ impl From<CreativeWorkOrItemListOrText> for Sections {
                 } else {
                     String::new()
                 };
-                Sections::from([(section_name, vec![item])])
+                Sections::from([(section_name, vec![SectionItem::new(item)])])
             }
             CreativeWorkOrItemListOrText::ItemList(items) => {
                 let mut section_names = items
@@ -2136,7 +2152,7 @@ impl From<CreativeWorkOrItemListOrText> for Sections {
                 let mut sections = Sections::from(
                     section_names
                         .iter()
-                        .map(|name| (name.clone(), Vec::<String>::new()))
+                        .map(|name| (name.clone(), Vec::new()))
                         .collect::<Vec<_>>(),
                 );
 
@@ -2144,13 +2160,15 @@ impl From<CreativeWorkOrItemListOrText> for Sections {
                     let name = item.name.clone().unwrap_or_default();
 
                     if let Some((_name, texts)) = sections.iter_mut().find(|(n, _)| *n == name) {
-                        texts.push(item.text);
+                        texts.push(SectionItem::new(item.text));
                     }
                 }
 
                 sections
             }
-            CreativeWorkOrItemListOrText::Text(s) => Self::from([("".into(), vec![s])]),
+            CreativeWorkOrItemListOrText::Text(s) => {
+                Self::from([("".into(), vec![SectionItem::new(s)])])
+            }
         }
     }
 }

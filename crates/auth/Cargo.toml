@@ -16,14 +16,14 @@ rust-version.workspace = true
 
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
-derive_more = { workspace = true }
+derive_more.workspace = true
 enum_dispatch = "0.3.13"
 hmac = "0.12.1"
 lazy-regex = "3.4.1"
-serde = { workspace = true }
+serde.workspace = true
 sha2 = "0.10.9"
-support = { workspace = true }
-time = { workspace = true }
-tokio = { workspace = true }
-tower-cookies = { workspace = true }
-uuid = { workspace = true }
+support.workspace = true
+time.workspace = true
+tokio.workspace = true
+tower-cookies.workspace = true
+uuid.workspace = true

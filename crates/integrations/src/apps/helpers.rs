@@ -6,12 +6,13 @@ use std::io;
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 
-use recipe_schema::{ImageObjectOrUrl, ImageObjectType, RecipeSchema, Sections};
-use support::strings::auto_convert_to_utf8;
 use tracing::log::warn;
 use url::Url;
 use uuid::Uuid;
 use zip::ZipArchive;
+
+use recipe_schema::{ImageObjectOrUrl, ImageObjectType, RecipeSchema, SectionItem, Sections};
+use support::strings::auto_convert_to_utf8;
 
 use crate::Result;
 use crate::apps::{cookmate, mastercook::parse_mx2};
@@ -57,9 +58,9 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         }
 
                         if let Some((_, lines)) = acc.last_mut() {
-                            lines.push(name_trimmed);
+                            lines.push(SectionItem::new(name_trimmed));
                         } else {
-                            acc.push(("".into(), vec![name_trimmed]));
+                            acc.push(("".into(), vec![SectionItem::new(name_trimmed)]));
                         }
                     }
                     Ingredient::Section(section) => {
@@ -72,22 +73,22 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
             .map(|(section, lines)| {
                 let lines = lines
                     .into_iter()
-                    .filter(|l| !l.is_empty())
+                    .filter(|l| !l.text.is_empty())
                     .collect::<Vec<_>>();
 
                 let merged = (0..lines.len())
                     .filter_map(|i| {
                         let line = &lines[i];
 
-                        if line.ends_with(';') && i + 2 < lines.len() {
-                            Some((i, format!("{} {}", line, lines[i + 2])))
-                        } else if i > 1 && lines[i - 2].ends_with(';') {
+                        if line.text.ends_with(';') && i + 2 < lines.len() {
+                            Some((i, format!("{} {}", line.text, lines[i + 2].text)))
+                        } else if i > 1 && lines[i - 2].text.ends_with(';') {
                             None
                         } else {
-                            Some((i, line.clone()))
+                            Some((i, line.text.clone()))
                         }
                     })
-                    .map(|(_, line)| line)
+                    .map(|(_, line)| SectionItem::new(line))
                     .collect();
 
                 (section, merged)
@@ -118,10 +119,10 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
                             }
 
                             if let Some((_, lines)) = acc.last_mut() {
-                                lines.push(line);
+                                lines.push(SectionItem::new(line));
                             }
                         } else if let Some((_, lines)) = acc.last_mut() {
-                            lines.push(line);
+                            lines.push(SectionItem::new(line));
                         }
                     }
                 }
@@ -130,7 +131,7 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
             .into_iter()
             .map(|(section, mut lines)| {
                 if let Some(l) = lines.last()
-                    && l.is_empty()
+                    && l.text.is_empty()
                 {
                     lines.pop();
                 }

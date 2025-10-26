@@ -15,21 +15,21 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-axum = { workspace = true }
-config = { workspace = true }
-derive_more = { workspace = true }
-diesel = { workspace = true }
-diesel-async = { workspace = true }
-email = { workspace = true }
-models = { workspace = true }
-recipe-schema = { workspace = true }
-recipya-scraper = { workspace = true }
-repository = { workspace = true }
-support = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
-url = { workspace = true }
-uuid = { workspace = true }
+axum.workspace = true
+config.workspace = true
+derive_more.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
+email.workspace = true
+models.workspace = true
+recipe-schema.workspace = true
+recipya-scraper.workspace = true
+repository.workspace = true
+support.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url.workspace = true
+uuid.workspace = true
 
 [dev-dependencies]
-pretty_assertions = { workspace = true }
+pretty_assertions.workspace = true

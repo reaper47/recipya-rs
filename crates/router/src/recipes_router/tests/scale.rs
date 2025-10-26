@@ -8,7 +8,7 @@ mod tests {
     use models::Recipe;
     use models::recipe::RecipeForCreate;
     use models::recipe::test_utils::a_complete_recipe_for_create;
-    use recipe_schema::Sections;
+    use recipe_schema::{SectionItem, Sections};
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_ws,
         create_app_state,
@@ -94,40 +94,42 @@ mod tests {
                 ingredients: Sections::from([
                     (
                         "Sauce".into(),
-                        Vec::<String>::from([
-                            "1 cup blue spinach".into(),
-                            "1/2 tbsp cinnamon".into(),
-                            "2lb chicken".into(),
-                            "1/2 cup bread loaf".into(),
-                            "½ tbsp beef broth".into(),
-                            "7 1/2 cups flour".into(),
-                            "2 big apples".into(),
-                            "Lots of big apples".into(),
-                            "2.5 slices of bacon".into(),
-                            "2 1/3 cans of bamboo sticks".into(),
-                            "1½can of tomato paste".into(),
-                            "6 ¾ peanut butter jars".into(),
-                            "7.5mL of whiskey".into(),
-                            "2 tsp lemon juice".into(),
-                        ]),
+                        vec![
+                            SectionItem::new("1 cup blue spinach"),
+                            SectionItem::new("1/2 tbsp cinnamon"),
+                            SectionItem::new("2lb chicken"),
+                            SectionItem::new("1/2 cup bread loaf"),
+                            SectionItem::new("½ tbsp beef broth"),
+                            SectionItem::new("7 1/2 cups flour"),
+                            SectionItem::new("2 big apples"),
+                            SectionItem::new("Lots of big apples"),
+                            SectionItem::new("2.5 slices of bacon"),
+                            SectionItem::new("2 1/3 cans of bamboo sticks"),
+                            SectionItem::new("1½can of tomato paste"),
+                            SectionItem::new("6 ¾ peanut butter jars"),
+                            SectionItem::new("7.5mL of whiskey"),
+                            SectionItem::new("2 tsp lemon juice"),
+                        ],
                     ),
                     (
                         "Main".into(),
-                        Vec::<String>::from([
-                            "Ground ginger".into(),
-                            "3 Large or 4 medium ripe Hass avocados".into(),
-                            "1/4-1/2 teaspoon salt plus more for seasoning".into(),
-                            "1/2 fresh pineapple, cored and cut into 1 1/2-inch pieces".into(),
-                            "Un sac de chips de 1kg".into(),
-                            "Two 15-ounce can Goya beans".into(),
-                            "4 pounds top quality chicken filet".into(),
-                            "1/8 cup lemon juice".into(),
-                        ]),
+                        vec![
+                            SectionItem::new("Ground ginger"),
+                            SectionItem::new("3 Large or 4 medium ripe Hass avocados"),
+                            SectionItem::new("1/4-1/2 teaspoon salt plus more for seasoning"),
+                            SectionItem::new(
+                                "1/2 fresh pineapple, cored and cut into 1 1/2-inch pieces",
+                            ),
+                            SectionItem::new("Un sac de chips de 1kg"),
+                            SectionItem::new("Two 15-ounce can Goya beans"),
+                            SectionItem::new("4 pounds top quality chicken filet"),
+                            SectionItem::new("1/8 cup lemon juice"),
+                        ],
                     ),
                 ]),
                 instructions: Sections::from([(
                     "Sauce".into(),
-                    Vec::<String>::from(["Mix all these ingredients".into()]),
+                    vec![SectionItem::new("Mix all these ingredients")],
                 )]),
                 ..Default::default()
             },

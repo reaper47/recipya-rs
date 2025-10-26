@@ -15,11 +15,11 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-iso8601 = { workspace = true }
-reqwest = { workspace = true }
+iso8601.workspace = true
+reqwest.workspace = true
 schemars = "1.0.4"
-serde = { workspace = true }
-serde_json = { workspace = true }
-support = { workspace = true }
-tracing = { workspace = true }
-url = { workspace = true }
+serde.workspace = true
+serde_json.workspace = true
+support.workspace = true
+tracing.workspace = true
+url.workspace = true
