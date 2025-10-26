@@ -60,12 +60,9 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/edit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/edit.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/recipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/shared_router.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/shared_router.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/wakelock.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/wakelock.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/css/tailwind.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/css/tailwind.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/js/wakelock.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/wakelock.min.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -446,7 +443,7 @@
     "Cargo.Test recipes_router::tests::add_manual::tests::test_get_logged_in_ok.executor": "Debug",
     "Cargo.Test recipes_router::tests::edit::tests::test_get_recipe_exists_htmx_request_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok.executor": "Debug",
-    "Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok.executor": "Debug",
+    "Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok.executor": "Run",
     "Cargo.Test recipes_router::tests::timeline::tests::test_get_edit_timeline_event_not_exist_ok.executor": "Run",
@@ -903,7 +900,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok">
+  <component name="RunManager" selected="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -1017,8 +1014,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
         <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
+        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
         <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_from_htmx_ok" />
         <item itemvalue="Cargo.Test recipes_router::tests::recipe::tests::test_get_recipe_exists_ok" />
         <item itemvalue="Cargo.Test shared_router::tests::test_shared_anonymous_ok" />
