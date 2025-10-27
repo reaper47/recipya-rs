@@ -1,33 +1,50 @@
 var wakeLock = null;
-let isWakeLockEnabled = false;
 
-initWakeLock(false);
+let isToggledByUser = false;
+let isVisibilityStateHidden = false;
+let isWakeLockActivated = false;
 
-function initWakeLock(displayToast = true) {
-    isWakeLockEnabled = true;
-    requestWakeLock(displayToast);
+function toggleWakeLock(baseIdIcon = "bulb") {
+    isToggledByUser = true;
+    if (wakeLock === null) {
+        requestWakeLock(true, baseIdIcon);
+    } else {
+        wakeLock.release().then(() => {
+            isToggledByUser = false;
+        });
+    }
 }
 
-function requestWakeLock(displayToast = true) {
-    if (!isWakeLockEnabled) {
-        return;
-    }
-
+function requestWakeLock(displayToast, baseIdIcon = "bulb") {
     navigator.wakeLock?.request("screen")
         .then((lock) => {
             wakeLock = lock;
 
-            wakeLock.addEventListener('release', () => {
-                wakeLock = null;
-
-                if (isWakeLockEnabled) {
-                    showToast("", "Screen lock deactivated.", "alert-warning");
-                }
-            });
+            if (isToggledByUser) {
+                isWakeLockActivated = true;
+            }
 
             if (displayToast) {
                 showToast("", "Screen lock activated.", "alert-info");
             }
+
+            toggleWakeLockIcon(true, baseIdIcon);
+            isToggledByUser = false;
+
+            wakeLock.addEventListener("release", () => {
+                wakeLock = null;
+
+                if (isToggledByUser) {
+                    isWakeLockActivated = false;
+                }
+
+                if (!isVisibilityStateHidden) {
+                    showToast("", "Screen lock deactivated.", "alert-warning");
+                }
+
+                toggleWakeLockIcon(false, baseIdIcon);
+                displayToast = false;
+            });
         })
         .catch((err) => {
             showToast("", "Failed to toggle screen lock.", "alert-error");
@@ -35,8 +52,29 @@ function requestWakeLock(displayToast = true) {
         });
 }
 
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && isWakeLockEnabled && !wakeLock) {
-        requestWakeLock(false);
+function toggleWakeLockIcon(isActivated, baseIdIcon = "bulb") {
+    const onEl = document.getElementById(`${baseIdIcon}-on`);
+    const offEl = document.getElementById(`${baseIdIcon}-off`);
+
+    if (isActivated) {
+        onEl.classList.remove("hidden");
+        offEl.classList.add("hidden");
+    } else {
+        onEl.classList.add("hidden");
+        offEl.classList.remove("hidden");
+    }
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+        isVisibilityStateHidden = true;
+    } else if (document.visibilityState === "visible") {
+        if (isVisibilityStateHidden) {
+            isVisibilityStateHidden = false;
+        }
+
+        if (isWakeLockActivated) {
+            requestWakeLock(false);
+        }
     }
 });
