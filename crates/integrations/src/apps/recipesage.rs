@@ -13,10 +13,11 @@ use support::strings::extract_number;
 use tracing::{error, warn};
 use url::Url;
 
-use recipe_schema::{
-    AtType, CommentType, CreativeWorkOrItemListOrText, CreativeWorkOrText, DateOrDateTime,
-    QuantitativeValueOrText, RecipeCategory, RecipeSchema, SectionItem, Sections, TextOrTextObject,
+use recipe_schema::components::{
+    CommentType, CreativeWorkOrItemListOrText, CreativeWorkOrText, DateTimeOrDate,
+    QuantitativeValueOrText, SectionItem, Sections, TextOrTextObject,
 };
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
 use crate::apps::helpers::read_file;
 use crate::error::{Error, Result};
@@ -291,13 +292,13 @@ impl From<RecipeSageXMLRecipe> for RecipeSchema {
             .filter(|v: &Vec<CommentType>| !v.is_empty()),
             cook_time: seconds_to_duration(total_time_secs - active_time_secs),
             date_created: DateTime::from_str(&r.created_at).ok().map(|d| {
-                DateOrDateTime::DateTime(DateTime {
+                DateTimeOrDate::DateTime(DateTime {
                     date: d.date,
                     time: d.time,
                 })
             }),
             date_modified: DateTime::from_str(&r.updated_at).ok().map(|d| {
-                DateOrDateTime::DateTime(DateTime {
+                DateTimeOrDate::DateTime(DateTime {
                     date: d.date,
                     time: d.time,
                 })

@@ -9,10 +9,11 @@ use tracing::error;
 use url::Url;
 use uuid::Uuid;
 
-use recipe_schema::{
-    AggregateRating, AtType, CreativeWorkOrUrl, DateOrDateTime, ImageObjectOrUrl, ImageObjectType,
-    NumberOrText, RecipeCategory, RecipeSchema, SectionItem, Sections,
+use recipe_schema::components::{
+    AggregateRating, CreativeWorkOrURL, DateTimeOrDate, ImageObjectOrUrl, ImageObjectType,
+    NumberOrText, SectionItem, Sections,
 };
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
 use crate::Result;
 use crate::helpers::{
@@ -68,7 +69,7 @@ impl ToRecipeSchema for Recipe {
 
         let ingredients = self.ingredients.lines().collect::<Vec<_>>();
         let url = if let Ok(u) = Url::parse(&self.source_url) {
-            Some(CreativeWorkOrUrl::Url(u))
+            Some(CreativeWorkOrURL::Url(u))
         } else {
             None
         };
@@ -125,7 +126,7 @@ impl ToRecipeSchema for Recipe {
                 None
             },
             cook_time: seconds_to_duration(cook.as_secs() as i32),
-            date_created: Some(DateOrDateTime::Date(
+            date_created: Some(DateTimeOrDate::Date(
                 iso8601::Date::from_str(self.created.split_whitespace().next().unwrap_or_default())
                     .unwrap_or_default(),
             )),
@@ -198,10 +199,10 @@ mod tests {
                 at_context: Default::default(),
                 at_type: Some(AtType::Recipe),
                 cook_time: seconds_to_duration(3900),
-                date_created: Some(DateOrDateTime::Date(iso8601::Date::from_str("2025-04-15").unwrap_or_default())),
+                date_created: Some(DateTimeOrDate::Date(iso8601::Date::from_str("2025-04-15").unwrap_or_default())),
                 image: None,
                 is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]".into()),
-                main_entity_of_page: Some(CreativeWorkOrUrl::Url(Url::parse("https://www.allrecipes.com/recipe/259353/black-eyed-pea-cornbread/").expect("Url to be valid"))),
+                main_entity_of_page: Some(CreativeWorkOrURL::Url(Url::parse("https://www.allrecipes.com/recipe/259353/black-eyed-pea-cornbread/").expect("Url to be valid"))),
                 name: Some("Black-Eyed Pea Cornbread".into()),
                 prep_time: seconds_to_duration(900),
                 recipe_category: RecipeCategory::Text("Japanese".into()),
@@ -257,7 +258,7 @@ mod tests {
                 content_location: None,
                 country_of_origin: None,
                 credit_text: None,
-                date_created: Some(DateOrDateTime::Date(iso8601::Date::from_str("2025-04-15").unwrap_or_default())),
+                date_created: Some(DateTimeOrDate::Date(iso8601::Date::from_str("2025-04-15").unwrap_or_default())),
                 date_modified: None,
                 date_published: None,
                 description: to_text("A great recipe!".into()),
@@ -271,7 +272,7 @@ mod tests {
                 is_part_of: None,
                 keywords: to_defined_text("Dinner,Japanese,Meat".into()),
                 location_created: None,
-                main_entity_of_page: Some(CreativeWorkOrUrl::Url(Url::parse("https://www.allrecipes.com/recipe/285611/loaded-mashed-potato-casserole/").expect("Url to be valid"))),
+                main_entity_of_page: Some(CreativeWorkOrURL::Url(Url::parse("https://www.allrecipes.com/recipe/285611/loaded-mashed-potato-casserole/").expect("Url to be valid"))),
                 name: Some("Loaded Mashed Potato Casserole".into()),
                 nutrition: None,
                 perform_time: None,

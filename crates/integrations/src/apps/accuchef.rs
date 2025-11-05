@@ -12,7 +12,8 @@ use nom::{IResult, Parser};
 use tracing::error;
 use url::Url;
 
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema, SectionItem, Sections};
+use recipe_schema::components::{SectionItem, Sections};
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
 use super::helpers::read_file;
 use crate::Result;
@@ -234,12 +235,15 @@ fn eol(input: &str) -> IResult<&str, &str> {
 mod tests {
     use super::*;
 
-    use crate::helpers::vec_to_howto;
-    use recipe_schema::{
-        AtType, CreativeWorkOrText, QuantitativeValueOrText, QuantitativeValueType,
-    };
     use std::default::Default;
     use std::io::Cursor;
+
+    use recipe_schema::AtType;
+    use recipe_schema::components::{
+        CreativeWorkOrText, QuantitativeValue, QuantitativeValueOrText,
+    };
+
+    use crate::helpers::vec_to_howto;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -280,9 +284,9 @@ mod tests {
                         "frothy. Microwave like scrambled eggs. Cool and blend in lemon juice and",
                         "cool whip. Drain the fruit and fold in dressing. Add marshmellows.",
                     ]),
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
-                        QuantitativeValueType { value: 0 }
-                    ),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
+                        value: 0
+                    }),
                     ..Default::default()
                 },
                 RecipeSchema {
@@ -313,9 +317,9 @@ mod tests {
                         "chestnuts and then cover with miracle whip mixture. Refrigerate over",
                         "night and then place eggs, bacon and tomatoes on top.",
                     ]),
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
-                        QuantitativeValueType { value: 0 }
-                    ),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
+                        value: 0
+                    }),
                     ..Default::default()
                 },
                 RecipeSchema {
@@ -344,9 +348,9 @@ mod tests {
                         "}~",
                         "",
                     ]),
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
-                        QuantitativeValueType { value: 24 }
-                    ),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
+                        value: 24
+                    }),
                     ..Default::default()
                 },
                 RecipeSchema {
@@ -369,9 +373,9 @@ mod tests {
                         "Mix all together about 2 hours before serving. Serve a with a scoop of",
                         "orange sherbet on top.",
                     ]),
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(
-                        QuantitativeValueType { value: 0 }
-                    ),
+                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
+                        value: 0
+                    }),
                     ..Default::default()
                 }
             ]

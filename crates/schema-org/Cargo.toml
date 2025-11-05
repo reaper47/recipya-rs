@@ -2,10 +2,10 @@
 name = "recipe-schema"
 version = "0.1.0"
 publish = true
+description = "Rust representations of Schema.org recipe-related types."
 
 authors.workspace = true
 categories.workspace = true
-description.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true

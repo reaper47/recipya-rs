@@ -819,7 +819,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     mod results {
         use super::*;
 
-        use recipe_schema::{SectionItem, Sections};
+        use recipe_schema::components::{SectionItem, Sections};
 
         pub fn cookmate() -> Vec<RecipeSchema> {
             vec![

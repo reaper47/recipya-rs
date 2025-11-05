@@ -11,11 +11,6 @@ use nom::multi::{many1, separated_list0};
 use nom::sequence::{delimited, preceded, terminated};
 use serde::Deserialize;
 
-use recipe_schema::{
-    AggregateRating, AtType, Energy, ImageObjectOrUrl, ImageObjectType, Mass, NumberOrText,
-    NutritionInformationSchema, RecipeCategory, RecipeSchema, SectionItem, Sections,
-};
-
 use crate::apps::helpers::{
     Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
 };
@@ -24,6 +19,12 @@ use crate::helpers::{
     to_organization_type, to_text, to_yield,
 };
 use crate::{Error, Result};
+use recipe_schema::components::{
+    AggregateRating, ImageObjectOrUrl, ImageObjectType, NumberOrText, SectionItem, Sections,
+};
+use recipe_schema::{
+    AtType, Energy, Mass, NutritionInformationSchema, RecipeCategory, RecipeSchema,
+};
 
 #[derive(Default)]
 struct RecipeComponents<'a> {

@@ -5,9 +5,9 @@ use std::io::Read;
 use serde::Deserialize;
 use url::Url;
 
+use recipe_schema::components::{DefinedTermOrTextOrURL, ImageObjectOrUrl, SectionItem, Sections};
 use recipe_schema::{
-    AtType, DefinedTermOrTextOrUrl, Energy, ImageObjectOrUrl, Mass, NutritionInformationSchema,
-    RecipeCategory, RecipeSchema, SectionItem, Sections,
+    AtType, Energy, Mass, NutritionInformationSchema, RecipeCategory, RecipeSchema,
 };
 use support::strings::extract_number;
 
@@ -158,8 +158,8 @@ where
             (!images.is_empty()).then_some(ImageObjectOrUrl::Urls(images))
         },
         is_based_on: to_is_based_on(source.clone().unwrap_or_default()),
-        keywords: Some(DefinedTermOrTextOrUrl::Text(keywords.join(","))).filter(|s| match s {
-            DefinedTermOrTextOrUrl::Text(s) => !s.is_empty(),
+        keywords: Some(DefinedTermOrTextOrURL::Text(keywords.join(","))).filter(|s| match s {
+            DefinedTermOrTextOrURL::Text(s) => !s.is_empty(),
             _ => false,
         }),
         name: crouton.name.into(),

@@ -27,7 +27,8 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema, SectionItem, Sections};
+use recipe_schema::components::{SectionItem, Sections};
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::Result;

@@ -1,10 +1,10 @@
 use iso8601::Duration;
 
-use recipe_schema::{
-    AtType::HowToStep, CreativeWorkOrItemListOrText, CreativeWorkOrText, DefinedTermOrTextOrUrl,
-    HowTo, OrganizationTypeOrText, QuantitativeValueOrText, QuantitativeValueType, RecipeSchema,
-    Sections, TextOrTextObject,
+use recipe_schema::components::{
+    CreativeWorkOrItemListOrText, CreativeWorkOrText, DefinedTermOrTextOrURL, HowTo,
+    OrganizationTypeOrText, QuantitativeValue, QuantitativeValueOrText, Sections, TextOrTextObject,
 };
+use recipe_schema::{AtType::HowToStep, RecipeSchema};
 
 pub(super) fn seconds_to_duration(secs: i32) -> Option<Duration> {
     Some(format!("P{secs}S").parse::<Duration>().unwrap_or_default())
@@ -41,9 +41,9 @@ pub(super) fn sections_to_itemlist(sections: Sections) -> Option<CreativeWorkOrI
     }
 }
 
-pub(super) fn to_defined_text(value: String) -> Option<DefinedTermOrTextOrUrl> {
-    Some(DefinedTermOrTextOrUrl::Text(value)).filter(|t| match t {
-        DefinedTermOrTextOrUrl::Text(s) => !s.is_empty(),
+pub(super) fn to_defined_text(value: String) -> Option<DefinedTermOrTextOrURL> {
+    Some(DefinedTermOrTextOrURL::Text(value)).filter(|t| match t {
+        DefinedTermOrTextOrURL::Text(s) => !s.is_empty(),
         _ => false,
     })
 }
@@ -67,7 +67,7 @@ pub(super) fn to_organization_type(value: String) -> Option<OrganizationTypeOrTe
 }
 
 pub(super) fn to_yield(value: i64) -> QuantitativeValueOrText {
-    QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType { value })
+    QuantitativeValueOrText::QuantitativeValue(QuantitativeValue { value })
 }
 
 pub(super) fn vec_to_howto(values: Vec<&str>) -> Option<CreativeWorkOrItemListOrText> {

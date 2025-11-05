@@ -38,7 +38,8 @@ use models::time::FormattedTimes;
 use models::user::User;
 use models::website::{ToHtmlTable, Website};
 use models::{Recipe, RecipeDetails};
-use recipe_schema::{ClipOrVideoObject, ImageObjectOrUrl, RecipeSchema, SectionItem, Sections};
+use recipe_schema::RecipeSchema;
+use recipe_schema::components::{ClipOrVideoObject, ImageObjectOrUrl, SectionItem, Sections};
 use templates::recipes::timeline::Event;
 
 use crate::handlers::get_settings;

@@ -6,11 +6,11 @@ use support::strings::extract_number;
 use tracing::{error, warn};
 use url::Url;
 
-use recipe_schema::{
-    AggregateRating, AtType, ClipOrVideoObject, CommentType, DefinedTermOrTextOrUrl,
-    ImageObjectOrUrl, NumberOrText, RecipeCategory, RecipeSchema, SectionItem, Sections,
-    VideoObjectType,
+use recipe_schema::components::{
+    AggregateRating, ClipOrVideoObject, CommentType, DefinedTermOrTextOrURL, ImageObjectOrUrl,
+    NumberOrText, SectionItem, Sections, VideoObjectType,
 };
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
 use super::helpers::{extract_archive_contents, update_recipe_image_paths};
 use crate::helpers::{
@@ -110,7 +110,7 @@ impl From<Recipe> for RecipeSchema {
             } else {
                 to_is_based_on(r.url)
             },
-            keywords: Some(DefinedTermOrTextOrUrl::Text(
+            keywords: Some(DefinedTermOrTextOrURL::Text(
                 categories
                     .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect::<Vec<_>>())
                     .unwrap_or_default()
@@ -484,7 +484,7 @@ mod tests {
         use super::*;
 
         use crate::helpers::to_yield;
-        use recipe_schema::CreativeWorkOrText;
+        use recipe_schema::components::CreativeWorkOrText;
 
         pub fn xml_recipes() -> Vec<RecipeSchema> {
             vec![
@@ -493,7 +493,7 @@ mod tests {
                     at_type: Some(AtType::Recipe),
                     is_accessible_for_free: false,
                     is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrUrl::Text(
+                    keywords: Some(DefinedTermOrTextOrURL::Text(
                         ["Soups/stews", "Vegetables"].join(","),
                     )),
                     name: Some("Asparagus Soup (Zuppa Di Asparagi)".into()),
@@ -566,7 +566,7 @@ mod tests {
                     at_type: Some(AtType::Recipe),
                     is_accessible_for_free: false,
                     is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrUrl::Text(
+                    keywords: Some(DefinedTermOrTextOrURL::Text(
                         ["Appetizers", "Greek"].join(","),
                     )),
                     name: Some("Aubergine and Sesame Pate".into()),
@@ -608,7 +608,7 @@ mod tests {
                     at_type: Some(AtType::Recipe),
                     is_accessible_for_free: false,
                     is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrUrl::Text(
+                    keywords: Some(DefinedTermOrTextOrURL::Text(
                         ["Casseroles", "French"].join(","),
                     )),
                     name: Some("Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()),
@@ -665,7 +665,7 @@ mod tests {
                     at_type: Some(AtType::Recipe),
                     is_accessible_for_free: false,
                     is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrUrl::Text("German".into())),
+                    keywords: Some(DefinedTermOrTextOrURL::Text("German".into())),
                     name: Some("August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()),
                     recipe_category: RecipeCategory::Text("Beef".into()),
                     recipe_ingredient: Some(vec![
@@ -734,7 +734,7 @@ mod tests {
                     at_type: Some(AtType::Recipe),
                     is_accessible_for_free: false,
                     is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrUrl::Text(
+                    keywords: Some(DefinedTermOrTextOrURL::Text(
                         ["Poultry", "Fish/sea", "Spanish"].join(","),
                     )),
                     name: Some("Aunt Julia's Paella".into()),

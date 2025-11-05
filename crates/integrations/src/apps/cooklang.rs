@@ -1,13 +1,13 @@
+use recipe_schema::components::SectionItem;
 use std::io::{Read, Seek};
 
 use cooklang::{Content, CooklangParser, Item, Value};
-use recipe_schema::{
-    AtType, DefinedTermOrTextOrUrl, Diets, HowToToolOrText, HowToToolType, RecipeCategory,
-    RecipeCuisine, RecipeSchema, RestrictedDiet, SectionItem, Sections,
-};
 use support::time::parse_duration;
 use tracing::{error, warn};
 use url::Url;
+
+use recipe_schema::components::{DefinedTermOrTextOrURL, HowToToolOrText, HowToToolType, Sections};
+use recipe_schema::{AtType, Diets, RecipeCategory, RecipeCuisine, RecipeSchema, RestrictedDiet};
 
 use super::helpers::{read_file, urls_to_image_object};
 use crate::Result;
@@ -52,7 +52,7 @@ impl From<CooklangRecipe> for RecipeSchema {
             cook_time: seconds_to_duration(r.times.cook_seconds),
             description: to_text(r.description.unwrap_or_default()),
             is_based_on: to_is_based_on(r.source.to_owned().unwrap()),
-            keywords: Some(DefinedTermOrTextOrUrl::Text(r.tags.join(","))),
+            keywords: Some(DefinedTermOrTextOrURL::Text(r.tags.join(","))),
             name: Some(r.name).filter(|s| !s.is_empty()),
             prep_time: seconds_to_duration(r.times.prep_seconds),
             recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
@@ -400,12 +400,13 @@ impl ParserBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use recipe_schema::ImageObjectOrUrl;
-    use recipe_schema::{
-        OrganizationTypeOrText, QuantitativeValueOrText, QuantitativeValueType, RecipeCuisine,
+
+    use std::io::Cursor;
+
+    use recipe_schema::components::{
+        ImageObjectOrUrl, OrganizationTypeOrText, QuantitativeValue, QuantitativeValueOrText,
         TextOrTextObject,
     };
-    use std::io::Cursor;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -458,7 +459,7 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                     Url::parse("https://example.org/recipe_image2.jpg")?,
                 ]),),
                 is_based_on: to_is_based_on("https://example.org/recipe".into()),
-                keywords: Some(DefinedTermOrTextOrUrl::Text(
+                keywords: Some(DefinedTermOrTextOrURL::Text(
                     ["2022", "baking", "summer"].join(",")
                 )),
                 name: Some("Spaghetti Carbonara".into()),
@@ -494,7 +495,7 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                         ),
                     ]
                 ),])),
-                recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType {
+                recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
                     value: 1
                 }),
                 suitable_for_diet: Some(Diets::RestrictedDiet(vec![

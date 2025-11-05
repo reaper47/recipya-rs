@@ -9,7 +9,9 @@ use nom::combinator::{map, opt, recognize, verify};
 use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema, Sections};
+
+use recipe_schema::components::Sections;
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::Result;
@@ -483,7 +485,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
 
     mod results {
         use super::*;
-        use recipe_schema::SectionItem;
+        use recipe_schema::components::SectionItem;
 
         pub fn all_recipes_txt() -> Vec<RecipeSchema> {
             vec![

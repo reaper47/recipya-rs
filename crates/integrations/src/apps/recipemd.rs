@@ -2,7 +2,8 @@ use std::io::{Read, Seek};
 
 use recipemd::{Factor, Ingredient, Recipe};
 
-use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
+use recipe_schema::components::{SectionItem, Sections};
+use recipe_schema::{AtType, RecipeSchema};
 
 use crate::apps::helpers::read_file;
 use crate::error::Result;

@@ -13,7 +13,12 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::render_rating;
 use crate::recipes::timeline::render_dialog;
-use crate::templates::icons::{icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart, icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share, icon_stop, icon_timeline, icon_trash};
+use crate::templates::icons::{
+    icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_clock, icon_cooking_pot,
+    icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart,
+    icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share, icon_stop,
+    icon_timeline, icon_trash,
+};
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
 use crate::{Error, Result};

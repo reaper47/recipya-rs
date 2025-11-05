@@ -9,10 +9,10 @@ use uuid::Uuid;
 use whatlang::Lang;
 
 use math::cooking::units;
-use recipe_schema::{
-    CreativeWorkOrText, DefinedTermOrTextOrUrl, HowToToolOrText, NutritionInformationSchema,
-    RecipeSchema, SectionItem, Sections,
+use recipe_schema::components::{
+    CreativeWorkOrText, DefinedTermOrTextOrURL, HowToToolOrText, SectionItem, Sections,
 };
+use recipe_schema::{NutritionInformationSchema, RecipeSchema};
 use repository::schema;
 use support::fs::FsSupport;
 use support::name_entity_with_relations;
@@ -215,14 +215,14 @@ impl From<&RecipeSchema> for RecipeForCreate {
             keywords: match &schema.keywords {
                 None => vec![],
                 Some(keywords) => match keywords {
-                    DefinedTermOrTextOrUrl::DefinedTerm(term) => {
+                    DefinedTermOrTextOrURL::DefinedTerm(term) => {
                         warn!("Keywords DefinedTerm is defined but not processed: {term:?}");
                         vec![]
                     }
-                    DefinedTermOrTextOrUrl::Text(text) => {
+                    DefinedTermOrTextOrURL::Text(text) => {
                         text.split(',').map(String::from).collect()
                     }
-                    DefinedTermOrTextOrUrl::Url(url) => {
+                    DefinedTermOrTextOrURL::Url(url) => {
                         warn!("Keywords Url is defined but not processed: {url}");
                         vec![]
                     }
@@ -1019,7 +1019,7 @@ pub mod test_utils {
                         SectionItem {
                             text: "Bake for 35 minutes".into(),
                             duration_seconds: Some(2100),
-                        }
+                        },
                     ],
                 ),
             ]),

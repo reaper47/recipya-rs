@@ -11,7 +11,7 @@ mod tests {
         ToolRecipe, VideoForCreate,
     };
     use models::{Recipe, RecipeDetails};
-    use recipe_schema::{SectionItem, Sections};
+    use recipe_schema::components::{SectionItem, Sections};
     use testing::utils::{
         TestDb, assert_must_be_logged_in, build_server_logged_in, create_app_state,
     };

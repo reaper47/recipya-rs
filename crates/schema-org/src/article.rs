@@ -1,11 +1,7 @@
 use serde::Deserialize;
 use url::Url;
 
-use super::AtType;
-use super::common::{
-    Action, CreativeWorkOrUrl, DateOrDateTime, DefinedTermOrTextOrUrl, ImageObjectOrUrl,
-    LanguageOrText, OrganizationOrPerson, OrganizationType,
-};
+use crate::{ActionItemOrItems, AtType};
 
 /// An article, such as a news article or piece of investigative report. Newspapers and magazines
 /// have articles of many different types and this is intended to cover them all.
@@ -25,7 +21,7 @@ pub struct ArticleSchema {
     /// The author of this content or rating. Please note that author is special in that HTML 5
     /// provides a special mechanism for indicating authorship via the rel tag. That is equivalent
     /// to this and may be used interchangeably.
-    pub author: Option<OrganizationType>,
+    pub author: Option<Organization>,
 
     /// The number of comments this CreativeWork (e.g. Article, Question or Answer) has received.
     /// This is most applicable to works published in Web sites with commenting system;
@@ -34,11 +30,11 @@ pub struct ArticleSchema {
 
     /// The date on which the CreativeWork was most recently modified or when the item's entry
     /// was modified within a DataFeed.
-    pub date_modified: Option<DateOrDateTime>,
+    pub date_modified: Option<DateTimeOrDate>,
 
     /// Date of first publication or broadcast. For example the date a CreativeWork was broadcast
     /// or a Certification was issued.
-    pub date_published: Option<DateOrDateTime>,
+    pub date_published: Option<DateTimeOrDate>,
 
     /// Headline of the article.
     pub headline: Option<String>,
@@ -52,20 +48,20 @@ pub struct ArticleSchema {
 
     /// Indicates an item or CreativeWork that this item, or CreativeWork (in some sense), is part of.
     // Inverse property: hasPart
-    pub is_part_of: Option<CreativeWorkOrUrl>,
+    pub is_part_of: Option<CreativeWorkOrURL>,
 
     /// Keywords or tags used to describe some item. Multiple textual entries in a keywords list
     /// are typically delimited by commas, or by repeating the property.
     #[serde(alias = "Keywords")]
-    pub keywords: Option<DefinedTermOrTextOrUrl>,
+    pub keywords: Option<DefinedTermOrTextOrURL>,
 
     /// Indicates a page (or other CreativeWork) for which this thing is the main entity being
     /// described. See background notes for details. Inverse property: mainEntity
-    pub main_entity_of_page: Option<CreativeWorkOrUrl>,
+    pub main_entity_of_page: Option<CreativeWorkOrURL>,
 
     /// Indicates a potential Action, which describes an idealized action in which this thing
     /// would play an 'object' role.
-    pub potential_action: Option<Action>,
+    pub potential_action: Option<ActionItemOrItems>,
 
     /// The publisher of the creative work.
     pub publisher: Option<OrganizationOrPerson>,

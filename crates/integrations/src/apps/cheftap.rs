@@ -10,7 +10,8 @@ use nom::multi::{many_till, many1};
 use nom::sequence::{preceded, terminated};
 use url::Url;
 
-use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
+use recipe_schema::components::{SectionItem, Sections};
+use recipe_schema::{AtType, RecipeSchema};
 
 use super::helpers::read_file;
 use crate::Result;

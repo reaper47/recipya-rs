@@ -6,7 +6,7 @@ use diesel_async::RunQueryDsl;
 use repository::{ModelManager, PgPooledConn, schema};
 use uuid::Uuid;
 
-use recipe_schema::SectionItem;
+use recipe_schema::components::SectionItem;
 
 use crate::params::SearchParams;
 use crate::recipe::{

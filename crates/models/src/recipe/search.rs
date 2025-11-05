@@ -424,7 +424,7 @@ mod tests {
     mod tests_search {
         use super::*;
         use crate::recipe::ToolForCreate;
-        use recipe_schema::{SectionItem, Sections};
+        use recipe_schema::components::{SectionItem, Sections};
 
         fn to_recipe_details(id: i64, recipe_c: RecipeForCreate) -> RecipeDetails {
             let mut keywords = recipe_c.keywords;

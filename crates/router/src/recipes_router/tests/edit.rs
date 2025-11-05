@@ -3,7 +3,6 @@ mod tests {
     use axum::http::HeaderValue;
     use axum_test::TestResponse;
     use chrono::Duration;
-    use recipe_schema::SectionItem;
     use reqwest::Method;
     use uuid::Uuid;
 
@@ -12,7 +11,7 @@ mod tests {
         ToolRecipe, VideoForCreate, test_utils::a_complete_recipe_for_create,
     };
     use models::{Recipe, RecipeDetails};
-    use recipe_schema::Sections;
+    use recipe_schema::components::{SectionItem, Sections};
     use testing::utils::{
         TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
         build_server_ws, create_app_state,

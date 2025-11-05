@@ -9,7 +9,8 @@ use nom::sequence::{preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
+use recipe_schema::components::{SectionItem, Sections};
+use recipe_schema::{AtType, RecipeSchema};
 use support::time::parse_duration;
 
 use crate::apps::helpers::{read_file, urls_to_image_object};

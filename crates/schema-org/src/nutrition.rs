@@ -1,6 +1,7 @@
+use std::fmt::Formatter;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, de};
-use std::fmt::Formatter;
 
 use support::strings::extract_number;
 
@@ -191,7 +192,7 @@ impl<'de> Deserialize<'de> for Mass {
 }
 
 /// Enumeration of all possible containers that hold restricted diets.
-#[derive(Debug, PartialEq, JsonSchema)]
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 pub enum Diets {
     RestrictedDiet(Vec<RestrictedDiet>),
 }

@@ -9,10 +9,10 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use recipe_schema::{
-    AggregateRating, AtType, DefinedTermOrTextOrUrl, NumberOrText, RecipeCategory, RecipeSchema,
-    SectionItem, Sections,
+use recipe_schema::components::{
+    AggregateRating, DefinedTermOrTextOrURL, NumberOrText, SectionItem, Sections,
 };
+use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
 
 use super::helpers::read_file;
 use crate::Result;
@@ -139,7 +139,7 @@ impl From<BigOvenRecipe> for RecipeSchema {
             } else {
                 to_is_based_on(r.source.to_owned().unwrap())
             },
-            keywords: Some(DefinedTermOrTextOrUrl::Text(r.keywords.join(","))),
+            keywords: Some(DefinedTermOrTextOrURL::Text(r.keywords.join(","))),
             name: Some(r.title).filter(|s| !s.is_empty()),
             prep_time: seconds_to_duration(r.active_minutes as i32),
             recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
@@ -788,7 +788,7 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
             RecipeSchema {
                 at_context: Default::default(),
                 at_type: Some(AtType::Recipe),
-                keywords: Some(DefinedTermOrTextOrUrl::Text(["Low Fat",
+                keywords: Some(DefinedTermOrTextOrURL::Text(["Low Fat",
                     "Summer",
                     "Spring",
                     "Vegetables",
