@@ -8,7 +8,7 @@ use crate::Thing;
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Class {
     /// Relates a term (i.e. a property, class or enumeration) to one that supersedes it.
-    pub superseded_by: 	ClassOrEnumerationOrProperty,
+    pub superseded_by: ClassOrEnumerationOrProperty,
     #[serde(flatten)]
     pub thing: Thing,
 }

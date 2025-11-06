@@ -3,9 +3,10 @@ use std::fmt::Formatter;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer};
 
+use crate::thing::Place;
+use crate::thing::intangible::ItemList;
 use crate::thing::intangible::structured_value::contact_point::PostalAddress;
 use crate::thing::intangible::virtual_location::VirtualLocation;
-use crate::thing::Place;
 
 #[derive(Debug, PartialEq, JsonSchema)]
 pub enum PlaceOrPostalAddressOrTextOrVirtualLocation {
@@ -38,4 +39,10 @@ impl<'de> Deserialize<'de> for PlaceOrPostalAddressOrTextOrVirtualLocation {
 
         deserializer.deserialize_any(Visitor)
     }
+}
+
+#[derive(Debug, PartialEq, JsonSchema)]
+pub enum ItemListOrPlace {
+    ItemList(ItemList),
+    Place(Place),
 }

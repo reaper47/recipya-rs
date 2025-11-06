@@ -1,16 +1,35 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::de::{Error, MapAccess};
-use serde::{de, Deserializer};
+use serde::{Deserializer, de};
+use serde_json::Number;
 use url::Url;
 
 use crate::data_type::text::URL;
 use crate::thing::intangible::Language;
 
 #[derive(Debug, PartialEq, JsonSchema)]
+pub enum BreadcrumbListOrText {
+    BreadcrumbList(BreadcrumbList),
+    Text(String),
+}
+
+impl Default for BreadcrumbListOrText {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
+}
+
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum LanguageOrText {
     Language(Language),
     Text(String),
+}
+
+impl Default for LanguageOrText {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
 }
 
 impl<'de> Deserialize<'de> for LanguageOrText {
@@ -54,17 +73,29 @@ impl<'de> Deserialize<'de> for LanguageOrText {
     }
 }
 
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
+#[serde(untagged)]
+pub enum IntegerOrText {
+    Integer(i32),
+    Text(String),
+}
+
+impl Default for IntegerOrText {
+    fn default() -> Self {
+        Self::Integer(0)
+    }
+}
 
 #[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum NumberOrText {
-    Number(i32),
+    Number(Number),
     Text(String),
 }
 
 impl Default for NumberOrText {
     fn default() -> Self {
-        Self::Number(0)
+        Self::Number(Number::from(0))
     }
 }
 

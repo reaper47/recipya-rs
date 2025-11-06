@@ -1,7 +1,7 @@
 mod css_selector;
-mod x_path;
 mod url;
+mod x_path;
 
 pub use css_selector::*;
-pub use x_path::*;
 pub use url::*;
+pub use x_path::*;

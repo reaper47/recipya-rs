@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use crate::permutations::defined_term::DefinedTermOrEnumerationOrMeasurementTypeEnumerationOrPropertyValueOrQualitativeValueOrQuantitativeValueOrStructuredValueOrText;
 use crate::thing::intangible::enumeration::Enumeration;
-use crate::thing::intangible::PropertyValue;
+use crate::thing::intangible::structured_value::PropertyValue;
 
 /// A predefined value for a product characteristic, e.g. the power cord plug type 'US' or the
 /// garment sizes 'S', 'M', 'L', and 'XL'.
@@ -21,22 +21,22 @@ pub struct QualitativeValue {
     pub additional_property: 	PropertyValue,
     /// This ordering relation for qualitative values indicates that the subject is equal to the
     /// object.
-    pub equal: 	QualitativeValue,
+    pub equal: 	Box<QualitativeValue>,
     /// This ordering relation for qualitative values indicates that the subject is greater than the
     /// object.
-    pub greater: 	QualitativeValue,
+    pub greater: 	Box<QualitativeValue>,
     /// This ordering relation for qualitative values indicates that the subject is greater than or
     /// equal to the object.
-    pub greater_or_equal: 	QualitativeValue,
+    pub greater_or_equal: 	Box<QualitativeValue>,
     /// This ordering relation for qualitative values indicates that the subject is lesser than the
     /// object.
-    pub lesser: 	QualitativeValue,
+    pub lesser: 	Box<QualitativeValue>,
     /// This ordering relation for qualitative values indicates that the subject is lesser than or
     /// equal to the object.
-    pub lesser_or_equal: 	QualitativeValue,
+    pub lesser_or_equal: 	Box<QualitativeValue>,
     /// This ordering relation for qualitative values indicates that the subject is not equal to the
     /// object.
-    pub non_equal: 	QualitativeValue,
+    pub non_equal: 	Box<QualitativeValue>,
     /// A secondary value that provides additional information on the original value, e.g. a
     /// reference temperature or a type of measurement.
     pub value_reference: 	DefinedTermOrEnumerationOrMeasurementTypeEnumerationOrPropertyValueOrQualitativeValueOrQuantitativeValueOrStructuredValueOrText,

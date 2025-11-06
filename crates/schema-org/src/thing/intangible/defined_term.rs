@@ -29,4 +29,3 @@ pub struct DefinedTerm {
     #[serde(flatten)]
     pub thing: Thing,
 }
-

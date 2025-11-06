@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::thing::intangible::enumeration::MedicalEvidenceLevel;
 use crate::thing::MedicalEntity;
+use crate::thing::intangible::enumeration::MedicalEvidenceLevel;
 use crate::types::date::Date;
 
 /// Any recommendation made by a standard society (e.g. ACC/AHA) or consensus statement that denotes
@@ -15,13 +15,13 @@ use crate::types::date::Date;
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct MedicalGuideline {
     /// Strength of evidence of the data used to formulate the guideline (enumerated).
-    pub evidence_level: 	MedicalEvidenceLevel,
+    pub evidence_level: MedicalEvidenceLevel,
     /// Source of the data used to formulate the guidance, e.g. RCT, consensus opinion, etc.
-    pub evidence_origin: 	String,
+    pub evidence_origin: String,
     /// Date on which this guideline's recommendation was made.
-    pub guideline_date: 	Date,
+    pub guideline_date: Date,
     /// The medical conditions, treatments, etc. that are the subject of the guideline.
-    pub guideline_subject: 	MedicalEntity,
+    pub guideline_subject: MedicalEntity,
     #[serde(flatten)]
     pub medical_entity: MedicalEntity,
 }

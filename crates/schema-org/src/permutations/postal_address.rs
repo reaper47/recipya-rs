@@ -1,11 +1,11 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::intangible::structured_value::PostalAddress;
+use crate::thing::intangible::structured_value::contact_point::PostalAddress;
 
 #[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 pub enum PostalAddressOrText {
-    PostalAddress(PostalAddress),
+    PostalAddress(Box<PostalAddress>),
     Text(String),
 }
 
@@ -14,4 +14,3 @@ impl Default for PostalAddressOrText {
         Self::Text(String::new())
     }
 }
-

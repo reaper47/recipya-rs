@@ -1,6 +1,7 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::Thing;
 use crate::thing::Place;
 
 /// A geographical region, typically under the jurisdiction of a particular government.

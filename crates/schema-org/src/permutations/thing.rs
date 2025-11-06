@@ -1,10 +1,10 @@
 use schemars::JsonSchema;
-use serde::{de, Deserialize, Deserializer};
 use serde::de::{Error, MapAccess};
+use serde::{Deserialize, Deserializer, de};
 
-use crate::intangible::DataFeedItem;
 use crate::Thing;
-use crate::permutations::helpers::has_datafeed_properties;
+use crate::permutations::helpers::{has_datafeed_properties, has_list_item_properties};
+use crate::thing::intangible::{DataFeedItem, ListItem};
 
 #[derive(Debug, PartialEq, JsonSchema)]
 pub enum DataFeedItemOrTextOrThing {
@@ -51,20 +51,19 @@ impl<'de> Deserialize<'de> for DataFeedItemOrTextOrThing {
             where
                 A: MapAccess<'de>,
             {
-                let value = serde_json::Value::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                let value =
+                    serde_json::Value::deserialize(de::value::MapAccessDeserializer::new(map))?;
 
-                let type_hint = value
-                    .get("@type")
-                    .and_then(|v| v.as_str());
+                let type_hint = value.get("@type").and_then(|v| v.as_str());
 
                 match type_hint {
                     Some("DataFeedItem") => try_datafeed_item(value),
-                    Some("Thing") => try_thing(value),
+                    Some("Thing") => try_thing_datafeed(value),
                     _ => {
                         if has_datafeed_properties(&value) {
                             try_datafeed_item(value)
                         } else {
-                            try_thing(value)
+                            try_thing_datafeed(value)
                         }
                     }
                 }
@@ -77,18 +76,104 @@ impl<'de> Deserialize<'de> for DataFeedItemOrTextOrThing {
 
 fn try_datafeed_item<'de, E>(v: serde_json::Value) -> Result<DataFeedItemOrTextOrThing, E>
 where
-    E: Error
+    E: Error,
 {
     Ok(DataFeedItemOrTextOrThing::DataFeedItem(
         serde_json::from_value(v).map_err(E::custom)?,
     ))
 }
 
-fn try_thing<'de, E>(v: serde_json::Value) -> Result<DataFeedItemOrTextOrThing, E>
+fn try_thing_datafeed<'de, E>(v: serde_json::Value) -> Result<DataFeedItemOrTextOrThing, E>
 where
     E: Error,
 {
     Ok(DataFeedItemOrTextOrThing::Thing(
+        serde_json::from_value(v).map_err(E::custom)?,
+    ))
+}
+
+#[derive(Debug, PartialEq, JsonSchema)]
+pub enum ListItemOrTextOrThing {
+    ListItem(ListItem),
+    Text(String),
+    Thing(Thing),
+}
+
+impl Default for ListItemOrTextOrThing {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
+}
+
+impl<'de> Deserialize<'de> for ListItemOrTextOrThing {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct Visitor;
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = ListItemOrTextOrThing;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("ListItem, Text, or Thing")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(ListItemOrTextOrThing::Text(v.to_string()))
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                self.visit_str(&v)
+            }
+
+            fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let value =
+                    serde_json::Value::deserialize(de::value::MapAccessDeserializer::new(map))?;
+
+                let type_hint = value.get("@type").and_then(|v| v.as_str());
+
+                match type_hint {
+                    Some("ListItem") => try_list_item(value),
+                    Some("Thing") => try_thing_list_item(value),
+                    _ => {
+                        if has_list_item_properties(&value) {
+                            try_list_item(value)
+                        } else {
+                            try_thing_list_item(value)
+                        }
+                    }
+                }
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
+    }
+}
+
+fn try_list_item<'de, E>(v: serde_json::Value) -> Result<ListItemOrTextOrThing, E>
+where
+    E: Error,
+{
+    Ok(ListItemOrTextOrThing::ListItem(
+        serde_json::from_value(v).map_err(E::custom)?,
+    ))
+}
+
+fn try_thing_list_item<'de, E>(v: serde_json::Value) -> Result<ListItemOrTextOrThing, E>
+where
+    E: Error,
+{
+    Ok(ListItemOrTextOrThing::Thing(
         serde_json::from_value(v).map_err(E::custom)?,
     ))
 }

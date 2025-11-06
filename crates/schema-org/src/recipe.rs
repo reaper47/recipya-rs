@@ -1,13 +1,13 @@
 use std::fmt::Formatter;
 
+use super::components::*;
+use super::nutrition::NutritionInformationSchema;
+use super::{AtContext, AtType, Diets, components};
+use crate::data_type::text::URL;
 use reqwest::Url;
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, de};
 use tracing::warn;
-use crate::data_type::text::URL;
-use super::components::*;
-use super::nutrition::NutritionInformationSchema;
-use super::{AtContext, AtType, Diets, components};
 
 /// Enumeration of possible values for the @graph field in JSON-LD used to group
 /// multiple related entities in a single document.
@@ -78,10 +78,6 @@ pub struct RecipeSchema {
     #[serde(flatten)]
     pub how_to: HowTo,
 
-
-
-
-
     /// An alias for the item.
     pub alternate_name: Option<String>,
 
@@ -131,8 +127,6 @@ pub struct RecipeSchema {
 
     /// The name of the item.
     pub name: Option<String>,
-
-
 
     /// The length of time it takes to perform instructions or a direction (not including time to
     /// prepare the supplies), in ISO 8601 duration format.

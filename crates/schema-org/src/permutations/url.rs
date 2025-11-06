@@ -2,12 +2,13 @@ use std::fmt::Formatter;
 
 use schemars::JsonSchema;
 use serde::de::{Error, MapAccess};
-use serde::{de, Deserialize};
+use serde::{Deserialize, de};
 
 use crate::data_type::text::URL;
 use crate::permutations::helpers::parse_url_variant;
 use crate::thing::creative_work::WebPage;
 use crate::thing::intangible::{EntryPoint, SpeakableSpecification};
+use crate::thing::medical_entity::ImageObject;
 
 #[derive(Debug, PartialEq, JsonSchema)]
 pub enum EntryPointOrURL {
@@ -57,9 +58,56 @@ impl<'de> Deserialize<'de> for EntryPointOrURL {
 }
 
 #[derive(Debug, PartialEq, JsonSchema)]
+pub enum ImageObjectOrURL {
+    ImageObject(ImageObject),
+    URL(URL),
+}
+
+impl<'de> Deserialize<'de> for ImageObjectOrURL {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct Visitor;
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = ImageObjectOrURL;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("ImageObject or URL")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                parse_url_variant(v, Self::Value::URL)
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                self.visit_str(&v)
+            }
+
+            fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let v = ImageObject::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                Ok(Self::Value::ImageObject(v))
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
+    }
+}
+
+#[derive(Debug, PartialEq, JsonSchema)]
 pub enum URLOrWebPage {
     URL(URL),
-    WebPage(WebPage)
+    WebPage(WebPage),
 }
 
 impl Default for URLOrWebPage {
@@ -115,6 +163,12 @@ pub enum SpeakableSpecificationOrURL {
     URL(URL),
 }
 
+impl Default for SpeakableSpecificationOrURL {
+    fn default() -> Self {
+        Self::URL(URL::default())
+    }
+}
+
 impl<'de> Deserialize<'de> for SpeakableSpecificationOrURL {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -147,7 +201,9 @@ impl<'de> Deserialize<'de> for SpeakableSpecificationOrURL {
             where
                 A: MapAccess<'de>,
             {
-                let w = SpeakableSpecification::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                let w = SpeakableSpecification::deserialize(
+                    de::value::MapAccessDeserializer::new(map),
+                )?;
                 Ok(SpeakableSpecificationOrURL::SpeakableSpecification(w))
             }
         }

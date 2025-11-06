@@ -1,9 +1,8 @@
 use iso8601::Duration;
 
-use recipe_schema::components::{
-    CreativeWorkOrItemListOrText, CreativeWorkOrText, DefinedTermOrTextOrURL, HowTo,
-    OrganizationTypeOrText, QuantitativeValue, QuantitativeValueOrText, Sections, TextOrTextObject,
-};
+use recipe_schema::permutations::creative_work::CreativeWorkOrText;
+use recipe_schema::thing::creative_work::HowTo;
+use recipe_schema::thing::intangible::structured_value::QuantitativeValue;
 use recipe_schema::{AtType::HowToStep, RecipeSchema};
 
 pub(super) fn seconds_to_duration(secs: i32) -> Option<Duration> {

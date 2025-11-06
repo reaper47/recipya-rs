@@ -16,12 +16,12 @@ pub struct TherapeuticProcedure {
     /// outcome is serious (resulting in death, disability, or permanent damage; requiring
     /// hospitalization; or otherwise life-threatening or requiring immediate medical attention),
     /// tag it as a seriousAdverseOutcome instead.
-    pub adverse_outcome: 	MedicalEntity,
+    pub adverse_outcome: MedicalEntity,
     /// A dosing schedule for the drug for a given population, either observed, recommended, or
     /// maximum dose based on the type used.
-    pub dose_schedule: 	DoseSchedule,
+    pub dose_schedule: DoseSchedule,
     /// Specifying a drug or medicine used in a medication procedure.
-    pub drug: 	Drug,
+    pub drug: Drug,
     #[serde(flatten)]
     pub medical_procedure: MedicalProcedure,
 }

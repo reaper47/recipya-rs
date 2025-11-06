@@ -59,140 +59,109 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/NOTICE" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/date.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/datetime.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/text/css_selector.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/text/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/text/url.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/text/x_path.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/time.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/lib.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/administrative_area.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/bool.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/brand.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/category.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/creative_work.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/date.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/defined_term.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/helpers.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/medical.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/person.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/place.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/postal_address.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/product.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/property.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/text.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/thing.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/url.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/web_page_element.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/action.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/bio_chem.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/article/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/article/news_article.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/dataset/data_feed.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/dataset/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/defined_term_set.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/how_to.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/media_object/data_download.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/media_object/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/software_application.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/web_page.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/web_page_element.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/event.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/audience.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/brand.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/class.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/data_feed_item.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/defined_term.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/demand.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/entry_point.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/enumeration.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/medical.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/qualitative_value/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/grant.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/language.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/property.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/quantity/duration.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/quantity/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/speakable_spec.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/contact_point.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/geoshape.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/interaction_counter.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/monetary_amount.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/opening_hours_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/property_value.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/quantitave_value.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/trip.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/virtual_location.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/anatomical_structure.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/media_object/image_object.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/media_object/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_condition.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_contraindication.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_device.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_entity.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_guideline.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_intangible/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/therapeutic_procedure/medical_therapy.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/therapeutic_procedure/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_test.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/superficial_entity.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/organization.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/person.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/place/administrative_area.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/place/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/product.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/types/date.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/types/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/anatomy.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/organization.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/payment.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/website.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/review.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/website.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/status_enumeration/action_type.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/status_enumeration/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/item_list/breadcrumb_list.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/item_list/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/list_item.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/service/financial_product/loan_or_credit.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/service/financial_product/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/service/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/service_channel.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/contact_point/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/contact_point/postal_address.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/organization/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/organization/performing_group.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/place/civic_structure/educational_organization.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/place/civic_structure/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/paprika.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/paprika.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/recipemd.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/recipemd.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/article.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/article.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/common.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/context.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/context.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/lib.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/nutrition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/recipe-schema/src/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/add_manual.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/add_manual.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/edit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/edit.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/scale.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/recipes_router/tests/scale.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/support/src/regexp/time.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/support/src/regexp/time.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/data_type/text/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/text/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/data_type/time.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/data_type/time.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/administrative_area.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/administrative_area.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/bool.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/bool.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/brand.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/brand.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/category.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/category.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/creative_work.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/creative_work.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/date.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/date.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/defined_term.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/defined_term.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/medical.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/medical.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/person.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/person.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/place.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/place.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/postal_address.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/postal_address.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/product.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/product.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/property.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/property.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/text.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/text.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/thing.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/thing.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/url.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/url.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/permutations/web_page_element.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/permutations/web_page_element.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/action.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/action.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/bio_chem.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/bio_chem.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/article/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/article/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/article/news_article.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/article/news_article.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/dataset/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/dataset/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/how_to.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/how_to.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/media_object/data_download.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/media_object/data_download.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/media_object/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/media_object/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/software_application.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/software_application.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/web_page.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/web_page.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/web_page_element.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work/web_page_element.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/brand.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/brand.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/class.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/class.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/data_feed_item.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/data_feed_item.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/defined_term.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/defined_term.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/entry_point.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/entry_point.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/enumeration.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/enumeration.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/medical.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/medical.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/qualitative_value/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/enumeration/qualitative_value/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/grant.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/grant.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/property.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/property.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/speakable_spec.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/speakable_spec.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/contact_point.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/geoshape.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/geoshape.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/interaction_counter.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/interaction_counter.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/monetary_amount.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/monetary_amount.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/opening_hours_specification.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/opening_hours_specification.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/property_value.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/property_value.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/quantitave_value.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value/quantitave_value.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/trip.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/trip.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/anatomical_structure.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/anatomical_structure.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/media_object/image_object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/media_object/image_object.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/media_object/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/media_object/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_condition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_condition.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_device.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_device.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_entity.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_entity.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_guideline.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_guideline.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_intangible/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_intangible/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/therapeutic_procedure/medical_therapy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/therapeutic_procedure/medical_therapy.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/therapeutic_procedure/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_procedure/therapeutic_procedure/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/superficial_entity.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/superficial_entity.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/person.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/person.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/place/administrative_area.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/place/administrative_area.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/place/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/place/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing/product.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing/product.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/types/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/types/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -987,7 +956,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
     &quot;SHELLCHECK.PATH&quot;: &quot;/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;169-cant-parse-json-recipe-that-has-a-propertyvalue-as-a-recipeingredient&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#173 on 169-cant-parse-json-recipe-that-h…dient&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/macpoule/Documents/Projects/recipya-rs/crates/recipe-schema/src&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,

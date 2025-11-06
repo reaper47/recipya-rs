@@ -12,10 +12,10 @@ use crate::data_type::text::{CssSelectorType, XPathType};
 pub struct SpeakableSpecification {
     /// A CSS selector, e.g. of a SpeakableSpecification or WebPageElement. In the latter case,
     /// multiple matches within a page can constitute a single conceptual "Web page element".
-    pub css_selector: 	CssSelectorType,
+    pub css_selector: CssSelectorType,
     /// An XPath, e.g. of a SpeakableSpecification or WebPageElement. In the latter case, multiple
     /// matches within a page can constitute a single conceptual "Web page element".
-    pub xpath: 	XPathType,
+    pub xpath: XPathType,
     #[serde(flatten)]
     pub thing: Thing,
 }

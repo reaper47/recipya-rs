@@ -1,28 +1,39 @@
-mod defined_term_set;
-mod software_application;
-mod dataset;
-mod media_object;
 mod article;
+mod dataset;
+mod defined_term_set;
+mod how_to;
+mod media_object;
+mod review;
+mod software_application;
 mod web_page;
 mod web_page_element;
-mod how_to;
+mod website;
 
+pub use article::*;
 pub use dataset::*;
 pub use defined_term_set::*;
 pub use how_to::*;
+pub use media_object::*;
+pub use review::*;
 pub use software_application::*;
 pub use web_page::*;
 pub use web_page_element::*;
+pub use website::*;
 
-use iso8601::Duration;
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::AtType;
-use crate::components::{AggregateRating, AudioObjectOrClipOrMusicRecording, ClipOrVideoObject, CommentType, CountryType, CreativeWorkOrText, CreativeWorkOrURL, DateTimeOrDate, DefinedTermOrTextOrURL, ImageObjectType, IntegerOrText, InteractionStatistic, ItemList, LanguageOrText, MediaObject, NumberOrText, Organization, OrganizationOrPerson, OrganizationTypeOrText, Person, Place, QuantitativeValueOrText, RatingOrText, Review, TextOrUrl, Thing};
 use crate::data_type::text::URL;
+use crate::permutations::creative_work::CreativeWorkOrText;
+use crate::permutations::date::DateOrDateTime;
+use crate::permutations::person::OrganizationOrPerson;
+use crate::permutations::text::{IntegerOrText, LanguageOrText, NumberOrText, TextOrURL};
 use crate::permutations::url::URLOrWebPage;
-use crate::thing::Audience;
+use crate::thing::intangible::grant::Grant;
+use crate::thing::intangible::quantity::duration::Duration;
+use crate::thing::intangible::{Audience, ItemList};
+use crate::thing::{Event, Organization, Person, Place};
+use crate::{AtType, Thing};
 
 /// The most generic kind of creative work, including books, movies, photographs, software programs, etc.
 #[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
@@ -118,7 +129,7 @@ pub struct CreativeWork {
     pub content_rating: Option<RatingOrText>,
     /// The specific time described by a creative work, for works (e.g. articles, video objects
     /// etc.) that emphasise a particular moment within an Event.
-    pub content_reference_time: Option<DateTimeOrDate>,
+    pub content_reference_time: Option<DateOrDateTime>,
     /// A secondary contributor to the CreativeWork or Event.
     pub contributor: Option<OrganizationOrPerson>,
     /// The party holding the legal copyright to the CreativeWork.
@@ -153,13 +164,13 @@ pub struct CreativeWork {
     /// published Creative Work.
     pub credit_text: Option<String>,
     /// The date on which the CreativeWork was created or the item was added to a DataFeed.
-    pub date_created: Option<DateTimeOrDate>,
+    pub date_created: Option<DateOrDateTime>,
     /// The date on which the CreativeWork was most recently modified or when the item's entry
     /// was modified within a DataFeed.
-    pub date_modified: Option<DateTimeOrDate>,
+    pub date_modified: Option<DateOrDateTime>,
     /// Date of first publication or broadcast. For example the date a CreativeWork was broadcast
     /// or a Certification was issued.
-    pub date_published: Option<DateTimeOrDate>,
+    pub date_published: Option<DateOrDateTime>,
     /// Indicates an IPTCDigitalSourceEnumeration code indicating the nature of the digital
     /// source(s) for some CreativeWork.
     pub digital_source_type: IPTCDigitalSourceEnumeration,
@@ -175,7 +186,7 @@ pub struct CreativeWork {
     /// Since schema.org types like Movie and TVEpisode can be used for both works and their
     /// multiple expressions, it is possible to use titleEIDR alone (for a general description), or
     /// alongside editEIDR for a more edit-specific description.
-    pub edit_eidr: Option<TextOrUrl>,
+    pub edit_eidr: Option<TextOrURL>,
     /// Specifies the Person who edited the CreativeWork.
     pub editor: Option<Person>,
     /// An alignment to an established educational framework.
@@ -203,7 +214,7 @@ pub struct CreativeWork {
     /// Unregistered or niche encoding and file formats can be indicated instead via the most
     /// appropriate URL, e.g. defining Web page or a Wikipedia/Wikidata entry.
     /// Supersedes fileFormat.
-    pub encoding_format: Option<TextOrUrl>,
+    pub encoding_format: Option<TextOrURL>,
     /// A creative work that this work is an example/instance/realization/derivation of.
     ///
     /// Inverse property: workExample
@@ -212,7 +223,7 @@ pub struct CreativeWork {
     /// NewsArticle whose availability or relevance is time-limited, a ClaimReview fact check whose
     /// publisher wants to indicate that it may no longer be relevant (or helpful to highlight)
     /// after some date, or a Certification the validity has expired.
-    pub expires: Option<DateTimeOrDate>,
+    pub expires: Option<DateOrDateTime>,
     /// A person or organization that supports (sponsors) something through some kind of financial
     /// contribution.
     pub funder: Option<OrganizationOrPerson>,
@@ -222,7 +233,7 @@ pub struct CreativeWork {
     /// Inverse property: fundedItem
     pub funding: Grant,
     /// Genre of the creative work, broadcast channel or group.
-    pub genre: Option<TextOrUrl>,
+    pub genre: Option<TextOrURL>,
     /// Indicates an item or CreativeWork that is part of this item, or CreativeWork (in some sense).
     ///
     /// Inverse property: isPartOf
@@ -328,7 +339,7 @@ pub struct CreativeWork {
     /// The Event where the CreativeWork was recorded. The CreativeWork may capture all or part of the event.
     ///
     /// Inverse property: recordedIn
-    pub recorded_at: Option<crate::components::event::Event>,
+    pub recorded_at: Option<Event>,
     /// The place and time the release was issued, expressed as a PublicationEvent.
     pub released_event: Option<PublicationEvent>,
     /// A review of the item. Supersedes reviews.
@@ -340,10 +351,10 @@ pub struct CreativeWork {
     /// might usefully be referenced this way,
     /// e.g. http://dublincore.org/specifications/dublin-core/dces/1999-07-02/ but this has not
     /// been carefully explored in the community.
-    pub schema_version: Option<TextOrUrl>,
+    pub schema_version: Option<TextOrURL>,
     /// Indicates the date on which the current structured data was generated / published.
     /// Typically used alongside sdPublisher.
-    pub sd_date_published: Option<DateTimeOrDate>,
+    pub sd_date_published: Option<DateOrDateTime>,
     /// A license document that applies to this structured data, typically indicated by URL.
     pub sd_license: Option<CreativeWorkOrURL>,
     /// Indicates the party responsible for generating and publishing the current structured data
@@ -390,7 +401,7 @@ pub struct CreativeWork {
     /// "2015-11/.." indicates a range beginning in November 2015 and with no specified final date.
     /// This is tentative and might be updated in future when ISO 8601 is officially updated.
     /// Supersedes datasetTimeInterval.
-    pub temporal_coverage: Option<DateTimeOrTextOrUrl>,
+    pub temporal_coverage: Option<DateTimeOrTextOrURL>,
     /// The textual content of this CreativeWork.
     pub text: Option<String>,
     /// Thumbnail image for an image or video.
@@ -439,7 +450,7 @@ pub struct CreativeWork {
     /// Inverse property: translationOfWork
     pub work_translation: Option<Box<CreativeWork>>,
     #[serde(flatten)]
-    pub thing: Thing
+    pub thing: Thing,
 }
 
 fn set_creative_work_type() -> AtType {

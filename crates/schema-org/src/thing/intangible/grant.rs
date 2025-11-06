@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::permutations::product::BioChemEntityOrCreativeWorkOrEventOrMedicalEntityOrOrganizationOrPersonOrProduct;
 use crate::Thing;
+use crate::permutations::product::BioChemEntityOrCreativeWorkOrEventOrMedicalEntityOrOrganizationOrPersonOrProduct;
 
 /// A grant, typically financial or otherwise quantifiable, of resources. Typically a funder
 /// sponsors some MonetaryAmount to an Organization or Person, sometimes not necessarily via a
@@ -22,7 +22,8 @@ pub struct Grant {
     /// See also ownershipFundingInfo.
     ///
     /// Inverse property: funding
-    pub funded_item: BioChemEntityOrCreativeWorkOrEventOrMedicalEntityOrOrganizationOrPersonOrProduct,
+    pub funded_item:
+        BioChemEntityOrCreativeWorkOrEventOrMedicalEntityOrOrganizationOrPersonOrProduct,
     /// A person or organization that supports (sponsors) something through some kind of financial
     /// contribution.
     pub funder: OrganizationOrPerson,

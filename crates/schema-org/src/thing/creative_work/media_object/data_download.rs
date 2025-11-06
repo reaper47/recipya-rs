@@ -6,7 +6,7 @@ use crate::thing::creative_work::media_object::MediaObject;
 /// All or part of a Dataset in downloadable form.
 #[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct  DataDownload  {
+pub struct DataDownload {
     /// A subproperty of measurementTechnique that can be used for specifying specific methods, in
     /// particular via MeasurementMethodEnum.
     pub measurement_method: DefinedTermOrMeasurementMethodEnumOrTextOrUrl,

@@ -15,3 +15,9 @@ pub enum CategoryCodeOrPhysicalActivityCategoryOrTextOrThingOrURL {
     Thing(Thing),
     URL(URL),
 }
+
+impl Default for CategoryCodeOrPhysicalActivityCategoryOrTextOrThingOrURL {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
+}

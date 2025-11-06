@@ -1,9 +1,9 @@
-use schemars::JsonSchema;
-use serde::Deserialize;
-
-use crate::components::{PropertyValueOrTextOrURL, Thing};
+use crate::Thing;
+use crate::permutations::medical::MedicalConditionOrPropertyValueOrURL;
 use crate::thing::intangible::defined_term::DefinedTerm;
 use crate::thing::intangible::grant::Grant;
+use schemars::JsonSchema;
+use serde::Deserialize;
 
 /// Any biological, chemical, or biochemical thing. For example: a protein; a gene; a chemical; a
 /// synthetic chemical.
@@ -12,44 +12,44 @@ use crate::thing::intangible::grant::Grant;
 pub struct BioChemEntity {
     /// Disease associated to this BioChemEntity. Such disease can be a MedicalCondition or a URL.
     /// If you want to add an evidence supporting the association, please use PropertyValue.
-    pub associated_disease: 	MedicalConditionOrPropertyValueOrUrl,
+    pub associated_disease: MedicalConditionOrPropertyValueOrURL,
     /// A BioChemEntity that is known to interact with this item.
-    pub bio_chem_interaction: 	Box<Self>,
+    pub bio_chem_interaction: Box<Self>,
     /// A similar BioChemEntity, e.g., obtained by fingerprint similarity algorithms.
-    pub bio_chem_similarity: 	Box<Self>,
+    pub bio_chem_similarity: Box<Self>,
     /// A role played by the BioChemEntity within a biological context.
-    pub biological_role: 	DefinedTerm,
+    pub biological_role: DefinedTerm,
     /// A Grant that directly or indirectly provide funding or sponsorship for this item. See also
     /// ownershipFundingInfo.
     ///
     /// Inverse property: fundedItem
-    pub funding: 	Grant,
+    pub funding: Grant,
     /// Indicates a BioChemEntity that (in some sense) has this BioChemEntity as a part.
     ///
     /// Inverse property: isPartOfBioChemEntity,
-    pub has_bio_chem_entity_part: 	Box<Self>,
+    pub has_bio_chem_entity_part: Box<Self>,
     /// Molecular function performed by this BioChemEntity; please use PropertyValue if you want to
     /// include any evidence.
-    pub has_molecular_function: 	DefinedTermOrPropertyValueOrUrl,
+    pub has_molecular_function: DefinedTermOrPropertyValueOrURL,
     /// A common representation such as a protein sequence or chemical structure for this entity.
     /// For images use schema.org/image.
     pub has_representation: PropertyValueOrTextOrURL,
     /// Another BioChemEntity encoding by this one.
     ///
     /// Inverse property: encodesBioChemEntity
-    pub is_encoded_by_bio_chem_entity: 	Box<Gene>,
+    pub is_encoded_by_bio_chem_entity: Box<Gene>,
     /// Biological process this BioChemEntity is involved in; please use PropertyValue if you want
     /// to include any evidence.
-    pub is_involved_in_biological_process: 	DefinedTermOrPropertyValueOrUrl,
+    pub is_involved_in_biological_process: DefinedTermOrPropertyValueOrURL,
     /// Subcellular location where this BioChemEntity is located; please use PropertyValue if you want to include any evidence.
-    pub is_located_in_subcellular_location: 	DefinedTermOrPropertyValueOrUrl,
+    pub is_located_in_subcellular_location: DefinedTermOrPropertyValueOrURL,
     /// Indicates a BioChemEntity that is (in some sense) a part of this BioChemEntity.
     ///
     /// Inverse property: hasBioChemEntityPart
-    pub is_part_of_bio_chem_entity: 	Box<Self>,
+    pub is_part_of_bio_chem_entity: Box<Self>,
     /// The taxonomic grouping of the organism that expresses, encodes, or in some way related to
     /// the BioChemEntity.
-    pub taxonomic_range: 	DefinedTermOrTaxonOrTextOrUrl,
+    pub taxonomic_range: DefinedTermOrTaxonOrTextOrURL,
     #[serde(flatten)]
     pub thing: Thing,
 }

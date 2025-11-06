@@ -2,8 +2,9 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 
 /// Enumerated options related to a ContactPoint.
-#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 pub enum ContactPointOption {
+    #[default]
     HearingImpairedSupported,
     TollFree,
 }
@@ -48,7 +49,7 @@ pub enum MeasurementTypeEnumeration {
 #[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 pub enum Specialty {
     #[default]
-    MedicalSpecialty
+    MedicalSpecialty,
 }
 
 /// Categories of physical activity, organized by physiologic classification.

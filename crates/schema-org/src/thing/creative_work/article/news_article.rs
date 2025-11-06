@@ -19,18 +19,18 @@ pub struct NewsArticle {
     // and can vary substantially. Some examples: "BEIRUT, Lebanon, June 2.", "Paris, France",
     // "December 19, 2017 11:43AM Reporting from Washington", "Beijing/Moscow",
     // "QUEZON CITY, Philippines".
-    pub dateline: 	String,
+    pub dateline: String,
     /// The number of the column in which the NewsArticle appears in the print edition.
-    pub print_column: 	String,
+    pub print_column: String,
     /// The edition of the print product in which the NewsArticle appears.
-    pub print_edition: 	String,
+    pub print_edition: String,
     /// If this NewsArticle appears in print, this field indicates the name of the page on which the
     /// article is found. Please note that this field is intended for the exact page name
     /// (e.g. A5, B18).
-    pub print_page: 	String,
+    pub print_page: String,
     /// If this NewsArticle appears in print, this field indicates the print section in which the
     /// article appeared.
-    pub print_section: 	String,
+    pub print_section: String,
     #[serde(flatten)]
     pub article: Article,
 }

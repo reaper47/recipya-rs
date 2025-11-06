@@ -211,4 +211,3 @@ pub enum PhysicalExam {
     Skin,
     Throat,
 }
-

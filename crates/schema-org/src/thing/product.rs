@@ -107,7 +107,7 @@ pub struct Product {
     /// Used to tag an item to be intended or suitable for consumption or use by adults only.
     pub has_adult_consideration: AdultOrientedEnumeration,
     /// Certification information about a product, organization, service, place, or person.
-    pub has_certification: 	Certification,
+    pub has_certification: Certification,
     /// Defines the energy efficiency Category (also known as "class" or "rating") for a product
     /// according to an international energy efficiency standard.
     pub has_energy_consumption_details: EnergyConsumptionDetails,
@@ -139,13 +139,13 @@ pub struct Product {
     /// or spare part.
     pub is_accessory_or_spare_part_for: Product,
     /// A pointer to another product (or multiple products) for which this product is a consumable.
-    pub is_consumable_for: 	Product,
+    pub is_consumable_for: Product,
     /// Indicates whether this content is family friendly.
     pub is_family_friendly: bool,
     /// A pointer to another, somehow related product (or multiple products).
-    pub is_related_to: 	ProductOrService,
+    pub is_related_to: ProductOrService,
     /// A pointer to another, functionally similar product (or multiple products).
-    pub is_similar_to: 	ProductOrService,
+    pub is_similar_to: ProductOrService,
     /// Indicates the kind of product that this is a variant of. In the case of ProductModel, this
     /// is a pointer (from a ProductModel) to a base product from which this product is a variant.
     /// It is safe to infer that the variant inherits all product features from the base model,
@@ -156,11 +156,11 @@ pub struct Product {
     /// property can apply to any Product included in the group.
     ///
     /// Inverse property: hasVariant
-    pub is_variant_of: 	ProductGroupOrProductModel,
+    pub is_variant_of: ProductGroupOrProductModel,
     /// A predefined value from OfferItemCondition specifying the condition of the product or
     /// service, or the products or services included in the offer. Also used for product return
     /// policies to specify the condition of products accepted for returns.
-    pub item_condition: 	OfferItemCondition,
+    pub item_condition: OfferItemCondition,
     /// Keywords or tags used to describe some item. Multiple textual entries in a keywords list are
     /// typically delimited by commas, or by repeating the property.
     pub keywords: DefinedTermOrTextOrURL,
@@ -169,7 +169,7 @@ pub struct Product {
     /// The manufacturer of the product.
     pub manufacturer: Organization,
     /// A material that something is made from, e.g. leather, wool, cotton, paper.
-    pub material: 	ProductOrTextOrUrl,
+    pub material: ProductOrTextOrUrl,
     /// The mobileUrl property is provided for specific situations in which data consumers need to
     /// determine whether one of several provided URLs is a dedicated 'mobile site'.
     ///
@@ -182,14 +182,14 @@ pub struct Product {
     /// mobileUrl for more mobile-oriented pages. The property is intended for the case when items
     /// (primarily Product and Offer) have extra URLs hosted on an additional "mobile site"
     /// alongside the main one. It should not be taken as an endorsement of this publication style.
-    pub mobile_url: 	String,
+    pub mobile_url: String,
     /// The model of the product. Use with the URL of a ProductModel or a textual representation of
     /// the model identifier. The URL of the ProductModel can be from an external source. It is
     /// recommended to additionally provide strong product identifiers via the gtin8/gtin13/gtin14
     /// and mpn properties.
-    pub model: 	ProductModelOrText,
+    pub model: ProductModelOrText,
     /// The Manufacturer Part Number (MPN) of the product, or the product to which the offer refers.
-    pub mpn: 	String,
+    pub mpn: String,
     /// Provides negative considerations regarding something, most typically in pro/con lists for
     /// reviews (alongside positiveNotes). For symmetry
     ///
@@ -201,9 +201,9 @@ pub struct Product {
     ///
     /// The property values can be expressed either as unstructured text (repeated as necessary),
     /// or if ordered, as a list (in which case the most negative is at the beginning of the list).
-    pub negative_notes: 	ItemListOrListItemOrTextOrWebContent,
+    pub negative_notes: ItemListOrListItemOrTextOrWebContent,
     /// Indicates the NATO stock number (nsn) of a Product.
-    pub nsn: 	String,
+    pub nsn: String,
     /// An offer to provide this item—for example, an offer to sell a product, rent the DVD of a
     /// movie, perform a service, or give away tickets to an event. Use businessFunction to indicate
     /// the kind of transaction offered, i.e. sell, lease, etc. This property can also be used to
@@ -212,11 +212,11 @@ pub struct Product {
     /// Product, can clarify the nature of the offer.
     ///
     /// Inverse property: itemOffered
-    pub offers: 	DemandOrOffer,
+    pub offers: DemandOrOffer,
     /// A pattern that something has, for example 'polka dot', 'striped', 'Canadian flag'. Values
     /// are typically expressed as text, although links to controlled value schemes are also
     /// supported.
-    pub pattern: 	DefinedTermOrText,
+    pub pattern: DefinedTermOrText,
     /// Provides positive considerations regarding something, for example product highlights or
     /// (alongside negativeNotes) pro/con lists for reviews.
     ///
@@ -225,34 +225,34 @@ pub struct Product {
     ///
     /// The property values can be expressed either as unstructured text (repeated as necessary), or
     /// if ordered, as a list (in which case the most positive is at the beginning of the list).
-    pub positive_notes: 	ItemListOrListItemOrTextOrWebContent,
+    pub positive_notes: ItemListOrListItemOrTextOrWebContent,
     /// The product identifier, such as ISBN. For example: meta itemprop="productID"
     /// content="isbn:123-456-789".
     #[serde(rename = "productID")]
-    pub product_id: 	String,
+    pub product_id: String,
     /// The date of production of the item, e.g. vehicle.
-    pub production_date: 	Date,
+    pub production_date: Date,
     ///  The date the item, e.g. vehicle, was purchased by the current owner.
-    pub purchase_date: 	Date,
+    pub purchase_date: Date,
     /// The release date of a product or product model. This can be used to distinguish the exact
     /// variant of a product.
-    pub release_date: 	Date,
+    pub release_date: Date,
     /// A review of the item. Supersedes reviews.
-    pub review: 	Review,
+    pub review: Review,
     /// A standardized size of a product or creative work, specified either through a simple textual
     /// string (for example 'XL', '32Wx34L'), a QuantitativeValue with a unitCode, or a
     /// comprehensive and structured SizeSpecification; in other cases, the width, height, depth and
     /// weight properties may be more applicable.
-    pub size: 	DefinedTermOrQuantitativeValueOrSizeSpecificationOrText,
+    pub size: DefinedTermOrQuantitativeValueOrSizeSpecificationOrText,
     /// The Stock Keeping Unit (SKU), i.e. a merchant-specific identifier for a product or service,
     /// or the product to which the offer refers.
-    pub sku: 	String,
+    pub sku: String,
     /// A slogan or motto associated with the item.
-    pub slogan: 	String,
+    pub slogan: String,
     /// The weight of the product or person.
-    pub weight: 	MassOrQuantitativeValue,
+    pub weight: MassOrQuantitativeValue,
     /// The width of the item.
-    pub width: 	DistanceOrQuantitativeValue,
+    pub width: DistanceOrQuantitativeValue,
 
     #[serde(flatten)]
     pub thing: Box<Thing>,

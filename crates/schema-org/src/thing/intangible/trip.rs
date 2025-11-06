@@ -1,16 +1,16 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::components::{DateTimeOrDate, OrganizationOrPerson, Place, Thing};
+use crate::permutations::date::DateOrDateTime;
 
 /// A trip or journey. An itinerary of visits to one or more places.
 #[derive(Debug, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Trip {
     /// The expected arrival time.
-    pub arrival_time: DateTimeOrDate,
+    pub arrival_time: DateOrDateTime,
     /// The expected departure time.
-    pub departure_time: DateTimeOrDate,
+    pub departure_time: DateOrDateTime,
     /// Destination(s) ( Place ) that make up a trip. For a trip where destination order is
     /// important use ItemList to specify that order (see examples).
     pub itinerary: ItemListOrPlace,

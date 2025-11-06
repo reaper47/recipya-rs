@@ -1,10 +1,10 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::Thing;
 use crate::permutations::bool::BooleanOrNumberOrStructuredValueOrText;
 use crate::permutations::defined_term::DefinedTermOrMeasurementMethodEnumOrTextOrURL;
 use crate::permutations::text::TextOrURL;
-use crate::Thing;
 
 /// A property-value pair, e.g. representing a feature of a product or place. Use the 'name'
 /// property for the name of the property. If there is an additional human-readable version of the

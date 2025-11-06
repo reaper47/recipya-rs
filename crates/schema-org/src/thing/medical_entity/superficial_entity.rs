@@ -1,9 +1,9 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::thing::medical_entity::therapeutic_procedure::MedicalTherapy;
-use crate::thing::medical_entity::MedicalCondition;
 use crate::thing::MedicalEntity;
+use crate::thing::medical_entity::MedicalCondition;
+use crate::thing::medical_entity::therapeutic_procedure::MedicalTherapy;
 
 /// Anatomical features that can be observed by sight (without dissection), including the form and
 /// proportions of the human body as well as surface landmarks that correspond to deeper
@@ -25,16 +25,16 @@ pub struct SuperficialAnatomy {
     /// If applicable, a description of the pathophysiology associated with the anatomical system,
     /// including potential abnormal changes in the mechanical, physical, and biochemical functions
     /// of the system.
-    pub associated_pathophysiology: 	String,
+    pub associated_pathophysiology: String,
     /// Anatomical systems or structures that relate to the superficial anatomy.
-    pub related_anatomy: 	AnatomicalStructureOrAnatomicalSystem,
+    pub related_anatomy: AnatomicalStructureOrAnatomicalSystem,
     /// A medical condition associated with this anatomy.
-    pub related_condition: 	MedicalCondition,
+    pub related_condition: MedicalCondition,
     /// A medical therapy related to this anatomy.
-    pub related_therapy: 	MedicalTherapy,
+    pub related_therapy: MedicalTherapy,
     /// The significance associated with the superficial anatomy; as an example, how characteristics
     /// of the superficial anatomy can suggest underlying medical conditions or courses of treatment.
-    pub significance: 	String,
+    pub significance: String,
     #[serde(flatten)]
     pub medical_entity: MedicalEntity,
 }

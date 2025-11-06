@@ -2,14 +2,16 @@ mod enumeration;
 mod medical;
 mod qualitative_value;
 
+pub mod status_enumeration;
+
 pub use enumeration::*;
 pub use medical::*;
 
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::permutations::property::ClassOrEnumerationOrProperty;
 use crate::Thing;
+use crate::permutations::property::ClassOrEnumerationOrProperty;
 
 /// Lists or enumerations—for example, a list of cuisines or music genres, etc.
 #[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]

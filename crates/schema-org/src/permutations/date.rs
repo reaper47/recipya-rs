@@ -29,7 +29,10 @@ impl<'de> Deserialize<'de> for DateOrDateTime {
 
         match iso8601::datetime(&s) {
             Ok(parsed) => {
-                let has_time = parsed.time.hour != 0 || parsed.time.minute != 0 || parsed.time.second != 0 || parsed.time.millisecond != 0;
+                let has_time = parsed.time.hour != 0
+                    || parsed.time.minute != 0
+                    || parsed.time.second != 0
+                    || parsed.time.millisecond != 0;
 
                 if has_time {
                     DateTime::new(s)
@@ -41,11 +44,9 @@ impl<'de> Deserialize<'de> for DateOrDateTime {
                         .map_err(serde::de::Error::custom)
                 }
             }
-            Err(_) => {
-                Date::new(s)
-                    .map(Self::Date)
-                    .map_err(|err| serde::de::Error::custom(format!("Invalid date or datetime format: {err}")))
-            }
+            Err(_) => Date::new(s).map(Self::Date).map_err(|err| {
+                serde::de::Error::custom(format!("Invalid date or datetime format: {err}"))
+            }),
         }
     }
 }

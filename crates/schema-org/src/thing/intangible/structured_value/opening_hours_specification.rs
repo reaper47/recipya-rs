@@ -1,10 +1,10 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::Thing;
 use crate::data_type::time::Time;
 use crate::permutations::date::DateOrDateTime;
 use crate::thing::intangible::enumeration::DayOfWeek;
-use crate::Thing;
 
 /// A structured value providing information about the opening hours of a place or a certain service
 /// inside a place.
@@ -30,4 +30,3 @@ pub struct OpeningHoursSpecification {
     #[serde(flatten)]
     pub thing: Thing,
 }
-

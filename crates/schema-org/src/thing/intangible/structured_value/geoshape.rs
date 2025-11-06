@@ -1,10 +1,10 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::Thing;
 use crate::permutations::administrative_area::CountryOrText;
 use crate::permutations::postal_address::PostalAddressOrText;
 use crate::permutations::text::NumberOrText;
-use crate::Thing;
 
 /// The geographic shape of a place. A GeoShape can be described using several properties whose
 /// values are based on latitude/longitude pairs. Either whitespace or commas can be used to

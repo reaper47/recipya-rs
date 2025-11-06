@@ -1,16 +1,18 @@
-mod contact_point;
+pub mod contact_point;
 mod geoshape;
-mod opening_hours_specification;
-mod quantitave_value;
-mod property_value;
-mod monetary_amount;
 mod interaction_counter;
+mod monetary_amount;
+mod opening_hours_specification;
+mod property_value;
+mod quantitave_value;
 
-pub use contact_point::*;
 pub use geoshape::*;
+pub use interaction_counter::*;
 pub use opening_hours_specification::*;
-pub use quantitave_value::*;
 pub use property_value::*;
+pub use quantitave_value::*;
+
+pub use contact_point::ContactPoint;
 
 use schemars::JsonSchema;
 use serde::Deserialize;
