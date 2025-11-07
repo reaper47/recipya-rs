@@ -14,12 +14,12 @@ pub use action::*;
 pub use bio_chem::*;
 pub use creative_work::CreativeWork;
 pub use event::*;
-pub use product::*;
 
 pub use medical_entity::MedicalEntity;
 pub use organization::Organization;
 pub use person::Person;
 pub use place::Place;
+pub use product::Product;
 
 use schemars::JsonSchema;
 use serde::Deserialize;

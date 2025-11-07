@@ -1,9 +1,11 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::intangible::enumeration::MedicalProcedureType;
-use crate::permutations::medical::MedicalEntityOrText;
+use crate::permutations::medical::{
+    EventStatusTypeOrMedicalStudyStatusOrText, MedicalEntityOrText,
+};
 use crate::thing::MedicalEntity;
+use crate::thing::intangible::enumeration::MedicalProcedureType;
 
 pub mod therapeutic_procedure;
 

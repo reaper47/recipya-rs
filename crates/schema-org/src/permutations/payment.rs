@@ -1,5 +1,7 @@
 use schemars::JsonSchema;
 
+use crate::thing::intangible::LoanOrCredit;
+
 #[derive(Debug, PartialEq, JsonSchema)]
 pub enum LoanOrCreditOrPaymentMethodOrText {
     LoanOrCredit(LoanOrCredit),

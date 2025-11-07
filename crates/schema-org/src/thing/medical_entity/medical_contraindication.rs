@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::medical_entity::MedicalEntity;
+use crate::thing::medical_entity::MedicalEntity;
 
 /// A condition or factor that serves as a reason to withhold a certain medical therapy.
 /// Contraindications can be absolute (there are no reasonable circumstances for undertaking a

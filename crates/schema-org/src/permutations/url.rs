@@ -63,6 +63,12 @@ pub enum ImageObjectOrURL {
     URL(URL),
 }
 
+impl Default for ImageObjectOrURL {
+    fn default() -> Self {
+        Self::URL(URL::default())
+    }
+}
+
 impl<'de> Deserialize<'de> for ImageObjectOrURL {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

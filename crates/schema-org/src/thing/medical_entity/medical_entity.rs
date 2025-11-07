@@ -2,10 +2,11 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 
 use crate::Thing;
-use crate::intangible::enumeration::{MedicalSpecialty, MedicineSystem};
-use crate::intangible::grant::Grant;
-use crate::medical_entity::medical_guideline::MedicalGuideline;
-use crate::medical_entity::medical_intangible::MedicalCode;
+use crate::thing::intangible::enumeration::{MedicalSpecialty, MedicineSystem};
+use crate::thing::intangible::grant::Grant;
+use crate::thing::medical_entity::MedicalStudy;
+use crate::thing::medical_entity::medical_guideline::MedicalGuideline;
+use crate::thing::medical_entity::medical_intangible::MedicalCode;
 use crate::thing::organization::Organization;
 
 /// The most generic type of entity related to health and the practice of medicine.

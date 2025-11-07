@@ -4,6 +4,8 @@ use serde::Deserialize;
 use crate::Thing;
 use crate::data_type::Date;
 use crate::permutations::brand::BrandOrOrganization;
+use crate::permutations::organization::EducationalOrganizationOrOrganization;
+use crate::permutations::person::OrganizationOrPerson;
 use crate::permutations::postal_address::PostalAddressOrText;
 use crate::permutations::text::LanguageOrText;
 use crate::thing::intangible::grant::Grant;

@@ -4,7 +4,6 @@ use serde::Deserialize;
 /// A combination of date and time of day in the form [-]CCYY-MM-DDThh:mm:ss[Z|(+|-)hh:mm]
 /// (see Chapter 5.4 of ISO 8601).
 #[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct DateTime(String);
 
 impl DateTime {

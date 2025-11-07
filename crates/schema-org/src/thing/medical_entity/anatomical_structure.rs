@@ -1,9 +1,10 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::medical_entity::therapeutic_procedure::MedicalTherapy;
-use crate::medical_entity::{MedicalCondition, MedicalEntity};
 use crate::thing::medical::AnatomicalSystem;
+use crate::thing::medical_entity::ImageObject;
+use crate::thing::medical_entity::therapeutic_procedure::MedicalTherapy;
+use crate::thing::medical_entity::{MedicalCondition, MedicalEntity};
 
 /// Any part of the human body, typically a component of an anatomical system. Organs, tissues, and
 /// cells are all anatomical structures.
@@ -23,7 +24,7 @@ pub struct AnatomicalStructure {
     /// The anatomical or organ system that this structure is part of.
     pub part_of_system: Box<AnatomicalSystem>,
     /// A medical condition associated with this anatomy.
-    pub related_condition: MedicalCondition,
+    pub related_condition: Box<MedicalCondition>,
     /// A medical therapy related to this anatomy.
     pub related_therapy: MedicalTherapy,
     /// Component (sub-)structure(s) that comprise this anatomical structure.

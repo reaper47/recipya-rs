@@ -6,6 +6,31 @@ use serde_json::Value;
 
 use crate::data_type::text::URL;
 
+pub(crate) fn has_anatomical_structure_properties(value: &Value) -> bool {
+    let values = [
+        "associatedPathophysiology",
+        "bodyLocation",
+        "connectedTo",
+        "diagram",
+        "partOfSystem",
+        "relatedCondition",
+        "subStructure",
+        "relatedTherapy",
+    ];
+    values.iter().any(|v| value.get(v).is_some())
+}
+
+pub(crate) fn has_anatomical_system_properties(value: &Value) -> bool {
+    let values = [
+        "associatedPathophysiology",
+        "comprisedOf",
+        "relatedCondition",
+        "relatedStructure",
+        "relatedTherapy",
+    ];
+    values.iter().any(|v| value.get(v).is_some())
+}
+
 pub(crate) fn has_bio_chem_entity_properties(value: &Value) -> bool {
     let values = [
         "bioChemInteraction",

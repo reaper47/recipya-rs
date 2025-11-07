@@ -1,17 +1,26 @@
+mod drug;
+
+pub use drug::*;
+
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::data_type::Date;
 use crate::data_type::text::URL;
 use crate::permutations::brand::BrandOrOrganization;
 use crate::permutations::category::CategoryCodeOrPhysicalActivityCategoryOrTextOrThingOrURL;
+use crate::permutations::text::TextOrURL;
+use crate::permutations::url::ImageObjectOrURL;
+use crate::thing::Organization;
+use crate::thing::creative_work::Review;
 use crate::thing::intangible::Audience;
-use crate::thing::intangible::structured_value::QuantitativeValue;
-use crate::thing::place::administrative_area::Country;
-use crate::types::date::Date;
+use crate::thing::intangible::grant::Grant;
+use crate::thing::intangible::structured_value::{PropertyValue, QuantitativeValue};
+use crate::thing::place::Country;
 
 /// Any offered product or service. For example: a pair of shoes; a concert ticket; the rental of a
 /// car; a haircut; or an episode of a TV show streamed online.
-#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Product {
     /// A property-value pair representing an additional characteristic of the entity, e.g. a
@@ -32,7 +41,7 @@ pub struct Product {
     /// definition of ASINs in general - see documentation from Amazon for authoritative details.
     /// ASINs are most commonly encoded as text strings, but the [asin] property supports URL/URI
     /// as potential values too.
-    pub asin: TextOrUrl,
+    pub asin: TextOrURL,
     /// An intended audience, i.e. a group for whom something was created. Supersedes
     /// serviceAudience.
     pub audience: Audience,
@@ -49,7 +58,7 @@ pub struct Product {
     /// A color swatch image, visualizing the color of a Product. Should match the textual
     /// description specified in the color property. This can be a URL or a fully described
     /// ImageObject.
-    pub color_swatch: ImageObjectOrUrl,
+    pub color_swatch: ImageObjectOrURL,
     /// The place where the product was assembled.
     pub country_of_assembly: String,
     /// The place where the item (typically Product) was last processed and tested before
@@ -88,7 +97,7 @@ pub struct Product {
     ///
     /// Note also that this is a definition for how to include GTINs in Schema.org data, and not a
     /// definition of GTINs in general - see the GS1 documentation for authoritative details.
-    pub gtin: TextOrUrl,
+    pub gtin: TextOrURL,
     /// The GTIN-12 code of the product, or the product to which the offer refers. The GTIN-12 is
     /// the 12-digit GS1 Identification Key composed of a U.P.C. Company Prefix, Item Reference,
     /// and Check Digit used to identify trade items. See GS1 GTIN Summary for more details.
@@ -105,7 +114,7 @@ pub struct Product {
     /// known as EAN/UCC-8 or 8-digit EAN. See GS1 GTIN Summary for more details.
     pub gtin8: String,
     /// Used to tag an item to be intended or suitable for consumption or use by adults only.
-    pub has_adult_consideration: AdultOrientedEnumeration,
+    pub has_adult_consideration: String,
     /// Certification information about a product, organization, service, place, or person.
     pub has_certification: Certification,
     /// Defines the energy efficiency Category (also known as "class" or "rating") for a product
@@ -253,7 +262,6 @@ pub struct Product {
     pub weight: MassOrQuantitativeValue,
     /// The width of the item.
     pub width: DistanceOrQuantitativeValue,
-
     #[serde(flatten)]
     pub thing: Box<Thing>,
 }

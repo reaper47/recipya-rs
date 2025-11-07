@@ -1,10 +1,16 @@
+mod ddx_element;
+mod dose_schedule;
+mod drug_strength;
+
+pub use ddx_element::*;
+pub use dose_schedule::*;
+pub use drug_strength::*;
+
 use schemars::JsonSchema;
 use serde::Deserialize;
 
 use crate::thing::MedicalEntity;
 use crate::thing::intangible::defined_term::CategoryCode;
-use crate::thing::intangible::enumeration::MedicalEvidenceLevel;
-use crate::types::date::Date;
 
 /// A code for a medical entity.
 #[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]

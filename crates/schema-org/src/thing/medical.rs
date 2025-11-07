@@ -1,6 +1,7 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::permutations::anatomy::AnatomicalStructureOrAnatomicalSystem;
 use crate::thing::MedicalEntity;
 use crate::thing::medical_entity::therapeutic_procedure::MedicalTherapy;
 use crate::thing::medical_entity::{AnatomicalStructure, MedicalCondition};

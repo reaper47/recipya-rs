@@ -2,10 +2,12 @@ mod enumeration;
 mod medical;
 mod qualitative_value;
 
+pub mod medical_enumeration;
 pub mod status_enumeration;
 
 pub use enumeration::*;
 pub use medical::*;
+pub use qualitative_value::*;
 
 use schemars::JsonSchema;
 use serde::Deserialize;

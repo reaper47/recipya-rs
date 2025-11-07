@@ -1,7 +1,15 @@
+mod medical_sign_or_symptom;
+
+pub use medical_sign_or_symptom::*;
+
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::permutations::anatomy::AnatomicalStructureOrAnatomicalSystemOrSuperficialAnatomy;
 use crate::thing::MedicalEntity;
+use crate::thing::medical_entity::MedicalTest;
+use crate::thing::medical_entity::medical_intangible::DDxElement;
+use crate::thing::medical_entity::therapeutic_procedure::MedicalTherapy;
 
 /// Any condition of the human body that affects the normal functioning of a person, whether
 /// physically or mentally. Includes diseases, injuries, disabilities, disorders, syndromes, etc.

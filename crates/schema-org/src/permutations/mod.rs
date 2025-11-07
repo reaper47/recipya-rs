@@ -9,6 +9,7 @@ pub mod creative_work;
 pub mod date;
 pub mod defined_term;
 pub mod medical;
+pub mod number;
 pub mod organization;
 pub mod payment;
 pub mod person;

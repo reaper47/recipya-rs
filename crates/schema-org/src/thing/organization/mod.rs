@@ -5,6 +5,27 @@ pub use performing_group::*;
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::Thing;
+use crate::data_type::Date;
+use crate::data_type::text::URL;
+use crate::permutations::administrative_area::AdministrativeAreaOrGeoShapeOrPlaceOrText;
+use crate::permutations::brand::BrandOrOrganization;
+use crate::permutations::payment::LoanOrCreditOrPaymentMethodOrText;
+use crate::permutations::person::OrganizationOrPerson;
+use crate::permutations::place::PlaceOrPostalAddressOrTextOrVirtualLocation;
+use crate::permutations::postal_address::PostalAddressOrText;
+use crate::permutations::text::LanguageOrText;
+use crate::permutations::url::ImageObjectOrURL;
+use crate::thing::creative_work::Review;
+use crate::thing::intangible::demand::Demand;
+use crate::thing::intangible::grant::Grant;
+use crate::thing::intangible::rating::AggregateRating;
+use crate::thing::intangible::structured_value::contact_point::PostalAddress;
+use crate::thing::intangible::structured_value::{
+    ContactPoint, InteractionCounter, QuantitativeValue,
+};
+use crate::thing::{Event, Person, Place};
+
 /// An organization such as a school, NGO, corporation, club, etc.
 #[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]

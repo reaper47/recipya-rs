@@ -15,7 +15,7 @@ pub struct AdministrativeArea {
 }
 
 /// A country.
-#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
+#[derive(Debug, Default, Deserialize, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Country {
     #[serde(flatten)]

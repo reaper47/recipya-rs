@@ -4,17 +4,18 @@ use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 
 use crate::permutations::helpers::has_person_properties;
+use crate::thing::organization::PerformingGroup;
 use crate::thing::{Organization, Person};
 
 #[derive(Debug, PartialEq, JsonSchema)]
 pub enum OrganizationOrPerson {
-    Organization(Organization),
-    Person(Person),
+    Organization(Box<Organization>),
+    Person(Box<Person>),
 }
 
 impl Default for OrganizationOrPerson {
     fn default() -> Self {
-        Self::Person(Person::default())
+        Self::Person(Box::from(Person::default()))
     }
 }
 

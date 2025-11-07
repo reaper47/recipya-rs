@@ -5,10 +5,26 @@ use serde::de::{Error, MapAccess};
 use serde::{Deserialize, Deserializer, de};
 use serde_json::Value;
 
-use crate::permutations::helpers::{has_medical_condition_properties, has_place_properties};
+use crate::permutations::helpers::has_medical_condition_properties;
 use crate::thing::MedicalEntity;
+use crate::thing::intangible::enumeration::medical_enumeration::MedicalStudyStatus;
+use crate::thing::intangible::enumeration::status_enumeration::EventStatusType;
 use crate::thing::intangible::structured_value::PropertyValue;
 use crate::thing::medical_entity::{MedicalCondition, MedicalContraindication};
+
+#[derive(Debug, Deserialize, PartialEq, JsonSchema)]
+#[serde(untagged)]
+pub enum EventStatusTypeOrMedicalStudyStatusOrText {
+    EventStatusType(EventStatusType),
+    MedicalStudyStatus(MedicalStudyStatus),
+    Text(String),
+}
+
+impl Default for EventStatusTypeOrMedicalStudyStatusOrText {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
+}
 
 #[derive(Debug, PartialEq, JsonSchema)]
 pub enum MedicalContraindicationOrText {
@@ -22,6 +38,49 @@ impl Default for MedicalContraindicationOrText {
     }
 }
 
+impl<'de> Deserialize<'de> for MedicalContraindicationOrText {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct Visitor;
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = MedicalContraindicationOrText;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("MedicalContraindication or Text")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Self::Value::Text(v.to_string()))
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                self.visit_str(&v)
+            }
+
+            fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let v = MedicalContraindication::deserialize(
+                    de::value::MapAccessDeserializer::new(map),
+                )?;
+                Ok(Self::Value::MedicalContraindication(v))
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
+    }
+}
+
 #[derive(Debug, PartialEq, JsonSchema)]
 pub enum MedicalEntityOrText {
     MedicalEntity(MedicalEntity),
@@ -31,6 +90,47 @@ pub enum MedicalEntityOrText {
 impl Default for MedicalEntityOrText {
     fn default() -> Self {
         Self::Text(String::new())
+    }
+}
+
+impl<'de> Deserialize<'de> for MedicalEntityOrText {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct Visitor;
+
+        impl<'de> de::Visitor<'de> for Visitor {
+            type Value = MedicalEntityOrText;
+
+            fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+                formatter.write_str("MedicalContraindication or Text")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                Ok(Self::Value::Text(v.to_string()))
+            }
+
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: Error,
+            {
+                self.visit_str(&v)
+            }
+
+            fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let v = MedicalEntity::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                Ok(Self::Value::MedicalEntity(v))
+            }
+        }
+
+        deserializer.deserialize_any(Visitor)
     }
 }
 
