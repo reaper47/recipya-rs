@@ -1,24 +1,35 @@
-//! # schemaorg
-//!
-//! Rust type definitions automatically derived from [Schema.org](https://schema.org/).
-//!
-//! Source: © Schema.org contributors — licensed under [CC-BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/).
-//! Rust translation © 2025 Marc-André Charland — licensed under AGPL-3.0 OR CC-BY-SA 3.0.
-
-extern crate core;
-
-mod article;
-mod context;
-mod nutrition;
+mod action;
+mod defined_term;
+mod defined_term_set;
+mod energy;
+pub mod enums;
+pub mod field;
+mod how_to;
+mod mass;
+mod nutrition_information;
+mod place;
+mod property_value;
 mod recipe;
+mod thing;
 
-mod data_type;
-pub mod permutations;
-pub mod thing;
-mod types;
+mod comment;
+mod event;
+pub(crate) mod helpers;
+mod duration;
+mod creative_work;
 
-pub use article::*;
-pub use context::*;
-pub use nutrition::*;
+pub use creative_work::*;
+pub use duration::*;
+pub use action::*;
+pub use comment::*;
+pub use defined_term::*;
+pub use defined_term_set::*;
+pub use energy::*;
+pub use event::*;
+pub use how_to::*;
+pub use mass::*;
+pub use nutrition_information::*;
+pub use place::*;
+pub use property_value::*;
 pub use recipe::*;
-pub use thing::Thing;
+pub use thing::*;
