@@ -751,10 +751,10 @@ pub enum FieldEnum4 {
 // pub type CategoryCodeSetIsBasedOnUrlFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOn>
 // pub type CategoryCodeSetIsBasedOnFieldEnum = FieldEnum4;
-// ///<https://schema.org/isBasedOnUrl>
-// pub type ReviewIsBasedOnUrlFieldEnum = FieldEnum4;
-// ///<https://schema.org/isBasedOn>
-// pub type ReviewIsBasedOnFieldEnum = FieldEnum4;
+///<https://schema.org/isBasedOnUrl>
+pub type ReviewIsBasedOnUrlFieldEnum = FieldEnum4;
+///<https://schema.org/isBasedOn>
+pub type ReviewIsBasedOnFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOnUrl>
 // pub type AmpStoryIsBasedOnUrlFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOn>
@@ -1435,8 +1435,8 @@ pub enum FieldEnum5 {
 // pub type ProductSizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
 // pub type CategoryCodeSetSizeFieldEnum = FieldEnum5;
-// ///<https://schema.org/size>
-// pub type ReviewSizeFieldEnum = FieldEnum5;
+///<https://schema.org/size>
+pub type ReviewSizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
 // pub type AmpStorySizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
@@ -2247,30 +2247,30 @@ pub enum FieldEnum6 {
 // pub type CategoryCodeSetAuthorFieldEnum = FieldEnum6;
 // ///<https://schema.org/translator>
 // pub type CategoryCodeSetTranslatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/maintainer>
-// pub type ReviewMaintainerFieldEnum = FieldEnum6;
-// ///<https://schema.org/contributor>
-// pub type ReviewContributorFieldEnum = FieldEnum6;
-// ///<https://schema.org/publisher>
-// pub type ReviewPublisherFieldEnum = FieldEnum6;
-// ///<https://schema.org/provider>
-// pub type ReviewProviderFieldEnum = FieldEnum6;
-// ///<https://schema.org/creator>
-// pub type ReviewCreatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type ReviewFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type ReviewSponsorFieldEnum = FieldEnum6;
-// ///<https://schema.org/copyrightHolder>
-// pub type ReviewCopyrightHolderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sdPublisher>
-// pub type ReviewSdPublisherFieldEnum = FieldEnum6;
-// ///<https://schema.org/producer>
-// pub type ReviewProducerFieldEnum = FieldEnum6;
-// ///<https://schema.org/author>
-// pub type ReviewAuthorFieldEnum = FieldEnum6;
-// ///<https://schema.org/translator>
-// pub type ReviewTranslatorFieldEnum = FieldEnum6;
+///<https://schema.org/maintainer>
+pub type ReviewMaintainerFieldEnum = FieldEnum6;
+///<https://schema.org/contributor>
+pub type ReviewContributorFieldEnum = FieldEnum6;
+///<https://schema.org/publisher>
+pub type ReviewPublisherFieldEnum = FieldEnum6;
+///<https://schema.org/provider>
+pub type ReviewProviderFieldEnum = FieldEnum6;
+///<https://schema.org/creator>
+pub type ReviewCreatorFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type ReviewFunderFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type ReviewSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/copyrightHolder>
+pub type ReviewCopyrightHolderFieldEnum = FieldEnum6;
+///<https://schema.org/sdPublisher>
+pub type ReviewSdPublisherFieldEnum = FieldEnum6;
+///<https://schema.org/producer>
+pub type ReviewProducerFieldEnum = FieldEnum6;
+///<https://schema.org/author>
+pub type ReviewAuthorFieldEnum = FieldEnum6;
+///<https://schema.org/translator>
+pub type ReviewTranslatorFieldEnum = FieldEnum6;
 // ///<https://schema.org/maintainer>
 // pub type AmpStoryMaintainerFieldEnum = FieldEnum6;
 // ///<https://schema.org/contributor>
@@ -8145,8 +8145,8 @@ pub type CreativeWorkTranslatorFieldEnum = FieldEnum6;
 // pub type ProjectFounderFieldEnum = FieldEnum6;
 // ///<https://schema.org/maintainer>
 // pub type ClaimReviewMaintainerFieldEnum = FieldEnum6;
-// ///<https://schema.org/contributor>
-// pub type ClaimReviewContributorFieldEnum = FieldEnum6;
+///<https://schema.org/contributor>
+pub type ClaimReviewContributorFieldEnum = FieldEnum6;
 // ///<https://schema.org/publisher>
 // pub type ClaimReviewPublisherFieldEnum = FieldEnum6;
 // ///<https://schema.org/provider>
@@ -9691,20 +9691,20 @@ pub enum FieldEnum7 {
 // pub type DigitalDocumentPermissionTypeMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type FMRadioChannelMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/license>
-// pub type ReviewLicenseFieldEnum = FieldEnum7;
-// ///<https://schema.org/usageInfo>
-// pub type ReviewUsageInfoFieldEnum = FieldEnum7;
-// ///<https://schema.org/isPartOf>
-// pub type ReviewIsPartOfFieldEnum = FieldEnum7;
-// ///<https://schema.org/acquireLicensePage>
-// pub type ReviewAcquireLicensePageFieldEnum = FieldEnum7;
-// ///<https://schema.org/publishingPrinciples>
-// pub type ReviewPublishingPrinciplesFieldEnum = FieldEnum7;
-// ///<https://schema.org/sdLicense>
-// pub type ReviewSdLicenseFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type ReviewMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/license>
+pub type ReviewLicenseFieldEnum = FieldEnum7;
+///<https://schema.org/usageInfo>
+pub type ReviewUsageInfoFieldEnum = FieldEnum7;
+///<https://schema.org/isPartOf>
+pub type ReviewIsPartOfFieldEnum = FieldEnum7;
+///<https://schema.org/acquireLicensePage>
+pub type ReviewAcquireLicensePageFieldEnum = FieldEnum7;
+///<https://schema.org/publishingPrinciples>
+pub type ReviewPublishingPrinciplesFieldEnum = FieldEnum7;
+///<https://schema.org/sdLicense>
+pub type ReviewSdLicenseFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type ReviewMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type PriceComponentTypeEnumerationMainEntityOfPageFieldEnum = FieldEnum7;
 ///<https://schema.org/mainEntityOfPage>
@@ -15333,8 +15333,8 @@ pub enum FieldEnum8 {
 // pub type GatedResidenceCommunityLongitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type CategoryCodeSetVersionFieldEnum = FieldEnum8;
-// ///<https://schema.org/version>
-// pub type ReviewVersionFieldEnum = FieldEnum8;
+///<https://schema.org/version>
+pub type ReviewVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type AmpStoryVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
@@ -16602,10 +16602,10 @@ pub enum FieldEnum9 {
 // pub type CategoryCodeSetEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type CategoryCodeSetKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/educationalLevel>
-// pub type ReviewEducationalLevelFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type ReviewKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/educationalLevel>
+pub type ReviewEducationalLevelFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type ReviewKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/educationalLevel>
 // pub type AmpStoryEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
@@ -17824,8 +17824,8 @@ pub enum FieldEnum10 {
 // pub type ProductOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type CategoryCodeSetOffersFieldEnum = FieldEnum10;
-// ///<https://schema.org/offers>
-// pub type ReviewOffersFieldEnum = FieldEnum10;
+///<https://schema.org/offers>
+pub type ReviewOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type AmpStoryOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
@@ -18328,8 +18328,8 @@ pub enum FieldEnum11 {
 // pub type ProductMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
 // pub type CategoryCodeSetMaterialFieldEnum = FieldEnum11;
-// ///<https://schema.org/material>
-// pub type ReviewMaterialFieldEnum = FieldEnum11;
+///<https://schema.org/material>
+pub type ReviewMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
 // pub type AmpStoryMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
@@ -18838,18 +18838,18 @@ pub enum FieldEnum12 {
 // pub type CategoryCodeSetLearningResourceTypeFieldEnum = FieldEnum12;
 // ///<https://schema.org/educationalUse>
 // pub type CategoryCodeSetEducationalUseFieldEnum = FieldEnum12;
-// ///<https://schema.org/assesses>
-// pub type ReviewAssessesFieldEnum = FieldEnum12;
-// ///<https://schema.org/teaches>
-// pub type ReviewTeachesFieldEnum = FieldEnum12;
-// ///<https://schema.org/pattern>
-// pub type ReviewPatternFieldEnum = FieldEnum12;
-// ///<https://schema.org/creativeWorkStatus>
-// pub type ReviewCreativeWorkStatusFieldEnum = FieldEnum12;
-// ///<https://schema.org/learningResourceType>
-// pub type ReviewLearningResourceTypeFieldEnum = FieldEnum12;
-// ///<https://schema.org/educationalUse>
-// pub type ReviewEducationalUseFieldEnum = FieldEnum12;
+///<https://schema.org/assesses>
+pub type ReviewAssessesFieldEnum = FieldEnum12;
+///<https://schema.org/teaches>
+pub type ReviewTeachesFieldEnum = FieldEnum12;
+///<https://schema.org/pattern>
+pub type ReviewPatternFieldEnum = FieldEnum12;
+///<https://schema.org/creativeWorkStatus>
+pub type ReviewCreativeWorkStatusFieldEnum = FieldEnum12;
+///<https://schema.org/learningResourceType>
+pub type ReviewLearningResourceTypeFieldEnum = FieldEnum12;
+///<https://schema.org/educationalUse>
+pub type ReviewEducationalUseFieldEnum = FieldEnum12;
 // ///<https://schema.org/assesses>
 // pub type AmpStoryAssessesFieldEnum = FieldEnum12;
 // ///<https://schema.org/teaches>
@@ -21178,8 +21178,8 @@ pub enum FieldEnum13 {
 // pub type MusicRecordingArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
 // pub type CategoryCodeSetArchivedAtFieldEnum = FieldEnum13;
-// ///<https://schema.org/archivedAt>
-// pub type ReviewArchivedAtFieldEnum = FieldEnum13;
+///<https://schema.org/archivedAt>
+pub type ReviewArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
 // pub type AmpStoryArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
@@ -21532,8 +21532,8 @@ pub enum FieldEnum14 {
 // pub type MusicRecordingContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
 // pub type CategoryCodeSetContentRatingFieldEnum = FieldEnum14;
-// ///<https://schema.org/contentRating>
-// pub type ReviewContentRatingFieldEnum = FieldEnum14;
+///<https://schema.org/contentRating>
+pub type ReviewContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
 // pub type AmpStoryContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
@@ -21887,8 +21887,8 @@ pub enum FieldEnum15 {
 // pub type MusicRecordingCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
 // pub type CategoryCodeSetCorrectionFieldEnum = FieldEnum15;
-// ///<https://schema.org/correction>
-// pub type ReviewCorrectionFieldEnum = FieldEnum15;
+///<https://schema.org/correction>
+pub type ReviewCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
 // pub type AmpStoryCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
@@ -22273,8 +22273,8 @@ pub enum FieldEnum16 {
 // pub type MusicRecordingInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type CategoryCodeSetInLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/inLanguage>
-// pub type ReviewInLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/inLanguage>
+pub type ReviewInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type AmpStoryInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
@@ -23071,8 +23071,8 @@ pub enum FieldEnum17 {
 // pub type MusicRecordingAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
 // pub type CategoryCodeSetAudioFieldEnum = FieldEnum17;
-// ///<https://schema.org/audio>
-// pub type ReviewAudioFieldEnum = FieldEnum17;
+///<https://schema.org/audio>
+pub type ReviewAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
 // pub type AmpStoryAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
@@ -43668,18 +43668,18 @@ pub type DefinedTermInDefinedTermSetFieldEnum = FieldEnum44;
 // pub type OfferShippingDetailsWidthFieldEnum = FieldEnum48;
 // ///<https://schema.org/height>
 // pub type OfferShippingDetailsHeightFieldEnum = FieldEnum48;
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum FieldEnum49 {
-//     ///<https://schema.org/ItemList>
-//     ItemList(ItemList),
-//     ///<https://schema.org/ListItem>
-//     ListItem(ListItem),
-//     ///<https://schema.org/Text>
-//     Text(String),
-//     ///<https://schema.org/WebContent>
-//     WebContent(WebContent),
-// }
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum FieldEnum49 {
+    ///<https://schema.org/ItemList>
+    ItemList(ItemList),
+    ///<https://schema.org/ListItem>
+    ListItem(ListItem),
+    ///<https://schema.org/Text>
+    Text(String),
+    ///<https://schema.org/WebContent>
+    WebContent(WebContent),
+}
 // ///<https://schema.org/negativeNotes>
 // pub type ProductCollectionNegativeNotesFieldEnum = FieldEnum49;
 // ///<https://schema.org/positiveNotes>
@@ -43688,10 +43688,10 @@ pub type DefinedTermInDefinedTermSetFieldEnum = FieldEnum44;
 // pub type ProductNegativeNotesFieldEnum = FieldEnum49;
 // ///<https://schema.org/positiveNotes>
 // pub type ProductPositiveNotesFieldEnum = FieldEnum49;
-// ///<https://schema.org/negativeNotes>
-// pub type ReviewNegativeNotesFieldEnum = FieldEnum49;
-// ///<https://schema.org/positiveNotes>
-// pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
+///<https://schema.org/negativeNotes>
+pub type ReviewNegativeNotesFieldEnum = FieldEnum49;
+///<https://schema.org/positiveNotes>
+pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // ///<https://schema.org/negativeNotes>
 // pub type DrugNegativeNotesFieldEnum = FieldEnum49;
 // ///<https://schema.org/positiveNotes>
