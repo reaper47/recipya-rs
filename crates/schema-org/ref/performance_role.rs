@@ -1,5 +1,8 @@
-use crate::*;
-use serde_with::{serde_as, OneOrMany};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use crate::helpers::one_or_many;
+use crate::field::*;
 ///<https://schema.org/endDate>
 ///<https://schema.org/Date>
 ///<https://schema.org/DateTime>
@@ -21,95 +24,94 @@ pub type PerformanceRoleRoleNameFieldEnum = String;
 ///<https://schema.org/URL>
 pub type PerformanceRoleAdditionalTypeFieldEnum = String;
 ///<https://schema.org/PerformanceRole>
-#[serde_as]
-#[derive(Debug, serde::Deserialize)]
-#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct PerformanceRole {
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/characterName>
     #[serde(rename = "characterName")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub character_name: Vec<String>,
     ///<https://schema.org/endDate>
     #[serde(rename = "endDate")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub end_date: Vec<PerformanceRoleEndDateFieldEnum>,
     ///<https://schema.org/namedPosition>
     #[serde(rename = "namedPosition")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub named_position: Vec<PerformanceRoleNamedPositionFieldEnum>,
     ///<https://schema.org/startDate>
     #[serde(rename = "startDate")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub start_date: Vec<PerformanceRoleStartDateFieldEnum>,
     ///<https://schema.org/roleName>
     #[serde(rename = "roleName")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub role_name: Vec<PerformanceRoleRoleNameFieldEnum>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(rename = "disambiguatingDescription")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
     ///<https://schema.org/potentialAction>
     #[serde(rename = "potentialAction")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub potential_action: Vec<Action>,
     ///<https://schema.org/additionalType>
     #[serde(rename = "additionalType")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_type: Vec<PerformanceRoleAdditionalTypeFieldEnum>,
     ///<https://schema.org/identifier>
     #[serde(rename = "identifier")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub identifier: Vec<PerformanceRoleIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(rename = "image")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub image: Vec<PerformanceRoleImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(rename = "sameAs")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub same_as: Vec<String>,
     ///<https://schema.org/description>
     #[serde(rename = "description")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub description: Vec<PerformanceRoleDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(rename = "alternateName")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
     #[serde(rename = "url")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
     #[serde(rename = "subjectOf")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub subject_of: Vec<PerformanceRoleSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(rename = "name")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
     ///<https://schema.org/mainEntityOfPage>
     #[serde(rename = "mainEntityOfPage")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub main_entity_of_page: Vec<PerformanceRoleMainEntityOfPageFieldEnum>,
 }

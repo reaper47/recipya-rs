@@ -1,309 +1,311 @@
-use crate::*;
-use serde_with::{serde_as, OneOrMany};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use crate::helpers::one_or_many;
+use crate::field::*;
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
 ///<https://schema.org/URL>
 pub type VolcanoAdditionalTypeFieldEnum = String;
 ///<https://schema.org/Volcano>
-#[serde_as]
-#[derive(Debug, serde::Deserialize)]
-#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Volcano {
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/containedInPlace>
     #[serde(rename = "containedInPlace")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub contained_in_place: Vec<Place>,
     ///<https://schema.org/faxNumber>
     #[serde(rename = "faxNumber")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub fax_number: Vec<String>,
     ///<https://schema.org/map>
     #[serde(rename = "map")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub map: Vec<String>,
     ///<https://schema.org/geoEquals>
     #[serde(rename = "geoEquals")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_equals: Vec<VolcanoGeoEqualsFieldEnum>,
     ///<https://schema.org/review>
     #[serde(rename = "review")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub review: Vec<Review>,
     ///<https://schema.org/latitude>
     #[serde(rename = "latitude")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub latitude: Vec<VolcanoLatitudeFieldEnum>,
     ///<https://schema.org/geoDisjoint>
     #[serde(rename = "geoDisjoint")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_disjoint: Vec<VolcanoGeoDisjointFieldEnum>,
     ///<https://schema.org/tourBookingPage>
     #[serde(rename = "tourBookingPage")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub tour_booking_page: Vec<String>,
     ///<https://schema.org/longitude>
     #[serde(rename = "longitude")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub longitude: Vec<VolcanoLongitudeFieldEnum>,
     ///<https://schema.org/photo>
     #[serde(rename = "photo")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub photo: Vec<VolcanoPhotoFieldEnum>,
     ///<https://schema.org/hasDriveThroughService>
     #[serde(rename = "hasDriveThroughService")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub has_drive_through_service: Vec<String>,
     ///<https://schema.org/geo>
     #[serde(rename = "geo")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo: Vec<VolcanoGeoFieldEnum>,
     ///<https://schema.org/publicAccess>
     #[serde(rename = "publicAccess")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub public_access: Vec<String>,
     ///<https://schema.org/geoCovers>
     #[serde(rename = "geoCovers")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_covers: Vec<VolcanoGeoCoversFieldEnum>,
     ///<https://schema.org/specialOpeningHoursSpecification>
     #[serde(rename = "specialOpeningHoursSpecification")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub special_opening_hours_specification: Vec<OpeningHoursSpecification>,
     ///<https://schema.org/isAccessibleForFree>
     #[serde(rename = "isAccessibleForFree")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub is_accessible_for_free: Vec<String>,
     ///<https://schema.org/keywords>
     #[serde(rename = "keywords")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub keywords: Vec<VolcanoKeywordsFieldEnum>,
     ///<https://schema.org/amenityFeature>
     #[serde(rename = "amenityFeature")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub amenity_feature: Vec<LocationFeatureSpecification>,
     ///<https://schema.org/openingHoursSpecification>
     #[serde(rename = "openingHoursSpecification")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub opening_hours_specification: Vec<OpeningHoursSpecification>,
     ///<https://schema.org/globalLocationNumber>
     #[serde(rename = "globalLocationNumber")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub global_location_number: Vec<String>,
     ///<https://schema.org/smokingAllowed>
     #[serde(rename = "smokingAllowed")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub smoking_allowed: Vec<String>,
     ///<https://schema.org/geoTouches>
     #[serde(rename = "geoTouches")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_touches: Vec<VolcanoGeoTouchesFieldEnum>,
     ///<https://schema.org/events>
     #[serde(rename = "events")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<Event>,
     ///<https://schema.org/telephone>
     #[serde(rename = "telephone")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub telephone: Vec<String>,
     ///<https://schema.org/slogan>
     #[serde(rename = "slogan")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub slogan: Vec<String>,
     ///<https://schema.org/hasMap>
     #[serde(rename = "hasMap")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub has_map: Vec<VolcanoHasMapFieldEnum>,
     ///<https://schema.org/geoCrosses>
     #[serde(rename = "geoCrosses")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_crosses: Vec<VolcanoGeoCrossesFieldEnum>,
     ///<https://schema.org/aggregateRating>
     #[serde(rename = "aggregateRating")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub aggregate_rating: Vec<AggregateRating>,
     ///<https://schema.org/hasGS1DigitalLink>
     #[serde(rename = "hasGS1DigitalLink")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub has_gs1_digital_link: Vec<String>,
     ///<https://schema.org/isicV4>
     #[serde(rename = "isicV4")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub isic_v4: Vec<String>,
     ///<https://schema.org/geoContains>
     #[serde(rename = "geoContains")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_contains: Vec<VolcanoGeoContainsFieldEnum>,
     ///<https://schema.org/photos>
     #[serde(rename = "photos")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub photos: Vec<VolcanoPhotosFieldEnum>,
     ///<https://schema.org/maps>
     #[serde(rename = "maps")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub maps: Vec<String>,
     ///<https://schema.org/hasCertification>
     #[serde(rename = "hasCertification")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub has_certification: Vec<Certification>,
     ///<https://schema.org/containsPlace>
     #[serde(rename = "containsPlace")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub contains_place: Vec<Place>,
     ///<https://schema.org/branchCode>
     #[serde(rename = "branchCode")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub branch_code: Vec<String>,
     ///<https://schema.org/maximumAttendeeCapacity>
     #[serde(rename = "maximumAttendeeCapacity")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub maximum_attendee_capacity: Vec<i32>,
     ///<https://schema.org/geoOverlaps>
     #[serde(rename = "geoOverlaps")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_overlaps: Vec<VolcanoGeoOverlapsFieldEnum>,
     ///<https://schema.org/containedIn>
     #[serde(rename = "containedIn")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub contained_in: Vec<Place>,
     ///<https://schema.org/geoIntersects>
     #[serde(rename = "geoIntersects")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_intersects: Vec<VolcanoGeoIntersectsFieldEnum>,
     ///<https://schema.org/geoWithin>
     #[serde(rename = "geoWithin")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_within: Vec<VolcanoGeoWithinFieldEnum>,
     ///<https://schema.org/event>
     #[serde(rename = "event")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub event: Vec<Event>,
     ///<https://schema.org/address>
     #[serde(rename = "address")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub address: Vec<VolcanoAddressFieldEnum>,
     ///<https://schema.org/additionalProperty>
     #[serde(rename = "additionalProperty")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_property: Vec<PropertyValue>,
     ///<https://schema.org/geoCoveredBy>
     #[serde(rename = "geoCoveredBy")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub geo_covered_by: Vec<VolcanoGeoCoveredByFieldEnum>,
     ///<https://schema.org/logo>
     #[serde(rename = "logo")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub logo: Vec<VolcanoLogoFieldEnum>,
     ///<https://schema.org/reviews>
     #[serde(rename = "reviews")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub reviews: Vec<Review>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(rename = "disambiguatingDescription")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
     ///<https://schema.org/potentialAction>
     #[serde(rename = "potentialAction")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub potential_action: Vec<Action>,
     ///<https://schema.org/additionalType>
     #[serde(rename = "additionalType")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_type: Vec<VolcanoAdditionalTypeFieldEnum>,
     ///<https://schema.org/identifier>
     #[serde(rename = "identifier")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub identifier: Vec<VolcanoIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(rename = "image")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub image: Vec<VolcanoImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(rename = "sameAs")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub same_as: Vec<String>,
     ///<https://schema.org/description>
     #[serde(rename = "description")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub description: Vec<VolcanoDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(rename = "alternateName")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
     #[serde(rename = "url")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
     #[serde(rename = "subjectOf")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub subject_of: Vec<VolcanoSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(rename = "name")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
     ///<https://schema.org/mainEntityOfPage>
     #[serde(rename = "mainEntityOfPage")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub main_entity_of_page: Vec<VolcanoMainEntityOfPageFieldEnum>,
 }

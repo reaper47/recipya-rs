@@ -1,5 +1,8 @@
-use crate::*;
-use serde_with::{serde_as, OneOrMany};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use crate::helpers::one_or_many;
+use crate::field::*;
 ///<https://schema.org/endDate>
 ///<https://schema.org/Date>
 ///<https://schema.org/DateTime>
@@ -25,135 +28,134 @@ pub type ScheduleExceptDateFieldEnum = String;
 ///<https://schema.org/URL>
 pub type ScheduleAdditionalTypeFieldEnum = String;
 ///<https://schema.org/Schedule>
-#[serde_as]
-#[derive(Debug, serde::Deserialize)]
-#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Schedule {
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/endDate>
     #[serde(rename = "endDate")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub end_date: Vec<ScheduleEndDateFieldEnum>,
     ///<https://schema.org/endTime>
     #[serde(rename = "endTime")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub end_time: Vec<ScheduleEndTimeFieldEnum>,
     ///<https://schema.org/startDate>
     #[serde(rename = "startDate")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub start_date: Vec<ScheduleStartDateFieldEnum>,
     ///<https://schema.org/byMonthDay>
     #[serde(rename = "byMonthDay")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub by_month_day: Vec<i32>,
     ///<https://schema.org/startTime>
     #[serde(rename = "startTime")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub start_time: Vec<ScheduleStartTimeFieldEnum>,
     ///<https://schema.org/byMonthWeek>
     #[serde(rename = "byMonthWeek")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub by_month_week: Vec<i32>,
     ///<https://schema.org/duration>
     #[serde(rename = "duration")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub duration: Vec<ScheduleDurationFieldEnum>,
     ///<https://schema.org/byMonth>
     #[serde(rename = "byMonth")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub by_month: Vec<i32>,
     ///<https://schema.org/exceptDate>
     #[serde(rename = "exceptDate")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub except_date: Vec<ScheduleExceptDateFieldEnum>,
     ///<https://schema.org/repeatCount>
     #[serde(rename = "repeatCount")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub repeat_count: Vec<i32>,
     ///<https://schema.org/byDay>
     #[serde(rename = "byDay")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub by_day: Vec<ScheduleByDayFieldEnum>,
     ///<https://schema.org/scheduleTimezone>
     #[serde(rename = "scheduleTimezone")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub schedule_timezone: Vec<String>,
     ///<https://schema.org/repeatFrequency>
     #[serde(rename = "repeatFrequency")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub repeat_frequency: Vec<ScheduleRepeatFrequencyFieldEnum>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(rename = "disambiguatingDescription")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
     ///<https://schema.org/potentialAction>
     #[serde(rename = "potentialAction")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub potential_action: Vec<Action>,
     ///<https://schema.org/additionalType>
     #[serde(rename = "additionalType")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_type: Vec<ScheduleAdditionalTypeFieldEnum>,
     ///<https://schema.org/identifier>
     #[serde(rename = "identifier")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub identifier: Vec<ScheduleIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(rename = "image")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub image: Vec<ScheduleImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(rename = "sameAs")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub same_as: Vec<String>,
     ///<https://schema.org/description>
     #[serde(rename = "description")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub description: Vec<ScheduleDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(rename = "alternateName")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
     #[serde(rename = "url")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
     #[serde(rename = "subjectOf")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub subject_of: Vec<ScheduleSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(rename = "name")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
     ///<https://schema.org/mainEntityOfPage>
     #[serde(rename = "mainEntityOfPage")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub main_entity_of_page: Vec<ScheduleMainEntityOfPageFieldEnum>,
 }

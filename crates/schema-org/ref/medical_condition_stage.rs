@@ -1,124 +1,126 @@
-use crate::*;
-use serde_with::{serde_as, OneOrMany};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use crate::helpers::one_or_many;
+use crate::field::*;
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
 ///<https://schema.org/URL>
 pub type MedicalConditionStageAdditionalTypeFieldEnum = String;
 ///<https://schema.org/MedicalConditionStage>
-#[serde_as]
-#[derive(Debug, serde::Deserialize)]
-#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct MedicalConditionStage {
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/subStageSuffix>
     #[serde(rename = "subStageSuffix")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sub_stage_suffix: Vec<String>,
     ///<https://schema.org/stageAsNumber>
     #[serde(rename = "stageAsNumber")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub stage_as_number: Vec<f32>,
     ///<https://schema.org/code>
     #[serde(rename = "code")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub code: Vec<MedicalCode>,
     ///<https://schema.org/study>
     #[serde(rename = "study")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub study: Vec<MedicalStudy>,
     ///<https://schema.org/funding>
     #[serde(rename = "funding")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub funding: Vec<Grant>,
     ///<https://schema.org/recognizingAuthority>
     #[serde(rename = "recognizingAuthority")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub recognizing_authority: Vec<Organization>,
     ///<https://schema.org/guideline>
     #[serde(rename = "guideline")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub guideline: Vec<MedicalGuideline>,
     ///<https://schema.org/medicineSystem>
     #[serde(rename = "medicineSystem")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub medicine_system: Vec<MedicineSystemEnum>,
     ///<https://schema.org/relevantSpecialty>
     #[serde(rename = "relevantSpecialty")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub relevant_specialty: Vec<MedicalSpecialtyEnum>,
     ///<https://schema.org/legalStatus>
     #[serde(rename = "legalStatus")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub legal_status: Vec<MedicalConditionStageLegalStatusFieldEnum>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(rename = "disambiguatingDescription")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
     ///<https://schema.org/potentialAction>
     #[serde(rename = "potentialAction")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub potential_action: Vec<Action>,
     ///<https://schema.org/additionalType>
     #[serde(rename = "additionalType")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_type: Vec<MedicalConditionStageAdditionalTypeFieldEnum>,
     ///<https://schema.org/identifier>
     #[serde(rename = "identifier")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub identifier: Vec<MedicalConditionStageIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(rename = "image")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub image: Vec<MedicalConditionStageImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(rename = "sameAs")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub same_as: Vec<String>,
     ///<https://schema.org/description>
     #[serde(rename = "description")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub description: Vec<MedicalConditionStageDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(rename = "alternateName")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
     #[serde(rename = "url")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
     #[serde(rename = "subjectOf")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub subject_of: Vec<MedicalConditionStageSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(rename = "name")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
     ///<https://schema.org/mainEntityOfPage>
     #[serde(rename = "mainEntityOfPage")]
-    #[serde_as(as = "OneOrMany<_>")]
-    #[serde(default)]
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub main_entity_of_page: Vec<MedicalConditionStageMainEntityOfPageFieldEnum>,
 }

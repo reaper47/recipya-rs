@@ -12,6 +12,7 @@ use crate::grant::Grant;
 use crate::interaction_counter::InteractionCounter;
 use crate::organization::Organization;
 use crate::person::Person;
+use crate::publication_event::PublicationEvent;
 use crate::quantitative_value::QuantitativeValue;
 use crate::rating::Rating;
 

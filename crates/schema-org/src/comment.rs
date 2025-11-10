@@ -2,9 +2,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::helpers::one_or_many;
-use crate::{Action, CreativeWork, Duration, Event, Place, Thing};
+use crate::{Action, CreativeWork, Duration, Event, Place, Review, Thing};
+use crate::audience::Audience;
 use crate::enums::IPTCDigitalSourceEnumerationEnum;
 use crate::field::*;
+use crate::person::Person;
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

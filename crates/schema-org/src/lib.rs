@@ -31,6 +31,14 @@ mod interaction_counter;
 mod person;
 mod contact_point;
 mod grant;
+mod publication_event;
+mod broadcast_service;
+mod broadcast_channel;
+mod cable_or_satellite_service;
+mod service_channel;
+mod service;
+mod offer_catalog;
+mod media_object;
 
 pub use action::*;
 pub use comment::*;
