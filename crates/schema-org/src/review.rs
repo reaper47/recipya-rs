@@ -4,7 +4,13 @@ use serde::{Deserialize, Serialize};
 use crate::enums::IPTCDigitalSourceEnumerationEnum;
 use crate::field::*;
 use crate::helpers::one_or_many;
-use crate::{Comment, CreativeWork, Duration, Event, Place, Thing};
+use crate::{Action, Comment, CreativeWork, Duration, Event, Place, Thing};
+use crate::aggregate_rating::AggregateRating;
+use crate::audience::Audience;
+use crate::interaction_counter::InteractionCounter;
+use crate::organization::Organization;
+use crate::person::Person;
+use crate::rating::Rating;
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

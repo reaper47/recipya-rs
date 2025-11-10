@@ -1,88 +1,65 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::action::Action;
-use crate::helpers::one_or_many;
+use crate::Action;
 use crate::field::*;
+use crate::helpers::one_or_many;
 
-///<https://schema.org/propertyID>
-///<https://schema.org/Text>
-///<https://schema.org/URL>
-pub type PropertyValuePropertyIDFieldEnum = String;
-///<https://schema.org/unitCode>
-///<https://schema.org/Text>
-///<https://schema.org/URL>
-pub type PropertyValueUnitCodeFieldEnum = String;
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
 ///<https://schema.org/URL>
-pub type PropertyValueAdditionalTypeFieldEnum = String;
+pub type RatingAdditionalTypeFieldEnum = String;
 
-///<https://schema.org/PropertyValue>
+///<https://schema.org/Rating>
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct PropertyValue {
+pub struct Rating {
     #[serde(rename = "@context")]
     pub context: String,
-    ///<https://schema.org/measurementMethod>
+    ///<https://schema.org/worstRating>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub measurement_method: Vec<PropertyValueMeasurementMethodFieldEnum>,
-    ///<https://schema.org/minValue>
+    pub worst_rating: Vec<RatingWorstRatingFieldEnum>,
+    ///<https://schema.org/reviewAspect>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub min_value: Vec<f32>,
-    ///<https://schema.org/propertyID>
-    #[serde(rename = "propertyID")]
+    pub review_aspect: Vec<String>,
+    ///<https://schema.org/bestRating>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub property_id: Vec<PropertyValuePropertyIDFieldEnum>,
-    ///<https://schema.org/maxValue>
+    pub best_rating: Vec<RatingBestRatingFieldEnum>,
+    ///<https://schema.org/author>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub max_value: Vec<f32>,
-    ///<https://schema.org/valueReference>
+    pub author: Vec<RatingAuthorFieldEnum>,
+    ///<https://schema.org/ratingExplanation>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub value_reference: Vec<PropertyValueValueReferenceFieldEnum>,
-    ///<https://schema.org/measurementTechnique>
+    pub rating_explanation: Vec<String>,
+    ///<https://schema.org/ratingValue>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub measurement_technique: Vec<PropertyValueMeasurementTechniqueFieldEnum>,
-    ///<https://schema.org/unitText>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub unit_text: Vec<String>,
-    ///<https://schema.org/value>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub value: Vec<PropertyValueValueFieldEnum>,
-    ///<https://schema.org/unitCode>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub unit_code: Vec<PropertyValueUnitCodeFieldEnum>,
+    pub rating_value: Vec<RatingRatingValueFieldEnum>,
     ///<https://schema.org/disambiguatingDescription>
-    #[serde(rename = "disambiguatingDescription")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
     ///<https://schema.org/potentialAction>
-    #[serde(rename = "potentialAction")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub potential_action: Vec<Action>,
     ///<https://schema.org/additionalType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub additional_type: Vec<PropertyValueAdditionalTypeFieldEnum>,
+    pub additional_type: Vec<RatingAdditionalTypeFieldEnum>,
     ///<https://schema.org/identifier>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub identifier: Vec<PropertyValueIdentifierFieldEnum>,
+    pub identifier: Vec<RatingIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<PropertyValueImageFieldEnum>,
+    pub image: Vec<RatingImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -90,7 +67,7 @@ pub struct PropertyValue {
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub description: Vec<PropertyValueDescriptionFieldEnum>,
+    pub description: Vec<RatingDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -102,7 +79,7 @@ pub struct PropertyValue {
     ///<https://schema.org/subjectOf>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub subject_of: Vec<PropertyValueSubjectOfFieldEnum>,
+    pub subject_of: Vec<RatingSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -110,5 +87,5 @@ pub struct PropertyValue {
     ///<https://schema.org/mainEntityOfPage>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<PropertyValueMainEntityOfPageFieldEnum>,
+    pub main_entity_of_page: Vec<RatingMainEntityOfPageFieldEnum>,
 }

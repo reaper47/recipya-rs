@@ -1,98 +1,85 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::field::*;
 use crate::helpers::one_or_many;
-use crate::{Action, CreativeWork, Review, Thing};
+use crate::{Action, Event, Place, PropertyValue, Review};
 use crate::aggregate_rating::AggregateRating;
-use crate::audience::Audience;
-use crate::enums::{EventAttendanceModeEnumerationEnum, EventStatusTypeEnum};
-use crate::grant::Grant;
-use crate::person::Person;
+use crate::certification::Certification;
+use crate::field::*;
+use crate::location_feature_specification::LocationFeatureSpecification;
+use crate::opening_hours_specification::OpeningHoursSpecification;
 
-///<https://schema.org/endDate>
-///<https://schema.org/Date>
-///<https://schema.org/DateTime>
-pub type EventEndDateFieldEnum = String;
-///<https://schema.org/startDate>
-///<https://schema.org/Date>
-///<https://schema.org/DateTime>
-pub type EventStartDateFieldEnum = String;
-///<https://schema.org/doorTime>
-///<https://schema.org/DateTime>
-///<https://schema.org/Time>
-pub type EventDoorTimeFieldEnum = String;
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
 ///<https://schema.org/URL>
-pub type EventAdditionalTypeFieldEnum = String;
+pub type AdministrativeAreaAdditionalTypeFieldEnum = String;
 
-///<https://schema.org/Event>
+///<https://schema.org/AdministrativeArea>
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct Event {
+pub struct AdministrativeArea {
     #[serde(rename = "@context")]
     pub context: String,
-    ///<https://schema.org/maximumVirtualAttendeeCapacity>
+    ///<https://schema.org/containedInPlace>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub maximum_virtual_attendee_capacity: Vec<i32>,
-    ///<https://schema.org/eventSchedule>
+    pub contained_in_place: Vec<Place>,
+    ///<https://schema.org/faxNumber>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub event_schedule: Vec<Schedule>,
-    ///<https://schema.org/location>
+    pub fax_number: Vec<String>,
+    ///<https://schema.org/map>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub location: Vec<EventLocationFieldEnum>,
-    ///<https://schema.org/endDate>
+    pub map: Vec<String>,
+    ///<https://schema.org/geoEquals>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub end_date: Vec<EventEndDateFieldEnum>,
-    ///<https://schema.org/subEvents>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub sub_events: Vec<Event>,
-    ///<https://schema.org/offers>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub offers: Vec<EventOffersFieldEnum>,
-    ///<https://schema.org/actor>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub actor: Vec<EventActorFieldEnum>,
-    ///<https://schema.org/audience>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub audience: Vec<Audience>,
+    pub geo_equals: Vec<AdministrativeAreaGeoEqualsFieldEnum>,
     ///<https://schema.org/review>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub review: Vec<Review>,
-    ///<https://schema.org/contributor>
+    ///<https://schema.org/latitude>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub contributor: Vec<EventContributorFieldEnum>,
-    ///<https://schema.org/subEvent>
+    pub latitude: Vec<AdministrativeAreaLatitudeFieldEnum>,
+    ///<https://schema.org/geoDisjoint>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub sub_event: Vec<Event>,
-    ///<https://schema.org/attendees>
+    pub geo_disjoint: Vec<AdministrativeAreaGeoDisjointFieldEnum>,
+    ///<https://schema.org/tourBookingPage>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub attendees: Vec<EventAttendeesFieldEnum>,
-    ///<https://schema.org/recordedIn>
+    pub tour_booking_page: Vec<String>,
+    ///<https://schema.org/longitude>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub recorded_in: Vec<CreativeWork>,
-    ///<https://schema.org/startDate>
+    pub longitude: Vec<AdministrativeAreaLongitudeFieldEnum>,
+    ///<https://schema.org/photo>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub start_date: Vec<EventStartDateFieldEnum>,
-    ///<https://schema.org/workFeatured>
+    pub photo: Vec<AdministrativeAreaPhotoFieldEnum>,
+    ///<https://schema.org/hasDriveThroughService>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub work_featured: Vec<CreativeWork>,
+    pub has_drive_through_service: Vec<String>,
+    ///<https://schema.org/geo>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub geo: Vec<AdministrativeAreaGeoFieldEnum>,
+    ///<https://schema.org/publicAccess>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub public_access: Vec<String>,
+    ///<https://schema.org/geoCovers>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub geo_covers: Vec<AdministrativeAreaGeoCoversFieldEnum>,
+    ///<https://schema.org/specialOpeningHoursSpecification>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub special_opening_hours_specification: Vec<OpeningHoursSpecification>,
     ///<https://schema.org/isAccessibleForFree>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -100,103 +87,128 @@ pub struct Event {
     ///<https://schema.org/keywords>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub keywords: Vec<EventKeywordsFieldEnum>,
-    ///<https://schema.org/maximumPhysicalAttendeeCapacity>
+    pub keywords: Vec<AdministrativeAreaKeywordsFieldEnum>,
+    ///<https://schema.org/amenityFeature>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub maximum_physical_attendee_capacity: Vec<i32>,
-    ///<https://schema.org/duration>
+    pub amenity_feature: Vec<LocationFeatureSpecification>,
+    ///<https://schema.org/openingHoursSpecification>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub duration: Vec<EventDurationFieldEnum>,
-    ///<https://schema.org/typicalAgeRange>
+    pub opening_hours_specification: Vec<OpeningHoursSpecification>,
+    ///<https://schema.org/globalLocationNumber>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub typical_age_range: Vec<String>,
-    ///<https://schema.org/funder>
+    pub global_location_number: Vec<String>,
+    ///<https://schema.org/smokingAllowed>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub funder: Vec<EventFunderFieldEnum>,
-    ///<https://schema.org/eventStatus>
+    pub smoking_allowed: Vec<String>,
+    ///<https://schema.org/geoTouches>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub event_status: Vec<EventStatusTypeEnum>,
-    ///<https://schema.org/composer>
+    pub geo_touches: Vec<AdministrativeAreaGeoTouchesFieldEnum>,
+    ///<https://schema.org/events>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub composer: Vec<EventComposerFieldEnum>,
-    ///<https://schema.org/workPerformed>
+    pub events: Vec<Event>,
+    ///<https://schema.org/telephone>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub work_performed: Vec<CreativeWork>,
-    ///<https://schema.org/organizer>
+    pub telephone: Vec<String>,
+    ///<https://schema.org/slogan>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub organizer: Vec<EventOrganizerFieldEnum>,
-    ///<https://schema.org/sponsor>
+    pub slogan: Vec<String>,
+    ///<https://schema.org/hasMap>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub sponsor: Vec<EventSponsorFieldEnum>,
+    pub has_map: Vec<AdministrativeAreaHasMapFieldEnum>,
+    ///<https://schema.org/geoCrosses>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub geo_crosses: Vec<AdministrativeAreaGeoCrossesFieldEnum>,
     ///<https://schema.org/aggregateRating>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub aggregate_rating: Vec<AggregateRating>,
-    ///<https://schema.org/inLanguage>
+    ///<https://schema.org/hasGS1DigitalLink>
+    #[serde(rename = "hasGS1DigitalLink")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub in_language: Vec<EventInLanguageFieldEnum>,
-    ///<https://schema.org/attendee>
+    pub has_gs1_digital_link: Vec<String>,
+    ///<https://schema.org/isicV4>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub attendee: Vec<EventAttendeeFieldEnum>,
-    ///<https://schema.org/about>
+    pub isic_v4: Vec<String>,
+    ///<https://schema.org/geoContains>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub about: Vec<Thing>,
-    ///<https://schema.org/funding>
+    pub geo_contains: Vec<AdministrativeAreaGeoContainsFieldEnum>,
+    ///<https://schema.org/photos>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub funding: Vec<Grant>,
+    pub photos: Vec<AdministrativeAreaPhotosFieldEnum>,
+    ///<https://schema.org/maps>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub maps: Vec<String>,
+    ///<https://schema.org/hasCertification>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub has_certification: Vec<Certification>,
+    ///<https://schema.org/containsPlace>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub contains_place: Vec<Place>,
+    ///<https://schema.org/branchCode>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub branch_code: Vec<String>,
     ///<https://schema.org/maximumAttendeeCapacity>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub maximum_attendee_capacity: Vec<i32>,
-    ///<https://schema.org/previousStartDate>
+    ///<https://schema.org/geoOverlaps>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub previous_start_date: Vec<String>,
-    ///<https://schema.org/doorTime>
+    pub geo_overlaps: Vec<AdministrativeAreaGeoOverlapsFieldEnum>,
+    ///<https://schema.org/containedIn>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub door_time: Vec<EventDoorTimeFieldEnum>,
-    ///<https://schema.org/eventAttendanceMode>
+    pub contained_in: Vec<Place>,
+    ///<https://schema.org/geoIntersects>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub event_attendance_mode: Vec<EventAttendanceModeEnumerationEnum>,
-    ///<https://schema.org/translator>
+    pub geo_intersects: Vec<AdministrativeAreaGeoIntersectsFieldEnum>,
+    ///<https://schema.org/geoWithin>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub translator: Vec<EventTranslatorFieldEnum>,
-    ///<https://schema.org/superEvent>
+    pub geo_within: Vec<AdministrativeAreaGeoWithinFieldEnum>,
+    ///<https://schema.org/event>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub super_event: Vec<Event>,
-    ///<https://schema.org/performer>
+    pub event: Vec<Event>,
+    ///<https://schema.org/address>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub performer: Vec<EventPerformerFieldEnum>,
-    ///<https://schema.org/performers>
+    pub address: Vec<AdministrativeAreaAddressFieldEnum>,
+    ///<https://schema.org/additionalProperty>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub performers: Vec<EventPerformersFieldEnum>,
-    ///<https://schema.org/remainingAttendeeCapacity>
+    pub additional_property: Vec<PropertyValue>,
+    ///<https://schema.org/geoCoveredBy>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub remaining_attendee_capacity: Vec<i32>,
-    ///<https://schema.org/director>
+    pub geo_covered_by: Vec<AdministrativeAreaGeoCoveredByFieldEnum>,
+    ///<https://schema.org/logo>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub director: Vec<Person>,
+    pub logo: Vec<AdministrativeAreaLogoFieldEnum>,
+    ///<https://schema.org/reviews>
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub reviews: Vec<Review>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -208,15 +220,15 @@ pub struct Event {
     ///<https://schema.org/additionalType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub additional_type: Vec<EventAdditionalTypeFieldEnum>,
+    pub additional_type: Vec<AdministrativeAreaAdditionalTypeFieldEnum>,
     ///<https://schema.org/identifier>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub identifier: Vec<EventIdentifierFieldEnum>,
+    pub identifier: Vec<AdministrativeAreaIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<EventImageFieldEnum>,
+    pub image: Vec<AdministrativeAreaImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -224,7 +236,7 @@ pub struct Event {
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub description: Vec<EventDescriptionFieldEnum>,
+    pub description: Vec<AdministrativeAreaDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -236,7 +248,7 @@ pub struct Event {
     ///<https://schema.org/subjectOf>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub subject_of: Vec<EventSubjectOfFieldEnum>,
+    pub subject_of: Vec<AdministrativeAreaSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -244,5 +256,5 @@ pub struct Event {
     ///<https://schema.org/mainEntityOfPage>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<EventMainEntityOfPageFieldEnum>,
+    pub main_entity_of_page: Vec<AdministrativeAreaMainEntityOfPageFieldEnum>,
 }

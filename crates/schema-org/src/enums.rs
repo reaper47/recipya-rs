@@ -906,21 +906,21 @@ pub enum MeasurementMethodEnumEnum {
 //     ///<https://schema.org/ReturnLabelDownloadAndPrint>
 //     ReturnLabelDownloadAndPrint,
 // }
-// ///<https://schema.org/EventStatusType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum EventStatusTypeEnum {
-//     ///<https://schema.org/EventPostponed>
-//     EventPostponed,
-//     ///<https://schema.org/EventScheduled>
-//     EventScheduled,
-//     ///<https://schema.org/EventRescheduled>
-//     EventRescheduled,
-//     ///<https://schema.org/EventMovedOnline>
-//     EventMovedOnline,
-//     ///<https://schema.org/EventCancelled>
-//     EventCancelled,
-// }
+///<https://schema.org/EventStatusType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum EventStatusTypeEnum {
+    ///<https://schema.org/EventPostponed>
+    EventPostponed,
+    ///<https://schema.org/EventScheduled>
+    EventScheduled,
+    ///<https://schema.org/EventRescheduled>
+    EventRescheduled,
+    ///<https://schema.org/EventMovedOnline>
+    EventMovedOnline,
+    ///<https://schema.org/EventCancelled>
+    EventCancelled,
+}
 // ///<https://schema.org/SizeSystemEnumeration>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1090,17 +1090,17 @@ pub enum MeasurementMethodEnumEnum {
 //     ///<https://schema.org/FulfillmentTypePickupDropoff>
 //     FulfillmentTypePickupDropoff,
 // }
-// ///<https://schema.org/EventAttendanceModeEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum EventAttendanceModeEnumerationEnum {
-//     ///<https://schema.org/MixedEventAttendanceMode>
-//     MixedEventAttendanceMode,
-//     ///<https://schema.org/OfflineEventAttendanceMode>
-//     OfflineEventAttendanceMode,
-//     ///<https://schema.org/OnlineEventAttendanceMode>
-//     OnlineEventAttendanceMode,
-// }
+///<https://schema.org/EventAttendanceModeEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum EventAttendanceModeEnumerationEnum {
+    ///<https://schema.org/MixedEventAttendanceMode>
+    MixedEventAttendanceMode,
+    ///<https://schema.org/OfflineEventAttendanceMode>
+    OfflineEventAttendanceMode,
+    ///<https://schema.org/OnlineEventAttendanceMode>
+    OnlineEventAttendanceMode,
+}
 // ///<https://schema.org/GameServerStatus>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1148,15 +1148,15 @@ pub enum MeasurementMethodEnumEnum {
 //     ///<https://schema.org/PurchaseTypeTradeIn>
 //     PurchaseTypeTradeIn,
 // }
-// ///<https://schema.org/CertificationStatusEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum CertificationStatusEnumerationEnum {
-//     ///<https://schema.org/CertificationActive>
-//     CertificationActive,
-//     ///<https://schema.org/CertificationInactive>
-//     CertificationInactive,
-// }
+///<https://schema.org/CertificationStatusEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum CertificationStatusEnumerationEnum {
+    ///<https://schema.org/CertificationActive>
+    CertificationActive,
+    ///<https://schema.org/CertificationInactive>
+    CertificationInactive,
+}
 // ///<https://schema.org/DrugPrescriptionStatus>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1188,27 +1188,27 @@ pub enum MeasurementMethodEnumEnum {
 //     ///<https://schema.org/CoOp>
 //     CoOp,
 // }
-// ///<https://schema.org/DayOfWeek>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum DayOfWeekEnum {
-//     ///<https://schema.org/Thursday>
-//     Thursday,
-//     ///<https://schema.org/Friday>
-//     Friday,
-//     ///<https://schema.org/Saturday>
-//     Saturday,
-//     ///<https://schema.org/Tuesday>
-//     Tuesday,
-//     ///<https://schema.org/PublicHolidays>
-//     PublicHolidays,
-//     ///<https://schema.org/Wednesday>
-//     Wednesday,
-//     ///<https://schema.org/Sunday>
-//     Sunday,
-//     ///<https://schema.org/Monday>
-//     Monday,
-// }
+///<https://schema.org/DayOfWeek>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum DayOfWeekEnum {
+    ///<https://schema.org/Thursday>
+    Thursday,
+    ///<https://schema.org/Friday>
+    Friday,
+    ///<https://schema.org/Saturday>
+    Saturday,
+    ///<https://schema.org/Tuesday>
+    Tuesday,
+    ///<https://schema.org/PublicHolidays>
+    PublicHolidays,
+    ///<https://schema.org/Wednesday>
+    Wednesday,
+    ///<https://schema.org/Sunday>
+    Sunday,
+    ///<https://schema.org/Monday>
+    Monday,
+}
 // ///<https://schema.org/GenderType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1418,15 +1418,15 @@ pub enum MeasurementMethodEnumEnum {
 //     ///<https://schema.org/True>
 //     True,
 // }
-// ///<https://schema.org/ContactPointOption>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum ContactPointOptionEnum {
-//     ///<https://schema.org/HearingImpairedSupported>
-//     HearingImpairedSupported,
-//     ///<https://schema.org/TollFree>
-//     TollFree,
-// }
+///<https://schema.org/ContactPointOption>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum ContactPointOptionEnum {
+    ///<https://schema.org/HearingImpairedSupported>
+    HearingImpairedSupported,
+    ///<https://schema.org/TollFree>
+    TollFree,
+}
 // ///<https://schema.org/MedicalProcedureType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]

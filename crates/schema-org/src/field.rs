@@ -41,8 +41,8 @@ use crate::property_value::PropertyValue;
 // pub type RadioSeasonActorFieldEnum = FieldEnum0;
 // ///<https://schema.org/actor>
 // pub type TVEpisodeActorFieldEnum = FieldEnum0;
-// ///<https://schema.org/actor>
-// pub type EventSeriesActorFieldEnum = FieldEnum0;
+///<https://schema.org/actor>
+pub type EventSeriesActorFieldEnum = FieldEnum0;
 // ///<https://schema.org/actor>
 // pub type UserPlusOnesActorFieldEnum = FieldEnum0;
 // ///<https://schema.org/actor>
@@ -121,8 +121,8 @@ pub type CreativeWorkSeasonActorFieldEnum = FieldEnum0;
 // pub type RadioEpisodeActorFieldEnum = FieldEnum0;
 // ///<https://schema.org/actor>
 // pub type VideoObjectActorFieldEnum = FieldEnum0;
-// ///<https://schema.org/actor>
-// pub type EventActorFieldEnum = FieldEnum0;
+///<https://schema.org/actor>
+pub type EventActorFieldEnum = FieldEnum0;
 // ///<https://schema.org/actor>
 // pub type UserTweetsActorFieldEnum = FieldEnum0;
 // ///<https://schema.org/actor>
@@ -201,8 +201,8 @@ pub enum FieldEnum2 {
 // pub type MusicRecordingPositionFieldEnum = FieldEnum2;
 // ///<https://schema.org/position>
 // pub type CategoryCodeSetPositionFieldEnum = FieldEnum2;
-// ///<https://schema.org/position>
-// pub type ReviewPositionFieldEnum = FieldEnum2;
+///<https://schema.org/position>
+pub type ReviewPositionFieldEnum = FieldEnum2;
 // ///<https://schema.org/position>
 // pub type AmpStoryPositionFieldEnum = FieldEnum2;
 // ///<https://schema.org/position>
@@ -443,8 +443,8 @@ pub type DefinedTermSetPositionFieldEnum = FieldEnum2;
 // pub type AskPublicNewsArticlePositionFieldEnum = FieldEnum2;
 // ///<https://schema.org/position>
 // pub type WebApplicationPositionFieldEnum = FieldEnum2;
-// ///<https://schema.org/position>
-// pub type CertificationPositionFieldEnum = FieldEnum2;
+///<https://schema.org/position>
+pub type CertificationPositionFieldEnum = FieldEnum2;
 // ///<https://schema.org/pageEnd>
 // pub type MedicalScholarlyArticlePageEndFieldEnum = FieldEnum2;
 // ///<https://schema.org/pageStart>
@@ -543,12 +543,12 @@ pub type CreativeWorkPositionFieldEnum = FieldEnum2;
 // pub type MedicalWebPagePositionFieldEnum = FieldEnum2;
 // ///<https://schema.org/position>
 // pub type VideoGalleryPositionFieldEnum = FieldEnum2;
-// ///<https://schema.org/position>
-// pub type ReviewNewsArticlePositionFieldEnum = FieldEnum2;
-// ///<https://schema.org/pageEnd>
-// pub type ReviewNewsArticlePageEndFieldEnum = FieldEnum2;
-// ///<https://schema.org/pageStart>
-// pub type ReviewNewsArticlePageStartFieldEnum = FieldEnum2;
+///<https://schema.org/position>
+pub type ReviewNewsArticlePositionFieldEnum = FieldEnum2;
+///<https://schema.org/pageEnd>
+pub type ReviewNewsArticlePageEndFieldEnum = FieldEnum2;
+///<https://schema.org/pageStart>
+pub type ReviewNewsArticlePageStartFieldEnum = FieldEnum2;
 // ///<https://schema.org/position>
 // pub type HowToDirectionPositionFieldEnum = FieldEnum2;
 // ///<https://schema.org/position>
@@ -1083,10 +1083,10 @@ pub type DefinedTermSetIsBasedOnFieldEnum = FieldEnum4;
 // pub type WebApplicationIsBasedOnUrlFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOn>
 // pub type WebApplicationIsBasedOnFieldEnum = FieldEnum4;
-// ///<https://schema.org/isBasedOnUrl>
-// pub type CertificationIsBasedOnUrlFieldEnum = FieldEnum4;
-// ///<https://schema.org/isBasedOn>
-// pub type CertificationIsBasedOnFieldEnum = FieldEnum4;
+///<https://schema.org/isBasedOnUrl>
+pub type CertificationIsBasedOnUrlFieldEnum = FieldEnum4;
+///<https://schema.org/isBasedOn>
+pub type CertificationIsBasedOnFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOnUrl>
 // pub type MedicalScholarlyArticleIsBasedOnUrlFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOn>
@@ -1235,10 +1235,10 @@ pub type CreativeWorkIsBasedOnFieldEnum = FieldEnum4;
 // pub type VideoGalleryIsBasedOnUrlFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOn>
 // pub type VideoGalleryIsBasedOnFieldEnum = FieldEnum4;
-// ///<https://schema.org/isBasedOnUrl>
-// pub type ReviewNewsArticleIsBasedOnUrlFieldEnum = FieldEnum4;
-// ///<https://schema.org/isBasedOn>
-// pub type ReviewNewsArticleIsBasedOnFieldEnum = FieldEnum4;
+///<https://schema.org/isBasedOnUrl>
+pub type ReviewNewsArticleIsBasedOnUrlFieldEnum = FieldEnum4;
+///<https://schema.org/isBasedOn>
+pub type ReviewNewsArticleIsBasedOnFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOnUrl>
 // pub type HowToDirectionIsBasedOnUrlFieldEnum = FieldEnum4;
 // ///<https://schema.org/isBasedOn>
@@ -1619,8 +1619,8 @@ pub type DefinedTermSetSizeFieldEnum = FieldEnum5;
 // pub type AskPublicNewsArticleSizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
 // pub type WebApplicationSizeFieldEnum = FieldEnum5;
-// ///<https://schema.org/size>
-// pub type CertificationSizeFieldEnum = FieldEnum5;
+///<https://schema.org/size>
+pub type CertificationSizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
 // pub type MedicalScholarlyArticleSizeFieldEnum = FieldEnum5;
 ///<https://schema.org/size>
@@ -1697,8 +1697,8 @@ pub type CreativeWorkSizeFieldEnum = FieldEnum5;
 // pub type MedicalWebPageSizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
 // pub type VideoGallerySizeFieldEnum = FieldEnum5;
-// ///<https://schema.org/size>
-// pub type ReviewNewsArticleSizeFieldEnum = FieldEnum5;
+///<https://schema.org/size>
+pub type ReviewNewsArticleSizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
 // pub type HowToDirectionSizeFieldEnum = FieldEnum5;
 // ///<https://schema.org/size>
@@ -2903,10 +2903,10 @@ pub type ReviewTranslatorFieldEnum = FieldEnum6;
 // pub type HighSchoolMembersFieldEnum = FieldEnum6;
 // ///<https://schema.org/founder>
 // pub type HighSchoolFounderFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type PersonFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type PersonSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type PersonFunderFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type PersonSponsorFieldEnum = FieldEnum6;
 // ///<https://schema.org/reviewedBy>
 // pub type WebPageReviewedByFieldEnum = FieldEnum6;
 // ///<https://schema.org/maintainer>
@@ -3159,8 +3159,8 @@ pub type ReviewTranslatorFieldEnum = FieldEnum6;
 // pub type AggregateOfferSellerFieldEnum = FieldEnum6;
 // ///<https://schema.org/offeredBy>
 // pub type AggregateOfferOfferedByFieldEnum = FieldEnum6;
-// ///<https://schema.org/author>
-// pub type RatingAuthorFieldEnum = FieldEnum6;
+///<https://schema.org/author>
+pub type RatingAuthorFieldEnum = FieldEnum6;
 // ///<https://schema.org/publisher>
 // pub type FinancialIncentivePublisherFieldEnum = FieldEnum6;
 // ///<https://schema.org/provider>
@@ -3665,26 +3665,26 @@ pub type ActionParticipantFieldEnum = FieldEnum6;
 // pub type TVEpisodeAuthorFieldEnum = FieldEnum6;
 // ///<https://schema.org/translator>
 // pub type TVEpisodeTranslatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/contributor>
-// pub type EventSeriesContributorFieldEnum = FieldEnum6;
-// ///<https://schema.org/attendees>
-// pub type EventSeriesAttendeesFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type EventSeriesFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/composer>
-// pub type EventSeriesComposerFieldEnum = FieldEnum6;
-// ///<https://schema.org/organizer>
-// pub type EventSeriesOrganizerFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type EventSeriesSponsorFieldEnum = FieldEnum6;
-// ///<https://schema.org/attendee>
-// pub type EventSeriesAttendeeFieldEnum = FieldEnum6;
-// ///<https://schema.org/translator>
-// pub type EventSeriesTranslatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/performer>
-// pub type EventSeriesPerformerFieldEnum = FieldEnum6;
-// ///<https://schema.org/performers>
-// pub type EventSeriesPerformersFieldEnum = FieldEnum6;
+///<https://schema.org/contributor>
+pub type EventSeriesContributorFieldEnum = FieldEnum6;
+///<https://schema.org/attendees>
+pub type EventSeriesAttendeesFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type EventSeriesFunderFieldEnum = FieldEnum6;
+///<https://schema.org/composer>
+pub type EventSeriesComposerFieldEnum = FieldEnum6;
+///<https://schema.org/organizer>
+pub type EventSeriesOrganizerFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type EventSeriesSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/attendee>
+pub type EventSeriesAttendeeFieldEnum = FieldEnum6;
+///<https://schema.org/translator>
+pub type EventSeriesTranslatorFieldEnum = FieldEnum6;
+///<https://schema.org/performer>
+pub type EventSeriesPerformerFieldEnum = FieldEnum6;
+///<https://schema.org/performers>
+pub type EventSeriesPerformersFieldEnum = FieldEnum6;
 // ///<https://schema.org/funder>
 // pub type BakeryFunderFieldEnum = FieldEnum6;
 // ///<https://schema.org/member>
@@ -4981,8 +4981,8 @@ pub type ActionParticipantFieldEnum = FieldEnum6;
 // pub type AllocateActionProviderFieldEnum = FieldEnum6;
 // ///<https://schema.org/participant>
 // pub type AllocateActionParticipantFieldEnum = FieldEnum6;
-// ///<https://schema.org/author>
-// pub type AggregateRatingAuthorFieldEnum = FieldEnum6;
+///<https://schema.org/author>
+pub type AggregateRatingAuthorFieldEnum = FieldEnum6;
 // ///<https://schema.org/maintainer>
 // pub type HyperTocEntryMaintainerFieldEnum = FieldEnum6;
 // ///<https://schema.org/contributor>
@@ -5743,30 +5743,30 @@ pub type DefinedTermSetTranslatorFieldEnum = FieldEnum6;
 // pub type WebApplicationAuthorFieldEnum = FieldEnum6;
 // ///<https://schema.org/translator>
 // pub type WebApplicationTranslatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/maintainer>
-// pub type CertificationMaintainerFieldEnum = FieldEnum6;
-// ///<https://schema.org/contributor>
-// pub type CertificationContributorFieldEnum = FieldEnum6;
-// ///<https://schema.org/publisher>
-// pub type CertificationPublisherFieldEnum = FieldEnum6;
-// ///<https://schema.org/provider>
-// pub type CertificationProviderFieldEnum = FieldEnum6;
-// ///<https://schema.org/creator>
-// pub type CertificationCreatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type CertificationFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type CertificationSponsorFieldEnum = FieldEnum6;
-// ///<https://schema.org/copyrightHolder>
-// pub type CertificationCopyrightHolderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sdPublisher>
-// pub type CertificationSdPublisherFieldEnum = FieldEnum6;
-// ///<https://schema.org/producer>
-// pub type CertificationProducerFieldEnum = FieldEnum6;
-// ///<https://schema.org/author>
-// pub type CertificationAuthorFieldEnum = FieldEnum6;
-// ///<https://schema.org/translator>
-// pub type CertificationTranslatorFieldEnum = FieldEnum6;
+///<https://schema.org/maintainer>
+pub type CertificationMaintainerFieldEnum = FieldEnum6;
+///<https://schema.org/contributor>
+pub type CertificationContributorFieldEnum = FieldEnum6;
+///<https://schema.org/publisher>
+pub type CertificationPublisherFieldEnum = FieldEnum6;
+///<https://schema.org/provider>
+pub type CertificationProviderFieldEnum = FieldEnum6;
+///<https://schema.org/creator>
+pub type CertificationCreatorFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type CertificationFunderFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type CertificationSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/copyrightHolder>
+pub type CertificationCopyrightHolderFieldEnum = FieldEnum6;
+///<https://schema.org/sdPublisher>
+pub type CertificationSdPublisherFieldEnum = FieldEnum6;
+///<https://schema.org/producer>
+pub type CertificationProducerFieldEnum = FieldEnum6;
+///<https://schema.org/author>
+pub type CertificationAuthorFieldEnum = FieldEnum6;
+///<https://schema.org/translator>
+pub type CertificationTranslatorFieldEnum = FieldEnum6;
 // ///<https://schema.org/agent>
 // pub type LendActionAgentFieldEnum = FieldEnum6;
 // ///<https://schema.org/provider>
@@ -6005,16 +6005,16 @@ pub type CreativeWorkSeasonTranslatorFieldEnum = FieldEnum6;
 // pub type ThreeDModelAuthorFieldEnum = FieldEnum6;
 // ///<https://schema.org/translator>
 // pub type ThreeDModelTranslatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type OrganizationFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/member>
-// pub type OrganizationMemberFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type OrganizationSponsorFieldEnum = FieldEnum6;
-// ///<https://schema.org/members>
-// pub type OrganizationMembersFieldEnum = FieldEnum6;
-// ///<https://schema.org/founder>
-// pub type OrganizationFounderFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type OrganizationFunderFieldEnum = FieldEnum6;
+///<https://schema.org/member>
+pub type OrganizationMemberFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type OrganizationSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/members>
+pub type OrganizationMembersFieldEnum = FieldEnum6;
+///<https://schema.org/founder>
+pub type OrganizationFounderFieldEnum = FieldEnum6;
 // ///<https://schema.org/funder>
 // pub type AdultEntertainmentFunderFieldEnum = FieldEnum6;
 // ///<https://schema.org/member>
@@ -6995,10 +6995,10 @@ pub type CreativeWorkTranslatorFieldEnum = FieldEnum6;
 // pub type PetStoreMembersFieldEnum = FieldEnum6;
 // ///<https://schema.org/founder>
 // pub type PetStoreFounderFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type GrantFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type GrantSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type GrantFunderFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type GrantSponsorFieldEnum = FieldEnum6;
 // ///<https://schema.org/acquiredFrom>
 // pub type OwnershipInfoAcquiredFromFieldEnum = FieldEnum6;
 // ///<https://schema.org/funder>
@@ -7179,12 +7179,12 @@ pub type CreativeWorkTranslatorFieldEnum = FieldEnum6;
 // pub type OrderSellerFieldEnum = FieldEnum6;
 // ///<https://schema.org/merchant>
 // pub type OrderMerchantFieldEnum = FieldEnum6;
-// ///<https://schema.org/agent>
-// pub type ReviewActionAgentFieldEnum = FieldEnum6;
-// ///<https://schema.org/provider>
-// pub type ReviewActionProviderFieldEnum = FieldEnum6;
-// ///<https://schema.org/participant>
-// pub type ReviewActionParticipantFieldEnum = FieldEnum6;
+///<https://schema.org/agent>
+pub type ReviewActionAgentFieldEnum = FieldEnum6;
+///<https://schema.org/provider>
+pub type ReviewActionProviderFieldEnum = FieldEnum6;
+///<https://schema.org/participant>
+pub type ReviewActionParticipantFieldEnum = FieldEnum6;
 // ///<https://schema.org/seller>
 // pub type OfferForPurchaseSellerFieldEnum = FieldEnum6;
 // ///<https://schema.org/offeredBy>
@@ -7497,30 +7497,30 @@ pub type CreativeWorkTranslatorFieldEnum = FieldEnum6;
 // pub type VideoGalleryAuthorFieldEnum = FieldEnum6;
 // ///<https://schema.org/translator>
 // pub type VideoGalleryTranslatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/maintainer>
-// pub type ReviewNewsArticleMaintainerFieldEnum = FieldEnum6;
-// ///<https://schema.org/contributor>
-// pub type ReviewNewsArticleContributorFieldEnum = FieldEnum6;
-// ///<https://schema.org/publisher>
-// pub type ReviewNewsArticlePublisherFieldEnum = FieldEnum6;
-// ///<https://schema.org/provider>
-// pub type ReviewNewsArticleProviderFieldEnum = FieldEnum6;
-// ///<https://schema.org/creator>
-// pub type ReviewNewsArticleCreatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type ReviewNewsArticleFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type ReviewNewsArticleSponsorFieldEnum = FieldEnum6;
-// ///<https://schema.org/copyrightHolder>
-// pub type ReviewNewsArticleCopyrightHolderFieldEnum = FieldEnum6;
-// ///<https://schema.org/sdPublisher>
-// pub type ReviewNewsArticleSdPublisherFieldEnum = FieldEnum6;
-// ///<https://schema.org/producer>
-// pub type ReviewNewsArticleProducerFieldEnum = FieldEnum6;
-// ///<https://schema.org/author>
-// pub type ReviewNewsArticleAuthorFieldEnum = FieldEnum6;
-// ///<https://schema.org/translator>
-// pub type ReviewNewsArticleTranslatorFieldEnum = FieldEnum6;
+///<https://schema.org/maintainer>
+pub type ReviewNewsArticleMaintainerFieldEnum = FieldEnum6;
+///<https://schema.org/contributor>
+pub type ReviewNewsArticleContributorFieldEnum = FieldEnum6;
+///<https://schema.org/publisher>
+pub type ReviewNewsArticlePublisherFieldEnum = FieldEnum6;
+///<https://schema.org/provider>
+pub type ReviewNewsArticleProviderFieldEnum = FieldEnum6;
+///<https://schema.org/creator>
+pub type ReviewNewsArticleCreatorFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type ReviewNewsArticleFunderFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type ReviewNewsArticleSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/copyrightHolder>
+pub type ReviewNewsArticleCopyrightHolderFieldEnum = FieldEnum6;
+///<https://schema.org/sdPublisher>
+pub type ReviewNewsArticleSdPublisherFieldEnum = FieldEnum6;
+///<https://schema.org/producer>
+pub type ReviewNewsArticleProducerFieldEnum = FieldEnum6;
+///<https://schema.org/author>
+pub type ReviewNewsArticleAuthorFieldEnum = FieldEnum6;
+///<https://schema.org/translator>
+pub type ReviewNewsArticleTranslatorFieldEnum = FieldEnum6;
 // ///<https://schema.org/maintainer>
 // pub type HowToDirectionMaintainerFieldEnum = FieldEnum6;
 // ///<https://schema.org/contributor>
@@ -8607,14 +8607,14 @@ pub type ClaimReviewContributorFieldEnum = FieldEnum6;
 // pub type TouristInformationCenterMembersFieldEnum = FieldEnum6;
 // ///<https://schema.org/founder>
 // pub type TouristInformationCenterFounderFieldEnum = FieldEnum6;
-// ///<https://schema.org/broker>
-// pub type EventReservationBrokerFieldEnum = FieldEnum6;
-// ///<https://schema.org/provider>
-// pub type EventReservationProviderFieldEnum = FieldEnum6;
-// ///<https://schema.org/bookingAgent>
-// pub type EventReservationBookingAgentFieldEnum = FieldEnum6;
-// ///<https://schema.org/underName>
-// pub type EventReservationUnderNameFieldEnum = FieldEnum6;
+///<https://schema.org/broker>
+pub type EventReservationBrokerFieldEnum = FieldEnum6;
+///<https://schema.org/provider>
+pub type EventReservationProviderFieldEnum = FieldEnum6;
+///<https://schema.org/bookingAgent>
+pub type EventReservationBookingAgentFieldEnum = FieldEnum6;
+///<https://schema.org/underName>
+pub type EventReservationUnderNameFieldEnum = FieldEnum6;
 // ///<https://schema.org/contributor>
 // pub type BusinessEventContributorFieldEnum = FieldEnum6;
 // ///<https://schema.org/attendees>
@@ -9113,26 +9113,26 @@ pub type CommentTranslatorFieldEnum = FieldEnum6;
 // pub type BankAccountBrokerFieldEnum = FieldEnum6;
 // ///<https://schema.org/provider>
 // pub type BankAccountProviderFieldEnum = FieldEnum6;
-// ///<https://schema.org/contributor>
-// pub type EventContributorFieldEnum = FieldEnum6;
-// ///<https://schema.org/attendees>
-// pub type EventAttendeesFieldEnum = FieldEnum6;
-// ///<https://schema.org/funder>
-// pub type EventFunderFieldEnum = FieldEnum6;
-// ///<https://schema.org/composer>
-// pub type EventComposerFieldEnum = FieldEnum6;
-// ///<https://schema.org/organizer>
-// pub type EventOrganizerFieldEnum = FieldEnum6;
-// ///<https://schema.org/sponsor>
-// pub type EventSponsorFieldEnum = FieldEnum6;
-// ///<https://schema.org/attendee>
-// pub type EventAttendeeFieldEnum = FieldEnum6;
-// ///<https://schema.org/translator>
-// pub type EventTranslatorFieldEnum = FieldEnum6;
-// ///<https://schema.org/performer>
-// pub type EventPerformerFieldEnum = FieldEnum6;
-// ///<https://schema.org/performers>
-// pub type EventPerformersFieldEnum = FieldEnum6;
+///<https://schema.org/contributor>
+pub type EventContributorFieldEnum = FieldEnum6;
+///<https://schema.org/attendees>
+pub type EventAttendeesFieldEnum = FieldEnum6;
+///<https://schema.org/funder>
+pub type EventFunderFieldEnum = FieldEnum6;
+///<https://schema.org/composer>
+pub type EventComposerFieldEnum = FieldEnum6;
+///<https://schema.org/organizer>
+pub type EventOrganizerFieldEnum = FieldEnum6;
+///<https://schema.org/sponsor>
+pub type EventSponsorFieldEnum = FieldEnum6;
+///<https://schema.org/attendee>
+pub type EventAttendeeFieldEnum = FieldEnum6;
+///<https://schema.org/translator>
+pub type EventTranslatorFieldEnum = FieldEnum6;
+///<https://schema.org/performer>
+pub type EventPerformerFieldEnum = FieldEnum6;
+///<https://schema.org/performers>
+pub type EventPerformersFieldEnum = FieldEnum6;
 // ///<https://schema.org/contributor>
 // pub type UserTweetsContributorFieldEnum = FieldEnum6;
 // ///<https://schema.org/attendees>
@@ -9367,8 +9367,8 @@ pub enum FieldEnum7 {
 // pub type EmployeeRoleMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type RejectActionMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type EventVenueMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type EventVenueMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ScheduleActionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -9601,8 +9601,8 @@ pub enum FieldEnum7 {
 // pub type ThesisSdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ThesisMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type QuantitativeValueMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type QuantitativeValueMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type SynagogueMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/diversityPolicy>
@@ -10273,10 +10273,10 @@ pub type ThingMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type HighSchoolPublishingPrinciplesFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type HighSchoolMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/publishingPrinciples>
-// pub type PersonPublishingPrinciplesFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type PersonMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/publishingPrinciples>
+pub type PersonPublishingPrinciplesFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type PersonMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/license>
 // pub type WebPageLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/usageInfo>
@@ -10409,8 +10409,8 @@ pub type ThingMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type DepartmentStorePublishingPrinciplesFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type DepartmentStoreMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type EventStatusTypeMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type EventStatusTypeMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type MedicalStudyStatusMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/license>
@@ -10459,8 +10459,8 @@ pub type ThingMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type SpecialAnnouncementMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type AggregateOfferMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type RatingMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type RatingMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type FinancialIncentiveMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -10781,8 +10781,8 @@ pub type ActionMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type BedAndBreakfastPublishingPrinciplesFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type BedAndBreakfastMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type PropertyValueSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type PropertyValueSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type MedicalSignMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -10819,8 +10819,8 @@ pub type ActionMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type TVEpisodeSdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type TVEpisodeMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type EventSeriesMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type EventSeriesMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/diversityPolicy>
 // pub type BakeryDiversityPolicyFieldEnum = FieldEnum7;
 // ///<https://schema.org/correctionsPolicy>
@@ -10857,8 +10857,8 @@ pub type ActionMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type ChapterMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type VoteActionMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type ContactPointOptionMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type ContactPointOptionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type UseActionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -11357,8 +11357,8 @@ pub type PlaceMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type PublicationVolumeSdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type PublicationVolumeMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type OrganizationRoleMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type OrganizationRoleMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/diversityPolicy>
 // pub type ConsortiumDiversityPolicyFieldEnum = FieldEnum7;
 // ///<https://schema.org/correctionsPolicy>
@@ -11485,8 +11485,8 @@ pub type PlaceMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type ItemListMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type SeekToActionMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type OpeningHoursSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type OpeningHoursSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type DrawActionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/license>
@@ -11789,8 +11789,8 @@ pub type MassMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type WPFooterSdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type WPFooterMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type InteractionCounterMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type InteractionCounterMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type CommentActionMainEntityOfPageFieldEnum = FieldEnum7;
 ///<https://schema.org/mainEntityOfPage>
@@ -11877,8 +11877,8 @@ pub type NutritionInformationMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type MusicReleaseMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type AllocateActionMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type AggregateRatingMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type AggregateRatingMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ChurchMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -12497,20 +12497,20 @@ pub type DefinedTermSetMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type WebApplicationSdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type WebApplicationMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/license>
-// pub type CertificationLicenseFieldEnum = FieldEnum7;
-// ///<https://schema.org/usageInfo>
-// pub type CertificationUsageInfoFieldEnum = FieldEnum7;
-// ///<https://schema.org/isPartOf>
-// pub type CertificationIsPartOfFieldEnum = FieldEnum7;
-// ///<https://schema.org/acquireLicensePage>
-// pub type CertificationAcquireLicensePageFieldEnum = FieldEnum7;
-// ///<https://schema.org/publishingPrinciples>
-// pub type CertificationPublishingPrinciplesFieldEnum = FieldEnum7;
-// ///<https://schema.org/sdLicense>
-// pub type CertificationSdLicenseFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type CertificationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/license>
+pub type CertificationLicenseFieldEnum = FieldEnum7;
+///<https://schema.org/usageInfo>
+pub type CertificationUsageInfoFieldEnum = FieldEnum7;
+///<https://schema.org/isPartOf>
+pub type CertificationIsPartOfFieldEnum = FieldEnum7;
+///<https://schema.org/acquireLicensePage>
+pub type CertificationAcquireLicensePageFieldEnum = FieldEnum7;
+///<https://schema.org/publishingPrinciples>
+pub type CertificationPublishingPrinciplesFieldEnum = FieldEnum7;
+///<https://schema.org/sdLicense>
+pub type CertificationSdLicenseFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type CertificationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type LendActionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -12719,20 +12719,20 @@ pub type CreativeWorkSeasonMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type ThreeDModelSdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ThreeDModelMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/diversityPolicy>
-// pub type OrganizationDiversityPolicyFieldEnum = FieldEnum7;
-// ///<https://schema.org/correctionsPolicy>
-// pub type OrganizationCorrectionsPolicyFieldEnum = FieldEnum7;
-// ///<https://schema.org/unnamedSourcesPolicy>
-// pub type OrganizationUnnamedSourcesPolicyFieldEnum = FieldEnum7;
-// ///<https://schema.org/actionableFeedbackPolicy>
-// pub type OrganizationActionableFeedbackPolicyFieldEnum = FieldEnum7;
-// ///<https://schema.org/ethicsPolicy>
-// pub type OrganizationEthicsPolicyFieldEnum = FieldEnum7;
-// ///<https://schema.org/publishingPrinciples>
-// pub type OrganizationPublishingPrinciplesFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type OrganizationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/diversityPolicy>
+pub type OrganizationDiversityPolicyFieldEnum = FieldEnum7;
+///<https://schema.org/correctionsPolicy>
+pub type OrganizationCorrectionsPolicyFieldEnum = FieldEnum7;
+///<https://schema.org/unnamedSourcesPolicy>
+pub type OrganizationUnnamedSourcesPolicyFieldEnum = FieldEnum7;
+///<https://schema.org/actionableFeedbackPolicy>
+pub type OrganizationActionableFeedbackPolicyFieldEnum = FieldEnum7;
+///<https://schema.org/ethicsPolicy>
+pub type OrganizationEthicsPolicyFieldEnum = FieldEnum7;
+///<https://schema.org/publishingPrinciples>
+pub type OrganizationPublishingPrinciplesFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type OrganizationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type OccupationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/diversityPolicy>
@@ -13519,8 +13519,8 @@ pub type CreativeWorkMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type PetStoreMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type PlaygroundMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type GrantMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type GrantMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ChemicalSubstanceMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -13671,8 +13671,8 @@ pub type EnergyMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type OrderMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type PriceSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type ReviewActionMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type ReviewActionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type OfferForPurchaseMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -13745,8 +13745,8 @@ pub type EnergyMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type ContactPageSdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ContactPageMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type AudienceMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type AudienceMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ProgramMembershipMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -13883,20 +13883,20 @@ pub type EnergyMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type VideoGallerySdLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type VideoGalleryMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/license>
-// pub type ReviewNewsArticleLicenseFieldEnum = FieldEnum7;
-// ///<https://schema.org/usageInfo>
-// pub type ReviewNewsArticleUsageInfoFieldEnum = FieldEnum7;
-// ///<https://schema.org/isPartOf>
-// pub type ReviewNewsArticleIsPartOfFieldEnum = FieldEnum7;
-// ///<https://schema.org/acquireLicensePage>
-// pub type ReviewNewsArticleAcquireLicensePageFieldEnum = FieldEnum7;
-// ///<https://schema.org/publishingPrinciples>
-// pub type ReviewNewsArticlePublishingPrinciplesFieldEnum = FieldEnum7;
-// ///<https://schema.org/sdLicense>
-// pub type ReviewNewsArticleSdLicenseFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type ReviewNewsArticleMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/license>
+pub type ReviewNewsArticleLicenseFieldEnum = FieldEnum7;
+///<https://schema.org/usageInfo>
+pub type ReviewNewsArticleUsageInfoFieldEnum = FieldEnum7;
+///<https://schema.org/isPartOf>
+pub type ReviewNewsArticleIsPartOfFieldEnum = FieldEnum7;
+///<https://schema.org/acquireLicensePage>
+pub type ReviewNewsArticleAcquireLicensePageFieldEnum = FieldEnum7;
+///<https://schema.org/publishingPrinciples>
+pub type ReviewNewsArticlePublishingPrinciplesFieldEnum = FieldEnum7;
+///<https://schema.org/sdLicense>
+pub type ReviewNewsArticleSdLicenseFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type ReviewNewsArticleMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type HowToDirectionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/license>
@@ -14293,8 +14293,8 @@ pub type EnergyMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type ReportMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type PhotographActionMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type AdministrativeAreaMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type AdministrativeAreaMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type MedicalDeviceMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/diversityPolicy>
@@ -14471,8 +14471,8 @@ pub type EnergyMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type JewelryStorePublishingPrinciplesFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type JewelryStoreMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type QuantitativeValueDistributionMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type QuantitativeValueDistributionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type ReserveActionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/diversityPolicy>
@@ -14639,8 +14639,8 @@ pub type EnergyMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type CollectionPageMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type MedicalStudyMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type EventAttendanceModeEnumerationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type EventAttendanceModeEnumerationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type PeriodicalMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/license>
@@ -14739,8 +14739,8 @@ pub type EnergyMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type TouristInformationCenterPublishingPrinciplesFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type TouristInformationCenterMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type EventReservationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type EventReservationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type DeliveryChargeSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -14767,8 +14767,8 @@ pub type HowToSdLicenseFieldEnum = FieldEnum7;
 pub type HowToMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type PermitMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type LocationFeatureSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type LocationFeatureSpecificationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type UnRegisterActionMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -15017,8 +15017,8 @@ pub type CommentPublishingPrinciplesFieldEnum = FieldEnum7;
 pub type CommentSdLicenseFieldEnum = FieldEnum7;
 ///<https://schema.org/mainEntityOfPage>
 pub type CommentMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type PropertyValueMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type PropertyValueMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/diversityPolicy>
 // pub type DanceGroupDiversityPolicyFieldEnum = FieldEnum7;
 // ///<https://schema.org/correctionsPolicy>
@@ -15097,8 +15097,8 @@ pub type CommentMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type VideoObjectMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type BankAccountMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type EventMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type EventMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type UserTweetsMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
@@ -15109,12 +15109,12 @@ pub type CommentMainEntityOfPageFieldEnum = FieldEnum7;
 // pub type HowToSupplyMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type WearActionMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type CertificationStatusEnumerationMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type CertificationStatusEnumerationMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/mainEntityOfPage>
 // pub type BrokerageAccountMainEntityOfPageFieldEnum = FieldEnum7;
-// ///<https://schema.org/mainEntityOfPage>
-// pub type ContactPointMainEntityOfPageFieldEnum = FieldEnum7;
+///<https://schema.org/mainEntityOfPage>
+pub type ContactPointMainEntityOfPageFieldEnum = FieldEnum7;
 // ///<https://schema.org/license>
 // pub type AdvertiserContentArticleLicenseFieldEnum = FieldEnum7;
 // ///<https://schema.org/usageInfo>
@@ -15243,10 +15243,10 @@ pub enum FieldEnum8 {
 // pub type ExerciseGymLongitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type MusicPlaylistVersionFieldEnum = FieldEnum8;
-// ///<https://schema.org/latitude>
-// pub type EventVenueLatitudeFieldEnum = FieldEnum8;
-// ///<https://schema.org/longitude>
-// pub type EventVenueLongitudeFieldEnum = FieldEnum8;
+///<https://schema.org/latitude>
+pub type EventVenueLatitudeFieldEnum = FieldEnum8;
+///<https://schema.org/longitude>
+pub type EventVenueLongitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/latitude>
 // pub type HotelLatitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/longitude>
@@ -15481,12 +15481,12 @@ pub type ReviewVersionFieldEnum = FieldEnum8;
 // pub type AggregateOfferHighPriceFieldEnum = FieldEnum8;
 // ///<https://schema.org/price>
 // pub type AggregateOfferPriceFieldEnum = FieldEnum8;
-// ///<https://schema.org/worstRating>
-// pub type RatingWorstRatingFieldEnum = FieldEnum8;
-// ///<https://schema.org/bestRating>
-// pub type RatingBestRatingFieldEnum = FieldEnum8;
-// ///<https://schema.org/ratingValue>
-// pub type RatingRatingValueFieldEnum = FieldEnum8;
+///<https://schema.org/worstRating>
+pub type RatingWorstRatingFieldEnum = FieldEnum8;
+///<https://schema.org/bestRating>
+pub type RatingBestRatingFieldEnum = FieldEnum8;
+///<https://schema.org/ratingValue>
+pub type RatingRatingValueFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type MediaObjectVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/latitude>
@@ -15769,12 +15769,12 @@ pub type PlaceLongitudeFieldEnum = FieldEnum8;
 // pub type DigitalDocumentVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type MusicReleaseVersionFieldEnum = FieldEnum8;
-// ///<https://schema.org/worstRating>
-// pub type AggregateRatingWorstRatingFieldEnum = FieldEnum8;
-// ///<https://schema.org/bestRating>
-// pub type AggregateRatingBestRatingFieldEnum = FieldEnum8;
-// ///<https://schema.org/ratingValue>
-// pub type AggregateRatingRatingValueFieldEnum = FieldEnum8;
+///<https://schema.org/worstRating>
+pub type AggregateRatingWorstRatingFieldEnum = FieldEnum8;
+///<https://schema.org/bestRating>
+pub type AggregateRatingBestRatingFieldEnum = FieldEnum8;
+///<https://schema.org/ratingValue>
+pub type AggregateRatingRatingValueFieldEnum = FieldEnum8;
 // ///<https://schema.org/latitude>
 // pub type ChurchLatitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/longitude>
@@ -15915,8 +15915,8 @@ pub type DefinedTermSetVersionFieldEnum = FieldEnum8;
 // pub type TireShopLongitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type WebApplicationVersionFieldEnum = FieldEnum8;
-// ///<https://schema.org/version>
-// pub type CertificationVersionFieldEnum = FieldEnum8;
+///<https://schema.org/version>
+pub type CertificationVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type MedicalScholarlyArticleVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/latitude>
@@ -16219,8 +16219,8 @@ pub type CreativeWorkVersionFieldEnum = FieldEnum8;
 // pub type GeoCircleElevationFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type VideoGalleryVersionFieldEnum = FieldEnum8;
-// ///<https://schema.org/version>
-// pub type ReviewNewsArticleVersionFieldEnum = FieldEnum8;
+///<https://schema.org/version>
+pub type ReviewNewsArticleVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type HowToDirectionVersionFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
@@ -16305,10 +16305,10 @@ pub type CreativeWorkVersionFieldEnum = FieldEnum8;
 // pub type FireStationLongitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/version>
 // pub type ReportVersionFieldEnum = FieldEnum8;
-// ///<https://schema.org/latitude>
-// pub type AdministrativeAreaLatitudeFieldEnum = FieldEnum8;
-// ///<https://schema.org/longitude>
-// pub type AdministrativeAreaLongitudeFieldEnum = FieldEnum8;
+///<https://schema.org/latitude>
+pub type AdministrativeAreaLatitudeFieldEnum = FieldEnum8;
+///<https://schema.org/longitude>
+pub type AdministrativeAreaLongitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/latitude>
 // pub type MensClothingStoreLatitudeFieldEnum = FieldEnum8;
 // ///<https://schema.org/longitude>
@@ -16520,8 +16520,8 @@ pub enum FieldEnum9 {
 // pub type MusicPlaylistEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type MusicPlaylistKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type EventVenueKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type EventVenueKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type HotelKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
@@ -16828,8 +16828,8 @@ pub type ReviewKeywordsFieldEnum = FieldEnum9;
 // pub type TVEpisodeEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type TVEpisodeKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type EventSeriesKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type EventSeriesKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type BakeryKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
@@ -17186,10 +17186,10 @@ pub type DefinedTermSetKeywordsFieldEnum = FieldEnum9;
 // pub type WebApplicationEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type WebApplicationKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/educationalLevel>
-// pub type CertificationEducationalLevelFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type CertificationKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/educationalLevel>
+pub type CertificationEducationalLevelFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type CertificationKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/educationalLevel>
 // pub type MedicalScholarlyArticleEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
@@ -17232,8 +17232,8 @@ pub type CreativeWorkSeasonKeywordsFieldEnum = FieldEnum9;
 // pub type ThreeDModelEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type ThreeDModelKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type OrganizationKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type OrganizationKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type AdultEntertainmentKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
@@ -17486,10 +17486,10 @@ pub type CreativeWorkKeywordsFieldEnum = FieldEnum9;
 // pub type VideoGalleryEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type VideoGalleryKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/educationalLevel>
-// pub type ReviewNewsArticleEducationalLevelFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type ReviewNewsArticleKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/educationalLevel>
+pub type ReviewNewsArticleEducationalLevelFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type ReviewNewsArticleKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/educationalLevel>
 // pub type HowToDirectionEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
@@ -17576,8 +17576,8 @@ pub type CreativeWorkKeywordsFieldEnum = FieldEnum9;
 // pub type ReportEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type ReportKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type AdministrativeAreaKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type AdministrativeAreaKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type MensClothingStoreKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
@@ -17752,8 +17752,8 @@ pub type CommentKeywordsFieldEnum = FieldEnum9;
 // pub type VideoObjectEducationalLevelFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type VideoObjectKeywordsFieldEnum = FieldEnum9;
-// ///<https://schema.org/keywords>
-// pub type EventKeywordsFieldEnum = FieldEnum9;
+///<https://schema.org/keywords>
+pub type EventKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/keywords>
 // pub type UserTweetsKeywordsFieldEnum = FieldEnum9;
 // ///<https://schema.org/educationalLevel>
@@ -17920,8 +17920,8 @@ pub type ReviewOffersFieldEnum = FieldEnum10;
 // pub type AudiobookOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type TVEpisodeOffersFieldEnum = FieldEnum10;
-// ///<https://schema.org/offers>
-// pub type EventSeriesOffersFieldEnum = FieldEnum10;
+///<https://schema.org/offers>
+pub type EventSeriesOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type BusOrCoachOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
@@ -18057,8 +18057,8 @@ pub type DefinedTermSetOffersFieldEnum = FieldEnum10;
 // pub type AskPublicNewsArticleOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type WebApplicationOffersFieldEnum = FieldEnum10;
-// ///<https://schema.org/offers>
-// pub type CertificationOffersFieldEnum = FieldEnum10;
+///<https://schema.org/offers>
+pub type CertificationOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type MedicalScholarlyArticleOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
@@ -18171,8 +18171,8 @@ pub type CreativeWorkOffersFieldEnum = FieldEnum10;
 // pub type MedicalWebPageOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type VideoGalleryOffersFieldEnum = FieldEnum10;
-// ///<https://schema.org/offers>
-// pub type ReviewNewsArticleOffersFieldEnum = FieldEnum10;
+///<https://schema.org/offers>
+pub type ReviewNewsArticleOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type HowToDirectionOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
@@ -18279,8 +18279,8 @@ pub type CommentOffersFieldEnum = FieldEnum10;
 // pub type VideoObjectOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type BankAccountOffersFieldEnum = FieldEnum10;
-// ///<https://schema.org/offers>
-// pub type EventOffersFieldEnum = FieldEnum10;
+///<https://schema.org/offers>
+pub type EventOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
 // pub type UserTweetsOffersFieldEnum = FieldEnum10;
 // ///<https://schema.org/offers>
@@ -18512,8 +18512,8 @@ pub type DefinedTermSetMaterialFieldEnum = FieldEnum11;
 // pub type AskPublicNewsArticleMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
 // pub type WebApplicationMaterialFieldEnum = FieldEnum11;
-// ///<https://schema.org/material>
-// pub type CertificationMaterialFieldEnum = FieldEnum11;
+///<https://schema.org/material>
+pub type CertificationMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
 // pub type MedicalScholarlyArticleMaterialFieldEnum = FieldEnum11;
 ///<https://schema.org/material>
@@ -18590,8 +18590,8 @@ pub type CreativeWorkMaterialFieldEnum = FieldEnum11;
 // pub type MedicalWebPageMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
 // pub type VideoGalleryMaterialFieldEnum = FieldEnum11;
-// ///<https://schema.org/material>
-// pub type ReviewNewsArticleMaterialFieldEnum = FieldEnum11;
+///<https://schema.org/material>
+pub type ReviewNewsArticleMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
 // pub type HowToDirectionMaterialFieldEnum = FieldEnum11;
 // ///<https://schema.org/material>
@@ -19052,10 +19052,10 @@ pub type ReviewEducationalUseFieldEnum = FieldEnum12;
 // pub type FundingAgencySkillsFieldEnum = FieldEnum12;
 // ///<https://schema.org/skills>
 // pub type HighSchoolSkillsFieldEnum = FieldEnum12;
-// ///<https://schema.org/jobTitle>
-// pub type PersonJobTitleFieldEnum = FieldEnum12;
-// ///<https://schema.org/skills>
-// pub type PersonSkillsFieldEnum = FieldEnum12;
+///<https://schema.org/jobTitle>
+pub type PersonJobTitleFieldEnum = FieldEnum12;
+///<https://schema.org/skills>
+pub type PersonSkillsFieldEnum = FieldEnum12;
 // ///<https://schema.org/assesses>
 // pub type WebPageAssessesFieldEnum = FieldEnum12;
 // ///<https://schema.org/teaches>
@@ -20022,20 +20022,20 @@ pub type DefinedTermSetEducationalUseFieldEnum = FieldEnum12;
 // pub type WebApplicationLearningResourceTypeFieldEnum = FieldEnum12;
 // ///<https://schema.org/educationalUse>
 // pub type WebApplicationEducationalUseFieldEnum = FieldEnum12;
-// ///<https://schema.org/certificationIdentification>
-// pub type CertificationCertificationIdentificationFieldEnum = FieldEnum12;
-// ///<https://schema.org/assesses>
-// pub type CertificationAssessesFieldEnum = FieldEnum12;
-// ///<https://schema.org/teaches>
-// pub type CertificationTeachesFieldEnum = FieldEnum12;
-// ///<https://schema.org/pattern>
-// pub type CertificationPatternFieldEnum = FieldEnum12;
-// ///<https://schema.org/creativeWorkStatus>
-// pub type CertificationCreativeWorkStatusFieldEnum = FieldEnum12;
-// ///<https://schema.org/learningResourceType>
-// pub type CertificationLearningResourceTypeFieldEnum = FieldEnum12;
-// ///<https://schema.org/educationalUse>
-// pub type CertificationEducationalUseFieldEnum = FieldEnum12;
+///<https://schema.org/certificationIdentification>
+pub type CertificationCertificationIdentificationFieldEnum = FieldEnum12;
+///<https://schema.org/assesses>
+pub type CertificationAssessesFieldEnum = FieldEnum12;
+///<https://schema.org/teaches>
+pub type CertificationTeachesFieldEnum = FieldEnum12;
+///<https://schema.org/pattern>
+pub type CertificationPatternFieldEnum = FieldEnum12;
+///<https://schema.org/creativeWorkStatus>
+pub type CertificationCreativeWorkStatusFieldEnum = FieldEnum12;
+///<https://schema.org/learningResourceType>
+pub type CertificationLearningResourceTypeFieldEnum = FieldEnum12;
+///<https://schema.org/educationalUse>
+pub type CertificationEducationalUseFieldEnum = FieldEnum12;
 // ///<https://schema.org/assesses>
 // pub type MedicalScholarlyArticleAssessesFieldEnum = FieldEnum12;
 // ///<https://schema.org/teaches>
@@ -20120,8 +20120,8 @@ pub type CreativeWorkSeasonEducationalUseFieldEnum = FieldEnum12;
 // pub type ThreeDModelLearningResourceTypeFieldEnum = FieldEnum12;
 // ///<https://schema.org/educationalUse>
 // pub type ThreeDModelEducationalUseFieldEnum = FieldEnum12;
-// ///<https://schema.org/skills>
-// pub type OrganizationSkillsFieldEnum = FieldEnum12;
+///<https://schema.org/skills>
+pub type OrganizationSkillsFieldEnum = FieldEnum12;
 // ///<https://schema.org/skills>
 // pub type OccupationSkillsFieldEnum = FieldEnum12;
 // ///<https://schema.org/skills>
@@ -20578,18 +20578,18 @@ pub type CreativeWorkEducationalUseFieldEnum = FieldEnum12;
 // pub type VideoGalleryLearningResourceTypeFieldEnum = FieldEnum12;
 // ///<https://schema.org/educationalUse>
 // pub type VideoGalleryEducationalUseFieldEnum = FieldEnum12;
-// ///<https://schema.org/assesses>
-// pub type ReviewNewsArticleAssessesFieldEnum = FieldEnum12;
-// ///<https://schema.org/teaches>
-// pub type ReviewNewsArticleTeachesFieldEnum = FieldEnum12;
-// ///<https://schema.org/pattern>
-// pub type ReviewNewsArticlePatternFieldEnum = FieldEnum12;
-// ///<https://schema.org/creativeWorkStatus>
-// pub type ReviewNewsArticleCreativeWorkStatusFieldEnum = FieldEnum12;
-// ///<https://schema.org/learningResourceType>
-// pub type ReviewNewsArticleLearningResourceTypeFieldEnum = FieldEnum12;
-// ///<https://schema.org/educationalUse>
-// pub type ReviewNewsArticleEducationalUseFieldEnum = FieldEnum12;
+///<https://schema.org/assesses>
+pub type ReviewNewsArticleAssessesFieldEnum = FieldEnum12;
+///<https://schema.org/teaches>
+pub type ReviewNewsArticleTeachesFieldEnum = FieldEnum12;
+///<https://schema.org/pattern>
+pub type ReviewNewsArticlePatternFieldEnum = FieldEnum12;
+///<https://schema.org/creativeWorkStatus>
+pub type ReviewNewsArticleCreativeWorkStatusFieldEnum = FieldEnum12;
+///<https://schema.org/learningResourceType>
+pub type ReviewNewsArticleLearningResourceTypeFieldEnum = FieldEnum12;
+///<https://schema.org/educationalUse>
+pub type ReviewNewsArticleEducationalUseFieldEnum = FieldEnum12;
 // ///<https://schema.org/assesses>
 // pub type HowToDirectionAssessesFieldEnum = FieldEnum12;
 // ///<https://schema.org/teaches>
@@ -21344,8 +21344,8 @@ pub type DefinedTermSetArchivedAtFieldEnum = FieldEnum13;
 // pub type AskPublicNewsArticleArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
 // pub type WebApplicationArchivedAtFieldEnum = FieldEnum13;
-// ///<https://schema.org/archivedAt>
-// pub type CertificationArchivedAtFieldEnum = FieldEnum13;
+///<https://schema.org/archivedAt>
+pub type CertificationArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
 // pub type MedicalScholarlyArticleArchivedAtFieldEnum = FieldEnum13;
 ///<https://schema.org/archivedAt>
@@ -21420,8 +21420,8 @@ pub type CreativeWorkArchivedAtFieldEnum = FieldEnum13;
 // pub type MedicalWebPageArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
 // pub type VideoGalleryArchivedAtFieldEnum = FieldEnum13;
-// ///<https://schema.org/archivedAt>
-// pub type ReviewNewsArticleArchivedAtFieldEnum = FieldEnum13;
+///<https://schema.org/archivedAt>
+pub type ReviewNewsArticleArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
 // pub type HowToDirectionArchivedAtFieldEnum = FieldEnum13;
 // ///<https://schema.org/archivedAt>
@@ -21698,8 +21698,8 @@ pub type DefinedTermSetContentRatingFieldEnum = FieldEnum14;
 // pub type AskPublicNewsArticleContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
 // pub type WebApplicationContentRatingFieldEnum = FieldEnum14;
-// ///<https://schema.org/contentRating>
-// pub type CertificationContentRatingFieldEnum = FieldEnum14;
+///<https://schema.org/contentRating>
+pub type CertificationContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
 // pub type MedicalScholarlyArticleContentRatingFieldEnum = FieldEnum14;
 ///<https://schema.org/contentRating>
@@ -21774,8 +21774,8 @@ pub type CreativeWorkContentRatingFieldEnum = FieldEnum14;
 // pub type MedicalWebPageContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
 // pub type VideoGalleryContentRatingFieldEnum = FieldEnum14;
-// ///<https://schema.org/contentRating>
-// pub type ReviewNewsArticleContentRatingFieldEnum = FieldEnum14;
+///<https://schema.org/contentRating>
+pub type ReviewNewsArticleContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
 // pub type HowToDirectionContentRatingFieldEnum = FieldEnum14;
 // ///<https://schema.org/contentRating>
@@ -22053,8 +22053,8 @@ pub type DefinedTermSetCorrectionFieldEnum = FieldEnum15;
 // pub type AskPublicNewsArticleCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
 // pub type WebApplicationCorrectionFieldEnum = FieldEnum15;
-// ///<https://schema.org/correction>
-// pub type CertificationCorrectionFieldEnum = FieldEnum15;
+///<https://schema.org/correction>
+pub type CertificationCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
 // pub type MedicalScholarlyArticleCorrectionFieldEnum = FieldEnum15;
 ///<https://schema.org/correction>
@@ -22129,8 +22129,8 @@ pub type CreativeWorkCorrectionFieldEnum = FieldEnum15;
 // pub type MedicalWebPageCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
 // pub type VideoGalleryCorrectionFieldEnum = FieldEnum15;
-// ///<https://schema.org/correction>
-// pub type ReviewNewsArticleCorrectionFieldEnum = FieldEnum15;
+///<https://schema.org/correction>
+pub type ReviewNewsArticleCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
 // pub type HowToDirectionCorrectionFieldEnum = FieldEnum15;
 // ///<https://schema.org/correction>
@@ -22353,8 +22353,8 @@ pub type ReviewInLanguageFieldEnum = FieldEnum16;
 // pub type FundingAgencyKnowsLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/knowsLanguage>
 // pub type HighSchoolKnowsLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/knowsLanguage>
-// pub type PersonKnowsLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/knowsLanguage>
+pub type PersonKnowsLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type WebPageInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
@@ -22425,8 +22425,8 @@ pub type ReviewInLanguageFieldEnum = FieldEnum16;
 // pub type TVEpisodeSubtitleLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type TVEpisodeInLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/inLanguage>
-// pub type EventSeriesInLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/inLanguage>
+pub type EventSeriesInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/knowsLanguage>
 // pub type BakeryKnowsLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
@@ -22653,8 +22653,8 @@ pub type DefinedTermSetInLanguageFieldEnum = FieldEnum16;
 // pub type TireShopKnowsLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type WebApplicationInLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/inLanguage>
-// pub type CertificationInLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/inLanguage>
+pub type CertificationInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type MedicalScholarlyArticleInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/knowsLanguage>
@@ -22681,8 +22681,8 @@ pub type CreativeWorkSeasonInLanguageFieldEnum = FieldEnum16;
 // pub type VideoGameInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type ThreeDModelInLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/knowsLanguage>
-// pub type OrganizationKnowsLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/knowsLanguage>
+pub type OrganizationKnowsLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/knowsLanguage>
 // pub type AdultEntertainmentKnowsLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
@@ -22849,8 +22849,8 @@ pub type CreativeWorkInLanguageFieldEnum = FieldEnum16;
 // pub type NewsMediaOrganizationKnowsLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type VideoGalleryInLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/inLanguage>
-// pub type ReviewNewsArticleInLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/inLanguage>
+pub type ReviewNewsArticleInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type HowToDirectionInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
@@ -23019,12 +23019,12 @@ pub type CommentInLanguageFieldEnum = FieldEnum16;
 // pub type MobileApplicationInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type VideoObjectInLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/inLanguage>
-// pub type EventInLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/inLanguage>
+pub type EventInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type UserTweetsInLanguageFieldEnum = FieldEnum16;
-// ///<https://schema.org/availableLanguage>
-// pub type ContactPointAvailableLanguageFieldEnum = FieldEnum16;
+///<https://schema.org/availableLanguage>
+pub type ContactPointAvailableLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
 // pub type AdvertiserContentArticleInLanguageFieldEnum = FieldEnum16;
 // ///<https://schema.org/inLanguage>
@@ -23237,8 +23237,8 @@ pub type DefinedTermSetAudioFieldEnum = FieldEnum17;
 // pub type AskPublicNewsArticleAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
 // pub type WebApplicationAudioFieldEnum = FieldEnum17;
-// ///<https://schema.org/audio>
-// pub type CertificationAudioFieldEnum = FieldEnum17;
+///<https://schema.org/audio>
+pub type CertificationAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
 // pub type MedicalScholarlyArticleAudioFieldEnum = FieldEnum17;
 ///<https://schema.org/audio>
@@ -23313,8 +23313,8 @@ pub type CreativeWorkAudioFieldEnum = FieldEnum17;
 // pub type MedicalWebPageAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
 // pub type VideoGalleryAudioFieldEnum = FieldEnum17;
-// ///<https://schema.org/audio>
-// pub type ReviewNewsArticleAudioFieldEnum = FieldEnum17;
+///<https://schema.org/audio>
+pub type ReviewNewsArticleAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
 // pub type HowToDirectionAudioFieldEnum = FieldEnum17;
 // ///<https://schema.org/audio>
@@ -23429,8 +23429,8 @@ pub enum FieldEnum18 {
 // pub type MusicRecordingCitationFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
 // pub type CategoryCodeSetCitationFieldEnum = FieldEnum18;
-// ///<https://schema.org/citation>
-// pub type ReviewCitationFieldEnum = FieldEnum18;
+///<https://schema.org/citation>
+pub type ReviewCitationFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
 // pub type AmpStoryCitationFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
@@ -23615,8 +23615,8 @@ pub type DefinedTermSetCitationFieldEnum = FieldEnum18;
 // pub type AskPublicNewsArticleCitationFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
 // pub type WebApplicationCitationFieldEnum = FieldEnum18;
-// ///<https://schema.org/citation>
-// pub type CertificationCitationFieldEnum = FieldEnum18;
+///<https://schema.org/citation>
+pub type CertificationCitationFieldEnum = FieldEnum18;
 // ///<https://schema.org/backstory>
 // pub type MedicalScholarlyArticleBackstoryFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
@@ -23697,10 +23697,10 @@ pub type CreativeWorkCitationFieldEnum = FieldEnum18;
 // pub type MedicalWebPageCitationFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
 // pub type VideoGalleryCitationFieldEnum = FieldEnum18;
-// ///<https://schema.org/citation>
-// pub type ReviewNewsArticleCitationFieldEnum = FieldEnum18;
-// ///<https://schema.org/backstory>
-// pub type ReviewNewsArticleBackstoryFieldEnum = FieldEnum18;
+///<https://schema.org/citation>
+pub type ReviewNewsArticleCitationFieldEnum = FieldEnum18;
+///<https://schema.org/backstory>
+pub type ReviewNewsArticleBackstoryFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
 // pub type HowToDirectionCitationFieldEnum = FieldEnum18;
 // ///<https://schema.org/citation>
@@ -23817,8 +23817,8 @@ pub enum FieldEnum19 {
 // pub type MusicRecordingVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
 // pub type CategoryCodeSetVideoFieldEnum = FieldEnum19;
-// ///<https://schema.org/video>
-// pub type ReviewVideoFieldEnum = FieldEnum19;
+///<https://schema.org/video>
+pub type ReviewVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
 // pub type AmpStoryVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
@@ -23983,8 +23983,8 @@ pub type DefinedTermSetVideoFieldEnum = FieldEnum19;
 // pub type AskPublicNewsArticleVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
 // pub type WebApplicationVideoFieldEnum = FieldEnum19;
-// ///<https://schema.org/video>
-// pub type CertificationVideoFieldEnum = FieldEnum19;
+///<https://schema.org/video>
+pub type CertificationVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
 // pub type MedicalScholarlyArticleVideoFieldEnum = FieldEnum19;
 ///<https://schema.org/video>
@@ -24059,8 +24059,8 @@ pub type CreativeWorkVideoFieldEnum = FieldEnum19;
 // pub type MedicalWebPageVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
 // pub type VideoGalleryVideoFieldEnum = FieldEnum19;
-// ///<https://schema.org/video>
-// pub type ReviewNewsArticleVideoFieldEnum = FieldEnum19;
+///<https://schema.org/video>
+pub type ReviewNewsArticleVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
 // pub type HowToDirectionVideoFieldEnum = FieldEnum19;
 // ///<https://schema.org/video>
@@ -24171,8 +24171,8 @@ pub enum FieldEnum20 {
 // pub type MusicRecordingMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
 // pub type CategoryCodeSetMaterialExtentFieldEnum = FieldEnum20;
-// ///<https://schema.org/materialExtent>
-// pub type ReviewMaterialExtentFieldEnum = FieldEnum20;
+///<https://schema.org/materialExtent>
+pub type ReviewMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
 // pub type AmpStoryMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
@@ -24337,8 +24337,8 @@ pub type DefinedTermSetMaterialExtentFieldEnum = FieldEnum20;
 // pub type AskPublicNewsArticleMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
 // pub type WebApplicationMaterialExtentFieldEnum = FieldEnum20;
-// ///<https://schema.org/materialExtent>
-// pub type CertificationMaterialExtentFieldEnum = FieldEnum20;
+///<https://schema.org/materialExtent>
+pub type CertificationMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
 // pub type MedicalScholarlyArticleMaterialExtentFieldEnum = FieldEnum20;
 ///<https://schema.org/materialExtent>
@@ -24421,8 +24421,8 @@ pub type CreativeWorkMaterialExtentFieldEnum = FieldEnum20;
 // pub type MedicalWebPageMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
 // pub type VideoGalleryMaterialExtentFieldEnum = FieldEnum20;
-// ///<https://schema.org/materialExtent>
-// pub type ReviewNewsArticleMaterialExtentFieldEnum = FieldEnum20;
+///<https://schema.org/materialExtent>
+pub type ReviewNewsArticleMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
 // pub type HowToDirectionMaterialExtentFieldEnum = FieldEnum20;
 // ///<https://schema.org/materialExtent>
@@ -24532,8 +24532,8 @@ pub enum FieldEnum21 {
 // pub type EmployeeRoleIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type RejectActionIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type EventVenueIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type EventVenueIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ScheduleActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -24598,8 +24598,8 @@ pub enum FieldEnum21 {
 // pub type MovieIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ThesisIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type QuantitativeValueIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type QuantitativeValueIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type SynagogueIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -24628,8 +24628,8 @@ pub enum FieldEnum21 {
 // pub type DigitalDocumentPermissionTypeIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type FMRadioChannelIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type ReviewIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type ReviewIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type PriceComponentTypeEnumerationIdentifierFieldEnum = FieldEnum21;
 ///<https://schema.org/identifier>
@@ -24804,8 +24804,8 @@ pub type ThingIdentifierFieldEnum = FieldEnum21;
 // pub type FundingAgencyIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type HighSchoolIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type PersonIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type PersonIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type WebPageIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -24842,8 +24842,8 @@ pub type ThingIdentifierFieldEnum = FieldEnum21;
 // pub type WPSideBarIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type DepartmentStoreIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type EventStatusTypeIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type EventStatusTypeIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type MedicalStudyStatusIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -24856,8 +24856,8 @@ pub type ThingIdentifierFieldEnum = FieldEnum21;
 // pub type SpecialAnnouncementIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type AggregateOfferIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type RatingIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type RatingIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type FinancialIncentiveIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -24964,8 +24964,8 @@ pub type ActionIdentifierFieldEnum = FieldEnum21;
 // pub type BedTypeIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type BedAndBreakfastIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type PropertyValueSpecificationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type PropertyValueSpecificationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type MedicalSignIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -24978,8 +24978,8 @@ pub type ActionIdentifierFieldEnum = FieldEnum21;
 // pub type BookmarkActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type TVEpisodeIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type EventSeriesIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type EventSeriesIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type BakeryIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -24992,8 +24992,8 @@ pub type ActionIdentifierFieldEnum = FieldEnum21;
 // pub type ChapterIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type VoteActionIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type ContactPointOptionIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type ContactPointOptionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type UseActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/hasRepresentation>
@@ -25134,8 +25134,8 @@ pub type PlaceIdentifierFieldEnum = FieldEnum21;
 // pub type RestaurantIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type PublicationVolumeIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type OrganizationRoleIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type OrganizationRoleIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ConsortiumIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25166,8 +25166,8 @@ pub type PlaceIdentifierFieldEnum = FieldEnum21;
 // pub type ItemListIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type SeekToActionIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type OpeningHoursSpecificationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type OpeningHoursSpecificationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type DrawActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25254,8 +25254,8 @@ pub type MassIdentifierFieldEnum = FieldEnum21;
 // pub type InsuranceAgencyIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type WPFooterIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type InteractionCounterIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type InteractionCounterIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type CommentActionIdentifierFieldEnum = FieldEnum21;
 ///<https://schema.org/identifier>
@@ -25282,8 +25282,8 @@ pub type NutritionInformationIdentifierFieldEnum = FieldEnum21;
 // pub type MusicReleaseIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type AllocateActionIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type AggregateRatingIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type AggregateRatingIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ChurchIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25446,8 +25446,8 @@ pub type DefinedTermSetIdentifierFieldEnum = FieldEnum21;
 // pub type TireShopIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type WebApplicationIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type CertificationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type CertificationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type LendActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25512,8 +25512,8 @@ pub type CreativeWorkSeasonIdentifierFieldEnum = FieldEnum21;
 // pub type ConstraintNodeIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ThreeDModelIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type OrganizationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type OrganizationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type OccupationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25760,8 +25760,8 @@ pub type CreativeWorkIdentifierFieldEnum = FieldEnum21;
 // pub type PetStoreIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type PlaygroundIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type GrantIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type GrantIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/hasRepresentation>
 // pub type ChemicalSubstanceHasRepresentationFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25820,8 +25820,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 // pub type OrderIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type PriceSpecificationIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type ReviewActionIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type ReviewActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type OfferForPurchaseIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25858,8 +25858,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 // pub type DistanceIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ContactPageIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type AudienceIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type AudienceIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ProgramMembershipIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -25904,8 +25904,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 // pub type CookActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type VideoGalleryIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type ReviewNewsArticleIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type ReviewNewsArticleIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type HowToDirectionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26026,8 +26026,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 // pub type ReportIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type PhotographActionIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type AdministrativeAreaIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type AdministrativeAreaIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type MedicalDeviceIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26070,8 +26070,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 // pub type VacationRentalIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type JewelryStoreIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type QuantitativeValueDistributionIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type QuantitativeValueDistributionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type ReserveActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26118,8 +26118,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 // pub type CollectionPageIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type MedicalStudyIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type EventAttendanceModeEnumerationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type EventAttendanceModeEnumerationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type PeriodicalIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26146,8 +26146,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 // pub type CourseInstanceIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type TouristInformationCenterIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type EventReservationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type EventReservationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type DeliveryChargeSpecificationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26162,8 +26162,8 @@ pub type EnergyIdentifierFieldEnum = FieldEnum21;
 pub type HowToIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type PermitIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type LocationFeatureSpecificationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type LocationFeatureSpecificationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type UnRegisterActionIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26268,8 +26268,8 @@ pub type HowToIdentifierFieldEnum = FieldEnum21;
 // pub type MediaSubscriptionIdentifierFieldEnum = FieldEnum21;
 ///<https://schema.org/identifier>
 pub type CommentIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type PropertyValueIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type PropertyValueIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type DanceGroupIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26288,8 +26288,8 @@ pub type CommentIdentifierFieldEnum = FieldEnum21;
 // pub type VideoObjectIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type BankAccountIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type EventIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type EventIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type UserTweetsIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26300,12 +26300,12 @@ pub type CommentIdentifierFieldEnum = FieldEnum21;
 // pub type HowToSupplyIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type WearActionIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type CertificationStatusEnumerationIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type CertificationStatusEnumerationIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type BrokerageAccountIdentifierFieldEnum = FieldEnum21;
-// ///<https://schema.org/identifier>
-// pub type ContactPointIdentifierFieldEnum = FieldEnum21;
+///<https://schema.org/identifier>
+pub type ContactPointIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
 // pub type AdvertiserContentArticleIdentifierFieldEnum = FieldEnum21;
 // ///<https://schema.org/identifier>
@@ -26368,10 +26368,10 @@ pub enum FieldEnum22 {
 // pub type EmployeeRoleImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type RejectActionImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/logo>
-// pub type EventVenueLogoFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type EventVenueImageFieldEnum = FieldEnum22;
+///<https://schema.org/logo>
+pub type EventVenueLogoFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type EventVenueImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type ScheduleActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -26466,8 +26466,8 @@ pub enum FieldEnum22 {
 // pub type MovieImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type ThesisImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type QuantitativeValueImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type QuantitativeValueImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
 // pub type SynagogueLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -26514,8 +26514,8 @@ pub enum FieldEnum22 {
 // pub type DigitalDocumentPermissionTypeImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type FMRadioChannelImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type ReviewImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type ReviewImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type PriceComponentTypeEnumerationImageFieldEnum = FieldEnum22;
 ///<https://schema.org/image>
@@ -26752,8 +26752,8 @@ pub type ThingImageFieldEnum = FieldEnum22;
 // pub type HighSchoolLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type HighSchoolImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type PersonImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type PersonImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type WebPageImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -26806,8 +26806,8 @@ pub type ThingImageFieldEnum = FieldEnum22;
 // pub type DepartmentStoreLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type DepartmentStoreImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type EventStatusTypeImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type EventStatusTypeImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type MedicalStudyStatusImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -26820,8 +26820,8 @@ pub type ThingImageFieldEnum = FieldEnum22;
 // pub type SpecialAnnouncementImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type AggregateOfferImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type RatingImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type RatingImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type FinancialIncentiveImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -26948,8 +26948,8 @@ pub type ActionImageFieldEnum = FieldEnum22;
 // pub type BedAndBreakfastLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type BedAndBreakfastImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type PropertyValueSpecificationImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type PropertyValueSpecificationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type MedicalSignImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -26964,8 +26964,8 @@ pub type ActionImageFieldEnum = FieldEnum22;
 // pub type BookmarkActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type TVEpisodeImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type EventSeriesImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type EventSeriesImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
 // pub type BakeryLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -26986,8 +26986,8 @@ pub type ActionImageFieldEnum = FieldEnum22;
 // pub type ChapterImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type VoteActionImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type ContactPointOptionImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type ContactPointOptionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type UseActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -27168,8 +27168,8 @@ pub type PlaceImageFieldEnum = FieldEnum22;
 // pub type RestaurantImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type PublicationVolumeImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type OrganizationRoleImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type OrganizationRoleImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
 // pub type ConsortiumLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -27214,8 +27214,8 @@ pub type PlaceImageFieldEnum = FieldEnum22;
 // pub type ItemListImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type SeekToActionImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type OpeningHoursSpecificationImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type OpeningHoursSpecificationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type DrawActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -27324,8 +27324,8 @@ pub type MassImageFieldEnum = FieldEnum22;
 // pub type InsuranceAgencyImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type WPFooterImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type InteractionCounterImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type InteractionCounterImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type CommentActionImageFieldEnum = FieldEnum22;
 ///<https://schema.org/image>
@@ -27356,8 +27356,8 @@ pub type NutritionInformationImageFieldEnum = FieldEnum22;
 // pub type MusicReleaseImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type AllocateActionImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type AggregateRatingImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type AggregateRatingImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
 // pub type ChurchLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -27592,10 +27592,10 @@ pub type DefinedTermSetImageFieldEnum = FieldEnum22;
 // pub type WebApplicationScreenshotFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type WebApplicationImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/logo>
-// pub type CertificationLogoFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type CertificationImageFieldEnum = FieldEnum22;
+///<https://schema.org/logo>
+pub type CertificationLogoFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type CertificationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type LendActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -27682,10 +27682,10 @@ pub type CreativeWorkSeasonImageFieldEnum = FieldEnum22;
 // pub type ConstraintNodeImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type ThreeDModelImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/logo>
-// pub type OrganizationLogoFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type OrganizationImageFieldEnum = FieldEnum22;
+///<https://schema.org/logo>
+pub type OrganizationLogoFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type OrganizationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type OccupationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
@@ -28018,8 +28018,8 @@ pub type CreativeWorkImageFieldEnum = FieldEnum22;
 // pub type PlaygroundLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type PlaygroundImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type GrantImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type GrantImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type ChemicalSubstanceImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28086,8 +28086,8 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 // pub type OrderImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type PriceSpecificationImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type ReviewActionImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type ReviewActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type OfferForPurchaseImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28126,8 +28126,8 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 // pub type DistanceImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type ContactPageImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type AudienceImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type AudienceImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type ProgramMembershipImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28184,8 +28184,8 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 // pub type CookActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type VideoGalleryImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type ReviewNewsArticleImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type ReviewNewsArticleImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type HowToDirectionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28342,10 +28342,10 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 // pub type ReportImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type PhotographActionImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/logo>
-// pub type AdministrativeAreaLogoFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type AdministrativeAreaImageFieldEnum = FieldEnum22;
+///<https://schema.org/logo>
+pub type AdministrativeAreaLogoFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type AdministrativeAreaImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type MedicalDeviceImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
@@ -28408,8 +28408,8 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 // pub type JewelryStoreLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type JewelryStoreImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type QuantitativeValueDistributionImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type QuantitativeValueDistributionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type ReserveActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
@@ -28470,8 +28470,8 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 // pub type CollectionPageImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type MedicalStudyImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type EventAttendanceModeEnumerationImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type EventAttendanceModeEnumerationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type PeriodicalImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28502,8 +28502,8 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 // pub type TouristInformationCenterLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type TouristInformationCenterImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type EventReservationImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type EventReservationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type DeliveryChargeSpecificationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28520,8 +28520,8 @@ pub type EnergyImageFieldEnum = FieldEnum22;
 pub type HowToImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type PermitImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type LocationFeatureSpecificationImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type LocationFeatureSpecificationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type UnRegisterActionImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28650,8 +28650,8 @@ pub type HowToImageFieldEnum = FieldEnum22;
 // pub type MediaSubscriptionImageFieldEnum = FieldEnum22;
 ///<https://schema.org/image>
 pub type CommentImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type PropertyValueImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type PropertyValueImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
 // pub type DanceGroupLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28678,8 +28678,8 @@ pub type CommentImageFieldEnum = FieldEnum22;
 // pub type BankAccountLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type BankAccountImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type EventImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type EventImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type UserTweetsImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
@@ -28690,14 +28690,14 @@ pub type CommentImageFieldEnum = FieldEnum22;
 // pub type HowToSupplyImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type WearActionImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type CertificationStatusEnumerationImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type CertificationStatusEnumerationImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
 // pub type BrokerageAccountLogoFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type BrokerageAccountImageFieldEnum = FieldEnum22;
-// ///<https://schema.org/image>
-// pub type ContactPointImageFieldEnum = FieldEnum22;
+///<https://schema.org/image>
+pub type ContactPointImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/image>
 // pub type AdvertiserContentArticleImageFieldEnum = FieldEnum22;
 // ///<https://schema.org/logo>
@@ -28770,8 +28770,8 @@ pub enum FieldEnum23 {
 // pub type EmployeeRoleDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type RejectActionDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type EventVenueDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type EventVenueDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ScheduleActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -28836,8 +28836,8 @@ pub enum FieldEnum23 {
 // pub type MovieDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ThesisDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type QuantitativeValueDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type QuantitativeValueDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type SynagogueDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -28866,8 +28866,8 @@ pub enum FieldEnum23 {
 // pub type DigitalDocumentPermissionTypeDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type FMRadioChannelDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type ReviewDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type ReviewDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type PriceComponentTypeEnumerationDescriptionFieldEnum = FieldEnum23;
 ///<https://schema.org/description>
@@ -29040,8 +29040,8 @@ pub type ThingDescriptionFieldEnum = FieldEnum23;
 // pub type FundingAgencyDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type HighSchoolDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type PersonDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type PersonDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type WebPageDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29078,8 +29078,8 @@ pub type ThingDescriptionFieldEnum = FieldEnum23;
 // pub type WPSideBarDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type DepartmentStoreDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type EventStatusTypeDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type EventStatusTypeDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type MedicalStudyStatusDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29092,8 +29092,8 @@ pub type ThingDescriptionFieldEnum = FieldEnum23;
 // pub type SpecialAnnouncementDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type AggregateOfferDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type RatingDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type RatingDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type FinancialIncentiveDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29198,8 +29198,8 @@ pub type ActionDescriptionFieldEnum = FieldEnum23;
 // pub type BedTypeDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type BedAndBreakfastDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type PropertyValueSpecificationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type PropertyValueSpecificationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type MedicalSignDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29212,8 +29212,8 @@ pub type ActionDescriptionFieldEnum = FieldEnum23;
 // pub type BookmarkActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type TVEpisodeDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type EventSeriesDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type EventSeriesDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type BakeryDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29226,8 +29226,8 @@ pub type ActionDescriptionFieldEnum = FieldEnum23;
 // pub type ChapterDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type VoteActionDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type ContactPointOptionDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type ContactPointOptionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type UseActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29366,8 +29366,8 @@ pub type PlaceDescriptionFieldEnum = FieldEnum23;
 // pub type RestaurantDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type PublicationVolumeDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type OrganizationRoleDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type OrganizationRoleDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ConsortiumDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29398,8 +29398,8 @@ pub type PlaceDescriptionFieldEnum = FieldEnum23;
 // pub type ItemListDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type SeekToActionDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type OpeningHoursSpecificationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type OpeningHoursSpecificationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type DrawActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29486,8 +29486,8 @@ pub type MassDescriptionFieldEnum = FieldEnum23;
 // pub type InsuranceAgencyDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type WPFooterDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type InteractionCounterDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type InteractionCounterDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type CommentActionDescriptionFieldEnum = FieldEnum23;
 ///<https://schema.org/description>
@@ -29514,8 +29514,8 @@ pub type NutritionInformationDescriptionFieldEnum = FieldEnum23;
 // pub type MusicReleaseDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type AllocateActionDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type AggregateRatingDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type AggregateRatingDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ChurchDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29678,8 +29678,8 @@ pub type DefinedTermSetDescriptionFieldEnum = FieldEnum23;
 // pub type TireShopDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type WebApplicationDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type CertificationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type CertificationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type LendActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29744,8 +29744,8 @@ pub type CreativeWorkSeasonDescriptionFieldEnum = FieldEnum23;
 // pub type ConstraintNodeDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ThreeDModelDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type OrganizationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type OrganizationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type OccupationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -29992,8 +29992,8 @@ pub type CreativeWorkDescriptionFieldEnum = FieldEnum23;
 // pub type PetStoreDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type PlaygroundDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type GrantDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type GrantDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ChemicalSubstanceDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30048,8 +30048,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 // pub type OrderDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type PriceSpecificationDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type ReviewActionDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type ReviewActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type OfferForPurchaseDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30084,8 +30084,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 // pub type DistanceDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ContactPageDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type AudienceDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type AudienceDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ProgramMembershipDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30130,8 +30130,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 // pub type CookActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type VideoGalleryDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type ReviewNewsArticleDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type ReviewNewsArticleDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type HowToDirectionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30252,8 +30252,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 // pub type ReportDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type PhotographActionDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type AdministrativeAreaDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type AdministrativeAreaDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type MedicalDeviceDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30296,8 +30296,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 // pub type VacationRentalDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type JewelryStoreDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type QuantitativeValueDistributionDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type QuantitativeValueDistributionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type ReserveActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30344,8 +30344,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 // pub type CollectionPageDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type MedicalStudyDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type EventAttendanceModeEnumerationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type EventAttendanceModeEnumerationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type PeriodicalDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30372,8 +30372,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 // pub type CourseInstanceDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type TouristInformationCenterDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type EventReservationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type EventReservationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type DeliveryChargeSpecificationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30388,8 +30388,8 @@ pub type EnergyDescriptionFieldEnum = FieldEnum23;
 pub type HowToDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type PermitDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type LocationFeatureSpecificationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type LocationFeatureSpecificationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type UnRegisterActionDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30494,8 +30494,8 @@ pub type HowToDescriptionFieldEnum = FieldEnum23;
 // pub type MediaSubscriptionDescriptionFieldEnum = FieldEnum23;
 ///<https://schema.org/description>
 pub type CommentDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type PropertyValueDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type PropertyValueDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type DanceGroupDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30514,8 +30514,8 @@ pub type CommentDescriptionFieldEnum = FieldEnum23;
 // pub type VideoObjectDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type BankAccountDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type EventDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type EventDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type UserTweetsDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30526,12 +30526,12 @@ pub type CommentDescriptionFieldEnum = FieldEnum23;
 // pub type HowToSupplyDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type WearActionDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type CertificationStatusEnumerationDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type CertificationStatusEnumerationDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type BrokerageAccountDescriptionFieldEnum = FieldEnum23;
-// ///<https://schema.org/description>
-// pub type ContactPointDescriptionFieldEnum = FieldEnum23;
+///<https://schema.org/description>
+pub type ContactPointDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
 // pub type AdvertiserContentArticleDescriptionFieldEnum = FieldEnum23;
 // ///<https://schema.org/description>
@@ -30592,8 +30592,8 @@ pub enum FieldEnum24 {
 // pub type EmployeeRoleSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type RejectActionSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type EventVenueSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type EventVenueSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ScheduleActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -30658,8 +30658,8 @@ pub enum FieldEnum24 {
 // pub type MovieSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ThesisSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type QuantitativeValueSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type QuantitativeValueSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type SynagogueSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -30688,8 +30688,8 @@ pub enum FieldEnum24 {
 // pub type DigitalDocumentPermissionTypeSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type FMRadioChannelSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type ReviewSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type ReviewSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type PriceComponentTypeEnumerationSubjectOfFieldEnum = FieldEnum24;
 ///<https://schema.org/subjectOf>
@@ -30862,8 +30862,8 @@ pub type ThingSubjectOfFieldEnum = FieldEnum24;
 // pub type FundingAgencySubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type HighSchoolSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type PersonSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type PersonSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type WebPageSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -30900,8 +30900,8 @@ pub type ThingSubjectOfFieldEnum = FieldEnum24;
 // pub type WPSideBarSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type DepartmentStoreSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type EventStatusTypeSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type EventStatusTypeSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type MedicalStudyStatusSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -30914,8 +30914,8 @@ pub type ThingSubjectOfFieldEnum = FieldEnum24;
 // pub type SpecialAnnouncementSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type AggregateOfferSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type RatingSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type RatingSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type FinancialIncentiveSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31020,8 +31020,8 @@ pub type ActionSubjectOfFieldEnum = FieldEnum24;
 // pub type BedTypeSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type BedAndBreakfastSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type PropertyValueSpecificationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type PropertyValueSpecificationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type MedicalSignSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31034,8 +31034,8 @@ pub type ActionSubjectOfFieldEnum = FieldEnum24;
 // pub type BookmarkActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type TVEpisodeSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type EventSeriesSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type EventSeriesSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type BakerySubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31048,8 +31048,8 @@ pub type ActionSubjectOfFieldEnum = FieldEnum24;
 // pub type ChapterSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type VoteActionSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type ContactPointOptionSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type ContactPointOptionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type UseActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31188,8 +31188,8 @@ pub type PlaceSubjectOfFieldEnum = FieldEnum24;
 // pub type RestaurantSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type PublicationVolumeSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type OrganizationRoleSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type OrganizationRoleSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ConsortiumSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31220,8 +31220,8 @@ pub type PlaceSubjectOfFieldEnum = FieldEnum24;
 // pub type ItemListSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type SeekToActionSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type OpeningHoursSpecificationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type OpeningHoursSpecificationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type DrawActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31308,8 +31308,8 @@ pub type MassSubjectOfFieldEnum = FieldEnum24;
 // pub type InsuranceAgencySubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type WPFooterSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type InteractionCounterSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type InteractionCounterSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type CommentActionSubjectOfFieldEnum = FieldEnum24;
 ///<https://schema.org/subjectOf>
@@ -31336,8 +31336,8 @@ pub type NutritionInformationSubjectOfFieldEnum = FieldEnum24;
 // pub type MusicReleaseSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type AllocateActionSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type AggregateRatingSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type AggregateRatingSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ChurchSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31500,8 +31500,8 @@ pub type DefinedTermSetSubjectOfFieldEnum = FieldEnum24;
 // pub type TireShopSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type WebApplicationSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type CertificationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type CertificationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type LendActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31566,8 +31566,8 @@ pub type CreativeWorkSeasonSubjectOfFieldEnum = FieldEnum24;
 // pub type ConstraintNodeSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ThreeDModelSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type OrganizationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type OrganizationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type OccupationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31814,8 +31814,8 @@ pub type CreativeWorkSubjectOfFieldEnum = FieldEnum24;
 // pub type PetStoreSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type PlaygroundSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type GrantSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type GrantSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ChemicalSubstanceSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31870,8 +31870,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 // pub type OrderSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type PriceSpecificationSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type ReviewActionSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type ReviewActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type OfferForPurchaseSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31906,8 +31906,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 // pub type DistanceSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ContactPageSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type AudienceSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type AudienceSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ProgramMembershipSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -31952,8 +31952,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 // pub type CookActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type VideoGallerySubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type ReviewNewsArticleSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type ReviewNewsArticleSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type HowToDirectionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32074,8 +32074,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 // pub type ReportSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type PhotographActionSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type AdministrativeAreaSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type AdministrativeAreaSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type MedicalDeviceSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32118,8 +32118,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 // pub type VacationRentalSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type JewelryStoreSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type QuantitativeValueDistributionSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type QuantitativeValueDistributionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type ReserveActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32166,8 +32166,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 // pub type CollectionPageSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type MedicalStudySubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type EventAttendanceModeEnumerationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type EventAttendanceModeEnumerationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type PeriodicalSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32194,8 +32194,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 // pub type CourseInstanceSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type TouristInformationCenterSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type EventReservationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type EventReservationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type DeliveryChargeSpecificationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32210,8 +32210,8 @@ pub type EnergySubjectOfFieldEnum = FieldEnum24;
 pub type HowToSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type PermitSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type LocationFeatureSpecificationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type LocationFeatureSpecificationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type UnRegisterActionSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32316,8 +32316,8 @@ pub type HowToSubjectOfFieldEnum = FieldEnum24;
 // pub type MediaSubscriptionSubjectOfFieldEnum = FieldEnum24;
 ///<https://schema.org/subjectOf>
 pub type CommentSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type PropertyValueSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type PropertyValueSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type DanceGroupSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32336,8 +32336,8 @@ pub type CommentSubjectOfFieldEnum = FieldEnum24;
 // pub type VideoObjectSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type BankAccountSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type EventSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type EventSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type UserTweetsSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32348,12 +32348,12 @@ pub type CommentSubjectOfFieldEnum = FieldEnum24;
 // pub type HowToSupplySubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type WearActionSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type CertificationStatusEnumerationSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type CertificationStatusEnumerationSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type BrokerageAccountSubjectOfFieldEnum = FieldEnum24;
-// ///<https://schema.org/subjectOf>
-// pub type ContactPointSubjectOfFieldEnum = FieldEnum24;
+///<https://schema.org/subjectOf>
+pub type ContactPointSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
 // pub type AdvertiserContentArticleSubjectOfFieldEnum = FieldEnum24;
 // ///<https://schema.org/subjectOf>
@@ -32564,8 +32564,8 @@ pub type ActionLocationFieldEnum = FieldEnum25;
 // pub type ChildCareLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type BookmarkActionLocationFieldEnum = FieldEnum25;
-// ///<https://schema.org/location>
-// pub type EventSeriesLocationFieldEnum = FieldEnum25;
+///<https://schema.org/location>
+pub type EventSeriesLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type BakeryLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
@@ -32662,8 +32662,8 @@ pub type ActionLocationFieldEnum = FieldEnum25;
 // pub type CasinoLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type InsuranceAgencyLocationFieldEnum = FieldEnum25;
-// ///<https://schema.org/location>
-// pub type InteractionCounterLocationFieldEnum = FieldEnum25;
+///<https://schema.org/location>
+pub type InteractionCounterLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type CommentActionLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
@@ -32762,8 +32762,8 @@ pub type ActionLocationFieldEnum = FieldEnum25;
 // pub type ElementarySchoolLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type PharmacyLocationFieldEnum = FieldEnum25;
-// ///<https://schema.org/location>
-// pub type OrganizationLocationFieldEnum = FieldEnum25;
+///<https://schema.org/location>
+pub type OrganizationLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type AdultEntertainmentLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
@@ -32868,8 +32868,8 @@ pub type ActionLocationFieldEnum = FieldEnum25;
 // pub type ConvenienceStoreLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type MarryActionLocationFieldEnum = FieldEnum25;
-// ///<https://schema.org/location>
-// pub type ReviewActionLocationFieldEnum = FieldEnum25;
+///<https://schema.org/location>
+pub type ReviewActionLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type TakeActionLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
@@ -33020,8 +33020,8 @@ pub type ActionLocationFieldEnum = FieldEnum25;
 // pub type AssignActionLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type AppendActionLocationFieldEnum = FieldEnum25;
-// ///<https://schema.org/location>
-// pub type EventLocationFieldEnum = FieldEnum25;
+///<https://schema.org/location>
+pub type EventLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
 // pub type UserTweetsLocationFieldEnum = FieldEnum25;
 // ///<https://schema.org/location>
@@ -33206,8 +33206,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ControlActionTargetFieldEnum = FieldEnum26;
 // ///<https://schema.org/target>
 // pub type MarryActionTargetFieldEnum = FieldEnum26;
-// ///<https://schema.org/target>
-// pub type ReviewActionTargetFieldEnum = FieldEnum26;
+///<https://schema.org/target>
+pub type ReviewActionTargetFieldEnum = FieldEnum26;
 // ///<https://schema.org/target>
 // pub type TakeActionTargetFieldEnum = FieldEnum26;
 // ///<https://schema.org/target>
@@ -33343,8 +33343,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type FundingAgencyKnowsAboutFieldEnum = FieldEnum27;
 // ///<https://schema.org/knowsAbout>
 // pub type HighSchoolKnowsAboutFieldEnum = FieldEnum27;
-// ///<https://schema.org/knowsAbout>
-// pub type PersonKnowsAboutFieldEnum = FieldEnum27;
+///<https://schema.org/knowsAbout>
+pub type PersonKnowsAboutFieldEnum = FieldEnum27;
 // ///<https://schema.org/knowsAbout>
 // pub type HairSalonKnowsAboutFieldEnum = FieldEnum27;
 // ///<https://schema.org/knowsAbout>
@@ -33485,8 +33485,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type PharmacyKnowsAboutFieldEnum = FieldEnum27;
 // ///<https://schema.org/gamePlatform>
 // pub type VideoGameGamePlatformFieldEnum = FieldEnum27;
-// ///<https://schema.org/knowsAbout>
-// pub type OrganizationKnowsAboutFieldEnum = FieldEnum27;
+///<https://schema.org/knowsAbout>
+pub type OrganizationKnowsAboutFieldEnum = FieldEnum27;
 // ///<https://schema.org/knowsAbout>
 // pub type AdultEntertainmentKnowsAboutFieldEnum = FieldEnum27;
 // ///<https://schema.org/knowsAbout>
@@ -33829,8 +33829,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ElementarySchoolDiversityStaffingReportFieldEnum = FieldEnum28;
 // ///<https://schema.org/diversityStaffingReport>
 // pub type PharmacyDiversityStaffingReportFieldEnum = FieldEnum28;
-// ///<https://schema.org/diversityStaffingReport>
-// pub type OrganizationDiversityStaffingReportFieldEnum = FieldEnum28;
+///<https://schema.org/diversityStaffingReport>
+pub type OrganizationDiversityStaffingReportFieldEnum = FieldEnum28;
 // ///<https://schema.org/diversityStaffingReport>
 // pub type AdultEntertainmentDiversityStaffingReportFieldEnum = FieldEnum28;
 // ///<https://schema.org/diversityStaffingReport>
@@ -34035,8 +34035,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type FundingAgencyMemberOfFieldEnum = FieldEnum29;
 // ///<https://schema.org/memberOf>
 // pub type HighSchoolMemberOfFieldEnum = FieldEnum29;
-// ///<https://schema.org/memberOf>
-// pub type PersonMemberOfFieldEnum = FieldEnum29;
+///<https://schema.org/memberOf>
+pub type PersonMemberOfFieldEnum = FieldEnum29;
 // ///<https://schema.org/memberOf>
 // pub type HairSalonMemberOfFieldEnum = FieldEnum29;
 // ///<https://schema.org/memberOf>
@@ -34175,8 +34175,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ElementarySchoolMemberOfFieldEnum = FieldEnum29;
 // ///<https://schema.org/memberOf>
 // pub type PharmacyMemberOfFieldEnum = FieldEnum29;
-// ///<https://schema.org/memberOf>
-// pub type OrganizationMemberOfFieldEnum = FieldEnum29;
+///<https://schema.org/memberOf>
+pub type OrganizationMemberOfFieldEnum = FieldEnum29;
 // ///<https://schema.org/memberOf>
 // pub type AdultEntertainmentMemberOfFieldEnum = FieldEnum29;
 // ///<https://schema.org/memberOf>
@@ -34549,8 +34549,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ElementarySchoolAreaServedFieldEnum = FieldEnum30;
 // ///<https://schema.org/areaServed>
 // pub type PharmacyAreaServedFieldEnum = FieldEnum30;
-// ///<https://schema.org/areaServed>
-// pub type OrganizationAreaServedFieldEnum = FieldEnum30;
+///<https://schema.org/areaServed>
+pub type OrganizationAreaServedFieldEnum = FieldEnum30;
 // ///<https://schema.org/areaServed>
 // pub type AdultEntertainmentAreaServedFieldEnum = FieldEnum30;
 // ///<https://schema.org/areaServed>
@@ -34711,8 +34711,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type BankAccountAreaServedFieldEnum = FieldEnum30;
 // ///<https://schema.org/areaServed>
 // pub type BrokerageAccountAreaServedFieldEnum = FieldEnum30;
-// ///<https://schema.org/areaServed>
-// pub type ContactPointAreaServedFieldEnum = FieldEnum30;
+///<https://schema.org/areaServed>
+pub type ContactPointAreaServedFieldEnum = FieldEnum30;
 // ///<https://schema.org/areaServed>
 // pub type AutoRentalAreaServedFieldEnum = FieldEnum30;
 // ///<https://schema.org/areaServed>
@@ -34929,8 +34929,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ElementarySchoolAcceptedPaymentMethodFieldEnum = FieldEnum31;
 // ///<https://schema.org/acceptedPaymentMethod>
 // pub type PharmacyAcceptedPaymentMethodFieldEnum = FieldEnum31;
-// ///<https://schema.org/acceptedPaymentMethod>
-// pub type OrganizationAcceptedPaymentMethodFieldEnum = FieldEnum31;
+///<https://schema.org/acceptedPaymentMethod>
+pub type OrganizationAcceptedPaymentMethodFieldEnum = FieldEnum31;
 // ///<https://schema.org/acceptedPaymentMethod>
 // pub type AdultEntertainmentAcceptedPaymentMethodFieldEnum = FieldEnum31;
 // ///<https://schema.org/acceptedPaymentMethod>
@@ -35161,8 +35161,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type FundingAgencyBrandFieldEnum = FieldEnum32;
 // ///<https://schema.org/brand>
 // pub type HighSchoolBrandFieldEnum = FieldEnum32;
-// ///<https://schema.org/brand>
-// pub type PersonBrandFieldEnum = FieldEnum32;
+///<https://schema.org/brand>
+pub type PersonBrandFieldEnum = FieldEnum32;
 // ///<https://schema.org/brand>
 // pub type MotorcycleBrandFieldEnum = FieldEnum32;
 // ///<https://schema.org/brand>
@@ -35323,8 +35323,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ElementarySchoolBrandFieldEnum = FieldEnum32;
 // ///<https://schema.org/brand>
 // pub type PharmacyBrandFieldEnum = FieldEnum32;
-// ///<https://schema.org/brand>
-// pub type OrganizationBrandFieldEnum = FieldEnum32;
+///<https://schema.org/brand>
+pub type OrganizationBrandFieldEnum = FieldEnum32;
 // ///<https://schema.org/brand>
 // pub type AdultEntertainmentBrandFieldEnum = FieldEnum32;
 // ///<https://schema.org/brand>
@@ -35555,8 +35555,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type FundingAgencyOwnsFieldEnum = FieldEnum33;
 // ///<https://schema.org/owns>
 // pub type HighSchoolOwnsFieldEnum = FieldEnum33;
-// ///<https://schema.org/owns>
-// pub type PersonOwnsFieldEnum = FieldEnum33;
+///<https://schema.org/owns>
+pub type PersonOwnsFieldEnum = FieldEnum33;
 // ///<https://schema.org/owns>
 // pub type HairSalonOwnsFieldEnum = FieldEnum33;
 // ///<https://schema.org/owns>
@@ -35695,8 +35695,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ElementarySchoolOwnsFieldEnum = FieldEnum33;
 // ///<https://schema.org/owns>
 // pub type PharmacyOwnsFieldEnum = FieldEnum33;
-// ///<https://schema.org/owns>
-// pub type OrganizationOwnsFieldEnum = FieldEnum33;
+///<https://schema.org/owns>
+pub type OrganizationOwnsFieldEnum = FieldEnum33;
 // ///<https://schema.org/owns>
 // pub type AdultEntertainmentOwnsFieldEnum = FieldEnum33;
 // ///<https://schema.org/owns>
@@ -36063,8 +36063,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type ElementarySchoolServiceAreaFieldEnum = FieldEnum34;
 // ///<https://schema.org/serviceArea>
 // pub type PharmacyServiceAreaFieldEnum = FieldEnum34;
-// ///<https://schema.org/serviceArea>
-// pub type OrganizationServiceAreaFieldEnum = FieldEnum34;
+///<https://schema.org/serviceArea>
+pub type OrganizationServiceAreaFieldEnum = FieldEnum34;
 // ///<https://schema.org/serviceArea>
 // pub type AdultEntertainmentServiceAreaFieldEnum = FieldEnum34;
 // ///<https://schema.org/serviceArea>
@@ -36215,8 +36215,8 @@ pub type ActionTargetFieldEnum = FieldEnum26;
 // pub type BankAccountServiceAreaFieldEnum = FieldEnum34;
 // ///<https://schema.org/serviceArea>
 // pub type BrokerageAccountServiceAreaFieldEnum = FieldEnum34;
-// ///<https://schema.org/serviceArea>
-// pub type ContactPointServiceAreaFieldEnum = FieldEnum34;
+///<https://schema.org/serviceArea>
+pub type ContactPointServiceAreaFieldEnum = FieldEnum34;
 // ///<https://schema.org/serviceArea>
 // pub type AutoRentalServiceAreaFieldEnum = FieldEnum34;
 // ///<https://schema.org/serviceArea>
@@ -36231,8 +36231,8 @@ pub enum FieldEnum35 {
 }
 // ///<https://schema.org/address>
 // pub type ExerciseGymAddressFieldEnum = FieldEnum35;
-// ///<https://schema.org/address>
-// pub type EventVenueAddressFieldEnum = FieldEnum35;
+///<https://schema.org/address>
+pub type EventVenueAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
 // pub type HotelAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
@@ -36313,8 +36313,8 @@ pub enum FieldEnum35 {
 // pub type FundingAgencyAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
 // pub type HighSchoolAddressFieldEnum = FieldEnum35;
-// ///<https://schema.org/address>
-// pub type PersonAddressFieldEnum = FieldEnum35;
+///<https://schema.org/address>
+pub type PersonAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
 // pub type PlaceOfWorshipAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
@@ -36501,8 +36501,8 @@ pub type PlaceAddressFieldEnum = FieldEnum35;
 // pub type PharmacyAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
 // pub type GovernmentBuildingAddressFieldEnum = FieldEnum35;
-// ///<https://schema.org/address>
-// pub type OrganizationAddressFieldEnum = FieldEnum35;
+///<https://schema.org/address>
+pub type OrganizationAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
 // pub type AdultEntertainmentAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
@@ -36641,8 +36641,8 @@ pub type PlaceAddressFieldEnum = FieldEnum35;
 // pub type SelfStorageAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
 // pub type FireStationAddressFieldEnum = FieldEnum35;
-// ///<https://schema.org/address>
-// pub type AdministrativeAreaAddressFieldEnum = FieldEnum35;
+///<https://schema.org/address>
+pub type AdministrativeAreaAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
 // pub type MensClothingStoreAddressFieldEnum = FieldEnum35;
 // ///<https://schema.org/address>
@@ -36924,8 +36924,8 @@ pub type PlaceAddressFieldEnum = FieldEnum35;
 // pub type ElementarySchoolOwnershipFundingInfoFieldEnum = FieldEnum36;
 // ///<https://schema.org/ownershipFundingInfo>
 // pub type PharmacyOwnershipFundingInfoFieldEnum = FieldEnum36;
-// ///<https://schema.org/ownershipFundingInfo>
-// pub type OrganizationOwnershipFundingInfoFieldEnum = FieldEnum36;
+///<https://schema.org/ownershipFundingInfo>
+pub type OrganizationOwnershipFundingInfoFieldEnum = FieldEnum36;
 // ///<https://schema.org/ownershipFundingInfo>
 // pub type AdultEntertainmentOwnershipFundingInfoFieldEnum = FieldEnum36;
 // ///<https://schema.org/ownershipFundingInfo>
@@ -37086,26 +37086,26 @@ pub enum FieldEnum37 {
 // pub type ExerciseGymGeoWithinFieldEnum = FieldEnum37;
 // ///<https://schema.org/geoCoveredBy>
 // pub type ExerciseGymGeoCoveredByFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoEquals>
-// pub type EventVenueGeoEqualsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoDisjoint>
-// pub type EventVenueGeoDisjointFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoCovers>
-// pub type EventVenueGeoCoversFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoTouches>
-// pub type EventVenueGeoTouchesFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoCrosses>
-// pub type EventVenueGeoCrossesFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoContains>
-// pub type EventVenueGeoContainsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoOverlaps>
-// pub type EventVenueGeoOverlapsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoIntersects>
-// pub type EventVenueGeoIntersectsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoWithin>
-// pub type EventVenueGeoWithinFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoCoveredBy>
-// pub type EventVenueGeoCoveredByFieldEnum = FieldEnum37;
+///<https://schema.org/geoEquals>
+pub type EventVenueGeoEqualsFieldEnum = FieldEnum37;
+///<https://schema.org/geoDisjoint>
+pub type EventVenueGeoDisjointFieldEnum = FieldEnum37;
+///<https://schema.org/geoCovers>
+pub type EventVenueGeoCoversFieldEnum = FieldEnum37;
+///<https://schema.org/geoTouches>
+pub type EventVenueGeoTouchesFieldEnum = FieldEnum37;
+///<https://schema.org/geoCrosses>
+pub type EventVenueGeoCrossesFieldEnum = FieldEnum37;
+///<https://schema.org/geoContains>
+pub type EventVenueGeoContainsFieldEnum = FieldEnum37;
+///<https://schema.org/geoOverlaps>
+pub type EventVenueGeoOverlapsFieldEnum = FieldEnum37;
+///<https://schema.org/geoIntersects>
+pub type EventVenueGeoIntersectsFieldEnum = FieldEnum37;
+///<https://schema.org/geoWithin>
+pub type EventVenueGeoWithinFieldEnum = FieldEnum37;
+///<https://schema.org/geoCoveredBy>
+pub type EventVenueGeoCoveredByFieldEnum = FieldEnum37;
 // ///<https://schema.org/geoEquals>
 // pub type HotelGeoEqualsFieldEnum = FieldEnum37;
 // ///<https://schema.org/geoDisjoint>
@@ -40606,26 +40606,26 @@ pub type PlaceGeoCoveredByFieldEnum = FieldEnum37;
 // pub type FireStationGeoWithinFieldEnum = FieldEnum37;
 // ///<https://schema.org/geoCoveredBy>
 // pub type FireStationGeoCoveredByFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoEquals>
-// pub type AdministrativeAreaGeoEqualsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoDisjoint>
-// pub type AdministrativeAreaGeoDisjointFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoCovers>
-// pub type AdministrativeAreaGeoCoversFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoTouches>
-// pub type AdministrativeAreaGeoTouchesFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoCrosses>
-// pub type AdministrativeAreaGeoCrossesFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoContains>
-// pub type AdministrativeAreaGeoContainsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoOverlaps>
-// pub type AdministrativeAreaGeoOverlapsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoIntersects>
-// pub type AdministrativeAreaGeoIntersectsFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoWithin>
-// pub type AdministrativeAreaGeoWithinFieldEnum = FieldEnum37;
-// ///<https://schema.org/geoCoveredBy>
-// pub type AdministrativeAreaGeoCoveredByFieldEnum = FieldEnum37;
+///<https://schema.org/geoEquals>
+pub type AdministrativeAreaGeoEqualsFieldEnum = FieldEnum37;
+///<https://schema.org/geoDisjoint>
+pub type AdministrativeAreaGeoDisjointFieldEnum = FieldEnum37;
+///<https://schema.org/geoCovers>
+pub type AdministrativeAreaGeoCoversFieldEnum = FieldEnum37;
+///<https://schema.org/geoTouches>
+pub type AdministrativeAreaGeoTouchesFieldEnum = FieldEnum37;
+///<https://schema.org/geoCrosses>
+pub type AdministrativeAreaGeoCrossesFieldEnum = FieldEnum37;
+///<https://schema.org/geoContains>
+pub type AdministrativeAreaGeoContainsFieldEnum = FieldEnum37;
+///<https://schema.org/geoOverlaps>
+pub type AdministrativeAreaGeoOverlapsFieldEnum = FieldEnum37;
+///<https://schema.org/geoIntersects>
+pub type AdministrativeAreaGeoIntersectsFieldEnum = FieldEnum37;
+///<https://schema.org/geoWithin>
+pub type AdministrativeAreaGeoWithinFieldEnum = FieldEnum37;
+///<https://schema.org/geoCoveredBy>
+pub type AdministrativeAreaGeoCoveredByFieldEnum = FieldEnum37;
 // ///<https://schema.org/geoEquals>
 // pub type MensClothingStoreGeoEqualsFieldEnum = FieldEnum37;
 // ///<https://schema.org/geoDisjoint>
@@ -41258,10 +41258,10 @@ pub enum FieldEnum38 {
 // pub type ExerciseGymPhotoFieldEnum = FieldEnum38;
 // ///<https://schema.org/photos>
 // pub type ExerciseGymPhotosFieldEnum = FieldEnum38;
-// ///<https://schema.org/photo>
-// pub type EventVenuePhotoFieldEnum = FieldEnum38;
-// ///<https://schema.org/photos>
-// pub type EventVenuePhotosFieldEnum = FieldEnum38;
+///<https://schema.org/photo>
+pub type EventVenuePhotoFieldEnum = FieldEnum38;
+///<https://schema.org/photos>
+pub type EventVenuePhotosFieldEnum = FieldEnum38;
 // ///<https://schema.org/photo>
 // pub type HotelPhotoFieldEnum = FieldEnum38;
 // ///<https://schema.org/photos>
@@ -41958,10 +41958,10 @@ pub type PlacePhotosFieldEnum = FieldEnum38;
 // pub type FireStationPhotoFieldEnum = FieldEnum38;
 // ///<https://schema.org/photos>
 // pub type FireStationPhotosFieldEnum = FieldEnum38;
-// ///<https://schema.org/photo>
-// pub type AdministrativeAreaPhotoFieldEnum = FieldEnum38;
-// ///<https://schema.org/photos>
-// pub type AdministrativeAreaPhotosFieldEnum = FieldEnum38;
+///<https://schema.org/photo>
+pub type AdministrativeAreaPhotoFieldEnum = FieldEnum38;
+///<https://schema.org/photos>
+pub type AdministrativeAreaPhotosFieldEnum = FieldEnum38;
 // ///<https://schema.org/photo>
 // pub type MensClothingStorePhotoFieldEnum = FieldEnum38;
 // ///<https://schema.org/photos>
@@ -42096,8 +42096,8 @@ pub type PlacePhotosFieldEnum = FieldEnum38;
 // }
 // ///<https://schema.org/geo>
 // pub type ExerciseGymGeoFieldEnum = FieldEnum39;
-// ///<https://schema.org/geo>
-// pub type EventVenueGeoFieldEnum = FieldEnum39;
+///<https://schema.org/geo>
+pub type EventVenueGeoFieldEnum = FieldEnum39;
 // ///<https://schema.org/geo>
 // pub type HotelGeoFieldEnum = FieldEnum39;
 // ///<https://schema.org/geo>
@@ -42446,8 +42446,8 @@ pub type PlaceGeoFieldEnum = FieldEnum39;
 // pub type SelfStorageGeoFieldEnum = FieldEnum39;
 // ///<https://schema.org/geo>
 // pub type FireStationGeoFieldEnum = FieldEnum39;
-// ///<https://schema.org/geo>
-// pub type AdministrativeAreaGeoFieldEnum = FieldEnum39;
+///<https://schema.org/geo>
+pub type AdministrativeAreaGeoFieldEnum = FieldEnum39;
 // ///<https://schema.org/geo>
 // pub type MensClothingStoreGeoFieldEnum = FieldEnum39;
 // ///<https://schema.org/geo>
@@ -42520,8 +42520,8 @@ pub enum FieldEnum40 {
 }
 // ///<https://schema.org/hasMap>
 // pub type ExerciseGymHasMapFieldEnum = FieldEnum40;
-// ///<https://schema.org/hasMap>
-// pub type EventVenueHasMapFieldEnum = FieldEnum40;
+///<https://schema.org/hasMap>
+pub type EventVenueHasMapFieldEnum = FieldEnum40;
 // ///<https://schema.org/hasMap>
 // pub type HotelHasMapFieldEnum = FieldEnum40;
 // ///<https://schema.org/hasMap>
@@ -42870,8 +42870,8 @@ pub type PlaceHasMapFieldEnum = FieldEnum40;
 // pub type SelfStorageHasMapFieldEnum = FieldEnum40;
 // ///<https://schema.org/hasMap>
 // pub type FireStationHasMapFieldEnum = FieldEnum40;
-// ///<https://schema.org/hasMap>
-// pub type AdministrativeAreaHasMapFieldEnum = FieldEnum40;
+///<https://schema.org/hasMap>
+pub type AdministrativeAreaHasMapFieldEnum = FieldEnum40;
 // ///<https://schema.org/hasMap>
 // pub type MensClothingStoreHasMapFieldEnum = FieldEnum40;
 // ///<https://schema.org/hasMap>
@@ -43530,8 +43530,8 @@ pub type DefinedTermInDefinedTermSetFieldEnum = FieldEnum44;
 // pub type DietarySupplementWidthFieldEnum = FieldEnum48;
 // ///<https://schema.org/height>
 // pub type DietarySupplementHeightFieldEnum = FieldEnum48;
-// ///<https://schema.org/height>
-// pub type PersonHeightFieldEnum = FieldEnum48;
+///<https://schema.org/height>
+pub type PersonHeightFieldEnum = FieldEnum48;
 // ///<https://schema.org/depth>
 // pub type MotorcycleDepthFieldEnum = FieldEnum48;
 // ///<https://schema.org/width>
@@ -43744,10 +43744,10 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type ProductGroupNegativeNotesFieldEnum = FieldEnum49;
 // ///<https://schema.org/positiveNotes>
 // pub type ProductGroupPositiveNotesFieldEnum = FieldEnum49;
-// ///<https://schema.org/negativeNotes>
-// pub type ReviewNewsArticleNegativeNotesFieldEnum = FieldEnum49;
-// ///<https://schema.org/positiveNotes>
-// pub type ReviewNewsArticlePositiveNotesFieldEnum = FieldEnum49;
+///<https://schema.org/negativeNotes>
+pub type ReviewNewsArticleNegativeNotesFieldEnum = FieldEnum49;
+///<https://schema.org/positiveNotes>
+pub type ReviewNewsArticlePositiveNotesFieldEnum = FieldEnum49;
 // ///<https://schema.org/negativeNotes>
 // pub type CriticReviewNegativeNotesFieldEnum = FieldEnum49;
 // ///<https://schema.org/positiveNotes>
@@ -43850,8 +43850,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type VehicleWeightFieldEnum = FieldEnum52;
 // ///<https://schema.org/weight>
 // pub type DietarySupplementWeightFieldEnum = FieldEnum52;
-// ///<https://schema.org/weight>
-// pub type PersonWeightFieldEnum = FieldEnum52;
+///<https://schema.org/weight>
+pub type PersonWeightFieldEnum = FieldEnum52;
 // ///<https://schema.org/weight>
 // pub type MotorcycleWeightFieldEnum = FieldEnum52;
 // ///<https://schema.org/weight>
@@ -44025,8 +44025,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type AudiobookDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/duration>
 // pub type TVEpisodeDurationFieldEnum = FieldEnum54;
-// ///<https://schema.org/duration>
-// pub type EventSeriesDurationFieldEnum = FieldEnum54;
+///<https://schema.org/duration>
+pub type EventSeriesDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/duration>
 // pub type UserPlusOnesDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/duration>
@@ -44101,8 +44101,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type UserPageVisitsDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/duration>
 // pub type AudioObjectSnapshotDurationFieldEnum = FieldEnum54;
-// ///<https://schema.org/duration>
-// pub type QuantitativeValueDistributionDurationFieldEnum = FieldEnum54;
+///<https://schema.org/duration>
+pub type QuantitativeValueDistributionDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/duration>
 // pub type TextObjectDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/activityDuration>
@@ -44127,8 +44127,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type HouseLeaseLengthFieldEnum = FieldEnum54;
 // ///<https://schema.org/duration>
 // pub type VideoObjectDurationFieldEnum = FieldEnum54;
-// ///<https://schema.org/duration>
-// pub type EventDurationFieldEnum = FieldEnum54;
+///<https://schema.org/duration>
+pub type EventDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/duration>
 // pub type UserTweetsDurationFieldEnum = FieldEnum54;
 // ///<https://schema.org/leaseLength>
@@ -44251,8 +44251,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type MedicalWebPageSpeakableFieldEnum = FieldEnum56;
 // ///<https://schema.org/speakable>
 // pub type VideoGallerySpeakableFieldEnum = FieldEnum56;
-// ///<https://schema.org/speakable>
-// pub type ReviewNewsArticleSpeakableFieldEnum = FieldEnum56;
+///<https://schema.org/speakable>
+pub type ReviewNewsArticleSpeakableFieldEnum = FieldEnum56;
 // ///<https://schema.org/speakable>
 // pub type FAQPageSpeakableFieldEnum = FieldEnum56;
 // ///<https://schema.org/speakable>
@@ -44313,8 +44313,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type BusinessFunctionSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type RestrictedDietSupersededByFieldEnum = FieldEnum58;
-// ///<https://schema.org/supersededBy>
-// pub type EventStatusTypeSupersededByFieldEnum = FieldEnum58;
+///<https://schema.org/supersededBy>
+pub type EventStatusTypeSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type MedicalStudyStatusSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
@@ -44331,8 +44331,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type BedTypeSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type BoardingPolicyTypeSupersededByFieldEnum = FieldEnum58;
-// ///<https://schema.org/supersededBy>
-// pub type ContactPointOptionSupersededByFieldEnum = FieldEnum58;
+///<https://schema.org/supersededBy>
+pub type ContactPointOptionSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type IPTCDigitalSourceEnumerationSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
@@ -44453,8 +44453,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type SizeGroupEnumerationSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type DrugPrescriptionStatusSupersededByFieldEnum = FieldEnum58;
-// ///<https://schema.org/supersededBy>
-// pub type EventAttendanceModeEnumerationSupersededByFieldEnum = FieldEnum58;
+///<https://schema.org/supersededBy>
+pub type EventAttendanceModeEnumerationSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type RsvpResponseTypeSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
@@ -44473,8 +44473,8 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type MeasurementMethodEnumSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type BusinessEntityTypeSupersededByFieldEnum = FieldEnum58;
-// ///<https://schema.org/supersededBy>
-// pub type CertificationStatusEnumerationSupersededByFieldEnum = FieldEnum58;
+///<https://schema.org/supersededBy>
+pub type CertificationStatusEnumerationSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
 // pub type MapCategoryTypeSupersededByFieldEnum = FieldEnum58;
 // ///<https://schema.org/supersededBy>
@@ -44602,28 +44602,28 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type SportsEventHomeTeamFieldEnum = FieldEnum62;
 // ///<https://schema.org/competitor>
 // pub type SportsEventCompetitorFieldEnum = FieldEnum62;
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum FieldEnum63 {
-//     ///<https://schema.org/DefinedTerm>
-//     DefinedTerm(DefinedTerm),
-//     ///<https://schema.org/Enumeration>
-//     Enumeration(Enumeration),
-//     ///<https://schema.org/MeasurementTypeEnumeration>
-//     MeasurementTypeEnumeration(MeasurementTypeEnumeration),
-//     ///<https://schema.org/PropertyValue>
-//     PropertyValue(PropertyValue),
-//     ///<https://schema.org/QualitativeValue>
-//     QualitativeValue(QualitativeValue),
-//     ///<https://schema.org/QuantitativeValue>
-//     QuantitativeValue(QuantitativeValue),
-//     ///<https://schema.org/StructuredValue>
-//     StructuredValue(StructuredValue),
-//     ///<https://schema.org/Text>
-//     Text(String),
-// }
-// ///<https://schema.org/valueReference>
-// pub type QuantitativeValueValueReferenceFieldEnum = FieldEnum63;
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum FieldEnum63 {
+    ///<https://schema.org/DefinedTerm>
+    DefinedTerm(DefinedTerm),
+    ///<https://schema.org/Enumeration>
+    Enumeration(Enumeration),
+    ///<https://schema.org/MeasurementTypeEnumeration>
+    MeasurementTypeEnumeration(MeasurementTypeEnumeration),
+    ///<https://schema.org/PropertyValue>
+    PropertyValue(PropertyValue),
+    ///<https://schema.org/QualitativeValue>
+    QualitativeValue(QualitativeValue),
+    ///<https://schema.org/QuantitativeValue>
+    QuantitativeValue(QuantitativeValue),
+    ///<https://schema.org/StructuredValue>
+    StructuredValue(StructuredValue),
+    ///<https://schema.org/Text>
+    Text(String),
+}
+///<https://schema.org/valueReference>
+pub type QuantitativeValueValueReferenceFieldEnum = FieldEnum63;
 // ///<https://schema.org/valueReference>
 // pub type BedTypeValueReferenceFieldEnum = FieldEnum63;
 // ///<https://schema.org/valueReference>
@@ -44636,10 +44636,10 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 // pub type ObservationValueReferenceFieldEnum = FieldEnum63;
 // ///<https://schema.org/valueReference>
 // pub type SteeringPositionValueValueReferenceFieldEnum = FieldEnum63;
-// ///<https://schema.org/valueReference>
-// pub type LocationFeatureSpecificationValueReferenceFieldEnum = FieldEnum63;
-// ///<https://schema.org/valueReference>
-// pub type PropertyValueValueReferenceFieldEnum = FieldEnum63;
+///<https://schema.org/valueReference>
+pub type LocationFeatureSpecificationValueReferenceFieldEnum = FieldEnum63;
+///<https://schema.org/valueReference>
+pub type PropertyValueValueReferenceFieldEnum = FieldEnum63;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
 // pub enum FieldEnum64 {
@@ -44651,16 +44651,16 @@ pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 //     ///<https://schema.org/StructuredValue>
 //     StructuredValue(StructuredValue),
 // }
-// ///<https://schema.org/value>
-// pub type QuantitativeValueValueFieldEnum = FieldEnum64;
+///<https://schema.org/value>
+pub type QuantitativeValueValueFieldEnum = FieldEnum64;
 // ///<https://schema.org/value>
 // pub type ObservationValueFieldEnum = FieldEnum64;
 // ///<https://schema.org/value>
 // pub type MonetaryAmountValueFieldEnum = FieldEnum64;
-// ///<https://schema.org/value>
-// pub type LocationFeatureSpecificationValueFieldEnum = FieldEnum64;
-// ///<https://schema.org/value>
-// pub type PropertyValueValueFieldEnum = FieldEnum64;
+///<https://schema.org/value>
+pub type LocationFeatureSpecificationValueFieldEnum = FieldEnum64;
+///<https://schema.org/value>
+pub type PropertyValueValueFieldEnum = FieldEnum64;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
 // pub enum FieldEnum65 {
@@ -45313,8 +45313,8 @@ pub type CommentParentItemFieldEnum = FieldEnum73;
 //     ///<https://schema.org/Text>
 //     Text(String),
 // }
-// ///<https://schema.org/pronouns>
-// pub type PersonPronounsFieldEnum = FieldEnum89;
+///<https://schema.org/pronouns>
+pub type PersonPronounsFieldEnum = FieldEnum89;
 // ///<https://schema.org/pronouns>
 // pub type PatientPronounsFieldEnum = FieldEnum89;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -45325,10 +45325,10 @@ pub type CommentParentItemFieldEnum = FieldEnum73;
 //     ///<https://schema.org/Place>
 //     Place(Place),
 // }
-// ///<https://schema.org/workLocation>
-// pub type PersonWorkLocationFieldEnum = FieldEnum90;
-// ///<https://schema.org/homeLocation>
-// pub type PersonHomeLocationFieldEnum = FieldEnum90;
+///<https://schema.org/workLocation>
+pub type PersonWorkLocationFieldEnum = FieldEnum90;
+///<https://schema.org/homeLocation>
+pub type PersonHomeLocationFieldEnum = FieldEnum90;
 // ///<https://schema.org/workLocation>
 // pub type PatientWorkLocationFieldEnum = FieldEnum90;
 // ///<https://schema.org/homeLocation>
@@ -45341,8 +45341,8 @@ pub type CommentParentItemFieldEnum = FieldEnum73;
 //     ///<https://schema.org/Text>
 //     Text(String),
 // }
-// ///<https://schema.org/gender>
-// pub type PersonGenderFieldEnum = FieldEnum91;
+///<https://schema.org/gender>
+pub type PersonGenderFieldEnum = FieldEnum91;
 // ///<https://schema.org/suggestedGender>
 // pub type MedicalAudienceSuggestedGenderFieldEnum = FieldEnum91;
 // ///<https://schema.org/suggestedGender>
@@ -45365,8 +45365,8 @@ pub type CommentParentItemFieldEnum = FieldEnum73;
 //     ///<https://schema.org/PriceSpecification>
 //     PriceSpecification(PriceSpecification),
 // }
-// ///<https://schema.org/netWorth>
-// pub type PersonNetWorthFieldEnum = FieldEnum92;
+///<https://schema.org/netWorth>
+pub type PersonNetWorthFieldEnum = FieldEnum92;
 // ///<https://schema.org/netWorth>
 // pub type PatientNetWorthFieldEnum = FieldEnum92;
 // ///<https://schema.org/minimumPaymentDue>
@@ -45381,8 +45381,8 @@ pub type CommentParentItemFieldEnum = FieldEnum73;
 //     ///<https://schema.org/Organization>
 //     Organization(Organization),
 // }
-// ///<https://schema.org/alumniOf>
-// pub type PersonAlumniOfFieldEnum = FieldEnum93;
+///<https://schema.org/alumniOf>
+pub type PersonAlumniOfFieldEnum = FieldEnum93;
 // ///<https://schema.org/alumniOf>
 // pub type PatientAlumniOfFieldEnum = FieldEnum93;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -45393,8 +45393,8 @@ pub type CommentParentItemFieldEnum = FieldEnum73;
 //     ///<https://schema.org/URL>
 //     URL(String),
 // }
-// ///<https://schema.org/colleague>
-// pub type PersonColleagueFieldEnum = FieldEnum94;
+///<https://schema.org/colleague>
+pub type PersonColleagueFieldEnum = FieldEnum94;
 // ///<https://schema.org/colleague>
 // pub type PatientColleagueFieldEnum = FieldEnum94;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -45599,8 +45599,8 @@ pub type HowToEstimatedCostFieldEnum = FieldEnum102;
 // }
 // ///<https://schema.org/fundedItem>
 // pub type MonetaryGrantFundedItemFieldEnum = FieldEnum106;
-// ///<https://schema.org/fundedItem>
-// pub type GrantFundedItemFieldEnum = FieldEnum106;
+///<https://schema.org/fundedItem>
+pub type GrantFundedItemFieldEnum = FieldEnum106;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
 // pub enum FieldEnum107 {
@@ -45629,8 +45629,8 @@ pub type HowToEstimatedCostFieldEnum = FieldEnum102;
 // pub type LodgingReservationTotalPriceFieldEnum = FieldEnum107;
 // ///<https://schema.org/totalPrice>
 // pub type RentalCarReservationTotalPriceFieldEnum = FieldEnum107;
-// ///<https://schema.org/totalPrice>
-// pub type EventReservationTotalPriceFieldEnum = FieldEnum107;
+///<https://schema.org/totalPrice>
+pub type EventReservationTotalPriceFieldEnum = FieldEnum107;
 // ///<https://schema.org/totalPrice>
 // pub type BusReservationTotalPriceFieldEnum = FieldEnum107;
 // ///<https://schema.org/totalPrice>
@@ -45825,14 +45825,14 @@ pub enum FieldEnum116 {
 // pub type DataDownloadMeasurementMethodFieldEnum = FieldEnum116;
 // ///<https://schema.org/measurementTechnique>
 // pub type DataDownloadMeasurementTechniqueFieldEnum = FieldEnum116;
-// ///<https://schema.org/measurementMethod>
-// pub type LocationFeatureSpecificationMeasurementMethodFieldEnum = FieldEnum116;
-// ///<https://schema.org/measurementTechnique>
-// pub type LocationFeatureSpecificationMeasurementTechniqueFieldEnum = FieldEnum116;
+///<https://schema.org/measurementMethod>
+pub type LocationFeatureSpecificationMeasurementMethodFieldEnum = FieldEnum116;
+///<https://schema.org/measurementTechnique>
+pub type LocationFeatureSpecificationMeasurementTechniqueFieldEnum = FieldEnum116;
 ///<https://schema.org/measurementMethod>
 pub type PropertyValueMeasurementMethodFieldEnum = FieldEnum116;
-// ///<https://schema.org/measurementTechnique>
-// pub type PropertyValueMeasurementTechniqueFieldEnum = FieldEnum116;
+///<https://schema.org/measurementTechnique>
+pub type PropertyValueMeasurementTechniqueFieldEnum = FieldEnum116;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
 // pub enum FieldEnum117 {
@@ -45841,8 +45841,8 @@ pub type PropertyValueMeasurementMethodFieldEnum = FieldEnum116;
 //     ///<https://schema.org/Thing>
 //     Thing(Thing),
 // }
-// ///<https://schema.org/defaultValue>
-// pub type PropertyValueSpecificationDefaultValueFieldEnum = FieldEnum117;
+///<https://schema.org/defaultValue>
+pub type PropertyValueSpecificationDefaultValueFieldEnum = FieldEnum117;
 // ///<https://schema.org/option>
 // pub type VoteActionOptionFieldEnum = FieldEnum117;
 // ///<https://schema.org/actionOption>
@@ -46091,8 +46091,8 @@ pub type PropertyValueMeasurementMethodFieldEnum = FieldEnum116;
 // }
 // ///<https://schema.org/productSupported>
 // pub type PostalAddressProductSupportedFieldEnum = FieldEnum134;
-// ///<https://schema.org/productSupported>
-// pub type ContactPointProductSupportedFieldEnum = FieldEnum134;
+///<https://schema.org/productSupported>
+pub type ContactPointProductSupportedFieldEnum = FieldEnum134;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
 // pub enum FieldEnum135 {
@@ -46101,8 +46101,8 @@ pub type PropertyValueMeasurementMethodFieldEnum = FieldEnum116;
 //     ///<https://schema.org/WebSite>
 //     WebSite(WebSite),
 // }
-// ///<https://schema.org/interactionService>
-// pub type InteractionCounterInteractionServiceFieldEnum = FieldEnum135;
+///<https://schema.org/interactionService>
+pub type InteractionCounterInteractionServiceFieldEnum = FieldEnum135;
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
 // pub enum FieldEnum136 {

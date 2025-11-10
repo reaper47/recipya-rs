@@ -2,10 +2,16 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::action::Action;
-use crate::{Comment, CreativeWork, Duration, Event};
+use crate::{Comment, CreativeWork, Duration, Event, Review};
+use crate::aggregate_rating::AggregateRating;
+use crate::audience::Audience;
 use crate::enums::IPTCDigitalSourceEnumerationEnum;
 use crate::field::*;
+use crate::grant::Grant;
 use crate::helpers::one_or_many;
+use crate::interaction_counter::InteractionCounter;
+use crate::organization::Organization;
+use crate::person::Person;
 use crate::place::Place;
 use crate::thing::Thing;
 
