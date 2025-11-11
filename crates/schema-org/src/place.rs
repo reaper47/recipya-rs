@@ -2,9 +2,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::action::Action;
-use crate::Event;
+use crate::{Event, PropertyValue, Review};
+use crate::aggregate_rating::AggregateRating;
+use crate::certification::Certification;
 use crate::field::*;
 use crate::helpers::one_or_many;
+use crate::location_feature_specification::LocationFeatureSpecification;
+use crate::opening_hours_specification::OpeningHoursSpecification;
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
@@ -169,7 +173,7 @@ pub struct Place {
     ///<https://schema.org/geoOverlaps>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub geo_overlaps: Vec<crate::field::PlaceGeoOverlapsFieldEnum>,
+    pub geo_overlaps: Vec<PlaceGeoOverlapsFieldEnum>,
     ///<https://schema.org/containedIn>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

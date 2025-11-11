@@ -7,10 +7,19 @@ use crate::{Action, Event, Place, Review};
 use crate::aggregate_rating::AggregateRating;
 use crate::certification::Certification;
 use crate::contact_point::ContactPoint;
+use crate::demand::Demand;
+use crate::educational_occupational_credential::EducationalOccupationalCredential;
 use crate::grant::Grant;
 use crate::interaction_counter::InteractionCounter;
+use crate::member_program::MemberProgram;
+use crate::merchant_return_policy::MerchantReturnPolicy;
+use crate::nonprofit_type::NonprofitType;
+use crate::offer::Offer;
+use crate::offer_catalog::OfferCatalog;
 use crate::person::Person;
+use crate::postal_address::PostalAddress;
 use crate::quantitative_value::QuantitativeValue;
+use crate::shipping_service::ShippingService;
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>

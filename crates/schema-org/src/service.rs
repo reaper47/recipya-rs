@@ -7,6 +7,7 @@ use crate::audience::Audience;
 use crate::certification::Certification;
 use crate::field::*;
 use crate::helpers::one_or_many;
+use crate::offer_catalog::OfferCatalog;
 use crate::opening_hours_specification::OpeningHoursSpecification;
 use crate::service_channel::ServiceChannel;
 

@@ -6,10 +6,18 @@ use crate::field::*;
 use crate::helpers::one_or_many;
 use crate::{Action, Comment, CreativeWork, Duration, Event, Place, Thing};
 use crate::aggregate_rating::AggregateRating;
+use crate::alignment_object::AlignmentObject;
 use crate::audience::Audience;
+use crate::claim::Claim;
+use crate::country::Country;
+use crate::grant::Grant;
+use crate::image_object::ImageObject;
 use crate::interaction_counter::InteractionCounter;
+use crate::item_list::ItemList;
+use crate::media_object::MediaObject;
 use crate::organization::Organization;
 use crate::person::Person;
+use crate::publication_event::PublicationEvent;
 use crate::rating::Rating;
 
 ///<https://schema.org/dateCreated>

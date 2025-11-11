@@ -1,29 +1,29 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-// ///<https://schema.org/MusicAlbumProductionType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MusicAlbumProductionTypeEnum {
-//     ///<https://schema.org/DJMixAlbum>
-//     DJMixAlbum,
-//     ///<https://schema.org/DemoAlbum>
-//     DemoAlbum,
-//     ///<https://schema.org/StudioAlbum>
-//     StudioAlbum,
-//     ///<https://schema.org/SpokenWordAlbum>
-//     SpokenWordAlbum,
-//     ///<https://schema.org/LiveAlbum>
-//     LiveAlbum,
-//     ///<https://schema.org/RemixAlbum>
-//     RemixAlbum,
-//     ///<https://schema.org/MixtapeAlbum>
-//     MixtapeAlbum,
-//     ///<https://schema.org/SoundtrackAlbum>
-//     SoundtrackAlbum,
-//     ///<https://schema.org/CompilationAlbum>
-//     CompilationAlbum,
-// }
+///<https://schema.org/MusicAlbumProductionType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MusicAlbumProductionTypeEnum {
+    ///<https://schema.org/DJMixAlbum>
+    DJMixAlbum,
+    ///<https://schema.org/DemoAlbum>
+    DemoAlbum,
+    ///<https://schema.org/StudioAlbum>
+    StudioAlbum,
+    ///<https://schema.org/SpokenWordAlbum>
+    SpokenWordAlbum,
+    ///<https://schema.org/LiveAlbum>
+    LiveAlbum,
+    ///<https://schema.org/RemixAlbum>
+    RemixAlbum,
+    ///<https://schema.org/MixtapeAlbum>
+    MixtapeAlbum,
+    ///<https://schema.org/SoundtrackAlbum>
+    SoundtrackAlbum,
+    ///<https://schema.org/CompilationAlbum>
+    CompilationAlbum,
+}
 // ///<https://schema.org/USNonprofitType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -114,38 +114,38 @@ use serde::{Deserialize, Serialize};
 //     ///<https://schema.org/LimitedByGuaranteeCharity>
 //     LimitedByGuaranteeCharity,
 // }
-// ///<https://schema.org/ReturnMethodEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum ReturnMethodEnumerationEnum {
-//     ///<https://schema.org/ReturnAtKiosk>
-//     ReturnAtKiosk,
-//     ///<https://schema.org/ReturnByMail>
-//     ReturnByMail,
-//     ///<https://schema.org/ReturnInStore>
-//     ReturnInStore,
-//     ///<https://schema.org/KeepProduct>
-//     KeepProduct,
-// }
-// ///<https://schema.org/PhysicalActivityCategory>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum PhysicalActivityCategoryEnum {
-//     ///<https://schema.org/AerobicActivity>
-//     AerobicActivity,
-//     ///<https://schema.org/AnaerobicActivity>
-//     AnaerobicActivity,
-//     ///<https://schema.org/LeisureTimeActivity>
-//     LeisureTimeActivity,
-//     ///<https://schema.org/StrengthTraining>
-//     StrengthTraining,
-//     ///<https://schema.org/Balance>
-//     Balance,
-//     ///<https://schema.org/Flexibility>
-//     Flexibility,
-//     ///<https://schema.org/OccupationalActivity>
-//     OccupationalActivity,
-// }
+///<https://schema.org/ReturnMethodEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum ReturnMethodEnumerationEnum {
+    ///<https://schema.org/ReturnAtKiosk>
+    ReturnAtKiosk,
+    ///<https://schema.org/ReturnByMail>
+    ReturnByMail,
+    ///<https://schema.org/ReturnInStore>
+    ReturnInStore,
+    ///<https://schema.org/KeepProduct>
+    KeepProduct,
+}
+///<https://schema.org/PhysicalActivityCategory>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum PhysicalActivityCategoryEnum {
+    ///<https://schema.org/AerobicActivity>
+    AerobicActivity,
+    ///<https://schema.org/AnaerobicActivity>
+    AnaerobicActivity,
+    ///<https://schema.org/LeisureTimeActivity>
+    LeisureTimeActivity,
+    ///<https://schema.org/StrengthTraining>
+    StrengthTraining,
+    ///<https://schema.org/Balance>
+    Balance,
+    ///<https://schema.org/Flexibility>
+    Flexibility,
+    ///<https://schema.org/OccupationalActivity>
+    OccupationalActivity,
+}
 // ///<https://schema.org/WearableMeasurementTypeEnumeration>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -184,38 +184,38 @@ use serde::{Deserialize, Serialize};
 //     ///<https://schema.org/NonprofitSBBI>
 //     NonprofitSBBI,
 // }
-// ///<https://schema.org/MusicReleaseFormatType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MusicReleaseFormatTypeEnum {
-//     ///<https://schema.org/DigitalFormat>
-//     DigitalFormat,
-//     ///<https://schema.org/VinylFormat>
-//     VinylFormat,
-//     ///<https://schema.org/LaserDiscFormat>
-//     LaserDiscFormat,
-//     ///<https://schema.org/CDFormat>
-//     CDFormat,
-//     ///<https://schema.org/CassetteFormat>
-//     CassetteFormat,
-//     ///<https://schema.org/DigitalAudioTapeFormat>
-//     DigitalAudioTapeFormat,
-//     ///<https://schema.org/DVDFormat>
-//     DVDFormat,
-// }
-// ///<https://schema.org/MerchantReturnEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MerchantReturnEnumerationEnum {
-//     ///<https://schema.org/MerchantReturnFiniteReturnWindow>
-//     MerchantReturnFiniteReturnWindow,
-//     ///<https://schema.org/MerchantReturnNotPermitted>
-//     MerchantReturnNotPermitted,
-//     ///<https://schema.org/MerchantReturnUnlimitedWindow>
-//     MerchantReturnUnlimitedWindow,
-//     ///<https://schema.org/MerchantReturnUnspecified>
-//     MerchantReturnUnspecified,
-// }
+///<https://schema.org/MusicReleaseFormatType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MusicReleaseFormatTypeEnum {
+    ///<https://schema.org/DigitalFormat>
+    DigitalFormat,
+    ///<https://schema.org/VinylFormat>
+    VinylFormat,
+    ///<https://schema.org/LaserDiscFormat>
+    LaserDiscFormat,
+    ///<https://schema.org/CDFormat>
+    CDFormat,
+    ///<https://schema.org/CassetteFormat>
+    CassetteFormat,
+    ///<https://schema.org/DigitalAudioTapeFormat>
+    DigitalAudioTapeFormat,
+    ///<https://schema.org/DVDFormat>
+    DVDFormat,
+}
+///<https://schema.org/MerchantReturnEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MerchantReturnEnumerationEnum {
+    ///<https://schema.org/MerchantReturnFiniteReturnWindow>
+    MerchantReturnFiniteReturnWindow,
+    ///<https://schema.org/MerchantReturnNotPermitted>
+    MerchantReturnNotPermitted,
+    ///<https://schema.org/MerchantReturnUnlimitedWindow>
+    MerchantReturnUnlimitedWindow,
+    ///<https://schema.org/MerchantReturnUnspecified>
+    MerchantReturnUnspecified,
+}
 ///<https://schema.org/ActionStatusType>
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
@@ -229,21 +229,21 @@ pub enum ActionStatusTypeEnum {
     ///<https://schema.org/FailedActionStatus>
     FailedActionStatus,
 }
-// ///<https://schema.org/ReturnFeesEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum ReturnFeesEnumerationEnum {
-//     ///<https://schema.org/FreeReturn>
-//     FreeReturn,
-//     ///<https://schema.org/RestockingFees>
-//     RestockingFees,
-//     ///<https://schema.org/ReturnShippingFees>
-//     ReturnShippingFees,
-//     ///<https://schema.org/ReturnFeesCustomerResponsibility>
-//     ReturnFeesCustomerResponsibility,
-//     ///<https://schema.org/OriginalShippingFees>
-//     OriginalShippingFees,
-// }
+///<https://schema.org/ReturnFeesEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum ReturnFeesEnumerationEnum {
+    ///<https://schema.org/FreeReturn>
+    FreeReturn,
+    ///<https://schema.org/RestockingFees>
+    RestockingFees,
+    ///<https://schema.org/ReturnShippingFees>
+    ReturnShippingFees,
+    ///<https://schema.org/ReturnFeesCustomerResponsibility>
+    ReturnFeesCustomerResponsibility,
+    ///<https://schema.org/OriginalShippingFees>
+    OriginalShippingFees,
+}
 // ///<https://schema.org/PhysicalExam>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -277,27 +277,27 @@ pub enum ActionStatusTypeEnum {
 //     ///<https://schema.org/Eye>
 //     Eye,
 // }
-// ///<https://schema.org/GovernmentBenefitsType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum GovernmentBenefitsTypeEnum {
-//     ///<https://schema.org/UnemploymentSupport>
-//     UnemploymentSupport,
-//     ///<https://schema.org/HealthCare>
-//     HealthCare,
-//     ///<https://schema.org/ParentalSupport>
-//     ParentalSupport,
-//     ///<https://schema.org/BusinessSupport>
-//     BusinessSupport,
-//     ///<https://schema.org/BasicIncome>
-//     BasicIncome,
-//     ///<https://schema.org/DisabilitySupport>
-//     DisabilitySupport,
-//     ///<https://schema.org/PaidLeave>
-//     PaidLeave,
-//     ///<https://schema.org/OneTimePayments>
-//     OneTimePayments,
-// }
+///<https://schema.org/GovernmentBenefitsType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum GovernmentBenefitsTypeEnum {
+    ///<https://schema.org/UnemploymentSupport>
+    UnemploymentSupport,
+    ///<https://schema.org/HealthCare>
+    HealthCare,
+    ///<https://schema.org/ParentalSupport>
+    ParentalSupport,
+    ///<https://schema.org/BusinessSupport>
+    BusinessSupport,
+    ///<https://schema.org/BasicIncome>
+    BasicIncome,
+    ///<https://schema.org/DisabilitySupport>
+    DisabilitySupport,
+    ///<https://schema.org/PaidLeave>
+    PaidLeave,
+    ///<https://schema.org/OneTimePayments>
+    OneTimePayments,
+}
 // ///<https://schema.org/DriveWheelConfigurationValue>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -311,31 +311,31 @@ pub enum ActionStatusTypeEnum {
 //     ///<https://schema.org/AllWheelDriveConfiguration>
 //     AllWheelDriveConfiguration,
 // }
-// ///<https://schema.org/EUEnergyEfficiencyEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum EUEnergyEfficiencyEnumerationEnum {
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryE>
-//     EUEnergyEfficiencyCategoryE,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryA1Plus>
-//     EUEnergyEfficiencyCategoryA1Plus,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryA3Plus>
-//     EUEnergyEfficiencyCategoryA3Plus,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryF>
-//     EUEnergyEfficiencyCategoryF,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryB>
-//     EUEnergyEfficiencyCategoryB,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryA2Plus>
-//     EUEnergyEfficiencyCategoryA2Plus,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryA>
-//     EUEnergyEfficiencyCategoryA,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryD>
-//     EUEnergyEfficiencyCategoryD,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryG>
-//     EUEnergyEfficiencyCategoryG,
-//     ///<https://schema.org/EUEnergyEfficiencyCategoryC>
-//     EUEnergyEfficiencyCategoryC,
-// }
+///<https://schema.org/EUEnergyEfficiencyEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum EUEnergyEfficiencyEnumerationEnum {
+    ///<https://schema.org/EUEnergyEfficiencyCategoryE>
+    EUEnergyEfficiencyCategoryE,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryA1Plus>
+    EUEnergyEfficiencyCategoryA1Plus,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryA3Plus>
+    EUEnergyEfficiencyCategoryA3Plus,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryF>
+    EUEnergyEfficiencyCategoryF,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryB>
+    EUEnergyEfficiencyCategoryB,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryA2Plus>
+    EUEnergyEfficiencyCategoryA2Plus,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryA>
+    EUEnergyEfficiencyCategoryA,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryD>
+    EUEnergyEfficiencyCategoryD,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryG>
+    EUEnergyEfficiencyCategoryG,
+    ///<https://schema.org/EUEnergyEfficiencyCategoryC>
+    EUEnergyEfficiencyCategoryC,
+}
 // ///<https://schema.org/IncentiveStatus>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -349,23 +349,23 @@ pub enum ActionStatusTypeEnum {
 //     ///<https://schema.org/IncentiveStatusInDevelopment>
 //     IncentiveStatusInDevelopment,
 // }
-// ///<https://schema.org/MedicineSystem>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MedicineSystemEnum {
-//     ///<https://schema.org/Homeopathic>
-//     Homeopathic,
-//     ///<https://schema.org/Chiropractic>
-//     Chiropractic,
-//     ///<https://schema.org/Ayurvedic>
-//     Ayurvedic,
-//     ///<https://schema.org/Osteopathic>
-//     Osteopathic,
-//     ///<https://schema.org/WesternConventional>
-//     WesternConventional,
-//     ///<https://schema.org/TraditionalChinese>
-//     TraditionalChinese,
-// }
+///<https://schema.org/MedicineSystem>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MedicineSystemEnum {
+    ///<https://schema.org/Homeopathic>
+    Homeopathic,
+    ///<https://schema.org/Chiropractic>
+    Chiropractic,
+    ///<https://schema.org/Ayurvedic>
+    Ayurvedic,
+    ///<https://schema.org/Osteopathic>
+    Osteopathic,
+    ///<https://schema.org/WesternConventional>
+    WesternConventional,
+    ///<https://schema.org/TraditionalChinese>
+    TraditionalChinese,
+}
 // ///<https://schema.org/HealthAspectEnumeration>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -485,19 +485,19 @@ pub enum ActionStatusTypeEnum {
 //     ///<https://schema.org/Observational>
 //     Observational,
 // }
-// ///<https://schema.org/OfferItemCondition>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum OfferItemConditionEnum {
-//     ///<https://schema.org/NewCondition>
-//     NewCondition,
-//     ///<https://schema.org/UsedCondition>
-//     UsedCondition,
-//     ///<https://schema.org/RefurbishedCondition>
-//     RefurbishedCondition,
-//     ///<https://schema.org/DamagedCondition>
-//     DamagedCondition,
-// }
+///<https://schema.org/OfferItemCondition>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum OfferItemConditionEnum {
+    ///<https://schema.org/NewCondition>
+    NewCondition,
+    ///<https://schema.org/UsedCondition>
+    UsedCondition,
+    ///<https://schema.org/RefurbishedCondition>
+    RefurbishedCondition,
+    ///<https://schema.org/DamagedCondition>
+    DamagedCondition,
+}
 // ///<https://schema.org/WearableSizeSystemEnumeration>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -531,31 +531,31 @@ pub enum ActionStatusTypeEnum {
 //     ///<https://schema.org/WearableSizeSystemBR>
 //     WearableSizeSystemBR,
 // }
-// ///<https://schema.org/MedicalStudyStatus>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MedicalStudyStatusEnum {
-//     ///<https://schema.org/ActiveNotRecruiting>
-//     ActiveNotRecruiting,
-//     ///<https://schema.org/Withdrawn>
-//     Withdrawn,
-//     ///<https://schema.org/Recruiting>
-//     Recruiting,
-//     ///<https://schema.org/Terminated>
-//     Terminated,
-//     ///<https://schema.org/Suspended>
-//     Suspended,
-//     ///<https://schema.org/EnrollingByInvitation>
-//     EnrollingByInvitation,
-//     ///<https://schema.org/ResultsAvailable>
-//     ResultsAvailable,
-//     ///<https://schema.org/ResultsNotAvailable>
-//     ResultsNotAvailable,
-//     ///<https://schema.org/NotYetRecruiting>
-//     NotYetRecruiting,
-//     ///<https://schema.org/Completed>
-//     Completed,
-// }
+///<https://schema.org/MedicalStudyStatus>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MedicalStudyStatusEnum {
+    ///<https://schema.org/ActiveNotRecruiting>
+    ActiveNotRecruiting,
+    ///<https://schema.org/Withdrawn>
+    Withdrawn,
+    ///<https://schema.org/Recruiting>
+    Recruiting,
+    ///<https://schema.org/Terminated>
+    Terminated,
+    ///<https://schema.org/Suspended>
+    Suspended,
+    ///<https://schema.org/EnrollingByInvitation>
+    EnrollingByInvitation,
+    ///<https://schema.org/ResultsAvailable>
+    ResultsAvailable,
+    ///<https://schema.org/ResultsNotAvailable>
+    ResultsNotAvailable,
+    ///<https://schema.org/NotYetRecruiting>
+    NotYetRecruiting,
+    ///<https://schema.org/Completed>
+    Completed,
+}
 ///<https://schema.org/RestrictedDiet>
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
@@ -583,95 +583,95 @@ pub enum RestrictedDietEnum {
     ///<https://schema.org/LowLactoseDiet>
     LowLactoseDiet,
 }
-// ///<https://schema.org/MedicalSpecialty>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MedicalSpecialtyEnum {
-//     ///<https://schema.org/Musculoskeletal>
-//     Musculoskeletal,
-//     ///<https://schema.org/Dermatology>
-//     Dermatology,
-//     ///<https://schema.org/DietNutrition>
-//     DietNutrition,
-//     ///<https://schema.org/Hematologic>
-//     Hematologic,
-//     ///<https://schema.org/Neurologic>
-//     Neurologic,
-//     ///<https://schema.org/Genetic>
-//     Genetic,
-//     ///<https://schema.org/Nursing>
-//     Nursing,
-//     ///<https://schema.org/PublicHealth>
-//     PublicHealth,
-//     ///<https://schema.org/Physiotherapy>
-//     Physiotherapy,
-//     ///<https://schema.org/Urologic>
-//     Urologic,
-//     ///<https://schema.org/Surgical>
-//     Surgical,
-//     ///<https://schema.org/CommunityHealth>
-//     CommunityHealth,
-//     ///<https://schema.org/Dentistry>
-//     Dentistry,
-//     ///<https://schema.org/Psychiatric>
-//     Psychiatric,
-//     ///<https://schema.org/RespiratoryTherapy>
-//     RespiratoryTherapy,
-//     ///<https://schema.org/SpeechPathology>
-//     SpeechPathology,
-//     ///<https://schema.org/Renal>
-//     Renal,
-//     ///<https://schema.org/PlasticSurgery>
-//     PlasticSurgery,
-//     ///<https://schema.org/Pediatric>
-//     Pediatric,
-//     ///<https://schema.org/Optometric>
-//     Optometric,
-//     ///<https://schema.org/Oncologic>
-//     Oncologic,
-//     ///<https://schema.org/Infectious>
-//     Infectious,
-//     ///<https://schema.org/Pathology>
-//     Pathology,
-//     ///<https://schema.org/LaboratoryScience>
-//     LaboratoryScience,
-//     ///<https://schema.org/Pulmonary>
-//     Pulmonary,
-//     ///<https://schema.org/Otolaryngologic>
-//     Otolaryngologic,
-//     ///<https://schema.org/PrimaryCare>
-//     PrimaryCare,
-//     ///<https://schema.org/Cardiovascular>
-//     Cardiovascular,
-//     ///<https://schema.org/Rheumatologic>
-//     Rheumatologic,
-//     ///<https://schema.org/Toxicologic>
-//     Toxicologic,
-//     ///<https://schema.org/Midwifery>
-//     Midwifery,
-//     ///<https://schema.org/Obstetric>
-//     Obstetric,
-//     ///<https://schema.org/PharmacySpecialty>
-//     PharmacySpecialty,
-//     ///<https://schema.org/Emergency>
-//     Emergency,
-//     ///<https://schema.org/Radiography>
-//     Radiography,
-//     ///<https://schema.org/Geriatric>
-//     Geriatric,
-//     ///<https://schema.org/Anesthesia>
-//     Anesthesia,
-//     ///<https://schema.org/Podiatric>
-//     Podiatric,
-//     ///<https://schema.org/Gynecologic>
-//     Gynecologic,
-//     ///<https://schema.org/Gastroenterologic>
-//     Gastroenterologic,
-//     ///<https://schema.org/Endocrine>
-//     Endocrine,
-//     ///<https://schema.org/Dermatologic>
-//     Dermatologic,
-// }
+///<https://schema.org/MedicalSpecialty>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MedicalSpecialtyEnum {
+    ///<https://schema.org/Musculoskeletal>
+    Musculoskeletal,
+    ///<https://schema.org/Dermatology>
+    Dermatology,
+    ///<https://schema.org/DietNutrition>
+    DietNutrition,
+    ///<https://schema.org/Hematologic>
+    Hematologic,
+    ///<https://schema.org/Neurologic>
+    Neurologic,
+    ///<https://schema.org/Genetic>
+    Genetic,
+    ///<https://schema.org/Nursing>
+    Nursing,
+    ///<https://schema.org/PublicHealth>
+    PublicHealth,
+    ///<https://schema.org/Physiotherapy>
+    Physiotherapy,
+    ///<https://schema.org/Urologic>
+    Urologic,
+    ///<https://schema.org/Surgical>
+    Surgical,
+    ///<https://schema.org/CommunityHealth>
+    CommunityHealth,
+    ///<https://schema.org/Dentistry>
+    Dentistry,
+    ///<https://schema.org/Psychiatric>
+    Psychiatric,
+    ///<https://schema.org/RespiratoryTherapy>
+    RespiratoryTherapy,
+    ///<https://schema.org/SpeechPathology>
+    SpeechPathology,
+    ///<https://schema.org/Renal>
+    Renal,
+    ///<https://schema.org/PlasticSurgery>
+    PlasticSurgery,
+    ///<https://schema.org/Pediatric>
+    Pediatric,
+    ///<https://schema.org/Optometric>
+    Optometric,
+    ///<https://schema.org/Oncologic>
+    Oncologic,
+    ///<https://schema.org/Infectious>
+    Infectious,
+    ///<https://schema.org/Pathology>
+    Pathology,
+    ///<https://schema.org/LaboratoryScience>
+    LaboratoryScience,
+    ///<https://schema.org/Pulmonary>
+    Pulmonary,
+    ///<https://schema.org/Otolaryngologic>
+    Otolaryngologic,
+    ///<https://schema.org/PrimaryCare>
+    PrimaryCare,
+    ///<https://schema.org/Cardiovascular>
+    Cardiovascular,
+    ///<https://schema.org/Rheumatologic>
+    Rheumatologic,
+    ///<https://schema.org/Toxicologic>
+    Toxicologic,
+    ///<https://schema.org/Midwifery>
+    Midwifery,
+    ///<https://schema.org/Obstetric>
+    Obstetric,
+    ///<https://schema.org/PharmacySpecialty>
+    PharmacySpecialty,
+    ///<https://schema.org/Emergency>
+    Emergency,
+    ///<https://schema.org/Radiography>
+    Radiography,
+    ///<https://schema.org/Geriatric>
+    Geriatric,
+    ///<https://schema.org/Anesthesia>
+    Anesthesia,
+    ///<https://schema.org/Podiatric>
+    Podiatric,
+    ///<https://schema.org/Gynecologic>
+    Gynecologic,
+    ///<https://schema.org/Gastroenterologic>
+    Gastroenterologic,
+    ///<https://schema.org/Endocrine>
+    Endocrine,
+    ///<https://schema.org/Dermatologic>
+    Dermatologic,
+}
 // ///<https://schema.org/LegalValueLevel>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -685,48 +685,48 @@ pub enum RestrictedDietEnum {
 //     ///<https://schema.org/OfficialLegalValue>
 //     OfficialLegalValue,
 // }
-// ///<https://schema.org/DrugPregnancyCategory>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum DrugPregnancyCategoryEnum {
-//     ///<https://schema.org/FDAcategoryC>
-//     FDAcategoryC,
-//     ///<https://schema.org/FDAcategoryX>
-//     FDAcategoryX,
-//     ///<https://schema.org/FDAcategoryD>
-//     FDAcategoryD,
-//     ///<https://schema.org/FDAcategoryB>
-//     FDAcategoryB,
-//     ///<https://schema.org/FDAnotEvaluated>
-//     FDAnotEvaluated,
-//     ///<https://schema.org/FDAcategoryA>
-//     FDAcategoryA,
-// }
-// ///<https://schema.org/AdultOrientedEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum AdultOrientedEnumerationEnum {
-//     ///<https://schema.org/ReducedRelevanceForChildrenConsideration>
-//     ReducedRelevanceForChildrenConsideration,
-//     ///<https://schema.org/ViolenceConsideration>
-//     ViolenceConsideration,
-//     ///<https://schema.org/WeaponConsideration>
-//     WeaponConsideration,
-//     ///<https://schema.org/NarcoticConsideration>
-//     NarcoticConsideration,
-//     ///<https://schema.org/SexualContentConsideration>
-//     SexualContentConsideration,
-//     ///<https://schema.org/HealthcareConsideration>
-//     HealthcareConsideration,
-//     ///<https://schema.org/AlcoholConsideration>
-//     AlcoholConsideration,
-//     ///<https://schema.org/DangerousGoodConsideration>
-//     DangerousGoodConsideration,
-//     ///<https://schema.org/TobaccoNicotineConsideration>
-//     TobaccoNicotineConsideration,
-//     ///<https://schema.org/UnclassifiedAdultConsideration>
-//     UnclassifiedAdultConsideration,
-// }
+///<https://schema.org/DrugPregnancyCategory>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum DrugPregnancyCategoryEnum {
+    ///<https://schema.org/FDAcategoryC>
+    FDAcategoryC,
+    ///<https://schema.org/FDAcategoryX>
+    FDAcategoryX,
+    ///<https://schema.org/FDAcategoryD>
+    FDAcategoryD,
+    ///<https://schema.org/FDAcategoryB>
+    FDAcategoryB,
+    ///<https://schema.org/FDAnotEvaluated>
+    FDAnotEvaluated,
+    ///<https://schema.org/FDAcategoryA>
+    FDAcategoryA,
+}
+///<https://schema.org/AdultOrientedEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum AdultOrientedEnumerationEnum {
+    ///<https://schema.org/ReducedRelevanceForChildrenConsideration>
+    ReducedRelevanceForChildrenConsideration,
+    ///<https://schema.org/ViolenceConsideration>
+    ViolenceConsideration,
+    ///<https://schema.org/WeaponConsideration>
+    WeaponConsideration,
+    ///<https://schema.org/NarcoticConsideration>
+    NarcoticConsideration,
+    ///<https://schema.org/SexualContentConsideration>
+    SexualContentConsideration,
+    ///<https://schema.org/HealthcareConsideration>
+    HealthcareConsideration,
+    ///<https://schema.org/AlcoholConsideration>
+    AlcoholConsideration,
+    ///<https://schema.org/DangerousGoodConsideration>
+    DangerousGoodConsideration,
+    ///<https://schema.org/TobaccoNicotineConsideration>
+    TobaccoNicotineConsideration,
+    ///<https://schema.org/UnclassifiedAdultConsideration>
+    UnclassifiedAdultConsideration,
+}
 // ///<https://schema.org/ReservationStatusType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -740,46 +740,46 @@ pub enum RestrictedDietEnum {
 //     ///<https://schema.org/ReservationHold>
 //     ReservationHold,
 // }
-// ///<https://schema.org/ItemAvailability>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum ItemAvailabilityEnum {
-//     ///<https://schema.org/Reserved>
-//     Reserved,
-//     ///<https://schema.org/PreSale>
-//     PreSale,
-//     ///<https://schema.org/Discontinued>
-//     Discontinued,
-//     ///<https://schema.org/PreOrder>
-//     PreOrder,
-//     ///<https://schema.org/BackOrder>
-//     BackOrder,
-//     ///<https://schema.org/MadeToOrder>
-//     MadeToOrder,
-//     ///<https://schema.org/InStoreOnly>
-//     InStoreOnly,
-//     ///<https://schema.org/OnlineOnly>
-//     OnlineOnly,
-//     ///<https://schema.org/OutOfStock>
-//     OutOfStock,
-//     ///<https://schema.org/InStock>
-//     InStock,
-//     ///<https://schema.org/SoldOut>
-//     SoldOut,
-//     ///<https://schema.org/LimitedAvailability>
-//     LimitedAvailability,
-// }
-// ///<https://schema.org/ItemListOrderType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum ItemListOrderTypeEnum {
-//     ///<https://schema.org/ItemListOrderDescending>
-//     ItemListOrderDescending,
-//     ///<https://schema.org/ItemListOrderAscending>
-//     ItemListOrderAscending,
-//     ///<https://schema.org/ItemListUnordered>
-//     ItemListUnordered,
-// }
+///<https://schema.org/ItemAvailability>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum ItemAvailabilityEnum {
+    ///<https://schema.org/Reserved>
+    Reserved,
+    ///<https://schema.org/PreSale>
+    PreSale,
+    ///<https://schema.org/Discontinued>
+    Discontinued,
+    ///<https://schema.org/PreOrder>
+    PreOrder,
+    ///<https://schema.org/BackOrder>
+    BackOrder,
+    ///<https://schema.org/MadeToOrder>
+    MadeToOrder,
+    ///<https://schema.org/InStoreOnly>
+    InStoreOnly,
+    ///<https://schema.org/OnlineOnly>
+    OnlineOnly,
+    ///<https://schema.org/OutOfStock>
+    OutOfStock,
+    ///<https://schema.org/InStock>
+    InStock,
+    ///<https://schema.org/SoldOut>
+    SoldOut,
+    ///<https://schema.org/LimitedAvailability>
+    LimitedAvailability,
+}
+///<https://schema.org/ItemListOrderType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum ItemListOrderTypeEnum {
+    ///<https://schema.org/ItemListOrderDescending>
+    ItemListOrderDescending,
+    ///<https://schema.org/ItemListOrderAscending>
+    ItemListOrderAscending,
+    ///<https://schema.org/ItemListUnordered>
+    ItemListUnordered,
+}
 // ///<https://schema.org/MedicalTrialDesign>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -803,17 +803,17 @@ pub enum RestrictedDietEnum {
 //     ///<https://schema.org/MultiCenterTrial>
 //     MultiCenterTrial,
 // }
-// ///<https://schema.org/MedicalEvidenceLevel>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MedicalEvidenceLevelEnum {
-//     ///<https://schema.org/EvidenceLevelB>
-//     EvidenceLevelB,
-//     ///<https://schema.org/EvidenceLevelC>
-//     EvidenceLevelC,
-//     ///<https://schema.org/EvidenceLevelA>
-//     EvidenceLevelA,
-// }
+///<https://schema.org/MedicalEvidenceLevel>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MedicalEvidenceLevelEnum {
+    ///<https://schema.org/EvidenceLevelB>
+    EvidenceLevelB,
+    ///<https://schema.org/EvidenceLevelC>
+    EvidenceLevelC,
+    ///<https://schema.org/EvidenceLevelA>
+    EvidenceLevelA,
+}
 ///<https://schema.org/IPTCDigitalSourceEnumeration>
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
@@ -860,17 +860,17 @@ pub enum MeasurementMethodEnumEnum {
     ///<https://schema.org/ExampleMeasurementMethodEnum>
     ExampleMeasurementMethodEnum,
 }
-// ///<https://schema.org/DeliveryMethod>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum DeliveryMethodEnum {
-//     ///<https://schema.org/OnSitePickup>
-//     OnSitePickup,
-//     ///<https://schema.org/LockerDelivery>
-//     LockerDelivery,
-//     ///<https://schema.org/ParcelService>
-//     ParcelService,
-// }
+///<https://schema.org/DeliveryMethod>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum DeliveryMethodEnum {
+    ///<https://schema.org/OnSitePickup>
+    OnSitePickup,
+    ///<https://schema.org/LockerDelivery>
+    LockerDelivery,
+    ///<https://schema.org/ParcelService>
+    ParcelService,
+}
 // ///<https://schema.org/BoardingPolicyType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -895,17 +895,17 @@ pub enum MeasurementMethodEnumEnum {
 //     ///<https://schema.org/PaymentComplete>
 //     PaymentComplete,
 // }
-// ///<https://schema.org/ReturnLabelSourceEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum ReturnLabelSourceEnumerationEnum {
-//     ///<https://schema.org/ReturnLabelInBox>
-//     ReturnLabelInBox,
-//     ///<https://schema.org/ReturnLabelCustomerResponsibility>
-//     ReturnLabelCustomerResponsibility,
-//     ///<https://schema.org/ReturnLabelDownloadAndPrint>
-//     ReturnLabelDownloadAndPrint,
-// }
+///<https://schema.org/ReturnLabelSourceEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum ReturnLabelSourceEnumerationEnum {
+    ///<https://schema.org/ReturnLabelInBox>
+    ReturnLabelInBox,
+    ///<https://schema.org/ReturnLabelCustomerResponsibility>
+    ReturnLabelCustomerResponsibility,
+    ///<https://schema.org/ReturnLabelDownloadAndPrint>
+    ReturnLabelDownloadAndPrint,
+}
 ///<https://schema.org/EventStatusType>
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
@@ -921,15 +921,15 @@ pub enum EventStatusTypeEnum {
     ///<https://schema.org/EventCancelled>
     EventCancelled,
 }
-// ///<https://schema.org/SizeSystemEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum SizeSystemEnumerationEnum {
-//     ///<https://schema.org/SizeSystemImperial>
-//     SizeSystemImperial,
-//     ///<https://schema.org/SizeSystemMetric>
-//     SizeSystemMetric,
-// }
+///<https://schema.org/SizeSystemEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum SizeSystemEnumerationEnum {
+    ///<https://schema.org/SizeSystemImperial>
+    SizeSystemImperial,
+    ///<https://schema.org/SizeSystemMetric>
+    SizeSystemMetric,
+}
 // ///<https://schema.org/BookFormatType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1023,27 +1023,27 @@ pub enum EventStatusTypeEnum {
 //     ///<https://schema.org/MedicalResearcher>
 //     MedicalResearcher,
 // }
-// ///<https://schema.org/PriceTypeEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum PriceTypeEnumerationEnum {
-//     ///<https://schema.org/SalePrice>
-//     SalePrice,
-//     ///<https://schema.org/MinimumAdvertisedPrice>
-//     MinimumAdvertisedPrice,
-//     ///<https://schema.org/InvoicePrice>
-//     InvoicePrice,
-//     ///<https://schema.org/RegularPrice>
-//     RegularPrice,
-//     ///<https://schema.org/MSRP>
-//     MSRP,
-//     ///<https://schema.org/SRP>
-//     SRP,
-//     ///<https://schema.org/StrikethroughPrice>
-//     StrikethroughPrice,
-//     ///<https://schema.org/ListPrice>
-//     ListPrice,
-// }
+///<https://schema.org/PriceTypeEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum PriceTypeEnumerationEnum {
+    ///<https://schema.org/SalePrice>
+    SalePrice,
+    ///<https://schema.org/MinimumAdvertisedPrice>
+    MinimumAdvertisedPrice,
+    ///<https://schema.org/InvoicePrice>
+    InvoicePrice,
+    ///<https://schema.org/RegularPrice>
+    RegularPrice,
+    ///<https://schema.org/MSRP>
+    MSRP,
+    ///<https://schema.org/SRP>
+    SRP,
+    ///<https://schema.org/StrikethroughPrice>
+    StrikethroughPrice,
+    ///<https://schema.org/ListPrice>
+    ListPrice,
+}
 // ///<https://schema.org/EnergyStarEnergyEfficiencyEnumeration>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1051,19 +1051,19 @@ pub enum EventStatusTypeEnum {
 //     ///<https://schema.org/EnergyStarCertified>
 //     EnergyStarCertified,
 // }
-// ///<https://schema.org/TierBenefitEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum TierBenefitEnumerationEnum {
-//     ///<https://schema.org/TierBenefitLoyaltyReturns>
-//     TierBenefitLoyaltyReturns,
-//     ///<https://schema.org/TierBenefitLoyaltyShipping>
-//     TierBenefitLoyaltyShipping,
-//     ///<https://schema.org/TierBenefitLoyaltyPoints>
-//     TierBenefitLoyaltyPoints,
-//     ///<https://schema.org/TierBenefitLoyaltyPrice>
-//     TierBenefitLoyaltyPrice,
-// }
+///<https://schema.org/TierBenefitEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum TierBenefitEnumerationEnum {
+    ///<https://schema.org/TierBenefitLoyaltyReturns>
+    TierBenefitLoyaltyReturns,
+    ///<https://schema.org/TierBenefitLoyaltyShipping>
+    TierBenefitLoyaltyShipping,
+    ///<https://schema.org/TierBenefitLoyaltyPoints>
+    TierBenefitLoyaltyPoints,
+    ///<https://schema.org/TierBenefitLoyaltyPrice>
+    TierBenefitLoyaltyPrice,
+}
 // ///<https://schema.org/CarUsageType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1075,21 +1075,21 @@ pub enum EventStatusTypeEnum {
 //     ///<https://schema.org/TaxiVehicleUsage>
 //     TaxiVehicleUsage,
 // }
-// ///<https://schema.org/FulfillmentTypeEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum FulfillmentTypeEnumerationEnum {
-//     ///<https://schema.org/FulfillmentTypePickupInStore>
-//     FulfillmentTypePickupInStore,
-//     ///<https://schema.org/FulfillmentTypeScheduledDelivery>
-//     FulfillmentTypeScheduledDelivery,
-//     ///<https://schema.org/FulfillmentTypeDelivery>
-//     FulfillmentTypeDelivery,
-//     ///<https://schema.org/FulfillmentTypeCollectionPoint>
-//     FulfillmentTypeCollectionPoint,
-//     ///<https://schema.org/FulfillmentTypePickupDropoff>
-//     FulfillmentTypePickupDropoff,
-// }
+///<https://schema.org/FulfillmentTypeEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum FulfillmentTypeEnumerationEnum {
+    ///<https://schema.org/FulfillmentTypePickupInStore>
+    FulfillmentTypePickupInStore,
+    ///<https://schema.org/FulfillmentTypeScheduledDelivery>
+    FulfillmentTypeScheduledDelivery,
+    ///<https://schema.org/FulfillmentTypeDelivery>
+    FulfillmentTypeDelivery,
+    ///<https://schema.org/FulfillmentTypeCollectionPoint>
+    FulfillmentTypeCollectionPoint,
+    ///<https://schema.org/FulfillmentTypePickupDropoff>
+    FulfillmentTypePickupDropoff,
+}
 ///<https://schema.org/EventAttendanceModeEnumeration>
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
@@ -1114,27 +1114,27 @@ pub enum EventAttendanceModeEnumerationEnum {
 //     ///<https://schema.org/OnlineFull>
 //     OnlineFull,
 // }
-// ///<https://schema.org/PaymentMethodType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum PaymentMethodTypeEnum {
-//     ///<https://schema.org/PhoneCarrierPayment>
-//     PhoneCarrierPayment,
-//     ///<https://schema.org/CheckInAdvance>
-//     CheckInAdvance,
-//     ///<https://schema.org/InStorePrepay>
-//     InStorePrepay,
-//     ///<https://schema.org/DirectDebit>
-//     DirectDebit,
-//     ///<https://schema.org/COD>
-//     COD,
-//     ///<https://schema.org/ByInvoice>
-//     ByInvoice,
-//     ///<https://schema.org/Cash>
-//     Cash,
-//     ///<https://schema.org/ByBankTransferInAdvance>
-//     ByBankTransferInAdvance,
-// }
+///<https://schema.org/PaymentMethodType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum PaymentMethodTypeEnum {
+    ///<https://schema.org/PhoneCarrierPayment>
+    PhoneCarrierPayment,
+    ///<https://schema.org/CheckInAdvance>
+    CheckInAdvance,
+    ///<https://schema.org/InStorePrepay>
+    InStorePrepay,
+    ///<https://schema.org/DirectDebit>
+    DirectDebit,
+    ///<https://schema.org/COD>
+    COD,
+    ///<https://schema.org/ByInvoice>
+    ByInvoice,
+    ///<https://schema.org/Cash>
+    Cash,
+    ///<https://schema.org/ByBankTransferInAdvance>
+    ByBankTransferInAdvance,
+}
 // ///<https://schema.org/PurchaseType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1157,26 +1157,26 @@ pub enum CertificationStatusEnumerationEnum {
     ///<https://schema.org/CertificationInactive>
     CertificationInactive,
 }
-// ///<https://schema.org/DrugPrescriptionStatus>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum DrugPrescriptionStatusEnum {
-//     ///<https://schema.org/PrescriptionOnly>
-//     PrescriptionOnly,
-//     ///<https://schema.org/OTC>
-//     OTC,
-// }
-// ///<https://schema.org/RefundTypeEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum RefundTypeEnumerationEnum {
-//     ///<https://schema.org/ExchangeRefund>
-//     ExchangeRefund,
-//     ///<https://schema.org/FullRefund>
-//     FullRefund,
-//     ///<https://schema.org/StoreCreditRefund>
-//     StoreCreditRefund,
-// }
+///<https://schema.org/DrugPrescriptionStatus>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum DrugPrescriptionStatusEnum {
+    ///<https://schema.org/PrescriptionOnly>
+    PrescriptionOnly,
+    ///<https://schema.org/OTC>
+    OTC,
+}
+///<https://schema.org/RefundTypeEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum RefundTypeEnumerationEnum {
+    ///<https://schema.org/ExchangeRefund>
+    ExchangeRefund,
+    ///<https://schema.org/FullRefund>
+    FullRefund,
+    ///<https://schema.org/StoreCreditRefund>
+    StoreCreditRefund,
+}
 // ///<https://schema.org/GamePlayMode>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1209,30 +1209,30 @@ pub enum DayOfWeekEnum {
     ///<https://schema.org/Monday>
     Monday,
 }
-// ///<https://schema.org/GenderType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum GenderTypeEnum {
-//     ///<https://schema.org/Male>
-//     Male,
-//     ///<https://schema.org/Female>
-//     Female,
-// }
-// ///<https://schema.org/DigitalPlatformEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum DigitalPlatformEnumerationEnum {
-//     ///<https://schema.org/IOSPlatform>
-//     IOSPlatform,
-//     ///<https://schema.org/DesktopWebPlatform>
-//     DesktopWebPlatform,
-//     ///<https://schema.org/AndroidPlatform>
-//     AndroidPlatform,
-//     ///<https://schema.org/MobileWebPlatform>
-//     MobileWebPlatform,
-//     ///<https://schema.org/GenericWebPlatform>
-//     GenericWebPlatform,
-// }
+///<https://schema.org/GenderType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum GenderTypeEnum {
+    ///<https://schema.org/Male>
+    Male,
+    ///<https://schema.org/Female>
+    Female,
+}
+///<https://schema.org/DigitalPlatformEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum DigitalPlatformEnumerationEnum {
+    ///<https://schema.org/IOSPlatform>
+    IOSPlatform,
+    ///<https://schema.org/DesktopWebPlatform>
+    DesktopWebPlatform,
+    ///<https://schema.org/AndroidPlatform>
+    AndroidPlatform,
+    ///<https://schema.org/MobileWebPlatform>
+    MobileWebPlatform,
+    ///<https://schema.org/GenericWebPlatform>
+    GenericWebPlatform,
+}
 // ///<https://schema.org/MediaManipulationRatingEnumeration>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1250,23 +1250,23 @@ pub enum DayOfWeekEnum {
 //     ///<https://schema.org/StagedContent>
 //     StagedContent,
 // }
-// ///<https://schema.org/PriceComponentTypeEnumeration>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum PriceComponentTypeEnumerationEnum {
-//     ///<https://schema.org/CleaningFee>
-//     CleaningFee,
-//     ///<https://schema.org/DistanceFee>
-//     DistanceFee,
-//     ///<https://schema.org/Downpayment>
-//     Downpayment,
-//     ///<https://schema.org/Subscription>
-//     Subscription,
-//     ///<https://schema.org/ActivationFee>
-//     ActivationFee,
-//     ///<https://schema.org/Installment>
-//     Installment,
-// }
+///<https://schema.org/PriceComponentTypeEnumeration>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum PriceComponentTypeEnumerationEnum {
+    ///<https://schema.org/CleaningFee>
+    CleaningFee,
+    ///<https://schema.org/DistanceFee>
+    DistanceFee,
+    ///<https://schema.org/Downpayment>
+    Downpayment,
+    ///<https://schema.org/Subscription>
+    Subscription,
+    ///<https://schema.org/ActivationFee>
+    ActivationFee,
+    ///<https://schema.org/Installment>
+    Installment,
+}
 // ///<https://schema.org/IncentiveQualifiedExpenseType>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1337,19 +1337,19 @@ pub enum DayOfWeekEnum {
 //     ///<https://schema.org/ReimbursementCap>
 //     ReimbursementCap,
 // }
-// ///<https://schema.org/MapCategoryType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MapCategoryTypeEnum {
-//     ///<https://schema.org/SeatingMap>
-//     SeatingMap,
-//     ///<https://schema.org/TransitMap>
-//     TransitMap,
-//     ///<https://schema.org/VenueMap>
-//     VenueMap,
-//     ///<https://schema.org/ParkingMap>
-//     ParkingMap,
-// }
+///<https://schema.org/MapCategoryType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MapCategoryTypeEnum {
+    ///<https://schema.org/SeatingMap>
+    SeatingMap,
+    ///<https://schema.org/TransitMap>
+    TransitMap,
+    ///<https://schema.org/VenueMap>
+    VenueMap,
+    ///<https://schema.org/ParkingMap>
+    ParkingMap,
+}
 // ///<https://schema.org/SteeringPositionValue>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1379,19 +1379,19 @@ pub enum DayOfWeekEnum {
 //     ///<https://schema.org/Therapeutic>
 //     Therapeutic,
 // }
-// ///<https://schema.org/MusicAlbumReleaseType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MusicAlbumReleaseTypeEnum {
-//     ///<https://schema.org/EPRelease>
-//     EPRelease,
-//     ///<https://schema.org/AlbumRelease>
-//     AlbumRelease,
-//     ///<https://schema.org/SingleRelease>
-//     SingleRelease,
-//     ///<https://schema.org/BroadcastRelease>
-//     BroadcastRelease,
-// }
+///<https://schema.org/MusicAlbumReleaseType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MusicAlbumReleaseTypeEnum {
+    ///<https://schema.org/EPRelease>
+    EPRelease,
+    ///<https://schema.org/AlbumRelease>
+    AlbumRelease,
+    ///<https://schema.org/SingleRelease>
+    SingleRelease,
+    ///<https://schema.org/BroadcastRelease>
+    BroadcastRelease,
+}
 // ///<https://schema.org/MedicalImagingTechnique>
 // #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 // #[serde(untagged)]
@@ -1427,12 +1427,12 @@ pub enum ContactPointOptionEnum {
     ///<https://schema.org/TollFree>
     TollFree,
 }
-// ///<https://schema.org/MedicalProcedureType>
-// #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-// #[serde(untagged)]
-// pub enum MedicalProcedureTypeEnum {
-//     ///<https://schema.org/NoninvasiveProcedure>
-//     NoninvasiveProcedure,
-//     ///<https://schema.org/PercutaneousProcedure>
-//     PercutaneousProcedure,
-// }
+///<https://schema.org/MedicalProcedureType>
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MedicalProcedureTypeEnum {
+    ///<https://schema.org/NoninvasiveProcedure>
+    NoninvasiveProcedure,
+    ///<https://schema.org/PercutaneousProcedure>
+    PercutaneousProcedure,
+}

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::Action;
 use crate::opening_hours_specification::OpeningHoursSpecification;
 use crate::field::*;
+use crate::helpers::one_or_many;
 
 ///<https://schema.org/validFrom>
 ///<https://schema.org/Date>

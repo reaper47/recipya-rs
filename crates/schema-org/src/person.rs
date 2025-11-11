@@ -3,9 +3,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Action, Event, Place};
 use crate::certification::Certification;
+use crate::contact_point::ContactPoint;
+use crate::country::Country;
+use crate::demand::Demand;
+use crate::educational_occupational_credential::EducationalOccupationalCredential;
 use crate::field::*;
+use crate::grant::Grant;
 use crate::helpers::one_or_many;
 use crate::interaction_counter::InteractionCounter;
+use crate::occupation::Occupation;
+use crate::offer::Offer;
+use crate::offer_catalog::OfferCatalog;
 use crate::organization::Organization;
 
 ///<https://schema.org/additionalType>

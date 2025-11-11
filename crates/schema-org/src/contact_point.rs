@@ -19,112 +19,90 @@ pub struct ContactPoint {
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/hoursAvailable>
-    #[serde(rename = "hoursAvailable")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub hours_available: Vec<OpeningHoursSpecification>,
     ///<https://schema.org/faxNumber>
-    #[serde(rename = "faxNumber")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub fax_number: Vec<String>,
     ///<https://schema.org/contactOption>
-    #[serde(rename = "contactOption")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub contact_option: Vec<ContactPointOptionEnum>,
     ///<https://schema.org/availableLanguage>
-    #[serde(rename = "availableLanguage")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub available_language: Vec<ContactPointAvailableLanguageFieldEnum>,
     ///<https://schema.org/areaServed>
-    #[serde(rename = "areaServed")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub area_served: Vec<ContactPointAreaServedFieldEnum>,
     ///<https://schema.org/contactType>
-    #[serde(rename = "contactType")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub contact_type: Vec<String>,
     ///<https://schema.org/productSupported>
-    #[serde(rename = "productSupported")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub product_supported: Vec<ContactPointProductSupportedFieldEnum>,
     ///<https://schema.org/telephone>
-    #[serde(rename = "telephone")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub telephone: Vec<String>,
     ///<https://schema.org/serviceArea>
-    #[serde(rename = "serviceArea")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub service_area: Vec<ContactPointServiceAreaFieldEnum>,
     ///<https://schema.org/email>
-    #[serde(rename = "email")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub email: Vec<String>,
     ///<https://schema.org/disambiguatingDescription>
-    #[serde(rename = "disambiguatingDescription")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
     ///<https://schema.org/potentialAction>
-    #[serde(rename = "potentialAction")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub potential_action: Vec<Action>,
     ///<https://schema.org/additionalType>
-    #[serde(rename = "additionalType")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_type: Vec<ContactPointAdditionalTypeFieldEnum>,
     ///<https://schema.org/identifier>
-    #[serde(rename = "identifier")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub identifier: Vec<ContactPointIdentifierFieldEnum>,
     ///<https://schema.org/image>
-    #[serde(rename = "image")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub image: Vec<ContactPointImageFieldEnum>,
     ///<https://schema.org/sameAs>
-    #[serde(rename = "sameAs")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub same_as: Vec<String>,
     ///<https://schema.org/description>
-    #[serde(rename = "description")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub description: Vec<ContactPointDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
-    #[serde(rename = "alternateName")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
-    #[serde(rename = "url")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
-    #[serde(rename = "subjectOf")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub subject_of: Vec<ContactPointSubjectOfFieldEnum>,
     ///<https://schema.org/name>
-    #[serde(rename = "name")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
     ///<https://schema.org/mainEntityOfPage>
-    #[serde(rename = "mainEntityOfPage")]
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub main_entity_of_page: Vec<ContactPointMainEntityOfPageFieldEnum>,

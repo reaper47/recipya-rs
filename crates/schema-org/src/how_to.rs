@@ -4,15 +4,22 @@ use serde::{Deserialize, Serialize};
 use crate::action::Action;
 use crate::{Comment, CreativeWork, Duration, Event, Review};
 use crate::aggregate_rating::AggregateRating;
+use crate::alignment_object::AlignmentObject;
 use crate::audience::Audience;
+use crate::claim::Claim;
+use crate::country::Country;
 use crate::enums::IPTCDigitalSourceEnumerationEnum;
 use crate::field::*;
 use crate::grant::Grant;
 use crate::helpers::one_or_many;
+use crate::image_object::ImageObject;
 use crate::interaction_counter::InteractionCounter;
+use crate::item_list::ItemList;
+use crate::media_object::MediaObject;
 use crate::organization::Organization;
 use crate::person::Person;
 use crate::place::Place;
+use crate::publication_event::PublicationEvent;
 use crate::thing::Thing;
 
 ///<https://schema.org/dateCreated>

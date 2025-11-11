@@ -10,6 +10,7 @@ use crate::field::*;
 use crate::grant::Grant;
 use crate::helpers::one_or_many;
 use crate::person::Person;
+use crate::schedule::Schedule;
 
 ///<https://schema.org/endDate>
 ///<https://schema.org/Date>

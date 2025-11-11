@@ -9,6 +9,7 @@ use crate::audience::Audience;
 use crate::enums::{EventAttendanceModeEnumerationEnum, EventStatusTypeEnum};
 use crate::grant::Grant;
 use crate::person::Person;
+use crate::schedule::Schedule;
 
 ///<https://schema.org/endDate>
 ///<https://schema.org/Date>

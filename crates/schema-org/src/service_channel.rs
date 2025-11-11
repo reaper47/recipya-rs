@@ -5,6 +5,8 @@ use crate::contact_point::ContactPoint;
 use crate::{Action, Duration, Place};
 use crate::helpers::one_or_many;
 use crate::field::*;
+use crate::postal_address::PostalAddress;
+use crate::service::Service;
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
