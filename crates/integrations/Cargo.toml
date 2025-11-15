@@ -23,7 +23,7 @@ iso8601.workspace = true
 itertools.workspace = true
 libpaprika = { version = "0.4.1", default-features = false }
 nom.workspace = true
-recipe-schema.workspace = true
+schema-org.workspace = true
 recipemd = "0.2.0"
 serde.workspace = true
 serde-xml-rs = "0.8.1"

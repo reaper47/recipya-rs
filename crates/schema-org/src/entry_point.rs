@@ -1,29 +1,28 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::Action;
+use crate::field::{
+    EntryPointDescriptionFieldEnum, EntryPointImageFieldEnum, EntryPointSubjectOfFieldEnum,
+};
 use crate::helpers::one_or_many;
-use crate::field::*;
-use crate::software_application::SoftwareApplication;
+use crate::{Action, AtType};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
 ///<https://schema.org/URL>
 pub type EntryPointAdditionalTypeFieldEnum = String;
 ///<https://schema.org/EntryPoint>
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct EntryPoint {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/contentType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub content_type: Vec<String>,
-    ///<https://schema.org/actionPlatform>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub action_platform: Vec<EntryPointActionPlatformFieldEnum>,
     ///<https://schema.org/encodingType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -32,18 +31,10 @@ pub struct EntryPoint {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub url_template: Vec<String>,
-    ///<https://schema.org/actionApplication>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub action_application: Vec<SoftwareApplication>,
     ///<https://schema.org/httpMethod>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub http_method: Vec<String>,
-    ///<https://schema.org/application>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub application: Vec<SoftwareApplication>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -56,10 +47,6 @@ pub struct EntryPoint {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_type: Vec<EntryPointAdditionalTypeFieldEnum>,
-    ///<https://schema.org/identifier>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub identifier: Vec<EntryPointIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -88,8 +75,4 @@ pub struct EntryPoint {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-    ///<https://schema.org/mainEntityOfPage>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<EntryPointMainEntityOfPageFieldEnum>,
 }

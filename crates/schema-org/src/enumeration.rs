@@ -1,9 +1,11 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::Action;
+use crate::field::{
+    EnumerationDescriptionFieldEnum, EnumerationIdentifierFieldEnum, EnumerationSubjectOfFieldEnum,
+};
 use crate::helpers::one_or_many;
-use crate::field::*;
+use crate::{Action, AtType};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
@@ -11,15 +13,13 @@ use crate::field::*;
 pub type EnumerationAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Enumeration>
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct Enumeration {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
     #[serde(rename = "@context")]
     pub context: String,
-    ///<https://schema.org/supersededBy>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub superseded_by: Vec<EnumerationSupersededByFieldEnum>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -36,10 +36,6 @@ pub struct Enumeration {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub identifier: Vec<EnumerationIdentifierFieldEnum>,
-    ///<https://schema.org/image>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<EnumerationImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -64,8 +60,4 @@ pub struct Enumeration {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-    ///<https://schema.org/mainEntityOfPage>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<EnumerationMainEntityOfPageFieldEnum>,
 }

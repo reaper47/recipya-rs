@@ -30,9 +30,6 @@
         <enabledFeature name="test-utils" />
         <enabledFeature name="default" />
       </package>
-      <package file="$PROJECT_DIR$/crates/schema-org">
-        <enabledFeature name="default" />
-      </package>
       <package file="$PROJECT_DIR$/crates/recipya-cli">
         <enabledFeature name="default" />
       </package>
@@ -43,6 +40,9 @@
         <enabledFeature name="default" />
       </package>
       <package file="$PROJECT_DIR$/crates/router">
+        <enabledFeature name="default" />
+      </package>
+      <package file="$PROJECT_DIR$/crates/schema-org">
         <enabledFeature name="default" />
       </package>
       <package file="$PROJECT_DIR$/crates/support">
@@ -59,177 +59,1091 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/about_page.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/aggregate_offer.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/alignment_object.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/anatomical_structure.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/anatomical_system.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/article.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/audio_object.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/bio_chem_entity.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/brand.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/breadcrumb_list.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/broadcast_frequency_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/bus_station.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/bus_stop.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/business_entity_type.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/business_function.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/category_code.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/category_code_set.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/claim.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/class.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/clip.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/correction_comment.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/country.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/creative_work_season.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/creative_work_series.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/credit_card.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/d_dx_element.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_catalog.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_download.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_feed.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/data_feed_item.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/dataset.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/defined_region.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/delivery_charge_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/demand.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/distance.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/dose_schedule.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/drug.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/drug_class.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/drug_legal_status.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/drug_strength.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/educational_occupational_credential.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/educational_organization.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/energy_consumption_details.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/energy_efficiency_enumeration.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/entry_point.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/enumeration.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/episode.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/gene.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/geo_coordinates.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/geo_shape.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/geospatial_geometry.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/health_insurance_plan.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/health_plan_formulary.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/health_plan_network.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_section.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_step.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_supply.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_tool.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/hyper_toc_entry.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/image_object.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/item_list.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/list_item.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/loan_or_credit.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/map.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/maximum_dose_schedule.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/measurement_type_enumeration.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/media_subscription.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_code.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_condition.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_condition_stage.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_contraindication.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_device.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_entity.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_enumeration.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_evidence_level.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_guideline.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_risk_factor.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_sign_or_symptom.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_study.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_test.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/medical_therapy.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/member_program.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/member_program_tier.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/menu_item.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/menu_section.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/merchant_return_policy.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/merchant_return_policy_seasonal_override.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/monetary_amount.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/monetary_amount_distribution.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/music_album.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/music_group.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/music_recording.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/music_release.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/news_article.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/nonprofit_type.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/occupation.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/occupational_experience_requirements.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/offer.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/offer_shipping_details.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/ownership_info.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/payment_method.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/performing_group.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/photograph.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/postal_address.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/postal_code_range_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/price_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/product.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/product_group.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/product_model.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/program_membership.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/property.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/qualitative_value.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/repayment_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/schedule.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/service_period.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/shipping_conditions.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/shipping_delivery_time.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/shipping_rate_settings.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/shipping_service.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/size_group_enumeration.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/size_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/software_application.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/speakable_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/specialty.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/statistical_variable.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/structured_value.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/superficial_anatomy.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/taxon.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/text_object.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/trip.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/type_and_quantity_node.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/unit_price_specification.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/video_object.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/virtual_location.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/warranty_promise.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/warranty_scope.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/web_content.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/web_page.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/web_page_element.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/crates/schema-org/src/web_site.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/certification.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/certification.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/app/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/app/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-scraper/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-scraper/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/support/scraper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/recipya-scraper/src/tests/support/scraper.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/about_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/accept_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/accommodation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/accounting_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/achieve_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/action_access_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/action_status_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/activate_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/add_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/adult_entertainment.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/adult_oriented_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/advertiser_content_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/aggregate_offer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/agree_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/airline.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/airport.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/alignment_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/all.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/allocate_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/am_radio_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/amp_story.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/amusement_park.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/analysis_news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/anatomical_structure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/anatomical_system.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/animal_shelter.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/answer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/apartment.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/apartment_complex.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/api_reference.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/append_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/apply_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/approved_indication.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/aquarium.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/archive_component.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/archive_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/arrive_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/art_gallery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/artery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ask_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ask_public_news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/assess_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/assign_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/atlas.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/attorney.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/audio_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/audio_object_snapshot.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/audiobook.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/authorize_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/auto_body_shop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/auto_dealer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/auto_parts_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/auto_rental.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/auto_repair.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/auto_wash.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/automated_teller.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/automotive_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/background_news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bakery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bank_account.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bank_or_credit_union.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bar_or_pub.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/barcode.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/beach.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/beauty_salon.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bed_and_breakfast.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bed_details.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bed_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/befriend_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bike_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bio_chem_entity.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/blog.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/blog_posting.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/blood_test.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/boarding_policy_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/boat_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/boat_terminal.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/boat_trip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/body_measurement_type_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/body_of_water.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bone.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/book.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/book_format_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/book_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/book_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bookmark_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/borrow_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bowling_alley.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/brain_structure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/brand.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/breadcrumb_list.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/brewery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bridge.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/broadcast_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/broadcast_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/broadcast_frequency_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/broadcast_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/brokerage_account.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/buddhist_temple.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bus_or_coach.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bus_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bus_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bus_stop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/bus_trip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/business_audience.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/business_entity_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/business_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/business_function.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/buy_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cable_or_satellite_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cafe_or_coffee_shop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/campground.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/camping_pitch.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/canal.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cancel_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/car.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/car_usage_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/casino.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/category_code.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/category_code_set.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/catholic_church.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cdcpmd_record.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cemetery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/certification_status_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/chapter.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/check_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/check_in_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/check_out_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/checkout_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/chemical_substance.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/child_care.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/childrens_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/choose_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/church.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/city.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/city_hall.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/civic_structure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/claim.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/claim_review.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/class.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/clip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/clothing_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/code.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/collection.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/collection_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/college_or_university.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/comedy_club.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/comedy_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/comic_cover_art.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/comic_issue.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/comic_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/comic_story.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/comment_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/communicate_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/complete_data_feed.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/compound_price_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/computer_language.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/computer_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/confirm_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/consortium.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/constraint_node.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/consume_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/contact_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/contact_point_option.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/continent.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/control_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/convenience_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/conversation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cook_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cooperative.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/corporation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/correction_comment.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/country.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/course.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/course_instance.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/courthouse.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/cover_art.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/covid_testing_facility.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/create_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/creative_work_season.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/creative_work_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/credit_card.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/crematorium.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/critic_review.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/currency_conversion_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/d_dx_element.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dance_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dance_group.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/data_catalog.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/data_download.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/data_feed.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/data_feed_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dataset.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dated_money_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/day_of_week.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/day_spa.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/deactivate_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/defence_establishment.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/defined_region.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/defined_term_set.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/delete_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/delivery_charge_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/delivery_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/delivery_method.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/demand.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dentist.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/depart_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/department_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/deposit_account.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/diagnostic_lab.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/diagnostic_procedure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/diet.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dietary_supplement.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/digital_document.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/digital_document_permission.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/digital_document_permission_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/digital_platform_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/disagree_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/discover_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/discussion_forum_posting.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dislike_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/distance.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/distillery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/donate_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dose_schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/download_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/draw_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drawing.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drink_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drive_wheel_configuration_value.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug_class.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug_cost.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug_cost_category.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug_legal_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug_pregnancy_category.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug_prescription_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/drug_strength.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/dry_cleaning_or_laundry.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/eat_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/education_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/educational_audience.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/educational_occupational_credential.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/educational_occupational_program.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/educational_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/electrician.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/electronics_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/elementary_school.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/email_message.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/embassy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/emergency_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/employee_role.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/employer_aggregate_rating.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/employer_review.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/employment_agency.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/endorse_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/endorsement_rating.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/energy_consumption_details.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/energy_efficiency_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/energy_star_energy_efficiency_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/engine_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/entertainment_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/entry_point.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/episode.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/eu_energy_efficiency_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/event_attendance_mode_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/event_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/event_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/event_status_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/event_venue.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/exchange_rate_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/exercise_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/exercise_gym.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/exercise_plan.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/exhibition_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/faq_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/fast_food_restaurant.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/festival.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/film_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/financial_incentive.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/financial_product.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/financial_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/find_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/fire_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/flight.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/flight_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/floor_plan.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/florist.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/fm_radio_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/follow_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/food_establishment.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/food_establishment_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/food_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/food_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/fulfillment_type_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/funding_agency.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/funding_scheme.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/furniture_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/game.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/game_availability_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/game_play_mode.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/game_server.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/game_server_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/garden_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/gas_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/gated_residence_community.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/gender_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/gene.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/general_contractor.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/geo_circle.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/geo_coordinates.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/geo_shape.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/geospatial_geometry.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/give_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/golf_course.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/government_benefits_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/government_building.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/government_office.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/government_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/government_permit.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/government_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/grocery_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/guide.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hackathon.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hair_salon.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hardware_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_and_beauty_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_aspect_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_club.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_insurance_plan.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_plan_cost_sharing_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_plan_formulary.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_plan_network.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/health_topic_content.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/high_school.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hindu_temple.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hobby_shop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/home_and_construction_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/home_goods_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hospital.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hostel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hotel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hotel_room.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/house.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/house_painter.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/how_to_direction.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/how_to_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/how_to_section.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/how_to_step.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/how_to_supply.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/how_to_tip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/how_to_tool.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hvac_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hyper_toc.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/hyper_toc_entry.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ice_cream_shop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ignore_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/image_gallery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/image_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/image_object_snapshot.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/imaging_test.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/incentive_qualified_expense_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/incentive_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/incentive_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/individual_physician.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/individual_product.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/infectious_agent_class.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/infectious_disease.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/inform_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/insert_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/install_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/insurance_agency.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/intangible.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/interact_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/internet_cafe.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/investment_fund.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/investment_or_deposit.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/invite_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/invoice.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/iptc_digital_source_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/item_availability.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/item_list.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/item_list_order_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/item_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/jewelry_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/job_posting.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/join_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/joint.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lake_body_of_water.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/landform.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/landmarks_or_historical_buildings.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/language.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/learning_resource.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/leave_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/legal_force_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/legal_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/legal_value_level.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/legislation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/legislation_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/legislative_building.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lend_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lib.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/library.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/library_system.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lifestyle_modification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ligament.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/like_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/link_role.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/liquor_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/list_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/listen_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/literary_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/live_blog_posting.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/loan_or_credit.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/local_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/locksmith.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lodging_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lodging_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lose_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/lymphatic_vessel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/manuscript.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/map.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/map_category_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/marry_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/math_solver.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/maximum_dose_schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/measurement_method_enum.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/measurement_type_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/media_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/media_gallery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/media_manipulation_rating_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/media_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/media_review.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/media_review_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/media_subscription.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_audience.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_audience_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_cause.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_clinic.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_code.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_condition.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_condition_stage.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_contraindication.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_device.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_device_purpose.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_entity.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_evidence_level.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_guideline.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_guideline_contraindication.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_guideline_recommendation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_imaging_technique.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_indication.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_intangible.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_observational_study.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_observational_study_design.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_procedure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_procedure_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_risk_calculator.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_risk_estimator.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_risk_factor.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_risk_score.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_scholarly_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_sign.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_sign_or_symptom.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_specialty.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_study.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_study_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_symptom.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_test.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_test_panel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_therapy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_trial.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_trial_design.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medical_web_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/medicine_system.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/meeting_room.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/member_program.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/member_program_tier.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/mens_clothing_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/menu.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/menu_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/menu_section.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/merchant_return_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/merchant_return_policy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/merchant_return_policy_seasonal_override.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/message.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/middle_school.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/mobile_application.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/mobile_phone_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/molecular_entity.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/monetary_amount.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/monetary_amount_distribution.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/monetary_grant.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/money_transfer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/mortgage_loan.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/mosque.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/motel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/motorcycle.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/motorcycle_dealer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/motorcycle_repair.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/motorized_bicycle.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/mountain.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/move_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/movie.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/movie_clip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/movie_rental_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/movie_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/movie_theater.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/moving_company.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/muscle.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/museum.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_album.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_album_production_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_album_release_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_composition.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_group.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_playlist.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_recording.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_release.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_release_format_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_venue.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/music_video_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/nail_salon.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/nerve.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/news_media_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/newspaper.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ngo.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/night_club.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/nl_nonprofit_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/nonprofit_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/notary.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/note_digital_document.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/observation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/occupation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/occupational_experience_requirements.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/occupational_therapy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ocean_body_of_water.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/offer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/offer_catalog.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/offer_for_lease.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/offer_for_purchase.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/offer_item_condition.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/offer_shipping_details.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/office_equipment_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/on_demand_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/online_business.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/online_marketplace.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/online_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/opinion_news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/optician.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/order.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/order_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/order_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/order_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/organization_role.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/organize_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/outlet_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ownership_info.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/paint_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/painting.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/palliative_procedure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/parcel_delivery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/parent_audience.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/park.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/parking_facility.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pathology_test.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/patient.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pawn_shop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pay_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/payment_card.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/payment_charge_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/payment_method.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/payment_method_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/payment_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/payment_status_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/people_audience.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/perform_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/performance_role.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/performing_arts_theater.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/performing_group.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/periodical.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/permit.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pet_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pharmacy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/photograph.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/photograph_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/physical_activity.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/physical_activity_category.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/physical_exam.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/physical_therapy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/physician.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/physicians_office.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/place_of_worship.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/plan_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/play.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/play_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/play_game_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/playground.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/plumber.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/podcast_episode.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/podcast_season.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/podcast_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/police_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/political_party.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pond.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/post_office.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/postal_address.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/postal_code_range_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/poster.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pre_order_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/prepend_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/preschool.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/presentation_digital_document.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/prevention_indication.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/price_component_type_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/price_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/price_type_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/product.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/product_collection.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/product_group.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/product_model.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/professional_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/profile_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/program_membership.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/project.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/pronounceable_text.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/property.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/property_value_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/protein.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/psychological_treatment.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/public_swimming_pool.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/public_toilet.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/publication_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/publication_issue.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/publication_volume.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/purchase_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/qa_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/qualitative_value.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/quantitative_value_distribution.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/quantity.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/question.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/quiz.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/quotation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/quote_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radiation_therapy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radio_broadcast_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radio_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radio_clip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radio_episode.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radio_season.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radio_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/radio_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/react_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/read_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/real_estate_agent.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/real_estate_listing.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/receive_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/recommendation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/recommended_dose_schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/recycling_center.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/refund_type_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/register_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reject_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/rent_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/rental_car_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/repayment_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/replace_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reply_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/report.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reportage_news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reported_dose_schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/research_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/research_project.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/researcher.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reservation_package.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reservation_status_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reserve_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/reservoir.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/residence.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/resort.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/restaurant.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/restricted_diet.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/resume_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/return_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/return_fees_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/return_label_source_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/return_method_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/review_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/review_news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/river_body_of_water.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/role.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/roofing_contractor.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/room.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/rsvp_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/rsvp_response_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/rv_park.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sale_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/satirical_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/schedule_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/scholarly_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/school.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/school_district.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/screening_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sculpture.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sea_body_of_water.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/search_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/search_rescue_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/search_results_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/season.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/seat.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/seek_to_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/self_storage.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sell_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/send_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/service_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/service_period.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/share_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sheet_music.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/shipping_conditions.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/shipping_delivery_time.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/shipping_rate_settings.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/shipping_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/shoe_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/shopping_center.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/short_story.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/single_family_residence.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/site_navigation_element.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/size_group_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/size_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/size_system_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ski_resort.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/social_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/social_media_posting.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/software_application.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/software_source_code.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/solve_math_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/some_products.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/speakable_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/special_announcement.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/specialty.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sporting_goods_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sports_activity_location.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sports_club.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sports_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sports_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/sports_team.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/spreadsheet_digital_document.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/stadium_or_arena.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/state.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/statement.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/statistical_population.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/statistical_variable.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/status_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/steering_position_value.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/structured_value.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/subscribe_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/substance.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/subway_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/suite.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/superficial_anatomy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/surgical_procedure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/suspend_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/syllabus.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/synagogue.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/table.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/take_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tattoo_parlor.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/taxi.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/taxi_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/taxi_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/taxi_stand.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/taxon.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tech_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/television_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/television_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tennis_complex.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/text_digital_document.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/text_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/theater_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/theater_group.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/therapeutic_procedure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/thesis.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/three_d_model.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/ticket.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tie_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tier_benefit_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tip_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tire_shop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tourist_attraction.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tourist_destination.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tourist_information_center.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tourist_trip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/toy_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/track_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/trade_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/train_reservation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/train_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/train_trip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/transfer_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/travel_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/travel_agency.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/treatment_indication.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/trip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tv_clip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tv_episode.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tv_season.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/tv_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/type_and_quantity_node.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/uk_nonprofit_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/un_register_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/unit_price_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/update_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/us_nonprofit_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/use_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_blocks.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_checkins.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_comments.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_downloads.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_interaction.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_likes.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_page_visits.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_plays.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_plus_ones.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_review.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/user_tweets.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/vacation_rental.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/vehicle.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/vein.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/vessel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/veterinary_care.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/video_gallery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/video_game.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/video_game_clip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/video_game_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/video_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/video_object_snapshot.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/view_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/virtual_location.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/visual_arts_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/visual_artwork.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/vital_sign.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/volcano.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/vote_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/want_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/warranty_promise.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/warranty_scope.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/watch_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/waterfall.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wear_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wearable_measurement_type_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wearable_size_group_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wearable_size_system_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/web_api.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/web_application.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/web_content.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/web_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/web_page_element.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/web_site.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wholesale_store.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/win_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/winery.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/work_based_program.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/workers_union.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wp_ad_block.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wp_footer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wp_header.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/wp_side_bar.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/write_action.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/ref/zoo.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/about_page.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/action.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/action.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/administrative_area.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/aggregate_offer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/aggregate_rating.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/aggregate_rating.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/alignment_object.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/anatomical_structure.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/anatomical_system.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/audience.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/audio_object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/audio_object.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/bio_chem_entity.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/brand.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/breadcrumb_list.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/breadcrumb_list.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/broadcast_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/broadcast_frequency_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/broadcast_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/bus_station.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/bus_stop.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/business_entity_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/business_function.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/cable_or_satellite_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/category_code.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/category_code_set.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/certification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/claim.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/music_playlist.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/class.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/clip.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/clip.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/comment.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/comment.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/contact_point.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/contact_point.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/contact_point.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/correction_comment.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/country.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/country.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/creative_work.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/creative_work.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/creative_work_season.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/creative_work_series.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/credit_card.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/d_dx_element.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/data_catalog.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/data_download.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/music_composition.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/data_feed.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/data_feed_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/dataset.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/defined_region.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/defined_term.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/defined_term.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/defined_term_set.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/defined_term_set.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/delivery_charge_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/demand.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/distance.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/distance.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/dose_schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/drug.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/drug_class.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/drug_legal_status.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/drug_strength.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/duration.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/duration.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/educational_occupational_credential.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/educational_organization.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/energy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/energy.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/energy_consumption_details.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/energy_efficiency_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/entry_point.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/entry_point.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/enumeration.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/enumeration.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/enums.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/enums.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/episode.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/event.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/field.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/field.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/grant.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/grant.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/gene.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/geo_coordinates.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/geo_shape.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/geospatial_geometry.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/grant.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/health_insurance_plan.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/health_plan_formulary.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/health_plan_network.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/how_to.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/how_to_section.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_section.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/how_to_step.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_step.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/how_to_supply.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_supply.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/how_to_tool.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/how_to_tool.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/hyper_toc_entry.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/image_object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/image_object.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/interaction_counter.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/interaction_counter.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/item_list.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/item_list.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/language.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/language.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/location_feature_specification.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/location_feature_specification.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/list_item.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/list_item.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/loan_or_credit.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/location_feature_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/map.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/mass.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/mass.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/maximum_dose_schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/measurement_type_enumeration.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/measurement_type_enumeration.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/media_object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/media_object.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/media_subscription.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_code.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_condition.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_condition_stage.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_contraindication.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_device.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_entity.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_evidence_level.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_guideline.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_risk_factor.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_sign_or_symptom.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_study.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_test.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/medical_therapy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/member_program.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/member_program_tier.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/menu_item.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/menu_section.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/merchant_return_policy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/merchant_return_policy_seasonal_override.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/monetary_amount.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/monetary_amount.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/monetary_amount_distribution.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/music_album.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/music_album.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/music_group.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/music_recording.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/music_recording.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/music_release.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/music_release.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/news_article.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/nonprofit_type.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/nutrition_information.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/nutrition_information.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/occupation.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/occupational_experience_requirements.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/offer.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/offer_catalog.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/offer_shipping_details.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/opening_hours_specification.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/organization.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/organization.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/ownership_info.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/payment_method.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/performing_group.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/person.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/person.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/photograph.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/place.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/place.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/publication_event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/publication_event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/postal_address.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/postal_address.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/postal_code_range_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/price_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/product.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/product.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/product_group.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/product_model.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/program_membership.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/property.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/property_value.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/property_value.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/publication_event.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/qualitative_value.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/qualitative_value.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/quantitative_value.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/quantitative_value.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/rating.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/rating.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/repayment_specification.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/review.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/review.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/service_channel.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/service_channel.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/schedule.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/service_channel.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/service_period.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/shipping_conditions.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/shipping_delivery_time.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/shipping_rate_settings.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/shipping_service.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/size_group_enumeration.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/size_specification.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/size_specification.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/software_application.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/speakable_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/specialty.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/statistical_variable.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/structured_value.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/structured_value.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/superficial_anatomy.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/taxon.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/text_object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/text_object.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/thing.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/thing.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/trip.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/type_and_quantity_node.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/unit_price_specification.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/video_object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/video_object.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/virtual_location.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/warranty_promise.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/warranty_scope.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/web_content.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/web_content.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/web_page.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/web_page.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/web_page_element.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/web_page_element.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/web_site.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/support/src/fs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/support/src/fs.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -295,6 +1209,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;Cargo.Run.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test accuchef::tests.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test admin_router::tests.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor&quot;: &quot;Run&quot;,
     &quot;Cargo.Test admin_router::tests::tests_user::test_add_user_ok.executor&quot;: &quot;Run&quot;,
@@ -1060,7 +1975,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Run">
+  <component name="RunManager" selected="Cargo.Test accuchef::tests">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -1079,8 +1994,9 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_submit_recipe_ok -- --exact" />
+    <configuration name="Test accuchef::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package integrations --lib apps::accuchef::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -1166,7 +2082,7 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
+      <item itemvalue="Cargo.Test accuchef::tests" />
       <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
       <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
       <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
@@ -1174,11 +2090,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test accuchef::tests" />
         <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
         <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
         <item itemvalue="Cargo.Test time::tests" />
         <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
-        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
       </list>
     </recent_temporary>
   </component>

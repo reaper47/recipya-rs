@@ -1,21 +1,20 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::Action;
+use crate::AtType;
 use crate::enums::ContactPointOptionEnum;
+use crate::field::{
+    PostalAddressAvailableLanguageFieldEnum, PostalAddressDescriptionFieldEnum,
+    PostalAddressImageFieldEnum, PostalAddressSubjectOfFieldEnum,
+};
 use crate::helpers::one_or_many;
-use crate::field::*;
-use crate::opening_hours_specification::OpeningHoursSpecification;
-
-///<https://schema.org/additionalType>
-///<https://schema.org/Text>
-///<https://schema.org/URL>
-pub type PostalAddressAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/PostalAddress>
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct PostalAddress {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/addressLocality>
@@ -30,10 +29,6 @@ pub struct PostalAddress {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub post_office_box_number: Vec<String>,
-    ///<https://schema.org/addressCountry>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub address_country: Vec<PostalAddressAddressCountryFieldEnum>,
     ///<https://schema.org/extendedAddress>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -46,14 +41,6 @@ pub struct PostalAddress {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub street_address: Vec<String>,
-    ///<https://schema.org/hoursAvailable>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub hours_available: Vec<OpeningHoursSpecification>,
-    ///<https://schema.org/faxNumber>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub fax_number: Vec<String>,
     ///<https://schema.org/contactOption>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -62,26 +49,14 @@ pub struct PostalAddress {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub available_language: Vec<PostalAddressAvailableLanguageFieldEnum>,
-    ///<https://schema.org/areaServed>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub area_served: Vec<PostalAddressAreaServedFieldEnum>,
     ///<https://schema.org/contactType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub contact_type: Vec<String>,
-    ///<https://schema.org/productSupported>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub product_supported: Vec<PostalAddressProductSupportedFieldEnum>,
     ///<https://schema.org/telephone>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub telephone: Vec<String>,
-    ///<https://schema.org/serviceArea>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub service_area: Vec<PostalAddressServiceAreaFieldEnum>,
     ///<https://schema.org/email>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -90,18 +65,6 @@ pub struct PostalAddress {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
-    ///<https://schema.org/potentialAction>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub potential_action: Vec<Action>,
-    ///<https://schema.org/additionalType>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub additional_type: Vec<PostalAddressAdditionalTypeFieldEnum>,
-    ///<https://schema.org/identifier>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub identifier: Vec<PostalAddressIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -130,8 +93,4 @@ pub struct PostalAddress {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-    ///<https://schema.org/mainEntityOfPage>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<PostalAddressMainEntityOfPageFieldEnum>,
 }

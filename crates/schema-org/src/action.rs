@@ -1,11 +1,14 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::HowTo;
-use crate::Thing;
 use crate::enums::ActionStatusTypeEnum;
-use crate::field::*;
+use crate::field::{
+    ActionAgentFieldEnum, ActionDescriptionFieldEnum, ActionIdentifierFieldEnum,
+    ActionImageFieldEnum, ActionParticipantFieldEnum, ActionProviderFieldEnum,
+    ActionSubjectOfFieldEnum, ActionTargetFieldEnum,
+};
 use crate::helpers::one_or_many;
+use crate::{AtType, HowTo, Thing};
 
 ///<https://schema.org/endTime>
 ///<https://schema.org/DateTime>
@@ -21,15 +24,13 @@ pub type ActionStartTimeFieldEnum = String;
 pub type ActionAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Action>
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct Action {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
     #[serde(rename = "@context")]
     pub context: String,
-    ///<https://schema.org/location>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub location: Vec<ActionLocationFieldEnum>,
     ///<https://schema.org/agent>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -97,7 +98,7 @@ pub struct Action {
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<crate::field::ActionImageFieldEnum>,
+    pub image: Vec<ActionImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -122,8 +123,4 @@ pub struct Action {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-    ///<https://schema.org/mainEntityOfPage>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<ActionMainEntityOfPageFieldEnum>,
 }

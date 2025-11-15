@@ -232,7 +232,7 @@ impl FsSupport for AppFs {
     fn generate_thumbnail(&self, path: &Path, file_name: Uuid, output_path: &Path) {
         let res: Result<()> = (|| {
             let buf: Vec<u8> = {
-                let img = ImageReader::open(&path)?.with_guessed_format()?.decode()?;
+                let img = ImageReader::open(path)?.with_guessed_format()?.decode()?;
 
                 let thumb = {
                     let (w, h) = img.dimensions();
@@ -271,7 +271,7 @@ impl FsSupport for AppFs {
             }
 
             let _ = fs::remove_file(&tmp_out);
-            let _ = fs::remove_file(&path);
+            let _ = fs::remove_file(path);
 
             Ok(())
         })();

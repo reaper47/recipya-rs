@@ -12,16 +12,13 @@ use nom::{IResult, Parser};
 use tracing::error;
 use url::Url;
 
-use recipe_schema::components::{SectionItem, Sections};
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
+use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
+use schema_org::{Duration, Recipe};
 
 use super::helpers::read_file;
 use crate::Result;
 use crate::common::Times;
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
-    to_yield,
-};
+use crate::helpers::{seconds_to_duration, to_defined_text, to_is_based_on, to_yield};
 
 struct AccuChefRecipe {
     title: String,
@@ -29,8 +26,8 @@ struct AccuChefRecipe {
     keywords: Vec<String>,
     yield_: Option<i16>,
     times: Times,
-    ingredients: Sections,
-    instructions: Sections,
+    ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
+    instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
     source: String,
 }
 
@@ -49,21 +46,20 @@ struct Ingredient<'a> {
     quantity: &'a str,
 }
 
-impl From<AccuChefRecipe> for RecipeSchema {
+impl From<AccuChefRecipe> for Recipe {
     fn from(r: AccuChefRecipe) -> Self {
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            cook_time: seconds_to_duration(r.times.cook_seconds),
-            is_based_on: to_is_based_on(r.source.to_owned()),
-            keywords: to_defined_text(r.keywords.join(",")),
-            name: Some(r.title),
+            context: Default::default(),
+            cook_time: vec![Duration::from(seconds_to_duration(r.times.cook_seconds))],
+            is_based_on: to_is_based_on(&r.source),
+            keywords: to_defined_text(&r.keywords.join(",")),
+            name: vec![r.title],
             prep_time: seconds_to_duration(r.times.prep_seconds),
-            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
-            recipe_ingredient: sections_to_vec(r.ingredients),
-            recipe_instructions: sections_to_itemlist(r.instructions),
+            recipe_category: r.category.unwrap_or_default().into(),
+            recipe_ingredient: r.ingredients,
+            recipe_instructions: r.instructions,
             recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
-            url: Url::parse(r.source.as_ref()).ok(),
+            url: vec![r.source],
             ..Default::default()
         }
     }
@@ -76,13 +72,13 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             category: r.category.map(String::from),
             keywords: vec![],
             yield_: r.servings,
-            ingredients: Sections::from([(
-                "".into(),
-                r.ingredients
-                    .into_iter()
-                    .map(|ing| SectionItem::new(format!("{} {}", ing.quantity, ing.name)))
-                    .collect(),
-            )]),
+            ingredients: r
+                .ingredients
+                .into_iter()
+                .map(|ing| {
+                    RecipeRecipeIngredientFieldEnum::Text(format!("{} {}", ing.quantity, ing.name))
+                })
+                .collect(),
             times: Times {
                 prep_seconds: r
                     .prep_time
@@ -104,23 +100,24 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                     .unwrap_or(15 * 60),
                 cook_seconds: 30 * 60,
             },
-            instructions: Sections::from([(
-                "".into(),
-                r.instructions.into_iter().map(SectionItem::new).collect(),
-            )]),
+            instructions: r
+                .instructions
+                .into_iter()
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect(),
             source: r.header.into(),
         }
     }
 }
 
 /// Represents the parsed components of an AccuChef recipe.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
     let content = read_file(r)?;
     let recipe = parse_accuchef_recipe(&content)?;
-    Ok(recipe.into_iter().map(RecipeSchema::from).collect())
+    Ok(recipe.into_iter().map(Recipe::from).collect())
 }
 
 fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
@@ -242,6 +239,8 @@ mod tests {
     use recipe_schema::components::{
         CreativeWorkOrText, QuantitativeValue, QuantitativeValueOrText,
     };
+    use schema_org::CreativeWork;
+    use schema_org::field::{RecipeIsBasedOnFieldEnum, RecipeRecipeIngredientFieldEnum};
 
     use crate::helpers::vec_to_howto;
 
@@ -254,6 +253,7 @@ mod tests {
 
         let got = parse(buf)?;
 
+        let a = RecipeRecipeIngredientFieldEnum::Text("Hard Boiled Eggs, Chopped".into());
         pretty_assertions::assert_eq!(
             got,
             vec![
@@ -289,34 +289,36 @@ mod tests {
                     }),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#context: Default::default(),
+                    r#type: Some(AtType::Recipe),
                     cook_time: seconds_to_duration(1800),
-                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
-                    name: Some("7 Layer Salad".into()),
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::CreativeWork(Box::new(CreativeWork {
+                        name: vec!["AccuChef Import File".into()],
+                        ..Default::default()
+                    }))],
+                    name: vec!["7 Layer Salad".into()],
                     prep_time: seconds_to_duration(900),
-                    recipe_category: RecipeCategory::Text("Salad".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "1 Head Lettuce, Shredded".into(),
-                        "1 Cup Celery, Thinly Sliced".into(),
-                        "1 Cup Green Onion, Sliced".into(),
-                        "1 Cup Green Pepper, Chopped".into(),
-                        "1 Pkg Frozen Peas (Or Peas & Onions)".into(),
-                        "8 Oz Can Water Chestnuts".into(),
-                        "1/2 Cup Miracle Whip".into(),
-                        "1/2 Cup Sour Cream".into(),
-                        "1/2 Cup Grated Cheddar Cheese".into(),
-                        " Hard Boiled Eggs, Chopped".into(),
-                        " Bacon, Crinkled".into(),
-                        " Tomtato Cubes".into(),
-                    ]),
-                    recipe_instructions: vec_to_howto(vec![
-                        "Mix sour cream and miracle whip. Layer all the ingredients down to water",
-                        "chestnuts and then cover with miracle whip mixture. Refrigerate over",
-                        "night and then place eggs, bacon and tomatoes on top.",
-                    ]),
+                    recipe_category: vec!["Salad".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 Head Lettuce, Shredded".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Cup Celery, Thinly Sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Cup Green Onion, Sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Cup Green Pepper, Chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Pkg Frozen Peas (Or Peas & Onions)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("8 Oz Can Water Chestnuts".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 Cup Miracle Whip".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 Cup Sour Cream".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 Cup Grated Cheddar Cheese".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Hard Boiled Eggs, Chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Bacon, Crinkled".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Tomtato Cubes".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("Mix sour cream and miracle whip. Layer all the ingredients down to water".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("chestnuts and then cover with miracle whip mixture. Refrigerate over".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("night and then place eggs, bacon and tomatoes on top.".into()),
+                    ],
                     recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
                         value: 0
                     }),

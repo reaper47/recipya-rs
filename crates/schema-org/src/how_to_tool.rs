@@ -1,10 +1,13 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::field::{
+    HowToToolDescriptionFieldEnum, HowToToolImageFieldEnum, HowToToolPositionFieldEnum,
+    HowToToolRequiredQuantityFieldEnum, HowToToolSubjectOfFieldEnum,
+};
 use crate::helpers::one_or_many;
-use crate::field::*;
 use crate::list_item::ListItem;
-use crate::{Action, Thing};
+use crate::{Action, AtType, Thing};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
@@ -12,9 +15,11 @@ use crate::{Action, Thing};
 pub type HowToToolAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/HowToTool>
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct HowToTool {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/requiredQuantity>
@@ -49,10 +54,6 @@ pub struct HowToTool {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub additional_type: Vec<HowToToolAdditionalTypeFieldEnum>,
-    ///<https://schema.org/identifier>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub identifier: Vec<HowToToolIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -81,8 +82,4 @@ pub struct HowToTool {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-    ///<https://schema.org/mainEntityOfPage>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<HowToToolMainEntityOfPageFieldEnum>,
 }

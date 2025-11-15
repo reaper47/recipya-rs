@@ -43,7 +43,7 @@ email = { path = "./crates/email" }
 integrations = { path = "./crates/integrations" }
 math = { path = "./crates/math" }
 models = { path = "./crates/models" }
-recipe-schema = { path = "crates/schema-org" }
+schema-org = { path = "./crates/schema-org" }
 recipya-scraper = { path = "crates/recipya-scraper" }
 repository = { path = "./crates/repository" }
 router = { path = "./crates/router" }

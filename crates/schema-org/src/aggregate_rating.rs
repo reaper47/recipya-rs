@@ -1,19 +1,21 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::field::{
+    AggregateRatingAuthorFieldEnum, AggregateRatingBestRatingFieldEnum,
+    AggregateRatingDescriptionFieldEnum, AggregateRatingImageFieldEnum,
+    AggregateRatingRatingValueFieldEnum, AggregateRatingSubjectOfFieldEnum,
+    AggregateRatingWorstRatingFieldEnum,
+};
 use crate::helpers::one_or_many;
-use crate::field::*;
-use crate::{Action, Thing};
-
-///<https://schema.org/additionalType>
-///<https://schema.org/Text>
-///<https://schema.org/URL>
-pub type AggregateRatingAdditionalTypeFieldEnum = String;
+use crate::{AtType, Thing};
 
 ///<https://schema.org/AggregateRating>
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct AggregateRating {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/reviewCount>
@@ -52,30 +54,10 @@ pub struct AggregateRating {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub rating_value: Vec<AggregateRatingRatingValueFieldEnum>,
-    ///<https://schema.org/disambiguatingDescription>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub disambiguating_description: Vec<String>,
-    ///<https://schema.org/potentialAction>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub potential_action: Vec<Action>,
-    ///<https://schema.org/additionalType>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub additional_type: Vec<AggregateRatingAdditionalTypeFieldEnum>,
-    ///<https://schema.org/identifier>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub identifier: Vec<AggregateRatingIdentifierFieldEnum>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub image: Vec<AggregateRatingImageFieldEnum>,
-    ///<https://schema.org/sameAs>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub same_as: Vec<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -96,8 +78,4 @@ pub struct AggregateRating {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-    ///<https://schema.org/mainEntityOfPage>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<AggregateRatingMainEntityOfPageFieldEnum>,
 }

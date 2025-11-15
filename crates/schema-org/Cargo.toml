@@ -1,5 +1,5 @@
 [package]
-name = "recipe-schema"
+name = "schema-org"
 version = "0.0.0"
 description = "Rust representations of Schema.org recipe-related types generated using schemy."
 
@@ -15,11 +15,6 @@ rust-version.workspace = true
 
 [dependencies]
 iso8601.workspace = true
-reqwest.workspace = true
-schemars = "1.0.4"
-serde.workspace = true
 serde_json.workspace = true
-serde_with = "3.15.1"
-support.workspace = true
-tracing.workspace = true
-url.workspace = true
+serde.workspace = true
+schemars = "1.1.0"

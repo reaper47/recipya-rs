@@ -1,9 +1,9 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::Action;
+use crate::AtType;
+use crate::field::{DistanceDescriptionFieldEnum, DistanceSubjectOfFieldEnum};
 use crate::helpers::one_or_many;
-use crate::field::*;
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
@@ -11,35 +11,17 @@ use crate::field::*;
 pub type DistanceAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Distance>
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct Distance {
+    #[serde(rename = "@type")]
+    pub r#type: AtType,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub disambiguating_description: Vec<String>,
-    ///<https://schema.org/potentialAction>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub potential_action: Vec<Action>,
-    ///<https://schema.org/additionalType>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub additional_type: Vec<DistanceAdditionalTypeFieldEnum>,
-    ///<https://schema.org/identifier>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub identifier: Vec<DistanceIdentifierFieldEnum>,
-    ///<https://schema.org/image>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<DistanceImageFieldEnum>,
-    ///<https://schema.org/sameAs>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub same_as: Vec<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -60,8 +42,4 @@ pub struct Distance {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-    ///<https://schema.org/mainEntityOfPage>
-    #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub main_entity_of_page: Vec<DistanceMainEntityOfPageFieldEnum>,
 }
