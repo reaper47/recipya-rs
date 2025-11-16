@@ -23,11 +23,11 @@ pub type ProductGtinFieldEnum = String;
 pub type ProductAsinFieldEnum = String;
 
 ///<https://schema.org/Product>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Product {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/productionDate>

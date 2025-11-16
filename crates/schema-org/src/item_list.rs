@@ -9,11 +9,11 @@ use crate::helpers::one_or_many;
 use crate::{AtType, Thing};
 
 ///<https://schema.org/ItemList>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemList {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     ///<https://schema.org/aggregateElement>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

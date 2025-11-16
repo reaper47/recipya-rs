@@ -25,11 +25,11 @@ pub type WebContentDateModifiedFieldEnum = String;
 pub type WebContentDatePublishedFieldEnum = String;
 
 ///<https://schema.org/WebContent>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WebContent {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/comment>

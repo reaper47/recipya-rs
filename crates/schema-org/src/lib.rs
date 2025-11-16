@@ -58,6 +58,7 @@ pub mod enums;
 pub mod field;
 pub(crate) mod helpers;
 
+use std::fmt::Display;
 pub use action::*;
 pub use aggregate_rating::*;
 pub use audio_object::*;
@@ -118,8 +119,16 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Enumeration of all possible @type values.
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 pub enum AtType {
     #[default]
     Recipe,
+}
+
+impl Display for AtType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            AtType::Recipe => "Recipe".to_string(),
+        })
+    }
 }

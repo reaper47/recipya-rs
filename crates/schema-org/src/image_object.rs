@@ -39,11 +39,11 @@ pub type ImageObjectDateModifiedFieldEnum = String;
 pub type ImageObjectDatePublishedFieldEnum = String;
 
 ///<https://schema.org/ImageObject>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageObject {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/embeddedTextCaption>

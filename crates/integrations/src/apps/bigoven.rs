@@ -9,15 +9,12 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use recipe_schema::components::{
-    AggregateRating, DefinedTermOrTextOrURL, NumberOrText, SectionItem, Sections,
-};
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
+use schema_org::field::RecipeRecipeIngredientFieldEnum;
 
 use super::helpers::read_file;
 use crate::Result;
 use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield,
+    seconds_to_duration, to_is_based_on, to_yield,
 };
 
 struct BigOvenRecipe {
@@ -28,7 +25,7 @@ struct BigOvenRecipe {
     effort_rating: u8,
     appearance_rating: u8,
     affordability_rating: u8,
-    ingredients: Sections,
+    ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
     instructions: Vec<String>,
     active_minutes: u16,
     total_minutes: u16,

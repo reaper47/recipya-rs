@@ -6,11 +6,11 @@ use crate::field::EnergyDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 
 ///<https://schema.org/Energy>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Energy {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/description>

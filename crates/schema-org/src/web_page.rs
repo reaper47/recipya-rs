@@ -29,11 +29,11 @@ pub type WebPageDateModifiedFieldEnum = String;
 pub type WebPageDatePublishedFieldEnum = String;
 
 ///<https://schema.org/WebPage>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WebPage {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/mainContentOfPage>

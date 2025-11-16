@@ -5,8 +5,21 @@ use crate::AtType;
 use crate::field::DurationDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 
+#[derive(Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum DurationOrText {
+    Duration(Duration),
+    Text(String),
+}
+
+impl DurationOrText {
+    pub fn new_text(s: impl Into<String>) -> Self {
+        Self::Text(s.into())
+    }
+}
+
 ///<https://schema.org/Duration>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Duration {
     ///<https://schema.org/alternateName>
@@ -24,7 +37,7 @@ pub struct Duration {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
 }
 
 impl From<iso8601::Duration> for Duration {
@@ -33,5 +46,11 @@ impl From<iso8601::Duration> for Duration {
             name: vec![value.to_string()],
             ..Default::default()
         }
+    }
+}
+
+impl From<iso8601::Duration> for DurationOrText {
+    fn from(value: iso8601::Duration) -> Self {
+        Self::new_text(value.to_string())
     }
 }

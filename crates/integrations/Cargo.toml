@@ -20,13 +20,12 @@ cooklang = "0.17.1"
 derive_more.workspace = true
 humantime.workspace = true
 iso8601.workspace = true
-itertools.workspace = true
 libpaprika = { version = "0.4.1", default-features = false }
 nom.workspace = true
 schema-org.workspace = true
 recipemd = "0.2.0"
 serde.workspace = true
-serde-xml-rs = "0.8.1"
+serde-xml-rs = "0.8.2"
 serde_json.workspace = true
 strum.workspace = true
 strum_macros.workspace = true

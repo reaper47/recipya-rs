@@ -2,10 +2,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::helpers::one_or_many;
-use crate::{AtType, Energy, Mass};
+use crate::{Energy, Mass};
 
 ///<https://schema.org/NutritionInformation>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct NutritionInformation {
     ///<https://schema.org/calories>
@@ -51,7 +51,7 @@ pub struct NutritionInformation {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sugar_content: Vec<Mass>,
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     ///<https://schema.org/transFatContent>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

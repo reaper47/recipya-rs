@@ -9,7 +9,7 @@ use crate::helpers::one_or_many;
 use crate::{AggregateRating, AtType, Review};
 
 ///<https://schema.org/Place>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Place {
     ///<https://schema.org/address>
@@ -107,7 +107,7 @@ pub struct Place {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub telephone: Vec<String>,
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

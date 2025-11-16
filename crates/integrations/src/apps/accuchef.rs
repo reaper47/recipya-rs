@@ -10,10 +10,9 @@ use nom::multi::{many0, many1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use tracing::error;
-use url::Url;
 
 use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
-use schema_org::{Duration, Recipe};
+use schema_org::Recipe;
 
 use super::helpers::read_file;
 use crate::Result;
@@ -50,12 +49,12 @@ impl From<AccuChefRecipe> for Recipe {
     fn from(r: AccuChefRecipe) -> Self {
         Self {
             context: Default::default(),
-            cook_time: vec![Duration::from(seconds_to_duration(r.times.cook_seconds))],
+            cook_time: seconds_to_duration(r.times.cook_seconds),
             is_based_on: to_is_based_on(&r.source),
             keywords: to_defined_text(&r.keywords.join(",")),
             name: vec![r.title],
             prep_time: seconds_to_duration(r.times.prep_seconds),
-            recipe_category: r.category.unwrap_or_default().into(),
+            recipe_category: vec![r.category.unwrap_or_default()],
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
@@ -103,7 +102,7 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             instructions: r
                 .instructions
                 .into_iter()
-                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
                 .collect(),
             source: r.header.into(),
         }
@@ -239,10 +238,7 @@ mod tests {
     use recipe_schema::components::{
         CreativeWorkOrText, QuantitativeValue, QuantitativeValueOrText,
     };
-    use schema_org::CreativeWork;
     use schema_org::field::{RecipeIsBasedOnFieldEnum, RecipeRecipeIngredientFieldEnum};
-
-    use crate::helpers::vec_to_howto;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -253,50 +249,45 @@ mod tests {
 
         let got = parse(buf)?;
 
-        let a = RecipeRecipeIngredientFieldEnum::Text("Hard Boiled Eggs, Chopped".into());
         pretty_assertions::assert_eq!(
             got,
             vec![
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe),
                     cook_time: seconds_to_duration(1800),
-                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
-                    name: Some("24 Hour Fruit Salad".into()),
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
+                    name: vec!["24 Hour Fruit Salad".into()],
                     prep_time: seconds_to_duration(900),
                     recipe_category: RecipeCategory::Text("Fruit".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "Dressing: ".into(),
-                        "3 Egg Yolks".into(),
-                        "2 Tbls Sugar".into(),
-                        "1 Tbls Butter".into(),
-                        "1 Tbls Lemon Juice".into(),
-                        "1 Cup Cool Whip".into(),
-                        "Fruit: ".into(),
-                        "1 Can Pineapple Chunks (20 Oz)".into(),
-                        "2 Cans Mandarin Oranges".into(),
-                        "1 Can Royal Ann Cherries".into(),
-                        "1 Package Small Colored Marshmellows".into(),
-                    ]),
-                    recipe_instructions: vec_to_howto(vec![
-                        "Mix egg yolks, sugar and butter by hand slightly. Mixture should not be",
-                        "frothy. Microwave like scrambled eggs. Cool and blend in lemon juice and",
-                        "cool whip. Drain the fruit and fold in dressing. Add marshmellows.",
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Dressing", vec![
+                            "3 Egg Yolks".into(),
+                            "2 Tbls Sugar".into(),
+                            "1 Tbls Butter".into(),
+                            "1 Tbls Lemon Juice".into(),
+                            "1 Cup Cool Whip".into(),
+                        ]),
+                        RecipeRecipeIngredientFieldEnum::new_section("Fruit", vec![
+                            "1 Can Pineapple Chunks (20 Oz)".into(),
+                            "2 Cans Mandarin Oranges".into(),
+                            "1 Can Royal Ann Cherries".into(),
+                            "1 Package Small Colored Marshmellows".into(),
+                        ]),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("Mix egg yolks, sugar and butter by hand slightly. Mixture should not be".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("frothy. Microwave like scrambled eggs. Cool and blend in lemon juice and".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("cool whip. Drain the fruit and fold in dressing. Add marshmellows.".into()),
+                    ],
                     recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
                         value: 0
                     }),
                     ..Default::default()
                 },
                 Recipe {
-                    r#context: Default::default(),
                     r#type: Some(AtType::Recipe),
                     cook_time: seconds_to_duration(1800),
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::CreativeWork(Box::new(CreativeWork {
-                        name: vec!["AccuChef Import File".into()],
-                        ..Default::default()
-                    }))],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["7 Layer Salad".into()],
                     prep_time: seconds_to_duration(900),
                     recipe_category: vec!["Salad".into()],
@@ -324,57 +315,52 @@ mod tests {
                     }),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe),
                     cook_time: seconds_to_duration(1800),
-                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
-                    name: Some("Aebleskiver".into()),
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
+                    name: vec!["Aebleskiver".into()],
                     prep_time: seconds_to_duration(900),
                     recipe_category: RecipeCategory::Text("Bread".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "3 C Jiffy Mix".into(),
-                        "2 Tbsp Shortening".into(),
-                        "3 Eggs".into(),
-                        " Milk".into(),
-                    ]),
-                    recipe_instructions: vec_to_howto(vec![
-                        "{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fswiss\\fcharset0 Arial;",
-                        "}{\\f1\\fnil Lucida Casual;}}~",
-                        "\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs18\\par~",
-                        "\\f1 Separate whites from yolks. Beat whites until stiff. Mix jiffy mix,",
-                        "shortening and yolks. Add enough milk to make a thin batter. Fold in the",
-                        "whites. Cook in aebleskiver pan with melted margarine or butter as",
-                        "cooking fat. Cook on medium low heat until done.\\par~",
-                        "}~",
-                        "",
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("3 C Jiffy Mix".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Tbsp Shortening".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 Eggs".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Milk".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0\\fswiss\\fcharset0 Arial;".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("}{\\f1\\fnil Lucida Casual;}}~".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs18\\par~".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("\\f1 Separate whites from yolks. Beat whites until stiff. Mix jiffy mix,".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("shortening and yolks. Add enough milk to make a thin batter. Fold in the".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("whites. Cook in aebleskiver pan with melted margarine or butter as".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("cooking fat. Cook on medium low heat until done.\\par~".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("}~".into()),
+                    ],
                     recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
                         value: 24
                     }),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe),
                     cook_time: seconds_to_duration(1800),
-                    is_based_on: Some(CreativeWorkOrText::Text("AccuChef Import File".into())),
-                    name: Some("Ambrosia Delight".into()),
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
+                    name: vec!["Ambrosia Delight".into()],
                     prep_time: seconds_to_duration(3600),
                     recipe_category: RecipeCategory::Text("Dessert".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "1 Lrg Can Fruit Cocktail".into(),
-                        "1 Lrg Can Crushed Pineapple".into(),
-                        "2 Pkgs Frozen Strawberries".into(),
-                        "2 Or 3 Bananas".into(),
-                        " Orange Sherbet".into(),
-                    ]),
-                    recipe_instructions: vec_to_howto(vec![
-                        "Mix all together about 2 hours before serving. Serve a with a scoop of",
-                        "orange sherbet on top.",
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 Lrg Can Fruit Cocktail".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Lrg Can Crushed Pineapple".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Pkgs Frozen Strawberries".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Or 3 Bananas".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Orange Sherbet".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("Mix all together about 2 hours before serving. Serve a with a scoop of".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("orange sherbet on top.".into()),
+                    ],
                     recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
                         value: 0
                     }),
@@ -386,7 +372,7 @@ mod tests {
     }
 
     fn recipe1_file<'a>() -> &'a str {
-        r##"*****AccuChef Import File (C)SIVART Software http://www.AccuChef.com
+        r##"*****AccuChef Import File (C)SIVART Software https://www.AccuChef.com
 A24 Hour Fruit Salad
 BFruit
 MServings
@@ -416,7 +402,7 @@ JMix egg yolks, sugar and butter by hand slightly. Mixture should not be
 Jfrothy. Microwave like scrambled eggs. Cool and blend in lemon juice and
 Jcool whip. Drain the fruit and fold in dressing. Add marshmellows.
 Z.....End of recipe definition
-*****AccuChef Import File (C)SIVART Software http://www.AccuChef.com
+*****AccuChef Import File (C)SIVART Software https://www.AccuChef.com
 A7 Layer Salad
 BSalad
 MServings
@@ -448,7 +434,7 @@ JMix sour cream and miracle whip. Layer all the ingredients down to water
 Jchestnuts and then cover with miracle whip mixture. Refrigerate over
 Jnight and then place eggs, bacon and tomatoes on top.
 Z.....End of recipe definition
-*****AccuChef Import File (C)SIVART Software http://www.AccuChef.com
+*****AccuChef Import File (C)SIVART Software https://www.AccuChef.com
 AAebleskiver
 BBread
 MServings 24
@@ -471,7 +457,7 @@ Jcooking fat. Cook on medium low heat until done.\par~
 J}~
 J
 Z.....End of recipe definition
-*****AccuChef Import File (C)SIVART Software http://www.AccuChef.com
+*****AccuChef Import File (C)SIVART Software https://www.AccuChef.com
 AAmbrosia Delight
 BDessert
 MServings

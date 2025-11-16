@@ -14,11 +14,11 @@ use crate::{Action, AtType};
 pub type DefinedTermAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/DefinedTerm>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DefinedTerm {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/inDefinedTermSet>

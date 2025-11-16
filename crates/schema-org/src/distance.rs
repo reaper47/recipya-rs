@@ -11,11 +11,11 @@ use crate::helpers::one_or_many;
 pub type DistanceAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Distance>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Distance {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/disambiguatingDescription>

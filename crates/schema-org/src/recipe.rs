@@ -16,10 +16,7 @@ use crate::field::{
     RecipeYieldFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{
-    AggregateRating, AtType, Comment, Country, CreativeWork, Duration, ImageObject,
-    InteractionCounter, NutritionInformation, Person, Review, Thing,
-};
+use crate::{AggregateRating, AtType, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject, InteractionCounter, NutritionInformation, Person, Review, Thing};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>
@@ -43,11 +40,11 @@ pub type RecipeDatePublishedFieldEnum = String;
 pub type RecipeSchemaVersionFieldEnum = String;
 
 ///<https://schema.org/Recipe>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Recipe {
-    #[serde(rename = "@type", default = "set_recipe_type")]
-    pub r#type: AtType,
+    #[serde(rename = "@type")]
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/nutrition>
@@ -80,7 +77,7 @@ pub struct Recipe {
     ///<https://schema.org/cookTime>
     #[serde(rename = "cookTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    pub cook_time: Vec<Duration>,
+    pub cook_time: Vec<DurationOrText>,
     ///<https://schema.org/recipeInstructions>
     #[serde(rename = "recipeInstructions")]
     #[serde(default, deserialize_with = "one_or_many")]
@@ -108,7 +105,7 @@ pub struct Recipe {
     ///<https://schema.org/prepTime>
     #[serde(rename = "prepTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    pub prep_time: Vec<Duration>,
+    pub prep_time: Vec<DurationOrText>,
     ///<https://schema.org/estimatedCost>
     #[serde(rename = "estimatedCost")]
     #[serde(default, deserialize_with = "one_or_many")]
@@ -373,8 +370,4 @@ pub struct Recipe {
     #[serde(rename = "name")]
     #[serde(default, deserialize_with = "one_or_many")]
     pub name: Vec<String>,
-}
-
-fn set_recipe_type() -> AtType {
-    AtType::Recipe
 }

@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 ///<https://schema.org/MusicAlbumProductionType>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum MusicAlbumProductionTypeEnum {
     ///<https://schema.org/DJMixAlbum>
@@ -26,7 +26,7 @@ pub enum MusicAlbumProductionTypeEnum {
     CompilationAlbum,
 }
 ///<https://schema.org/MusicReleaseFormatType>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum MusicReleaseFormatTypeEnum {
     ///<https://schema.org/DigitalFormat>
@@ -46,7 +46,7 @@ pub enum MusicReleaseFormatTypeEnum {
     DVDFormat,
 }
 ///<https://schema.org/ActionStatusType>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum ActionStatusTypeEnum {
     ///<https://schema.org/ActiveActionStatus>
@@ -60,7 +60,7 @@ pub enum ActionStatusTypeEnum {
     FailedActionStatus,
 }
 ///<https://schema.org/OfferItemCondition>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum OfferItemConditionEnum {
     ///<https://schema.org/NewCondition>
@@ -74,7 +74,7 @@ pub enum OfferItemConditionEnum {
     DamagedCondition,
 }
 ///<https://schema.org/RestrictedDiet>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum RestrictedDietEnum {
     ///<https://schema.org/HinduDiet>
@@ -102,7 +102,7 @@ pub enum RestrictedDietEnum {
     LowLactoseDiet,
 }
 ///<https://schema.org/AdultOrientedEnumeration>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum AdultOrientedEnumerationEnum {
     ///<https://schema.org/ReducedRelevanceForChildrenConsideration>
@@ -128,7 +128,7 @@ pub enum AdultOrientedEnumerationEnum {
     UnclassifiedAdultConsideration,
 }
 ///<https://schema.org/ItemListOrderType>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum ItemListOrderTypeEnum {
     ///<https://schema.org/ItemListOrderDescending>
@@ -140,7 +140,7 @@ pub enum ItemListOrderTypeEnum {
     ItemListUnordered,
 }
 ///<https://schema.org/MeasurementMethodEnum>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum MeasurementMethodEnumEnum {
     ///<https://schema.org/ExampleMeasurementMethodEnum>
@@ -148,7 +148,7 @@ pub enum MeasurementMethodEnumEnum {
     ExampleMeasurementMethodEnum,
 }
 ///<https://schema.org/EventStatusType>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum EventStatusTypeEnum {
     ///<https://schema.org/EventPostponed>
@@ -164,7 +164,7 @@ pub enum EventStatusTypeEnum {
     EventCancelled,
 }
 ///<https://schema.org/EventAttendanceModeEnumeration>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum EventAttendanceModeEnumerationEnum {
     ///<https://schema.org/MixedEventAttendanceMode>
@@ -176,7 +176,7 @@ pub enum EventAttendanceModeEnumerationEnum {
     OnlineEventAttendanceMode,
 }
 ///<https://schema.org/GenderType>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum GenderTypeEnum {
     ///<https://schema.org/Male>
@@ -186,7 +186,7 @@ pub enum GenderTypeEnum {
     Female,
 }
 ///<https://schema.org/MusicAlbumReleaseType>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum MusicAlbumReleaseTypeEnum {
     ///<https://schema.org/EPRelease>
@@ -200,7 +200,7 @@ pub enum MusicAlbumReleaseTypeEnum {
     BroadcastRelease,
 }
 ///<https://schema.org/ContactPointOption>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum ContactPointOptionEnum {
     ///<https://schema.org/HearingImpairedSupported>

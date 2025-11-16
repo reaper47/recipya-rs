@@ -32,11 +32,11 @@ pub type ClipEncodingFormatFieldEnum = String;
 pub type ClipDatePublishedFieldEnum = String;
 
 ///<https://schema.org/Clip>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Clip {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/actors>

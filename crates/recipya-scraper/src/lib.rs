@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::websites::Website;
-use schema_org::Recipe;
+use schema_org::{AtType, Recipe};
 use scraper::{Html, Selector};
 use support::fs::FsSupport;
 use tracing::error;

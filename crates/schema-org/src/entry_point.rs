@@ -12,11 +12,11 @@ use crate::{Action, AtType};
 ///<https://schema.org/URL>
 pub type EntryPointAdditionalTypeFieldEnum = String;
 ///<https://schema.org/EntryPoint>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EntryPoint {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/contentType>

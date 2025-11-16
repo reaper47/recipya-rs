@@ -12,11 +12,11 @@ use crate::{AtType, PropertyValue, QualitativeValue, QuantitativeValue};
 ///<https://schema.org/URL>
 pub type SizeSpecificationAdditionalTypeFieldEnum = String;
 ///<https://schema.org/SizeSpecification>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SizeSpecification {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/hasMeasurement>

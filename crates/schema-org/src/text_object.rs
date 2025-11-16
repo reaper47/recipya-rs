@@ -35,11 +35,11 @@ pub type TextObjectDateModifiedFieldEnum = String;
 pub type TextObjectDatePublishedFieldEnum = String;
 
 ///<https://schema.org/TextObject>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TextObject {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     ///<https://schema.org/about>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

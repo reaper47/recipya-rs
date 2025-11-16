@@ -11,7 +11,7 @@ pub use fileformat::FileFormat;
 
 use std::io::{Read, Seek};
 
-use recipe_schema::RecipeSchema;
+use schema_org::Recipe;
 
 use crate::apps::cooklang::CookLang;
 use crate::apps::{
@@ -25,7 +25,7 @@ pub fn parse_recipe<R>(
     app: &App,
     file_name: &str,
     file_format: &FileFormat,
-) -> Result<Vec<RecipeSchema>>
+) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {

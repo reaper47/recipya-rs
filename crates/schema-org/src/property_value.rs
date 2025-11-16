@@ -19,11 +19,11 @@ pub type PropertyValuePropertyIDFieldEnum = String;
 pub type PropertyValueUnitCodeFieldEnum = String;
 
 ///<https://schema.org/PropertyValue>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyValue {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/measurementMethod>

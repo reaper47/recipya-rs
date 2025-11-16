@@ -27,11 +27,11 @@ pub type HowToStepDateModifiedFieldEnum = String;
 pub type HowToStepDatePublishedFieldEnum = String;
 
 ///<https://schema.org/HowToStep>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HowToStep {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/item>

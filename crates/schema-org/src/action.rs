@@ -24,11 +24,11 @@ pub type ActionStartTimeFieldEnum = String;
 pub type ActionAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Action>
-#[derive(Debug, Default, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Action {
     #[serde(rename = "@type")]
-    pub r#type: AtType,
+    pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/agent>
