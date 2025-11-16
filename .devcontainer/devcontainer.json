@@ -5,6 +5,7 @@
 	"workspaceFolder": "/workspace",
 	"forwardPorts": [7324, 5432],
 	"remoteUser": "root",
+	"mounts": [],
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -22,7 +23,7 @@
 						"name": "Container database",
 						"driver": "PostgreSQL",
 						"previewLimit": 50,
-						"server": "localhost",
+						"server": "db",
 						"port": 5432,
 						"database": "recipya_test",
 						"username": "postgres",
