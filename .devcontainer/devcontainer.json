@@ -25,7 +25,7 @@
 						"previewLimit": 50,
 						"server": "db",
 						"port": 5432,
-						"database": "recipya_test",
+						"database": "recipya",
 						"username": "postgres",
 						"password": "postgres"
 					}
