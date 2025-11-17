@@ -89,7 +89,7 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
     diesel::PgConnection::establish(database_url)
         .expect("error connecting to database")
         .run_pending_migrations(MIGRATIONS)
-        .unwrap_or_else(|_| panic!("migrations should have been applied for {database_url}"));
+        .unwrap_or_else(|err| panic!("migrations should have been applied for {database_url}: {err:?}"));
 
     if database_url.contains("localhost") || database_url.contains("host.docker.internal") {
         let (client, connection) =
