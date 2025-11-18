@@ -6,7 +6,7 @@ use crate::field::{
     PlaceLatitudeFieldEnum, PlaceLogoFieldEnum, PlaceLongitudeFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AggregateRating, AtType, Review};
+use crate::{AggregateRating, Review};
 
 ///<https://schema.org/Place>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]

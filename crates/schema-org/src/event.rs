@@ -8,7 +8,7 @@ use crate::field::{
     EventSubjectOfFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{Action, AtType, Person, Thing};
+use crate::{Action, Person, Thing};
 
 ///<https://schema.org/endDate>
 ///<https://schema.org/Date>

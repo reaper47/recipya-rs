@@ -17,7 +17,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AggregateRating, AtType, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
+    AggregateRating, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
     InteractionCounter, NutritionInformation, Person, Review, Thing,
 };
 
@@ -116,7 +116,7 @@ pub struct Recipe {
     ///<https://schema.org/totalTime>
     #[serde(rename = "totalTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    pub total_time: Vec<Duration>,
+    pub total_time: Vec<DurationOrText>,
     ///<https://schema.org/performTime>
     #[serde(rename = "performTime")]
     #[serde(default, deserialize_with = "one_or_many")]

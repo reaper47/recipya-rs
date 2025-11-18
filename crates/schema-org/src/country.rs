@@ -1,7 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::field::{
     CountryAddressFieldEnum, CountryDescriptionFieldEnum, CountryImageFieldEnum,
     CountryKeywordsFieldEnum, CountryLatitudeFieldEnum, CountryLongitudeFieldEnum,

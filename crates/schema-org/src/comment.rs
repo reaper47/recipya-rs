@@ -9,7 +9,7 @@ use crate::field::{
     CommentVideoFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AggregateRating, AtType, CreativeWork, ImageObject, InteractionCounter};
+use crate::{AggregateRating, CreativeWork, ImageObject, InteractionCounter};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

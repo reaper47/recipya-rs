@@ -11,8 +11,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AtType, Comment, CreativeWork, ImageObject, InteractionCounter, MediaObject, Thing,
-    WebPageElement,
+    Comment, CreativeWork, ImageObject, InteractionCounter, MediaObject, Thing, WebPageElement,
 };
 
 ///<https://schema.org/dateCreated>

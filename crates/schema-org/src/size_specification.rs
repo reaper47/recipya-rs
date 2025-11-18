@@ -5,7 +5,7 @@ use crate::field::{
     SizeSpecificationDescriptionFieldEnum, SizeSpecificationValueReferenceFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, PropertyValue, QualitativeValue, QuantitativeValue};
+use crate::{PropertyValue, QualitativeValue, QuantitativeValue};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>

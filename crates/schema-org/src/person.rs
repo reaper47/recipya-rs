@@ -7,7 +7,7 @@ use crate::field::{
     PersonWeightFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Country, InteractionCounter, Place};
+use crate::{Country, InteractionCounter, Place};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>

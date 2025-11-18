@@ -11,7 +11,7 @@ use crate::field::{
     ImageObjectSubjectOfFieldEnum, ImageObjectWidthFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Comment, InteractionCounter, MediaObject, Thing};
+use crate::{Comment, InteractionCounter, MediaObject, Thing};
 
 ///<https://schema.org/encodingFormat>
 ///<https://schema.org/Text>

@@ -10,7 +10,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    Action, AtType, Comment, CreativeWork, ImageObject, InteractionCounter, ListItem, Review, Thing,
+    Action, Comment, CreativeWork, ImageObject, InteractionCounter, ListItem, Review, Thing,
 };
 
 ///<https://schema.org/dateCreated>

@@ -1,6 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::Thing;
 use crate::field::{
     AggregateRatingAuthorFieldEnum, AggregateRatingBestRatingFieldEnum,
     AggregateRatingDescriptionFieldEnum, AggregateRatingImageFieldEnum,
@@ -8,7 +9,6 @@ use crate::field::{
     AggregateRatingWorstRatingFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Thing};
 
 ///<https://schema.org/AggregateRating>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]

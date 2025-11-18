@@ -27,15 +27,9 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use recipe_schema::components::{SectionItem, Sections};
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
-
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::Result;
-use crate::helpers::{
-    sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
-    to_yield,
-};
+use crate::helpers::{to_is_based_on, to_organization_type, to_yield};
 
 struct MealMasterRecipe {
     author: Option<String>,
@@ -1247,11 +1241,11 @@ MMMMM
 
         pub fn recipe_v8_00_file<'a>() -> &'a str {
             r##"---------- Recipe via Meal-Master (tm) v8.00
- 
+
       Title: Chicken Avocado Melt
  Categories: Poultry, Main dish
       Yield: 2 servings
- 
+
       2    Chicken breast halves
       1 tb Cornstarch
     1/2 ts Cumin, ground
@@ -1268,7 +1262,7 @@ MMMMM
     1/8    Pepper, red bell; chopped
            Tomatoes, cherry
            Parsley sprigs
- 
+
   Skin and bone chicken breasts. On hard surface, with meat mallet or similar
   flattening utensil, pound chicken to 1/4 in thickness. In shallow dish, mix
   together cornstarch, cumin and garlic salt. Add chicken on piece at a time,
@@ -1280,7 +1274,7 @@ MMMMM
   oven about 15 minutes or until fork can be inserted in chicken with ease
   and cheese melts. Top chicken with sour cream, dividing equally; sprinkle
   with chopped green onion and red pepper.
- 
+
 -----
  "##
         }

@@ -1,7 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::field::DurationDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 

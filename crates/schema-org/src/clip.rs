@@ -8,7 +8,7 @@ use crate::field::{
     ClipSubjectOfFieldEnum, ClipVideoFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Comment, Country, Duration, ImageObject, MediaObject, Person, Place, Thing};
+use crate::{Comment, Country, Duration, ImageObject, MediaObject, Person, Place, Thing};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

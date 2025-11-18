@@ -1,13 +1,13 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::Thing;
 use crate::field::{
     HowToSupplyDescriptionFieldEnum, HowToSupplyEstimatedCostFieldEnum, HowToSupplyImageFieldEnum,
     HowToSupplyPositionFieldEnum, HowToSupplyRequiredQuantityFieldEnum,
 };
 use crate::helpers::one_or_many;
 use crate::list_item::ListItem;
-use crate::{AtType, Thing};
 
 ///<https://schema.org/HowToSupply>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]

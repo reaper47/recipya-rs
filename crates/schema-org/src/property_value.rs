@@ -1,7 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::field::{
     PropertyValueDescriptionFieldEnum, PropertyValueImageFieldEnum,
     PropertyValueMeasurementMethodFieldEnum, PropertyValueMeasurementTechniqueFieldEnum,

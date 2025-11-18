@@ -1,7 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::field::{
     QuantitativeValueDescriptionFieldEnum, QuantitativeValueValueFieldEnum,
     QuantitativeValueValueReferenceFieldEnum,

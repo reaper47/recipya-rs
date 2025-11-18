@@ -1,7 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::field::{DistanceDescriptionFieldEnum, DistanceSubjectOfFieldEnum};
 use crate::helpers::one_or_many;
 

@@ -10,8 +10,8 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AggregateRating, AtType, ImageObject, InteractionCounter, MediaObject, Organization, Person,
-    Review, Thing,
+    AggregateRating, ImageObject, InteractionCounter, MediaObject, Organization, Person, Review,
+    Thing,
 };
 
 ///<https://schema.org/endTime>

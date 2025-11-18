@@ -11,8 +11,8 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AggregateRating, AtType, Comment, Country, CreativeWork, Event, ImageObject,
-    InteractionCounter, MediaObject, Review, Thing,
+    AggregateRating, Comment, Country, CreativeWork, Event, ImageObject, InteractionCounter,
+    MediaObject, Review, Thing,
 };
 
 ///<https://schema.org/encodingFormat>

@@ -7,9 +7,7 @@ use crate::field::{
     WebContentIsBasedOnUrlFieldEnum, WebContentKeywordsFieldEnum, WebContentSubjectOfFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{
-    AtType, Comment, CreativeWork, Duration, ImageObject, InteractionCounter, Review, Thing,
-};
+use crate::{Comment, CreativeWork, Duration, ImageObject, InteractionCounter, Review, Thing};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

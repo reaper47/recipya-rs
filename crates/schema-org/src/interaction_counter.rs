@@ -1,9 +1,9 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::Action;
 use crate::field::InteractionCounterDescriptionFieldEnum;
 use crate::helpers::one_or_many;
-use crate::{Action, AtType};
 
 ///<https://schema.org/InteractionCounter>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]

@@ -10,9 +10,7 @@ use crate::field::{
     HowToTranslatorFieldEnum, HowToVideoFieldEnum, HowToYieldFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{
-    Action, AtType, Comment, CreativeWork, Duration, ImageObject, InteractionCounter, Thing,
-};
+use crate::{Action, Comment, CreativeWork, Duration, ImageObject, InteractionCounter, Thing};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

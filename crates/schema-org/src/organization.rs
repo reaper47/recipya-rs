@@ -7,7 +7,7 @@ use crate::field::{
     OrganizationSubjectOfFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AggregateRating, AtType, InteractionCounter, Person, QuantitativeValue, Review};
+use crate::{AggregateRating, InteractionCounter, Person, QuantitativeValue, Review};
 
 ///<https://schema.org/Organization>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]

@@ -7,7 +7,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::list_item::ListItem;
-use crate::{Action, AtType, Thing};
+use crate::{Action, Thing};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>

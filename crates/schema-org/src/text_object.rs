@@ -9,8 +9,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AggregateRating, AtType, Comment, CreativeWork, ImageObject, InteractionCounter, Person,
-    Review, Thing,
+    AggregateRating, Comment, CreativeWork, ImageObject, InteractionCounter, Person, Review, Thing,
 };
 
 ///<https://schema.org/uploadDate>

@@ -10,9 +10,7 @@ use crate::field::{
     HowToSectionVideoFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{
-    AtType, Comment, CreativeWork, Duration, ImageObject, InteractionCounter, ListItem, Thing,
-};
+use crate::{Comment, CreativeWork, Duration, ImageObject, InteractionCounter, ListItem, Thing};
 
 ///<https://schema.org/HowToSection>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]

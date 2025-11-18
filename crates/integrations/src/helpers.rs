@@ -1,8 +1,7 @@
 use iso8601::Duration;
 
 use schema_org::field::{
-    QuantitativeValueValueFieldEnum, RecipeAuthorFieldEnum, RecipeIsBasedOnFieldEnum,
-    RecipeKeywordsFieldEnum, RecipeRecipeYieldFieldEnum,
+    QuantitativeValueValueFieldEnum, RecipeIsBasedOnFieldEnum, RecipeRecipeYieldFieldEnum,
 };
 use schema_org::{DurationOrText, QuantitativeValue, Recipe};
 

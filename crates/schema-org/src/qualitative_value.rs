@@ -1,12 +1,12 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::PropertyValue;
 use crate::field::{
     QualitativeValueDescriptionFieldEnum, QualitativeValueSubjectOfFieldEnum,
     QualitativeValueValueReferenceFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, PropertyValue};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>

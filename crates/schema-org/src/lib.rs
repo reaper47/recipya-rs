@@ -123,6 +123,7 @@ use serde::{Deserialize, Serialize};
 pub enum AtType {
     AggregateRating,
     HowToTool,
+    ImageObject,
     ItemList,
     NutritionInformation,
     #[default]
@@ -140,6 +141,7 @@ impl Display for AtType {
                 AtType::Recipe => "Recipe".to_string(),
                 AtType::AggregateRating => "AggregateRating".to_string(),
                 AtType::HowToTool => "HowToTool".to_string(),
+                AtType::ImageObject => "ImageObject".to_string(),
                 AtType::ItemList => "ItemList".to_string(),
                 AtType::NutritionInformation => "NutritionInformation".to_string(),
                 AtType::Review => "Review".to_string(),

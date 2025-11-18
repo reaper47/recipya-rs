@@ -9,7 +9,7 @@ use crate::field::{
     CreativeWorkTranslatorFieldEnum, CreativeWorkVideoFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AggregateRating, AtType, Comment, Duration, ImageObject, InteractionCounter, Review};
+use crate::{AggregateRating, Comment, Duration, ImageObject, InteractionCounter, Review};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

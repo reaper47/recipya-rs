@@ -9,22 +9,22 @@ use nom::character::complete::{digit1, line_ending, space0, space1};
 use nom::combinator::{map, opt, recognize, rest};
 use nom::multi::{many1, separated_list0};
 use nom::sequence::{delimited, preceded, terminated};
+
+use schema_org::field::{
+    AggregateRatingRatingValueFieldEnum, ImageObjectImageFieldEnum, RecipeImageFieldEnum,
+    RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
+    RecipeRecipeInstructionsFieldEnum,
+};
+use schema_org::{
+    AggregateRating, AtType, Energy, ImageObject, Mass, NutritionInformation, Recipe,
+};
 use serde::Deserialize;
 
 use crate::apps::helpers::{
     Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
 };
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
-    to_organization_type, to_text, to_yield,
-};
+use crate::helpers::{seconds_to_duration, to_organization_type, to_text, to_yield};
 use crate::{Error, Result};
-use recipe_schema::components::{
-    AggregateRating, ImageObjectOrUrl, ImageObjectType, NumberOrText, SectionItem, Sections,
-};
-use recipe_schema::{
-    AtType, Energy, Mass, NutritionInformationSchema, RecipeCategory, RecipeSchema,
-};
 
 #[derive(Default)]
 struct RecipeComponents<'a> {
@@ -42,7 +42,7 @@ struct RecipeComponents<'a> {
     r#yield: i64,
 }
 
-impl From<RecipeComponents<'_>> for RecipeSchema {
+impl From<RecipeComponents<'_>> for Recipe {
     fn from(r: RecipeComponents) -> Self {
         let (category, keywords) = match r.categories.as_slice() {
             [first, rest @ ..] => (first.trim().to_string(), rest.to_vec()),
@@ -53,8 +53,8 @@ impl From<RecipeComponents<'_>> for RecipeSchema {
             .rating
             .and_then(|r| r.trim().split_once(' '))
             .map(|(numerator, denominator)| {
-                let numerator: f64 = numerator.parse().unwrap_or_default();
-                let denominator: f64 = denominator.parse().unwrap_or_default();
+                let numerator: f32 = numerator.parse().unwrap_or_default();
+                let denominator: f32 = denominator.parse().unwrap_or_default();
                 numerator / denominator
             })
             .unwrap_or_default();
@@ -92,47 +92,52 @@ impl From<RecipeComponents<'_>> for RecipeSchema {
         }
 
         Self {
-            at_type: Some(AtType::Recipe),
-            aggregate_rating: (rating > 0.0).then(|| AggregateRating {
-                at_type: AtType::AggregateRating,
-                rating_value: Some(NumberOrText::Number(rating)),
-                ..Default::default()
-            }),
+            r#type: Some(AtType::Recipe.to_string()),
+            aggregate_rating: (rating > 0.0)
+                .then(|| {
+                    vec![AggregateRating {
+                        r#type: Some(AtType::AggregateRating.to_string()),
+                        rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(rating)],
+                        ..Default::default()
+                    }]
+                })
+                .unwrap_or_default(),
             author: to_organization_type(r.author.trim().into()),
             cook_time: seconds_to_duration(cook_secs),
             description: to_text(r.description.trim_end_matches("\"").into()),
-            is_based_on: to_is_based_on(source),
-            keywords: to_defined_text(keywords.join(",")),
-            name: Some(r.title.into()),
+            is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
+            keywords: keywords
+                .into_iter()
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
+                .collect(),
+            name: vec![r.title.into()],
             nutrition: parse_nutrition_schema(r.nutrition),
             prep_time: seconds_to_duration(prep_secs),
             recipe_category: if category.is_empty() {
-                RecipeCategory::default()
+                vec![]
             } else {
-                RecipeCategory::Text(category)
+                vec![category]
             },
-            recipe_ingredient: sections_to_vec(Sections::from([(
-                "".into(),
-                r.ingredients
-                    .into_iter()
-                    .map(|s| match s {
-                        Ingredient::Line(s) => s.to_string(),
-                        Ingredient::Section(s) => s.to_string(),
-                    })
-                    .map(|s| {
-                        SectionItem::new(
-                            s.split_whitespace()
-                                .collect::<Vec<_>>()
-                                .join(" ")
-                                .replace(" --", ","),
-                        )
-                    })
-                    .collect(),
-            )])),
-            recipe_instructions: sections_to_itemlist(Sections::from([(
-                "".into(),
-                instructions.iter().map(SectionItem::new).collect(),
-            )])),
+            recipe_ingredient: r
+                .ingredients
+                .into_iter()
+                .map(|s| match s {
+                    Ingredient::Line(s) => s.to_string(),
+                    Ingredient::Section(s) => s.to_string(),
+                })
+                .map(|s| {
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        s.split_whitespace()
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                            .replace(" --", ","),
+                    )
+                })
+                .collect(),
+            recipe_instructions: instructions
+                .into_iter()
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect(),
             recipe_yield: to_yield(r.r#yield),
             total_time: seconds_to_duration(total_secs),
             ..Default::default()
@@ -149,7 +154,7 @@ struct Mx2 {
     #[serde(rename = "Summ")]
     summary: Summary,
     #[serde(rename = "RcpE")]
-    recipes: Vec<Recipe>,
+    recipes: Vec<MastercookRecipe>,
 }
 
 #[derive(Deserialize)]
@@ -159,7 +164,7 @@ struct Summary {
 }
 
 #[derive(Deserialize)]
-struct Recipe {
+struct MastercookRecipe {
     #[serde(rename = "@name")]
     name: String,
     #[serde(rename = "@author")]
@@ -266,8 +271,8 @@ struct Rating {
     pub value: String,
 }
 
-impl From<Recipe> for RecipeSchema {
-    fn from(r: Recipe) -> Self {
+impl From<MastercookRecipe> for Recipe {
+    fn from(r: MastercookRecipe) -> Self {
         let (category, keywords) = match r.categories.unwrap_or_default().categories.as_slice() {
             [first, rest @ ..] => (first.trim().to_string(), rest.to_vec()),
             [] => ("".into(), Vec::new()),
@@ -290,72 +295,78 @@ impl From<Recipe> for RecipeSchema {
             .trim_start_matches("Per Serving (excluding unknown items): ");
 
         Self {
-            at_type: Some(AtType::Recipe),
-            aggregate_rating: r.ratings.map(|r| {
-                let numerator: f64 = r.rating.name.parse().unwrap_or_default();
-                let denominator: f64 = r.rating.value.parse().unwrap_or_default();
+            r#type: Some(AtType::Recipe.to_string()),
+            aggregate_rating: r
+                .ratings
+                .map(|r| {
+                    let numerator: f32 = r.rating.name.parse().unwrap_or_default();
+                    let denominator: f32 = r.rating.value.parse().unwrap_or_default();
 
-                AggregateRating {
-                    at_type: AtType::AggregateRating,
-                    rating_value: Some(NumberOrText::Number(numerator / denominator)),
-                    ..Default::default()
-                }
-            }),
+                    vec![AggregateRating {
+                        r#type: Some(AtType::AggregateRating.to_string()),
+                        rating_value: Some(AggregateRatingRatingValueFieldEnum::Number(
+                            numerator / denominator,
+                        ))
+                        .map(|v| vec![v])
+                        .unwrap_or_default(),
+                        ..Default::default()
+                    }]
+                })
+                .unwrap_or_default(),
             author: to_organization_type(r.author),
             cook_time: seconds_to_duration(cook_secs),
             description: to_text(r.description),
-            is_accessible_for_free: false,
-            is_based_on: to_is_based_on(source),
-            image: (!r.img.is_empty()).then_some(ImageObjectOrUrl::ImageObject(Box::new(
-                ImageObjectType {
-                    at_type: AtType::ImageObject,
-                    at_id: Some(r.img),
-                    ..Default::default()
-                },
-            ))),
-            keywords: to_defined_text(keywords.join(",")),
-            name: Some(r.name),
+            is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
+            image: (!r.img.is_empty())
+                .then_some(vec![RecipeImageFieldEnum::ImageObject(Box::new(
+                    ImageObject {
+                        r#type: Some(AtType::ImageObject.to_string()),
+                        image: vec![ImageObjectImageFieldEnum::URL(r.img)],
+                        ..Default::default()
+                    },
+                ))])
+                .unwrap_or_default(),
+            keywords: keywords
+                .into_iter()
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
+                .collect(),
+            name: vec![r.name],
             nutrition: parse_nutrition_schema(nutrition.split(";").collect()),
             prep_time: seconds_to_duration(prep_secs),
             recipe_category: if category.is_empty() {
-                RecipeCategory::default()
+                vec![]
             } else {
-                RecipeCategory::Text(category)
+                vec![category]
             },
-            recipe_cuisine: None,
-            recipe_ingredient: sections_to_vec(Sections::from([(
-                "".into(),
-                r.ingredients
-                    .into_iter()
-                    .map(|ing| {
-                        SectionItem::new(format!(
-                            "{}{}{}{}",
-                            ing.qty,
-                            match ing.unit {
-                                None => String::new(),
-                                Some(s) => format!(" {}", s),
-                            },
-                            if ing.name.is_empty() {
-                                String::new()
-                            } else {
-                                format!(" {}", ing.name)
-                            },
-                            match ing.preparation {
-                                None => String::new(),
-                                Some(s) => format!(", {s}"),
-                            }
-                        ))
-                    })
-                    .collect(),
-            )])),
-            recipe_instructions: sections_to_itemlist(Sections::from([(
-                "".into(),
-                r.directions
-                    .directions
-                    .into_iter()
-                    .map(|d| SectionItem::new(d.text.to_string()))
-                    .collect(),
-            )])),
+            recipe_ingredient: r
+                .ingredients
+                .into_iter()
+                .map(|ing| {
+                    RecipeRecipeIngredientFieldEnum::Text(format!(
+                        "{}{}{}{}",
+                        ing.qty,
+                        match ing.unit {
+                            None => String::new(),
+                            Some(s) => format!(" {}", s),
+                        },
+                        if ing.name.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" {}", ing.name)
+                        },
+                        match ing.preparation {
+                            None => String::new(),
+                            Some(s) => format!(", {s}"),
+                        }
+                    ))
+                })
+                .collect(),
+            recipe_instructions: r
+                .directions
+                .directions
+                .into_iter()
+                .map(|d| RecipeRecipeInstructionsFieldEnum::Text(d.text.to_string()))
+                .collect(),
             recipe_yield: to_yield(r.serving.qty.parse().unwrap_or_default()),
             total_time: seconds_to_duration(total_secs),
             ..Default::default()
@@ -373,45 +384,44 @@ fn parse_time(s: &str) -> i32 {
     humantime::parse_duration(&s).unwrap_or_default().as_secs() as i32
 }
 
-fn parse_nutrition_schema(s: Vec<&str>) -> Option<NutritionInformationSchema> {
-    let mut nutrition = NutritionInformationSchema::default();
+fn parse_nutrition_schema(s: Vec<&str>) -> Vec<NutritionInformation> {
+    let mut nutrition = NutritionInformation::default();
     s.iter().for_each(|s| {
         let (value, key) = s.trim().split_once(' ').unwrap_or_default();
         if value == "0g" || value == "0mg" {
             return;
         }
 
-        let energy = Some(Energy::Str(value.to_string()));
-        let mass = Some(Mass::Str(value.to_string()));
+        let energy = Energy::new(value);
+        let mass = Mass::new(value);
 
         if key == "Calories" {
-            nutrition.calories = energy
+            nutrition.calories = vec![energy]
         } else if key.starts_with("Fat") {
-            nutrition.fat_content = mass
+            nutrition.fat_content = vec![mass]
         } else if key == "Protein" {
-            nutrition.protein_content = mass
+            nutrition.protein_content = vec![mass]
         } else if key == "Carbohydrate" {
-            nutrition.carbohydrate_content = mass
+            nutrition.carbohydrate_content = vec![mass]
         } else if key == "Dietary Fiber" {
-            nutrition.fiber_content = mass
+            nutrition.fiber_content = vec![mass]
         } else if key == "Cholesterol" {
-            nutrition.cholesterol_content = mass
+            nutrition.cholesterol_content = vec![mass]
         } else if key == "Sodium" {
-            nutrition.sodium_content = mass
+            nutrition.sodium_content = vec![mass]
         } else if key == "Total Sugars" {
-            nutrition.sugar_content = mass
+            nutrition.sugar_content = vec![mass]
         }
     });
 
-    if nutrition.is_empty() {
-        None
-    } else {
-        Some(nutrition)
-    }
+    nutrition
+        .is_empty()
+        .then_some(vec![nutrition])
+        .unwrap_or_default()
 }
 
 /// Parses a MasterCook MX2 file.
-pub fn parse_mx2<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_mx2<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -429,11 +439,11 @@ where
     let root: Mx2 =
         serde_xml_rs::from_str(&cleaned).map_err(|err| Error::Parse(err.to_string()))?;
 
-    Ok(root.recipes.into_iter().map(RecipeSchema::from).collect())
+    Ok(root.recipes.into_iter().map(Recipe::from).collect())
 }
 
 /// Parses a MasterCook MXP file.
-pub fn parse_mxp<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_mxp<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -441,14 +451,14 @@ where
 
     let recipes = parse_mxp_helper(&content)?
         .into_iter()
-        .map(RecipeSchema::from)
+        .map(Recipe::from)
         .collect::<Vec<_>>();
 
     Ok(recipes)
 }
 
 /// Parses a MasterCook MZ2 file.
-pub fn parse_mz2<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_mz2<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -553,7 +563,7 @@ fn flush_mxp(input: &str) -> IResult<&str, &str> {
 }
 
 /// Parses a MasterCook TXT file.
-pub fn parse_txt<R>(mut r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_txt<R>(mut r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
 {
@@ -562,7 +572,7 @@ where
 
     let recipes = parse_txt_helper(&content)?
         .into_iter()
-        .map(RecipeSchema::from)
+        .map(Recipe::from)
         .collect::<Vec<_>>();
 
     Ok(recipes)
@@ -929,7 +939,7 @@ Per Serving (excluding unknown items): 34 Calories; 1g Fat (21.3% calories from 
 
                                 Apple Slaw
 
-Recipe By     : 
+Recipe By     :
 Serving Size  : 5    Preparation Time :0:00
 Categories    : Side Dish
 
@@ -949,14 +959,14 @@ Sprinkle sliced apples with lemon juice. Mix with cabbage, celery, carrot, and o
 Combine sour cream, mayonnaise and celery salt. Toss with apple mixture and serve.
 Lemon juice keeps apples from discoloring.
 
-                   - - - - - - - - - - - - - - - - - - 
+                   - - - - - - - - - - - - - - - - - -
 
 
                     *  Exported from  MasterCook II  *
 
                             Apples and Noodles
 
-Recipe By     : 
+Recipe By     :
 Serving Size  : 4    Preparation Time :0:00
 Categories    : Side Dish
 
@@ -972,14 +982,14 @@ Preheat oven to 350 deg F.
 Place half of the noodles and apples in a buttered baking dish.
 Sprinkle with half the brown sugar and a dash of cinnamon. Dot with half the butter. Repeat. Cover and bake 30 minutes. Stir well before serving (or, leave uncovered toward the end of baking to give the top a nice crunchy texture.)
 
-                   - - - - - - - - - - - - - - - - - - 
+                   - - - - - - - - - - - - - - - - - -
 
 
                     *  Exported from  MasterCook II  *
 
                            ARTICHOKES AND PEAS
 
-Recipe By     : 
+Recipe By     :
 Serving Size  : 4    Preparation Time :0:00
 Categories    : Vegetarian                       Vegetables
                 Side Dish
@@ -994,14 +1004,14 @@ lg Basil leaves; - sliced in strips 1 lg Onion, white or yellow - sliced 1/4-in 
 
  DEBORAH MADISON - PRODIGY GUEST CHEFS COOKBOOK
 
-                   - - - - - - - - - - - - - - - - - - 
+                   - - - - - - - - - - - - - - - - - -
 
 
                     *  Exported from  MasterCook II  *
 
               Aunt Sadie's Fabulous Chopped Liver "Pineapple
 
-Recipe By     : 
+Recipe By     :
 Serving Size  : 25   Preparation Time :0:00
 Categories    : Side Dish                        Appetizers
                 Jewish
@@ -1020,7 +1030,7 @@ Categories    : Side Dish                        Appetizers
 
 I just have to pass this along to you. I don't want you to prepare this bec none of us need the bad cholesterol ingredients. I just wanted you to have pleasure of reading it. Saute liver, one chopped onion, and celery in generous amount of chicken >> fat; cooking until liver is just done, with no pink showing, but while live are still soft. Put everything through a meat grinder, adding salt and pepper to taste. Bl well, adding chicken fat if necessary. Chill well. Cut the top off the pineapple and reserve top. Mold liver on a large servi tray, copying the fresh >>>>>> pineapple shape as closely as possible. Score diamond shapes and press olive slices into each diamond.  Place pineapple top onto top of liver mold. Surround "Pineapple" with curly lettu buffet rye bread and cherry tomatoes.
 
-                   - - - - - - - - - - - - - - - - - - 
+                   - - - - - - - - - - - - - - - - - -
 
 
 "##
@@ -1031,7 +1041,7 @@ I just have to pass this along to you. I don't want you to prepare this bec none
         }
 
         pub fn txt<'a>() -> &'a str {
-            r##"                      
+            r##"
 * Exported from MasterCook *
 
                                Best Chicken
@@ -1062,7 +1072,7 @@ Yield:
 Start to Finish Time:
   "1:45"
 Ratings       : 5 10
-                                    - - - - - - - - - - - - - - - - - - - 
+                                    - - - - - - - - - - - - - - - - - - -
 
 Per Serving (excluding unknown items): 340 Calories; 23g Fat (62.1% calories from fat); 32g Protein; 0g Carbohydrate; 0g Dietary Fiber; 97mg Cholesterol; 95mg Sodium; 0g Total Sugars; 1mcg Vitamin D; 17mg Calcium; 1mg Iron; 333mg Potassium; 263mg Phosphorus.  Exchanges: .
 
@@ -1072,14 +1082,14 @@ NOTES : This recipe is extremely difficult to prepare.
 
 Nutr. Assoc. : 0 0
 
-                      
+
 * Exported from MasterCook *
 
                              Delicious Ramen
 
 Recipe By     :Macpoule
 Serving Size  : 24    Preparation Time :0:00
-Categories    : 
+Categories    :
 
   Amount  Measure       Ingredient -- Preparation Method
 --------  ------------  --------------------------------
@@ -1098,7 +1108,7 @@ Description:
 Source:
   "My mother's recipe cookbook"
 
-                                    - - - - - - - - - - - - - - - - - - - 
+                                    - - - - - - - - - - - - - - - - - - -
 
 Per Serving (excluding unknown items): 34 Calories; 1g Fat (21.3% calories from fat); 1g Protein; 6g Carbohydrate; 0g Dietary Fiber; 31mg Cholesterol; 108mg Sodium; 4g Total Sugars; trace Vitamin D; 5mg Calcium; trace Iron; 12mg Potassium; 17mg Phosphorus.  Exchanges: .
 
@@ -1111,10 +1121,10 @@ Nutr. Assoc. : 0 0 0
     mod results {
         use super::*;
 
-        pub fn mxp() -> Vec<RecipeSchema> {
+        pub fn mxp() -> Vec<Recipe> {
             vec![
-                RecipeSchema {
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
                     name: Some("Apple Slaw".into()),
                     recipe_category: RecipeCategory::Text("Side Dish".into()),
@@ -1147,8 +1157,8 @@ Nutr. Assoc. : 0 0 0
                     recipe_yield: to_yield(5),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
                     name: Some("Apples and Noodles".into()),
                     recipe_category: RecipeCategory::Text("Side Dish".into()),
@@ -1177,8 +1187,8 @@ Nutr. Assoc. : 0 0 0
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
                     name: Some("ARTICHOKES AND PEAS".into()),
                     keywords: to_defined_text(["Vegetables", "Side Dish"].join(",")),
@@ -1203,8 +1213,8 @@ Nutr. Assoc. : 0 0 0
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
                     keywords: to_defined_text(["Appetizers", "Jewish"].join(",")),
                     name: Some(r#"Aunt Sadie's Fabulous Chopped Liver "Pineapple"#.into()),
@@ -1235,13 +1245,13 @@ Nutr. Assoc. : 0 0 0
             ]
         }
 
-        pub fn txt() -> Vec<RecipeSchema> {
+        pub fn txt() -> Vec<Recipe> {
             vec![
-                RecipeSchema {
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     author: to_organization_type("Macpoule".into()),
                     aggregate_rating: Some(AggregateRating {
-                        at_type: AtType::AggregateRating,
+                        r#type: Some(AtType::AggregateRating.to_string()),
                         rating_value: Some(NumberOrText::Number(0.5)),
                         ..Default::default()
                     }),
@@ -1282,8 +1292,8 @@ Nutr. Assoc. : 0 0 0
                     total_time: seconds_to_duration(6300),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     author: to_organization_type("Macpoule".into()),
                     description: to_text("Ramen has never been soooo delicious".into()),
                     is_based_on: to_is_based_on(

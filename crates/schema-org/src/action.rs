@@ -8,7 +8,7 @@ use crate::field::{
     ActionSubjectOfFieldEnum, ActionTargetFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, HowTo, Thing};
+use crate::{HowTo, Thing};
 
 ///<https://schema.org/endTime>
 ///<https://schema.org/DateTime>

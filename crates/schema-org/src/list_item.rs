@@ -1,12 +1,12 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::Thing;
 use crate::field::{
     ListItemDescriptionFieldEnum, ListItemImageFieldEnum, ListItemPositionFieldEnum,
     ListItemSubjectOfFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Thing};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>

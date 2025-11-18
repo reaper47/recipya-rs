@@ -14,7 +14,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AggregateRating, AtType, Comment, CreativeWork, Event, ImageObject, InteractionCounter, Thing,
+    AggregateRating, Comment, CreativeWork, Event, ImageObject, InteractionCounter, Thing,
 };
 
 ///<https://schema.org/endTime>

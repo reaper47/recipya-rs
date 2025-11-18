@@ -1,9 +1,9 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::Action;
 use crate::field::{ThingDescriptionFieldEnum, ThingImageFieldEnum, ThingSubjectOfFieldEnum};
 use crate::helpers::one_or_many;
-use crate::{Action, AtType};
 
 ///<https://schema.org/Thing>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]

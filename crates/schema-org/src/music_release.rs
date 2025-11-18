@@ -11,8 +11,8 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AtType, Country, Event, ImageObject, InteractionCounter, MusicAlbum, MusicRecording,
-    Organization, Review, Thing,
+    Country, Event, ImageObject, InteractionCounter, MusicAlbum, MusicRecording, Organization,
+    Review, Thing,
 };
 
 ///<https://schema.org/dateCreated>

@@ -9,7 +9,7 @@ use crate::field::{
     WebPageElementSdPublisherFieldEnum, WebPageElementSubjectOfFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{Action, AtType, Comment, ImageObject, InteractionCounter, Thing};
+use crate::{Action, Comment, ImageObject, InteractionCounter, Thing};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

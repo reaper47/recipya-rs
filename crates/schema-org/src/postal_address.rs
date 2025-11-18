@@ -1,7 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::enums::ContactPointOptionEnum;
 use crate::field::{
     PostalAddressAvailableLanguageFieldEnum, PostalAddressDescriptionFieldEnum,

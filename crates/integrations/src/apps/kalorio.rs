@@ -10,11 +10,14 @@ use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 
-use schema_org::field::{RecipeAuthorFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
+use schema_org::field::{
+    RecipeAuthorFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum,
+    RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+};
 use schema_org::{AtType, Recipe};
+
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::Result;
-use crate::helpers::to_organization_type;
 
 struct KalorioTextRecipe {
     title: String,
@@ -96,8 +99,14 @@ impl From<KalorioTextRecipe> for Recipe {
         Self {
             r#type: Some(AtType::Recipe.to_string()),
             author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
-            is_based_on: r.kalorio_version.map(|s| vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]).unwrap_or_default(),
-            keywords: keywords.into_iter().map(RecipeKeywordsFieldEnum::TextOrURL).collect(),
+            is_based_on: r
+                .kalorio_version
+                .map(|s| vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)])
+                .unwrap_or_default(),
+            keywords: keywords
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
             name: vec![r.title],
             recipe_category: category.map(|c| vec![c]).unwrap_or_default(),
             recipe_ingredient: r.ingredients,
@@ -121,11 +130,9 @@ where
         .collect::<Vec<_>>();
 
     if let Some(last_recipe) = recipes.last() {
-        let is_based_on = last_recipe.is_based_on.clone();
-
         recipes
             .iter_mut()
-            .for_each(|r| r.is_based_on = is_based_on.clone())
+            .for_each(|r| r.is_based_on = last_recipe.is_based_on);
     }
 
     Ok(recipes)
@@ -364,13 +371,13 @@ mod tests {
  Ananas-Käsekuchen
 
     150  g Kokoszwieback                    1 kl Ananas
-     60  g Butter                                a 1 kg                     
+     60  g Butter                                a 1 kg
     600  g Doppelrahmfrischkäse             2 EL Rum
     150  g Saure Sahne                    200 ml Ananassaft
     120  g Zucker                           3 EL Vanille-Puddingpulver
       4    Eier                             1 Sp Zitrone
       1    Limette                         20  g Kokosraspel
-      1 EL Mehl                       
+      1 EL Mehl
 
 Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und
 unter die Brösel mischen. Den Boden einer Springform (24 cm
@@ -413,7 +420,7 @@ Das restliche Ananaskompott extra zum Kuchen servieren.
            Salz                                  Eigelb
       9 EL Öl                               1 EL grobes Meersalz
       1 EL Honig                                 Backpapier
-      1    Zweig Thymian              
+      1    Zweig Thymian
 
 1. Mehl, Hefe und l TL Salz vermengen; mit 5 EL Öl, Honig und 1/41
 warmem Wasser zu einem Teig verkneten. An einem warmen Ort
@@ -449,10 +456,10 @@ Passt hervorragend zum Raclette oder Fondue
 
  FÜLLUNG
       6 gr Zwiebeln                              Kümmel
-     75  g Butter                                gemahlen                   
+     75  g Butter                                gemahlen
       1 Be Joghurt                               Pfeffer
       1 Be Saure Sahne                           Paprika
-           oder Schmand                          edelsüss                   
+           oder Schmand                          edelsüss
       3    Eier                             1 TL Speisestärke
 
 Mehl, Margarine und Salz verrühren, 1 Ei schnell unterkneten und Teig

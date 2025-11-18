@@ -1,13 +1,13 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::Action;
 use crate::field::{
     RatingAuthorFieldEnum, RatingBestRatingFieldEnum, RatingDescriptionFieldEnum,
     RatingIdentifierFieldEnum, RatingImageFieldEnum, RatingRatingValueFieldEnum,
     RatingSubjectOfFieldEnum, RatingWorstRatingFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{Action, AtType};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>

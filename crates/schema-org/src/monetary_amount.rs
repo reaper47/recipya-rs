@@ -1,9 +1,10 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
-use crate::field::{MonetaryAmountDescriptionFieldEnum, MonetaryAmountValueFieldEnum};
-use crate::helpers::one_or_many;
+use crate::{
+    field::{MonetaryAmountDescriptionFieldEnum, MonetaryAmountValueFieldEnum},
+    helpers::one_or_many,
+};
 
 ///<https://schema.org/validFrom>
 ///<https://schema.org/Date>

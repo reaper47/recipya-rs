@@ -12,7 +12,7 @@ use crate::field::{
     MusicCompositionSubjectOfFieldEnum, MusicCompositionUsageInfoFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Comment, Country, CreativeWork, InteractionCounter, Person, Thing};
+use crate::{Comment, Country, CreativeWork, InteractionCounter, Person, Thing};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

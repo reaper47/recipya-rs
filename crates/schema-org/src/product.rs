@@ -9,9 +9,7 @@ use crate::field::{
     ProductSubjectOfFieldEnum, ProductWeightFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{
-    AggregateRating, AtType, Country, Organization, PropertyValue, QuantitativeValue, Review,
-};
+use crate::{AggregateRating, Country, Organization, PropertyValue, QuantitativeValue, Review};
 
 ///<https://schema.org/gtin>
 ///<https://schema.org/Text>
