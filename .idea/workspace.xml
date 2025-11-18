@@ -60,21 +60,10 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/accuchef.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cheftap.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/energy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/energy.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/enums.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/enums.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/kalorio.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/schema-org/src/field.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/field.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/mass.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/mass.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/nutrition_information.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/nutrition_information.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

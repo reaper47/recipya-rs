@@ -1587,6 +1587,7 @@ pub type HowToSectionStepsFieldEnum = FieldEnum141;
 pub type RecipeRecipeInstructionsFieldEnum = FieldEnum141;
 
 impl RecipeRecipeInstructionsFieldEnum {
+    /// Creates a new section.
     pub fn new_section(name: &str, items: Vec<&str>) -> Self {
         Self::ItemList(
             ItemList {
@@ -1600,6 +1601,13 @@ impl RecipeRecipeInstructionsFieldEnum {
             }
             .into(),
         )
+    }
+
+    /// Adds a new item to the section.
+    pub fn push_item(&mut self, item: &str) {
+        if let Self::ItemList(list) = self {
+            list.item_list_element.push(ItemListItemListElementFieldEnum::Text(item.to_string()))
+        }
     }
 }
 

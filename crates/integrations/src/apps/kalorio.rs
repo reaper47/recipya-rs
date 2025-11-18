@@ -10,21 +10,18 @@ use nom::multi::{many0, many1, separated_list1};
 use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 
-use recipe_schema::components::Sections;
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
-
+use schema_org::field::{RecipeAuthorFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
+use schema_org::{AtType, Recipe};
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
 use crate::Result;
-use crate::helpers::{
-    sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
-};
+use crate::helpers::to_organization_type;
 
 struct KalorioTextRecipe {
     title: String,
     author: String,
     keywords: Vec<String>,
-    instructions: Sections,
-    ingredients: Sections,
+    instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
+    ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
     kalorio_version: Option<String>,
 }
 
@@ -89,7 +86,7 @@ pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
     }
 }
 
-impl From<KalorioTextRecipe> for RecipeSchema {
+impl From<KalorioTextRecipe> for Recipe {
     fn from(r: KalorioTextRecipe) -> Self {
         let (category, keywords) = match r.keywords.as_slice() {
             [first, rest @ ..] => (Some(first.to_string()), rest.to_vec()),
@@ -97,15 +94,14 @@ impl From<KalorioTextRecipe> for RecipeSchema {
         };
 
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            author: to_organization_type(r.author),
-            is_based_on: to_is_based_on(r.kalorio_version.unwrap_or_default()),
-            keywords: to_defined_text(keywords.join(",")),
-            name: Some(r.title),
-            recipe_category: RecipeCategory::Text(category.unwrap_or_default()),
-            recipe_ingredient: sections_to_vec(r.ingredients),
-            recipe_instructions: sections_to_itemlist(r.instructions),
+            r#type: Some(AtType::Recipe.to_string()),
+            author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
+            is_based_on: r.kalorio_version.map(|s| vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]).unwrap_or_default(),
+            keywords: keywords.into_iter().map(RecipeKeywordsFieldEnum::TextOrURL).collect(),
+            name: vec![r.title],
+            recipe_category: category.map(|c| vec![c]).unwrap_or_default(),
+            recipe_ingredient: r.ingredients,
+            recipe_instructions: r.instructions,
             recipe_yield: Default::default(),
             ..Default::default()
         }
@@ -113,7 +109,7 @@ impl From<KalorioTextRecipe> for RecipeSchema {
 }
 
 /// Parses a Kalorio text file to extract the recipes from the file's content.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -121,7 +117,7 @@ where
 
     let mut recipes = parse_txt(&content)?
         .into_iter()
-        .map(RecipeSchema::from)
+        .map(Recipe::from)
         .collect::<Vec<_>>();
 
     if let Some(last_recipe) = recipes.last() {
@@ -486,12 +482,12 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     mod results {
         use super::*;
         use recipe_schema::components::SectionItem;
+        use schema_org::Recipe;
 
-        pub fn all_recipes_txt() -> Vec<RecipeSchema> {
+        pub fn all_recipes_txt() -> Vec<Recipe> {
             vec![
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     author: to_organization_type("Petra Holzapfel".into()),
                     is_based_on: to_is_based_on("Kalorio! V4.04".into()),
                     keywords: to_defined_text("Käse,Kuchen".into()),
@@ -536,9 +532,8 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     recipe_yield: Default::default(),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     author: to_organization_type("Jochen 'Nunz' Herz".into()),
                     is_based_on: to_is_based_on("Kalorio! V4.04".into()),
                     keywords: to_defined_text("Raclette,Fondue".into()),
@@ -578,9 +573,8 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     recipe_yield: Default::default(),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
                     author: to_organization_type("Jochen 'Nunz' Herz".into()),
                     is_based_on: to_is_based_on("Kalorio! V4.04".into()),
                     keywords: to_defined_text("Zwiebeln".into()),

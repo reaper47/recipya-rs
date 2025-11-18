@@ -5,10 +5,7 @@ use std::io::Read;
 use serde::Deserialize;
 use url::Url;
 
-use schema_org::field::{
-    RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeIsBasedOnFieldEnum,
-    RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
-};
+use schema_org::field::{RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
 use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};
 use support::strings::extract_number;
 
@@ -224,11 +221,11 @@ where
             .collect(),
         recipe_instructions: crouton.steps.into_iter().fold(Vec::new(), |mut acc, step| {
             if step.is_section {
-                acc.push((step.step, Vec::new()));
-            } else if let Some((_, steps)) = acc.last_mut() {
-                steps.push(SectionItem::new(step.step));
+                acc.push(RecipeRecipeInstructionsFieldEnum::new_section(&step.step, Vec::new()));
+            } else if let Some(instruction) = acc.last_mut() {
+                instruction.push_item(&step.step);
             } else {
-                acc.push(("".into(), vec![SectionItem::new(step.step)]));
+                acc.push(RecipeRecipeInstructionsFieldEnum::Text(step.step));
             }
             acc
         }),

@@ -11,8 +11,6 @@ use url::Url;
 use uuid::Uuid;
 use zip::ZipArchive;
 
-use recipe_schema::RecipeSchema;
-use recipe_schema::components::{ImageObjectOrUrl, ImageObjectType, SectionItem, Sections};
 use support::strings::auto_convert_to_utf8;
 
 use crate::Result;
