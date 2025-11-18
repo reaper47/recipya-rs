@@ -26,3 +26,13 @@ pub struct Mass {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
 }
+
+impl Mass {
+    pub fn new(mass: impl Into<String>) -> Self {
+        Self {
+            r#type: Some(AtType::NutritionInformation.to_string()),
+            name: vec![mass.into()],
+            ..Default::default()
+        }
+    }
+}

@@ -11,13 +11,15 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use tracing::error;
 
-use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
 use schema_org::Recipe;
+use schema_org::field::{
+    RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+};
 
 use super::helpers::read_file;
 use crate::Result;
 use crate::common::Times;
-use crate::helpers::{seconds_to_duration, to_defined_text, to_is_based_on, to_yield};
+use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 
 struct AccuChefRecipe {
     title: String,
@@ -51,7 +53,11 @@ impl From<AccuChefRecipe> for Recipe {
             context: Default::default(),
             cook_time: seconds_to_duration(r.times.cook_seconds),
             is_based_on: to_is_based_on(&r.source),
-            keywords: to_defined_text(&r.keywords.join(",")),
+            keywords: r
+                .keywords
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
             name: vec![r.title],
             prep_time: seconds_to_duration(r.times.prep_seconds),
             recipe_category: vec![r.category.unwrap_or_default()],

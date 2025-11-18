@@ -315,6 +315,14 @@ pub type RecipeSdPublisherFieldEnum = FieldEnum6;
 pub type RecipeProducerFieldEnum = FieldEnum6;
 ///<https://schema.org/author>
 pub type RecipeAuthorFieldEnum = FieldEnum6;
+impl RecipeAuthorFieldEnum {
+    pub fn new_person(name: &str) -> Self {
+        Self::Person(Person {
+            name: vec![name.to_string()],
+            ..Default::default()
+        })
+    }
+}
 ///<https://schema.org/translator>
 pub type RecipeTranslatorFieldEnum = FieldEnum6;
 ///<https://schema.org/publisher>
@@ -1577,6 +1585,24 @@ impl Default for FieldEnum141 {
 pub type HowToSectionStepsFieldEnum = FieldEnum141;
 ///<https://schema.org/recipeInstructions>
 pub type RecipeRecipeInstructionsFieldEnum = FieldEnum141;
+
+impl RecipeRecipeInstructionsFieldEnum {
+    pub fn new_section(name: &str, items: Vec<&str>) -> Self {
+        Self::ItemList(
+            ItemList {
+                item_list_element: items
+                    .iter()
+                    .map(|v| ItemListItemListElementFieldEnum::Text(v.to_string()))
+                    .collect(),
+                name: vec![name.into()],
+                number_of_items: vec![items.len() as i32],
+                ..Default::default()
+            }
+            .into(),
+        )
+    }
+}
+
 ///<https://schema.org/steps>
 pub type RecipeStepsFieldEnum = FieldEnum141;
 ///<https://schema.org/steps>
@@ -1603,7 +1629,10 @@ pub type RecipeRecipeIngredientFieldEnum = FieldEnum149;
 impl RecipeRecipeIngredientFieldEnum {
     pub fn new_section(name: &str, items: Vec<&str>) -> Self {
         Self::ItemList(ItemList {
-            item_list_element: items.iter().map(|v| ItemListItemListElementFieldEnum::Text(v.to_string())).collect(),
+            item_list_element: items
+                .iter()
+                .map(|v| ItemListItemListElementFieldEnum::Text(v.to_string()))
+                .collect(),
             name: vec![name.into()],
             number_of_items: vec![items.len() as i32],
             ..Default::default()

@@ -58,7 +58,6 @@ pub mod enums;
 pub mod field;
 pub(crate) mod helpers;
 
-use std::fmt::Display;
 pub use action::*;
 pub use aggregate_rating::*;
 pub use audio_object::*;
@@ -107,6 +106,7 @@ pub use rating::*;
 pub use recipe::*;
 pub use review::*;
 pub use size_specification::*;
+use std::fmt::Display;
 pub use structured_value::*;
 pub use text_object::*;
 pub use thing::*;
@@ -121,14 +121,30 @@ use serde::{Deserialize, Serialize};
 /// Enumeration of all possible @type values.
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 pub enum AtType {
+    AggregateRating,
+    HowToTool,
+    ItemList,
+    NutritionInformation,
     #[default]
     Recipe,
+    Review,
+    VideoObject,
 }
 
 impl Display for AtType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            AtType::Recipe => "Recipe".to_string(),
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                AtType::Recipe => "Recipe".to_string(),
+                AtType::AggregateRating => "AggregateRating".to_string(),
+                AtType::HowToTool => "HowToTool".to_string(),
+                AtType::ItemList => "ItemList".to_string(),
+                AtType::NutritionInformation => "NutritionInformation".to_string(),
+                AtType::Review => "Review".to_string(),
+                AtType::VideoObject => "VideoObject".to_string(),
+            }
+        )
     }
 }

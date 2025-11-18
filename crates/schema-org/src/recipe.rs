@@ -16,7 +16,10 @@ use crate::field::{
     RecipeYieldFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AggregateRating, AtType, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject, InteractionCounter, NutritionInformation, Person, Review, Thing};
+use crate::{
+    AggregateRating, AtType, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
+    InteractionCounter, NutritionInformation, Person, Review, Thing,
+};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>

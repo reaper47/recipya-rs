@@ -1,8 +1,8 @@
 use iso8601::Duration;
 
 use schema_org::field::{
-    QuantitativeValueValueFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum,
-    RecipeRecipeYieldFieldEnum,
+    QuantitativeValueValueFieldEnum, RecipeAuthorFieldEnum, RecipeIsBasedOnFieldEnum,
+    RecipeKeywordsFieldEnum, RecipeRecipeYieldFieldEnum,
 };
 use schema_org::{DurationOrText, QuantitativeValue, Recipe};
 
@@ -13,14 +13,6 @@ pub(super) fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
         .filter(|&d| d != Duration::default())
         .map(|d| vec![DurationOrText::from(d)])
         .unwrap_or(vec![])
-}
-
-pub(super) fn to_defined_text(value: &str) -> Vec<RecipeKeywordsFieldEnum> {
-    if value.is_empty() {
-        vec![]
-    } else {
-        vec![RecipeKeywordsFieldEnum::TextOrURL(value.into())]
-    }
 }
 
 pub(super) fn to_is_based_on(value: &str) -> Vec<RecipeIsBasedOnFieldEnum> {

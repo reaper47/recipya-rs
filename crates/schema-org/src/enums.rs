@@ -100,7 +100,43 @@ pub enum RestrictedDietEnum {
     VegetarianDiet,
     ///<https://schema.org/LowLactoseDiet>
     LowLactoseDiet,
+    UnspecifiedDiet,
 }
+
+impl From<String> for RestrictedDietEnum {
+    fn from(value: String) -> Self {
+        if value.contains("diabetic") {
+            RestrictedDietEnum::DiabeticDiet
+        } else if value.contains("gluten") {
+            RestrictedDietEnum::GlutenFreeDiet
+        } else if value.contains("halal") {
+            RestrictedDietEnum::HalalDiet
+        } else if value.contains("hindu") {
+            RestrictedDietEnum::HinduDiet
+        } else if value.contains("kosher") {
+            RestrictedDietEnum::KosherDiet
+        } else if value.contains("low") {
+            if value.contains("calorie") {
+                RestrictedDietEnum::LowCalorieDiet
+            } else if value.contains("fat") {
+                RestrictedDietEnum::LowFatDiet
+            } else if value.contains("lactose") {
+                RestrictedDietEnum::LowLactoseDiet
+            } else if value.contains("salt") {
+                RestrictedDietEnum::LowSaltDiet
+            } else {
+                RestrictedDietEnum::UnspecifiedDiet
+            }
+        } else if value.contains("vegan") {
+            RestrictedDietEnum::VeganDiet
+        } else if value.contains("vegetarian") {
+            RestrictedDietEnum::VegetarianDiet
+        } else {
+            RestrictedDietEnum::UnspecifiedDiet
+        }
+    }
+}
+
 ///<https://schema.org/AdultOrientedEnumeration>
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]

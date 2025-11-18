@@ -61,3 +61,21 @@ pub struct NutritionInformation {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub unsaturated_fat_content: Vec<Mass>,
 }
+
+impl NutritionInformation {
+    /// Checks whether all fields of the schema are `None`.
+    pub fn is_empty(&self) -> bool {
+        self.calories.is_empty()
+            && self.carbohydrate_content.is_empty()
+            && self.cholesterol_content.is_empty()
+            && self.fat_content.is_empty()
+            && self.fiber_content.is_empty()
+            && self.protein_content.is_empty()
+            && self.saturated_fat_content.is_empty()
+            && self.serving_size.is_empty()
+            && self.sodium_content.is_empty()
+            && self.sugar_content.is_empty()
+            && self.trans_fat_content.is_empty()
+            && self.unsaturated_fat_content.is_empty()
+    }
+}

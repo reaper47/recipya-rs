@@ -6,26 +6,25 @@ use support::strings::extract_number;
 use tracing::{error, warn};
 use url::Url;
 
-use recipe_schema::components::{
-    AggregateRating, ClipOrVideoObject, CommentType, DefinedTermOrTextOrURL, ImageObjectOrUrl,
-    NumberOrText, SectionItem, Sections, VideoObjectType,
+use schema_org::field::{
+    AggregateRatingRatingValueFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
+    RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+    RecipeVideoFieldEnum,
 };
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
+use schema_org::{AggregateRating, AtType, Comment, Recipe, VideoObject};
 
 use super::helpers::{extract_archive_contents, update_recipe_image_paths};
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
-};
+use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 use crate::{Error, Result};
 
 #[derive(Deserialize)]
 struct CookbookXML {
     #[serde(rename = "recipe")]
-    recipes: Vec<Recipe>,
+    recipes: Vec<CookmateRecipe>,
 }
 
 #[derive(Deserialize)]
-struct Recipe {
+struct CookmateRecipe {
     title: String,
     preptime: String,
     cooktime: String,
@@ -53,8 +52,8 @@ struct List {
     items: Vec<String>,
 }
 
-impl From<Recipe> for RecipeSchema {
-    fn from(r: Recipe) -> Self {
+impl From<CookmateRecipe> for Recipe {
+    fn from(r: CookmateRecipe) -> Self {
         let categories = r.categories.split_first();
         let url = Url::parse(&r.url).ok();
 
@@ -65,27 +64,30 @@ impl From<Recipe> for RecipeSchema {
         let num_comments = comments.len();
 
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
+            r#type: Some(AtType::Recipe.to_string()),
             aggregate_rating: if r.rating > 0 {
-                Some(AggregateRating {
-                    rating_value: Some(NumberOrText::Number(r.rating as f64)),
+                vec![AggregateRating {
+                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(
+                        r.rating as f32,
+                    )],
                     ..Default::default()
-                })
+                }]
             } else {
-                None
+                vec![]
             },
-            comment: Some(
-                comments
-                    .into_iter()
-                    .map(|c| CommentType {
-                        text: c,
+            comment: comments
+                .into_iter()
+                .filter_map(|c| {
+                    (!c.is_empty()).then_some(Comment {
+                        text: vec![c],
                         ..Default::default()
                     })
-                    .collect(),
-            )
-            .filter(|v: &Vec<CommentType>| !v.is_empty()),
-            comment_count: Some(num_comments as i64).filter(|c| *c > 0),
+                })
+                .collect(),
+            comment_count: vec![num_comments as i32]
+                .into_iter()
+                .filter(|c| *c > 0)
+                .collect(),
             cook_time: match parse_duration(&r.cooktime) {
                 Ok(d) => seconds_to_duration(d.as_secs() as i32),
                 Err(err) => {
@@ -93,35 +95,33 @@ impl From<Recipe> for RecipeSchema {
                         "Failed to parse cook time '{}' of an AccuChef recipe: {err}",
                         r.cooktime
                     );
-                    None
+                    vec![]
                 }
             },
-            description: to_text(r.description),
-            image: {
-                let urls = vec![r.imageurl, r.imagepath]
-                    .into_iter()
-                    .filter_map(|image| Url::parse(&image).ok())
-                    .collect::<Vec<_>>();
-
-                (!urls.is_empty()).then_some(ImageObjectOrUrl::Urls(urls))
-            },
+            description: vec![RecipeDescriptionFieldEnum::Text(r.description)],
+            image: vec![r.imageurl, r.imagepath]
+                .into_iter()
+                .filter_map(|image| Url::parse(&image).ok())
+                .map(|u| RecipeImageFieldEnum::URL(u.to_string()))
+                .collect::<Vec<_>>(),
             is_based_on: if !r.source.is_empty() {
-                to_is_based_on(r.source)
+                to_is_based_on(&r.source)
             } else {
-                to_is_based_on(r.url)
+                to_is_based_on(&r.url)
             },
-            keywords: Some(DefinedTermOrTextOrURL::Text(
-                categories
-                    .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect::<Vec<_>>())
-                    .unwrap_or_default()
-                    .join(","),
-            )),
-            name: Some(r.title),
-            nutrition: if !r.nutrition.is_empty() {
-                warn!("CookMate XML has nutrients: '{}'", r.nutrition);
-                None
-            } else {
-                None
+            keywords: categories
+                .map(|(_, b)| {
+                    b.into_iter()
+                        .map(|&s| RecipeKeywordsFieldEnum::TextOrURL(s))
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default(),
+            name: vec![r.title],
+            nutrition: {
+                if !r.nutrition.is_empty() {
+                    warn!("CookMate XML has nutrients: '{}'", r.nutrition);
+                }
+                vec![]
             },
             prep_time: match parse_duration(&r.preptime) {
                 Ok(d) => seconds_to_duration(d.as_secs() as i32),
@@ -130,54 +130,58 @@ impl From<Recipe> for RecipeSchema {
                         "Failed to parse prep time '{}' of a CookMate XML recipe: {err}",
                         r.preptime
                     );
-                    None
+                    vec![]
                 }
             },
-            recipe_category: RecipeCategory::Text(
-                categories.map(|(a, _b)| a.to_string()).unwrap_or_default(),
-            ),
-            recipe_ingredient: Some(r.ingredient.items),
-            recipe_instructions: sections_to_itemlist(Sections::from([(
-                "".into(),
-                r.recipetext.items.iter().map(SectionItem::new).collect(),
-            )])),
+            recipe_category: categories
+                .map(|(a, _b)| vec![a.to_string()])
+                .unwrap_or_default(),
+            recipe_ingredient: r
+                .ingredient
+                .items
+                .into_iter()
+                .map(RecipeRecipeIngredientFieldEnum::Text)
+                .collect(),
+            recipe_instructions: r
+                .recipetext
+                .items
+                .into_iter()
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect(),
             recipe_yield: to_yield(extract_number(r.quantity).unwrap_or_default()),
-            url,
+            url: url.map(|u| vec![u.to_string()]).unwrap_or_default(),
             video: Some(
                 vec![r.video]
                     .into_iter()
                     .filter_map(|s| Url::parse(&s).ok())
                     .map(|url| {
-                        ClipOrVideoObject::VideoObject(Box::new(VideoObjectType {
-                            at_type: Default::default(),
-                            content_url: url.clone(),
-                            description: "".to_string(),
-                            duration: None,
-                            embed_url: url,
-                            name: "".to_string(),
-                            thumbnail_url: vec![],
-                            upload_date: None,
+                        RecipeVideoFieldEnum::VideoObject(Box::new(VideoObject {
+                            r#type: Some(AtType::VideoObject.to_string()),
+                            content_url: vec![String::from(url)],
+                            embed_url: vec![String::from(url)],
+                            ..Default::default()
                         }))
                     })
                     .collect::<Vec<_>>(),
             )
-            .filter(|v| !v.is_empty()),
+            .filter(|v| !v.is_empty())
+            .unwrap_or_default(),
             ..Default::default()
         }
     }
 }
 
 /// Parses a COOKmate XML recipe file.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
 {
     let root: CookbookXML =
         serde_xml_rs::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
-    Ok(root.recipes.into_iter().map(RecipeSchema::from).collect())
+    Ok(root.recipes.into_iter().map(Recipe::from).collect())
 }
 
-pub fn parse_backup<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_backup<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -486,25 +490,35 @@ mod tests {
         use crate::helpers::to_yield;
         use recipe_schema::components::CreativeWorkOrText;
 
-        pub fn xml_recipes() -> Vec<RecipeSchema> {
+        pub fn xml_recipes() -> Vec<Recipe> {
             vec![
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    is_accessible_for_free: false,
-                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrURL::Text(
-                        ["Soups/stews", "Vegetables"].join(","),
-                    )),
-                    name: Some("Asparagus Soup (Zuppa Di Asparagi)".into()),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::Text("MMF".into())],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::TextOrURL("Soups/stews".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Vegetables".into()),
+                    ],
+                    name: vec!["Asparagus Soup (Zuppa Di Asparagi)".into()],
                     recipe_category: RecipeCategory::Text("Italian".into()),
-                    recipe_ingredient: Some(vec![
-                        "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
-                        "2 Cloves garlic, minced 4 Eggs".into(),
-                        "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
-                        "-and cut (1 inch pieces) -pecorino cheese".into(),
-                        "Salt and pepper 6 sl Italian bread, toasted".into(),
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "2 Cloves garlic, minced 4 Eggs".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or"
+                                .into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "-and cut (1 inch pieces) -pecorino cheese".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "Salt and pepper 6 sl Italian bread, toasted".into(),
+                        ),
+                    ],
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
@@ -561,24 +575,33 @@ mod tests {
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    is_accessible_for_free: false,
-                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrURL::Text(
-                        ["Appetizers", "Greek"].join(","),
-                    )),
-                    name: Some("Aubergine and Sesame Pate".into()),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
+                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::TextOrURL("Appetizers".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Greek".into()),
+                    ],
+                    name: vec!["Aubergine and Sesame Pate".into()],
                     recipe_category: RecipeCategory::Text("Vegetarian".into()),
-                    recipe_ingredient: Some(vec![
-                        "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
-                        "1 Crushed garlic cloves 1 tb Olive oil".into(),
-                        "1 1/2 tb Tahini Seasoning".into(),
-                        "Toasted Sesame seeds Flatleaf Parsley".into(),
-                        "Cayenne Pepper".into(),
-                        "25-30 minutes until tender. Cool slightly , then peel and".into(),
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 Crushed garlic cloves 1 tb Olive oil".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 1/2 tb Tahini Seasoning".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "Toasted Sesame seeds Flatleaf Parsley".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL("Cayenne Pepper".into()),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "25-30 minutes until tender. Cool slightly , then peel and".into(),
+                        ),
+                    ],
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
@@ -603,22 +626,29 @@ mod tests {
                     recipe_yield: to_yield(2),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    is_accessible_for_free: false,
-                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrURL::Text(
-                        ["Casseroles", "French"].join(","),
-                    )),
-                    name: Some("Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
+                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::Text("Casseroles".into()),
+                        RecipeKeywordsFieldEnum::Text("French".into()),
+                    ],
+                    name: vec!["Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()],
                     recipe_category: RecipeCategory::Text("Vegetables".into()),
-                    recipe_ingredient: Some(vec![
-                        "1 md Eggplant 2 tb Snipped parsley".into(),
-                        "1/4 c Salad oil 1 cl Galic, minced".into(),
-                        "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
-                        "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 md Eggplant 2 tb Snipped parsley".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1/4 c Salad oil 1 cl Galic, minced".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
+                        ),
+                    ],
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
@@ -660,19 +690,23 @@ mod tests {
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    is_accessible_for_free: false,
-                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrURL::Text("German".into())),
-                    name: Some("August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
+                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
+                    keywords: vec![RecipeKeywordsFieldEnum::Text("German".into())],
+                    name: vec!["August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()],
                     recipe_category: RecipeCategory::Text("Beef".into()),
-                    recipe_ingredient: Some(vec![
-                        "1 Shallot or small onion cut 1 pn Mace".into(),
-                        "-into small pieces 1 lg Steak (just over 1 lb), at".into(),
-                        "Freshly ground black pepper -least 1 1/4 inches".into(),
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 Shallot or small onion cut 1 pn Mace".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "-into small pieces 1 lg Steak (just over 1 lb), at".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "Freshly ground black pepper -least 1 1/4 inches".into(),
+                        ),
+                    ],
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
@@ -729,32 +763,58 @@ mod tests {
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    is_accessible_for_free: false,
-                    is_based_on: Some(CreativeWorkOrText::Text("MMF".into())),
-                    keywords: Some(DefinedTermOrTextOrURL::Text(
-                        ["Poultry", "Fish/sea", "Spanish"].join(","),
-                    )),
-                    name: Some("Aunt Julia's Paella".into()),
+                Recipe {
+                    r#type: Some(AtType::Recipe.to_string()),
+                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::Text("Poultry".into()),
+                        RecipeKeywordsFieldEnum::Text("Fish/sea".into()),
+                        RecipeKeywordsFieldEnum::Text("Spanish".into()),
+                    ],
+                    name: vec!["Aunt Julia's Paella".into()],
                     recipe_category: RecipeCategory::Text("Pork/ham".into()),
-                    recipe_ingredient: Some(vec![
-                        "1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into(),
-                        "-and legs) 2 ts Capers, with juice".into(),
-                        "Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into(),
-                        "1 lb Lean pork, cut into 1-inch -olives".into(),
-                        "-cubes 1/2 lb Calamari (squid), cleaned".into(),
-                        "1 md Onion, minced -and sliced".into(),
-                        "2 Toes garlic, minced 5 c Water".into(),
-                        "Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into(),
-                        "-strips: 1 ts Saffron threads".into(),
-                        "1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into(),
-                        "1 lg Carrot -uncooked".into(),
-                        "1 Stalk celery 3 Hard boiled eggs, sliced".into(),
-                        "1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into(),
-                        "1 1/2 lb Peeled shrimp Oil for frying".into(),
-                    ]),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "-and legs) 2 ts Capers, with juice".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 lb Lean pork, cut into 1-inch -olives".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "-cubes 1/2 lb Calamari (squid), cleaned".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 md Onion, minced -and sliced".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "2 Toes garlic, minced 5 c Water".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "-strips: 1 ts Saffron threads".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL("1 lg Carrot -uncooked".into()),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 Stalk celery 3 Hard boiled eggs, sliced".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                            "1 1/2 lb Peeled shrimp Oil for frying".into(),
+                        ),
+                    ],
                     recipe_instructions: sections_to_itemlist(Sections::from([(
                         "".into(),
                         vec![
