@@ -13,7 +13,7 @@ use crate::helpers::one_or_many;
 pub type EnumerationAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Enumeration>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Enumeration {
     #[serde(rename = "@type")]

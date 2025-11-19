@@ -9,10 +9,6 @@ use uuid::Uuid;
 use whatlang::Lang;
 
 use math::cooking::units;
-use recipe_schema::components::{
-    CreativeWorkOrText, DefinedTermOrTextOrURL, HowToToolOrText, SectionItem, Sections,
-};
-use recipe_schema::{NutritionInformationSchema, RecipeSchema};
 use repository::schema;
 use support::fs::FsSupport;
 use support::name_entity_with_relations;

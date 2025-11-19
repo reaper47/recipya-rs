@@ -27,7 +27,7 @@ pub type DefinedTermSetDateModifiedFieldEnum = String;
 pub type DefinedTermSetDatePublishedFieldEnum = String;
 
 ///<https://schema.org/DefinedTermSet>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DefinedTermSet {
     #[serde(rename = "@type")]

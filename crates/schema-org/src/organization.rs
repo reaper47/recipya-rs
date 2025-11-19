@@ -10,7 +10,7 @@ use crate::helpers::one_or_many;
 use crate::{AggregateRating, InteractionCounter, Person, QuantitativeValue, Review};
 
 ///<https://schema.org/Organization>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Organization {
     #[serde(rename = "@type")]

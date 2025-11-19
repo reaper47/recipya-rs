@@ -21,7 +21,7 @@ pub type ProductGtinFieldEnum = String;
 pub type ProductAsinFieldEnum = String;
 
 ///<https://schema.org/Product>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Product {
     #[serde(rename = "@type")]

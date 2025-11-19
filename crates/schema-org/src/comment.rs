@@ -9,7 +9,7 @@ use crate::field::{
     CommentVideoFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AggregateRating, CreativeWork, ImageObject, InteractionCounter};
+use crate::{AggregateRating, AtType, CreativeWork, ImageObject, InteractionCounter};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>
@@ -25,10 +25,10 @@ pub type CommentDateModifiedFieldEnum = String;
 pub type CommentDatePublishedFieldEnum = String;
 
 ///<https://schema.org/Comment>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Comment {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", default = "set_type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
@@ -176,4 +176,8 @@ pub struct Comment {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
+}
+
+fn set_type() -> Option<String> {
+    Some(AtType::Comment.to_string())
 }

@@ -13,7 +13,7 @@ use crate::helpers::one_or_many;
 use crate::{Comment, CreativeWork, Duration, ImageObject, InteractionCounter, ListItem, Thing};
 
 ///<https://schema.org/HowToSection>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HowToSection {
     #[serde(rename = "@type")]

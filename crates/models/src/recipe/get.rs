@@ -6,8 +6,6 @@ use diesel_async::RunQueryDsl;
 use repository::{ModelManager, PgPooledConn, schema};
 use uuid::Uuid;
 
-use recipe_schema::components::SectionItem;
-
 use crate::params::SearchParams;
 use crate::recipe::{
     Nutrition, RecipeDetails, RecipeSearch, Times, ToolRecipe, Video, VideoRecipe,

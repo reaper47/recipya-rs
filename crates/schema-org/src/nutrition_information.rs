@@ -5,7 +5,7 @@ use crate::helpers::one_or_many;
 use crate::{Energy, Mass};
 
 ///<https://schema.org/NutritionInformation>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct NutritionInformation {
     ///<https://schema.org/calories>

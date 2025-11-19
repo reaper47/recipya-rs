@@ -6,7 +6,7 @@ use crate::field::EnergyDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 
 ///<https://schema.org/Energy>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Energy {
     #[serde(rename = "@type")]

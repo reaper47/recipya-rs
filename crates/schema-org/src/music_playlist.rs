@@ -7,7 +7,7 @@ use crate::field::{
     MusicPlaylistKeywordsFieldEnum, MusicPlaylistSubjectOfFieldEnum, MusicPlaylistTrackFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, ImageObject, InteractionCounter, MusicRecording, Thing};
+use crate::{ImageObject, InteractionCounter, MusicRecording, Thing};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>
@@ -27,7 +27,7 @@ pub type MusicPlaylistDatePublishedFieldEnum = String;
 pub type MusicPlaylistGenreFieldEnum = String;
 
 ///<https://schema.org/MusicPlaylist>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MusicPlaylist {
     #[serde(rename = "@type")]

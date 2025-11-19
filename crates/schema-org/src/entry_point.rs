@@ -12,7 +12,7 @@ use crate::helpers::one_or_many;
 ///<https://schema.org/URL>
 pub type EntryPointAdditionalTypeFieldEnum = String;
 ///<https://schema.org/EntryPoint>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct EntryPoint {
     #[serde(rename = "@type")]

@@ -6,7 +6,7 @@ use crate::field::{ThingDescriptionFieldEnum, ThingImageFieldEnum, ThingSubjectO
 use crate::helpers::one_or_many;
 
 ///<https://schema.org/Thing>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Thing {
     #[serde(rename = "@type")]

@@ -9,7 +9,7 @@ use crate::helpers::one_or_many;
 use crate::{Action, Thing};
 
 ///<https://schema.org/BreadcrumbList>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BreadcrumbList {
     #[serde(rename = "@context")]

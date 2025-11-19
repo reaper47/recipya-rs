@@ -45,7 +45,7 @@ pub type AudioObjectDatePublishedFieldEnum = String;
 pub type AudioObjectGenreFieldEnum = String;
 
 ///<https://schema.org/AudioObject>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AudioObject {
     #[serde(rename = "@type")]

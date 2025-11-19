@@ -22,7 +22,7 @@ pub type HowToDateCreatedFieldEnum = String;
 pub type HowToDateModifiedFieldEnum = String;
 
 ///<https://schema.org/HowTo>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HowTo {
     #[serde(rename = "@type")]

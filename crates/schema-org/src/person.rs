@@ -15,7 +15,7 @@ use crate::{Country, InteractionCounter, Place};
 pub type PersonAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Person>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Person {
     #[serde(rename = "@type")]

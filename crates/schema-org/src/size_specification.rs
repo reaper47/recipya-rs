@@ -12,7 +12,7 @@ use crate::{PropertyValue, QualitativeValue, QuantitativeValue};
 ///<https://schema.org/URL>
 pub type SizeSpecificationAdditionalTypeFieldEnum = String;
 ///<https://schema.org/SizeSpecification>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SizeSpecification {
     #[serde(rename = "@type")]

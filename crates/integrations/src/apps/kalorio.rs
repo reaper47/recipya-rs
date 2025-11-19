@@ -129,10 +129,12 @@ where
         .map(Recipe::from)
         .collect::<Vec<_>>();
 
-    if let Some(last_recipe) = recipes.last() {
+    let is_based_on = recipes.last().map(|r| r.is_based_on.clone());
+
+    if let Some(based_on) = is_based_on {
         recipes
             .iter_mut()
-            .for_each(|r| r.is_based_on = last_recipe.is_based_on);
+            .for_each(|r| r.is_based_on = based_on.clone());
     }
 
     Ok(recipes)
@@ -489,147 +491,147 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     mod results {
         use super::*;
         use recipe_schema::components::SectionItem;
-        use schema_org::Recipe;
+        use schema_org::{ItemList, Recipe, field::ItemListItemListElementFieldEnum};
 
         pub fn all_recipes_txt() -> Vec<Recipe> {
             vec![
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    author: to_organization_type("Petra Holzapfel".into()),
-                    is_based_on: to_is_based_on("Kalorio! V4.04".into()),
-                    keywords: to_defined_text("Käse,Kuchen".into()),
-                    name: Some("Ananas-Käsekuchen".into()),
-                    recipe_category: RecipeCategory::Text("Ananas".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("150 g Kokoszwieback"),
-                            SectionItem::new("1 kl Ananas [a 1 kg]"),
-                            SectionItem::new("60 g Butter"),
-                            SectionItem::new("600 g Doppelrahmfrischkäse"),
-                            SectionItem::new("2 EL Rum"),
-                            SectionItem::new("150 g Saure Sahne"),
-                            SectionItem::new("200 ml Ananassaft"),
-                            SectionItem::new("120 g Zucker"),
-                            SectionItem::new("3 EL Vanille-Puddingpulver"),
-                            SectionItem::new("4 Eier"),
-                            SectionItem::new("1 Sp Zitrone"),
-                            SectionItem::new("1 Limette"),
-                            SectionItem::new("20 g Kokosraspel"),
-                            SectionItem::new("1 EL Mehl"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und unter die Brösel mischen. Den Boden einer Springform (24 cm Durchmesser) mit Backpapier auslegen. Die Brösel als Boden darauf verteilen und gut andrücken. Kalt stellen.",
-                            ),
-                            SectionItem::new(
-                                "Frischkäse, saure Sahne und 100 g Zucker mit den Quirlen des Handrührers glattrühren. Nacheinander die Eier dazugeben. Die Limettenschale fein abreiben, die Limette auspressen. Limettensaft und Mehl unter die Käsemasse heben. Die Masse auf dem Boden in der Springform verteilen. Im heissen Backofen auf der 2. Einschubleiste von unten bei 160GradC 15 Minuten backen. Dann die Temperatur auf 150GradC reduzieren und weitere 35 Minuten backen. Den Kuchen in der Form auf einem Gitter auskühlen lassen und dann mindestens 2 Stunden kalt stellen.",
-                            ),
-                            SectionItem::new(
-                                "Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren.",
-                            ),
-                            SectionItem::new(
-                                "Das restliche Ananaskompott extra zum Kuchen servieren.",
-                            ),
-                        ],
-                    )])),
-                    recipe_yield: Default::default(),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Petra Holzapfel")],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "Kalorio! V4.04".into(),
+                    )],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::TextOrURL("Käse".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Kuchen".into()),
+                    ],
+                    name: vec!["Ananas-Käsekuchen".into()],
+                    recipe_category: vec!["Ananas".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("150 g Kokoszwieback".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 kl Ananas [a 1 kg]".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("60 g Butter".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("600 g Doppelrahmfrischkäse".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 EL Rum".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("150 g Saure Sahne".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("200 ml Ananassaft".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("120 g Zucker".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 EL Vanille-Puddingpulver".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 Eier".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Sp Zitrone".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Limette".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("20 g Kokosraspel".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 EL Mehl".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und unter die Brösel mischen. Den Boden einer Springform (24 cm Durchmesser) mit Backpapier auslegen. Die Brösel als Boden darauf verteilen und gut andrücken. Kalt stellen.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Frischkäse, saure Sahne und 100 g Zucker mit den Quirlen des Handrührers glattrühren. Nacheinander die Eier dazugeben. Die Limettenschale fein abreiben, die Limette auspressen. Limettensaft und Mehl unter die Käsemasse heben. Die Masse auf dem Boden in der Springform verteilen. Im heissen Backofen auf der 2. Einschubleiste von unten bei 160GradC 15 Minuten backen. Dann die Temperatur auf 150GradC reduzieren und weitere 35 Minuten backen. Den Kuchen in der Form auf einem Gitter auskühlen lassen und dann mindestens 2 Stunden kalt stellen.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Das restliche Ananaskompott extra zum Kuchen servieren.".into()),
+                    ],
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    author: to_organization_type("Jochen 'Nunz' Herz".into()),
-                    is_based_on: to_is_based_on("Kalorio! V4.04".into()),
-                    keywords: to_defined_text("Raclette,Fondue".into()),
-                    name: Some("Kräuter-Focaccia".into()),
-                    recipe_category: RecipeCategory::Text("Kräuter".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("500 g Mehl"),
-                            SectionItem::new("1 Zweig Rosmarin"),
-                            SectionItem::new("1 Päckchen Trockenhefe"),
-                            SectionItem::new("1 Zweig Salbei"),
-                            SectionItem::new("Salz"),
-                            SectionItem::new("Eigelb"),
-                            SectionItem::new("9 EL Öl"),
-                            SectionItem::new("1 EL grobes Meersalz"),
-                            SectionItem::new("1 EL Honig"),
-                            SectionItem::new("Backpapier"),
-                            SectionItem::new("1 Zweig Thymian"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Mehl, Hefe und l TL Salz vermengen; mit 5 EL Öl, Honig und 1/41 warmem Wasser zu einem Teig verkneten. An einem warmen Ort zugedeckt 30 Min. gehen lassen. Krauter waschen, trocken schütteln. Blätter hacken, mit restlichem Öl verrühren.",
-                            ),
-                            SectionItem::new(
-                                "Den Teig halbieren. Jede Hälfte rund (ca. 30 cm 0) ausrollen. Die eine mit der Kräutermasse bestreichen, die andere darüber legen. Den Teig an den Rändern gut zusammendrücken und mit den Fingern einige Mulden hineindrücken. Das Brot auf ein mit Backpapier belegtes Blech legen und an einem warmen Ort zugedeckt weitere 30 Min. gehen lassen.",
-                            ),
-                            SectionItem::new(
-                                "Den Ofen auf 200° (Umluft 180°) vorheizen. Das Blech mit der Focaccia in den heißen Ofen (Mitte) schieben. 150 ml Wasser in die Fettpfanne des Ofens gießen. Das Brot ca. 15 Min. backen. Das Eigelb mit 2 EL Wasser verquirlen, den Teig damit bestreichen und mit grobem Meersalz bestreuen. Die Temperatur auf 180° (Umluft 160°) reduzieren und die Focaccia in weiteren 15 Min. fertig backen.",
-                            ),
-                            SectionItem::new("Passt hervorragend zum Raclette oder Fondue"),
-                        ],
-                    )])),
-                    recipe_yield: Default::default(),
-                    ..Default::default()
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "Kalorio! V4.04".into(),
+                    )],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::TextOrURL("Raclette".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Fondue".into()),
+                    ],
+                    name: vec!["Kräuter-Focaccia".into()],
+                    recipe_category: vec!["Kräuter".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("500 g Mehl".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Zweig Rosmarin".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Päckchen Trockenhefe".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Zweig Salbei".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Salz".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Eigelb".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("9 EL Öl".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 EL grobes Meersalz".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 EL Honig".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Backpapier".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Zweig Thymian".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mehl, Hefe und l TL Salz vermengen; mit 5 EL Öl, Honig und 1/41 warmem Wasser zu einem Teig verkneten. An einem warmen Ort zugedeckt 30 Min. gehen lassen. Krauter waschen, trocken schütteln. Blätter hacken, mit restlichem Öl verrühren.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Den Teig halbieren. Jede Hälfte rund (ca. 30 cm 0) ausrollen. Die eine mit der Kräutermasse bestreichen, die andere darüber legen. Den Teig an den Rändern gut zusammendrücken und mit den Fingern einige Mulden hineindrücken. Das Brot auf ein mit Backpapier belegtes Blech legen und an einem warmen Ort zugedeckt weitere 30 Min. gehen lassen.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Den Ofen auf 200° (Umluft 180°) vorheizen. Das Blech mit der Focaccia in den heißen Ofen (Mitte) schieben. 150 ml Wasser in die Fettpfanne des Ofens gießen. Das Brot ca. 15 Min. backen. Das Eigelb mit 2 EL Wasser verquirlen, den Teig damit bestreichen und mit grobem Meersalz bestreuen. Die Temperatur auf 180° (Umluft 160°) reduzieren und die Focaccia in weiteren 15 Min. fertig backen.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Passt hervorragend zum Raclette oder Fondue".into()),
+                    ],
+                ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    author: to_organization_type("Jochen 'Nunz' Herz".into()),
-                    is_based_on: to_is_based_on("Kalorio! V4.04".into()),
-                    keywords: to_defined_text("Zwiebeln".into()),
-                    name: Some("Zwiebelkuchen".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "Kalorio! V4.04".into(),
+                    )],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::TextOrURL("Zwiebeln".into()),
+                    ],
+                    name: vec!["Zwiebelkuchen".into()],
                     recipe_category: RecipeCategory::Text("Backen".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([
-                        (
-                            "TEIG".into(),
-                            vec![
-                                SectionItem::new("250 g Mehl"),
-                                SectionItem::new("1 Pr Salz"),
-                                SectionItem::new("125 g Margarine"),
-                                SectionItem::new("1 Eier"),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                            r#type: Some(AtType::ItemList.to_string()),
+                            item_list_element: vec![
+                                ItemListItemListElementFieldEnum::Text("250 g Mehl".into()),
+                                ItemListItemListElementFieldEnum::Text("1 Pr Salz".into()),
+                                ItemListItemListElementFieldEnum::Text("125 g Margarine".into()),
+                                ItemListItemListElementFieldEnum::Text("1 Eier".into()),
                             ],
-                        ),
-                        (
-                            "FÜLLUNG".into(),
-                            vec![
-                                SectionItem::new("6 gr Zwiebeln"),
-                                SectionItem::new("Kümmel [gemahlen]"),
-                                SectionItem::new("75 g Butter"),
-                                SectionItem::new("1 Be Joghurt"),
-                                SectionItem::new("Pfeffer"),
-                                SectionItem::new("1 Be Saure Sahne [oder Schmand]"),
-                                SectionItem::new("Paprika [edelsüss]"),
-                                SectionItem::new("3 Eier"),
-                                SectionItem::new("1 TL Speisestärke"),
+                            number_of_items: vec![4],
+                            name: vec!["TEIG".into()],
+                            ..Default::default()
+                        }),
+                        RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                            r#type: Some(AtType::ItemList.to_string()),
+                            item_list_element: vec![
+                                ItemListItemListElementFieldEnum::Text("6 gr Zwiebeln".into()),
+                                ItemListItemListElementFieldEnum::Text("Kümmel [gemahlen]".into()),
+                                ItemListItemListElementFieldEnum::Text("75 g Butter".into()),
+                                ItemListItemListElementFieldEnum::Text("1 Be Joghurt".into()),
+                                ItemListItemListElementFieldEnum::Text("Pfeffer".into()),
+                                ItemListItemListElementFieldEnum::Text("1 Be Saure Sahne [oder Schmand]".into()),
+                                ItemListItemListElementFieldEnum::Text("Paprika [edelsüss]".into()),
+                                ItemListItemListElementFieldEnum::Text("3 Eier".into()),
+                                ItemListItemListElementFieldEnum::Text("1 TL Speisestärke".into()),
                             ],
+                            number_of_items: vec![9],
+                            name: vec!["FÜLLUNG".into()],
+                            ..Default::default()
+                        }),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mehl, Margarine und Salz verrühren, 1 Ei schnell unterkneten und Teig 1-2 Stunden kalt stellen. Teig in 28er Kuchenform auswellen und hohen Rand kneten.".into(),
                         ),
-                    ])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Mehl, Margarine und Salz verrühren, 1 Ei schnell unterkneten und Teig 1-2 Stunden kalt stellen. Teig in 28er Kuchenform auswellen und hohen Rand kneten.",
-                            ),
-                            SectionItem::new(
-                                "Zwiebel schälen und in Streifen schneiden und in 75 g Butter und eventuell etwas Fondor eine halbe Stunde dünsten. Kalt stellen.",
-                            ),
-                            SectionItem::new(
-                                "Joghurt, Sahne, Eier, Speisestärke, Paprika, Salz und Pfeffer verrühren. und die Zwiebeln untermischen. Die Füllung auf den Teigboden und den rand herunterdrücken damit er nicht übersteht.",
-                            ),
-                            SectionItem::new(
-                                "Oben mit Kümmel oder Käse nach Belieben verfeindern und im vorgeheizten Backofen bei 220 Grad 30 Minuten backen.",
-                            ),
-                        ],
-                    )])),
-                    recipe_yield: Default::default(),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Zwiebel schälen und in Streifen schneiden und in 75 g Butter und eventuell etwas Fondor eine halbe Stunde dünsten. Kalt stellen.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Joghurt, Sahne, Eier, Speisestärke, Paprika, Salz und Pfeffer verrühren. und die Zwiebeln untermischen. Die Füllung auf den Teigboden und den rand herunterdrücken damit er nicht übersteht.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Oben mit Kümmel oder Käse nach Belieben verfeindern und im vorgeheizten Backofen bei 220 Grad 30 Minuten backen.".into(),
+                        ),
+                    ],
                     ..Default::default()
                 },
             ]

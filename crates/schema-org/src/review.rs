@@ -29,7 +29,7 @@ pub type ReviewDateModifiedFieldEnum = String;
 pub type ReviewDatePublishedFieldEnum = String;
 
 ///<https://schema.org/Review>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Review {
     #[serde(rename = "@type")]

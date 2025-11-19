@@ -10,7 +10,7 @@ use crate::helpers::one_or_many;
 use crate::list_item::ListItem;
 
 ///<https://schema.org/HowToSupply>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HowToSupply {
     #[serde(rename = "@type")]

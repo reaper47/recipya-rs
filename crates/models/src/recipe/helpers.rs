@@ -7,7 +7,7 @@ use diesel::data_types::PgInterval;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, RunQueryDsl};
-use recipe_schema::components::Sections;
+
 use repository::schema;
 use support::strings::normalise_vulgar_fractions;
 use uuid::Uuid;

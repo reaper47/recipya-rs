@@ -11,7 +11,7 @@ use crate::field::{
     ImageObjectSubjectOfFieldEnum, ImageObjectWidthFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{Comment, InteractionCounter, MediaObject, Thing};
+use crate::{AtType, Comment, InteractionCounter, MediaObject, Thing};
 
 ///<https://schema.org/encodingFormat>
 ///<https://schema.org/Text>
@@ -39,10 +39,10 @@ pub type ImageObjectDateModifiedFieldEnum = String;
 pub type ImageObjectDatePublishedFieldEnum = String;
 
 ///<https://schema.org/ImageObject>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageObject {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", default = "set_type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
@@ -254,4 +254,8 @@ pub struct ImageObject {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
+}
+
+fn set_type() -> Option<String> {
+    Some(AtType::ImageObject.to_string())
 }

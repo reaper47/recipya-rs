@@ -112,7 +112,7 @@ impl From<CookmateRecipe> for Recipe {
             keywords: categories
                 .map(|(_, b)| {
                     b.into_iter()
-                        .map(|&s| RecipeKeywordsFieldEnum::TextOrURL(s))
+                        .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into()))
                         .collect::<Vec<_>>()
                 })
                 .unwrap_or_default(),
@@ -155,10 +155,12 @@ impl From<CookmateRecipe> for Recipe {
                     .into_iter()
                     .filter_map(|s| Url::parse(&s).ok())
                     .map(|url| {
+                        let s = url.to_string();
+
                         RecipeVideoFieldEnum::VideoObject(Box::new(VideoObject {
                             r#type: Some(AtType::VideoObject.to_string()),
-                            content_url: vec![String::from(url)],
-                            embed_url: vec![String::from(url)],
+                            content_url: vec![s.clone()],
+                            embed_url: vec![s],
                             ..Default::default()
                         }))
                     })

@@ -6,7 +6,7 @@ use crate::field::InteractionCounterDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 
 ///<https://schema.org/InteractionCounter>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionCounter {
     #[serde(rename = "@type")]

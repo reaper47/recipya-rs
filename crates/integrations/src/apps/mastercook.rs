@@ -11,9 +11,9 @@ use nom::multi::{many1, separated_list0};
 use nom::sequence::{delimited, preceded, terminated};
 
 use schema_org::field::{
-    AggregateRatingRatingValueFieldEnum, ImageObjectImageFieldEnum, RecipeImageFieldEnum,
-    RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
-    RecipeRecipeInstructionsFieldEnum,
+    AggregateRatingRatingValueFieldEnum, ImageObjectImageFieldEnum, RecipeAuthorFieldEnum,
+    RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeIsBasedOnFieldEnum,
+    RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
 };
 use schema_org::{
     AggregateRating, AtType, Energy, ImageObject, Mass, NutritionInformation, Recipe,
@@ -23,7 +23,7 @@ use serde::Deserialize;
 use crate::apps::helpers::{
     Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
 };
-use crate::helpers::{seconds_to_duration, to_organization_type, to_text, to_yield};
+use crate::helpers::{seconds_to_duration, to_yield};
 use crate::{Error, Result};
 
 #[derive(Default)]
@@ -102,9 +102,11 @@ impl From<RecipeComponents<'_>> for Recipe {
                     }]
                 })
                 .unwrap_or_default(),
-            author: to_organization_type(r.author.trim().into()),
+            author: vec![RecipeAuthorFieldEnum::new_person(r.author.trim())],
             cook_time: seconds_to_duration(cook_secs),
-            description: to_text(r.description.trim_end_matches("\"").into()),
+            description: vec![RecipeDescriptionFieldEnum::Text(
+                r.description.trim_end_matches("\"").into(),
+            )],
             is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
             keywords: keywords
                 .into_iter()
@@ -313,9 +315,9 @@ impl From<MastercookRecipe> for Recipe {
                     }]
                 })
                 .unwrap_or_default(),
-            author: to_organization_type(r.author),
+            author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
             cook_time: seconds_to_duration(cook_secs),
-            description: to_text(r.description),
+            description: vec![RecipeDescriptionFieldEnum::Text(r.description)],
             is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
             image: (!r.img.is_empty())
                 .then_some(vec![RecipeImageFieldEnum::ImageObject(Box::new(
@@ -1126,90 +1128,72 @@ Nutr. Assoc. : 0 0 0
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
-                    name: Some("Apple Slaw".into()),
-                    recipe_category: RecipeCategory::Text("Side Dish".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("Apples, thinly sliced"),
-                            SectionItem::new("2 tablespoons Lemon Juice"),
-                            SectionItem::new("3 cups Shredded Cabbage"),
-                            SectionItem::new("Stalk Celery, chopped"),
-                            SectionItem::new("Carrot, grated"),
-                            SectionItem::new("Med Onion, thinly sliced"),
-                            SectionItem::new("1/2 cup Sour Cream"),
-                            SectionItem::new("1/4 cup Mayonnaise"),
-                            SectionItem::new("3/4 teaspoon Celery Salt"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Sprinkle sliced apples with lemon juice. Mix with cabbage, celery, carrot, and onion.",
-                            ),
-                            SectionItem::new(
-                                "Combine sour cream, mayonnaise and celery salt. Toss with apple mixture and serve.",
-                            ),
-                            SectionItem::new("Lemon juice keeps apples from discoloring."),
-                        ],
-                    )])),
+                    name: vec!["Apple Slaw".into()],
+                    recipe_category: vec!["Side Dish".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("Apples, thinly sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tablespoons Lemon Juice".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 cups Shredded Cabbage".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Stalk Celery, chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Carrot, grated".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Med Onion, thinly sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 cup Sour Cream".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 cup Mayonnaise".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3/4 teaspoon Celery Salt".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Sprinkle sliced apples with lemon juice. Mix with cabbage, celery, carrot, and onion.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Combine sour cream, mayonnaise and celery salt. Toss with apple mixture and serve.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Lemon juice keeps apples from discoloring.".into()),
+                    ],
                     recipe_yield: to_yield(5),
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
-                    name: Some("Apples and Noodles".into()),
+                    name: vec!["Apples and Noodles".into()],
                     recipe_category: RecipeCategory::Text("Side Dish".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("2 cups Noodles, cooked and drained"),
-                            SectionItem::new("Apples, peeled and sliced"),
-                            SectionItem::new("1 dash Cinnamon"),
-                            SectionItem::new("4 tablespoons Brown Sugar"),
-                            SectionItem::new("4 tablespoons Butter"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("Preheat oven to 350 deg F."),
-                            SectionItem::new(
-                                "Place half of the noodles and apples in a buttered baking dish.",
-                            ),
-                            SectionItem::new(
-                                "Sprinkle with half the brown sugar and a dash of cinnamon. Dot with half the butter. Repeat. Cover and bake 30 minutes. Stir well before serving (or, leave uncovered toward the end of baking to give the top a nice crunchy texture.)",
-                            ),
-                        ],
-                    )])),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("2 cups Noodles, cooked and drained".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Apples, peeled and sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 dash Cinnamon".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 tablespoons Brown Sugar".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 tablespoons Butter".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("Preheat oven to 350 deg F.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Place half of the noodles and apples in a buttered baking dish.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Sprinkle with half the brown sugar and a dash of cinnamon. Dot with half the butter. Repeat. Cover and bake 30 minutes. Stir well before serving (or, leave uncovered toward the end of baking to give the top a nice crunchy texture.)".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
-                    name: Some("ARTICHOKES AND PEAS".into()),
+                    name: vec!["ARTICHOKES AND PEAS".into()],
                     keywords: to_defined_text(["Vegetables", "Side Dish"].join(",")),
                     recipe_category: RecipeCategory::Text("Vegetarian".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("2 lg Artichokes"),
-                            SectionItem::new("1 Lemon (juice only)"),
-                            SectionItem::new("2 tablespoons Virgin olive oil"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "lg Basil leaves; - sliced in strips 1 lg Onion, white or yellow - sliced 1/4-in thick Salt 1 lb Fresh pod peas; -=OR=- 1 c  Frozen peas Finely chopped parsley Freshly milled pepper 1 tb Sweet butter -=OR=-Extra-Virgin Olive Oil Lemon juice; to taste -=OR=- Champagne Vinegar  SLICE THE UPPER 2/3 of the leaves off the artichokes, then break off the remaining leaves, snapping them off at the base. Trim off the dark green stubs, going around the artichoke with a paring knife. Cut them in quarters, remove the fuzzy choke and slice each quarter into pieces 1/4-to-1/2-inch thick. As you work, rub the cut surfaces with lemon and put them in a bowl with the lemon juice and water to cover. Gently warm the olive oil with half the basil. When it is fairly hot, but not sizzling, add the onions and the sliced artichokes. Salt lightly and give them a stir to coat them with the oil, then add 3/4 cup water and cook over a medium-low flame. As the water cooks off, add more, in 1/2-cup increments until the artichokes are cooked, about 25 minutes. Add the peas and continue cooking until they are done. Let any liquids reduce until they are syrupy. Taste and season with salt. Add the rest of the basil, the parsley and the butter or olive oil. To brighten the flavors, stir in a little lemon juice or champagne vinegar to taste.",
-                            ),
-                            SectionItem::new("DEBORAH MADISON - PRODIGY GUEST CHEFS COOKBOOK"),
-                        ],
-                    )])),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("2 lg Artichokes".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Lemon (juice only)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tablespoons Virgin olive oil".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "lg Basil leaves; - sliced in strips 1 lg Onion, white or yellow - sliced 1/4-in thick Salt 1 lb Fresh pod peas; -=OR=- 1 c  Frozen peas Finely chopped parsley Freshly milled pepper 1 tb Sweet butter -=OR=-Extra-Virgin Olive Oil Lemon juice; to taste -=OR=- Champagne Vinegar  SLICE THE UPPER 2/3 of the leaves off the artichokes, then break off the remaining leaves, snapping them off at the base. Trim off the dark green stubs, going around the artichoke with a paring knife. Cut them in quarters, remove the fuzzy choke and slice each quarter into pieces 1/4-to-1/2-inch thick. As you work, rub the cut surfaces with lemon and put them in a bowl with the lemon juice and water to cover. Gently warm the olive oil with half the basil. When it is fairly hot, but not sizzling, add the onions and the sliced artichokes. Salt lightly and give them a stir to coat them with the oil, then add 3/4 cup water and cook over a medium-low flame. As the water cooks off, add more, in 1/2-cup increments until the artichokes are cooked, about 25 minutes. Add the peas and continue cooking until they are done. Let any liquids reduce until they are syrupy. Taste and season with salt. Add the rest of the basil, the parsley and the butter or olive oil. To brighten the flavors, stir in a little lemon juice or champagne vinegar to taste.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("DEBORAH MADISON - PRODIGY GUEST CHEFS COOKBOOK".into()),
+                    ],
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
@@ -1217,28 +1201,22 @@ Nutr. Assoc. : 0 0 0
                     r#type: Some(AtType::Recipe.to_string()),
                     is_based_on: to_is_based_on("Exported from  MasterCook II".into()),
                     keywords: to_defined_text(["Appetizers", "Jewish"].join(",")),
-                    name: Some(r#"Aunt Sadie's Fabulous Chopped Liver "Pineapple"#.into()),
+                    name: vec![r#"Aunt Sadie's Fabulous Chopped Liver "Pineapple"#.into()],
                     recipe_category: RecipeCategory::Text("Side Dish".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("6 pounds Fresh chicken livers"),
-                            SectionItem::new("12 each Eggs, hard cooked"),
-                            SectionItem::new("1 each Large apple, peeled"),
-                            SectionItem::new("3 each Bermuda onions, chopped"),
-                            SectionItem::new("1 each Bunch celery, (hearts only)"),
-                            SectionItem::new("Chicken fat"),
-                            SectionItem::new("1 each Large pineapple"),
-                            SectionItem::new("1 each Jar of lg pimento green oliv"),
-                            SectionItem::new("Salt and pepper to taste"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![SectionItem::new(
-                            r#"I just have to pass this along to you. I don't want you to prepare this bec none of us need the bad cholesterol ingredients. I just wanted you to have pleasure of reading it. Saute liver, one chopped onion, and celery in generous amount of chicken >> fat; cooking until liver is just done, with no pink showing, but while live are still soft. Put everything through a meat grinder, adding salt and pepper to taste. Bl well, adding chicken fat if necessary. Chill well. Cut the top off the pineapple and reserve top. Mold liver on a large servi tray, copying the fresh >>>>>> pineapple shape as closely as possible. Score diamond shapes and press olive slices into each diamond.  Place pineapple top onto top of liver mold. Surround "Pineapple" with curly lettu buffet rye bread and cherry tomatoes."#,
-                        )],
-                    )])),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("6 pounds Fresh chicken livers".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("12 each Eggs, hard cooked".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 each Large apple, peeled".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 each Bermuda onions, chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 each Bunch celery, (hearts only)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Chicken fat".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 each Large pineapple".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 each Jar of lg pimento green oliv".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Salt and pepper to taste".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        r#"I just have to pass this along to you. I don't want you to prepare this bec none of us need the bad cholesterol ingredients. I just wanted you to have pleasure of reading it. Saute liver, one chopped onion, and celery in generous amount of chicken >> fat; cooking until liver is just done, with no pink showing, but while live are still soft. Put everything through a meat grinder, adding salt and pepper to taste. Bl well, adding chicken fat if necessary. Chill well. Cut the top off the pineapple and reserve top. Mold liver on a large servi tray, copying the fresh >>>>>> pineapple shape as closely as possible. Score diamond shapes and press olive slices into each diamond.  Place pineapple top onto top of liver mold. Surround "Pineapple" with curly lettu buffet rye bread and cherry tomatoes."#.into(),
+                    )],
                     recipe_yield: to_yield(25),
                     ..Default::default()
                 },
@@ -1249,84 +1227,84 @@ Nutr. Assoc. : 0 0 0
             vec![
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    author: to_organization_type("Macpoule".into()),
-                    aggregate_rating: Some(AggregateRating {
+                    author: vec![RecipeAuthorFieldEnum::new_person("Macpoule")],
+                    aggregate_rating: vec![AggregateRating {
                         r#type: Some(AtType::AggregateRating.to_string()),
-                        rating_value: Some(NumberOrText::Number(0.5)),
+                        rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(0.5)],
                         ..Default::default()
-                    }),
+                    }],
                     cook_time: seconds_to_duration(4500),
-                    description: to_text("The best chicken in the universe!".into()),
+                    description: vec![RecipeDescriptionFieldEnum::Text(
+                        "The best chicken in the universe!".into(),
+                    )],
                     is_based_on: to_is_based_on(
                         "My mother's recipe cookbook [Exported from MasterCook]".into(),
                     ),
-                    name: Some("Best Chicken".into()),
-                    nutrition: Some(NutritionInformationSchema {
-                        at_type: Some(AtType::NutritionInformation),
-                        calories: Some(Energy::Str("340".into())),
-                        cholesterol_content: Some(Mass::Str("97mg".into())),
-                        fat_content: Some(Mass::Str("23g".into())),
-                        protein_content: Some(Mass::Str("32g".into())),
-                        sodium_content: Some(Mass::Str("95mg".into())),
+                    name: vec!["Best Chicken".into()],
+                    nutrition: vec![NutritionInformation {
+                        r#type: Some(AtType::NutritionInformation.to_string()),
+                        calories: vec![Energy::new("340")],
+                        cholesterol_content: vec![Mass::new("97mg")],
+                        fat_content: vec![Mass::new("23g")],
+                        protein_content: vec![Mass::new("32g")],
+                        sodium_content: vec![Mass::new("95mg")],
                         ..Default::default()
-                    }),
+                    }],
                     prep_time: seconds_to_duration(30 * 60),
-                    recipe_category: RecipeCategory::Text("Dinner".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("6 pounds chicken breast, for braising meat"),
-                            SectionItem::new("12 tablespoons oil, flaked"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("Cut the chicken into many pieces"),
-                            SectionItem::new("Mix it with love"),
-                            SectionItem::new("Kiss it"),
-                            SectionItem::new("Eat"),
-                        ],
-                    )])),
+                    recipe_category: vec!["Dinner".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "6 pounds chicken breast, for braising meat".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::Text("12 tablespoons oil, flaked".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Cut the chicken into many pieces".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Mix it with love".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Kiss it".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Eat".into()),
+                    ],
                     recipe_yield: to_yield(18),
                     total_time: seconds_to_duration(6300),
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    author: to_organization_type("Macpoule".into()),
-                    description: to_text("Ramen has never been soooo delicious".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Macpoule".into())],
+                    description: vec![RecipeDescriptionFieldEnum::Text(
+                        "Ramen has never been soooo delicious".into(),
+                    )],
                     is_based_on: to_is_based_on(
                         "My mother's recipe cookbook [Exported from MasterCook]".into(),
                     ),
-                    name: Some("Delicious Ramen".into()),
-                    nutrition: Some(NutritionInformationSchema {
-                        at_type: Some(AtType::NutritionInformation),
-                        calories: Some(Energy::Str("34".into())),
-                        carbohydrate_content: Some(Mass::Str("6g".into())),
-                        cholesterol_content: Some(Mass::Str("31mg".into())),
-                        fat_content: Some(Mass::Str("1g".into())),
-                        protein_content: Some(Mass::Str("1g".into())),
-                        sodium_content: Some(Mass::Str("108mg".into())),
-                        sugar_content: Some(Mass::Str("4g".into())),
+                    name: vec!["Delicious Ramen".into()],
+                    nutrition: vec![NutritionInformation {
+                        r#type: Some(AtType::NutritionInformation.to_string()),
+                        calories: vec![Energy::new("34")],
+                        carbohydrate_content: vec![Mass::new("6g")],
+                        cholesterol_content: vec![Mass::new("31mg")],
+                        fat_content: vec![Mass::new("1g")],
+                        protein_content: vec![Mass::new("1g")],
+                        sodium_content: vec![Mass::new("108mg")],
+                        sugar_content: vec![Mass::new("4g")],
                         ..Default::default()
-                    }),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("4 egg"),
-                            SectionItem::new("12 heads Algood Preserves, Strawberry"),
-                            SectionItem::new("1 teaspoon salt"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("Cook for 12 hours"),
-                            SectionItem::new("Make sure to boil"),
-                            SectionItem::new("Mix all ingredients together and eat"),
-                        ],
-                    )])),
+                    }],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("4 egg".into()),
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "12 heads Algood Preserves, Strawberry".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::Text("1 teaspoon salt".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("Cook for 12 hours".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Make sure to boil".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mix all ingredients together and eat".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(24),
                     ..Default::default()
                 },

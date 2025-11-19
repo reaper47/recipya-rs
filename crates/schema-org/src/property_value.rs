@@ -18,7 +18,7 @@ pub type PropertyValuePropertyIDFieldEnum = String;
 pub type PropertyValueUnitCodeFieldEnum = String;
 
 ///<https://schema.org/PropertyValue>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyValue {
     #[serde(rename = "@type")]

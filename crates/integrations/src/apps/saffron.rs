@@ -9,15 +9,15 @@ use nom::sequence::{preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use recipe_schema::components::{SectionItem, Sections};
-use recipe_schema::{AtType, RecipeSchema};
+use schema_org::Recipe;
+use schema_org::field::{
+    RecipeDescriptionFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+};
 use support::time::parse_duration;
 
 use crate::apps::helpers::{read_file, urls_to_image_object};
 use crate::error::Result;
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
-};
+use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 
 struct SaffronRecipe {
     title: String,
@@ -27,8 +27,10 @@ struct SaffronRecipe {
     servings: Option<i16>,
     prep_seconds: Option<i32>,
     cook_seconds: Option<i32>,
+    #[allow(unused)]
     total_seconds: Option<i32>,
     cookbook: Option<String>,
+    #[allow(unused)]
     section: Option<String>,
     image: Option<String>,
     ingredients: Vec<String>,
@@ -71,38 +73,47 @@ impl From<RecipeComponents<'_>> for SaffronRecipe {
     }
 }
 
-impl From<SaffronRecipe> for RecipeSchema {
+impl From<SaffronRecipe> for Recipe {
     fn from(r: SaffronRecipe) -> Self {
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
             cook_time: seconds_to_duration(r.cook_seconds.unwrap_or_default()),
-            description: to_text(r.description.unwrap_or_default()),
-            headline: r.cookbook,
+            description: r
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            headline: r.cookbook.map(|s| vec![s]).unwrap_or_default(),
             image: urls_to_image_object(vec![r.image.unwrap_or_default()]),
-            name: Some(r.title),
-            is_based_on: to_is_based_on(r.source.unwrap_or_default()),
+            name: vec![r.title],
+            is_based_on: to_is_based_on(&r.source.unwrap_or_default()),
             prep_time: seconds_to_duration(r.prep_seconds.unwrap_or_default()),
-            recipe_ingredient: Some(r.ingredients).filter(|v| !v.is_empty()),
-            recipe_instructions: sections_to_itemlist(Sections::from([(
-                "".into(),
-                r.instructions.iter().map(SectionItem::new).collect(),
-            )])),
+            recipe_ingredient: r
+                .ingredients
+                .into_iter()
+                .map(RecipeRecipeIngredientFieldEnum::Text)
+                .collect(),
+            recipe_instructions: r
+                .instructions
+                .into_iter()
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect(),
             recipe_yield: to_yield(r.servings.unwrap_or_default() as i64),
-            url: r.original_url,
+            url: r
+                .original_url
+                .map(|u| vec![u.to_string()])
+                .unwrap_or_default(),
             ..Default::default()
         }
     }
 }
 
 /// Parses a Saffron recipe from the file's content.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
     let content = read_file(r)?;
     let recipe = parse_saffron_recipe(&content)?;
-    Ok(vec![RecipeSchema::from(recipe)])
+    Ok(vec![Recipe::from(recipe)])
 }
 
 fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
@@ -238,6 +249,7 @@ fn rest(input: &str) -> IResult<&str, &str> {
 mod tests {
     use super::*;
     use files::*;
+    use schema_org::Recipe;
     use std::io::Cursor;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -249,37 +261,33 @@ mod tests {
 
         let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, vec![RecipeSchema {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
+        pretty_assertions::assert_eq!(got, vec![Recipe {
             cook_time: seconds_to_duration(1800),
             description: to_text("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into()),
-            headline: Some("First Cookbook".into()),
+            headline: vec!["First Cookbook".into()],
             is_based_on: to_is_based_on("KMKIDMAN5".into()),
-            name: Some("Apple Puff Pancake".into()),
+            name: vec!["Apple Puff Pancake".into()],
             prep_time: seconds_to_duration(900),
-            recipe_ingredient: Some(vec![
-                "6 eggs".into(),
-                "1.5 cups milk".into(),
-                "1 teaspoon vanilla extract".into(),
-                "1 cup all-purpose flour".into(),
-                "3 tablespoons sugar".into(),
-                "0.5 teaspoon salt".into(),
-                "0.25 teaspoon ground cinnamon".into(),
-                "2 tablespoons butter".into(),
-                "2 apples - peeled, cored and sliced".into(),
-                "3 tablespoons brown sugar".into(),
-            ]),
-            recipe_instructions: sections_to_itemlist(Sections::from([
-                ("".into(), vec![
-                    SectionItem::new("Preheat the oven to 425 degrees F (220 degrees C)."),
-                    SectionItem::new("Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside."),
-                    SectionItem::new("Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top."),
-                    SectionItem::new("Bake in the preheated oven until puffed and lightly browned, about 20 minutes."),
-                ])
-            ])),
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("6 eggs".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1.5 cups milk".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup all-purpose flour".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 tablespoons sugar".into()),
+                RecipeRecipeIngredientFieldEnum::Text("0.5 teaspoon salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("0.25 teaspoon ground cinnamon".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tablespoons butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 apples - peeled, cored and sliced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 tablespoons brown sugar".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Preheat the oven to 425 degrees F (220 degrees C).".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Bake in the preheated oven until puffed and lightly browned, about 20 minutes.".into()),
+            ],
             recipe_yield: to_yield(9),
-            url: Url::parse("https://www.allrecipes.com/recipe/50936/apple-puff-pancake/").ok(),
+            url: vec!["https://www.allrecipes.com/recipe/50936/apple-puff-pancake/".into()],
             ..Default::default()
         }]);
         Ok(())
@@ -294,23 +302,21 @@ mod tests {
 
         pretty_assertions::assert_eq!(
             got,
-            vec![RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
+            vec![Recipe {
                 cook_time: seconds_to_duration(0),
-                headline: Some("First Cookbook".into()),
+                headline: vec!["First Cookbook".into()],
                 is_based_on: to_is_based_on("Mom".into()),
-                name: Some("Yay".into()),
+                name: vec!["Yay".into()],
                 prep_time: seconds_to_duration(4500),
-                recipe_ingredient: Some(vec!["1 kg chicken".into(), "1 egg".into()]),
-                recipe_instructions: sections_to_itemlist(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new("Mix stuff"),
-                        SectionItem::new("Eat a melon"),
-                        SectionItem::new("Profit"),
-                    ]
-                )])),
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("1 kg chicken".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1 egg".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text("Mix stuff".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Eat a melon".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Profit".into()),
+                ],
                 recipe_yield: to_yield(0),
                 ..Default::default()
             }]

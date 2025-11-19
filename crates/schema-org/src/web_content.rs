@@ -23,7 +23,7 @@ pub type WebContentDateModifiedFieldEnum = String;
 pub type WebContentDatePublishedFieldEnum = String;
 
 ///<https://schema.org/WebContent>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WebContent {
     #[serde(rename = "@type")]

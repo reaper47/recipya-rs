@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::field::DurationDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 
-#[derive(Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum DurationOrText {
     Duration(Duration),
@@ -18,7 +18,7 @@ impl DurationOrText {
 }
 
 ///<https://schema.org/Duration>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Duration {
     ///<https://schema.org/alternateName>

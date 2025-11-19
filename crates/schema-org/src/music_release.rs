@@ -29,7 +29,7 @@ pub type MusicReleaseDatePublishedFieldEnum = String;
 pub type MusicReleaseGenreFieldEnum = String;
 
 ///<https://schema.org/MusicRelease>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MusicRelease {
     #[serde(rename = "@type")]

@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::websites::Website;
-use schema_org::{AtType, Recipe};
+use schema_org::{AtType, GraphObject, Recipe};
 use scraper::{Html, Selector};
 use support::fs::FsSupport;
 use tracing::error;
@@ -50,10 +50,10 @@ impl Scraper {
                     .ok()
             })
             .find_map(|recipe| {
-                recipe.at_graph.and_then(|graph| {
+                recipe.graph.and_then(|graph| {
                     graph.into_iter().find_map(|item| match item {
                         GraphObject::Recipe(mut r) => {
-                            r.at_type = Some(AtType::Recipe);
+                            r.r#type = Some(AtType::Recipe.to_string());
                             Some(*r)
                         }
                         _ => None,

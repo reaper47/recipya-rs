@@ -16,7 +16,7 @@ pub type MonetaryAmountValidFromFieldEnum = String;
 pub type MonetaryAmountValidThroughFieldEnum = String;
 
 ///<https://schema.org/MonetaryAmount>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonetaryAmount {
     #[serde(rename = "@type")]

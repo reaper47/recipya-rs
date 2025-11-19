@@ -52,7 +52,7 @@ pub type VideoObjectDatePublishedFieldEnum = String;
 pub type VideoObjectGenreFieldEnum = String;
 
 ///<https://schema.org/VideoObject>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct VideoObject {
     #[serde(rename = "@type")]

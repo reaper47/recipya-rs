@@ -14,7 +14,7 @@ use crate::helpers::one_or_many;
 pub type ListItemAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/ListItem>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ListItem {
     #[serde(rename = "@type")]

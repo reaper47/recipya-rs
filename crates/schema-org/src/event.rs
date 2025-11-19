@@ -24,7 +24,7 @@ pub type EventStartDateFieldEnum = String;
 pub type EventDoorTimeFieldEnum = String;
 
 ///<https://schema.org/Event>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     #[serde(rename = "@type")]

@@ -29,7 +29,7 @@ pub type CreativeWorkDateModifiedFieldEnum = String;
 pub type CreativeWorkDatePublishedFieldEnum = String;
 
 ///<https://schema.org/CreativeWork>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreativeWork {
     #[serde(rename = "@type")]

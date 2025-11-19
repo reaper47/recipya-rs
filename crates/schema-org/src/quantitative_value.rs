@@ -13,7 +13,7 @@ use crate::helpers::one_or_many;
 pub type QuantitativeValueUnitCodeFieldEnum = String;
 
 ///<https://schema.org/QuantitativeValue>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QuantitativeValue {
     #[serde(rename = "@type")]

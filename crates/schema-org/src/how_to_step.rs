@@ -27,7 +27,7 @@ pub type HowToStepDateModifiedFieldEnum = String;
 pub type HowToStepDatePublishedFieldEnum = String;
 
 ///<https://schema.org/HowToStep>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HowToStep {
     #[serde(rename = "@type")]

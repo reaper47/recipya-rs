@@ -13,7 +13,7 @@ use crate::helpers::one_or_many;
 ///<https://schema.org/URL>
 pub type QualitativeValueAdditionalTypeFieldEnum = String;
 ///<https://schema.org/QualitativeValue>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct QualitativeValue {
     #[serde(rename = "@type")]

@@ -1,7 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::Thing;
 use crate::field::{
     AggregateRatingAuthorFieldEnum, AggregateRatingBestRatingFieldEnum,
     AggregateRatingDescriptionFieldEnum, AggregateRatingImageFieldEnum,
@@ -9,12 +8,13 @@ use crate::field::{
     AggregateRatingWorstRatingFieldEnum,
 };
 use crate::helpers::one_or_many;
+use crate::{AtType, Thing};
 
 ///<https://schema.org/AggregateRating>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AggregateRating {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", default = "set_type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
@@ -78,4 +78,8 @@ pub struct AggregateRating {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
+}
+
+fn set_type() -> Option<String> {
+    Some(AtType::AggregateRating.to_string())
 }

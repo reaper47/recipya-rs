@@ -15,7 +15,7 @@ use crate::helpers::one_or_many;
 pub type RatingAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Rating>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Rating {
     #[serde(rename = "@type")]

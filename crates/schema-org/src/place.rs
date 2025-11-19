@@ -9,7 +9,7 @@ use crate::helpers::one_or_many;
 use crate::{AggregateRating, Review};
 
 ///<https://schema.org/Place>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Place {
     ///<https://schema.org/address>

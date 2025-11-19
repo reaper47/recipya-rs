@@ -119,9 +119,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Enumeration of all possible @type values.
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 pub enum AtType {
     AggregateRating,
+    Comment,
     HowToTool,
     ImageObject,
     ItemList,
@@ -138,6 +139,7 @@ impl Display for AtType {
             f,
             "{}",
             match self {
+                AtType::Comment => "Comment".to_string(),
                 AtType::Recipe => "Recipe".to_string(),
                 AtType::AggregateRating => "AggregateRating".to_string(),
                 AtType::HowToTool => "HowToTool".to_string(),

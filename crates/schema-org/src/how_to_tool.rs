@@ -15,7 +15,7 @@ use crate::{Action, Thing};
 pub type HowToToolAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/HowToTool>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HowToTool {
     #[serde(rename = "@type")]

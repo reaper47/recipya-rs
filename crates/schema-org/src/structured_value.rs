@@ -14,7 +14,7 @@ use crate::helpers::one_or_many;
 pub type StructuredValueAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/StructuredValue>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StructuredValue {
     #[serde(rename = "@type")]

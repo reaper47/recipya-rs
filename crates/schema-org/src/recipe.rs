@@ -17,7 +17,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AggregateRating, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
+    AggregateRating, AtType, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
     InteractionCounter, NutritionInformation, Person, Review, Thing,
 };
 
@@ -42,12 +42,29 @@ pub type RecipeDatePublishedFieldEnum = String;
 ///<https://schema.org/URL>
 pub type RecipeSchemaVersionFieldEnum = String;
 
+/// Enumeration of possible values for the @graph field in JSON-LD used to group
+/// multiple related entities in a single document.
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum GraphObject {
+    Recipe(Box<Recipe>),
+    Unknown,
+}
+
+impl Default for GraphObject {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 ///<https://schema.org/Recipe>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Recipe {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", default = "set_recipe_type")]
     pub r#type: Option<String>,
+    #[serde(rename = "@graph")]
+    pub graph: Option<Vec<GraphObject>>,
     #[serde(rename = "@context")]
     pub context: String,
     ///<https://schema.org/nutrition>
@@ -373,4 +390,8 @@ pub struct Recipe {
     #[serde(rename = "name")]
     #[serde(default, deserialize_with = "one_or_many")]
     pub name: Vec<String>,
+}
+
+fn set_recipe_type() -> Option<String> {
+    Some(AtType::Recipe.to_string())
 }

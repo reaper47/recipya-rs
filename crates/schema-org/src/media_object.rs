@@ -59,7 +59,7 @@ pub type MediaObjectDatePublishedFieldEnum = String;
 pub type MediaObjectGenreFieldEnum = String;
 
 ///<https://schema.org/MediaObject>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaObject {
     #[serde(rename = "@type")]

@@ -10,7 +10,7 @@ use crate::helpers::one_or_many;
 pub type DistanceAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Distance>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Distance {
     #[serde(rename = "@type")]

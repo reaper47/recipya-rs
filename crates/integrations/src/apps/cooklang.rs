@@ -307,7 +307,6 @@ impl CookLang {
                             .content
                             .into_iter()
                             .filter_map(clean_content)
-                            .map(|s| s.as_str())
                             .collect(),
                     )
                 })

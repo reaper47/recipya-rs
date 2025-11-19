@@ -14,7 +14,7 @@ use crate::helpers::one_or_many;
 pub type LanguageAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Language>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Language {
     #[serde(rename = "@type")]

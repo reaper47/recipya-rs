@@ -14,7 +14,7 @@ use crate::helpers::one_or_many;
 pub type DefinedTermAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/DefinedTerm>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DefinedTerm {
     #[serde(rename = "@type")]

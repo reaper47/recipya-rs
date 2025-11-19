@@ -9,7 +9,7 @@ use crate::field::{
 use crate::helpers::one_or_many;
 
 ///<https://schema.org/ItemList>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemList {
     #[serde(rename = "@type")]

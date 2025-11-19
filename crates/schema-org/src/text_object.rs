@@ -34,7 +34,7 @@ pub type TextObjectDateModifiedFieldEnum = String;
 pub type TextObjectDatePublishedFieldEnum = String;
 
 ///<https://schema.org/TextObject>
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TextObject {
     #[serde(rename = "@type")]
