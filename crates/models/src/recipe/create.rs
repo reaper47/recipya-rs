@@ -239,7 +239,7 @@ mod tests {
             r#yield: Some(4),
             rating: Some(4),
             category: Some("uncategorized".into()),
-            ingredients: Sections::from([
+            ingredients: ComponentSections::from([
                 (
                     "Sauce".into(),
                     vec![
@@ -255,7 +255,7 @@ mod tests {
                     ],
                 ),
             ]),
-            instructions: Sections::from([
+            instructions: ComponentSections::from([
                 (
                     "Sauce".into(),
                     vec![SectionItem::new("Mix all these ingredients")],
@@ -492,7 +492,7 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let mut recipe = a_bare_minimum_recipe();
-        recipe.instructions = Sections::from([(
+        recipe.instructions = ComponentSections::from([(
             "".to_string(),
             vec![
                 SectionItem::new("Heat oil on medium heat in a large"),
@@ -510,7 +510,7 @@ mod tests {
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
         pretty_assertions::assert_eq!(
             got.instructions,
-            Sections::from([
+            ComponentSections::from([
             ("".to_string(), vec![
                 SectionItem {
                     text: "Heat oil on medium heat in a large".into(),

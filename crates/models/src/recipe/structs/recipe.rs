@@ -4,10 +4,15 @@ use whatlang::Lang;
 
 use math::cooking::units;
 use repository::schema;
-use schema_org::field::{RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
+use schema_org::field::{RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum};
 use support::name_entity_with_relations;
 
-use crate::recipe::{Nutrition, NutritionForCreate, RecipeForm, Sections, Times, TimesForCreate, ToolForCreate, ToolRecipe, Video, VideoForCreate};
+use crate::recipe::RecipeForm;
+use crate::recipe::media::{Video, VideoForCreate};
+use crate::recipe::nutrition::{Nutrition, NutritionForCreate};
+use crate::recipe::section::{ComponentSections, Section};
+use crate::recipe::time::{Times, TimesForCreate};
+use crate::recipe::tool::{ToolForCreate, ToolRecipe};
 use crate::user::User;
 
 /// Represents a recipe entity stored in the database.
@@ -54,7 +59,7 @@ pub struct Recipe {
 #[derive(Associations, Insertable)]
 #[diesel(belongs_to(User))]
 #[diesel(table_name = schema::recipes)]
-pub(super) struct RecipeForInsert {
+pub(crate) struct RecipeForInsert {
     pub name: String,
     pub description: Option<String>,
     pub image: Option<Uuid>,
@@ -74,8 +79,8 @@ pub struct RecipeDetails {
     pub additional_images: Vec<Uuid>,
     pub category: String,
     pub cuisine: Option<String>,
-    pub ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
-    pub instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
+    pub ingredients: ComponentSections,
+    pub instructions: ComponentSections,
     pub keywords: Vec<String>,
     pub nutrition: Option<Nutrition>,
     pub times: Times,
@@ -165,8 +170,8 @@ pub struct RecipeForCreate {
     // For association tables
     pub category: Option<String>,
     pub cuisine: Option<String>,
-    pub ingredients: Sections,
-    pub instructions: Sections,
+    pub ingredients: ComponentSections,
+    pub instructions: ComponentSections,
     pub keywords: Vec<String>,
     pub nutrition: Option<NutritionForCreate>,
     pub times: Option<TimesForCreate>,
@@ -189,14 +194,18 @@ impl RecipeForCreate {
                 self.name.as_str(),
                 self.description.as_deref().unwrap_or(""),
                 &itertools::Itertools::intersperse(
-                    self.ingredients.items_as_text().iter().chain(&self.instructions.items_as_text()).map(|s| s.to_string()),
+                    self.ingredients
+                        .items_as_text()
+                        .iter()
+                        .chain(&self.instructions.items_as_text())
+                        .map(|s| s.to_string()),
                     " ".into(),
                 )
-                    .collect::<String>(),
+                .collect::<String>(),
             ]
-                .join(" "),
+            .join(" "),
         )
-            .unwrap_or(Lang::Eng)
+        .unwrap_or(Lang::Eng)
     }
 }
 
@@ -216,8 +225,8 @@ impl From<&RecipeForm> for RecipeForCreate {
             videos: vec![],
             category: form.category.clone().or(Some("uncategorized".into())),
             cuisine: form.cuisine.clone(),
-            ingredients: Sections::new(ingredients.clone()),
-            instructions: Sections::new(form.instructions.clone()),
+            ingredients: ComponentSections::new(ingredients.clone()),
+            instructions: ComponentSections::new(form.instructions.clone()),
             keywords: form.keywords.clone(),
             measurement_system_id,
             nutrition: form.nutrition.clone(),
@@ -244,8 +253,8 @@ impl From<RecipeForm> for RecipeForCreate {
             videos: vec![],
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: Sections::new(ingredients),
-            instructions: Sections::new(form.instructions),
+            ingredients: ComponentSections::new(ingredients),
+            instructions: ComponentSections::new(form.instructions),
             keywords: form.keywords,
             measurement_system_id,
             nutrition: form.nutrition,
@@ -259,17 +268,24 @@ impl From<RecipeForm> for RecipeForCreate {
 impl From<&schema_org::Recipe> for RecipeForCreate {
     fn from(schema: &schema_org::Recipe) -> Self {
         let original_ingredients = schema.recipe_ingredient.clone();
-        let ingredients = Sections::from(original_ingredients);
-        let measurement_system_id = units::MeasurementSystem::from(ingredients.items_as_text()).id();
+        let ingredients = ComponentSections::from(original_ingredients);
+        let measurement_system_id =
+            units::MeasurementSystem::from(ingredients.items_as_text()).id();
 
         Self {
             name: schema.name.first().cloned().unwrap_or_default(),
             description: schema.description.first().map(|v| match v {
                 RecipeDescriptionFieldEnum::Text(s) => s.clone(),
-                RecipeDescriptionFieldEnum::TextObject(obj) => obj.text.first().cloned().unwrap_or_default(),
+                RecipeDescriptionFieldEnum::TextObject(obj) => {
+                    obj.text.first().cloned().unwrap_or_default()
+                }
             }),
             images: vec![],
-            r#yield: schema.recipe_yield.first().map(|v| v.to_i16()).unwrap_or_default(),
+            r#yield: schema
+                .recipe_yield
+                .first()
+                .map(|v| v.to_i16())
+                .unwrap_or_default(),
             source: schema.url.first().cloned().unwrap_or_default(),
             is_favourite: false,
             rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
@@ -277,23 +293,33 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             category: schema.recipe_category.get(0).cloned(),
             cuisine: schema.recipe_cuisine.get(0).cloned(),
             ingredients,
-            instructions: Sections::from(schema.recipe_instructions.clone()),
-            keywords: schema.keywords.iter().map(|k| match k {
-                RecipeKeywordsFieldEnum::DefinedTerm(term) => term.name.first().cloned().unwrap_or_default(),
-                RecipeKeywordsFieldEnum::TextOrURL(s) => s.clone(),
-            }).collect(),
+            instructions: ComponentSections::from(schema.recipe_instructions.clone()),
+            keywords: schema
+                .keywords
+                .iter()
+                .map(|k| match k {
+                    RecipeKeywordsFieldEnum::DefinedTerm(term) => {
+                        term.name.first().cloned().unwrap_or_default()
+                    }
+                    RecipeKeywordsFieldEnum::TextOrURL(s) => s.clone(),
+                })
+                .collect(),
             measurement_system_id,
             notes: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             nutrition: schema.nutrition.first().map(NutritionForCreate::from),
             times: Some(TimesForCreate::from_components(
-                schema.prep_time.first().map(|d| d.to_iso8601()).unwrap_or_default(),
-                schema.cook_time.first().map(|d| d.to_iso8601()).unwrap_or_default(),
+                schema
+                    .prep_time
+                    .first()
+                    .map(|d| d.to_iso8601())
+                    .unwrap_or_default(),
+                schema
+                    .cook_time
+                    .first()
+                    .map(|d| d.to_iso8601())
+                    .unwrap_or_default(),
             )),
-            tools: schema
-                .tool
-                .iter()
-                .map(ToolForCreate::from)
-                .collect(),
+            tools: schema.tool.iter().map(ToolForCreate::from).collect(),
         }
     }
 }
@@ -312,3 +338,367 @@ pub struct MeasurementSystem {
 name_entity_with_relations!(Category, categories, categories_recipes);
 name_entity_with_relations!(Cuisine, cuisines, cuisines_recipes);
 name_entity_with_relations!(Keyword, keywords, keywords_recipes);
+
+/// Represents an ingredient in the `ingredients` table.
+#[derive(Queryable, Identifiable, Selectable)]
+#[diesel(table_name = schema::ingredients)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Ingredient {
+    pub id: i64,
+    pub name: String,
+}
+
+/// Represents the insertion of an ingredient-recipe association into the database.
+#[derive(Insertable)]
+#[diesel(table_name = schema::ingredients)]
+pub(crate) struct IngredientForInsert {
+    pub name: String,
+}
+
+/// Represents the association between an ingredient and a recipe in the
+/// `ingredients_recipes` table.
+#[derive(Identifiable, Selectable, Queryable, Associations)]
+#[diesel(table_name = schema::ingredients_recipes)]
+#[diesel(belongs_to(Ingredient), belongs_to(Recipe), belongs_to(Section))]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct IngredientRecipe {
+    pub id: i64,
+    pub ingredient_id: i64,
+    pub recipe_id: i64,
+    pub section_id: i64,
+    pub item_order: i16,
+}
+
+/// Represents the data required to insert a new ingredient-recipe association into
+/// the `ingredients_recipes` table.
+#[derive(Associations, Insertable)]
+#[diesel(table_name = schema::ingredients_recipes)]
+#[diesel(belongs_to(Recipe))]
+pub(crate) struct IngredientRecipeForInsert {
+    pub ingredient_id: i64,
+    pub recipe_id: i64,
+    pub section_id: i64,
+    pub item_order: i16,
+}
+
+/// Represents the data required to insert an instruction into the `instructions` table.
+#[derive(Insertable)]
+#[diesel(table_name = schema::instructions)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub(crate) struct InstructionForInsert {
+    pub name: String,
+    pub duration_seconds: Option<i32>,
+}
+
+/// Represents the data required to insert an instruction-recipe association into the
+/// `instructions_recipes` table.
+#[derive(Associations, Insertable)]
+#[diesel(table_name = schema::instructions_recipes)]
+#[diesel(belongs_to(Recipe))]
+pub(crate) struct InstructionRecipeForInsert {
+    pub instruction_id: i64,
+    pub recipe_id: i64,
+    pub section_id: i64,
+    pub item_order: i16,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod tests_recipe_details {
+        use super::*;
+
+        fn a_recipe() -> RecipeDetails {
+            RecipeDetails {
+                recipe: Recipe {
+                    measurement_system_id: 2,
+                    ..Default::default()
+                },
+                ..Default::default()
+            }
+        }
+
+        #[test]
+        fn test_num_images_no_images() {
+            let recipe = a_recipe();
+
+            let got = recipe.num_images();
+
+            pretty_assertions::assert_eq!(got, 0);
+        }
+
+        #[test]
+        fn test_num_images_only_main_image() {
+            let mut recipe = a_recipe();
+            recipe.recipe.image = Some(Uuid::new_v4());
+
+            let got = recipe.num_images();
+
+            pretty_assertions::assert_eq!(got, 1);
+        }
+
+        #[test]
+        fn test_num_images_additional_images() {
+            let mut recipe = a_recipe();
+            recipe.recipe.image = Some(Uuid::new_v4());
+            recipe.additional_images = vec![Uuid::new_v4(), Uuid::new_v4()];
+
+            let got = recipe.num_images();
+
+            pretty_assertions::assert_eq!(got, 3);
+        }
+
+        #[test]
+        fn test_num_media_no_videos() {
+            let mut recipe = a_recipe();
+            recipe.recipe.image = Some(Uuid::new_v4());
+
+            let got = recipe.num_media();
+
+            pretty_assertions::assert_eq!(got, 1);
+        }
+
+        #[test]
+        fn test_num_media_no_images() {
+            let mut recipe = a_recipe();
+            recipe.videos = vec![Video::default(), Video::default()];
+
+            let got = recipe.num_videos();
+
+            pretty_assertions::assert_eq!(got, 2);
+        }
+
+        #[test]
+        fn test_num_media() {
+            let mut recipe = a_recipe();
+            recipe.recipe.image = Some(Uuid::new_v4());
+            recipe.additional_images = vec![Uuid::new_v4(), Uuid::new_v4()];
+            recipe.videos = vec![Video::default(), Video::default()];
+
+            let got = recipe.num_media();
+
+            pretty_assertions::assert_eq!(got, 5);
+        }
+
+        #[test]
+        fn test_num_videos() {
+            let mut recipe = a_recipe();
+            recipe.videos = vec![Video::default(), Video::default(), Video::default()];
+
+            let got = recipe.num_videos();
+
+            pretty_assertions::assert_eq!(got, 3);
+        }
+
+        #[test]
+        fn test_all_images_no_images() {
+            let recipe = a_recipe();
+
+            let got = recipe.all_images();
+
+            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            pretty_assertions::assert_eq!(got_str, Vec::<String>::new());
+        }
+
+        #[test]
+        fn test_all_images_only_main_image() {
+            let mut recipe = a_recipe();
+            let an_image = Uuid::new_v4();
+            recipe.recipe.image = Some(an_image);
+
+            let got = recipe.all_images();
+
+            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            pretty_assertions::assert_eq!(got_str, vec![an_image.to_string()]);
+        }
+
+        #[test]
+        fn test_all_images() {
+            let mut recipe = a_recipe();
+            let an_image = Uuid::new_v4();
+            let an_image2 = Uuid::new_v4();
+            recipe.recipe.image = Some(an_image);
+            recipe.additional_images = vec![an_image2];
+
+            let got = recipe.all_images();
+
+            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            pretty_assertions::assert_eq!(
+                got_str,
+                vec![an_image.to_string(), an_image2.to_string()]
+            );
+        }
+    }
+
+    mod tests_nutrition {
+        use super::*;
+
+        #[test]
+        fn test_empty_nutrition() {
+            let nutrition = Nutrition::default();
+
+            let got = nutrition.to_line();
+
+            assert_eq!(got, "No nutrition available.");
+        }
+
+        #[test]
+        fn test_single_nutrition_value() {
+            let nutrition = Nutrition {
+                calories_kcal: Some(200),
+                ..Default::default()
+            };
+
+            let got = nutrition.to_line();
+
+            assert_eq!(got, "Per serving: calories 200 kcal");
+        }
+
+        #[test]
+        fn test_multiple_nutrition_values() {
+            let nutrition = Nutrition {
+                calories_kcal: Some(200),
+                total_carbohydrates: Some(50),
+                sugars_g: Some(20),
+                protein_g: Some(10),
+                total_fat_g: Some(5),
+                serving_size: Some("100g".into()),
+                ..Default::default()
+            };
+
+            let got = nutrition.to_line();
+
+            assert_eq!(
+                got,
+                "Per 100g: calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g"
+            );
+        }
+
+        #[test]
+        fn test_nutrition_with_some_empty_values() {
+            let nutrition = Nutrition {
+                calories_kcal: Some(250),
+                sodium_mg: Some(300),
+                ..Default::default()
+            };
+
+            let got = nutrition.to_line();
+
+            assert_eq!(got, "Per serving: calories 250 kcal; sodium 300mg");
+        }
+
+        #[test]
+        fn test_nutrition_with_all_values() {
+            let nutrition = Nutrition {
+                calories_kcal: Some(200),
+                total_carbohydrates: Some(50),
+                sugars_g: Some(20),
+                protein_g: Some(10),
+                total_fat_g: Some(5),
+                saturated_fat_g: Some(2),
+                unsaturated_fat_g: Some(1),
+                trans_fat_g: Some(0),
+                cholesterol_mg: Some(30),
+                sodium_mg: Some(300),
+                fiber_g: Some(5),
+                serving_size: Some("100g".into()),
+                ..Default::default()
+            };
+
+            let got = nutrition.to_line();
+
+            assert_eq!(
+                got,
+                "Per 100g: calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g; saturated fat 2g; unsaturated fat 1g; trans fat 0g; cholesterol 30mg; sodium 300mg; fiber 5g"
+            );
+        }
+    }
+
+    mod tests_recipe_for_create {
+        use super::*;
+
+        #[test]
+        fn test_first_and_rest_with_multiple_images() {
+            let uuid1 = Uuid::new_v4();
+            let uuid2 = Uuid::new_v4();
+            let uuid3 = Uuid::new_v4();
+            let recipe_c = RecipeForCreate {
+                images: vec![uuid1, uuid2, uuid3],
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, Some(uuid1));
+            pretty_assertions::assert_eq!(rest, vec![uuid2, uuid3]);
+        }
+
+        #[test]
+        fn test_first_and_rest_with_one_image() {
+            let uuid1 = Uuid::new_v4();
+            let recipe_c = RecipeForCreate {
+                images: vec![uuid1],
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, Some(uuid1));
+            assert!(rest.is_empty());
+        }
+
+        #[test]
+        fn test_first_and_rest_with_no_images() {
+            let recipe_c = RecipeForCreate {
+                images: vec![],
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, None);
+            assert!(rest.is_empty());
+        }
+
+        #[test]
+        fn test_first_and_rest_with_empty_vec() {
+            let recipe_c = RecipeForCreate {
+                images: vec![],
+                ..Default::default()
+            };
+
+            let (first, rest) = recipe_c.first_and_rest_images();
+
+            pretty_assertions::assert_eq!(first, None);
+            assert!(rest.is_empty());
+        }
+
+        #[test]
+        fn test_detect_language_en() {
+            let recipe_c = RecipeForCreate {
+                name: "The best hamburger ever".into(),
+                description: Some("This is the best hamburger ever".into()),
+                ingredients: ComponentSections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new("1 cup of flour"),
+                        SectionItem::new("1 cup of water"),
+                    ],
+                )]),
+                instructions: ComponentSections::from([(
+                    "".into(),
+                    vec![
+                        SectionItem::new("Mix all ingredients"),
+                        SectionItem::new("Bake for 30 minutes"),
+                    ],
+                )]),
+                ..Default::default()
+            };
+
+            let got = recipe_c.detect_language();
+
+            pretty_assertions::assert_eq!(got, Lang::Eng);
+        }
+    }
+}
