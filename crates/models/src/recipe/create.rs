@@ -64,7 +64,7 @@ impl Recipe {
                             name: recipe_c.name.to_string(),
                             description: recipe_c.description.clone(),
                             image: main_image,
-                            yield_: recipe_c.yield_,
+                            yield_: recipe_c.r#yield,
                             language: recipe_c.detect_language().code().to_string(),
                             notes: recipe_c.notes.clone(),
                             source: recipe_c.source.clone(),
@@ -236,7 +236,7 @@ mod tests {
     fn a_bare_minimum_recipe() -> RecipeForCreate {
         RecipeForCreate {
             name: "Best Chinese Kale".into(),
-            yield_: Some(4),
+            r#yield: Some(4),
             rating: Some(4),
             category: Some("uncategorized".into()),
             ingredients: Sections::from([
@@ -315,7 +315,7 @@ mod tests {
                 name: recipe.name,
                 description: recipe.description,
                 image: main_image,
-                yield_: recipe.yield_.unwrap_or(4),
+                yield_: recipe.r#yield.unwrap_or(4),
                 language: "eng".into(),
                 source: recipe.source,
                 measurement_system_id: 2,

@@ -444,7 +444,7 @@ mod tests {
                     } else {
                         None
                     },
-                    yield_: recipe_c.yield_.unwrap_or_default(),
+                    yield_: recipe_c.r#yield.unwrap_or_default(),
                     language: "eng".to_string(),
                     measurement_system_id: 2,
                     notes: recipe_c.notes,

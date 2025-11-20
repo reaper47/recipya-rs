@@ -9,7 +9,7 @@ use crate::helpers::one_or_many;
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Energy {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", default = "set_type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: String,
@@ -32,11 +32,20 @@ pub struct Energy {
 }
 
 impl Energy {
+    /// Creates a new Energy struct with the given value.
     pub fn new(energy: impl Into<String>) -> Self {
         Self {
-            r#type: Some(AtType::NutritionInformation.to_string()),
             name: vec![energy.into()],
             ..Default::default()
         }
     }
+
+    /// Converts the energy to a number.
+    pub fn to_number(&self) -> i16 {
+        self.name.first().map(|s| s.split(' ').map(|s| s.parse::<i16>().unwrap_or_default()).sum()).unwrap_or_default()
+    }
+}
+
+fn set_type() -> Option<String> {
+    Some(AtType::Energy.to_string())
 }

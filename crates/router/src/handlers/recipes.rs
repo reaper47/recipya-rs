@@ -1133,7 +1133,7 @@ pub async fn add_manual_recipe_post_handler(
             description: form.description,
             images,
             measurement_system_id,
-            yield_: form.yield_,
+            r#yield: form.yield_,
             source: form.source.unwrap_or_default(),
             is_favourite: false,
             rating: form.rating,

@@ -12,8 +12,17 @@ pub enum DurationOrText {
 }
 
 impl DurationOrText {
+    /// Creates a new DurationOrText::Text.
     pub fn new_text(s: impl Into<String>) -> Self {
         Self::Text(s.into())
+    }
+
+    /// Converts the DurationOrText to iso8601.
+    pub fn to_iso8601(&self) -> Option<iso8601::Duration> {
+        match self {
+            Self::Duration(d) => d.name.get(0).map(|d| iso8601::duration(d).ok()).unwrap_or_default(),
+            Self::Text(s) => iso8601::duration(s).ok(),
+        }
     }
 }
 

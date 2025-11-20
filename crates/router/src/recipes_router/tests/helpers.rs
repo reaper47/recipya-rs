@@ -28,7 +28,7 @@ pub(super) fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         form = form.add_part("keyword", Part::text(keyword));
     }
 
-    if let Some(n) = &recipe.yield_ {
+    if let Some(n) = &recipe.r#yield {
         form = form.add_part("yield", Part::text(n.to_string()));
     }
 

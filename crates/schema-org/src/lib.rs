@@ -106,7 +106,6 @@ pub use rating::*;
 pub use recipe::*;
 pub use review::*;
 pub use size_specification::*;
-use std::fmt::Display;
 pub use structured_value::*;
 pub use text_object::*;
 pub use thing::*;
@@ -114,6 +113,8 @@ pub use video_object::*;
 pub use web_content::*;
 pub use web_page::*;
 pub use web_page_element::*;
+
+use std::fmt::Display;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -123,9 +124,11 @@ use serde::{Deserialize, Serialize};
 pub enum AtType {
     AggregateRating,
     Comment,
+    Energy,
     HowToTool,
     ImageObject,
     ItemList,
+    ListItem,
     NutritionInformation,
     #[default]
     Recipe,
@@ -140,11 +143,13 @@ impl Display for AtType {
             "{}",
             match self {
                 AtType::Comment => "Comment".to_string(),
+                AtType::Energy => "Energy".to_string(),
                 AtType::Recipe => "Recipe".to_string(),
                 AtType::AggregateRating => "AggregateRating".to_string(),
                 AtType::HowToTool => "HowToTool".to_string(),
                 AtType::ImageObject => "ImageObject".to_string(),
                 AtType::ItemList => "ItemList".to_string(),
+                AtType::ListItem => "ListItem".to_string(),
                 AtType::NutritionInformation => "NutritionInformation".to_string(),
                 AtType::Review => "Review".to_string(),
                 AtType::VideoObject => "VideoObject".to_string(),

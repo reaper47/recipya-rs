@@ -791,6 +791,18 @@ impl Default for FieldEnum20 {
         Self::Text(String::new())
     }
 }
+impl FieldEnum20 {
+    pub fn to_i16(&self) -> Option<i16> {
+        match self {
+            FieldEnum20::QuantitativeValue(q) => q.value.first().map(|q| match q {
+                QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => s.parse::<i16>().ok().unwrap_or_default(),
+                QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
+                QuantitativeValueValueFieldEnum::StructuredValue(v) => v.name.first().map(|v| v.parse::<i16>().unwrap_or_default()).unwrap_or_default(),
+            }),
+            FieldEnum20::Text(s) => s.parse::<i16>().ok(),
+        }
+    }
+}
 ///<https://schema.org/recipeYield>
 pub type RecipeRecipeYieldFieldEnum = FieldEnum20;
 ///<https://schema.org/yield>
@@ -1348,6 +1360,19 @@ impl Default for FieldEnum60 {
         Self::Text(Default::default())
     }
 }
+impl FieldEnum60 {
+    pub fn quantity(&self) -> i16 {
+        match self {
+            FieldEnum60::Number(n) => *n as i16,
+            FieldEnum60::QuantitativeValue(q) => q.value.first().map(|q| match q {
+                QuantitativeValueValueFieldEnum::BooleanEnumOrText(t) => t.parse().ok().unwrap_or_default(),
+                QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
+                QuantitativeValueValueFieldEnum::StructuredValue(v) => v.name.first().map(|n| n.parse().ok().unwrap_or_default()).unwrap_or_default(),
+            }).unwrap_or_default(),
+            FieldEnum60::Text(s) => s.parse::<i16>().unwrap_or_default(),
+        }
+    }
+}
 ///<https://schema.org/requiredQuantity>
 pub type HowToToolRequiredQuantityFieldEnum = FieldEnum60;
 ///<https://schema.org/requiredQuantity>
@@ -1586,6 +1611,70 @@ pub type HowToSectionStepsFieldEnum = FieldEnum141;
 ///<https://schema.org/recipeInstructions>
 pub type RecipeRecipeInstructionsFieldEnum = FieldEnum141;
 
+pub struct RecipeRecipeInstructionsFieldEnumBuilder<'a, T>
+where
+    T: Into<String>,
+{
+    name: &'a str,
+    items: Vec<T>,
+    durations_seconds: Vec<i32>,
+}
+
+impl<'a> RecipeRecipeInstructionsFieldEnumBuilder<'a, String> {
+    pub fn new(name: &'a str, items: Vec<String>) -> Self {
+        Self {
+            name,
+            items,
+            durations_seconds: Vec::new(),
+        }
+    }
+
+    pub fn with_items<T: Into<String>>(mut self, items: Vec<T>) -> Self {
+        self.items = items.into_iter().map(|v| v.into()).collect();
+        self
+    }
+
+    pub fn with_duration(mut self, durations: Vec<i32>) -> Self {
+        self.durations_seconds = durations;
+        self
+    }
+
+    pub fn build(self) -> RecipeRecipeInstructionsFieldEnum {
+        let num_items = self.items.len() as i32;
+
+        RecipeRecipeInstructionsFieldEnum::ItemList(
+            ItemList {
+                item_list_element: self
+                    .items
+                    .into_iter()
+                    .map(|item| {
+                        ItemListItemListElementFieldEnum::ListItem(ListItem {
+                            r#type: None,
+                            context: "".to_string(),
+                            item: vec![],
+                            next_item: vec![],
+                            previous_item: vec![],
+                            position: vec![],
+                            disambiguating_description: vec![],
+                            image: vec![],
+                            description: vec![],
+                            alternate_name: vec![],
+                            url: vec![],
+                            subject_of: vec![],
+                            name: vec![],
+                            ..Default::default()
+                        })
+                    })
+                    .collect(),
+                name: vec![self.name.to_string()],
+                number_of_items: vec![num_items],
+                ..Default::default()
+            }
+            .into(),
+        )
+    }
+}
+
 impl RecipeRecipeInstructionsFieldEnum {
     /// Creates a new section.
     pub fn new_section<T: Into<String>>(name: &str, items: Vec<T>) -> Self {
@@ -1638,6 +1727,7 @@ impl Default for FieldEnum149 {
 pub type RecipeRecipeIngredientFieldEnum = FieldEnum149;
 
 impl RecipeRecipeIngredientFieldEnum {
+    /// Creates a new ItemList that contains a title and a list of items.
     pub fn new_section(name: &str, items: Vec<&str>) -> Self {
         Self::ItemList(ItemList {
             item_list_element: items
@@ -1648,6 +1738,19 @@ impl RecipeRecipeIngredientFieldEnum {
             number_of_items: vec![items.len() as i32],
             ..Default::default()
         })
+    }
+
+    /// Extracts all the items from the enum.
+    pub fn item_names(&self) -> Vec<String> {
+        match self {
+            Self::ItemList(list) => list.item_list_element.iter().flat_map(|v| match v {
+                ItemListItemListElementFieldEnum::ListItem(l) => l.name.clone(),
+                ItemListItemListElementFieldEnum::Text(s) => vec![s.clone()],
+                ItemListItemListElementFieldEnum::Thing(t) => t.name.clone(),
+            }).collect::<Vec<_>>(),
+            Self::PropertyValue(prop) => prop.name.clone(),
+            Self::Text(s) => vec![s.clone()],
+        }
     }
 }
 

@@ -253,7 +253,7 @@ mod tests {
             description: Some("Your mouth will drool like never before".into()),
             images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
             measurement_system_id: 2,
-            yield_: Some(6),
+            r#yield: Some(6),
             source: "My mother's maple syrup recipes cookbook".into(),
             is_favourite: false,
             rating: Some(4),

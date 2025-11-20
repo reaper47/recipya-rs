@@ -28,11 +28,17 @@ pub struct Mass {
 }
 
 impl Mass {
+    /// Creates a new Mass struct with the given value.
     pub fn new(mass: impl Into<String>) -> Self {
         Self {
             r#type: Some(AtType::NutritionInformation.to_string()),
             name: vec![mass.into()],
             ..Default::default()
         }
+    }
+
+    /// Converts the mass to a number.
+    pub fn to_number(&self) -> i16 {
+        self.name.first().map(|s| s.split(' ').map(|s| s.parse::<i16>().unwrap_or_default()).sum()).unwrap_or_default()
     }
 }

@@ -90,7 +90,7 @@ mod tests {
             1,
             &RecipeForCreate {
                 name: "Best Chinese Kale".into(),
-                yield_: Some(4),
+                r#yield: Some(4),
                 ingredients: Sections::from([
                     (
                         "Sauce".into(),
