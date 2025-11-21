@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -9,7 +8,8 @@ use crate::helpers::one_or_many;
 use crate::{Action, Thing};
 
 ///<https://schema.org/BreadcrumbList>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct BreadcrumbList {
     #[serde(rename = "@context")]

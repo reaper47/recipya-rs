@@ -11,7 +11,8 @@ use winnow::combinator::alt;
 use winnow::token::literal;
 
 use crate::recipe::get::fetch_recipe_details;
-use crate::recipe::{Nutrition, Times};
+use crate::recipe::structs::nutrition::Nutrition;
+use crate::recipe::structs::time::Times;
 use crate::{Error, Recipe, RecipeDetails, Result};
 
 pub struct RecipeSearch {

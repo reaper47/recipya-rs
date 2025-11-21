@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -62,7 +61,8 @@ pub type WebPageElementSchemaVersionFieldEnum = String;
 pub type WebPageElementAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/WebPageElement>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct WebPageElement {
     #[serde(rename = "@type")]

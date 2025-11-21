@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -52,7 +51,8 @@ pub type VideoObjectDatePublishedFieldEnum = String;
 pub type VideoObjectGenreFieldEnum = String;
 
 ///<https://schema.org/VideoObject>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct VideoObject {
     #[serde(rename = "@type")]

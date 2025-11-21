@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -27,7 +26,8 @@ pub type MusicPlaylistDatePublishedFieldEnum = String;
 pub type MusicPlaylistGenreFieldEnum = String;
 
 ///<https://schema.org/MusicPlaylist>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MusicPlaylist {
     #[serde(rename = "@type")]

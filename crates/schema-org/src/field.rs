@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::enums::{GenderTypeEnum, ItemListOrderTypeEnum, MeasurementMethodEnumEnum};
@@ -11,7 +10,8 @@ use crate::{
     TextObject, Thing, VideoObject, WebContent, WebPage,
 };
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum2 {
     ///<https://schema.org/Integer>
@@ -37,7 +37,8 @@ pub type HowToSectionPositionFieldEnum = FieldEnum2;
 ///<https://schema.org/position>
 pub type HowToSupplyPositionFieldEnum = FieldEnum2;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum4 {
     ///<https://schema.org/CreativeWork>
@@ -132,7 +133,8 @@ pub type DefinedTermSetIsBasedOnUrlFieldEnum = FieldEnum4;
 ///<https://schema.org/isBasedOn>
 pub type DefinedTermSetIsBasedOnFieldEnum = FieldEnum4;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum5 {
     ///<https://schema.org/DefinedTerm>
@@ -166,7 +168,8 @@ pub type RecipeSizeFieldEnum = FieldEnum5;
 ///<https://schema.org/size>
 pub type HowToSizeFieldEnum = FieldEnum5;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum6 {
     ///<https://schema.org/Organization>
@@ -368,7 +371,8 @@ pub type EventOrganizerFieldEnum = FieldEnum6;
 ///<https://schema.org/contributor>
 pub type DefinedTermSetContributorFieldEnum = FieldEnum6;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum7 {
     ///<https://schema.org/CreativeWork>
@@ -404,7 +408,8 @@ pub type RecipeIsPartOfFieldEnum = FieldEnum7;
 ///<https://schema.org/isPartOf>
 pub type MusicAlbumIsPartOfFieldEnum = FieldEnum7;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum8 {
     ///<https://schema.org/Number>
@@ -438,7 +443,8 @@ pub type CountryLatitudeFieldEnum = FieldEnum8;
 ///<https://schema.org/longitude>
 pub type CountryLongitudeFieldEnum = FieldEnum8;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum9 {
     ///<https://schema.org/DefinedTerm>
@@ -507,7 +513,8 @@ pub type EventKeywordsFieldEnum = FieldEnum9;
 ///<https://schema.org/keywords>
 pub type DefinedTermSetKeywordsFieldEnum = FieldEnum9;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum11 {
     ///<https://schema.org/Product>
@@ -524,7 +531,8 @@ impl Default for FieldEnum11 {
 ///<https://schema.org/material>
 pub type ProductMaterialFieldEnum = FieldEnum11;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum12 {
     ///<https://schema.org/DefinedTerm>
@@ -542,7 +550,8 @@ pub type PersonJobTitleFieldEnum = FieldEnum12;
 ///<https://schema.org/skills>
 pub type PersonSkillsFieldEnum = FieldEnum12;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum13 {
     ///<https://schema.org/URL>
@@ -588,7 +597,8 @@ pub type VideoObjectArchivedAtFieldEnum = FieldEnum13;
 ///<https://schema.org/archivedAt>
 pub type DefinedTermSetArchivedAtFieldEnum = FieldEnum13;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum14 {
     ///<https://schema.org/Rating>
@@ -616,7 +626,8 @@ pub type TextObjectContentRatingFieldEnum = FieldEnum14;
 ///<https://schema.org/contentRating>
 pub type HowToContentRatingFieldEnum = FieldEnum14;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum16 {
     ///<https://schema.org/Language>
@@ -670,7 +681,8 @@ pub type PostalAddressAvailableLanguageFieldEnum = FieldEnum16;
 ///<https://schema.org/inLanguage>
 pub type DefinedTermSetInLanguageFieldEnum = FieldEnum16;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum17 {
     ///<https://schema.org/AudioObject>
@@ -708,7 +720,8 @@ pub type CommentAudioFieldEnum = FieldEnum17;
 ///<https://schema.org/audio>
 pub type VideoObjectAudioFieldEnum = FieldEnum17;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum18 {
     ///<https://schema.org/CreativeWork>
@@ -740,7 +753,8 @@ pub type TextObjectCitationFieldEnum = FieldEnum18;
 ///<https://schema.org/citation>
 pub type CommentCitationFieldEnum = FieldEnum18;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum19 {
     ///<https://schema.org/Clip>
@@ -778,7 +792,8 @@ pub type CommentVideoFieldEnum = FieldEnum19;
 ///<https://schema.org/video>
 pub type VideoObjectVideoFieldEnum = FieldEnum19;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum20 {
     ///<https://schema.org/QuantitativeValue>
@@ -795,9 +810,15 @@ impl FieldEnum20 {
     pub fn to_i16(&self) -> Option<i16> {
         match self {
             FieldEnum20::QuantitativeValue(q) => q.value.first().map(|q| match q {
-                QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => s.parse::<i16>().ok().unwrap_or_default(),
+                QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => {
+                    s.parse::<i16>().ok().unwrap_or_default()
+                }
                 QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
-                QuantitativeValueValueFieldEnum::StructuredValue(v) => v.name.first().map(|v| v.parse::<i16>().unwrap_or_default()).unwrap_or_default(),
+                QuantitativeValueValueFieldEnum::StructuredValue(v) => v
+                    .name
+                    .first()
+                    .map(|v| v.parse::<i16>().unwrap_or_default())
+                    .unwrap_or_default(),
             }),
             FieldEnum20::Text(s) => s.parse::<i16>().ok(),
         }
@@ -810,7 +831,8 @@ pub type RecipeYieldFieldEnum = FieldEnum20;
 ///<https://schema.org/yield>
 pub type HowToYieldFieldEnum = FieldEnum20;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum21 {
     ///<https://schema.org/PropertyValue>
@@ -839,7 +861,8 @@ pub type EnumerationIdentifierFieldEnum = FieldEnum21;
 ///<https://schema.org/identifier>
 pub type LanguageIdentifierFieldEnum = FieldEnum21;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum22 {
     ///<https://schema.org/ImageObject>
@@ -945,7 +968,8 @@ pub type EntryPointImageFieldEnum = FieldEnum22;
 ///<https://schema.org/image>
 pub type PostalAddressImageFieldEnum = FieldEnum22;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum23 {
     ///<https://schema.org/Text>
@@ -1067,7 +1091,8 @@ pub type EntryPointDescriptionFieldEnum = FieldEnum23;
 ///<https://schema.org/description>
 pub type PostalAddressDescriptionFieldEnum = FieldEnum23;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum24 {
     ///<https://schema.org/CreativeWork>
@@ -1161,7 +1186,8 @@ pub type EntryPointSubjectOfFieldEnum = FieldEnum24;
 ///<https://schema.org/subjectOf>
 pub type PostalAddressSubjectOfFieldEnum = FieldEnum24;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum26 {
     ///<https://schema.org/EntryPoint>
@@ -1177,7 +1203,8 @@ impl Default for FieldEnum26 {
 ///<https://schema.org/target>
 pub type ActionTargetFieldEnum = FieldEnum26;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum35 {
     ///<https://schema.org/PostalAddress>
@@ -1197,7 +1224,8 @@ pub type CountryAddressFieldEnum = FieldEnum35;
 ///<https://schema.org/address>
 pub type OrganizationAddressFieldEnum = FieldEnum35;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum41 {
     ///<https://schema.org/ItemList>
@@ -1217,7 +1245,8 @@ pub type MusicReleaseTrackFieldEnum = FieldEnum41;
 ///<https://schema.org/track>
 pub type MusicAlbumTrackFieldEnum = FieldEnum41;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum44 {
     ///<https://schema.org/DefinedTermSet>
@@ -1233,7 +1262,8 @@ impl Default for FieldEnum44 {
 ///<https://schema.org/inDefinedTermSet>
 pub type DefinedTermInDefinedTermSetFieldEnum = FieldEnum44;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum48 {
     ///<https://schema.org/Distance>
@@ -1257,7 +1287,8 @@ pub type ImageObjectWidthFieldEnum = FieldEnum48;
 ///<https://schema.org/height>
 pub type ImageObjectHeightFieldEnum = FieldEnum48;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum49 {
     ///<https://schema.org/ItemList>
@@ -1283,7 +1314,8 @@ pub type ReviewNegativeNotesFieldEnum = FieldEnum49;
 ///<https://schema.org/positiveNotes>
 pub type ReviewPositiveNotesFieldEnum = FieldEnum49;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum52 {
     ///<https://schema.org/Mass>
@@ -1301,7 +1333,8 @@ pub type ProductWeightFieldEnum = FieldEnum52;
 ///<https://schema.org/weight>
 pub type PersonWeightFieldEnum = FieldEnum52;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum54 {
     ///<https://schema.org/Duration>
@@ -1329,7 +1362,8 @@ pub type VideoObjectDurationFieldEnum = FieldEnum54;
 ///<https://schema.org/duration>
 pub type EventDurationFieldEnum = FieldEnum54;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum59 {
     ///<https://schema.org/BreadcrumbList>
@@ -1345,7 +1379,8 @@ impl Default for FieldEnum59 {
 ///<https://schema.org/breadcrumb>
 pub type WebPageBreadcrumbFieldEnum = FieldEnum59;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum60 {
     ///<https://schema.org/Number>
@@ -1364,11 +1399,21 @@ impl FieldEnum60 {
     pub fn quantity(&self) -> i16 {
         match self {
             FieldEnum60::Number(n) => *n as i16,
-            FieldEnum60::QuantitativeValue(q) => q.value.first().map(|q| match q {
-                QuantitativeValueValueFieldEnum::BooleanEnumOrText(t) => t.parse().ok().unwrap_or_default(),
-                QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
-                QuantitativeValueValueFieldEnum::StructuredValue(v) => v.name.first().map(|n| n.parse().ok().unwrap_or_default()).unwrap_or_default(),
-            }).unwrap_or_default(),
+            FieldEnum60::QuantitativeValue(q) => q
+                .value
+                .first()
+                .map(|q| match q {
+                    QuantitativeValueValueFieldEnum::BooleanEnumOrText(t) => {
+                        t.parse().ok().unwrap_or_default()
+                    }
+                    QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
+                    QuantitativeValueValueFieldEnum::StructuredValue(v) => v
+                        .name
+                        .first()
+                        .map(|n| n.parse().ok().unwrap_or_default())
+                        .unwrap_or_default(),
+                })
+                .unwrap_or_default(),
             FieldEnum60::Text(s) => s.parse::<i16>().unwrap_or_default(),
         }
     }
@@ -1378,7 +1423,8 @@ pub type HowToToolRequiredQuantityFieldEnum = FieldEnum60;
 ///<https://schema.org/requiredQuantity>
 pub type HowToSupplyRequiredQuantityFieldEnum = FieldEnum60;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum63 {
     ///<https://schema.org/DefinedTerm>
@@ -1412,7 +1458,8 @@ pub type QualitativeValueValueReferenceFieldEnum = FieldEnum63;
 ///<https://schema.org/valueReference>
 pub type PropertyValueValueReferenceFieldEnum = FieldEnum63;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum64 {
     ///<https://schema.org/Boolean>
@@ -1435,7 +1482,8 @@ pub type MonetaryAmountValueFieldEnum = FieldEnum64;
 ///<https://schema.org/value>
 pub type PropertyValueValueFieldEnum = FieldEnum64;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum73 {
     ///<https://schema.org/Comment>
@@ -1453,7 +1501,8 @@ pub type CorrectionCommentParentItemFieldEnum = FieldEnum73;
 ///<https://schema.org/parentItem>
 pub type CommentParentItemFieldEnum = FieldEnum73;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum91 {
     ///<https://schema.org/GenderType>
@@ -1469,7 +1518,8 @@ impl Default for FieldEnum91 {
 ///<https://schema.org/gender>
 pub type PersonGenderFieldEnum = FieldEnum91;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum96 {
     ///<https://schema.org/MediaObject>
@@ -1489,7 +1539,8 @@ pub type ImageObjectCaptionFieldEnum = FieldEnum96;
 ///<https://schema.org/caption>
 pub type VideoObjectCaptionFieldEnum = FieldEnum96;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum102 {
     ///<https://schema.org/MonetaryAmount>
@@ -1509,7 +1560,8 @@ pub type HowToEstimatedCostFieldEnum = FieldEnum102;
 ///<https://schema.org/estimatedCost>
 pub type HowToSupplyEstimatedCostFieldEnum = FieldEnum102;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum113 {
     ///<https://schema.org/ListItem>
@@ -1533,7 +1585,8 @@ pub type HowToStepItemListElementFieldEnum = FieldEnum113;
 ///<https://schema.org/itemListElement>
 pub type HowToSectionItemListElementFieldEnum = FieldEnum113;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum114 {
     ///<https://schema.org/ItemListOrderType>
@@ -1555,7 +1608,8 @@ pub type BreadcrumbListItemListOrderFieldEnum = FieldEnum114;
 ///<https://schema.org/itemListOrder>
 pub type HowToSectionItemListOrderFieldEnum = FieldEnum114;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum116 {
     ///<https://schema.org/DefinedTerm>
@@ -1576,7 +1630,8 @@ pub type PropertyValueMeasurementMethodFieldEnum = FieldEnum116;
 ///<https://schema.org/measurementTechnique>
 pub type PropertyValueMeasurementTechniqueFieldEnum = FieldEnum116;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum129 {
     ///<https://schema.org/PropertyValue>
@@ -1591,7 +1646,8 @@ impl Default for FieldEnum129 {
 }
 pub type ImageObjectExifDataFieldEnum = FieldEnum129;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum141 {
     ///<https://schema.org/CreativeWork>
@@ -1610,70 +1666,6 @@ impl Default for FieldEnum141 {
 pub type HowToSectionStepsFieldEnum = FieldEnum141;
 ///<https://schema.org/recipeInstructions>
 pub type RecipeRecipeInstructionsFieldEnum = FieldEnum141;
-
-pub struct RecipeRecipeInstructionsFieldEnumBuilder<'a, T>
-where
-    T: Into<String>,
-{
-    name: &'a str,
-    items: Vec<T>,
-    durations_seconds: Vec<i32>,
-}
-
-impl<'a> RecipeRecipeInstructionsFieldEnumBuilder<'a, String> {
-    pub fn new(name: &'a str, items: Vec<String>) -> Self {
-        Self {
-            name,
-            items,
-            durations_seconds: Vec::new(),
-        }
-    }
-
-    pub fn with_items<T: Into<String>>(mut self, items: Vec<T>) -> Self {
-        self.items = items.into_iter().map(|v| v.into()).collect();
-        self
-    }
-
-    pub fn with_duration(mut self, durations: Vec<i32>) -> Self {
-        self.durations_seconds = durations;
-        self
-    }
-
-    pub fn build(self) -> RecipeRecipeInstructionsFieldEnum {
-        let num_items = self.items.len() as i32;
-
-        RecipeRecipeInstructionsFieldEnum::ItemList(
-            ItemList {
-                item_list_element: self
-                    .items
-                    .into_iter()
-                    .map(|item| {
-                        ItemListItemListElementFieldEnum::ListItem(ListItem {
-                            r#type: None,
-                            context: "".to_string(),
-                            item: vec![],
-                            next_item: vec![],
-                            previous_item: vec![],
-                            position: vec![],
-                            disambiguating_description: vec![],
-                            image: vec![],
-                            description: vec![],
-                            alternate_name: vec![],
-                            url: vec![],
-                            subject_of: vec![],
-                            name: vec![],
-                            ..Default::default()
-                        })
-                    })
-                    .collect(),
-                name: vec![self.name.to_string()],
-                number_of_items: vec![num_items],
-                ..Default::default()
-            }
-            .into(),
-        )
-    }
-}
 
 impl RecipeRecipeInstructionsFieldEnum {
     /// Creates a new section.
@@ -1708,7 +1700,8 @@ pub type RecipeStepsFieldEnum = FieldEnum141;
 ///<https://schema.org/steps>
 pub type HowToStepsFieldEnum = FieldEnum141;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum149 {
     ///<https://schema.org/ItemList>
@@ -1743,18 +1736,23 @@ impl RecipeRecipeIngredientFieldEnum {
     /// Extracts all the items from the enum.
     pub fn item_names(&self) -> Vec<String> {
         match self {
-            Self::ItemList(list) => list.item_list_element.iter().flat_map(|v| match v {
-                ItemListItemListElementFieldEnum::ListItem(l) => l.name.clone(),
-                ItemListItemListElementFieldEnum::Text(s) => vec![s.clone()],
-                ItemListItemListElementFieldEnum::Thing(t) => t.name.clone(),
-            }).collect::<Vec<_>>(),
+            Self::ItemList(list) => list
+                .item_list_element
+                .iter()
+                .flat_map(|v| match v {
+                    ItemListItemListElementFieldEnum::ListItem(l) => l.name.clone(),
+                    ItemListItemListElementFieldEnum::Text(s) => vec![s.clone()],
+                    ItemListItemListElementFieldEnum::Thing(t) => t.name.clone(),
+                })
+                .collect::<Vec<_>>(),
             Self::PropertyValue(prop) => prop.name.clone(),
             Self::Text(s) => vec![s.clone()],
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum150 {
     ///<https://schema.org/HowToTool>
@@ -1772,7 +1770,8 @@ pub type RecipeToolFieldEnum = FieldEnum150;
 ///<https://schema.org/tool>
 pub type HowToToolFieldEnum = FieldEnum150;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum151 {
     ///<https://schema.org/CreativeWork>
@@ -1794,7 +1793,8 @@ pub type RecipeStepFieldEnum = FieldEnum151;
 ///<https://schema.org/step>
 pub type HowToStepFieldEnum = FieldEnum151;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum152 {
     ///<https://schema.org/HowToSupply>

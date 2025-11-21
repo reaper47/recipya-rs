@@ -4,8 +4,7 @@ use diesel_async::RunQueryDsl;
 
 use repository::{ModelManager, schema};
 
-use super::structs::*;
-use crate::{Error, Result};
+use crate::{Error, Result, recipe::structs::recipe::Recipe};
 
 impl Recipe {
     /// Deletes a user's recipe from the database.

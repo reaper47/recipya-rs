@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use maud::{Markup, PreEscaped, html};
+use models::recipe::structs::section::SectionComponents;
 use serde_json::json;
 use url::Url;
 
@@ -491,16 +492,30 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
             } else {
                 "column-count: 1"
             }) {
-            @for (_section, ingredients) in recipe_details.ingredients.iter() {
-                @for ing in ingredients.iter() {
-                    li class="text-sm" {
-                        label {
-                            input type="checkbox";
+                @match &recipe_details.ingredients {
+                    SectionComponents::Grouped(section) => {
+                        @for section in section.iter() {
+                            @for ing in section.items.iter() {
+                                li class="text-sm" {
+                                    label {
+                                        input type="checkbox";
+                                    }
+                                    span class="pl-2" { (ing.text) }
+                                }
+                            }
                         }
-                        span class="pl-2" { (ing.text) }
-                    }
+                    },
+                    SectionComponents::Flat(items) => {
+                        @for ing in items.iter() {
+                            li class="text-sm" {
+                                label {
+                                    input type="checkbox";
+                                }
+                                span class="pl-2" { (ing.text) }
+                            }
+                        }
+                    },
                 }
-            }
         }
     }
 }
@@ -511,14 +526,27 @@ fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
             b { "Instructions" }
         }
         ol class="col-span-6 list-decimal w-full ml-6" {
-            @for (_section, instructions) in recipe_details.instructions.iter() {
-                @for ins in instructions.iter() {
-                    li class="print:mr-4" {
-                        span class="text-sm whitespace-pre-line" {
-                            (ins.text)
+            @match &recipe_details.instructions {
+                SectionComponents::Grouped(section) => {
+                    @for section in section.iter() {
+                        @for ins in section.items.iter() {
+                            li class="print:mr-4" {
+                                span class="text-sm whitespace-pre-line" {
+                                    (ins.text)
+                                }
+                            }
                         }
                     }
-                }
+                },
+                SectionComponents::Flat(items) => {
+                    @for ins in items.iter() {
+                        li class="print:mr-4" {
+                            span class="text-sm whitespace-pre-line" {
+                                (ins.text)
+                            }
+                        }
+                    }
+                },
             }
         }
     }
@@ -778,42 +806,82 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 }
                 h2 class="font-semibold text-center underline pb-1" { "Ingredients" }
                 ul class="list grid gap-1" {
-                    @for (_section, ingredients) in recipe.ingredients.iter() {
-                        @for ingredient in ingredients.iter() {
-                             li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
-                                label class="flex items-center w-full" {
-                                    input type="checkbox" class="checkbox";
-                                    span class="pl-2" { (ingredient.text) }
+                    @match &recipe.ingredients {
+                        SectionComponents::Grouped(section) => {
+                            @for section in section.iter() {
+                                @for ingredient in section.items.iter() {
+                                     li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                        label class="flex items-center w-full" {
+                                            input type="checkbox" class="checkbox";
+                                            span class="pl-2" { (ingredient.text) }
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        },
+                        SectionComponents::Flat(items) => {
+                            @for ingredient in items.iter() {
+                                 li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                    label class="flex items-center w-full" {
+                                        input type="checkbox" class="checkbox";
+                                        span class="pl-2" { (ingredient.text) }
+                                    }
+                                }
+                            }
+                        },
                     }
                 }
             }
             div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden" {
                 h2 class="font-semibold text-center underline pb-1" { "Instructions" }
                 ol class="grid list-decimal" {
-                    @for (_section, instruction) in recipe.instructions.iter() {
-                        @for (idx, instruction) in instruction.iter().enumerate() {
-                            li class="min-w-full py-2 select-none hover:bg-base-300" {
-                                div class="flex" {
-                                    div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
-                                        (instruction.text)
-                                    }
-                                     @if let Some(d) = instruction.duration_seconds {
-                                        div id=(format!("timer-container-{idx}")) class="timer-container" {
-                                            button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
-                                                   _="on click add .hidden to me
-                                                      remove .hidden from the next <div/>
-                                                      call initTimer(event)" {
-                                                (icon_alarm_clock())
+                    @match &recipe.instructions {
+                        SectionComponents::Grouped(section) => {
+                            @for section in section.iter() {
+                                @for (idx, instruction) in section.items.iter().enumerate() {
+                                    li class="min-w-full py-2 select-none hover:bg-base-300" {
+                                        div class="flex" {
+                                            div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
+                                                (instruction.text)
                                             }
-                                            (render_countdown(&format!("countdown-step-{idx}"), d))
+                                             @if let Some(d) = instruction.duration_seconds {
+                                                div id=(format!("timer-container-{idx}")) class="timer-container" {
+                                                    button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                                                           _="on click add .hidden to me
+                                                              remove .hidden from the next <div/>
+                                                              call initTimer(event)" {
+                                                        (icon_alarm_clock())
+                                                    }
+                                                    (render_countdown(&format!("countdown-step-{idx}"), d))
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
+                        },
+                        SectionComponents::Flat(items) => {
+                            @for (idx, instruction) in items.iter().enumerate() {
+                                li class="min-w-full py-2 select-none hover:bg-base-300" {
+                                    div class="flex" {
+                                        div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
+                                            (instruction.text)
+                                        }
+                                         @if let Some(d) = instruction.duration_seconds {
+                                            div id=(format!("timer-container-{idx}")) class="timer-container" {
+                                                button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                                                       _="on click add .hidden to me
+                                                          remove .hidden from the next <div/>
+                                                          call initTimer(event)" {
+                                                    (icon_alarm_clock())
+                                                }
+                                                (render_countdown(&format!("countdown-step-{idx}"), d))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
                     }
                 }
             }

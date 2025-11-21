@@ -2,20 +2,25 @@ pub mod media;
 pub mod nutrition;
 pub mod recipe;
 pub mod section;
-pub mod structs;
 pub mod time;
 pub mod tool;
 
-use diesel::internal::derives::multiconnection::chrono;
-use uuid::Uuid;
-
-use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
-
 #[cfg(feature = "test-utils")]
 pub mod test_utils {
-    use super::*;
-    use crate::{Recipe, RecipeDetails, recipe::{media::VideoForCreate, nutrition::Nutrition, recipe::RecipeForCreate, time::{Times, TimesForCreate}, tool::{ToolForCreate, ToolRecipe}}};
     use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+    use uuid::Uuid;
+
+    use crate::{
+        Recipe, RecipeDetails,
+        recipe::structs::{
+            media::VideoForCreate,
+            nutrition::{Nutrition, NutritionForCreate},
+            recipe::RecipeForCreate,
+            section::{Item, SectionComponents, SectionItem},
+            time::{Times, TimesForCreate},
+            tool::{ToolForCreate, ToolRecipe},
+        },
+    };
 
     /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.
     pub fn a_complete_recipe() -> RecipeDetails {
@@ -112,35 +117,30 @@ pub mod test_utils {
             }],
             category: Some("dinner".into()),
             cuisine: Some("thai".into()),
-            ingredients: vec![
-                RecipeRecipeIngredientFieldEnum::new_section("Sauce", vec![
-                    "1 cup blue spinach",
-                    "1/2 tbsp cinnamon",
-                ]),
-                RecipeRecipeIngredientFieldEnum::new_section("Main", vec![
-                    "4 pounds top quality chicken filet".into(),
-                    "1/8 cup lemon juice".into(),
-                ]),
-
-            ],
-            instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::new_section("Sauce", vec![
-                    "Mix all these ingredients",
-                ]),
-                RecipeRecipeInstructionsFieldEnum::new_section("Chicken", vec![
-                    "Mix all these ingredients",
-                ]),
-            ], ComponentSections::from([
-                (
-                    .into(),
-                    vec![SectionItem::new()],
-                ),
-                (
-                    "".into(),
+            ingredients: SectionComponents::Grouped(vec![
+                SectionItem::new(
+                    "Sauce",
                     vec![
-                        SectionItem::new("Turn the oven at 300 F"),
-                        SectionItem::new("Soak the chicken in the lemon juice"),
-                        SectionItem {
+                        Item::new("1 cup blue spinach"),
+                        Item::new("1/2 tbsp cinnamon"),
+                    ],
+                ),
+                SectionItem::new(
+                    "Main",
+                    vec![
+                        Item::new("4 pounds top quality chicken filet"),
+                        Item::new("1/8 cup lemon juice"),
+                    ],
+                ),
+            ]),
+            instructions: SectionComponents::Grouped(vec![
+                SectionItem::new("Sauce", vec![Item::new("Mix all these ingredients")]),
+                SectionItem::new(
+                    "Chicken",
+                    vec![
+                        Item::new("Turn the oven at 300 F"),
+                        Item::new("Soak the chicken in the lemon juice"),
+                        Item {
                             text: "Bake for 35 minutes".into(),
                             duration_seconds: Some(2100),
                         },

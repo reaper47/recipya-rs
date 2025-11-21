@@ -37,7 +37,7 @@ pub struct ShareRecipe {
 /// A struct for inserting a new shared recipe into the database.
 #[derive(Insertable)]
 #[diesel(table_name = schema::shares_recipes)]
-pub(super) struct SharedRecipeForInsert {
+pub(crate) struct SharedRecipeForInsert {
     pub user_id: i64,
     pub recipe_id: i64,
     pub expires_at: Option<NaiveDateTime>,

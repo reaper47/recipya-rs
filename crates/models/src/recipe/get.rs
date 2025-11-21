@@ -7,9 +7,13 @@ use repository::{ModelManager, PgPooledConn, schema};
 use uuid::Uuid;
 
 use crate::params::SearchParams;
-use crate::recipe::{
-    Nutrition, RecipeDetails, RecipeSearch, Times, ToolRecipe, Video, VideoRecipe,
-};
+use crate::recipe::RecipeSearch;
+use crate::recipe::structs::media::{Video, VideoRecipe};
+use crate::recipe::structs::nutrition::Nutrition;
+use crate::recipe::structs::recipe::RecipeDetails;
+use crate::recipe::structs::section::{Item, SectionComponents, SectionItem};
+use crate::recipe::structs::time::Times;
+use crate::recipe::structs::tool::ToolRecipe;
 use crate::{Error, Recipe, Result};
 
 impl Recipe {
@@ -144,71 +148,89 @@ pub async fn fetch_recipe_details(
         .load::<Uuid>(conn)
         .await?;
 
-    let ingredients = schema::ingredients_recipes::table
-        .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
-        .inner_join(schema::ingredients::table)
-        .inner_join(schema::sections::table)
-        .order(schema::ingredients_recipes::item_order)
-        .select((
-            schema::ingredients::name,
-            schema::sections::name,
-            schema::ingredients_recipes::section_id,
-        ))
-        .load::<(String, String, i64)>(conn)
-        .await?
-        .into_iter()
-        .fold(
-            BTreeMap::new(),
-            |mut acc, (ingredient, section, section_id)| {
-                acc.entry(section_id)
-                    .and_modify(|entry: &mut (String, Vec<SectionItem>)| {
-                        entry.1.push(SectionItem::new(ingredient.clone()))
-                    })
-                    .or_insert_with(|| (section, vec![SectionItem::new(ingredient)]));
-                acc
-            },
-        )
-        .into_values()
-        .collect();
-
-    let instructions = schema::instructions_recipes::table
-        .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
-        .inner_join(schema::instructions::table)
-        .inner_join(schema::sections::table)
-        .order(schema::instructions_recipes::item_order)
-        .select((
-            schema::instructions::name,
-            schema::sections::name,
-            schema::instructions_recipes::section_id,
-            schema::instructions::duration_seconds,
-        ))
-        .load::<(String, String, i64, Option<i32>)>(conn)
-        .await?
-        .into_iter()
-        .fold(
-            BTreeMap::new(),
-            |mut acc, (instruction, section, section_id, duration_seconds)| {
-                acc.entry(section_id)
-                    .and_modify(|entry: &mut (String, Vec<SectionItem>)| {
-                        entry.1.push(SectionItem {
-                            text: instruction.clone(),
-                            duration_seconds,
+    let ingredients = SectionComponents::from(
+        schema::ingredients_recipes::table
+            .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
+            .inner_join(schema::ingredients::table)
+            .inner_join(schema::sections::table)
+            .order(schema::ingredients_recipes::item_order)
+            .select((
+                schema::ingredients::name,
+                schema::sections::name,
+                schema::ingredients_recipes::section_id,
+            ))
+            .load::<(String, String, i64)>(conn)
+            .await?
+            .into_iter()
+            .fold(
+                BTreeMap::new(),
+                |mut acc: BTreeMap<i64, (String, Vec<Item>)>, (ingredient, section, section_id)| {
+                    acc.entry(section_id)
+                        .and_modify(|(_, items)| {
+                            items.push(Item {
+                                text: ingredient.clone(),
+                                duration_seconds: None,
+                            });
                         })
-                    })
-                    .or_insert_with(|| {
-                        (
-                            section,
-                            vec![SectionItem {
-                                text: instruction,
+                        .or_insert_with(|| {
+                            (
+                                section,
+                                vec![Item {
+                                    text: ingredient,
+                                    duration_seconds: None,
+                                }],
+                            )
+                        });
+                    acc
+                },
+            )
+            .into_values()
+            .map(|(title, items)| SectionItem { title, items })
+            .collect::<Vec<_>>(),
+    );
+
+    let instructions = SectionComponents::from(
+        schema::instructions_recipes::table
+            .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
+            .inner_join(schema::instructions::table)
+            .inner_join(schema::sections::table)
+            .order(schema::instructions_recipes::item_order)
+            .select((
+                schema::instructions::name,
+                schema::sections::name,
+                schema::instructions_recipes::section_id,
+                schema::instructions::duration_seconds,
+            ))
+            .load::<(String, String, i64, Option<i32>)>(conn)
+            .await?
+            .into_iter()
+            .fold(
+                BTreeMap::new(),
+                |mut acc: BTreeMap<i64, (String, Vec<Item>)>,
+                 (instruction, section, section_id, duration_seconds)| {
+                    acc.entry(section_id)
+                        .and_modify(|(_, items)| {
+                            items.push(Item {
+                                text: instruction.clone(),
                                 duration_seconds,
-                            }],
-                        )
-                    });
-                acc
-            },
-        )
-        .into_values()
-        .collect();
+                            })
+                        })
+                        .or_insert_with(|| {
+                            (
+                                section,
+                                vec![Item {
+                                    text: instruction,
+                                    duration_seconds,
+                                }],
+                            )
+                        });
+                    acc
+                },
+            )
+            .into_values()
+            .map(|(title, items)| SectionItem { title, items })
+            .collect::<Vec<_>>(),
+    );
 
     let keywords = if keywords.is_some() {
         schema::keywords_recipes::table

@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 mod admin_router;
 mod auth_router;
 mod error;

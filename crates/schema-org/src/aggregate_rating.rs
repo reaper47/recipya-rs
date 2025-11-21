@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -11,7 +10,8 @@ use crate::helpers::one_or_many;
 use crate::{AtType, Thing};
 
 ///<https://schema.org/AggregateRating>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct AggregateRating {
     #[serde(rename = "@type", default = "set_type")]

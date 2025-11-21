@@ -8,11 +8,11 @@ use schema_org::field::{RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum};
 use support::name_entity_with_relations;
 
 use crate::recipe::RecipeForm;
-use crate::recipe::media::{Video, VideoForCreate};
-use crate::recipe::nutrition::{Nutrition, NutritionForCreate};
-use crate::recipe::section::{ComponentSections, Section};
-use crate::recipe::time::{Times, TimesForCreate};
-use crate::recipe::tool::{ToolForCreate, ToolRecipe};
+use crate::recipe::structs::media::{Video, VideoForCreate};
+use crate::recipe::structs::nutrition::{Nutrition, NutritionForCreate};
+use crate::recipe::structs::section::{Section, SectionComponents};
+use crate::recipe::structs::time::{Times, TimesForCreate};
+use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
 use crate::user::User;
 
 /// Represents a recipe entity stored in the database.
@@ -79,8 +79,8 @@ pub struct RecipeDetails {
     pub additional_images: Vec<Uuid>,
     pub category: String,
     pub cuisine: Option<String>,
-    pub ingredients: ComponentSections,
-    pub instructions: ComponentSections,
+    pub ingredients: SectionComponents,
+    pub instructions: SectionComponents,
     pub keywords: Vec<String>,
     pub nutrition: Option<Nutrition>,
     pub times: Times,
@@ -170,8 +170,8 @@ pub struct RecipeForCreate {
     // For association tables
     pub category: Option<String>,
     pub cuisine: Option<String>,
-    pub ingredients: ComponentSections,
-    pub instructions: ComponentSections,
+    pub ingredients: SectionComponents,
+    pub instructions: SectionComponents,
     pub keywords: Vec<String>,
     pub nutrition: Option<NutritionForCreate>,
     pub times: Option<TimesForCreate>,
@@ -225,8 +225,8 @@ impl From<&RecipeForm> for RecipeForCreate {
             videos: vec![],
             category: form.category.clone().or(Some("uncategorized".into())),
             cuisine: form.cuisine.clone(),
-            ingredients: ComponentSections::new(ingredients.clone()),
-            instructions: ComponentSections::new(form.instructions.clone()),
+            ingredients: SectionComponents::new(ingredients.clone()),
+            instructions: SectionComponents::new(form.instructions.clone()),
             keywords: form.keywords.clone(),
             measurement_system_id,
             nutrition: form.nutrition.clone(),
@@ -253,8 +253,8 @@ impl From<RecipeForm> for RecipeForCreate {
             videos: vec![],
             category: form.category.or(Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: ComponentSections::new(ingredients),
-            instructions: ComponentSections::new(form.instructions),
+            ingredients: SectionComponents::new(ingredients),
+            instructions: SectionComponents::new(form.instructions),
             keywords: form.keywords,
             measurement_system_id,
             nutrition: form.nutrition,
@@ -268,7 +268,7 @@ impl From<RecipeForm> for RecipeForCreate {
 impl From<&schema_org::Recipe> for RecipeForCreate {
     fn from(schema: &schema_org::Recipe) -> Self {
         let original_ingredients = schema.recipe_ingredient.clone();
-        let ingredients = ComponentSections::from(original_ingredients);
+        let ingredients = SectionComponents::from(original_ingredients);
         let measurement_system_id =
             units::MeasurementSystem::from(ingredients.items_as_text()).id();
 
@@ -293,7 +293,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             category: schema.recipe_category.get(0).cloned(),
             cuisine: schema.recipe_cuisine.get(0).cloned(),
             ingredients,
-            instructions: ComponentSections::from(schema.recipe_instructions.clone()),
+            instructions: SectionComponents::from(schema.recipe_instructions.clone()),
             keywords: schema
                 .keywords
                 .iter()
@@ -679,14 +679,14 @@ mod tests {
             let recipe_c = RecipeForCreate {
                 name: "The best hamburger ever".into(),
                 description: Some("This is the best hamburger ever".into()),
-                ingredients: ComponentSections::from([(
+                ingredients: SectionComponents::from([(
                     "".into(),
                     vec![
                         SectionItem::new("1 cup of flour"),
                         SectionItem::new("1 cup of water"),
                     ],
                 )]),
-                instructions: ComponentSections::from([(
+                instructions: SectionComponents::from([(
                     "".into(),
                     vec![
                         SectionItem::new("Mix all ingredients"),

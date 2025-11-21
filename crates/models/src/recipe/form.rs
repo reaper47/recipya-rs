@@ -7,8 +7,11 @@ use axum::extract::{FromRequest, Multipart, Request};
 use tracing::error;
 use uuid::Uuid;
 
-use super::{NutritionForCreate, TimesForCreate, ToolForCreate, save_media_field};
 use crate::recipe::helpers::text_trim;
+use crate::recipe::save_media_field;
+use crate::recipe::structs::nutrition::NutritionForCreate;
+use crate::recipe::structs::time::TimesForCreate;
+use crate::recipe::structs::tool::ToolForCreate;
 
 /// Represents a form used to create or update a recipe.
 pub struct RecipeForm {

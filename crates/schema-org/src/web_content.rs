@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -23,7 +22,8 @@ pub type WebContentDateModifiedFieldEnum = String;
 pub type WebContentDatePublishedFieldEnum = String;
 
 ///<https://schema.org/WebContent>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct WebContent {
     #[serde(rename = "@type")]

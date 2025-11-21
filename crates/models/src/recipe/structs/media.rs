@@ -79,7 +79,7 @@ impl VideoForCreate {
 #[diesel(table_name = schema::videos_recipes)]
 #[diesel(belongs_to(Recipe))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub(super) struct VideoForInsert {
+pub(crate) struct VideoForInsert {
     pub video: Uuid,
     pub recipe_id: i64,
     pub duration: Option<PgInterval>,

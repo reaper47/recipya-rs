@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -16,7 +15,8 @@ pub type MonetaryAmountValidFromFieldEnum = String;
 pub type MonetaryAmountValidThroughFieldEnum = String;
 
 ///<https://schema.org/MonetaryAmount>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MonetaryAmount {
     #[serde(rename = "@type")]

@@ -3,7 +3,7 @@ use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Sel
 use repository::schema;
 use schema_org::NutritionInformation;
 
-use crate::Recipe;
+use crate::recipe::structs::recipe::Recipe;
 
 /// Represents a nutrition entity stored in the database.
 #[derive(
@@ -56,7 +56,7 @@ impl Nutrition {
         } else {
             "Per serving: "
         }
-            .into();
+        .into();
 
         let parts: Vec<String> = [
             self.calories_kcal
@@ -81,9 +81,9 @@ impl Nutrition {
             self.sodium_mg.as_ref().map(|v| format!("sodium {v}mg")),
             self.fiber_g.as_ref().map(|v| format!("fiber {v}g")),
         ]
-            .into_iter()
-            .flatten()
-            .collect();
+        .into_iter()
+        .flatten()
+        .collect();
 
         result.push_str(&parts.join("; "));
         result
@@ -161,7 +161,10 @@ impl From<&NutritionInformation> for NutritionForCreate {
             protein_g: schema.protein_content.first().map(|v| v.to_number()),
             total_fat_g: schema.fat_content.first().map(|v| v.to_number()),
             saturated_fat_g: schema.saturated_fat_content.first().map(|v| v.to_number()),
-            unsaturated_fat_g: schema.unsaturated_fat_content.first().map(|v| v.to_number()),
+            unsaturated_fat_g: schema
+                .unsaturated_fat_content
+                .first()
+                .map(|v| v.to_number()),
             cholesterol_mg: schema.cholesterol_content.first().map(|v| v.to_number()),
             sodium_mg: schema.sodium_content.first().map(|v| v.to_number()),
             fiber_g: schema.fiber_content.first().map(|v| v.to_number()),
@@ -175,7 +178,7 @@ impl From<&NutritionInformation> for NutritionForCreate {
 #[derive(Associations, Insertable)]
 #[diesel(belongs_to(Recipe))]
 #[diesel(table_name = schema::nutrition)]
-pub(super) struct NutritionForInsert {
+pub(crate) struct NutritionForInsert {
     pub recipe_id: i64,
     pub calories_kcal: Option<i16>,
     pub total_carbohydrates: Option<i16>,

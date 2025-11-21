@@ -8,7 +8,11 @@ use super::helpers::{
     insert_instructions, insert_keywords, insert_nutrition, insert_sections, insert_tools,
     insert_videos,
 };
-use super::structs::*;
+
+use crate::recipe::structs::recipe::{
+    CategoryForInsert, CategoryRecipe, CuisineRecipe, Recipe, RecipeForCreate, RecipeForInsert,
+};
+use crate::recipe::structs::time::TimesForInsert;
 use crate::user::UserCategory;
 use crate::{Error, Result};
 

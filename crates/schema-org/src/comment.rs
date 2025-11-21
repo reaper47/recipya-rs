@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -25,7 +24,8 @@ pub type CommentDateModifiedFieldEnum = String;
 pub type CommentDatePublishedFieldEnum = String;
 
 ///<https://schema.org/Comment>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Comment {
     #[serde(rename = "@type", default = "set_type")]

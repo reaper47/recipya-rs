@@ -7,8 +7,10 @@ use uuid::Uuid;
 use auth::pwd::{ContentToHash, hash_pwd};
 use repository::{ModelManager, schema};
 
-use crate::recipe::{Category, Keyword};
-use crate::{Error, Recipe, Result};
+use crate::{
+    Error, Recipe, Result,
+    recipe::structs::recipe::{Category, Keyword},
+};
 
 /// Represents a user in the system.
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable, Serialize)]
@@ -44,7 +46,7 @@ pub struct UserForCreate {
 /// A struct for inserting a new user into the database.
 #[derive(Insertable)]
 #[diesel(table_name = schema::users)]
-pub(super) struct UserForInsert {
+pub(crate) struct UserForInsert {
     pub email: String,
     pub password: String,
     pub password_salt: Uuid,
@@ -57,7 +59,7 @@ pub(super) struct UserForInsert {
 #[diesel(table_name = schema::users_categories)]
 #[diesel(primary_key(user_id, category_id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub(super) struct UserCategory {
+pub(crate) struct UserCategory {
     pub user_id: i64,
     pub category_id: i64,
 }
@@ -69,7 +71,7 @@ pub(super) struct UserCategory {
 #[diesel(table_name = schema::users_keywords)]
 #[diesel(primary_key(user_id, keyword_id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub(super) struct UserKeyword {
+pub(crate) struct UserKeyword {
     pub user_id: i64,
     pub keyword_id: i64,
 }

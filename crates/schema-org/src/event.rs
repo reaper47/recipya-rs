@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::enums::{EventAttendanceModeEnumerationEnum, EventStatusTypeEnum};
@@ -24,7 +23,8 @@ pub type EventStartDateFieldEnum = String;
 pub type EventDoorTimeFieldEnum = String;
 
 ///<https://schema.org/Event>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     #[serde(rename = "@type")]

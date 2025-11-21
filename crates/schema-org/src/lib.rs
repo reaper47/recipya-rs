@@ -116,11 +116,11 @@ pub use web_page_element::*;
 
 use std::fmt::Display;
 
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Enumeration of all possible @type values.
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 pub enum AtType {
     AggregateRating,
     Comment,
@@ -129,6 +129,7 @@ pub enum AtType {
     ImageObject,
     ItemList,
     ListItem,
+    MusicAlbum,
     NutritionInformation,
     #[default]
     Recipe,
@@ -150,6 +151,7 @@ impl Display for AtType {
                 AtType::ImageObject => "ImageObject".to_string(),
                 AtType::ItemList => "ItemList".to_string(),
                 AtType::ListItem => "ListItem".to_string(),
+                AtType::MusicAlbum => "MusicAlbum".to_string(),
                 AtType::NutritionInformation => "NutritionInformation".to_string(),
                 AtType::Review => "Review".to_string(),
                 AtType::VideoObject => "VideoObject".to_string(),

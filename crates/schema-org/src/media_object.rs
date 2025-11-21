@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -59,7 +58,8 @@ pub type MediaObjectDatePublishedFieldEnum = String;
 pub type MediaObjectGenreFieldEnum = String;
 
 ///<https://schema.org/MediaObject>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MediaObject {
     #[serde(rename = "@type")]

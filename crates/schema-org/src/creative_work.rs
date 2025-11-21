@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -29,7 +28,8 @@ pub type CreativeWorkDateModifiedFieldEnum = String;
 pub type CreativeWorkDatePublishedFieldEnum = String;
 
 ///<https://schema.org/CreativeWork>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CreativeWork {
     #[serde(rename = "@type")]

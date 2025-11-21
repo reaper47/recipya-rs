@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::Action;
@@ -12,7 +11,8 @@ use crate::helpers::one_or_many;
 ///<https://schema.org/URL>
 pub type EntryPointAdditionalTypeFieldEnum = String;
 ///<https://schema.org/EntryPoint>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct EntryPoint {
     #[serde(rename = "@type")]

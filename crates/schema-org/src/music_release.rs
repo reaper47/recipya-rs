@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::enums::MusicReleaseFormatTypeEnum;
@@ -29,7 +28,8 @@ pub type MusicReleaseDatePublishedFieldEnum = String;
 pub type MusicReleaseGenreFieldEnum = String;
 
 ///<https://schema.org/MusicRelease>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MusicRelease {
     #[serde(rename = "@type")]

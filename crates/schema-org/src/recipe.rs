@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::enums::RestrictedDietEnum;
@@ -44,7 +43,8 @@ pub type RecipeSchemaVersionFieldEnum = String;
 
 /// Enumeration of possible values for the @graph field in JSON-LD used to group
 /// multiple related entities in a single document.
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum GraphObject {
     Recipe(Box<Recipe>),
@@ -58,7 +58,8 @@ impl Default for GraphObject {
 }
 
 ///<https://schema.org/Recipe>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Recipe {
     #[serde(rename = "@type", default = "set_recipe_type")]

@@ -1,10 +1,10 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::DurationDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum DurationOrText {
     Duration(Duration),
@@ -20,14 +20,19 @@ impl DurationOrText {
     /// Converts the DurationOrText to iso8601.
     pub fn to_iso8601(&self) -> Option<iso8601::Duration> {
         match self {
-            Self::Duration(d) => d.name.get(0).map(|d| iso8601::duration(d).ok()).unwrap_or_default(),
+            Self::Duration(d) => d
+                .name
+                .get(0)
+                .map(|d| iso8601::duration(d).ok())
+                .unwrap_or_default(),
             Self::Text(s) => iso8601::duration(s).ok(),
         }
     }
 }
 
 ///<https://schema.org/Duration>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Duration {
     ///<https://schema.org/alternateName>

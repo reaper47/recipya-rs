@@ -1,5 +1,8 @@
+use std::vec;
+
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
 
+use itertools::Either;
 use repository::schema;
 use schema_org::field::{
     ItemListItemListElementFieldEnum, PropertyValueValueFieldEnum, RecipeRecipeIngredientFieldEnum,
@@ -7,7 +10,7 @@ use schema_org::field::{
 };
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum ComponentSections {
+pub enum SectionComponents {
     Grouped(Vec<SectionItem>),
     Flat(Vec<Item>),
 }
@@ -21,10 +24,76 @@ pub struct SectionItem {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Item {
     pub text: String,
-    pub duration_seconds: Option<i16>,
+    pub duration_seconds: Option<i32>,
 }
 
-impl ComponentSections {
+pub enum SectionComponentsIter<'a> {
+    Grouped(
+        std::iter::FlatMap<
+            std::slice::Iter<'a, SectionItem>,
+            std::slice::Iter<'a, Item>,
+            fn(&'a SectionItem) -> std::slice::Iter<'a, Item>,
+        >,
+    ),
+    Flat(std::slice::Iter<'a, Item>),
+}
+
+impl<'a> Iterator for SectionComponentsIter<'a> {
+    type Item = &'a Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            SectionComponentsIter::Grouped(iter) => iter.next(),
+            SectionComponentsIter::Flat(iter) => iter.next(),
+        }
+    }
+}
+
+pub enum SectionComponentsIntoIter {
+    Grouped(
+        std::iter::FlatMap<
+            vec::IntoIter<SectionItem>,
+            vec::IntoIter<Item>,
+            fn(SectionItem) -> vec::IntoIter<Item>,
+        >,
+    ),
+    Flat(vec::IntoIter<Item>),
+}
+
+impl Iterator for SectionComponentsIntoIter {
+    type Item = Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            SectionComponentsIntoIter::Grouped(iter) => iter.next(),
+            SectionComponentsIntoIter::Flat(iter) => iter.next(),
+        }
+    }
+}
+
+pub enum SectionComponentsIterMut<'a> {
+    Grouped(
+        std::iter::FlatMap<
+            std::slice::IterMut<'a, SectionItem>,
+            std::slice::IterMut<'a, Item>,
+            fn(&'a mut SectionItem) -> std::slice::IterMut<'a, Item>,
+        >,
+    ),
+    Flat(std::slice::IterMut<'a, Item>),
+}
+
+impl<'a> Iterator for SectionComponentsIterMut<'a> {
+    type Item = &'a mut Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            SectionComponentsIterMut::Grouped(iter) => iter.next(),
+            SectionComponentsIterMut::Flat(iter) => iter.next(),
+        }
+    }
+}
+
+impl SectionComponents {
     /// Creates a new `Sections::Items` from a list of text.
     pub fn new(items: Vec<String>) -> Self {
         Self::Flat(
@@ -41,8 +110,8 @@ impl ComponentSections {
     /// Verifies whether there are items.
     pub fn is_empty(&self) -> bool {
         match self {
-            ComponentSections::Grouped(section_items) => section_items.is_empty(),
-            ComponentSections::Flat(items) => items.is_empty(),
+            SectionComponents::Grouped(section_items) => section_items.is_empty(),
+            SectionComponents::Flat(items) => items.is_empty(),
         }
     }
 
@@ -51,43 +120,80 @@ impl ComponentSections {
         self.iter().map(|item| item.text.clone()).collect()
     }
 
-    pub fn iter(&self) -> Box<dyn Iterator<Item = &Item> + '_> {
+    /// Iterates over the items
+    pub fn iter(&self) -> SectionComponentsIter<'_> {
+        fn get_items(s: &SectionItem) -> std::slice::Iter<'_, Item> {
+            s.items.iter()
+        }
+
         match self {
-            ComponentSections::Grouped(sections) => {
-                Box::new(sections.iter().flat_map(|s| s.items.iter()))
+            SectionComponents::Grouped(sections) => {
+                SectionComponentsIter::Grouped(sections.iter().flat_map(get_items))
             }
-            ComponentSections::Flat(items) => Box::new(items.iter()),
+            SectionComponents::Flat(items) => SectionComponentsIter::Flat(items.iter()),
+        }
+    }
+
+    /// Iterates over the items mutably
+    pub fn iter_mut(&mut self) -> SectionComponentsIterMut<'_> {
+        fn get_items_mut(s: &mut SectionItem) -> std::slice::IterMut<'_, Item> {
+            s.items.iter_mut()
+        }
+
+        match self {
+            SectionComponents::Grouped(sections) => {
+                SectionComponentsIterMut::Grouped(sections.iter_mut().flat_map(get_items_mut))
+            }
+            SectionComponents::Flat(items) => SectionComponentsIterMut::Flat(items.iter_mut()),
+        }
+    }
+
+    /// Returns the number of items in the section.
+    pub fn len(&self) -> usize {
+        match self {
+            SectionComponents::Grouped(sections) => {
+                sections.iter().map(|section| section.items.len()).sum()
+            }
+            SectionComponents::Flat(items) => items.len(),
         }
     }
 
     /// Returns an iterator over the sections variant.
     pub fn sections_iter(&self) -> Option<impl Iterator<Item = &SectionItem>> {
         match self {
-            ComponentSections::Grouped(section_items) => Some(section_items.iter()),
-            ComponentSections::Flat(_) => None,
+            SectionComponents::Grouped(section_items) => Some(section_items.iter()),
+            SectionComponents::Flat(_) => None,
+        }
+    }
+
+    /// Returns the section titles.
+    pub fn titles(&self) -> impl Iterator<Item = &str> {
+        match self {
+            SectionComponents::Grouped(section_items) => {
+                Either::Left(section_items.iter().map(|section| section.title.as_str()))
+            }
+            SectionComponents::Flat(_) => Either::Right(std::iter::empty()),
         }
     }
 }
 
-impl Default for ComponentSections {
+impl Default for SectionComponents {
     fn default() -> Self {
         Self::Grouped(vec![])
     }
 }
 
-impl From<Vec<SectionItem>> for ComponentSections {
-    fn from(sections: Vec<SectionItem>) -> Self {
+impl From<Vec<SectionItem>> for SectionComponents {
+    fn from(mut sections: Vec<SectionItem>) -> Self {
         match sections.as_slice() {
             [] => Self::Flat(Default::default()),
-            [single] if single.title.is_empty() => {
-                Self::Flat(sections.into_iter().next().unwrap().items)
-            }
+            [single] if single.title.is_empty() => Self::Flat(sections.pop().unwrap().items),
             _ => Self::Grouped(sections),
         }
     }
 }
 
-impl From<Vec<RecipeRecipeIngredientFieldEnum>> for ComponentSections {
+impl From<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
     fn from(items: Vec<RecipeRecipeIngredientFieldEnum>) -> Self {
         let mut sections = Vec::new();
         let mut current_items = Vec::new();
@@ -195,7 +301,7 @@ impl From<Vec<RecipeRecipeIngredientFieldEnum>> for ComponentSections {
     }
 }
 
-impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for ComponentSections {
+impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
     fn from(items: Vec<RecipeRecipeInstructionsFieldEnum>) -> Self {
         let mut sections = Vec::new();
         let mut current_items = Vec::new();
@@ -273,16 +379,40 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for ComponentSections {
     }
 }
 
-impl IntoIterator for ComponentSections {
+impl IntoIterator for SectionComponents {
     type Item = Item;
-    type IntoIter = Box<dyn Iterator<Item = Item>>;
+    type IntoIter = SectionComponentsIntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
+        fn extract_items(s: SectionItem) -> vec::IntoIter<Item> {
+            s.items.into_iter()
+        }
+
         match self {
-            ComponentSections::Grouped(section_items) => {
-                Box::new(section_items.into_iter().flat_map(|s| s.items.into_iter()))
-            }
-            ComponentSections::Flat(items) => Box::new(items.into_iter()),
+            SectionComponents::Grouped(section_items) => SectionComponentsIntoIter::Grouped(
+                section_items.into_iter().flat_map(extract_items),
+            ),
+            SectionComponents::Flat(items) => SectionComponentsIntoIter::Flat(items.into_iter()),
+        }
+    }
+}
+
+impl SectionItem {
+    /// Creates a new section item with the given title and items.
+    pub fn new(title: impl Into<String>, items: Vec<Item>) -> Self {
+        Self {
+            title: title.into(),
+            items,
+        }
+    }
+}
+
+impl Item {
+    /// Creates a new item with the given text.
+    pub fn new(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            duration_seconds: None,
         }
     }
 }

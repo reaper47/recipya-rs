@@ -55,7 +55,6 @@ impl UnitOperations for Length {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cooking::units::Unit;
 
     fn create_length_variants() -> Vec<Length> {
         vec![

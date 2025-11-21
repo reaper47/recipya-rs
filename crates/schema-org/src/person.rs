@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -15,7 +14,8 @@ use crate::{Country, InteractionCounter, Place};
 pub type PersonAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Person>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Person {
     #[serde(rename = "@type")]

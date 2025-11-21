@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::field::{
@@ -12,7 +11,8 @@ use crate::{PropertyValue, QualitativeValue, QuantitativeValue};
 ///<https://schema.org/URL>
 pub type SizeSpecificationAdditionalTypeFieldEnum = String;
 ///<https://schema.org/SizeSpecification>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SizeSpecification {
     #[serde(rename = "@type")]

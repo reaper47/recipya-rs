@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
 use maud::{Markup, PreEscaped, html};
+use models::recipe::structs::recipe::Keyword;
+use models::recipe::structs::tool::ToolRecipe;
 use serde_json::json;
 
 use config::DataDir;
 use models::data::Data;
-use models::recipe::{Keyword, ToolRecipe};
 use support::fs::FsSupport;
 
 use crate::recipes::render_favourite_button;

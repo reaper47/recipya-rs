@@ -11,7 +11,9 @@ use crate::recipe::helpers::{
     insert_keywords, insert_nutrition, insert_sections, insert_tools, insert_videos,
     update_category,
 };
-use crate::recipe::{Nutrition, RecipeForCreate, TimesForInsert};
+use crate::recipe::structs::nutrition::Nutrition;
+use crate::recipe::structs::recipe::RecipeForCreate;
+use crate::recipe::structs::time::TimesForInsert;
 use crate::{Error, Result};
 
 impl Recipe {
@@ -112,16 +114,8 @@ impl Recipe {
                     let sections_map = insert_sections(conn, new_recipe).await?;
 
                     // Ingredients
-                    let old_ingredients = old_recipe
-                        .ingredients
-                        .iter()
-                        .flat_map(|(_, ing)| ing)
-                        .collect::<Vec<_>>();
-                    let new_ingredients = new_recipe
-                        .ingredients
-                        .iter()
-                        .flat_map(|(_, ing)| ing)
-                        .collect::<Vec<_>>();
+                    let old_ingredients = old_recipe.ingredients.items_as_text();
+                    let new_ingredients = new_recipe.ingredients.items_as_text();
                     if old_ingredients != new_ingredients {
                         diesel::delete(
                             schema::ingredients_recipes::table
@@ -135,16 +129,8 @@ impl Recipe {
                     }
 
                     // Instructions
-                    let old_instructions = old_recipe
-                        .instructions
-                        .iter()
-                        .flat_map(|(_, ing)| ing)
-                        .collect::<Vec<_>>();
-                    let new_instructions = new_recipe
-                        .instructions
-                        .iter()
-                        .flat_map(|(_, ing)| ing)
-                        .collect::<Vec<_>>();
+                    let old_instructions = old_recipe.instructions.items_as_text();
+                    let new_instructions = new_recipe.instructions.items_as_text();
                     if old_instructions != new_instructions {
                         diesel::delete(
                             schema::instructions_recipes::table

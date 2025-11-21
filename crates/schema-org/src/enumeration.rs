@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::Action;
@@ -13,7 +12,8 @@ use crate::helpers::one_or_many;
 pub type EnumerationAdditionalTypeFieldEnum = String;
 
 ///<https://schema.org/Enumeration>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Enumeration {
     #[serde(rename = "@type")]

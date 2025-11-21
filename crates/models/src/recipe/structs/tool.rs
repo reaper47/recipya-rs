@@ -1,8 +1,8 @@
 use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 
 use repository::schema;
-use schema_org::field::RecipeToolFieldEnum;
 use schema_org::HowToTool;
+use schema_org::field::RecipeToolFieldEnum;
 use support::strings::extract_number;
 
 use crate::Recipe;
@@ -31,7 +31,11 @@ impl From<HowToTool> for ToolForCreate {
 
         Self {
             name: s.replace(&quantity.to_string(), "").trim().to_string(),
-            quantity: value.required_quantity.first().map(|q| q.quantity()).unwrap_or_default(),
+            quantity: value
+                .required_quantity
+                .first()
+                .map(|q| q.quantity())
+                .unwrap_or_default(),
         }
     }
 }
@@ -39,7 +43,7 @@ impl From<HowToTool> for ToolForCreate {
 /// Represents a tool being inserted into the `tools` table.
 #[derive(Insertable)]
 #[diesel(table_name = schema::tools)]
-pub(super) struct ToolForInsert {
+pub(crate) struct ToolForInsert {
     pub name: String,
 }
 
@@ -65,7 +69,7 @@ impl From<&ToolForCreate> for ToolRecipe {
 #[derive(Associations, Insertable)]
 #[diesel(table_name = schema::tools_recipes)]
 #[diesel(belongs_to(Recipe))]
-pub(super) struct ToolRecipeForInsert {
+pub(crate) struct ToolRecipeForInsert {
     pub tool_id: i64,
     pub recipe_id: i64,
     pub quantity: i16,
@@ -75,26 +79,24 @@ pub(super) struct ToolRecipeForInsert {
 impl From<&RecipeToolFieldEnum> for ToolForCreate {
     fn from(value: &RecipeToolFieldEnum) -> Self {
         match value {
-            RecipeToolFieldEnum::HowToTool(tool) => {
-                Self {
-                    name: tool.name.first().cloned().unwrap_or_default(),
-                    quantity: tool.required_quantity.first().map(|q| q.quantity()).unwrap_or_default(),
-                }
-            }
-            RecipeToolFieldEnum::Text(s) => {
-                match extract_number::<i16>(s.clone()) {
-                    Ok(n) => Self {
-                        name: s.replace(&n.to_string(), "").trim().to_string(),
-                        quantity: n,
-                    },
-                    Err(_) => {
-                        Self {
-                            name: s.clone(),
-                            quantity: 0,
-                        }
-                    }
-                }
-            }
+            RecipeToolFieldEnum::HowToTool(tool) => Self {
+                name: tool.name.first().cloned().unwrap_or_default(),
+                quantity: tool
+                    .required_quantity
+                    .first()
+                    .map(|q| q.quantity())
+                    .unwrap_or_default(),
+            },
+            RecipeToolFieldEnum::Text(s) => match extract_number::<i16>(s.clone()) {
+                Ok(n) => Self {
+                    name: s.replace(&n.to_string(), "").trim().to_string(),
+                    quantity: n,
+                },
+                Err(_) => Self {
+                    name: s.clone(),
+                    quantity: 0,
+                },
+            },
         }
     }
 }

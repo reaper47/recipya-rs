@@ -15,7 +15,6 @@ use futures_util::future::join_all;
 use itertools::izip;
 use reqwest::StatusCode;
 use serde::Deserialize;
-use support::fs::FsSupport;
 use tokio::fs;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
@@ -29,8 +28,11 @@ use math::cooking::units;
 use models::Error::{DuplicateEntity, EntityNotFound};
 use models::data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe};
 use models::params::SearchParams;
+use models::recipe::RecipeForm;
+use models::recipe::structs::media::VideoForCreate;
+use models::recipe::structs::recipe::{Category, Keyword, RecipeForCreate};
+use models::recipe::structs::section::SectionItem;
 use models::recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate};
-use models::recipe::{Category, Keyword, RecipeForCreate, RecipeForm, VideoForCreate};
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
@@ -38,8 +40,7 @@ use models::time::FormattedTimes;
 use models::user::User;
 use models::website::{ToHtmlTable, Website};
 use models::{Recipe, RecipeDetails};
-use recipe_schema::RecipeSchema;
-use recipe_schema::components::{ClipOrVideoObject, ImageObjectOrUrl, SectionItem, Sections};
+use support::fs::FsSupport;
 use templates::recipes::timeline::Event;
 
 use crate::handlers::get_settings;
@@ -417,14 +418,11 @@ pub async fn scale_recipe_handler(
                     .unwrap_or_default();
 
             let factor = params.yield_param as f64 / recipe.recipe.yield_ as f64;
+            let items = recipe.ingredients.items_as_text();
+            let scaled = measurement_system.scale(items, factor);
 
-            for (_name, ingredients) in recipe.ingredients.iter_mut() {
-                let strings = ingredients.iter().map(|item| item.text.clone()).collect();
-                let scaled_items = measurement_system.scale(strings, factor);
-
-                for (x, y) in izip!(ingredients, scaled_items) {
-                    x.text = y;
-                }
+            for (x, y) in izip!(recipe.ingredients.iter_mut(), scaled) {
+                x.text = y;
             }
 
             recipe
@@ -779,7 +777,7 @@ pub async fn add_recipes_handler(
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
-        RecipeSchema::schema(),
+        schema_org::Recipe::schema(),
         settings,
     )
     .into_response())
@@ -898,7 +896,7 @@ async fn parse_recipes(
     state: &AppState,
     mut form: ImportFromAppForm,
     user_id: i64,
-) -> Result<Vec<RecipeSchema>> {
+) -> Result<Vec<schema_org::Recipe>> {
     state
         .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
         .await;
@@ -934,7 +932,7 @@ pub async fn add_recipe_import_preview_handler(
     State(state): State<AppState>,
     Form(form): Form<PreviewForm>,
 ) -> Result<impl IntoResponse> {
-    match serde_json::from_str::<RecipeSchema>(&form.json_input) {
+    match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
         Ok(schema) => {
             let user_id = ctx.0.user_id();
 
@@ -1007,7 +1005,7 @@ pub async fn add_recipe_import_raw_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    match serde_json::from_str::<RecipeSchema>(&form.json_input) {
+    match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
         Ok(schema) => {
             let recipe_c = RecipeForCreate::from(&schema);
 
@@ -1393,7 +1391,10 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: i64) {
     });
 }
 
-async fn schema_to_recipe_for_create(state: &AppState, schema: RecipeSchema) -> RecipeForCreate {
+async fn schema_to_recipe_for_create(
+    state: &AppState,
+    schema: schema_org::Recipe,
+) -> RecipeForCreate {
     let fs_support = state.fs_support.clone();
 
     let schema = Arc::new(schema);
@@ -1406,7 +1407,7 @@ async fn schema_to_recipe_for_create(state: &AppState, schema: RecipeSchema) -> 
 }
 
 async fn extract_images(
-    schema: &Arc<RecipeSchema>,
+    schema: &Arc<schema_org::Recipe>,
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<Uuid> {
@@ -1441,7 +1442,7 @@ async fn extract_images(
         .collect()
 }
 
-fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, url: Url) -> Option<Uuid> {
+fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, _url: Url) -> Option<Uuid> {
     let path = PathBuf::new();
 
     let file_name = Uuid::new_v4();
@@ -1453,7 +1454,7 @@ fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, url: Url) -> Op
 }
 
 async fn extract_videos(
-    schema: &Arc<RecipeSchema>,
+    schema: &Arc<schema_org::Recipe>,
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<VideoForCreate> {
