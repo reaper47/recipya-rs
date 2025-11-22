@@ -141,7 +141,7 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
                 match ins {
                     Instruction::Section(section) => {
                         acc.push(RecipeRecipeInstructionsFieldEnum::new_section::<String>(
-                            &section,
+                            section,
                             vec![],
                         ));
                     }

@@ -1,7 +1,7 @@
-use super::Mass;
 use crate::Result;
-use crate::cooking::units::Unit;
+use crate::cooking::units::mass::units::Mass;
 use crate::cooking::units::traits::{UnitOperations, UnitScaler};
+use crate::cooking::units::unit::Unit;
 
 impl UnitScaler for Mass {
     fn scale(&self, factor: f64) -> Result<Unit> {

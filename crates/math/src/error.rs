@@ -1,4 +1,4 @@
-use crate::cooking::units::{Unit, UnitType};
+use crate::cooking::units::{UnitType, unit::Unit};
 
 /// Result type for errors related to mathematics.
 pub type Result<T> = core::result::Result<T, Error>;

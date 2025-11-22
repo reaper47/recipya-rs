@@ -22,7 +22,7 @@ impl DurationOrText {
         match self {
             Self::Duration(d) => d
                 .name
-                .get(0)
+                .first()
                 .map(|d| iso8601::duration(d).ok())
                 .unwrap_or_default(),
             Self::Text(s) => iso8601::duration(s).ok(),

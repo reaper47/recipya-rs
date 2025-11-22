@@ -3,7 +3,7 @@ use diesel::{Identifiable, Queryable, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use strum::{Display, EnumIter, EnumString};
 
-use math::cooking::units::MeasurementSystem;
+use math::cooking::units::system::MeasurementSystem;
 use repository::{ModelManager, schema};
 
 use crate::{Error, Result};
@@ -118,6 +118,7 @@ impl ThemeModel {
 }
 
 /// Represents a user's settings in the database.
+#[allow(dead_code)]
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
 #[diesel(table_name = schema::user_settings)]
 #[diesel(belongs_to(MeasurementSystem))]

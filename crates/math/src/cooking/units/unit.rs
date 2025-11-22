@@ -2,8 +2,12 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::str::FromStr;
 
+use crate::cooking::units::length::units::Length;
+use crate::cooking::units::mass::units::Mass;
+use crate::cooking::units::temperature::units::Temperature;
 use crate::cooking::units::traits::{UnitConverter, UnitOperations, UnitScaler};
-use crate::cooking::units::{Length, Mass, Temperature, Unitless, Volume};
+use crate::cooking::units::unitless::units::Unitless;
+use crate::cooking::units::volume::units::Volume;
 use crate::cooking::units::{UnitType, length, mass, temperature, unitless, volume};
 use crate::{Error, Result};
 
@@ -19,11 +23,11 @@ pub enum Unit {
 impl Unit {
     pub fn replace(&self, s: impl Into<String>) -> String {
         let re = match self {
-            Unit::Length(_) => length::get_regex(),
-            Unit::Mass(_) => mass::get_regex(),
-            Unit::Temperature(_) => temperature::get_regex(),
-            Unit::Volume(_) => volume::get_regex(),
-            Unit::Unitless(_) => unitless::get_regex(),
+            Unit::Length(_) => length::units::get_regex(),
+            Unit::Mass(_) => mass::units::get_regex(),
+            Unit::Temperature(_) => temperature::units::get_regex(),
+            Unit::Volume(_) => volume::units::get_regex(),
+            Unit::Unitless(_) => unitless::units::get_regex(),
         };
 
         let s: String = s.into();
@@ -176,10 +180,13 @@ impl FromStr for Unit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use Length::*;
+    use Mass::*;
+    use Temperature::*;
+    use Volume::*;
 
     mod tests_display {
         use super::*;
-        use crate::cooking::units::Length::*;
 
         #[test]
         fn test_length() {
@@ -318,10 +325,6 @@ mod tests {
 
     mod tests_replace {
         use super::*;
-        use Length::*;
-        use Mass::*;
-        use Temperature::*;
-        use Volume::*;
 
         fn assert_replace(s: &str, unit: Unit, expected: &str) {
             let got = unit.replace(s);
@@ -762,192 +765,188 @@ mod tests {
 
     mod tests_unit_type {
         use super::*;
+        use crate::cooking::units::length::units::LengthUnit;
+        use crate::cooking::units::mass::units::MassUnit;
+        use crate::cooking::units::temperature::units::TemperatureUnit;
+        use crate::cooking::units::volume::units::VolumeUnit;
 
         #[test]
         fn test_length() {
-            use crate::cooking::units::LengthUnit::*;
-
             assert_eq!(
                 Unit::Length(Length::Millimetre(1.0)).unit_type(),
-                UnitType::Length(Millimetre)
+                UnitType::Length(LengthUnit::Millimetre)
             );
             assert_eq!(
                 Unit::Length(Length::Centimetre(2.5)).unit_type(),
-                UnitType::Length(Centimetre)
+                UnitType::Length(LengthUnit::Centimetre)
             );
             assert_eq!(
                 Unit::Length(Length::Metre(10.0)).unit_type(),
-                UnitType::Length(Metre)
+                UnitType::Length(LengthUnit::Metre)
             );
             assert_eq!(
                 Unit::Length(Length::Kilometre(100.0)).unit_type(),
-                UnitType::Length(Kilometre)
+                UnitType::Length(LengthUnit::Kilometre)
             );
             assert_eq!(
                 Unit::Length(Length::Inch(12.0)).unit_type(),
-                UnitType::Length(Inch)
+                UnitType::Length(LengthUnit::Inch)
             );
             assert_eq!(
                 Unit::Length(Length::Foot(3.0)).unit_type(),
-                UnitType::Length(Foot)
+                UnitType::Length(LengthUnit::Foot)
             );
         }
 
         #[test]
         fn test_mass() {
-            use crate::cooking::units::MassUnit::*;
-
             assert_eq!(
                 Unit::Mass(Mass::Milligram(100.0)).unit_type(),
-                UnitType::Mass(Milligram)
+                UnitType::Mass(MassUnit::Milligram)
             );
             assert_eq!(
                 Unit::Mass(Mass::Gram(500.0)).unit_type(),
-                UnitType::Mass(Gram)
+                UnitType::Mass(MassUnit::Gram)
             );
             assert_eq!(
                 Unit::Mass(Mass::Dekagram(1.5)).unit_type(),
-                UnitType::Mass(Dekagram)
+                UnitType::Mass(MassUnit::Dekagram)
             );
             assert_eq!(
                 Unit::Mass(Mass::Hectogram(0.8)).unit_type(),
-                UnitType::Mass(Hectogram)
+                UnitType::Mass(MassUnit::Hectogram)
             );
             assert_eq!(
                 Unit::Mass(Mass::Kilogram(2.3)).unit_type(),
-                UnitType::Mass(Kilogram)
+                UnitType::Mass(MassUnit::Kilogram)
             );
             assert_eq!(
                 Unit::Mass(Mass::Ounce(16.0)).unit_type(),
-                UnitType::Mass(Ounce)
+                UnitType::Mass(MassUnit::Ounce)
             );
             assert_eq!(
                 Unit::Mass(Mass::Pound(2.2)).unit_type(),
-                UnitType::Mass(Pound)
+                UnitType::Mass(MassUnit::Pound)
             );
         }
 
         #[test]
         fn test_temperature() {
-            use crate::cooking::units::TemperatureUnit::*;
-
             assert_eq!(
                 Unit::Temperature(Temperature::Celsius(25.0)).unit_type(),
-                UnitType::Temperature(Celsius)
+                UnitType::Temperature(TemperatureUnit::Celsius)
             );
             assert_eq!(
                 Unit::Temperature(Temperature::Fahrenheit(77.0)).unit_type(),
-                UnitType::Temperature(Fahrenheit)
+                UnitType::Temperature(TemperatureUnit::Fahrenheit)
             );
         }
 
         #[test]
         fn test_volume() {
-            use crate::cooking::units::VolumeUnit::*;
-
             assert_eq!(
                 Unit::Volume(Volume::Millilitre(250.0)).unit_type(),
-                UnitType::Volume(Millilitre)
+                UnitType::Volume(VolumeUnit::Millilitre)
             );
             assert_eq!(
                 Unit::Volume(Volume::Centilitre(10.0)).unit_type(),
-                UnitType::Volume(Centilitre)
+                UnitType::Volume(VolumeUnit::Centilitre)
             );
             assert_eq!(
                 Unit::Volume(Volume::Decilitre(5.0)).unit_type(),
-                UnitType::Volume(Decilitre)
+                UnitType::Volume(VolumeUnit::Decilitre)
             );
             assert_eq!(
                 Unit::Volume(Volume::Litre(1.0)).unit_type(),
-                UnitType::Volume(Litre)
+                UnitType::Volume(VolumeUnit::Litre)
             );
             assert_eq!(
                 Unit::Volume(Volume::MetricTeaspoon(1.0)).unit_type(),
-                UnitType::Volume(MetricTeaspoon)
+                UnitType::Volume(VolumeUnit::MetricTeaspoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::MetricTablespoon(2.0)).unit_type(),
-                UnitType::Volume(MetricTablespoon)
+                UnitType::Volume(VolumeUnit::MetricTablespoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::MetricDessertspoon(1.5)).unit_type(),
-                UnitType::Volume(MetricDessertSpoon)
+                UnitType::Volume(VolumeUnit::MetricDessertSpoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::MetricCup(0.25)).unit_type(),
-                UnitType::Volume(MetricCup)
+                UnitType::Volume(VolumeUnit::MetricCup)
             );
             assert_eq!(
                 Unit::Volume(Volume::AustralianTablespoon(3.0)).unit_type(),
-                UnitType::Volume(AustralianTablespoon)
+                UnitType::Volume(VolumeUnit::AustralianTablespoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialTeaspoon(4.0)).unit_type(),
-                UnitType::Volume(ImperialTeaspoon)
+                UnitType::Volume(VolumeUnit::ImperialTeaspoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialDessertspoon(2.0)).unit_type(),
-                UnitType::Volume(ImperialDessertspoon)
+                UnitType::Volume(VolumeUnit::ImperialDessertspoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialTablespoon(1.5)).unit_type(),
-                UnitType::Volume(ImperialTablespoon)
+                UnitType::Volume(VolumeUnit::ImperialTablespoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialFluidOunce(8.0)).unit_type(),
-                UnitType::Volume(ImperialFluidOunce)
+                UnitType::Volume(VolumeUnit::ImperialFluidOunce)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialGill(0.5)).unit_type(),
-                UnitType::Volume(ImperialGill)
+                UnitType::Volume(VolumeUnit::ImperialGill)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialCup(2.0)).unit_type(),
-                UnitType::Volume(ImperialCup)
+                UnitType::Volume(VolumeUnit::ImperialCup)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialPint(1.0)).unit_type(),
-                UnitType::Volume(ImperialPint)
+                UnitType::Volume(VolumeUnit::ImperialPint)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialQuart(0.5)).unit_type(),
-                UnitType::Volume(ImperialQuart)
+                UnitType::Volume(VolumeUnit::ImperialQuart)
             );
             assert_eq!(
                 Unit::Volume(Volume::ImperialGallon(0.25)).unit_type(),
-                UnitType::Volume(ImperialGallon)
+                UnitType::Volume(VolumeUnit::ImperialGallon)
             );
             assert_eq!(
                 Unit::Volume(Volume::USTeaspoon(6.0)).unit_type(),
-                UnitType::Volume(USTeaspoon)
+                UnitType::Volume(VolumeUnit::USTeaspoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::USTablespoon(4.0)).unit_type(),
-                UnitType::Volume(USTablespoon)
+                UnitType::Volume(VolumeUnit::USTablespoon)
             );
             assert_eq!(
                 Unit::Volume(Volume::USFluidOunce(8.0)).unit_type(),
-                UnitType::Volume(USFluidOunce)
+                UnitType::Volume(VolumeUnit::USFluidOunce)
             );
             assert_eq!(
                 Unit::Volume(Volume::USCup(2.0)).unit_type(),
-                UnitType::Volume(USCup)
+                UnitType::Volume(VolumeUnit::USCup)
             );
             assert_eq!(
                 Unit::Volume(Volume::USPint(1.0)).unit_type(),
-                UnitType::Volume(USPint)
+                UnitType::Volume(VolumeUnit::USPint)
             );
             assert_eq!(
                 Unit::Volume(Volume::USQuart(0.5)).unit_type(),
-                UnitType::Volume(USQuart)
+                UnitType::Volume(VolumeUnit::USQuart)
             );
             assert_eq!(
                 Unit::Volume(Volume::USGallon(0.125)).unit_type(),
-                UnitType::Volume(USGallon)
+                UnitType::Volume(VolumeUnit::USGallon)
             );
             assert_eq!(
                 Unit::Volume(Volume::Jigger(2.0)).unit_type(),
-                UnitType::Volume(Jigger)
+                UnitType::Volume(VolumeUnit::Jigger)
             );
         }
 

@@ -1,5 +1,5 @@
-use super::{Length, LengthUnit};
 use crate::cooking::units::UnitType;
+use crate::cooking::units::length::units::{Length, LengthUnit};
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Length {

@@ -14,6 +14,7 @@ pub enum RequiredField {
 }
 
 /// A shortened version of nom parsing errors that excludes verbose input data.
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ShortNomError {
     kind: nom::error::ErrorKind,

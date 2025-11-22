@@ -1,7 +1,9 @@
-use crate::Error;
-use regex::Regex;
 use std::str::FromStr;
 use std::sync::OnceLock;
+
+use regex::Regex;
+
+use crate::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Volume {

@@ -83,6 +83,7 @@ impl From<&ReportForCreate> for ReportForInsert {
 }
 
 /// Represents a type of report.
+#[allow(dead_code)]
 #[derive(Identifiable, Queryable)]
 #[diesel(table_name = schema::report_types)]
 struct ReportType {
@@ -91,6 +92,7 @@ struct ReportType {
 }
 
 /// Represents a collection of reports for the database.
+#[allow(dead_code)]
 #[derive(Default, Associations, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = schema::reports)]
 #[diesel(belongs_to(ReportType))]

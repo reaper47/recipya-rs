@@ -1,6 +1,6 @@
-use super::{Volume, VolumeUnit};
 use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::UnitOperations;
+use crate::cooking::units::volume::units::{Volume, VolumeUnit};
 
 impl UnitOperations for Volume {
     fn abbrev(&self) -> &str {

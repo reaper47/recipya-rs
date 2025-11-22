@@ -23,6 +23,7 @@ struct CookbookXML {
     recipes: Vec<CookmateRecipe>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct CookmateRecipe {
     title: String,
@@ -111,7 +112,7 @@ impl From<CookmateRecipe> for Recipe {
             },
             keywords: categories
                 .map(|(_, b)| {
-                    b.into_iter()
+                    b.iter()
                         .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into()))
                         .collect::<Vec<_>>()
                 })

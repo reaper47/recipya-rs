@@ -1,8 +1,9 @@
-use super::Length;
-use crate::Result;
-use crate::cooking::units::Unit;
-use crate::cooking::units::traits::{UnitOperations, UnitScaler};
 use measurements::length::*;
+
+use crate::Result;
+use crate::cooking::units::length::units::Length;
+use crate::cooking::units::traits::{UnitOperations, UnitScaler};
+use crate::cooking::units::unit::Unit;
 
 impl UnitScaler for Length {
     fn scale(&self, factor: f64) -> Result<Unit> {

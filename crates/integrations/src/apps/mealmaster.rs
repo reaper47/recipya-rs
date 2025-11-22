@@ -48,6 +48,7 @@ struct MealMasterRecipe {
     source: String,
 }
 
+#[allow(dead_code)]
 struct RecipeComponents<'a> {
     author: Option<&'a str>,
     header: (&'a str, &'a str),
@@ -117,7 +118,7 @@ impl From<MealMasterRecipe> for Recipe {
             author: vec![RecipeAuthorFieldEnum::new_person(
                 &r.author.unwrap_or_default(),
             )],
-            is_based_on: to_is_based_on(r.source.trim().into()),
+            is_based_on: to_is_based_on(r.source.trim()),
             keywords: r
                 .keywords
                 .into_iter()

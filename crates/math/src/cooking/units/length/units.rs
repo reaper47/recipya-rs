@@ -1,7 +1,9 @@
-use crate::Error;
-use regex::Regex;
 use std::str::FromStr;
 use std::sync::OnceLock;
+
+use regex::Regex;
+
+use crate::Error;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Length {

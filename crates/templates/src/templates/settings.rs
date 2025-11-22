@@ -1,7 +1,7 @@
-use math::cooking::units::MeasurementSystem;
 use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
 
+use math::cooking::units::system::MeasurementSystem;
 use models::data::Data;
 use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};

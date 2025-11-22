@@ -423,6 +423,7 @@ pub(super) fn icon_printer() -> Markup {
 }
 
 /// Renders the 'rocket-launch' hero icon.
+#[allow(dead_code)]
 pub(super) fn icon_rocket_launch() -> Markup {
     html! {
         svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" {
@@ -450,6 +451,8 @@ pub(super) fn icon_share() -> Markup {
 }
 
 /// Renders the 'star' hero icon.
+// TODO: Review dead code attribute when used.
+#[allow(dead_code)]
 pub(super) fn icon_star(is_filled: bool) -> Markup {
     html! {
         svg xmlns="http://www.w3.org/2000/svg" fill=(format!("{}", if !is_filled { "none"} else { "currentColor" })) viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" {

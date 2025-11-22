@@ -15,8 +15,8 @@ use schema_org::Recipe;
 
 use crate::apps::cooklang::CookLang;
 use crate::apps::{
-    accuchef, cheftap, cookmate, cookml, crouton, kalorio, mastercook, mealmaster, paprika,
-    recipemd, recipesage, rezkonv, saffron,
+    accuchef, bigoven, cheftap, cookmate, cookml, crouton, kalorio, mastercook, mealmaster,
+    paprika, recipemd, recipesage, rezkonv, saffron,
 };
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
@@ -31,7 +31,7 @@ where
 {
     match app {
         App::AccuChef => accuchef::parse(r),
-        App::BigOven => accuchef::parse(r),
+        App::BigOven => bigoven::parse(r),
         App::ChefTap => cheftap::parse(r),
         App::Cooklang => CookLang::default().parse(r, file_name),
         App::CookMate => match file_format {

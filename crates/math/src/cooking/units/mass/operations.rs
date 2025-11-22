@@ -1,5 +1,5 @@
-use super::{Mass, MassUnit};
 use crate::cooking::units::UnitType;
+use crate::cooking::units::mass::units::{Mass, MassUnit};
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Mass {

@@ -1,4 +1,4 @@
-use std::vec;
+use std::{iter::FlatMap, slice::IterMut, vec};
 
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
 
@@ -27,15 +27,17 @@ pub struct Item {
     pub duration_seconds: Option<i32>,
 }
 
+type ItemIter<'a> = std::slice::Iter<'a, Item>;
+
 pub enum SectionComponentsIter<'a> {
     Grouped(
         std::iter::FlatMap<
             std::slice::Iter<'a, SectionItem>,
-            std::slice::Iter<'a, Item>,
-            fn(&'a SectionItem) -> std::slice::Iter<'a, Item>,
+            ItemIter<'a>,
+            fn(&'a SectionItem) -> ItemIter<'a>,
         >,
     ),
-    Flat(std::slice::Iter<'a, Item>),
+    Flat(ItemIter<'a>),
 }
 
 impl<'a> Iterator for SectionComponentsIter<'a> {
@@ -49,15 +51,17 @@ impl<'a> Iterator for SectionComponentsIter<'a> {
     }
 }
 
+type ItemIntoIter = vec::IntoIter<Item>;
+
 pub enum SectionComponentsIntoIter {
     Grouped(
         std::iter::FlatMap<
             vec::IntoIter<SectionItem>,
-            vec::IntoIter<Item>,
-            fn(SectionItem) -> vec::IntoIter<Item>,
+            ItemIntoIter,
+            fn(SectionItem) -> ItemIntoIter,
         >,
     ),
-    Flat(vec::IntoIter<Item>),
+    Flat(ItemIntoIter),
 }
 
 impl Iterator for SectionComponentsIntoIter {
@@ -71,15 +75,13 @@ impl Iterator for SectionComponentsIntoIter {
     }
 }
 
+type ItemIterMut<'a> = IterMut<'a, Item>;
+
+type MapFn<'a> = fn(&'a mut SectionItem) -> ItemIterMut<'a>;
+
 pub enum SectionComponentsIterMut<'a> {
-    Grouped(
-        std::iter::FlatMap<
-            std::slice::IterMut<'a, SectionItem>,
-            std::slice::IterMut<'a, Item>,
-            fn(&'a mut SectionItem) -> std::slice::IterMut<'a, Item>,
-        >,
-    ),
-    Flat(std::slice::IterMut<'a, Item>),
+    Grouped(FlatMap<IterMut<'a, SectionItem>, ItemIterMut<'a>, MapFn<'a>>),
+    Flat(ItemIterMut<'a>),
 }
 
 impl<'a> Iterator for SectionComponentsIterMut<'a> {
@@ -419,6 +421,7 @@ impl Item {
 
 /// Represents a section in a recipe, typically used for organizing the recipe's
 /// ingredients and instructions.
+#[allow(dead_code)]
 #[derive(Queryable, Identifiable, Selectable)]
 #[diesel(table_name = schema::sections)]
 #[diesel(check_for_backend(diesel::pg::Pg))]

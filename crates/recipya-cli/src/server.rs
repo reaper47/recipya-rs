@@ -33,10 +33,10 @@ pub async fn server() -> Result<()> {
     .await
     .map_err(|err| Error::Server(err.to_string()))?;
 
-    if config.is_autologin {
-        if let Err(err) = init_autologin_user(&state.mm).await {
-            error!("Autologin enabled. Error initializing autologin user: {err}");
-        }
+    if config.is_autologin
+        && let Err(err) = init_autologin_user(&state.mm).await
+    {
+        error!("Autologin enabled. Error initializing autologin user: {err}");
     }
 
     start_cron_jobs(

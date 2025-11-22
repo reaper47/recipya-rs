@@ -44,6 +44,7 @@
       </package>
       <package file="$PROJECT_DIR$/crates/schema-org">
         <enabledFeature name="default" />
+        <enabledFeature name="json-schema" />
       </package>
       <package file="$PROJECT_DIR$/crates/support">
         <enabledFeature name="default" />
@@ -60,27 +61,60 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/create.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/delete.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/delete.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/export.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/export.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/form.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/get.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/helpers.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/search.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs/media.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs/media.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs/nutrition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs/nutrition.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/app/src/jobs/clean_media.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/app/src/jobs/clean_media.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/bigoven.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookmate.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cookml.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/crouton.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mastercook.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/mealmaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/recipesage.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/conversion.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/conversion.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/scale.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/scale.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/conversion.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/conversion.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/scale.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/scale.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/system.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/conversion.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/conversion.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/temperature/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/traits.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/traits.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unit_type.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/scale.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/scale.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/conversion.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/conversion.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/operations.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/operations.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/scale.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/scale.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/math/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs/recipe.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs/section.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs/section.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/structs/tool.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/structs/tool.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/recipe/update.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/share.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/share.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/time.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/time.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/models/src/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/field.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/field.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/support/src/macros.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/support/src/macros.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/report.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/report.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/models/src/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/models/src/settings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/message.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/duration.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/duration.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/schema-org/src/recipe.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/settings.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

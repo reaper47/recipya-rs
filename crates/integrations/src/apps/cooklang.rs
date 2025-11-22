@@ -24,6 +24,7 @@ pub struct CookLang {
     parser: CooklangParser,
 }
 
+#[allow(dead_code)]
 struct CooklangRecipe {
     author: Option<String>,
     category: Option<String>,
@@ -113,7 +114,7 @@ impl From<CooklangRecipe> for Recipe {
                     }
                 })
                 .collect(),
-            url: r.source.map(String::from).into_iter().collect(),
+            url: r.source.into_iter().collect(),
             ..Default::default()
         }
     }
@@ -392,31 +393,6 @@ fn clean_content(content: Content) -> Option<String> {
     } else {
         s
     })
-}
-
-/// A builder pattern for constructing a `CookLang` parser.
-pub struct ParserBuilder {
-    parser: Option<CooklangParser>,
-}
-
-impl ParserBuilder {
-    /// Creates a new `ParserBuilder` with no parser initialized.
-    pub fn new() -> Self {
-        Self { parser: None }
-    }
-
-    /// Adds a parser to this builder, making it available for use during the build process.
-    pub fn with_parser(mut self, parser: CooklangParser) -> Self {
-        self.parser = Some(parser);
-        self
-    }
-
-    /// Builds a new `Parser` using the configured options or defaults.
-    pub fn build(self) -> CookLang {
-        CookLang {
-            parser: self.parser.unwrap_or_default(),
-        }
-    }
 }
 
 #[cfg(test)]

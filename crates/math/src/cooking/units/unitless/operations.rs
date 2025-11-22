@@ -1,6 +1,6 @@
-use super::Unitless;
 use crate::cooking::units::UnitType;
 use crate::cooking::units::traits::UnitOperations;
+use crate::cooking::units::unitless::units::Unitless;
 
 impl UnitOperations for Unitless {
     fn abbrev(&self) -> &str {

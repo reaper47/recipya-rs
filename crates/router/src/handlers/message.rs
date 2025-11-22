@@ -43,6 +43,7 @@ struct Content {
 }
 
 /// Enum representing different message types.
+#[allow(dead_code)]
 #[derive(Default, Serialize)]
 pub enum MessageType {
     #[serde(rename = "toast")]
@@ -82,12 +83,14 @@ impl MessageBuilder {
     }
 
     /// Sets the message status.
+    #[allow(dead_code)]
     pub fn status(mut self, status: MessageStatus) -> Self {
         self.status = status;
         self
     }
 
     /// Sets the message type.
+    #[allow(dead_code)]
     pub fn message_type(mut self, message_type: MessageType) -> Self {
         self.message_type = message_type;
         self
@@ -204,11 +207,11 @@ impl IMessage for MessageWs {
 
 /// Adds an HTMX message to a response's headers.
 pub fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
-    if let Ok(toast) = serde_json::to_string(&message) {
-        if let Ok(value) = HeaderValue::from_str(&toast) {
-            res.headers_mut()
-                .insert(axum_htmx::headers::HX_TRIGGER, value);
-        }
+    if let Ok(toast) = serde_json::to_string(&message)
+        && let Ok(value) = HeaderValue::from_str(&toast)
+    {
+        res.headers_mut()
+            .insert(axum_htmx::headers::HX_TRIGGER, value);
     }
 }
 

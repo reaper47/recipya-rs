@@ -29,7 +29,7 @@ itertools.workspace = true
 mime_guess = "2.0.5"
 math.workspace = true
 models = { workspace = true, features = ["test-utils"] }
-schema-org.workspace = true
+schema-org = { path = "../schema-org", features = ["json-schema"] }
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true

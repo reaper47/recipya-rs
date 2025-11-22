@@ -93,15 +93,15 @@ impl From<RecipeComponents<'_>> for Recipe {
 
         Self {
             r#type: Some(AtType::Recipe.to_string()),
-            aggregate_rating: (rating > 0.0)
-                .then(|| {
-                    vec![AggregateRating {
-                        r#type: Some(AtType::AggregateRating.to_string()),
-                        rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(rating)],
-                        ..Default::default()
-                    }]
-                })
-                .unwrap_or_default(),
+            aggregate_rating: if rating > 0.0 {
+                vec![AggregateRating {
+                    r#type: Some(AtType::AggregateRating.to_string()),
+                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(rating)],
+                    ..Default::default()
+                }]
+            } else {
+                Default::default()
+            },
             author: vec![RecipeAuthorFieldEnum::new_person(r.author.trim())],
             cook_time: seconds_to_duration(cook_secs),
             description: vec![RecipeDescriptionFieldEnum::Text(
@@ -147,6 +147,7 @@ impl From<RecipeComponents<'_>> for Recipe {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Mx2 {
     #[serde(rename = "@source")]
@@ -159,12 +160,14 @@ struct Mx2 {
     recipes: Vec<MastercookRecipe>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Summary {
     #[serde(rename = "Nam")]
     name: Vec<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct MastercookRecipe {
     #[serde(rename = "@name")]
@@ -237,6 +240,7 @@ struct Directions {
     directions: Vec<Direction>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Direction {
     #[serde(rename = "@img")]
@@ -245,6 +249,7 @@ struct Direction {
     text: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Yield {
     #[serde(rename = "@unit")]

@@ -2,7 +2,7 @@ use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Sel
 use uuid::Uuid;
 use whatlang::Lang;
 
-use math::cooking::units;
+use math::cooking::units::system;
 use repository::schema;
 use schema_org::field::{RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum};
 use support::name_entity_with_relations;
@@ -212,7 +212,7 @@ impl RecipeForCreate {
 impl From<&RecipeForm> for RecipeForCreate {
     fn from(form: &RecipeForm) -> Self {
         let ingredients = &form.ingredients;
-        let measurement_system_id = units::MeasurementSystem::from(ingredients.clone()).id();
+        let measurement_system_id = system::MeasurementSystem::from(ingredients.clone()).id();
 
         Self {
             name: form.title.clone(),
@@ -240,7 +240,7 @@ impl From<&RecipeForm> for RecipeForCreate {
 impl From<RecipeForm> for RecipeForCreate {
     fn from(form: RecipeForm) -> Self {
         let ingredients = form.ingredients;
-        let measurement_system_id = units::MeasurementSystem::from(ingredients.clone()).id();
+        let measurement_system_id = system::MeasurementSystem::from(ingredients.clone()).id();
 
         Self {
             name: form.title,
@@ -270,7 +270,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
         let original_ingredients = schema.recipe_ingredient.clone();
         let ingredients = SectionComponents::from(original_ingredients);
         let measurement_system_id =
-            units::MeasurementSystem::from(ingredients.items_as_text()).id();
+            system::MeasurementSystem::from(ingredients.items_as_text()).id();
 
         Self {
             name: schema.name.first().cloned().unwrap_or_default(),
@@ -290,8 +290,8 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             is_favourite: false,
             rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             videos: vec![],
-            category: schema.recipe_category.get(0).cloned(),
-            cuisine: schema.recipe_cuisine.get(0).cloned(),
+            category: schema.recipe_category.first().cloned(),
+            cuisine: schema.recipe_cuisine.first().cloned(),
             ingredients,
             instructions: SectionComponents::from(schema.recipe_instructions.clone()),
             keywords: schema

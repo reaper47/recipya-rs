@@ -20,6 +20,7 @@ use super::helpers::read_file;
 use crate::Result;
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 
+#[allow(dead_code)]
 struct BigOvenRecipe {
     title: String,
     servings: f32,
@@ -51,11 +52,13 @@ struct RecipeComponents<'a> {
     categories: Vec<&'a str>,
 }
 
+#[allow(dead_code)]
 enum IngredientType<'a> {
     Line(Ingredient<'a>),
     Section(Ingredient<'a>),
 }
 
+#[allow(dead_code)]
 struct Ingredient<'a> {
     heading: u16,
     quantity: Option<&'a str>,
@@ -206,7 +209,7 @@ impl From<BigOvenRecipe> for Recipe {
             },
             cook_time: seconds_to_duration((r.total_minutes - r.active_minutes) as i32),
             is_based_on: if url.is_some() {
-                to_is_based_on(&*r.source.to_owned().unwrap())
+                to_is_based_on(&r.source.to_owned().unwrap())
             } else {
                 vec![]
             },
@@ -476,19 +479,6 @@ fn parse_u16(
     move |input| {
         map_res(parse_tag(start_tag, closing_tag, empty_tag), |s| {
             s.parse::<u16>()
-        })
-        .parse(input)
-    }
-}
-
-fn parse_i16(
-    start_tag: &str,
-    closing_tag: &str,
-    empty_tag: &str,
-) -> impl FnMut(&str) -> IResult<&str, i16> {
-    move |input| {
-        map_res(parse_tag(start_tag, closing_tag, empty_tag), |s| {
-            s.parse::<i16>()
         })
         .parse(input)
     }

@@ -1,6 +1,6 @@
-use super::{Volume, VolumeUnit};
 use crate::Error;
 use crate::Result;
+use crate::cooking::units::UnitType;
 use crate::cooking::units::custom::{
     VolumeAustralianTablespoonExt, VolumeCentilitreExt, VolumeDecilitreExt, VolumeImperialCupExt,
     VolumeImperialDessertSpoonExt, VolumeImperialGillExt, VolumeImperialQuartExt,
@@ -8,7 +8,9 @@ use crate::cooking::units::custom::{
     VolumeMetricDessertSpoonExt, VolumeMetricTablespoonExt, VolumeMetricTeaspoonExt,
 };
 use crate::cooking::units::traits::{UnitConverter, UnitOperations};
-use crate::cooking::units::{Unit, UnitType};
+use crate::cooking::units::unit::Unit;
+use crate::cooking::units::volume::units::Volume;
+use crate::cooking::units::volume::units::VolumeUnit;
 
 impl UnitConverter for Volume {
     fn convert(&self, to: UnitType) -> Result<Unit> {
@@ -1966,8 +1968,7 @@ impl UnitConverter for Volume {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cooking::units::VolumeUnit::*;
-    use crate::cooking::units::traits::UnitOperations;
+    use crate::cooking::units::volume::units::VolumeUnit::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

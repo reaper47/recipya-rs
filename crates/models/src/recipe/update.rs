@@ -41,10 +41,10 @@ impl Recipe {
         if recipe.notes != new_recipe.notes {
             recipe.notes = new_recipe.notes.clone();
         }
-        if let Some(n) = new_recipe.r#yield {
-            if recipe.yield_ != n {
-                recipe.yield_ = n;
-            }
+        if let Some(n) = new_recipe.r#yield
+            && recipe.yield_ != n
+        {
+            recipe.yield_ = n;
         }
         if recipe.source != new_recipe.source {
             recipe.source = new_recipe.source.clone();

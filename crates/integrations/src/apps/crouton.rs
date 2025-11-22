@@ -16,6 +16,7 @@ use crate::common::Nutrition;
 use crate::error::Result;
 use crate::helpers::{seconds_to_duration, to_yield};
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Crouton {
@@ -69,6 +70,7 @@ struct Step {
     order: i64,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Tag {
     color: String,
@@ -162,7 +164,7 @@ where
             .into_iter()
             .map(RecipeKeywordsFieldEnum::TextOrURL)
             .collect(),
-        name: vec![crouton.name.into()],
+        name: vec![crouton.name],
         nutrition: Some(NutritionInformation {
             r#type: Some(AtType::NutritionInformation.to_string()),
             calories: nutrition

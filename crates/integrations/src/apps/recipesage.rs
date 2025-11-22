@@ -36,6 +36,7 @@ struct RecipeSage {
     r#yield: i16,
 }
 
+#[allow(dead_code)]
 struct RecipeComponents<'a> {
     category: Option<&'a str>,
     description: Option<&'a str>,
@@ -55,6 +56,7 @@ struct RecipeSageXMLData {
     pub recipes: Vec<RecipeSageXMLRecipe>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RecipeSageXMLRecipe {
@@ -84,6 +86,7 @@ struct Label {
     title: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct Images {
     id: String,
@@ -596,13 +599,13 @@ mod tests {
 
 id: 5ba3144a-e86e-431e-b5bb-c4109ebb8c04
 title: Asparagus Soup (Zuppa Di Asparagi)
-description: 
+description:
 yield: 6 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 2 tb Extra-virgin olive oil 1 qt Chicken broth
 2 Cloves garlic, minced 4 Eggs
 2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or
@@ -637,17 +640,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: italian, soups/stews, vegetables
-images: 
+images:
 
 id: d646992d-4726-48b4-ae7a-a85260b27811
 title: Aubergine and Sesame Pate
-description: 
+description:
 yield: 2 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1/2 md Aubergine 1/4 Juice of 1 lemon
 1 Crushed garlic cloves 1 tb Olive oil
 1 1/2 tb Tahini Seasoning
@@ -667,17 +670,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: appetizers, greek, vegetarian
-images: 
+images:
 
 id: adea4c61-fd42-4700-a2be-48338cc44818
 title: Aubergines a la Toulousaine (Eggplant A La Toulouse)
-description: 
+description:
 yield: 4 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1 md Eggplant 2 tb Snipped parsley
 1/4 c Salad oil 1 cl Galic, minced
 3 lg Tomatoes, peeled 1 tb Salad oil
@@ -700,17 +703,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: vegetables, french, casseroles
-images: 
+images:
 
 id: 03237963-3eca-4731-8586-ddaee265b98b
 title: August Goerg's Grilled Steak (Spiessbraten August Goerg)
-description: 
+description:
 yield: 6 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1 Shallot or small onion cut 1 pn Mace
 -into small pieces 1 lg Steak (just over 1 lb), at
 Freshly ground black pepper -least 1 1/4 inches
@@ -741,17 +744,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: german, beef
-images: 
+images:
 
 id: 4c23ec92-fc6f-4636-bb69-e1edbfa965c3
 title: Aunt Julia's Paella
-description: 
+description:
 yield: 6 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento
 -and legs) 2 ts Capers, with juice
 Salt and pepper to thaste 4 oz Jar pimento-stiffed green

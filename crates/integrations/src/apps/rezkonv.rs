@@ -70,8 +70,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                     .replace("(unreg.) ", "")
                     .trim_start_matches("Recipe via")
                     .trim_end_matches("=====")
-                    .trim()
-                    .into(),
+                    .trim(),
             ),
             keywords: keywords
                 .into_iter()

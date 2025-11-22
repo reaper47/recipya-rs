@@ -396,3 +396,12 @@ pub struct Recipe {
 fn set_recipe_type() -> Option<String> {
     Some(AtType::Recipe.to_string())
 }
+
+impl Recipe {
+    /// Generates the schema definition of RecipeSchema.
+    #[cfg(feature = "json-schema")]
+    pub fn schema() -> String {
+        let schema = schemars::schema_for!(Recipe);
+        serde_json::to_string_pretty(&schema).unwrap_or_default()
+    }
+}

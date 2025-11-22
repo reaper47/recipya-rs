@@ -20,6 +20,7 @@ use support::strings::extract_number;
 use crate::helpers::to_is_based_on;
 use crate::{Error, Result};
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Cookml {
     #[serde(rename = "@version")]
@@ -34,6 +35,7 @@ struct Cookml {
     menu: Option<Menu>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct CookmlRecipe {
     #[serde(rename = "@lang")]
@@ -44,6 +46,7 @@ struct CookmlRecipe {
     remark: Option<Remark>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Head {
     #[serde(rename = "@title")]
@@ -96,6 +99,7 @@ struct Head {
     picbin: Option<Vec<Picbin>>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Allergies {
     #[serde(rename = "@allergy")]
@@ -106,6 +110,7 @@ struct Allergies {
     contains: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Content {
     #[serde(rename = "@type")]
@@ -114,6 +119,7 @@ struct Content {
     value: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Picture {
     #[serde(rename = "@file")]
@@ -135,6 +141,7 @@ struct Part {
     ingredient: Vec<Ingredient>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Ingredient {
     #[serde(rename = "@qty")]
@@ -179,6 +186,7 @@ impl Display for Ingredient {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Preparation {
     text: String,
@@ -186,6 +194,7 @@ struct Preparation {
     step: Vec<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Remark {
     #[serde(rename = "@user")]
@@ -194,6 +203,7 @@ struct Remark {
     line: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Menu {
     #[serde(rename = "@title")]
@@ -207,18 +217,21 @@ struct Menu {
     mrecipe: Option<MRecipe>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct FrontPage {
     #[serde(rename = "@datatype")]
     datatype: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct BackPage {
     #[serde(rename = "@datatype")]
     datatype: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct MRecipe {
     #[serde(rename = "@title")]
@@ -329,7 +342,7 @@ impl From<CookmlRecipe> for Recipe {
             recipe_ingredient: r
                 .part
                 .into_iter()
-                .map(|p| {
+                .flat_map(|p| {
                     let num_items = p.ingredient.len();
                     let title = p.title;
 
@@ -352,7 +365,6 @@ impl From<CookmlRecipe> for Recipe {
                         })]
                     }
                 })
-                .flatten()
                 .collect(),
             recipe_instructions: r
                 .preparation
