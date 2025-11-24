@@ -616,6 +616,8 @@ mod tests {
     }
 
     mod tests_recipe_for_create {
+        use crate::recipe::structs::section::Item;
+
         use super::*;
 
         #[test]
@@ -679,20 +681,14 @@ mod tests {
             let recipe_c = RecipeForCreate {
                 name: "The best hamburger ever".into(),
                 description: Some("This is the best hamburger ever".into()),
-                ingredients: SectionComponents::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new("1 cup of flour"),
-                        SectionItem::new("1 cup of water"),
-                    ],
-                )]),
-                instructions: SectionComponents::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new("Mix all ingredients"),
-                        SectionItem::new("Bake for 30 minutes"),
-                    ],
-                )]),
+                ingredients: SectionComponents::Flat(vec![
+                    Item::new("1 cup of flour"),
+                    Item::new("1 cup of water"),
+                ]),
+                instructions: SectionComponents::Flat(vec![
+                    Item::new("Mix all ingredients"),
+                    Item::new("Bake for 30 minutes"),
+                ]),
                 ..Default::default()
             };
 

@@ -11,10 +11,10 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use tracing::error;
 
-use schema_org::Recipe;
 use schema_org::field::{
     RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
 };
+use schema_org::{Recipe, set_recipe_type};
 
 use super::helpers::read_file;
 use crate::Result;
@@ -50,6 +50,7 @@ struct Ingredient<'a> {
 impl From<AccuChefRecipe> for Recipe {
     fn from(r: AccuChefRecipe) -> Self {
         Self {
+            r#type: set_recipe_type(),
             context: Default::default(),
             cook_time: seconds_to_duration(r.times.cook_seconds),
             is_based_on: to_is_based_on(&r.source),
@@ -64,7 +65,6 @@ impl From<AccuChefRecipe> for Recipe {
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
-            url: vec![r.source],
             ..Default::default()
         }
     }
@@ -81,7 +81,9 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                 .ingredients
                 .into_iter()
                 .map(|ing| {
-                    RecipeRecipeIngredientFieldEnum::Text(format!("{} {}", ing.quantity, ing.name))
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        format!("{} {}", ing.quantity, ing.name).trim().to_string(),
+                    )
                 })
                 .collect(),
             times: Times {
@@ -235,16 +237,17 @@ fn eol(input: &str) -> IResult<&str, &str> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use std::default::Default;
     use std::io::Cursor;
 
-    use recipe_schema::AtType;
-    use recipe_schema::components::{
-        CreativeWorkOrText, QuantitativeValue, QuantitativeValueOrText,
+    use schema_org::{
+        AtType,
+        field::{
+            RecipeIsBasedOnFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeYieldFieldEnum,
+        },
     };
-    use schema_org::field::{RecipeIsBasedOnFieldEnum, RecipeRecipeIngredientFieldEnum};
+
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -259,12 +262,12 @@ mod tests {
             got,
             vec![
                 Recipe {
-                    r#type: Some(AtType::Recipe),
+                    r#type: Some(AtType::Recipe.to_string()),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["24 Hour Fruit Salad".into()],
                     prep_time: seconds_to_duration(900),
-                    recipe_category: RecipeCategory::Text("Fruit".into()),
+                    recipe_category: vec!["Fruit".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::new_section("Dressing", vec![
                             "3 Egg Yolks".into(),
@@ -285,13 +288,10 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text("frothy. Microwave like scrambled eggs. Cool and blend in lemon juice and".into()),
                         RecipeRecipeInstructionsFieldEnum::Text("cool whip. Drain the fruit and fold in dressing. Add marshmellows.".into()),
                     ],
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
-                        value: 0
-                    }),
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe),
+                    r#type: Some(AtType::Recipe.to_string()),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["7 Layer Salad".into()],
@@ -316,18 +316,16 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text("chestnuts and then cover with miracle whip mixture. Refrigerate over".into()),
                         RecipeRecipeInstructionsFieldEnum::Text("night and then place eggs, bacon and tomatoes on top.".into()),
                     ],
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
-                        value: 0
-                    }),
+
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe),
+                    r#type: Some(AtType::Recipe.to_string()),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["Aebleskiver".into()],
                     prep_time: seconds_to_duration(900),
-                    recipe_category: RecipeCategory::Text("Bread".into()),
+                    recipe_category: vec!["Bread".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::Text("3 C Jiffy Mix".into()),
                         RecipeRecipeIngredientFieldEnum::Text("2 Tbsp Shortening".into()),
@@ -344,18 +342,16 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text("cooking fat. Cook on medium low heat until done.\\par~".into()),
                         RecipeRecipeInstructionsFieldEnum::Text("}~".into()),
                     ],
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
-                        value: 24
-                    }),
+                    recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(24.0)],
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe),
+                    r#type: Some(AtType::Recipe.to_string()),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["Ambrosia Delight".into()],
                     prep_time: seconds_to_duration(3600),
-                    recipe_category: RecipeCategory::Text("Dessert".into()),
+                    recipe_category: vec!["Dessert".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::Text("1 Lrg Can Fruit Cocktail".into()),
                         RecipeRecipeIngredientFieldEnum::Text("1 Lrg Can Crushed Pineapple".into()),
@@ -367,9 +363,6 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text("Mix all together about 2 hours before serving. Serve a with a scoop of".into()),
                         RecipeRecipeInstructionsFieldEnum::Text("orange sherbet on top.".into()),
                     ],
-                    recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
-                        value: 0
-                    }),
                     ..Default::default()
                 }
             ]

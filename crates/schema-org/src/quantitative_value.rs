@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::AtType;
 use crate::field::{
     QuantitativeValueDescriptionFieldEnum, QuantitativeValueValueFieldEnum,
     QuantitativeValueValueReferenceFieldEnum,
@@ -60,4 +61,15 @@ pub struct QuantitativeValue {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
+}
+
+impl QuantitativeValue {
+    /// Creates a new `QuantitativeValue` for the given value.
+    pub fn new(value: f32) -> Self {
+        Self {
+            r#type: Some(AtType::QuantitativeValue.to_string()),
+            value: vec![QuantitativeValueValueFieldEnum::Number(value)],
+            ..Default::default()
+        }
+    }
 }

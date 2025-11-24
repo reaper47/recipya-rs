@@ -2,8 +2,7 @@
 mod tests {
     use axum::http::Method;
 
-    use models::Recipe;
-    use models::recipe::test_utils::a_complete_recipe_for_create;
+    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, build_server_logged_in,
         create_app_state,

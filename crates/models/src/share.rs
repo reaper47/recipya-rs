@@ -93,7 +93,7 @@ mod tests {
     use testing::utils::build_server_logged_in;
 
     use super::*;
-    use crate::recipe::test_utils::a_complete_recipe_for_create;
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

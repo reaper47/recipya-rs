@@ -283,7 +283,7 @@ impl Recipe {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::recipe::test_utils::a_complete_recipe_for_create;
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
     use testing::utils::{TestDb, create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;

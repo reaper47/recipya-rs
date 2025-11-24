@@ -263,7 +263,7 @@ mod tests {
 
         pretty_assertions::assert_eq!(got, vec![Recipe {
             cook_time: seconds_to_duration(1800),
-            description: to_text("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into()),
+            description: vec![RecipeDescriptionFieldEnum::Text("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into())],
             headline: vec!["First Cookbook".into()],
             is_based_on: to_is_based_on("KMKIDMAN5".into()),
             name: vec!["Apple Puff Pancake".into()],
@@ -336,8 +336,8 @@ Cook: 30 minutes
 Total: 45 minutes
 Cookbook: First Cookbook
 Section: First Section
-Image: 
-Ingredients: 
+Image:
+Ingredients:
 	6 eggs
 	1.5 cups milk
 	1 teaspoon vanilla extract
@@ -348,7 +348,7 @@ Ingredients:
 	2 tablespoons butter
 	2 apples - peeled, cored and sliced
 	3 tablespoons brown sugar
-Instructions: 
+Instructions:
 	Preheat the oven to 425 degrees F (220 degrees C).
 	Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.
 	Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.
@@ -357,18 +357,18 @@ Instructions:
 
         pub fn recipe2_file<'a>() -> &'a str {
             r#"Title: Yay
-Description: 
+Description:
 Source: Mom
-Original URL: 
-Yield: 
+Original URL:
+Yield:
 Prep: 1 hour and 15 minutes
 Cookbook: First Cookbook
 Section: First Section
-Image: 
-Ingredients: 
+Image:
+Ingredients:
 	1 kg chicken
 	1 egg
-Instructions: 
+Instructions:
 	Mix stuff
 	Eat a melon
 	Profit"#

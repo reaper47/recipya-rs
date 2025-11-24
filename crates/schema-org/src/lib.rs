@@ -131,6 +131,7 @@ pub enum AtType {
     ListItem,
     MusicAlbum,
     NutritionInformation,
+    QuantitativeValue,
     #[default]
     Recipe,
     Review,
@@ -153,6 +154,7 @@ impl Display for AtType {
                 AtType::ListItem => "ListItem".to_string(),
                 AtType::MusicAlbum => "MusicAlbum".to_string(),
                 AtType::NutritionInformation => "NutritionInformation".to_string(),
+                AtType::QuantitativeValue => "QuantitativeValue".to_string(),
                 AtType::Review => "Review".to_string(),
                 AtType::VideoObject => "VideoObject".to_string(),
             }

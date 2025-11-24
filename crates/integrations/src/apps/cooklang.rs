@@ -397,16 +397,12 @@ fn clean_content(content: Content) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use std::io::Cursor;
 
-    use recipe_schema::components::{
-        ImageObjectOrUrl, OrganizationTypeOrText, QuantitativeValue, QuantitativeValueOrText,
-        TextOrTextObject,
-    };
     use schema_org::Recipe;
-    use schema_org::field::RecipeRecipeIngredientFieldEnum;
+    use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeYieldFieldEnum};
+
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -459,7 +455,9 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                     RecipeImageFieldEnum::URL("https://example.org/recipe_image.jpg".into()),
                     RecipeImageFieldEnum::URL("https://example.org/recipe_image2.jpg".into()),
                 ],
-                is_based_on: to_is_based_on("https://example.org/recipe".into()),
+                is_based_on: vec![RecipeIsBasedOnFieldEnum::URL(
+                    "https://example.org/recipe".into()
+                )],
                 keywords: vec![
                     RecipeKeywordsFieldEnum::TextOrURL("2022".into()),
                     RecipeKeywordsFieldEnum::TextOrURL("baking".into()),
@@ -467,7 +465,7 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                 ],
                 name: vec!["Spaghetti Carbonara".into()],
                 prep_time: seconds_to_duration(2 * 60 * 60 + 30 * 60),
-                recipe_category: RecipeCategory::Text("dinner".into()),
+                recipe_category: vec!["dinner".into()],
                 recipe_cuisine: vec!["French".into()],
                 recipe_ingredient: vec![
                     RecipeRecipeIngredientFieldEnum::Text("100 g potatoes".into()),
@@ -481,36 +479,26 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                     RecipeRecipeIngredientFieldEnum::Text("salt".into()),
                 ],
                 recipe_instructions: vec![
-                    SectionItem::new(
-                        "Peel and chop the, and into chunks. The potatoes will need to be cut a bit smaller."
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Peel and chop the, and into chunks. The potatoes will need to be cut a bit smaller.".into()
                     ),
-                    SectionItem::new(
-                        "Heat a over a medium heat with a little and sauté the vegetables until golden. Season with, and chopped fresh ."
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Heat a over a medium heat with a little and sauté the vegetables until golden. Season with, and chopped fresh .".into()
                     ),
-                    SectionItem::new(
-                        "Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender."
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender.".into()
                     ),
-                    SectionItem::new(
-                        "Remove the soup from the heat and blend with a, add the and to taste. Garnish with freshly cracked black pepper."
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Remove the soup from the heat and blend with a, add the and to taste. Garnish with freshly cracked black pepper.".into()
                     ),
                 ],
-                recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValue {
-                    value: 1
-                }),
-                suitable_for_diet: vec![RestrictedDiet::GlutenFreeDiet],
+                recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(1.0)],
+                suitable_for_diet: vec![RestrictedDietEnum::GlutenFreeDiet],
                 tool: vec![
-                    HowToToolOrText::HowToTool(HowToToolType {
-                        r#type: AtType::HowToTool,
-                        name: "frying pan".into(),
-                        ..Default::default()
-                    }),
-                    HowToToolOrText::HowToTool(HowToToolType {
-                        r#type: AtType::HowToTool,
-                        name: "blender".into(),
-                        ..Default::default()
-                    }),
+                    RecipeToolFieldEnum::Text("frying pan".into()),
+                    RecipeToolFieldEnum::Text("blender".into()),
                 ],
-                url: Url::parse("https://example.org/recipe").ok(),
+                url: vec!["https://example.org/recipe".into()],
                 ..Default::default()
             }]
         );

@@ -343,7 +343,7 @@ impl User {
 mod tests {
     use super::*;
 
-    use crate::recipe::test_utils::a_complete_recipe_for_create;
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
     use testing::utils::{
         TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state, insert_other_user,
         insert_user,

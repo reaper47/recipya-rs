@@ -817,7 +817,6 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     mod results {
         use super::*;
 
-        use recipe_schema::components::{SectionItem, Sections};
         use schema_org::Recipe;
         use schema_org::field::{
             RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
@@ -908,7 +907,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
         pub fn kalorio_v4_03() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    author: to_organization_type("Petra Holzapfel".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Petra Holzapfel")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
                     keywords: ["Käse", "Kuchen"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     name: vec!["Ananas-Käsekuchen".into()],
@@ -947,7 +946,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ..Default::default()
                 },
                 Recipe {
-                    author: to_organization_type("Jochen Herz".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen Herz")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
                     keywords: ["Elsass", "Hefe"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     name: vec!["Flammenkuchen von Marc".into()],
@@ -992,7 +991,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ..Default::default()
                 },
                 Recipe {
-                    author: to_organization_type("Jochen 'Nunz' Herz".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
                     keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Karotten".into())],
                     name: vec!["Möhren-Mandel-Muffins".into()],
@@ -1022,9 +1021,9 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ..Default::default()
                 },
                 Recipe {
-                    author: to_organization_type("Jochen 'Nunz' Herz".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
-                    keywords: to_defined_text("Zwiebeln".into()),
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Zwiebeln".into())],
                     name: vec!["Zwiebelkuchen".into()],
                     recipe_category: vec!["Backen".into()],
                     recipe_ingredient: vec![

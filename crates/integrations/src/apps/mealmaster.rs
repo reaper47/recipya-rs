@@ -1555,14 +1555,14 @@ Typed for you by Karen Mintzias
 
     mod results {
         use super::*;
-        use recipe_schema::Recipe;
+
         use schema_org::Recipe;
 
         pub fn recipe_unspecified_version() -> Recipe {
             Recipe {
                 is_based_on: to_is_based_on("Meal-Master (tm) Database".into()),
                 name: vec!["West Haven Chocolate Cake".into()],
-                recipe_category: RecipeCategory::Text("Chocolate Cakes Fruits Desserts".into()),
+                recipe_category: vec!["Chocolate Cakes Fruits Desserts".into()],
                 recipe_ingredient: vec![
                     RecipeRecipeIngredientFieldEnum::Text("8 oz Dates; Pitted, Chopped".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1 t Baking Soda".into()),
@@ -1590,7 +1590,7 @@ Typed for you by Karen Mintzias
                 Recipe {
                     is_based_on: to_is_based_on("Meal-Master".into()),
                     name: vec!["Apfelkuchen".into()],
-                    recipe_category: RecipeCategory::Text("dessert".into()),
+                    recipe_category: vec!["dessert".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::Text("2/3 c butter;softened".into()),
                         RecipeRecipeIngredientFieldEnum::Text("2/3 c sugar".into()),
@@ -1680,7 +1680,7 @@ Typed for you by Karen Mintzias
                 },
                 Recipe {
                     is_based_on: to_is_based_on("Meal-Master".into()),
-                    keywords: to_defined_text(["Dip"].join(",")),
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Dip".into())],
                     name: vec!["Artichoke And Basil Dip".into()],
                     recipe_category: vec!["appetizers".into()],
                     recipe_ingredient: vec![
@@ -1811,37 +1811,37 @@ Typed for you by Karen Mintzias
                         RecipeRecipeIngredientFieldEnum::Text("2 oz apricot jam".into()),
                     ],
                     recipe_instructions: vec![
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Roll the chilled brisée into a rectangle to fit a 1/4 sheet pan about 1/8 inch thick. Be careful to work quickly and not over-work the dough or allow it to become warm.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text("Fold one inch of the dough over to form a border.".into()),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text("Fold one inch of the dough over to form a border.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Return to refrigerator to chill for another 30-60 minutes.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Peel apples, cut in half and core. Slice in even 1/8 inch slices.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Fan apples slightly and place on parchment on baking sheet. Place 1/2 T softened butter on each apple and bake at 400°F for 15 minutes.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Remove from oven and cool on parchment to allow juices to return to apples.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Remove the rolled brisée from the refrigerator and brush a thin coat of butter over the brisée.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text("Sprinkle with 1 tbs of the sugar.".into()),
-                        RecipeRecipeInstructionFieldEnum::Text("Arrange the apple slices over the brisée.".into()),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text("Sprinkle with 1 tbs of the sugar.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Arrange the apple slices over the brisée.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Brush the apples and dough border with the remaining butter and sprinkle with the remaining sugar.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Bake at 425°F until the galette begins to color, about 10-15 minutes.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Reduce the oven temperature to 375°F and continue to cook until the pastry is golden brown, about 20 minutes longer.".into(),
                         ),
-                        RecipeRecipeInstructionFieldEnum::Text(
+                        RecipeRecipeInstructionsFieldEnum::Text(
                             "Slightly warm the apricot glaze and brush on warm tart when it is finished baking.".into(),
                         ),
                     ],
@@ -1870,7 +1870,7 @@ Typed for you by Karen Mintzias
                         RecipeRecipeIngredientFieldEnum::Text("PUFF PASTRY".into()),
                         RecipeRecipeIngredientFieldEnum::Text("EGG WASH".into()),
                     ],
-                    recipe_instructions: vec![RecipeRecipeInstructionFieldEnum::Text(
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
                         "In a medium bowl, coat the apples with lemon juice. 2. Add brown sugar, five-spice powder and ginger. 3. Melt butter in skillet and add apple mixture. 4. Cook for several minutes until apples start to soften but are still slightly firm. Set aside. 5. Roll puff pastry to 1/4 inch thickness and cut into 3 or 4 inch squares. 6. Brush egg wash around perimeter. 7. Place small amount of filling on center and fold over the diagonal. 8. Crimp edges to seal and make a small slit in the top of each turnover to vent. 9. Chill for 30 minutes (or freeze.) 10. Bake at 400°F for 20 minutes or until medium golden brown.".into(),
                     )],
                     recipe_yield: to_yield(4),
@@ -1894,7 +1894,7 @@ Typed for you by Karen Mintzias
                         RecipeRecipeIngredientFieldEnum::Text("1/3 c Parmesan cheese;either fresh or from a can".into()),
                         RecipeRecipeIngredientFieldEnum::Text("3/4 ts Italian seasoning;add more if needed".into()),
                     ],
-                    recipe_instructions: vec![RecipeRecipeInstructionFieldEnum::Text(
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
                         "Place vinegar, lemon juice, sugar, mustard, salt, red pepper flakes, black pepper, and garlic in the jar of a blender and blend until smooth. While the blender is running, add the oil in a steady stream. Remove the blender jar from the blender and mix in the cheese and Italian seasoning by hand. Transfer to a storage or serving container and refrigerate for at least 1 hour before serving.".into(),
                     )],
                     recipe_yield: to_yield(4),
@@ -1917,16 +1917,16 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("3/4 c Cheddar; Sharp, Shredded".into()),
                 ],
                 recipe_instructions: vec![
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "In a skillet brown the ground beef and then drain off the excess fat. Add the bbq sauce, onion and brown sugar and set aside. Separate the biscuit dough into 12 pieces and place one in each of 12 ungreased muffin cups, pressing the dough up the sides to the edge of the cup. Spoon the mixture into the cups and sprinkle with the shredded Cheddar Cheese. Bake in a preheated 400 degrees F. oven for 12 minutes. Serve hot.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text("VARIATIONS:".into()),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text("VARIATIONS:".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Use 1 13-oz can of chili beans in place of the meat mixture (or 1 13-oz can of baked beans, and frankfurters or hot dogs that have been cut into pieces) in place of the meat mixture. You can also add green bell pepper or a hot pepper to the above recipe with good results.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::new_section("Notes", vec![
-                        RecipeRecipeInstructionFieldEnum::Text("- Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe.\n"),
-                        RecipeRecipeInstructionFieldEnum::Text("- Use store bought sauce or your favorite recipe.\n"),
+                    RecipeRecipeInstructionsFieldEnum::new_section("Notes", vec![
+                        "- Use 1 8-oz tube of store bought biscuits, or your favorite 12 biscuit recipe.",
+                        "- Use store bought sauce or your favorite recipe.",
                     ]),
                 ],
                 recipe_yield: to_yield(6),
@@ -1955,7 +1955,7 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("1/8 ts Tabasco sauce".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1 ea Egg yolk".into()),
                 ],
-                recipe_instructions: vec![RecipeRecipeInstructionFieldEnum::Text(
+                recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
                     "Shaking constantly, toast almonds in skillet over low heat till golden brown (about 5 minutes). Was and dry lettuce. Tear into bite size pieces. Place with green onions and mandarin oranges in large salad bowl. Dressing: Combine all ingredients but egg and vinegar, add in thin stream and process till well blended. MAKES : 1 cup Just before serving, toss well. Leftover dressing keeps up to 1 week in fridge. from Best Recipes Under the Sun".into(),
                 )],
                 recipe_yield: to_yield(6),
@@ -1979,7 +1979,7 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("1 Pkg. corn tortillas".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1 lb Cheese, grated".into()),
                 ],
-                recipe_instructions: vec![RecipeRecipeInstructionFieldEnum::Text(
+                recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
                     "1-2 c Oil for cooking corn tortillas Brown hamburger and 1 chopped onion (add 2 cloves garlic, chopped, if desired) and drain. Add tomatoes, crushed, kidney beans and spices. Simmer. Heat oil, and cook tortillas to desired degree. (Soft seems to work best) Drain on paper towels. Put 1 tortilla on plate, spoon \"sauce\" over it and sprinkle some of raw onion and cheese on sauce. Put on another tortilla and repeat untill large enough for you. Stop with layer of onion and cheese.".into(),
                 )],
                 recipe_yield: to_yield(4),
@@ -1992,7 +1992,7 @@ Typed for you by Karen Mintzias
                 is_based_on: to_is_based_on("Meal-Master (tm) v7.04".into()),
                 keywords: ["French can", "Benoit"]
                     .into_iter()
-                    .map(RecipeKeywordsFieldEnum::TextOrURL)
+                    .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into()))
                     .collect(),
                 name: vec!["Apple Pork Chops".into()],
                 recipe_category: vec!["Meats".into()],
@@ -2006,10 +2006,10 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("Cinnamon".into()),
                 ],
                 recipe_instructions: vec![
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Cook the chops using melted fat trimmed from the meat and 1 tsp butter. (Note those concerned about their fat intake may chose to use corn oil or some other vegetable oil rather than the pork fat). Season to taste and set on hot platter. Keep warm. Slice the apples 1/2\" thick and add to the pan with 1 tsp butter, the sugar and a few pinches of cinnamon or cloves. Cook over medium heat for about 10 minutes, turning once or twice until some of apples are browned. Arrange them around the chops and serve. Serves: 4-6".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "To quote Mme. Benoit, \"The apples keep the chops moist and tender. I sometimes use 6 to 7 apples, then I use 1 Tablespoon sugar. Serve very hot.\" Source\" _The Canadiana Cookbook_ by Mme. Jehane Benoit".into(),
                     ),
                 ],
@@ -2047,17 +2047,17 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("2 tb Sugar".into()),
                 ],
                 recipe_instructions: vec![
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "If dates are dry, soak to make them moist. Chop squash in processor. Add dates and orange zest. Blend well. Sift flour with baking powder, soda and salt. Blend dry ingredients. Beat egg. Add yogurt, sugar and vanilla. Add alternately dry mix and egg mix alternately to zucchini. Pour batter into lightly greased and floured bundt pan. Bake at 350 about 45 minutes, or til tests done. Cool on wire rack 10 minutes. Unmold onto serving platter. If using glaze, peirce top and sides with with toothpicks. Spoon glaze over cake, allowing to soak in until cake is moist but not wet. Cool completely. Drizzle icing over cake and sprinkle with almonds".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Icing: combine powdered sugar, cinnamon, orange juice and liqueur in bowl. Mix til smooth. Use immediately.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text("Orange Glaze: Stir together til smooth.".into()),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text("Orange Glaze: Stir together til smooth.".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Note: Avoid using dry old dates. For slightly softer cake texture, add 2 Tbsp melted butter to batter before folding into squash. This will add 2 grams fat per serving. From: The Spectator....Aug 12/92 There is yellow squash hidden in this cake, but you'd never guess it. It's delicate, faintly sweet flavor blends right in. You can use crook neck, straight neck or even yellow zucchini, but be sure to select young squach with soft, thin skins. (why not green zucchini?) This cake, with its accent of chopped dates, needs only a simple icing to dress it up To add extra moistness and a sweet citrus flavour, poke all over the warm cake and pour optional glaze over the cake til it soaks in.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Adapted from a rich recipe with sour cream and pecans created by the late Bert Greene.".into(),
                     ),
                 ],
@@ -2089,7 +2089,7 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("Tomatoes, cherry".into()),
                     RecipeRecipeIngredientFieldEnum::Text("Parsley sprigs".into()),
                 ],
-                recipe_instructions: vec![RecipeRecipeInstructionFieldEnum::Text(
+                recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
                     "Skin and bone chicken breasts. On hard surface, with meat mallet or similar flattening utensil, pound chicken to 1/4 in thickness. In shallow dish, mix together cornstarch, cumin and garlic salt. Add chicken on piece at a time, dredging to coat. In a small bowl, mix egg and water. Place cornmeal in another bowl. Dip chicken, first in egg and then in cornmeal turning to coat. In large frying pan, place oil and heat to medium temp.; add chicken and cook 2 minutes on each side. Remove chicken to shallow baking pan; place avocado slices over chicken and sprinkle with cheese. Bake in 350øF oven about 15 minutes or until fork can be inserted in chicken with ease and cheese melts. Top chicken with sour cream, dividing equally; sprinkle with chopped green onion and red pepper.".into(),
                 )],
                 recipe_yield: to_yield(2),
@@ -2122,25 +2122,25 @@ Typed for you by Karen Mintzias
                     ]),
                 ],
                 recipe_instructions: vec![
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "In a bowl, combine all the filling ingredients and mix well. Refreigerate, covered, until ready to fill the cannoli shells.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "To make the dough, place the flour in a bowl or food processor. Add the butter or lard and sugar and mix with a fork, or pulse, until the mixture resembles coarse meal. Slowly add the 1/4 cup of wine and shape the mixture into a ball; add a little more wine if the dough appears too dry. It should be soft but not sticky. Knead the dough on a floured surface until smooth, about 10 minutes. Wrap the dough and refrigerate for 45 minutes.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Place the chilled dough on a floured work surface. Divide the dough in half. Work with 1 piece of dough at a time; keep the remaining dough refrigerated. Roll the dough out to a very thin long rectangle about 14 inches long and 3 inches wide, either by hand or using a pasta machine set to the finest setting. Cut the dough into 3-inch squares. Place a cannoli form diagnoally across 1 square. Roll the dough up around the form so the points meet in the center. Seal the points with a little water. Continue making cylinders until all the dough is used.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "In an electric skillet, heat the vegetable oil to 375F. Fry the cannoli 3 or 4 at a time, turning them as they brown and blister, until golden brown on all sides. Drain them on brown paper. When they are cool enough to handle, carefully slide the cannoli off the forms.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "To serve, use a long iced tea spoon or a pastry bag without a tip to fill the cannoli with the ricotta cheese mixture. Dip the ends into colored sprinkles, arrange them on a tray, and sprinkle confectioner's sugar over fill the cannoli just before serving - any sooner will make the shells soggy. the tops. Serve at once.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "NOTE: If you prefer, you can fry the cannoli in a deep fryer. Be sure to".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text("This recipe from CIAO ITALIA by Mary Ann Esposito".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("This recipe from CIAO ITALIA by Mary Ann Esposito".into()),
                 ],
                 recipe_yield: to_yield(16),
                 ..Default::default()
@@ -2172,25 +2172,25 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("-cheese".into()),
                 ],
                 recipe_instructions: vec![
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "(From \"Perla Meyers' Art of Seasonal Cooking,\" Simon and Schuster).".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Place the peas in a vegetable steamer, set over simmering water, and steam, covered, for 3-5 minutes or until just tender. Remove and run under cold water to stop further cooking. Drain and set aside.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Add the asparagus to the vegetable steamer. Cover and steam for 3-5 minutes or until just tender. Remove and run under cold water to stop further cooking. Drain and set aside.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Add asparagus to the vegetable steamer. Cover and steam for 3-5 minutes or until just tender. Run under cold water, drain and reserve.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "In a large heavy skillet, melt the butter over medium heat and whisk in the cream. Bring to a boil, reduce the heat, and simmer until reduced by one-third. Add the lemon juice and rind. Season with salt and white pepper and keep warm.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Bring plenty of salted water to a boil in a large casserole. Add the ziti and cook until just tender, al dente. Add 2 cups of cold water to stop further cooking. Drain thoroughly, and add to the lemon cream together with the peas, asparagus and Bibb lettuce and simmer until the sauce lightly coats the pasta and the lettuce has just wilted. Add the Parmesan and toss gently. Taste and correct the seasoning and serve at once.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Nutritional analysis per serving: 642.3 calories; 52.6 grams total fat; (33.7 grams saturated fat); 10.9 grams protein; 26.5 grams carbohydrates; 179 milligrams cholesterol; 230.5 milligrams sodium.".into(),
                     ),
                 ],
@@ -2204,11 +2204,11 @@ Typed for you by Karen Mintzias
                 is_based_on: to_is_based_on("Meal-Master (tm) v8.05".into()),
                 keywords: ["Stew", "Beef"]
                     .into_iter()
-                    .map(RecipeKeywordsFieldEnum::TextOrURL)
+                    .map(|s|RecipeKeywordsFieldEnum::TextOrURL(s.into()))
                     .collect(),
                 name: vec!["South of the Border Stew".into()],
                 recipe_category: vec!["Main dish".into()],
-                recipe_ingredient: Some(vec![
+                recipe_ingredient: vec![
                     RecipeRecipeIngredientFieldEnum::Text("1/4 c butter".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1 ts salt".into()),
                     RecipeRecipeIngredientFieldEnum::Text("2 lb boneless round steak, cubed".into()),
@@ -2220,8 +2220,8 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("4 oz green chilies, chopped".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1/4 c chopped cilantro".into()),
                     RecipeRecipeIngredientFieldEnum::Text("2 ea cloves garlic, minced".into()),
-                ]),
-                recipe_instructions: vec![RecipeRecipeInstructionFieldEnum::Text(
+                ],
+                recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
                     "In a large skillet, melt butter. Brown meat, a few pieces at a time. Remove from skillet as they brown. Saute zucchini in skillet 7-10 minutes. Return meat and add corn, chilies, garlic, salt, oregano and cumin. Simmer, stirring occassionally, about 12-15 minutes or until meat is tender. Stir in cheese until melted. Garnish with chopped cilantro and serve. Serves 6".into(),
                 )],
                 recipe_yield: to_yield(6),
@@ -2232,7 +2232,7 @@ Typed for you by Karen Mintzias
         pub fn recipe_v8_06() -> Recipe {
             Recipe {
                 is_based_on: to_is_based_on("Meal-Master (tm) v8.06".into()),
-                keywords: ["Casseroles", "Ethnic", "Vegetables"].into_iter().map(RecipeKeywordsFieldEnum::TextOrURL).collect(),
+                keywords: ["Casseroles", "Ethnic", "Vegetables"].into_iter().map(|s|RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                 name: vec!["Yellow Rice & Shrimp Casserole".into()],
                 recipe_category: vec!["Seafood".into()],
                 recipe_ingredient: vec![
@@ -2263,16 +2263,16 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("Parsley bouquets".into()),
                 ],
                 recipe_instructions: vec![
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Use a 3-quart casserole with lid. An earthenware casserole is preferable, especially if you wish to add a touch of Spain to a dinner party. However, I know that good earthenware is hard to find today. I have 2 casseroles that I've had for 15 years.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Heat oil in casserole. Saute onion and pepper until transparent. Add garlic, parsley, tomato, bay leaf, nutmeg, cumin and thyme. Mix well, cover, and cook over low heat until mushy (about 15 minutes). The saffron should be toasting on the lid in the little brown paper.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Add the shrimp to the saute and cook until it turns pink. Dissolve the saffron in the 1 cup hot water. Combine with wine, lemon juice, salt and hot sauce. Pour into casserole, stir to mix, and cook covered 10 minutes more. Now add the rice and the 2 1/2 cups of water. Distribute ingredients well in casserole. Bring to a quick boil, STIR ONCE, and place in preheated 325 degree F. oven for only 20 minutes - NI UN MINUTO MAS! Remove from oven, uncover, and garnish with peas, pimientos, and parsley. Pour beer over all. Cover again and allow to stand 15 minutes longer, before serving.".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "Source: Clarita's Cocina - by Clarita Garcia (ISBN: 0-942084-74-8) Typos provided by: Karen Mintzias".into(),
                     ),
                 ],
@@ -2354,11 +2354,11 @@ SOURCE: Gourmet, December 1992
                     ),
                 ],
                 recipe_instructions: vec![
-                    RecipeRecipeInstructionFieldEnum::Text("From the bakery in Greve, in Chianti, Italy.".into()),
-                    RecipeRecipeInstructionFieldEnum::Text(
+                    RecipeRecipeInstructionsFieldEnum::Text("From the bakery in Greve, in Chianti, Italy.".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text(
                         "In the bowl of an electric mixer, fitted with a paddle attachment, blend the flour, the sugar, the baking soda and the salt until the mixture is combined well. In a small bowl whisk together the whole eggs, the yolk, thevanilla and the zest, add the mixture to the flour mixture, beating until adough is formed and stir in the almonds. Turn the dough out onto a lightly floured surface, knead it several times and halve it. Working on a large buttered and floured baking sheet, with floured hands form each piece of dough into a flattish log 12 inches long and 2 inches wide, arrange the logs at least 3 inches apart on the sheet, and brush them with the egg wash. Bake the logs in the middle of a preheated 300F for 50 minutes and them cool on the baking rack for 10 minutes. On a cutting board, cut the logs crosswise on the diagonal into 1/2 inch thick slices, arrange the biscotti, cut sides down, on the baking sheet andbake them, in the 300F oven for 15 minutes on each side. Transfer the biscotti to racks to cool and store them in airtight containers. MAKES: about 48 BISCOTTI".into(),
                     ),
-                    RecipeRecipeInstructionFieldEnum::Text("SOURCE: Gourmet, December 1992".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("SOURCE: Gourmet, December 1992".into()),
                 ],
                 recipe_yield: to_yield(48),
                 ..Default::default()
@@ -2386,7 +2386,7 @@ SOURCE: Gourmet, December 1992
                     RecipeRecipeIngredientFieldEnum::Text("1/2 c Zwieback crumbs 1 lb".into()),
                     RecipeRecipeIngredientFieldEnum::Text("4 tb Granulated sugar 1 1/2 c".into()),
                 ],
-                recipe_instructions: vec![RecipeRecipeInstructionFieldEnum::Text(
+                recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
                     "*Note: Either toasted blanched almonds, or walnut meats, or half of each, (finely chopped) may be used. Cooky Filling: Cream the 2 cups sweet butter until light. Gradually beat in the confectioners' sugar and continue to beat until mixture is fluffy. Add egg yolk and vanilla or almond extract and blend well. Work in about 4 cups flour to make a medium-soft dough. Set aside and make syrup. Syrup: In a saucepan combine the granulated sugar and water. Bring to a boil and boil for 15 minutes or until syrup is slightly thick. Add honey and again bring to the boiling point. Add lemon juice to taste, and cool. Mix almonds or walnuts, or a combination of the two, with zwieback, 4 T granulated sugar, and cinnamon. Brush 2 sheets of phyllo pastry evenly with butter and sprinkle with nut mixture. Place 2 buttered sheets of phyllo on top and sprinkle with nut mixture. Shape a portion of cooky filling into a 1/2-inch-thick roll and place the roll along one edge of the pastry sheets. Roll up loosely, cut into 2-inch slices, and place slices in a buttered cake pan. (Continue in this method until all phyllo pastry and/or cooky filling is used.) Brush tops of each slice with butter and bake in a 350 F oven for 20 minutes or until lightly browned. Dip the hot baklava slices, one at a time, in cold syrup, allowing each piece to remain in the syrup for a few minutes. From: \"The Art of Greek Cookery\" by The Women of St. Paul's Greek Orthodox Church (Hempstead, NY) Typed for you by Karen Mintzias".into(),
                 )],
                 recipe_yield: to_yield(36),

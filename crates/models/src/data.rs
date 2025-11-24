@@ -212,8 +212,7 @@ mod tests {
 
     mod tests_formatted_times {
         use super::*;
-        use crate::recipe::Times;
-        use crate::time::FormattedTimes;
+        use crate::{recipe::structs::time::Times, time::FormattedTimes};
 
         #[test]
         fn test_with_hours_and_minutes_ok() -> Result<()> {

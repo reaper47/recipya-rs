@@ -167,32 +167,32 @@ mod tests {
                     "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()
                 ),
                 name: vec!["Deviled Eggs".into()],
-                recipe_ingredient: sections_to_vec(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new("6 large eggs"),
-                        SectionItem::new("¼ cup mayonnaise"),
-                        SectionItem::new("2 tablespoons finely chopped onion"),
-                        SectionItem::new("1 tablespoon prepared horseradish"),
-                        SectionItem::new("1 tablespoon prepared mustard"),
-                        SectionItem::new("1/4 teaspoon paprika, or as needed, for garnish"),
-                        SectionItem::new("salt and pepper to taste"),
-                    ]
-                )])),
-                recipe_instructions: sections_to_itemlist(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new(
-                            "Place eggs in a medium saucepan and cover with cold water. Bring water to a boil and immediately remove from heat. Cover and let eggs stand in hot water for 10 to 12 minutes. Remove from hot water, cool, and peel."
-                        ),
-                        SectionItem::new(
-                            "Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined."
-                        ),
-                        SectionItem::new(
-                            "Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving."
-                        ),
-                    ]
-                )])),
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("6 large eggs".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("¼ cup mayonnaise".into()),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "2 tablespoons finely chopped onion".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "1 tablespoon prepared horseradish".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text("1 tablespoon prepared mustard".into()),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "1/4 teaspoon paprika, or as needed, for garnish".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text("salt and pepper to taste".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Place eggs in a medium saucepan and cover with cold water. Bring water to a boil and immediately remove from heat. Cover and let eggs stand in hot water for 10 to 12 minutes. Remove from hot water, cool, and peel.".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined.".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving.".into()
+                    ),
+                ],
                 recipe_yield: to_yield(6),
                 url: vec!["https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()],
                 ..Default::default()

@@ -807,6 +807,11 @@ impl Default for FieldEnum20 {
     }
 }
 impl FieldEnum20 {
+    /// Creates a new `QuantitativeValue` field.
+    pub fn new_quantitative_value(value: f32) -> Self {
+        Self::QuantitativeValue(Box::new(QuantitativeValue::new(value)))
+    }
+
     pub fn to_i16(&self) -> Option<i16> {
         match self {
             FieldEnum20::QuantitativeValue(q) => q.value.first().map(|q| match q {

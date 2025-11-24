@@ -1084,7 +1084,7 @@ Posted by Fred Peters</instructions>
         pub(crate) fn all_recipes() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    keywords: to_defined_text(["soups/stews", "vegetables"].join(",")),
+                    keywords: ["soups/stews", "vegetables"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
                     name: vec!["Asparagus Soup (Zuppa Di Asparagi)".into()],
                     recipe_category: vec!["italian".into()],
@@ -1118,7 +1118,7 @@ Posted by Fred Peters</instructions>
                     ..Default::default()
                 },
                 Recipe {
-                    keywords: to_defined_text(["greek", "vegetarian"].join(",")),
+                    keywords: ["greek", "vegetarian"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
                     name: vec!["Aubergine and Sesame Pate".into()],
                     recipe_category: vec!["appetizers".into()],
@@ -1145,7 +1145,7 @@ Posted by Fred Peters</instructions>
                     ..Default::default()
                 },
                 Recipe {
-                    keywords: to_defined_text(["french", "casseroles"].join(",")),
+                    keywords: ["french", "casseroles"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
                     name: vec!["Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()],
                     recipe_category: vec!["vegetables".into()],
@@ -1167,7 +1167,7 @@ Posted by Fred Peters</instructions>
                     ..Default::default()
                 },
                 Recipe {
-                    keywords: to_defined_text("beef".into()),
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("beef".into())],
                     is_based_on: to_is_based_on("MMF".into()),
                     name: vec!["August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()],
                     recipe_category: vec!["german".into()],
@@ -1198,7 +1198,7 @@ Posted by Fred Peters</instructions>
                     ..Default::default()
                 },
                 Recipe {
-                    keywords: to_defined_text("pork/ham,poultry,spanish".into()),
+                    keywords: ["pork/ham", "poultry", "spanish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
                     name: vec!["Aunt Julia's Paella".into()],
                     recipe_category: vec!["fish/sea".into()],

@@ -293,12 +293,11 @@ fn parse_section<'a>(
 
 #[cfg(test)]
 mod tests {
+    use testing::utils::{TestDb, create_app_state, insert_user};
+
     use super::*;
     use crate::Recipe;
-    use crate::recipe::test_utils::a_complete_recipe_for_create;
-
-    use crate::recipe::{RecipeForCreate, ToolRecipe, Video};
-    use testing::utils::{TestDb, create_app_state, insert_user};
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -423,9 +422,14 @@ mod tests {
     }
 
     mod tests_search {
+        use crate::recipe::structs::{
+            media::Video,
+            recipe::RecipeForCreate,
+            section::{Item, SectionComponents},
+            tool::{ToolForCreate, ToolRecipe},
+        };
+
         use super::*;
-        use crate::recipe::ToolForCreate;
-        use recipe_schema::components::{SectionItem, Sections};
 
         fn to_recipe_details(id: i64, recipe_c: RecipeForCreate) -> RecipeDetails {
             let mut keywords = recipe_c.keywords;
@@ -663,22 +667,16 @@ mod tests {
             let recipe1 = a_complete_recipe_for_create();
             let mut recipe2 = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
-            recipe2.ingredients = Sections::from([(
-                "".into(),
-                vec![
-                    SectionItem::new("tomato"),
-                    SectionItem::new("1/2 cups of lettuce"),
-                ],
-            )]);
+            recipe2.ingredients = SectionComponents::Flat(vec![
+                Item::new("tomato"),
+                Item::new("1/2 cups of lettuce"),
+            ]);
             let mut recipe3 = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
-            recipe3.ingredients = Sections::from([(
-                "".into(),
-                vec![
-                    SectionItem::new("1 tbsp of hot cayenne pepper"),
-                    SectionItem::new("3 lbs of chicken breasts"),
-                ],
-            )]);
+            recipe3.ingredients = SectionComponents::Flat(vec![
+                Item::new("1 tbsp of hot cayenne pepper"),
+                Item::new("3 lbs of chicken breasts"),
+            ]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
             let recipe_search = RecipeSearch::new("ing:cayenne pepper,chicken", 1, false, user.id)?;
@@ -702,31 +700,16 @@ mod tests {
             let recipe1 = a_complete_recipe_for_create();
             let mut recipe2 = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
-            recipe2.instructions = Sections::from([(
-                "".into(),
-                vec![
-                    SectionItem {
-                        text: "Sauté veggies: In a large pot, melt butter over medium heat. Add onions and garlic, cooking until soft (about 5 minutes). Add mushrooms and cook until they release moisture and begin to brown ".into(),
-                        duration_seconds: Some(300),
-                    },
-                    SectionItem {
-                        text: "Make roux: Sprinkle flour over the mushrooms and stir well to coat. Cook for 1–2 minutes to eliminate the raw flour taste.".into(),
-                        duration_seconds: Some(120),
-                    },
-                ],
-            )]);
+            recipe2.instructions = SectionComponents::Flat(vec![
+                Item::new("Sauté veggies: In a large pot, melt butter over medium heat. Add onions and garlic, cooking until soft (about 5 minutes). Add mushrooms and cook until they release moisture and begin to brown").with_duration(300),
+                Item::new("Make roux: Sprinkle flour over the mushrooms and stir well to coat. Cook for 1–2 minutes to eliminate the raw flour taste.").with_duration(120),
+            ]);
             let mut recipe3 = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
-            recipe3.instructions = Sections::from([(
-                "".into(),
-                vec![
-                    SectionItem::new("Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining."),
-                    SectionItem {
-                        text: "Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.".into(),
-                        duration_seconds: Some(120),
-                    },
-                ],
-            )]);
+            recipe3.instructions = SectionComponents::Flat(vec![
+                Item::new("Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining."),
+                Item::new("Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.").with_duration(120),
+            ]);
             insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
 
             let recipe_search =

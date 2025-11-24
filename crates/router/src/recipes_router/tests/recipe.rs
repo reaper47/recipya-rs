@@ -7,8 +7,9 @@ mod tests {
 
     use config::Config;
     use models::Recipe;
-    use models::recipe::test_utils::a_complete_recipe_for_create;
-    use models::recipe::{RecipeForCreate, VideoForCreate};
+    use models::recipe::structs::media::VideoForCreate;
+    use models::recipe::structs::recipe::RecipeForCreate;
+    use models::recipe::structs::test_utils::a_complete_recipe_for_create;
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
         build_server_ws, create_app_state,

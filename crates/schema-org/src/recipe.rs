@@ -393,7 +393,7 @@ pub struct Recipe {
     pub name: Vec<String>,
 }
 
-fn set_recipe_type() -> Option<String> {
+pub fn set_recipe_type() -> Option<String> {
     Some(AtType::Recipe.to_string())
 }
 

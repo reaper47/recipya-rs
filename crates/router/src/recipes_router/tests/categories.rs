@@ -3,8 +3,7 @@ mod tests {
     use axum::http::Method;
     use axum_test::http::StatusCode;
 
-    use models::Recipe;
-    use models::recipe::test_utils::a_complete_recipe_for_create;
+    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
     use testing::utils::{
         TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
         build_server_ws, create_app_state,

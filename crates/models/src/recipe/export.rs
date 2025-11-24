@@ -175,8 +175,9 @@ impl RecipeDetails {
 
 #[cfg(test)]
 mod tests {
-    use crate::recipe::test_utils::a_complete_recipe;
     use uuid::Uuid;
+
+    use crate::recipe::structs::test_utils::a_complete_recipe;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

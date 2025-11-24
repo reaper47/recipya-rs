@@ -164,8 +164,8 @@ mod tests {
             let mut got = parse(buf)?;
 
             let mut want = results::example1();
-            want.sort_by_key(|r| r.name.as_ref().unwrap().to_string());
-            got.sort_by_key(|r| r.name.as_ref().unwrap().to_string());
+            want.sort_by_key(|r| r.name.first().as_ref().unwrap().to_string());
+            got.sort_by_key(|r| r.name.first().as_ref().unwrap().to_string());
             for (got_item, want_item) in got.iter_mut().zip(want.iter()) {
                 got_item.image = want_item.image.clone();
             }
@@ -189,7 +189,7 @@ mod tests {
         pub fn example1() -> Vec<schema_org::Recipe> {
             vec![schema_org::Recipe {
                 cook_time: seconds_to_duration(3900),
-                date_created: vec![DateTimeOrDate::Date(iso8601::Date::from_str("2025-04-15").unwrap_or_default())],
+                date_created: vec!["2025-04-15".into()],
                 is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]".into()),
                 url: vec!["https://www.allrecipes.com/recipe/259353/black-eyed-pea-cornbread/".into()],
                 name: vec!["Black-Eyed Pea Cornbread".into()],
@@ -224,7 +224,7 @@ mod tests {
                 ..Default::default()
             }, schema_org::Recipe {
                 cook_time: seconds_to_duration(2700),
-                date_created: vec![DateTimeOrDate::Date(iso8601::Date::from_str("2025-04-15").unwrap_or_default())],
+                date_created: vec!["2025-04-15".into()],
                 description: vec![RecipeDescriptionFieldEnum::Text("A great recipe!".into())],
                 is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]".into()),
                 keywords: vec![

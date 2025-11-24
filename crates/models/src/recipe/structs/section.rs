@@ -417,6 +417,11 @@ impl Item {
             duration_seconds: None,
         }
     }
+
+    pub fn with_duration(mut self, duration_seconds: i32) -> Self {
+        self.duration_seconds = Some(duration_seconds);
+        self
+    }
 }
 
 /// Represents a section in a recipe, typically used for organizing the recipe's

@@ -138,8 +138,8 @@ Eat, mix and sleep!
         pretty_assertions::assert_eq!(
             got,
             vec![schema_org::Recipe {
-                description: vec![RecipeDescriptionFieldEnum::TextOrURL("Some people call it guac.".into())],
-                keywords: vec!["sauce", "vegan"].map(DefinedText::new).collect(),
+                description: vec![RecipeDescriptionFieldEnum::Text("Some people call it guac.".into())],
+                keywords: ["sauce", "vegan"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                 name: vec!["Guacamole".into()],
                 recipe_ingredient: vec![
                     RecipeRecipeIngredientFieldEnum::Text("1 avocado".into()),

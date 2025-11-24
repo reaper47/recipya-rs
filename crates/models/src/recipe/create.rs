@@ -173,13 +173,21 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
-    use self::test_utils::a_complete_recipe_for_create;
-    use super::*;
-    use recipe_schema::components::SectionItem;
-
     use app::state::AppState;
-    use recipe_schema::components::Sections;
     use testing::utils::{TestDb, build_server_logged_in, create_app_state, insert_user};
+
+    use super::*;
+    use crate::{
+        RecipeDetails,
+        recipe::structs::{
+            media::Video,
+            nutrition::Nutrition,
+            section::{Item, SectionComponents, SectionItem},
+            test_utils::a_complete_recipe_for_create,
+            time::Times,
+            tool::{ToolForCreate, ToolRecipe},
+        },
+    };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -243,36 +251,30 @@ mod tests {
             r#yield: Some(4),
             rating: Some(4),
             category: Some("uncategorized".into()),
-            ingredients: ComponentSections::from([
-                (
-                    "Sauce".into(),
+            ingredients: SectionComponents::Grouped(vec![
+                SectionItem::new(
+                    "Sauce",
                     vec![
-                        SectionItem::new("1 cup blue spinach"),
-                        SectionItem::new("1/2 tbsp cinnamon"),
+                        Item::new("1 cup blue spinach"),
+                        Item::new("1/2 tbsp cinnamon"),
                     ],
                 ),
-                (
-                    "Main".into(),
+                SectionItem::new(
+                    "Main",
                     vec![
-                        SectionItem::new("4 pounds top quality chicken filet"),
-                        SectionItem::new("1/8 cup lemon juice"),
+                        Item::new("4 pounds top quality chicken filet"),
+                        Item::new("1/8 cup lemon juice"),
                     ],
                 ),
             ]),
-            instructions: ComponentSections::from([
-                (
-                    "Sauce".into(),
-                    vec![SectionItem::new("Mix all these ingredients")],
-                ),
-                (
-                    "Chicken".into(),
+            instructions: SectionComponents::Grouped(vec![
+                SectionItem::new("Sauce", vec![Item::new("Mix all these ingredients")]),
+                SectionItem::new(
+                    "Chicken",
                     vec![
-                        SectionItem::new("Turn the oven at 300 F"),
-                        SectionItem::new("Soak the chicken in the lemon juice"),
-                        SectionItem {
-                            text: "Bake for 35 minutes".into(),
-                            duration_seconds: Some(2100),
-                        },
+                        Item::new("Turn the oven at 300 F"),
+                        Item::new("Soak the chicken in the lemon juice"),
+                        Item::new("Bake for 35 minutes").with_duration(2100),
                     ],
                 ),
             ]),
@@ -496,40 +498,30 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let mut recipe = a_bare_minimum_recipe();
-        recipe.instructions = ComponentSections::from([(
-            "".to_string(),
-            vec![
-                SectionItem::new("Heat oil on medium heat in a large"),
-                SectionItem::new(
-                    "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
-                ),
-                SectionItem::new(
-                    "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.",
-                ),
-            ],
-        )]);
+        recipe.instructions = SectionComponents::Flat(vec![
+            Item::new("Heat oil on medium heat in a large"),
+            Item::new(
+                "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
+            ),
+            Item::new(
+                "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.",
+            ),
+        ]);
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
         pretty_assertions::assert_eq!(
             got.instructions,
-            ComponentSections::from([
-            ("".to_string(), vec![
-                SectionItem {
-                    text: "Heat oil on medium heat in a large".into(),
-                    duration_seconds: None,
-                },
-                SectionItem {
-                    text: "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil".into(),
-                    duration_seconds: Some(5*60),
-                },
-                SectionItem {
-                    text: "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.".into(),
-                    duration_seconds: Some(360*60),
-                }
-            ])
-        ]));
+            SectionComponents::Flat(vec![
+                Item::new("Heat oil on medium heat in a large"),
+                Item::new(
+                    "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
+                ).with_duration(5*60),
+                Item::new(
+                    "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.",
+                ).with_duration(360*60)
+            ]));
         Ok(())
     }
 }

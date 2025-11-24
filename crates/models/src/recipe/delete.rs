@@ -93,8 +93,8 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
-    use self::test_utils::a_complete_recipe_for_create;
     use super::*;
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
     use testing::utils::{TestDb, create_app_state, insert_user};
 

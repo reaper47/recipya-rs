@@ -488,22 +488,23 @@ mod tests {
     }
 
     mod results {
+        use schema_org::field::RecipeIsBasedOnFieldEnum;
+
         use super::*;
 
         use crate::helpers::to_yield;
-        use recipe_schema::components::CreativeWorkOrText;
 
         pub fn xml_recipes() -> Vec<Recipe> {
             vec![
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::Text("MMF".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Soups/stews".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Vegetables".into()),
                     ],
                     name: vec!["Asparagus Soup (Zuppa Di Asparagi)".into()],
-                    recipe_category: RecipeCategory::Text("Italian".into()),
+                    recipe_category: vec!["Italian".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::Text(
                             "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
@@ -522,374 +523,359 @@ mod tests {
                             "Salt and pepper 6 sl Italian bread, toasted".into(),
                         ),
                     ],
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Heat the oil and garlic in a soup pot until the garlic is golden. Add the",
-                            ),
-                            SectionItem::new(
-                                "asparagus and cook until they begin to color. Season with salt and pepper.",
-                            ),
-                            SectionItem::new(
-                                "Add the broth and bring to a boil; reduce the heat and simmer for 15",
-                            ),
-                            SectionItem::new("minutes, or until the asparagus is tender."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Beat the eggs and cheese together. When the asparagus is tender, reduce",
-                            ),
-                            SectionItem::new(
-                                "the heat so the soup is no longer simmering. Very slowly ladle some of the",
-                            ),
-                            SectionItem::new(
-                                "hot soup into the beaten eggs, stirring continuously. After adding about 2",
-                            ),
-                            SectionItem::new(
-                                "cups of the hot soup to the eggs, reverse the process and gradually stir",
-                            ),
-                            SectionItem::new(
-                                "the eggs mixture into the soup pot. The soup must not boil or the eggs",
-                            ),
-                            SectionItem::new("will scramble. Heat until thickened."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Put one slice of toasted bread into each soup dish. Ladle the hot soup on",
-                            ),
-                            SectionItem::new("top and pass additional grated cheese."),
-                            SectionItem::new(""),
-                            SectionItem::new("Serves 6."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "NOTE: To trim asparagus, hold the tip in one hand and the base of the",
-                            ),
-                            SectionItem::new(
-                                "stalk in the other. Bend gently. The asparagus will snap, leaving the",
-                            ),
-                            SectionItem::new("tender part with the tip."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]",
-                            ),
-                            SectionItem::new(""),
-                            SectionItem::new("Posted by Fred Peters."),
-                        ],
-                    )])),
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Heat the oil and garlic in a soup pot until the garlic is golden. Add the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "asparagus and cook until they begin to color. Season with salt and pepper.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Add the broth and bring to a boil; reduce the heat and simmer for 15".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("minutes, or until the asparagus is tender.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Beat the eggs and cheese together. When the asparagus is tender, reduce".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "the heat so the soup is no longer simmering. Very slowly ladle some of the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "hot soup into the beaten eggs, stirring continuously. After adding about 2".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "cups of the hot soup to the eggs, reverse the process and gradually stir".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "the eggs mixture into the soup pot. The soup must not boil or the eggs".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("will scramble. Heat until thickened.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Put one slice of toasted bread into each soup dish. Ladle the hot soup on".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("top and pass additional grated cheese.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Serves 6.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "NOTE: To trim asparagus, hold the tip in one hand and the base of the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "stalk in the other. Bend gently. The asparagus will snap, leaving the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("tender part with the tip.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Posted by Fred Peters.".into()),
+                    ],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Appetizers".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Greek".into()),
                     ],
                     name: vec!["Aubergine and Sesame Pate".into()],
-                    recipe_category: RecipeCategory::Text("Vegetarian".into()),
+                    recipe_category: vec!["Vegetarian".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 Crushed garlic cloves 1 tb Olive oil".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 1/2 tb Tahini Seasoning".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "Toasted Sesame seeds Flatleaf Parsley".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL("Cayenne Pepper".into()),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text("Cayenne Pepper".into()),
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "25-30 minutes until tender. Cool slightly , then peel and".into(),
                         ),
                     ],
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for",
-                            ),
-                            SectionItem::new("puree the flesh in a blender or processor."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Add the garlic, tahini and lemon juice and process until mixed.",
-                            ),
-                            SectionItem::new(
-                                "With the motor running, drizzle in the oil to make a smooth paste.",
-                            ),
-                            SectionItem::new("Season to taste."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Transfer to a serving dish, garnish and serve cold with pitta bread.",
-                            ),
-                        ],
-                    )])),
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("puree the flesh in a blender or processor.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Add the garlic, tahini and lemon juice and process until mixed.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "With the motor running, drizzle in the oil to make a smooth paste.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Season to taste.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(2),
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
-                        RecipeKeywordsFieldEnum::Text("Casseroles".into()),
-                        RecipeKeywordsFieldEnum::Text("French".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Casseroles".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("French".into()),
                     ],
                     name: vec!["Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()],
-                    recipe_category: RecipeCategory::Text("Vegetables".into()),
+                    recipe_category: vec!["Vegetables".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 md Eggplant 2 tb Snipped parsley".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1/4 c Salad oil 1 cl Galic, minced".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
                         ),
                     ],
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper",
-                            ),
-                            SectionItem::new(
-                                "towels; sprinkle each generously with salt. let stand for 30 minutes; then",
-                            ),
-                            SectionItem::new(
-                                "blot dry with paper towels. Start heating oven to 400 deg. F. Saute",
-                            ),
-                            SectionItem::new(
-                                "eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut",
-                            ),
-                            SectionItem::new(
-                                "tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2",
-                            ),
-                            SectionItem::new(
-                                "inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in",
-                            ),
-                            SectionItem::new(
-                                "all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper.",
-                            ),
-                            SectionItem::new(
-                                "Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and",
-                            ),
-                            SectionItem::new(
-                                "cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread",
-                            ),
-                            SectionItem::new("cubes are golden and eggplant is tender."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book",
-                            ),
-                            SectionItem::new("Publishers Chicago 1, Illinois 1958"),
-                        ],
-                    )])),
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "towels; sprinkle each generously with salt. let stand for 30 minutes; then".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "blot dry with paper towels. Start heating oven to 400 deg. F. Saute".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("cubes are golden and eggplant is tender.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Publishers Chicago 1, Illinois 1958".into()),
+                    ],
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
-                    keywords: vec![RecipeKeywordsFieldEnum::Text("German".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("German".into())],
                     name: vec!["August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()],
-                    recipe_category: RecipeCategory::Text("Beef".into()),
+                    recipe_category: vec!["Beef".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 Shallot or small onion cut 1 pn Mace".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "-into small pieces 1 lg Steak (just over 1 lb), at".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "Freshly ground black pepper -least 1 1/4 inches".into(),
                         ),
                     ],
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "((Note: Per Horst Scharfenberg, this recipe originated in the town of",
-                            ),
-                            SectionItem::new(
-                                "Idar-Oberstein in the 19 th century, when gemstone prospectors returning",
-                            ),
-                            SectionItem::new(
-                                "from South America created their own version of gaucho-grilled steaks. The",
-                            ),
-                            SectionItem::new(
-                                "dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))",
-                            ),
-                            SectionItem::new(""),
-                            SectionItem::new("Per person: thick, trimmed"),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Mix together the shallot or onion with the pepper and mace. Insert a few",
-                            ),
-                            SectionItem::new(
-                                "shallot pieces into the steak using the point of a small knife. Coat the",
-                            ),
-                            SectionItem::new(
-                                "steak with the shallot mixture, pressing it in so it will adhere.",
-                            ),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Remove the loose shallot pieces and grill the steak (over a fire of oak",
-                            ),
-                            SectionItem::new(
-                                "logs, says August Goerg, from which the bark has been removed).* Take the",
-                            ),
-                            SectionItem::new(
-                                "steaks off the grill while they are still pink inside. Sprinkle them with",
-                            ),
-                            SectionItem::new("salt."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "*Note: A special grill is used, suspended with 3 chains from an iron",
-                            ),
-                            SectionItem::new("tripod and constantly swinging through the flames."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon &",
-                            ),
-                            SectionItem::new(
-                                "Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking",
-                            ),
-                            SectionItem::new("Echo, 8/92"),
-                        ],
-                    )])),
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "((Note: Per Horst Scharfenberg, this recipe originated in the town of".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Idar-Oberstein in the 19 th century, when gemstone prospectors returning".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "from South America created their own version of gaucho-grilled steaks. The".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Per person: thick, trimmed".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mix together the shallot or onion with the pepper and mace. Insert a few".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "shallot pieces into the steak using the point of a small knife. Coat the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "steak with the shallot mixture, pressing it in so it will adhere.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Remove the loose shallot pieces and grill the steak (over a fire of oak".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "logs, says August Goerg, from which the bark has been removed).* Take the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "steaks off the grill while they are still pink inside. Sprinkle them with".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("salt.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "*Note: A special grill is used, suspended with 3 chains from an iron".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("tripod and constantly swinging through the flames.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon &".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Echo, 8/92".into()),
+                    ],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![CreativeWorkOrText::Text("MMF".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
-                        RecipeKeywordsFieldEnum::Text("Poultry".into()),
-                        RecipeKeywordsFieldEnum::Text("Fish/sea".into()),
-                        RecipeKeywordsFieldEnum::Text("Spanish".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Poultry".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Fish/sea".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("Spanish".into()),
                     ],
                     name: vec!["Aunt Julia's Paella".into()],
-                    recipe_category: RecipeCategory::Text("Pork/ham".into()),
+                    recipe_category: vec!["Pork/ham".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "-and legs) 2 ts Capers, with juice".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 lb Lean pork, cut into 1-inch -olives".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "-cubes 1/2 lb Calamari (squid), cleaned".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 md Onion, minced -and sliced".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "2 Toes garlic, minced 5 c Water".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "-strips: 1 ts Saffron threads".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL("1 lg Carrot -uncooked".into()),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text("1 lg Carrot -uncooked".into()),
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 Stalk celery 3 Hard boiled eggs, sliced".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into(),
                         ),
-                        RecipeRecipeIngredientFieldEnum::TextOrURL(
+                        RecipeRecipeIngredientFieldEnum::Text(
                             "1 1/2 lb Peeled shrimp Oil for frying".into(),
                         ),
                     ],
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }",
-                            ),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "In a large electric skillet or paella pan, brown the chicken pieces (that",
-                            ),
-                            SectionItem::new(
-                                "have been seasoned with salt and pepper) in a little oil. Remove from the",
-                            ),
-                            SectionItem::new(
-                                "pan. Add the pork cubes to the drippinfs and brown for about 5 minutes.",
-                            ),
-                            SectionItem::new(
-                                "Remove from the pan. To the pan drippings (add a little more oil if",
-                            ),
-                            SectionItem::new(
-                                "necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry",
-                            ),
-                            SectionItem::new("for 2 minutes."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork.",
-                            ),
-                            SectionItem::new(
-                                "Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the",
-                            ),
-                            SectionItem::new(
-                                "bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.",
-                            ),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Gently stir the rice into the skillet mixture. Slowly pour in enough of",
-                            ),
-                            SectionItem::new(
-                                "the bouillon mixture to cover the rice and chicken pieces. Cover and cook",
-                            ),
-                            SectionItem::new(
-                                "over low heat for about 20 minutes. Uncover and decoaratively arrange the",
-                            ),
-                            SectionItem::new(
-                                "egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary",
-                            ),
-                            SectionItem::new("to keep the rice moist."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Cover and steam for another 10 minutes until the shrimp are cooked and the",
-                            ),
-                            SectionItem::new(
-                                "rice is tender. (Paella should be moist but not wet!) Place the pan on a",
-                            ),
-                            SectionItem::new(
-                                "hot pad on the serving table and let everyone help themselves.",
-                            ),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "Serve with a mixed green salad, red ripe tomatoes and some French bread.",
-                            ),
-                            SectionItem::new("Also mix up a pitcher of Sangria and enjoy!"),
-                            SectionItem::new(""),
-                            SectionItem::new("Serves: 12."),
-                            SectionItem::new(""),
-                            SectionItem::new(
-                                "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]",
-                            ),
-                            SectionItem::new(""),
-                            SectionItem::new("Posted by Fred Peters"),
-                        ],
-                    )])),
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "In a large electric skillet or paella pan, brown the chicken pieces (that".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "have been seasoned with salt and pepper) in a little oil. Remove from the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "pan. Add the pork cubes to the drippinfs and brown for about 5 minutes.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Remove from the pan. To the pan drippings (add a little more oil if".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("for 2 minutes.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Gently stir the rice into the skillet mixture. Slowly pour in enough of".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "the bouillon mixture to cover the rice and chicken pieces. Cover and cook".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "over low heat for about 20 minutes. Uncover and decoaratively arrange the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("to keep the rice moist.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Cover and steam for another 10 minutes until the shrimp are cooked and the".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "rice is tender. (Paella should be moist but not wet!) Place the pan on a".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "hot pad on the serving table and let everyone help themselves.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Serve with a mixed green salad, red ripe tomatoes and some French bread.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Also mix up a pitcher of Sangria and enjoy!".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Serves: 12.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Posted by Fred Peters".into()),
+                    ],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },

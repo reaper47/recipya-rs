@@ -489,9 +489,9 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     }
 
     mod results {
-        use super::*;
-        use recipe_schema::components::SectionItem;
         use schema_org::{ItemList, Recipe, field::ItemListItemListElementFieldEnum};
+
+        use super::*;
 
         pub fn all_recipes_txt() -> Vec<Recipe> {
             vec![
@@ -586,7 +586,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         RecipeKeywordsFieldEnum::TextOrURL("Zwiebeln".into()),
                     ],
                     name: vec!["Zwiebelkuchen".into()],
-                    recipe_category: RecipeCategory::Text("Backen".into()),
+                    recipe_category: vec!["Backen".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
                             r#type: Some(AtType::ItemList.to_string()),

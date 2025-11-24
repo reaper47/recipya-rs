@@ -3,7 +3,7 @@ use iso8601::Duration;
 use schema_org::field::{
     QuantitativeValueValueFieldEnum, RecipeIsBasedOnFieldEnum, RecipeRecipeYieldFieldEnum,
 };
-use schema_org::{DurationOrText, QuantitativeValue, Recipe};
+use schema_org::{AtType, CreativeWork, DurationOrText, QuantitativeValue, Recipe};
 
 pub(super) fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
     format!("P{secs}S")
@@ -18,17 +18,31 @@ pub(super) fn to_is_based_on(value: &str) -> Vec<RecipeIsBasedOnFieldEnum> {
     if value.is_empty() {
         vec![]
     } else {
-        vec![RecipeIsBasedOnFieldEnum::URL(value.into())]
+        match url::Url::parse(value) {
+            Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(value.into())],
+            Err(_) => {
+                vec![RecipeIsBasedOnFieldEnum::CreativeWork(Box::new(
+                    CreativeWork {
+                        ..Default::default()
+                    },
+                ))]
+            }
+        }
     }
 }
 
 pub(super) fn to_yield(value: i64) -> Vec<RecipeRecipeYieldFieldEnum> {
-    vec![RecipeRecipeYieldFieldEnum::QuantitativeValue(Box::new(
-        QuantitativeValue {
-            value: vec![QuantitativeValueValueFieldEnum::Number(value as f32)],
-            ..Default::default()
-        },
-    ))]
+    if value == 0 {
+        vec![]
+    } else {
+        vec![RecipeRecipeYieldFieldEnum::QuantitativeValue(Box::new(
+            QuantitativeValue {
+                r#type: Some(AtType::QuantitativeValue.to_string()),
+                value: vec![QuantitativeValueValueFieldEnum::Number(value as f32)],
+                ..Default::default()
+            },
+        ))]
+    }
 }
 
 pub(crate) trait ToRecipeSchema {
