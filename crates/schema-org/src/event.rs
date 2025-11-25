@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
 
 use crate::enums::{EventAttendanceModeEnumerationEnum, EventStatusTypeEnum};
 use crate::field::{
@@ -6,7 +7,7 @@ use crate::field::{
     EventInLanguageFieldEnum, EventKeywordsFieldEnum, EventOrganizerFieldEnum,
     EventSubjectOfFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{is_smallvec_empty, one_or_many};
 use crate::{Action, Person, Thing};
 
 ///<https://schema.org/endDate>
@@ -33,106 +34,106 @@ pub struct Event {
     pub context: Option<String>,
     ///<https://schema.org/maximumVirtualAttendeeCapacity>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub maximum_virtual_attendee_capacity: Vec<i32>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub maximum_virtual_attendee_capacity: SmallVec<[i32; 1]>,
     ///<https://schema.org/endDate>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub end_date: Vec<EventEndDateFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub end_date: SmallVec<[EventEndDateFieldEnum; 1]>,
     ///<https://schema.org/startDate>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub start_date: Vec<EventStartDateFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub start_date: SmallVec<[EventStartDateFieldEnum; 1]>,
     ///<https://schema.org/isAccessibleForFree>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub is_accessible_for_free: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub is_accessible_for_free: SmallVec<[String; 1]>,
     ///<https://schema.org/keywords>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub keywords: Vec<EventKeywordsFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub keywords: SmallVec<[EventKeywordsFieldEnum; 6]>,
     ///<https://schema.org/maximumPhysicalAttendeeCapacity>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub maximum_physical_attendee_capacity: Vec<i32>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub maximum_physical_attendee_capacity: SmallVec<[i32; 1]>,
     ///<https://schema.org/duration>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub duration: Vec<EventDurationFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub duration: SmallVec<[EventDurationFieldEnum; 1]>,
     ///<https://schema.org/eventStatus>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub event_status: Vec<EventStatusTypeEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub event_status: SmallVec<[EventStatusTypeEnum; 1]>,
     ///<https://schema.org/organizer>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub organizer: Vec<EventOrganizerFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub organizer: SmallVec<[EventOrganizerFieldEnum; 1]>,
     ///<https://schema.org/inLanguage>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub in_language: Vec<EventInLanguageFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub in_language: SmallVec<[EventInLanguageFieldEnum; 1]>,
     ///<https://schema.org/about>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub about: Vec<Thing>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub about: SmallVec<[Thing; 1]>,
     ///<https://schema.org/maximumAttendeeCapacity>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub maximum_attendee_capacity: Vec<i32>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub maximum_attendee_capacity: SmallVec<[i32; 1]>,
     ///<https://schema.org/previousStartDate>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub previous_start_date: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub previous_start_date: SmallVec<[String; 1]>,
     ///<https://schema.org/doorTime>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub door_time: Vec<EventDoorTimeFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub door_time: SmallVec<[EventDoorTimeFieldEnum; 1]>,
     ///<https://schema.org/eventAttendanceMode>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub event_attendance_mode: Vec<EventAttendanceModeEnumerationEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub event_attendance_mode: SmallVec<[EventAttendanceModeEnumerationEnum; 1]>,
     ///<https://schema.org/remainingAttendeeCapacity>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub remaining_attendee_capacity: Vec<i32>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub remaining_attendee_capacity: SmallVec<[i32; 1]>,
     ///<https://schema.org/director>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub director: Vec<Person>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub director: SmallVec<[Person; 1]>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub disambiguating_description: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub disambiguating_description: SmallVec<[String; 1]>,
     ///<https://schema.org/potentialAction>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub potential_action: Vec<Action>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub potential_action: SmallVec<[Action; 1]>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<EventImageFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub image: SmallVec<[EventImageFieldEnum; 3]>,
     ///<https://schema.org/sameAs>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub same_as: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub same_as: SmallVec<[String; 1]>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub description: Vec<EventDescriptionFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub description: SmallVec<[EventDescriptionFieldEnum; 1]>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub alternate_name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub alternate_name: SmallVec<[String; 1]>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub url: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub url: SmallVec<[String; 1]>,
     ///<https://schema.org/subjectOf>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub subject_of: Vec<EventSubjectOfFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub subject_of: SmallVec<[EventSubjectOfFieldEnum; 1]>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub name: SmallVec<[String; 1]>,
 }

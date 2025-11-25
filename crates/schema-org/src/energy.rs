@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use smallvec::{SmallVec, smallvec};
 
 use crate::AtType;
 use crate::field::EnergyDescriptionFieldEnum;
-use crate::helpers::one_or_many;
+use crate::helpers::{is_smallvec_empty, one_or_many};
 
 ///<https://schema.org/Energy>
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
@@ -15,27 +16,27 @@ pub struct Energy {
     pub context: Option<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub description: Vec<EnergyDescriptionFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub description: SmallVec<[EnergyDescriptionFieldEnum; 1]>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub alternate_name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub alternate_name: SmallVec<[String; 1]>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub url: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub url: SmallVec<[String; 1]>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub name: SmallVec<[String; 1]>,
 }
 
 impl Energy {
     /// Creates a new Energy struct with the given value.
     pub fn new(energy: impl Into<String>) -> Self {
         Self {
-            name: vec![energy.into()],
+            name: smallvec![energy.into()],
             ..Default::default()
         }
     }

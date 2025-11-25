@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
 
 use crate::Action;
 use crate::field::{ThingDescriptionFieldEnum, ThingImageFieldEnum, ThingSubjectOfFieldEnum};
-use crate::helpers::one_or_many;
+use crate::helpers::{is_smallvec_empty, one_or_many};
 
 ///<https://schema.org/Thing>
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
@@ -15,34 +16,34 @@ pub struct Thing {
     pub context: Option<String>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub disambiguating_description: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub disambiguating_description: SmallVec<[String; 1]>,
     ///<https://schema.org/potentialAction>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub potential_action: Vec<Action>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub potential_action: SmallVec<[Box<Action>; 1]>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<ThingImageFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub image: SmallVec<[ThingImageFieldEnum; 2]>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub description: Vec<ThingDescriptionFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub description: SmallVec<[ThingDescriptionFieldEnum; 1]>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub alternate_name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub alternate_name: SmallVec<[String; 1]>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub url: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub url: SmallVec<[String; 1]>,
     ///<https://schema.org/subjectOf>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub subject_of: Vec<ThingSubjectOfFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub subject_of: SmallVec<[ThingSubjectOfFieldEnum; 1]>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub name: SmallVec<[String; 1]>,
 }

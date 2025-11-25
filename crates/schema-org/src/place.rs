@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
 
 use crate::field::{
     PlaceAddressFieldEnum, PlaceDescriptionFieldEnum, PlaceImageFieldEnum, PlaceKeywordsFieldEnum,
     PlaceLatitudeFieldEnum, PlaceLogoFieldEnum, PlaceLongitudeFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{is_smallvec_empty, one_or_many};
 use crate::{AggregateRating, Review};
 
 ///<https://schema.org/Place>
@@ -14,102 +15,102 @@ use crate::{AggregateRating, Review};
 pub struct Place {
     ///<https://schema.org/address>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub address: Vec<PlaceAddressFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub address: SmallVec<[PlaceAddressFieldEnum; 1]>,
     ///<https://schema.org/aggregateRating>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub aggregate_rating: Vec<AggregateRating>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub aggregate_rating: SmallVec<[Box<AggregateRating>; 1]>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub alternate_name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub alternate_name: SmallVec<[String; 1]>,
     ///<https://schema.org/branchCode>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub branch_code: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub branch_code: SmallVec<[String; 1]>,
     #[serde(rename = "@context")]
     pub context: Option<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub description: Vec<PlaceDescriptionFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub description: SmallVec<[PlaceDescriptionFieldEnum; 1]>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub disambiguating_description: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub disambiguating_description: SmallVec<[String; 1]>,
     ///<https://schema.org/faxNumber>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub fax_number: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub fax_number: SmallVec<[String; 1]>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<PlaceImageFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub image: SmallVec<[PlaceImageFieldEnum; 3]>,
     ///<https://schema.org/isAccessibleForFree>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub is_accessible_for_free: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub is_accessible_for_free: SmallVec<[String; 1]>,
     ///<https://schema.org/isicV4>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub isic_v4: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub isic_v4: SmallVec<[String; 1]>,
     ///<https://schema.org/keywords>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub keywords: Vec<PlaceKeywordsFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub keywords: SmallVec<[PlaceKeywordsFieldEnum; 5]>,
     ///<https://schema.org/latitude>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub latitude: Vec<PlaceLatitudeFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub latitude: SmallVec<[PlaceLatitudeFieldEnum; 1]>,
     ///<https://schema.org/logo>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub logo: Vec<PlaceLogoFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub logo: SmallVec<[PlaceLogoFieldEnum; 1]>,
     ///<https://schema.org/longitude>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub longitude: Vec<PlaceLongitudeFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub longitude: SmallVec<[PlaceLongitudeFieldEnum; 1]>,
     ///<https://schema.org/map>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub map: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub map: SmallVec<[String; 1]>,
     ///<https://schema.org/maximumAttendeeCapacity>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub maximum_attendee_capacity: Vec<i32>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub maximum_attendee_capacity: SmallVec<[i32; 1]>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub name: SmallVec<[String; 1]>,
     ///<https://schema.org/publicAccess>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub public_access: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub public_access: SmallVec<[String; 1]>,
     ///<https://schema.org/review>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub review: Vec<Review>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub review: SmallVec<[Box<Review>; 4]>,
     ///<https://schema.org/reviews>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub reviews: Vec<Review>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub reviews: SmallVec<[Review; 1]>,
     ///<https://schema.org/slogan>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub slogan: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub slogan: SmallVec<[String; 1]>,
     ///<https://schema.org/smokingAllowed>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub smoking_allowed: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub smoking_allowed: SmallVec<[String; 1]>,
     ///<https://schema.org/telephone>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub telephone: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub telephone: SmallVec<[String; 1]>,
     #[serde(rename = "@type")]
     pub r#type: Option<String>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub url: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub url: SmallVec<[String; 1]>,
 }

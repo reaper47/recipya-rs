@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use smallvec::{SmallVec, smallvec};
 
 use crate::enums::{GenderTypeEnum, ItemListOrderTypeEnum, MeasurementMethodEnumEnum};
 use crate::{
@@ -57,7 +58,7 @@ impl FieldEnum4 {
     pub fn new_creative_work_text(s: &str) -> Self {
         Self::CreativeWork(Box::new(CreativeWork {
             r#type: Some(AtType::CreativeWork.to_string()),
-            text: vec![s.to_string()],
+            text: smallvec![s.to_string()],
             ..Default::default()
         }))
     }
@@ -174,13 +175,13 @@ pub type HowToSizeFieldEnum = FieldEnum5;
 #[serde(untagged)]
 pub enum FieldEnum6 {
     ///<https://schema.org/Organization>
-    Organization(Organization),
+    Organization(Box<Organization>),
     ///<https://schema.org/Person>
     Person(Person),
 }
 impl Default for FieldEnum6 {
     fn default() -> Self {
-        Self::Person(Person::default())
+        Self::Person(Default::default())
     }
 }
 ///<https://schema.org/creator>
@@ -322,7 +323,7 @@ pub type RecipeAuthorFieldEnum = FieldEnum6;
 impl RecipeAuthorFieldEnum {
     pub fn new_person(name: &str) -> Self {
         Self::Person(Person {
-            name: vec![name.to_string()],
+            name: smallvec![name.to_string()],
             ..Default::default()
         })
     }
@@ -687,15 +688,15 @@ pub type DefinedTermSetInLanguageFieldEnum = FieldEnum16;
 #[serde(untagged)]
 pub enum FieldEnum17 {
     ///<https://schema.org/AudioObject>
-    AudioObject(AudioObject),
+    AudioObject(Box<AudioObject>),
     ///<https://schema.org/Clip>
     Clip(Clip),
     ///<https://schema.org/MusicRecording>
-    MusicRecording(MusicRecording),
+    MusicRecording(Box<MusicRecording>),
 }
 impl Default for FieldEnum17 {
     fn default() -> Self {
-        Self::AudioObject(AudioObject::default())
+        Self::AudioObject(Box::new(AudioObject::default()))
     }
 }
 ///<https://schema.org/audio>
@@ -1444,7 +1445,7 @@ pub enum FieldEnum63 {
     ///<https://schema.org/QualitativeValue>
     QualitativeValue(QualitativeValue),
     ///<https://schema.org/QuantitativeValue>
-    QuantitativeValue(QuantitativeValue),
+    QuantitativeValue(Box<QuantitativeValue>),
     ///<https://schema.org/StructuredValue>
     StructuredValue(StructuredValue),
     ///<https://schema.org/Text>
@@ -1689,8 +1690,8 @@ impl RecipeRecipeInstructionsFieldEnum {
                         ItemListItemListElementFieldEnum::Text(s.trim().to_string())
                     })
                     .collect(),
-                name: vec![name.into()],
-                number_of_items: vec![num_items],
+                name: smallvec![name.into()],
+                number_of_items: smallvec![num_items],
                 ..Default::default()
             }
             .into(),
@@ -1748,26 +1749,26 @@ impl RecipeRecipeIngredientFieldEnum {
                 .iter()
                 .map(|v| ItemListItemListElementFieldEnum::Text(v.to_string()))
                 .collect(),
-            name: vec![name.into()],
-            number_of_items: vec![items.len() as i32],
+            name: smallvec![name.into()],
+            number_of_items: smallvec![items.len() as i32],
             ..Default::default()
         })
     }
 
     /// Extracts all the items from the enum.
-    pub fn item_names(&self) -> Vec<String> {
+    pub fn item_names(&self) -> SmallVec<[String; 1]> {
         match self {
             Self::ItemList(list) => list
                 .item_list_element
                 .iter()
                 .flat_map(|v| match v {
                     ItemListItemListElementFieldEnum::ListItem(l) => l.name.clone(),
-                    ItemListItemListElementFieldEnum::Text(s) => vec![s.clone()],
+                    ItemListItemListElementFieldEnum::Text(s) => smallvec![s.clone()],
                     ItemListItemListElementFieldEnum::Thing(t) => t.name.clone(),
                 })
-                .collect::<Vec<_>>(),
+                .collect::<SmallVec<_>>(),
             Self::PropertyValue(prop) => prop.name.clone(),
-            Self::Text(s) => vec![s.clone()],
+            Self::Text(s) => smallvec![s.clone()],
         }
     }
 }
@@ -1790,8 +1791,8 @@ impl FieldEnum150 {
     pub fn new_tool(name: impl Into<String>, quantity: f32) -> Self {
         Self::HowToTool(Box::new(HowToTool {
             r#type: Some(AtType::HowToTool.to_string()),
-            name: vec![name.into()],
-            required_quantity: vec![HowToToolRequiredQuantityFieldEnum::Number(quantity)],
+            name: smallvec![name.into()],
+            required_quantity: smallvec![HowToToolRequiredQuantityFieldEnum::Number(quantity)],
             ..Default::default()
         }))
     }

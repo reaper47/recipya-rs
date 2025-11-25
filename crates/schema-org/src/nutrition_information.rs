@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
 
-use crate::helpers::one_or_many;
+use crate::helpers::{is_smallvec_empty, one_or_many};
 use crate::{Energy, Mass};
 
 ///<https://schema.org/NutritionInformation>
@@ -10,56 +11,56 @@ use crate::{Energy, Mass};
 pub struct NutritionInformation {
     ///<https://schema.org/calories>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub calories: Vec<Energy>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub calories: SmallVec<[Energy; 1]>,
     ///<https://schema.org/carbohydrateContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub carbohydrate_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub carbohydrate_content: SmallVec<[Mass; 1]>,
     ///<https://schema.org/cholesterolContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub cholesterol_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub cholesterol_content: SmallVec<[Mass; 1]>,
     #[serde(rename = "@context")]
     pub context: Option<String>,
     ///<https://schema.org/fatContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub fat_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub fat_content: SmallVec<[Mass; 1]>,
     ///<https://schema.org/fiberContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub fiber_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub fiber_content: SmallVec<[Mass; 1]>,
     ///<https://schema.org/proteinContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub protein_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub protein_content: SmallVec<[Mass; 1]>,
     ///<https://schema.org/saturatedFatContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub saturated_fat_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub saturated_fat_content: SmallVec<[Mass; 1]>,
     ///<https://schema.org/servingSize>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub serving_size: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub serving_size: SmallVec<[String; 1]>,
     ///<https://schema.org/sodiumContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub sodium_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub sodium_content: SmallVec<[Mass; 1]>,
     ///<https://schema.org/sugarContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub sugar_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub sugar_content: SmallVec<[Mass; 1]>,
     #[serde(rename = "@type")]
     pub r#type: Option<String>,
     ///<https://schema.org/transFatContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub trans_fat_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub trans_fat_content: SmallVec<[Mass; 1]>,
     ///<https://schema.org/unsaturatedFatContent>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub unsaturated_fat_content: Vec<Mass>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub unsaturated_fat_content: SmallVec<[Mass; 1]>,
 }
 
 impl NutritionInformation {

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
 
 use crate::field::{
     CreativeWorkAuthorFieldEnum, CreativeWorkCitationFieldEnum, CreativeWorkContributorFieldEnum,
@@ -7,7 +8,7 @@ use crate::field::{
     CreativeWorkKeywordsFieldEnum, CreativeWorkMaintainerFieldEnum,
     CreativeWorkTranslatorFieldEnum, CreativeWorkVideoFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{is_smallvec_empty, one_or_many};
 use crate::{AggregateRating, Comment, Duration, ImageObject, InteractionCounter, Review};
 
 ///<https://schema.org/dateCreated>
@@ -38,142 +39,142 @@ pub struct CreativeWork {
     pub context: Option<String>,
     ///<https://schema.org/comment>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub comment: Vec<Comment>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub comment: SmallVec<[Box<Comment>; 4]>,
     ///<https://schema.org/isBasedOnUrl>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub is_based_on_url: Vec<CreativeWorkIsBasedOnUrlFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub is_based_on_url: SmallVec<[CreativeWorkIsBasedOnUrlFieldEnum; 1]>,
     ///<https://schema.org/translationOfWork>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub translation_of_work: Vec<CreativeWork>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub translation_of_work: SmallVec<[Box<CreativeWork>; 1]>,
     ///<https://schema.org/workTranslation>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub work_translation: Vec<CreativeWork>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub work_translation: SmallVec<[Box<CreativeWork>; 1]>,
     ///<https://schema.org/dateCreated>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub date_created: Vec<CreativeWorkDateCreatedFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub date_created: SmallVec<[CreativeWorkDateCreatedFieldEnum; 1]>,
     ///<https://schema.org/wordCount>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub word_count: Vec<i32>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub word_count: SmallVec<[i32; 1]>,
     ///<https://schema.org/maintainer>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub maintainer: Vec<CreativeWorkMaintainerFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub maintainer: SmallVec<[CreativeWorkMaintainerFieldEnum; 1]>,
     ///<https://schema.org/expires>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub expires: Vec<CreativeWorkExpiresFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub expires: SmallVec<[CreativeWorkExpiresFieldEnum; 1]>,
     ///<https://schema.org/commentCount>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub comment_count: Vec<i32>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub comment_count: SmallVec<[i32; 1]>,
     ///<https://schema.org/timeRequired>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub time_required: Vec<Duration>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub time_required: SmallVec<[Duration; 1]>,
     ///<https://schema.org/contributor>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub contributor: Vec<CreativeWorkContributorFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub contributor: SmallVec<[CreativeWorkContributorFieldEnum; 1]>,
     ///<https://schema.org/interactionStatistic>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub interaction_statistic: Vec<InteractionCounter>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub interaction_statistic: SmallVec<[InteractionCounter; 1]>,
     ///<https://schema.org/creditText>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub credit_text: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub credit_text: SmallVec<[String; 1]>,
     ///<https://schema.org/headline>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub headline: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub headline: SmallVec<[String; 1]>,
     ///<https://schema.org/dateModified>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub date_modified: Vec<CreativeWorkDateModifiedFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub date_modified: SmallVec<[CreativeWorkDateModifiedFieldEnum; 1]>,
     ///<https://schema.org/keywords>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub keywords: Vec<CreativeWorkKeywordsFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub keywords: SmallVec<[CreativeWorkKeywordsFieldEnum; 1]>,
     ///<https://schema.org/text>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub text: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub text: SmallVec<[String; 1]>,
     ///<https://schema.org/isBasedOn>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub is_based_on: Vec<CreativeWorkIsBasedOnFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub is_based_on: SmallVec<[CreativeWorkIsBasedOnFieldEnum; 1]>,
     ///<https://schema.org/aggregateRating>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub aggregate_rating: Vec<AggregateRating>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub aggregate_rating: SmallVec<[AggregateRating; 1]>,
     ///<https://schema.org/inLanguage>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub in_language: Vec<CreativeWorkInLanguageFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub in_language: SmallVec<[CreativeWorkInLanguageFieldEnum; 1]>,
     ///<https://schema.org/datePublished>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub date_published: Vec<CreativeWorkDatePublishedFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub date_published: SmallVec<[CreativeWorkDatePublishedFieldEnum; 1]>,
     ///<https://schema.org/alternativeHeadline>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub alternative_headline: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub alternative_headline: SmallVec<[String; 1]>,
     ///<https://schema.org/thumbnail>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub thumbnail: Vec<ImageObject>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub thumbnail: SmallVec<[Box<ImageObject>; 1]>,
     ///<https://schema.org/thumbnailUrl>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub thumbnail_url: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub thumbnail_url: SmallVec<[String; 1]>,
     ///<https://schema.org/citation>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub citation: Vec<CreativeWorkCitationFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub citation: SmallVec<[CreativeWorkCitationFieldEnum; 1]>,
     ///<https://schema.org/video>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub video: Vec<CreativeWorkVideoFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub video: SmallVec<[CreativeWorkVideoFieldEnum; 1]>,
     ///<https://schema.org/author>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub author: Vec<CreativeWorkAuthorFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub author: SmallVec<[CreativeWorkAuthorFieldEnum; 1]>,
     ///<https://schema.org/translator>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub translator: Vec<CreativeWorkTranslatorFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub translator: SmallVec<[CreativeWorkTranslatorFieldEnum; 1]>,
     ///<https://schema.org/reviews>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub reviews: Vec<Review>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub reviews: SmallVec<[Box<Review>; 4]>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub disambiguating_description: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub disambiguating_description: SmallVec<[String; 1]>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub image: Vec<CreativeWorkImageFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub image: SmallVec<[CreativeWorkImageFieldEnum; 1]>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub description: Vec<CreativeWorkDescriptionFieldEnum>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub description: SmallVec<[CreativeWorkDescriptionFieldEnum; 1]>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub alternate_name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub alternate_name: SmallVec<[String; 1]>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub url: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub url: SmallVec<[String; 1]>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub name: Vec<String>,
+    #[serde(skip_serializing_if = "is_smallvec_empty")]
+    pub name: SmallVec<[String; 1]>,
 }
