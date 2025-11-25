@@ -12,7 +12,8 @@ use nom::{IResult, Parser};
 use tracing::error;
 
 use schema_org::field::{
-    RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+    ItemListItemListElementFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
+    RecipeRecipeInstructionsFieldEnum,
 };
 use schema_org::{Recipe, set_recipe_type};
 
@@ -77,15 +78,31 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             category: r.category.map(String::from),
             keywords: vec![],
             yield_: r.servings,
-            ingredients: r
-                .ingredients
-                .into_iter()
-                .map(|ing| {
-                    RecipeRecipeIngredientFieldEnum::Text(
-                        format!("{} {}", ing.quantity, ing.name).trim().to_string(),
-                    )
-                })
-                .collect(),
+            ingredients: r.ingredients.into_iter().fold(Vec::new(), |mut acc, ing| {
+                if ing.name.is_empty() && ing.quantity.ends_with(':') {
+                    acc.push(RecipeRecipeIngredientFieldEnum::new_section(
+                        ing.quantity,
+                        vec![],
+                    ));
+                } else {
+                    let text = format!("{} {}", ing.quantity, ing.name).trim().to_string();
+
+                    if let Some(RecipeRecipeIngredientFieldEnum::ItemList(section)) = acc.last_mut()
+                    {
+                        section
+                            .item_list_element
+                            .push(ItemListItemListElementFieldEnum::Text(text.clone()));
+
+                        if let Some(i) = section.number_of_items.first_mut() {
+                            *i += 1;
+                        }
+                    } else {
+                        acc.push(RecipeRecipeIngredientFieldEnum::Text(text));
+                    }
+                }
+
+                acc
+            }),
             times: Times {
                 prep_seconds: r
                     .prep_time
@@ -110,7 +127,9 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             instructions: r
                 .instructions
                 .into_iter()
-                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
+                .filter_map(|s| {
+                    (!s.is_empty()).then(|| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
+                })
                 .collect(),
             source: r.header.into(),
         }
@@ -269,14 +288,14 @@ mod tests {
                     prep_time: seconds_to_duration(900),
                     recipe_category: vec!["Fruit".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::new_section("Dressing", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Dressing:", vec![
                             "3 Egg Yolks".into(),
                             "2 Tbls Sugar".into(),
                             "1 Tbls Butter".into(),
                             "1 Tbls Lemon Juice".into(),
                             "1 Cup Cool Whip".into(),
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Fruit", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Fruit:", vec![
                             "1 Can Pineapple Chunks (20 Oz)".into(),
                             "2 Cans Mandarin Oranges".into(),
                             "1 Can Royal Ann Cherries".into(),

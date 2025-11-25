@@ -76,7 +76,7 @@ pub struct TextObject {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub comment_count: Vec<i32>,
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: Option<String>,
     ///<https://schema.org/contentRating>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

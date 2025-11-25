@@ -125,7 +125,11 @@ impl ToRecipeSchema for Recipe {
                 Ok(d) => vec![d.to_string()],
                 Err(_) => vec![],
             },
-            description: vec![RecipeDescriptionFieldEnum::Text(self.description.clone())],
+            description: if self.description.is_empty() {
+                vec![]
+            } else {
+                vec![RecipeDescriptionFieldEnum::Text(self.description.clone())]
+            },
             image: pictures,
             is_based_on: to_is_based_on(&src),
             keywords: keywords

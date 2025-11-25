@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::enums::{GenderTypeEnum, ItemListOrderTypeEnum, MeasurementMethodEnumEnum};
 use crate::{
-    AudioObject, BreadcrumbList, Clip, Comment, CreativeWork, DefinedTerm, DefinedTermSet,
+    AtType, AudioObject, BreadcrumbList, Clip, Comment, CreativeWork, DefinedTerm, DefinedTermSet,
     Distance, Duration, EntryPoint, Enumeration, Event, HowToSection, HowToStep, HowToSupply,
     HowToTool, ImageObject, ItemList, Language, ListItem, Mass, MeasurementTypeEnumeration,
     MediaObject, MonetaryAmount, MusicRecording, Organization, Person, PostalAddress, Product,
@@ -56,6 +56,7 @@ impl Default for FieldEnum4 {
 impl FieldEnum4 {
     pub fn new_creative_work_text(s: &str) -> Self {
         Self::CreativeWork(Box::new(CreativeWork {
+            r#type: Some(AtType::CreativeWork.to_string()),
             text: vec![s.to_string()],
             ..Default::default()
         }))
@@ -1659,6 +1660,8 @@ pub enum FieldEnum141 {
     CreativeWork(Box<CreativeWork>),
     ///<https://schema.org/ItemList>
     ItemList(Box<ItemList>),
+    ///<https://schema.org/HowToStep>
+    HowToStep(Box<HowToStep>),
     ///<https://schema.org/Text>
     Text(String),
 }
@@ -1681,7 +1684,10 @@ impl RecipeRecipeInstructionsFieldEnum {
             ItemList {
                 item_list_element: items
                     .into_iter()
-                    .map(|v| ItemListItemListElementFieldEnum::Text(v.into()))
+                    .map(|v| {
+                        let s: String = v.into();
+                        ItemListItemListElementFieldEnum::Text(s.trim().to_string())
+                    })
                     .collect(),
                 name: vec![name.into()],
                 number_of_items: vec![num_items],
@@ -1696,6 +1702,15 @@ impl RecipeRecipeInstructionsFieldEnum {
         if let Self::ItemList(list) = self {
             list.item_list_element
                 .push(ItemListItemListElementFieldEnum::Text(item.to_string()))
+        }
+    }
+
+    /// Increments the number of items in the section.
+    pub fn increment_items(&mut self) {
+        if let Self::ItemList(list) = self
+            && let Some(i) = list.number_of_items.first_mut()
+        {
+            *i += 1;
         }
     }
 }
@@ -1728,6 +1743,7 @@ impl RecipeRecipeIngredientFieldEnum {
     /// Creates a new ItemList that contains a title and a list of items.
     pub fn new_section(name: &str, items: Vec<&str>) -> Self {
         Self::ItemList(ItemList {
+            r#type: Some(AtType::ItemList.to_string()),
             item_list_element: items
                 .iter()
                 .map(|v| ItemListItemListElementFieldEnum::Text(v.to_string()))
@@ -1768,6 +1784,16 @@ pub enum FieldEnum150 {
 impl Default for FieldEnum150 {
     fn default() -> Self {
         Self::Text(String::new())
+    }
+}
+impl FieldEnum150 {
+    pub fn new_tool(name: impl Into<String>, quantity: f32) -> Self {
+        Self::HowToTool(Box::new(HowToTool {
+            r#type: Some(AtType::HowToTool.to_string()),
+            name: vec![name.into()],
+            required_quantity: vec![HowToToolRequiredQuantityFieldEnum::Number(quantity)],
+            ..Default::default()
+        }))
     }
 }
 ///<https://schema.org/tool>

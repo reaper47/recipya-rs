@@ -18,7 +18,7 @@ pub struct EntryPoint {
     #[serde(rename = "@type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: Option<String>,
     ///<https://schema.org/contentType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

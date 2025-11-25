@@ -40,7 +40,7 @@ pub struct Duration {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub alternate_name: Vec<String>,
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: Option<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

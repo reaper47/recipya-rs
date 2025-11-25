@@ -361,6 +361,14 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                         duration_seconds: None,
                     });
                 }
+                RecipeRecipeInstructionsFieldEnum::HowToStep(how_to_step) => {
+                    if let Some(text) = how_to_step.text.first().cloned() {
+                        current_items.push(Item {
+                            text,
+                            duration_seconds: None,
+                        });
+                    }
+                }
             }
         }
 

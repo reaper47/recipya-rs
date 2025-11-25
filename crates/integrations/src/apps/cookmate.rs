@@ -99,7 +99,11 @@ impl From<CookmateRecipe> for Recipe {
                     vec![]
                 }
             },
-            description: vec![RecipeDescriptionFieldEnum::Text(r.description)],
+            description: if r.description.is_empty() {
+                vec![]
+            } else {
+                vec![RecipeDescriptionFieldEnum::Text(r.description)]
+            },
             image: vec![r.imageurl, r.imagepath]
                 .into_iter()
                 .filter_map(|image| Url::parse(&image).ok())

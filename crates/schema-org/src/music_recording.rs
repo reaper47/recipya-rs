@@ -48,7 +48,7 @@ pub struct MusicRecording {
     #[serde(rename = "@type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: Option<String>,
     ///<https://schema.org/isrcCode>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

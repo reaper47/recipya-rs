@@ -124,6 +124,7 @@ use serde::{Deserialize, Serialize};
 pub enum AtType {
     AggregateRating,
     Comment,
+    CreativeWork,
     Energy,
     HowToTool,
     ImageObject,
@@ -145,6 +146,7 @@ impl Display for AtType {
             "{}",
             match self {
                 AtType::Comment => "Comment".to_string(),
+                AtType::CreativeWork => "CreativeWork".to_string(),
                 AtType::Energy => "Energy".to_string(),
                 AtType::Recipe => "Recipe".to_string(),
                 AtType::AggregateRating => "AggregateRating".to_string(),

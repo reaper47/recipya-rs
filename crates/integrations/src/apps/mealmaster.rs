@@ -115,9 +115,14 @@ fn split_by_asterisks(input: &str) -> Vec<String> {
 impl From<MealMasterRecipe> for Recipe {
     fn from(r: MealMasterRecipe) -> Self {
         Self {
-            author: vec![RecipeAuthorFieldEnum::new_person(
-                &r.author.unwrap_or_default(),
-            )],
+            author: {
+                let s = r.author.unwrap_or_default();
+                if s.is_empty() {
+                    vec![]
+                } else {
+                    vec![RecipeAuthorFieldEnum::new_person(&s)]
+                }
+            },
             is_based_on: to_is_based_on(r.source.trim()),
             keywords: r
                 .keywords
@@ -2082,8 +2087,9 @@ Typed for you by Karen Mintzias
                     RecipeRecipeIngredientFieldEnum::Text("3 tb Cornmeal".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1 1/2 tb Oil".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1/2 Avocado; peeled, sliced".into()),
-                    RecipeRecipeIngredientFieldEnum::Text("3/4 c Cheese, monterey jack; 1/4 c Sour cream; divided".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("3/4 c Cheese, monterey jack;".into()),
                     RecipeRecipeIngredientFieldEnum::Text("-shredded".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1/4 c Sour cream; divided".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1/8 c Onion, green, tops only".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1/8 Pepper, red bell; chopped".into()),
                     RecipeRecipeIngredientFieldEnum::Text("Tomatoes, cherry".into()),
@@ -2372,7 +2378,6 @@ SOURCE: Gourmet, December 1992
                 name: vec!["Baklava with Cooky Filling".into()],
                 recipe_category: vec!["Greek".into()],
                 recipe_ingredient: vec![
-                    RecipeRecipeIngredientFieldEnum::Text("<section></section>".into()),
                     RecipeRecipeIngredientFieldEnum::Text("Karen Mintzias".into()),
                     RecipeRecipeIngredientFieldEnum::Text("2 c Sweet butter 1 ts".into()),
                     RecipeRecipeIngredientFieldEnum::Text("1 c Confectioners' sugar 4 c".into()),

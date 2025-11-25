@@ -2,11 +2,12 @@ use std::io::{Read, Seek};
 use std::str::FromStr;
 
 use iso8601::DateTime;
+use nom::branch::alt;
 use nom::bytes::complete::{tag, take_till, take_until};
 use nom::character::complete::line_ending;
 use nom::combinator::{map, opt};
 use nom::multi::{many_till, many1, separated_list0};
-use nom::sequence::{preceded, terminated};
+use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use serde::Deserialize;
 use tracing::error;
@@ -257,7 +258,6 @@ impl From<RecipeSage> for Recipe {
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: to_yield(r.r#yield as i64),
-            url: r.source.clone().map(|s| vec![s]).unwrap_or_default(),
             description: r
                 .description
                 .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
@@ -292,7 +292,13 @@ impl From<RecipeSageXMLRecipe> for Recipe {
         let url = Url::parse(&r.url).ok();
 
         Self {
-            author: vec![RecipeAuthorFieldEnum::new_person(&r.from_user)],
+            author: {
+                if r.from_user.is_empty() {
+                    vec![]
+                } else {
+                    vec![RecipeAuthorFieldEnum::new_person(&r.from_user)]
+                }
+            },
             comment: if r.notes.is_empty() {
                 vec![]
             } else {
@@ -310,7 +316,11 @@ impl From<RecipeSageXMLRecipe> for Recipe {
                 .ok()
                 .map(|d| vec![d.to_string()])
                 .unwrap_or_default(),
-            description: vec![RecipeDescriptionFieldEnum::Text(r.description)],
+            description: if r.description.is_empty() {
+                vec![]
+            } else {
+                vec![RecipeDescriptionFieldEnum::Text(r.description)]
+            },
             is_based_on: if url.is_none() && !r.url.is_empty() {
                 to_is_based_on(&r.url)
             } else {
@@ -541,8 +551,14 @@ fn images(input: &str) -> IResult<&str, Option<&str>> {
 fn parse_tag(prefix: &str) -> impl FnMut(&str) -> IResult<&str, Option<&str>> {
     move |input| {
         preceded(
-            (tag(prefix), tag(": ")),
-            terminated(opt(take_until("\n")), tag("\n")),
+            tag(prefix),
+            alt((
+                map(tag(":\n"), |_| None),
+                map(
+                    delimited(tag(": "), take_till(|c| c == '\n'), line_ending),
+                    |s: &str| if s.is_empty() { None } else { Some(s) },
+                ),
+            )),
         )
         .parse(input)
     }

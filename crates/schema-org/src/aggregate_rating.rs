@@ -17,7 +17,7 @@ pub struct AggregateRating {
     #[serde(rename = "@type", default = "set_type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: Option<String>,
     ///<https://schema.org/reviewCount>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

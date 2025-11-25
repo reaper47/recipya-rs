@@ -102,11 +102,23 @@ impl From<RecipeComponents<'_>> for Recipe {
             } else {
                 Default::default()
             },
-            author: vec![RecipeAuthorFieldEnum::new_person(r.author.trim())],
+            author: {
+                let s = r.author.trim();
+                if s.is_empty() {
+                    vec![]
+                } else {
+                    vec![RecipeAuthorFieldEnum::new_person(s)]
+                }
+            },
             cook_time: seconds_to_duration(cook_secs),
-            description: vec![RecipeDescriptionFieldEnum::Text(
-                r.description.trim_end_matches("\"").into(),
-            )],
+            description: {
+                let s = r.description.trim_end_matches("\"");
+                if s.is_empty() {
+                    vec![]
+                } else {
+                    vec![RecipeDescriptionFieldEnum::Text(s.into())]
+                }
+            },
             is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
             keywords: keywords
                 .into_iter()
@@ -323,7 +335,10 @@ impl From<MastercookRecipe> for Recipe {
             author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
             cook_time: seconds_to_duration(cook_secs),
             description: vec![RecipeDescriptionFieldEnum::Text(r.description)],
-            is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
+            is_based_on: match url::Url::parse(&source) {
+                Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(source.to_string())],
+                Err(_) => vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
+            },
             image: (!r.img.is_empty())
                 .then_some(vec![RecipeImageFieldEnum::ImageObject(Box::new(
                     ImageObject {
@@ -392,7 +407,10 @@ fn parse_time(s: &str) -> i32 {
 }
 
 fn parse_nutrition_schema(s: Vec<&str>) -> Vec<NutritionInformation> {
-    let mut nutrition = NutritionInformation::default();
+    let mut nutrition = NutritionInformation {
+        r#type: Some(AtType::NutritionInformation.to_string()),
+        ..Default::default()
+    };
     s.iter().for_each(|s| {
         let (value, key) = s.trim().split_once(' ').unwrap_or_default();
         if value == "0g" || value == "0mg" {
@@ -421,8 +439,7 @@ fn parse_nutrition_schema(s: Vec<&str>) -> Vec<NutritionInformation> {
         }
     });
 
-    nutrition
-        .is_empty()
+    (!nutrition.is_empty())
         .then_some(vec![nutrition])
         .unwrap_or_default()
 }
@@ -1132,7 +1149,7 @@ Nutr. Assoc. : 0 0 0
             vec![
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::URL("Exported from  MasterCook II".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     name: vec!["Apple Slaw".into()],
                     recipe_category: vec!["Side Dish".into()],
                     recipe_ingredient: vec![
@@ -1160,7 +1177,7 @@ Nutr. Assoc. : 0 0 0
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::URL("Exported from  MasterCook II".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     name: vec!["Apples and Noodles".into()],
                     recipe_category: vec!["Side Dish".into()],
                     recipe_ingredient: vec![
@@ -1184,7 +1201,7 @@ Nutr. Assoc. : 0 0 0
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::URL("Exported from  MasterCook II".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     name: vec!["ARTICHOKES AND PEAS".into()],
                     keywords: ["Vegetables", "Side Dish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     recipe_category: vec!["Vegetarian".into()],
@@ -1204,7 +1221,7 @@ Nutr. Assoc. : 0 0 0
                 },
                 Recipe {
                     r#type: Some(AtType::Recipe.to_string()),
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::URL("Exported from  MasterCook II".into())],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     keywords: ["Appetizers", "Jewish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     name: vec![r#"Aunt Sadie's Fabulous Chopped Liver "Pineapple"#.into()],
                     recipe_category: vec!["Side Dish".into()],
@@ -1242,8 +1259,8 @@ Nutr. Assoc. : 0 0 0
                     description: vec![RecipeDescriptionFieldEnum::Text(
                         "The best chicken in the universe!".into(),
                     )],
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::URL(
-                        "My mother's recipe cookbook [Exported from MasterCook]".into(),
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "My mother's recipe cookbook [Exported from MasterCook]",
                     )],
                     name: vec!["Best Chicken".into()],
                     nutrition: vec![NutritionInformation {
@@ -1281,8 +1298,8 @@ Nutr. Assoc. : 0 0 0
                     description: vec![RecipeDescriptionFieldEnum::Text(
                         "Ramen has never been soooo delicious".into(),
                     )],
-                    is_based_on: vec![RecipeIsBasedOnFieldEnum::URL(
-                        "My mother's recipe cookbook [Exported from MasterCook]".into(),
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "My mother's recipe cookbook [Exported from MasterCook]",
                     )],
                     name: vec!["Delicious Ramen".into()],
                     nutrition: vec![NutritionInformation {

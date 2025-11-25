@@ -18,7 +18,7 @@ pub struct SizeSpecification {
     #[serde(rename = "@type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: Option<String>,
     ///<https://schema.org/hasMeasurement>
     #[serde(rename = "hasMeasurement")]
     #[serde(default, deserialize_with = "one_or_many")]

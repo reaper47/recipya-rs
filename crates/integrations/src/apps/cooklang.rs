@@ -2,6 +2,7 @@ use std::io::{Read, Seek};
 
 use cooklang::{Content, CooklangParser, Item, Value};
 use tracing::{error, warn};
+use url::Url;
 
 use schema_org::enums::RestrictedDietEnum;
 use schema_org::field::{
@@ -60,7 +61,13 @@ impl From<CooklangRecipe> for Recipe {
             is_based_on: r
                 .source
                 .clone()
-                .map(|s| vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)])
+                .map(|s| {
+                    if let Some(_) = s.parse::<Url>().ok() {
+                        vec![RecipeIsBasedOnFieldEnum::URL(s)]
+                    } else {
+                        vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]
+                    }
+                })
                 .unwrap_or_default(),
             keywords: r
                 .tags
@@ -301,15 +308,20 @@ impl CookLang {
             instructions: recipe
                 .sections
                 .into_iter()
-                .map(|section| {
-                    RecipeRecipeInstructionsFieldEnum::new_section(
-                        &section.name.unwrap_or_default(),
-                        section
-                            .content
-                            .into_iter()
-                            .filter_map(clean_content)
+                .flat_map(|section| {
+                    let content = section.content.into_iter().filter_map(clean_content);
+
+                    match section.name {
+                        Some(name) => {
+                            vec![RecipeRecipeInstructionsFieldEnum::new_section(
+                                &name,
+                                content.collect(),
+                            )]
+                        }
+                        None => content
+                            .map(RecipeRecipeInstructionsFieldEnum::Text)
                             .collect(),
-                    )
+                    }
                 })
                 .collect(),
             servings: recipe
@@ -495,8 +507,8 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
                 recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(1.0)],
                 suitable_for_diet: vec![RestrictedDietEnum::GlutenFreeDiet],
                 tool: vec![
-                    RecipeToolFieldEnum::Text("frying pan".into()),
-                    RecipeToolFieldEnum::Text("blender".into()),
+                    RecipeToolFieldEnum::new_tool("frying pan", 1.0),
+                    RecipeToolFieldEnum::new_tool("blender", 1.0),
                 ],
                 url: vec!["https://example.org/recipe".into()],
                 ..Default::default()

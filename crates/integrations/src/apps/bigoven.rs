@@ -18,7 +18,7 @@ use schema_org::{AggregateRating, AtType, ItemList, Recipe};
 
 use super::helpers::read_file;
 use crate::Result;
-use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
+use crate::helpers::{seconds_to_duration, to_yield};
 
 #[allow(dead_code)]
 struct BigOvenRecipe {
@@ -159,7 +159,7 @@ fn transform_ingredient_types<'a>(
                         .into_iter()
                         .map(ItemListItemListElementFieldEnum::Text)
                         .collect(),
-                    name: vec![section],
+                    name: vec![section.trim_matches('-').trim().to_string()],
                     number_of_items: vec![num_items as i32],
                     ..Default::default()
                 })
@@ -208,11 +208,6 @@ impl From<BigOvenRecipe> for Recipe {
                 vec![]
             },
             cook_time: seconds_to_duration((r.total_minutes - r.active_minutes) as i32),
-            is_based_on: if url.is_some() {
-                to_is_based_on(&r.source.to_owned().unwrap())
-            } else {
-                vec![]
-            },
             keywords: r
                 .keywords
                 .into_iter()

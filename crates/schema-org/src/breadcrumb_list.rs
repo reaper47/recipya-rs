@@ -13,7 +13,7 @@ use crate::{Action, Thing};
 #[serde(rename_all = "camelCase")]
 pub struct BreadcrumbList {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: Option<String>,
     ///<https://schema.org/numberOfItems>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

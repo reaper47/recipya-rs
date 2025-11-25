@@ -232,6 +232,7 @@ where
                 ));
             } else if let Some(instruction) = acc.last_mut() {
                 instruction.push_item(&step.step);
+                instruction.increment_items();
             } else {
                 acc.push(RecipeRecipeInstructionsFieldEnum::Text(step.step));
             }
