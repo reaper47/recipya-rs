@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
-use smallvec::{SmallVec, smallvec};
 
 use crate::AtType;
 use crate::field::{MassDescriptionFieldEnum, MassImageFieldEnum};
-use crate::helpers::{is_smallvec_empty, one_or_many};
+use crate::helpers::one_or_many;
 
 ///<https://schema.org/Mass>
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
@@ -16,16 +15,16 @@ pub struct Mass {
     pub context: Option<String>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub image: SmallVec<[MassImageFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub image: Vec<MassImageFieldEnum>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub description: SmallVec<[MassDescriptionFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub description: Vec<MassDescriptionFieldEnum>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub name: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub name: Vec<String>,
 }
 
 impl Mass {
@@ -33,7 +32,7 @@ impl Mass {
     pub fn new(mass: impl Into<String>) -> Self {
         Self {
             r#type: Some(AtType::NutritionInformation.to_string()),
-            name: smallvec![mass.into()],
+            name: vec![mass.into()],
             ..Default::default()
         }
     }

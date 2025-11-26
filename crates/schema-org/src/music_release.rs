@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use smallvec::SmallVec;
 
 use crate::enums::MusicReleaseFormatTypeEnum;
 use crate::field::{
@@ -9,7 +8,7 @@ use crate::field::{
     MusicReleaseKeywordsFieldEnum, MusicReleasePublisherFieldEnum,
     MusicReleaseSdPublisherFieldEnum, MusicReleaseSubjectOfFieldEnum, MusicReleaseTrackFieldEnum,
 };
-use crate::helpers::{is_smallvec_empty, one_or_many};
+use crate::helpers::one_or_many;
 use crate::{
     Country, Event, ImageObject, InteractionCounter, MusicAlbum, MusicRecording, Organization,
     Review, Thing,
@@ -39,175 +38,175 @@ pub struct MusicRelease {
     pub context: Option<String>,
     ///<https://schema.org/recordLabel>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub record_label: SmallVec<[Box<Organization>; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub record_label: Vec<Organization>,
     ///<https://schema.org/duration>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub duration: SmallVec<[MusicReleaseDurationFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub duration: Vec<MusicReleaseDurationFieldEnum>,
     ///<https://schema.org/musicReleaseFormat>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub music_release_format: SmallVec<[MusicReleaseFormatTypeEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub music_release_format: Vec<MusicReleaseFormatTypeEnum>,
     ///<https://schema.org/creditedTo>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub credited_to: SmallVec<[MusicReleaseCreditedToFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub credited_to: Vec<MusicReleaseCreditedToFieldEnum>,
     ///<https://schema.org/releaseOf>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub release_of: SmallVec<[MusicAlbum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub release_of: Vec<MusicAlbum>,
     ///<https://schema.org/catalogNumber>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub catalog_number: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub catalog_number: Vec<String>,
     ///<https://schema.org/track>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub track: SmallVec<[MusicReleaseTrackFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub track: Vec<MusicReleaseTrackFieldEnum>,
     ///<https://schema.org/numTracks>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub num_tracks: SmallVec<[i32; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub num_tracks: Vec<i32>,
     ///<https://schema.org/tracks>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub tracks: SmallVec<[MusicRecording; 12]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub tracks: Vec<MusicRecording>,
     ///<https://schema.org/recordedAt>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub recorded_at: SmallVec<[Event; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub recorded_at: Vec<Event>,
     ///<https://schema.org/isBasedOnUrl>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub is_based_on_url: SmallVec<[MusicReleaseIsBasedOnUrlFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub is_based_on_url: Vec<MusicReleaseIsBasedOnUrlFieldEnum>,
     ///<https://schema.org/dateCreated>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub date_created: SmallVec<[MusicReleaseDateCreatedFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub date_created: Vec<MusicReleaseDateCreatedFieldEnum>,
     ///<https://schema.org/review>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub review: SmallVec<[Review; 4]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub review: Vec<Review>,
     ///<https://schema.org/interactionStatistic>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub interaction_statistic: SmallVec<[InteractionCounter; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub interaction_statistic: Vec<InteractionCounter>,
     ///<https://schema.org/mainEntity>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub main_entity: SmallVec<[Thing; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub main_entity: Vec<Thing>,
     ///<https://schema.org/publisher>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub publisher: SmallVec<[MusicReleasePublisherFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub publisher: Vec<MusicReleasePublisherFieldEnum>,
     ///<https://schema.org/headline>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub headline: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub headline: Vec<String>,
     ///<https://schema.org/keywords>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub keywords: SmallVec<[MusicReleaseKeywordsFieldEnum; 6]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub keywords: Vec<MusicReleaseKeywordsFieldEnum>,
     ///<https://schema.org/encodingFormat>
     ///<https://schema.org/creator>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub creator: SmallVec<[MusicReleaseCreatorFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub creator: Vec<MusicReleaseCreatorFieldEnum>,
     ///<https://schema.org/sdDatePublished>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub sd_date_published: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub sd_date_published: Vec<String>,
     ///<https://schema.org/discussionUrl>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub discussion_url: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub discussion_url: Vec<String>,
     ///<https://schema.org/countryOfOrigin>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub country_of_origin: SmallVec<[Country; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub country_of_origin: Vec<Country>,
     ///<https://schema.org/text>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub text: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub text: Vec<String>,
     ///<https://schema.org/datePublished>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub date_published: SmallVec<[MusicReleaseDatePublishedFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub date_published: Vec<MusicReleaseDatePublishedFieldEnum>,
     ///<https://schema.org/sdPublisher>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub sd_publisher: SmallVec<[MusicReleaseSdPublisherFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub sd_publisher: Vec<MusicReleaseSdPublisherFieldEnum>,
     ///<https://schema.org/genre>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub genre: SmallVec<[MusicReleaseGenreFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub genre: Vec<MusicReleaseGenreFieldEnum>,
     ///<https://schema.org/audio>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub audio: SmallVec<[MusicReleaseAudioFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub audio: Vec<MusicReleaseAudioFieldEnum>,
     ///<https://schema.org/alternativeHeadline>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub alternative_headline: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub alternative_headline: Vec<String>,
     ///<https://schema.org/about>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub about: SmallVec<[Thing; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub about: Vec<Thing>,
     ///<https://schema.org/thumbnail>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub thumbnail: SmallVec<[ImageObject; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub thumbnail: Vec<ImageObject>,
     ///<https://schema.org/thumbnailUrl>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub thumbnail_url: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub thumbnail_url: Vec<String>,
     ///<https://schema.org/copyrightYear>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub copyright_year: SmallVec<[f32; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub copyright_year: Vec<f32>,
     ///<https://schema.org/awards>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub awards: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub awards: Vec<String>,
     ///<https://schema.org/author>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub author: SmallVec<[MusicReleaseAuthorFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub author: Vec<MusicReleaseAuthorFieldEnum>,
     ///<https://schema.org/reviews>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub reviews: SmallVec<[Review; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub reviews: Vec<Review>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub disambiguating_description: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub disambiguating_description: Vec<String>,
     ///<https://schema.org/image>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub image: SmallVec<[MusicReleaseImageFieldEnum; 4]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub image: Vec<MusicReleaseImageFieldEnum>,
     ///<https://schema.org/sameAs>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub same_as: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub same_as: Vec<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub description: SmallVec<[MusicReleaseDescriptionFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub description: Vec<MusicReleaseDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub alternate_name: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub url: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub subject_of: SmallVec<[MusicReleaseSubjectOfFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub subject_of: Vec<MusicReleaseSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub name: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub name: Vec<String>,
 }

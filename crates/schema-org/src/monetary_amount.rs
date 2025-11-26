@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
-use smallvec::SmallVec;
 
 use crate::{
     field::{MonetaryAmountDescriptionFieldEnum, MonetaryAmountValueFieldEnum},
-    helpers::{is_smallvec_empty, one_or_many},
+    helpers::one_or_many,
 };
 
 ///<https://schema.org/validFrom>
@@ -26,46 +25,46 @@ pub struct MonetaryAmount {
     pub context: Option<String>,
     ///<https://schema.org/minValue>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub min_value: SmallVec<[f32; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub min_value: Vec<f32>,
     ///<https://schema.org/maxValue>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub max_value: SmallVec<[f32; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub max_value: Vec<f32>,
     ///<https://schema.org/currency>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub currency: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub currency: Vec<String>,
     ///<https://schema.org/validFrom>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub valid_from: SmallVec<[MonetaryAmountValidFromFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub valid_from: Vec<MonetaryAmountValidFromFieldEnum>,
     ///<https://schema.org/validThrough>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub valid_through: SmallVec<[MonetaryAmountValidThroughFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub valid_through: Vec<MonetaryAmountValidThroughFieldEnum>,
     ///<https://schema.org/value>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub value: SmallVec<[MonetaryAmountValueFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub value: Vec<MonetaryAmountValueFieldEnum>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub disambiguating_description: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub disambiguating_description: Vec<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub description: SmallVec<[MonetaryAmountDescriptionFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub description: Vec<MonetaryAmountDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub alternate_name: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub url: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub url: Vec<String>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub name: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub name: Vec<String>,
 }

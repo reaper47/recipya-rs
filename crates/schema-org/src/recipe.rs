@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use smallvec::SmallVec;
 
 use crate::enums::RestrictedDietEnum;
 use crate::field::{
@@ -15,7 +14,7 @@ use crate::field::{
     RecipeSupplyFieldEnum, RecipeToolFieldEnum, RecipeTranslatorFieldEnum, RecipeVideoFieldEnum,
     RecipeYieldFieldEnum,
 };
-use crate::helpers::{is_smallvec_empty, one_or_many};
+use crate::helpers::one_or_many;
 use crate::{
     AggregateRating, AtType, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
     InteractionCounter, NutritionInformation, Person, Review, Thing,
@@ -71,328 +70,327 @@ pub struct Recipe {
     pub context: Option<String>,
     ///<https://schema.org/nutrition>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub nutrition: SmallVec<[NutritionInformation; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub nutrition: Vec<NutritionInformation>,
     ///<https://schema.org/cookingMethod>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub cooking_method: SmallVec<[String; 1]>,
+    pub cooking_method: Vec<String>,
     ///<https://schema.org/recipeYield>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub recipe_yield: SmallVec<[RecipeRecipeYieldFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub recipe_yield: Vec<RecipeRecipeYieldFieldEnum>,
     ///<https://schema.org/recipeCuisine>
+    #[serde(rename = "recipeCuisine")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub recipe_cuisine: SmallVec<[String; 1]>,
+    pub recipe_cuisine: Vec<String>,
     ///<https://schema.org/ingredients>
+    #[serde(rename = "ingredients")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub ingredients: SmallVec<[String; 10]>,
+    pub ingredients: Vec<String>,
     ///<https://schema.org/recipeIngredient>
+    #[serde(rename = "recipeIngredient")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub recipe_ingredient: SmallVec<[RecipeRecipeIngredientFieldEnum; 10]>,
+    pub recipe_ingredient: Vec<RecipeRecipeIngredientFieldEnum>,
     ///<https://schema.org/suitableForDiet>
+    #[serde(rename = "suitableForDiet")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub suitable_for_diet: SmallVec<[RestrictedDietEnum; 1]>,
+    pub suitable_for_diet: Vec<RestrictedDietEnum>,
     ///<https://schema.org/cookTime>
+    #[serde(rename = "cookTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub cook_time: SmallVec<[DurationOrText; 1]>,
+    pub cook_time: Vec<DurationOrText>,
     ///<https://schema.org/recipeInstructions>
+    #[serde(rename = "recipeInstructions")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub recipe_instructions: SmallVec<[RecipeRecipeInstructionsFieldEnum; 8]>,
+    pub recipe_instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
     ///<https://schema.org/recipeCategory>
+    #[serde(rename = "recipeCategory")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub recipe_category: SmallVec<[String; 1]>,
+    pub recipe_category: Vec<String>,
     ///<https://schema.org/steps>
+    #[serde(rename = "steps")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub steps: SmallVec<[RecipeStepsFieldEnum; 8]>,
+    pub steps: Vec<RecipeStepsFieldEnum>,
     ///<https://schema.org/yield>
+    #[serde(rename = "yield")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub r#yield: SmallVec<[RecipeYieldFieldEnum; 1]>,
+    pub r#yield: Vec<RecipeYieldFieldEnum>,
     ///<https://schema.org/tool>
+    #[serde(rename = "tool")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub tool: SmallVec<[RecipeToolFieldEnum; 3]>,
+    pub tool: Vec<RecipeToolFieldEnum>,
     ///<https://schema.org/step>
+    #[serde(rename = "step")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub step: SmallVec<[RecipeStepFieldEnum; 1]>,
+    pub step: Vec<RecipeStepFieldEnum>,
     ///<https://schema.org/prepTime>
+    #[serde(rename = "prepTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub prep_time: SmallVec<[DurationOrText; 1]>,
+    pub prep_time: Vec<DurationOrText>,
     ///<https://schema.org/estimatedCost>
+    #[serde(rename = "estimatedCost")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub estimated_cost: SmallVec<[RecipeEstimatedCostFieldEnum; 1]>,
+    pub estimated_cost: Vec<RecipeEstimatedCostFieldEnum>,
     ///<https://schema.org/totalTime>
+    #[serde(rename = "totalTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub total_time: SmallVec<[DurationOrText; 1]>,
+    pub total_time: Vec<DurationOrText>,
     ///<https://schema.org/performTime>
+    #[serde(rename = "performTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub perform_time: SmallVec<[Duration; 1]>,
+    pub perform_time: Vec<Duration>,
     ///<https://schema.org/supply>
+    #[serde(rename = "supply")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub supply: SmallVec<[RecipeSupplyFieldEnum; 1]>,
+    pub supply: Vec<RecipeSupplyFieldEnum>,
     ///<https://schema.org/comment>
+    #[serde(rename = "comment")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub comment: SmallVec<[Comment; 4]>,
+    pub comment: Vec<Comment>,
     ///<https://schema.org/isBasedOnUrl>
+    #[serde(rename = "isBasedOnUrl")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub is_based_on_url: SmallVec<[RecipeIsBasedOnUrlFieldEnum; 1]>,
+    pub is_based_on_url: Vec<RecipeIsBasedOnUrlFieldEnum>,
     ///<https://schema.org/translationOfWork>
+    #[serde(rename = "translationOfWork")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub translation_of_work: SmallVec<[CreativeWork; 1]>,
+    pub translation_of_work: Vec<CreativeWork>,
     ///<https://schema.org/workTranslation>
+    #[serde(rename = "workTranslation")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub work_translation: SmallVec<[CreativeWork; 1]>,
+    pub work_translation: Vec<CreativeWork>,
     ///<https://schema.org/mentions>
+    #[serde(rename = "mentions")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub mentions: SmallVec<[Thing; 3]>,
+    pub mentions: Vec<Thing>,
     ///<https://schema.org/dateCreated>
+    #[serde(rename = "dateCreated")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub date_created: SmallVec<[RecipeDateCreatedFieldEnum; 1]>,
+    pub date_created: Vec<RecipeDateCreatedFieldEnum>,
     ///<https://schema.org/wordCount>
+    #[serde(rename = "wordCount")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub word_count: SmallVec<[i32; 1]>,
+    pub word_count: Vec<i32>,
     ///<https://schema.org/size>
+    #[serde(rename = "size")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub size: SmallVec<[RecipeSizeFieldEnum; 1]>,
+    pub size: Vec<RecipeSizeFieldEnum>,
     ///<https://schema.org/maintainer>
+    #[serde(rename = "maintainer")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub maintainer: SmallVec<[RecipeMaintainerFieldEnum; 2]>,
+    pub maintainer: Vec<RecipeMaintainerFieldEnum>,
     ///<https://schema.org/license>
+    #[serde(rename = "license")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub license: SmallVec<[RecipeLicenseFieldEnum; 1]>,
+    pub license: Vec<RecipeLicenseFieldEnum>,
     ///<https://schema.org/expires>
+    #[serde(rename = "expires")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub expires: SmallVec<[RecipeExpiresFieldEnum; 1]>,
+    pub expires: Vec<RecipeExpiresFieldEnum>,
     ///<https://schema.org/commentCount>
+    #[serde(rename = "commentCount")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub comment_count: SmallVec<[i32; 1]>,
+    pub comment_count: Vec<i32>,
     ///<https://schema.org/timeRequired>
+    #[serde(rename = "timeRequired")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub time_required: SmallVec<[Duration; 1]>,
+    pub time_required: Vec<Duration>,
     ///<https://schema.org/review>
+    #[serde(rename = "review")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub review: SmallVec<[Review; 4]>,
+    pub review: Vec<Review>,
     ///<https://schema.org/contributor>
+    #[serde(rename = "contributor")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub contributor: SmallVec<[RecipeContributorFieldEnum; 1]>,
+    pub contributor: Vec<RecipeContributorFieldEnum>,
     ///<https://schema.org/interactionStatistic>
+    #[serde(rename = "interactionStatistic")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub interaction_statistic: SmallVec<[InteractionCounter; 1]>,
+    pub interaction_statistic: Vec<InteractionCounter>,
     ///<https://schema.org/publisher>
+    #[serde(rename = "publisher")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub publisher: SmallVec<[RecipePublisherFieldEnum; 1]>,
+    pub publisher: Vec<RecipePublisherFieldEnum>,
     ///<https://schema.org/creditText>
+    #[serde(rename = "creditText")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub credit_text: SmallVec<[String; 1]>,
+    pub credit_text: Vec<String>,
     ///<https://schema.org/headline>
+    #[serde(rename = "headline")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub headline: SmallVec<[String; 1]>,
+    pub headline: Vec<String>,
     ///<https://schema.org/editor>
+    #[serde(rename = "editor")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub editor: SmallVec<[Person; 1]>,
+    pub editor: Vec<Person>,
     ///<https://schema.org/dateModified>
+    #[serde(rename = "dateModified")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub date_modified: SmallVec<[RecipeDateModifiedFieldEnum; 1]>,
+    pub date_modified: Vec<RecipeDateModifiedFieldEnum>,
     ///<https://schema.org/isAccessibleForFree>
+    #[serde(rename = "isAccessibleForFree")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub is_accessible_for_free: SmallVec<[String; 1]>,
+    pub is_accessible_for_free: Vec<String>,
     ///<https://schema.org/keywords>
+    #[serde(rename = "keywords")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub keywords: SmallVec<[RecipeKeywordsFieldEnum; 6]>,
+    pub keywords: Vec<RecipeKeywordsFieldEnum>,
     ///<https://schema.org/provider>
+    #[serde(rename = "provider")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub provider: SmallVec<[RecipeProviderFieldEnum; 1]>,
+    pub provider: Vec<RecipeProviderFieldEnum>,
     ///<https://schema.org/creator>
+    #[serde(rename = "creator")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub creator: SmallVec<[RecipeCreatorFieldEnum; 1]>,
+    pub creator: Vec<RecipeCreatorFieldEnum>,
     ///<https://schema.org/sdDatePublished>
+    #[serde(rename = "sdDatePublished")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub sd_date_published: SmallVec<[String; 1]>,
+    pub sd_date_published: Vec<String>,
     ///<https://schema.org/contentReferenceTime>
+    #[serde(rename = "contentReferenceTime")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub content_reference_time: SmallVec<[String; 1]>,
+    pub content_reference_time: Vec<String>,
     ///<https://schema.org/archivedAt>
+    #[serde(rename = "archivedAt")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub archived_at: SmallVec<[RecipeArchivedAtFieldEnum; 1]>,
+    pub archived_at: Vec<RecipeArchivedAtFieldEnum>,
     ///<https://schema.org/discussionUrl>
+    #[serde(rename = "discussionUrl")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub discussion_url: SmallVec<[String; 1]>,
+    pub discussion_url: Vec<String>,
     ///<https://schema.org/contentRating>
+    #[serde(rename = "contentRating")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub content_rating: SmallVec<[RecipeContentRatingFieldEnum; 1]>,
+    pub content_rating: Vec<RecipeContentRatingFieldEnum>,
     ///<https://schema.org/countryOfOrigin>
+    #[serde(rename = "countryOfOrigin")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub country_of_origin: SmallVec<[Country; 1]>,
+    pub country_of_origin: Vec<Country>,
     ///<https://schema.org/text>
+    #[serde(rename = "text")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub text: SmallVec<[String; 1]>,
+    pub text: Vec<String>,
     ///<https://schema.org/award>
+    #[serde(rename = "award")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub award: SmallVec<[String; 2]>,
+    pub award: Vec<String>,
     ///<https://schema.org/isBasedOn>
+    #[serde(rename = "isBasedOn")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub is_based_on: SmallVec<[RecipeIsBasedOnFieldEnum; 1]>,
+    pub is_based_on: Vec<RecipeIsBasedOnFieldEnum>,
     ///<https://schema.org/aggregateRating>
+    #[serde(rename = "aggregateRating")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub aggregate_rating: SmallVec<[AggregateRating; 1]>,
+    pub aggregate_rating: Vec<AggregateRating>,
     ///<https://schema.org/inLanguage>
+    #[serde(rename = "inLanguage")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub in_language: SmallVec<[RecipeInLanguageFieldEnum; 1]>,
+    pub in_language: Vec<RecipeInLanguageFieldEnum>,
     ///<https://schema.org/datePublished>
+    #[serde(rename = "datePublished")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub date_published: SmallVec<[RecipeDatePublishedFieldEnum; 1]>,
+    pub date_published: Vec<RecipeDatePublishedFieldEnum>,
     ///<https://schema.org/sdPublisher>
+    #[serde(rename = "sdPublisher")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub sd_publisher: SmallVec<[RecipeSdPublisherFieldEnum; 1]>,
+    pub sd_publisher: Vec<RecipeSdPublisherFieldEnum>,
     ///<https://schema.org/audio>
+    #[serde(rename = "audio")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub audio: SmallVec<[RecipeAudioFieldEnum; 1]>,
+    pub audio: Vec<RecipeAudioFieldEnum>,
     ///<https://schema.org/alternativeHeadline>
+    #[serde(rename = "alternativeHeadline")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub alternative_headline: SmallVec<[String; 1]>,
+    pub alternative_headline: Vec<String>,
     ///<https://schema.org/about>
+    #[serde(rename = "about")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub about: SmallVec<[Thing; 1]>,
+    pub about: Vec<Thing>,
     ///<https://schema.org/isPartOf>
+    #[serde(rename = "isPartOf")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub is_part_of: SmallVec<[RecipeIsPartOfFieldEnum; 1]>,
+    pub is_part_of: Vec<RecipeIsPartOfFieldEnum>,
     ///<https://schema.org/thumbnail>
+    #[serde(rename = "thumbnail")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub thumbnail: SmallVec<[ImageObject; 1]>,
+    pub thumbnail: Vec<ImageObject>,
     ///<https://schema.org/thumbnailUrl>
+    #[serde(rename = "thumbnailUrl")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub thumbnail_url: SmallVec<[String; 1]>,
+    pub thumbnail_url: Vec<String>,
     ///<https://schema.org/copyrightYear>
+    #[serde(rename = "copyrightYear")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub copyright_year: SmallVec<[f32; 1]>,
+    pub copyright_year: Vec<f32>,
     ///<https://schema.org/workExample>
+    #[serde(rename = "workExample")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub work_example: SmallVec<[CreativeWork; 1]>,
+    pub work_example: Vec<CreativeWork>,
     ///<https://schema.org/citation>
+    #[serde(rename = "citation")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub citation: SmallVec<[RecipeCitationFieldEnum; 1]>,
+    pub citation: Vec<RecipeCitationFieldEnum>,
     ///<https://schema.org/video>
+    #[serde(rename = "video")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub video: SmallVec<[RecipeVideoFieldEnum; 2]>,
+    pub video: Vec<RecipeVideoFieldEnum>,
     ///<https://schema.org/awards>
+    #[serde(rename = "awards")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub awards: SmallVec<[String; 4]>,
+    pub awards: Vec<String>,
     ///<https://schema.org/producer>
+    #[serde(rename = "producer")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub producer: SmallVec<[RecipeProducerFieldEnum; 1]>,
+    pub producer: Vec<RecipeProducerFieldEnum>,
     ///<https://schema.org/schemaVersion>
+    #[serde(rename = "schemaVersion")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub schema_version: SmallVec<[RecipeSchemaVersionFieldEnum; 1]>,
+    pub schema_version: Vec<RecipeSchemaVersionFieldEnum>,
     ///<https://schema.org/author>
+    #[serde(rename = "author")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub author: SmallVec<[RecipeAuthorFieldEnum; 1]>,
+    pub author: Vec<RecipeAuthorFieldEnum>,
     ///<https://schema.org/translator>
+    #[serde(rename = "translator")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub translator: SmallVec<[RecipeTranslatorFieldEnum; 1]>,
+    pub translator: Vec<RecipeTranslatorFieldEnum>,
     ///<https://schema.org/reviews>
+    #[serde(rename = "reviews")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub reviews: SmallVec<[Review; 4]>,
+    pub reviews: Vec<Review>,
     ///<https://schema.org/disambiguatingDescription>
+    #[serde(rename = "disambiguatingDescription")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub disambiguating_description: SmallVec<[String; 1]>,
+    pub disambiguating_description: Vec<String>,
     ///<https://schema.org/image>
+    #[serde(rename = "image")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub image: SmallVec<[RecipeImageFieldEnum; 4]>,
+    pub image: Vec<RecipeImageFieldEnum>,
     ///<https://schema.org/sameAs>
+    #[serde(rename = "sameAs")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub same_as: SmallVec<[String; 1]>,
+    pub same_as: Vec<String>,
     ///<https://schema.org/description>
+    #[serde(rename = "description")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub description: SmallVec<[RecipeDescriptionFieldEnum; 1]>,
+    pub description: Vec<RecipeDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
+    #[serde(rename = "alternateName")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub alternate_name: SmallVec<[String; 1]>,
+    pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
+    #[serde(rename = "url")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub url: SmallVec<[String; 1]>,
+    pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
+    #[serde(rename = "subjectOf")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub subject_of: SmallVec<[RecipeSubjectOfFieldEnum; 1]>,
+    pub subject_of: Vec<RecipeSubjectOfFieldEnum>,
     ///<https://schema.org/name>
+    #[serde(rename = "name")]
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub name: SmallVec<[String; 1]>,
+    pub name: Vec<String>,
 }
 
 pub fn set_recipe_type() -> Option<String> {

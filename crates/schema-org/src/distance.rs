@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
-use smallvec::SmallVec;
 
 use crate::field::{DistanceDescriptionFieldEnum, DistanceSubjectOfFieldEnum};
-use crate::helpers::{is_smallvec_empty, one_or_many};
+use crate::helpers::one_or_many;
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
@@ -20,26 +19,26 @@ pub struct Distance {
     pub context: Option<String>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub disambiguating_description: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub disambiguating_description: Vec<String>,
     ///<https://schema.org/description>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub description: SmallVec<[DistanceDescriptionFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub description: Vec<DistanceDescriptionFieldEnum>,
     ///<https://schema.org/alternateName>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub alternate_name: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub alternate_name: Vec<String>,
     ///<https://schema.org/url>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub url: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub url: Vec<String>,
     ///<https://schema.org/subjectOf>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub subject_of: SmallVec<[DistanceSubjectOfFieldEnum; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub subject_of: Vec<DistanceSubjectOfFieldEnum>,
     ///<https://schema.org/name>
     #[serde(default, deserialize_with = "one_or_many")]
-    #[serde(skip_serializing_if = "is_smallvec_empty")]
-    pub name: SmallVec<[String; 1]>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub name: Vec<String>,
 }
