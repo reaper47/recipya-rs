@@ -9,4 +9,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_23.x | bash - \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cargo install diesel_cli
+RUN cargo install diesel_cli --no-default-features --features postgres
+
+WORKDIR /workspace
