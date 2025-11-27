@@ -1,13 +1,12 @@
 use std::io::{Read, Seek};
 
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::character::complete::{line_ending, not_line_ending, space0, tab};
-use nom::combinator::{eof, map, map_opt, opt};
-use nom::multi::many1;
-use nom::sequence::{preceded, terminated};
-use nom::{IResult, Parser};
 use url::Url;
+use winnow::Result as WResult;
+use winnow::ascii::tab;
+use winnow::combinator::{opt, preceded, repeat, seq};
+use winnow::error::ContextError;
+use winnow::prelude::*;
+use winnow::token::{literal, rest};
 
 use schema_org::Recipe;
 use schema_org::field::{
@@ -16,7 +15,7 @@ use schema_org::field::{
 use support::time::parse_duration;
 
 use crate::apps::helpers::{read_file, urls_to_image_object};
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 
 struct SaffronRecipe {
@@ -37,6 +36,7 @@ struct SaffronRecipe {
     instructions: Vec<String>,
 }
 
+#[derive(Default)]
 struct RecipeComponents<'a> {
     title: &'a str,
     description: Option<&'a str>,
@@ -112,101 +112,69 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    let recipe = parse_saffron_recipe(&content)?;
+    let mut input = content.as_str();
+
+    let recipe = parse_saffron_recipe(&mut input).map_err(|err| Error::Parse(err.to_string()))?;
     Ok(vec![Recipe::from(recipe)])
 }
 
-fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
-    Ok(map(recipe, SaffronRecipe::from)
-        .parse(input)
-        .map(|(_, r)| r)?)
+fn parse_saffron_recipe<'s>(input: &mut &'s str) -> WResult<SaffronRecipe> {
+    Ok(parse_recipe.map(SaffronRecipe::from).parse_next(input)?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            title,
-            description,
-            source,
-            original_url,
-            servings,
-            prep_seconds,
-            cook_seconds,
-            total_seconds,
-            cookbook,
-            section,
-            image,
-            ingredients,
-            instructions,
-        ),
-        |(
-            title,
-            description,
-            source,
-            original_url,
-            servings,
-            prep_seconds,
-            cook_seconds,
-            total_seconds,
-            cookbook,
-            section,
-            image,
-            ingredients,
-            instructions,
-        )| {
-            RecipeComponents {
-                title,
-                description: description.filter(|s| !s.is_empty()),
-                source,
-                original_url,
-                servings,
-                prep_seconds,
-                cook_seconds,
-                total_seconds,
-                cookbook,
-                section,
-                image: image.filter(|s| !s.is_empty()),
-                ingredients,
-                instructions,
-            }
-        },
-    )
-    .parse(input)
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        title: parse_title,
+        description: parse_description,
+        source: parse_source,
+        original_url: parse_original_url,
+        servings: parse_servings,
+        prep_seconds: parse_prep_seconds,
+        cook_seconds: parse_cook_seconds,
+        total_seconds: parse_total_seconds,
+        cookbook: parse_cookbook,
+        section: parse_section,
+        image: parse_image,
+        ingredients: parse_ingredients,
+        instructions: parse_instructions,
+    }}
+    .parse_next(input)
 }
 
-fn title(input: &str) -> IResult<&str, &str> {
-    preceded(tag("Title: "), rest).parse(input)
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    parse_metadata("Title: ").parse_next(input)
 }
 
-fn description(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Description: "), rest)).parse(input)
+fn parse_description<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(parse_metadata("Description: ")).parse_next(input)
 }
 
-fn source(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Source: "), rest)).parse(input)
+fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(parse_metadata("Source: ")).parse_next(input)
 }
 
-fn original_url(input: &str) -> IResult<&str, Option<Url>> {
-    map(preceded(tag("Original URL: "), rest), |s| {
-        Url::parse(s).ok()
-    })
-    .parse(input)
+fn parse_original_url<'s>(input: &mut &'s str) -> WResult<Option<Url>> {
+    parse_metadata("Source: ")
+        .map(|s: &str| Url::parse(s).ok())
+        .parse_next(input)
 }
 
-fn servings(input: &str) -> IResult<&str, Option<i16>> {
-    map(preceded(tag("Yield: "), rest), |s| s.parse().ok()).parse(input)
+fn parse_servings<'s>(input: &mut &'s str) -> WResult<Option<i16>> {
+    parse_metadata("Yield: ")
+        .map(|s: &str| s.parse().ok())
+        .parse_next(input)
 }
 
-fn prep_seconds(input: &str) -> IResult<&str, Option<i32>> {
-    opt(map_opt(preceded(tag("Prep: "), rest), parse_time)).parse(input)
+fn parse_prep_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+    parse_metadata("Prep: ").map(parse_time).parse_next(input)
 }
 
-fn cook_seconds(input: &str) -> IResult<&str, Option<i32>> {
-    opt(map_opt(preceded(tag("Cook: "), rest), parse_time)).parse(input)
+fn parse_cook_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+    parse_metadata("Cook: ").map(parse_time).parse_next(input)
 }
 
-fn total_seconds(input: &str) -> IResult<&str, Option<i32>> {
-    opt(map_opt(preceded(tag("Total: "), rest), parse_time)).parse(input)
+fn parse_total_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+    parse_metadata("Total: ").map(parse_time).parse_next(input)
 }
 
 fn parse_time(s: &str) -> Option<i32> {
@@ -217,40 +185,42 @@ fn parse_time(s: &str) -> Option<i32> {
     }
 }
 
-fn cookbook(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Cookbook: "), rest)).parse(input)
+fn parse_cookbook<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(parse_metadata("Cookbook: ")).parse_next(input)
 }
 
-fn section(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Section: "), rest)).parse(input)
+fn parse_section<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(parse_metadata("Section: ")).parse_next(input)
 }
 
-fn image(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded((tag("Image: "), space0), rest)).parse(input)
+fn parse_image<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(parse_metadata("Image: ")).parse_next(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<&str>> {
-    preceded(preceded(tag("Ingredients: "), rest), many1(tabbed_line)).parse(input)
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    preceded(parse_metadata("Ingredients: "), repeat(1.., tabbed_line)).parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<&str>> {
-    preceded(preceded(tag("Instructions: "), rest), many1(tabbed_line)).parse(input)
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    preceded(parse_metadata("Instructions: "), repeat(1.., tabbed_line)).parse_next(input)
 }
 
-fn tabbed_line(input: &str) -> IResult<&str, &str> {
-    preceded(tab, rest).parse(input)
+fn tabbed_line<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    preceded(tab, rest).parse_next(input)
 }
 
-fn rest(input: &str) -> IResult<&str, &str> {
-    terminated(not_line_ending, alt((line_ending, eof))).parse(input)
+fn parse_metadata<'s>(text: &str) -> impl Parser<&'s str, &'s str, ContextError> {
+    preceded(literal(text), rest)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::io::Cursor;
+
     use files::*;
     use schema_org::Recipe;
-    use std::io::Cursor;
+
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
