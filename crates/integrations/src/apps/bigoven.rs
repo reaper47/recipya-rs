@@ -155,6 +155,7 @@ fn transform_ingredient_types<'a>(
                 let num_items = items.len();
 
                 RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                    r#type: Some(AtType::ItemList.to_string()),
                     item_list_element: items
                         .into_iter()
                         .map(ItemListItemListElementFieldEnum::Text)
