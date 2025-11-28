@@ -20,7 +20,7 @@ use crate::recipe::structs::recipe::{
     InstructionForInsert, InstructionRecipeForInsert, KeywordForInsert, KeywordRecipe,
     RecipeForCreate,
 };
-use crate::recipe::structs::section::{SectionComponents, SectionForInsert};
+use crate::recipe::structs::section::{Item, SectionComponents, SectionForInsert};
 use crate::recipe::structs::tool::{ToolForCreate, ToolForInsert, ToolRecipeForInsert};
 use crate::user::UserKeyword;
 
@@ -101,38 +101,68 @@ where
 {
     let mut uniques = HashSet::new();
 
-    for section in ingredients.iter() {
-        let ingredient_recipes: Vec<_> = diesel::insert_into(schema::ingredients::table)
-            .values(
-                ingredients
-                    .iter()
-                    .map(|item| IngredientForInsert {
-                        name: normalise_vulgar_fractions(&item.text),
-                    })
-                    .filter(|item| uniques.insert(item.name.clone()))
-                    .collect::<Vec<_>>(),
-            )
-            .on_conflict(schema::ingredients::name)
-            .do_update()
-            .set(schema::ingredients::name.eq(excluded(schema::ingredients::name)))
-            .returning((schema::ingredients::id, schema::ingredients::name))
-            .get_results::<(i64, String)>(&mut conn)
-            .await?
-            .into_iter()
-            .enumerate()
-            .map(|(idx, (id, _))| IngredientRecipeForInsert {
-                ingredient_id: id,
-                recipe_id,
-                section_id: *sections_map.get(&section.text).unwrap_or(&1),
-                item_order: idx as i16,
-            })
-            .collect::<Vec<_>>();
-
-        diesel::insert_into(schema::ingredients_recipes::table)
-            .values(&ingredient_recipes)
-            .execute(&mut conn)
-            .await?;
+    match ingredients {
+        SectionComponents::Grouped(sections) => {
+            for section in sections.iter() {
+                let section_id = *sections_map.get(&section.title).unwrap_or(&1);
+                process_ingredients(
+                    &section.items,
+                    section_id,
+                    recipe_id,
+                    &mut uniques,
+                    &mut conn,
+                )
+                .await?;
+            }
+        }
+        SectionComponents::Flat(items) => {
+            process_ingredients(items, 1, recipe_id, &mut uniques, &mut conn).await?;
+        }
     }
+
+    Ok(())
+}
+
+async fn process_ingredients<C>(
+    items: &[Item],
+    section_id: i64,
+    recipe_id: i64,
+    uniques: &mut HashSet<String>,
+    conn: &mut C,
+) -> Result<()>
+where
+    C: AsyncConnection<Backend = diesel::pg::Pg>,
+{
+    let ingredient_recipes: Vec<_> = diesel::insert_into(schema::ingredients::table)
+        .values(
+            items
+                .iter()
+                .map(|item| IngredientForInsert {
+                    name: normalise_vulgar_fractions(&item.text),
+                })
+                .filter(|item| uniques.insert(item.name.clone()))
+                .collect::<Vec<_>>(),
+        )
+        .on_conflict(schema::ingredients::name)
+        .do_update()
+        .set(schema::ingredients::name.eq(excluded(schema::ingredients::name)))
+        .returning((schema::ingredients::id, schema::ingredients::name))
+        .get_results::<(i64, String)>(conn)
+        .await?
+        .into_iter()
+        .enumerate()
+        .map(|(idx, (id, _))| IngredientRecipeForInsert {
+            ingredient_id: id,
+            recipe_id,
+            section_id,
+            item_order: idx as i16,
+        })
+        .collect::<Vec<_>>();
+
+    diesel::insert_into(schema::ingredients_recipes::table)
+        .values(&ingredient_recipes)
+        .execute(conn)
+        .await?;
 
     Ok(())
 }
@@ -148,40 +178,70 @@ where
 {
     let mut uniques = HashSet::new();
 
-    for section in instructions.iter() {
-        let instruction_recipes: Vec<InstructionRecipeForInsert> =
-            diesel::insert_into(schema::instructions::table)
-                .values(
-                    instructions
-                        .iter()
-                        .map(|item| InstructionForInsert {
-                            name: item.text.clone(),
-                            duration_seconds: item.duration_seconds,
-                        })
-                        .filter(|s| uniques.insert(s.name.clone()))
-                        .collect::<Vec<_>>(),
-                )
-                .on_conflict(schema::instructions::name)
-                .do_update()
-                .set(schema::instructions::name.eq(excluded(schema::instructions::name)))
-                .returning((schema::instructions::id, schema::instructions::name))
-                .get_results::<(i64, String)>(&mut conn)
-                .await?
-                .into_iter()
-                .enumerate()
-                .map(|(idx, (id, _))| InstructionRecipeForInsert {
-                    instruction_id: id,
+    match instructions {
+        SectionComponents::Grouped(sections) => {
+            for section in sections.iter() {
+                let section_id = *sections_map.get(&section.title).unwrap_or(&1);
+                process_instructions(
+                    &section.items,
+                    section_id,
                     recipe_id,
-                    section_id: *sections_map.get(&section.text).unwrap_or(&1),
-                    item_order: idx as i16,
-                })
-                .collect::<Vec<_>>();
-
-        diesel::insert_into(schema::instructions_recipes::table)
-            .values(&instruction_recipes)
-            .execute(&mut conn)
-            .await?;
+                    &mut uniques,
+                    &mut conn,
+                )
+                .await?;
+            }
+        }
+        SectionComponents::Flat(items) => {
+            process_instructions(items, 1, recipe_id, &mut uniques, &mut conn).await?;
+        }
     }
+
+    Ok(())
+}
+
+async fn process_instructions<C>(
+    items: &[Item],
+    section_id: i64,
+    recipe_id: i64,
+    uniques: &mut HashSet<String>,
+    conn: &mut C,
+) -> Result<()>
+where
+    C: AsyncConnection<Backend = diesel::pg::Pg>,
+{
+    let instruction_recipes: Vec<InstructionRecipeForInsert> =
+        diesel::insert_into(schema::instructions::table)
+            .values(
+                items
+                    .iter()
+                    .map(|item| InstructionForInsert {
+                        name: item.text.clone(),
+                        duration_seconds: item.duration_seconds,
+                    })
+                    .filter(|s| uniques.insert(s.name.clone()))
+                    .collect::<Vec<_>>(),
+            )
+            .on_conflict(schema::instructions::name)
+            .do_update()
+            .set(schema::instructions::name.eq(excluded(schema::instructions::name)))
+            .returning((schema::instructions::id, schema::instructions::name))
+            .get_results::<(i64, String)>(conn)
+            .await?
+            .into_iter()
+            .enumerate()
+            .map(|(idx, (id, _))| InstructionRecipeForInsert {
+                instruction_id: id,
+                recipe_id,
+                section_id: section_id,
+                item_order: idx as i16,
+            })
+            .collect::<Vec<_>>();
+
+    diesel::insert_into(schema::instructions_recipes::table)
+        .values(&instruction_recipes)
+        .execute(conn)
+        .await?;
 
     Ok(())
 }

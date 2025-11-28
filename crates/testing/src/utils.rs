@@ -34,6 +34,8 @@ pub const HIDDEN_WS_NOTIFICATION: &str = r#"<div id="ws-notification-container" 
 
 /// The database URL used for connecting to the database in test environments.
 pub fn test_database_url() -> String {
+    setup_env();
+
     let base = env::var("RECIPYA_DATABASE_URL")
         .expect("Environment variable 'RECIPYA_DATABASE_URL' to be set")
         .trim_end_matches('/')
@@ -43,6 +45,14 @@ pub fn test_database_url() -> String {
         base
     } else {
         format!("{base}/recipya_test")
+    }
+}
+
+pub fn setup_env() {
+    let _ = dotenvy::dotenv();
+
+    if std::env::var("RECIPYA_DATABASE_URL").is_err() {
+        panic!("Environment variable 'RECIPYA_DATABASE_URL' to be set: NotPresent");
     }
 }
 

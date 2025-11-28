@@ -17,6 +17,7 @@ rust-version.workspace = true
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
 derive_more.workspace = true
+dotenvy = "0.15.7"
 enum_dispatch = "0.3.13"
 hmac = "0.12.1"
 lazy-regex = "3.4.1"

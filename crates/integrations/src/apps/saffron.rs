@@ -2,8 +2,8 @@ use std::io::{Read, Seek};
 
 use url::Url;
 use winnow::Result as WResult;
-use winnow::ascii::{line_ending, space0, tab};
-use winnow::combinator::{opt, preceded, repeat, seq, terminated};
+use winnow::ascii::{line_ending, space0, tab, till_line_ending};
+use winnow::combinator::{alt, opt, preceded, repeat, seq, terminated};
 use winnow::error::ContextError;
 use winnow::prelude::*;
 use winnow::token::{literal, take_until};
@@ -146,22 +146,22 @@ fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
 }
 
 fn parse_description<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
-    opt(parse_metadata("Description:")).parse_next(input)
+    parse_metadata_opt("Description:").parse_next(input)
 }
 
 fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
-    opt(parse_metadata("Source:")).parse_next(input)
+    parse_metadata_opt("Source:").parse_next(input)
 }
 
 fn parse_original_url<'s>(input: &mut &'s str) -> WResult<Option<Url>> {
-    parse_metadata("Source:")
-        .map(|s: &str| Url::parse(s).ok())
+    parse_metadata_opt("Original URL:")
+        .map(|opt: Option<&str>| opt.and_then(|s| Url::parse(s.trim()).ok()))
         .parse_next(input)
 }
 
 fn parse_servings<'s>(input: &mut &'s str) -> WResult<Option<i16>> {
-    parse_metadata("Yield:")
-        .map(|s: &str| s.parse().ok())
+    parse_metadata_opt("Yield:")
+        .map(|s: Option<&str>| s.unwrap_or_default().parse().ok())
         .parse_next(input)
 }
 
@@ -170,11 +170,15 @@ fn parse_prep_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
 }
 
 fn parse_cook_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
-    parse_metadata("Cook:").map(parse_time).parse_next(input)
+    opt(parse_metadata("Cook:"))
+        .map(|opt| opt.and_then(parse_time))
+        .parse_next(input)
 }
 
 fn parse_total_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
-    parse_metadata("Total:").map(parse_time).parse_next(input)
+    opt(parse_metadata("Total:"))
+        .map(|opt| opt.and_then(parse_time))
+        .parse_next(input)
 }
 
 fn parse_time(s: &str) -> Option<i32> {
@@ -186,33 +190,43 @@ fn parse_time(s: &str) -> Option<i32> {
 }
 
 fn parse_cookbook<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
-    opt(parse_metadata("Cookbook:")).parse_next(input)
+    parse_metadata_opt("Cookbook:").parse_next(input)
 }
 
 fn parse_section<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
-    opt(parse_metadata("Section:")).parse_next(input)
+    parse_metadata_opt("Section:").parse_next(input)
 }
 
 fn parse_image<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
-    opt(parse_metadata("Image:")).parse_next(input)
+    parse_metadata_opt("Image:").parse_next(input)
 }
 
 fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
-    preceded(parse_metadata("Ingredients:"), repeat(1.., tabbed_line)).parse_next(input)
+    preceded(("Ingredients:", line_ending), repeat(1.., tabbed_line)).parse_next(input)
 }
 
 fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
-    preceded(parse_metadata("Instructions:"), repeat(1.., tabbed_line)).parse_next(input)
+    preceded(("Instructions:", line_ending), repeat(1.., tabbed_line)).parse_next(input)
 }
 
 fn tabbed_line<'s>(input: &mut &'s str) -> WResult<&'s str> {
-    preceded(tab, terminated(take_until(1.., "\n"), line_ending)).parse_next(input)
+    preceded(tab, terminated(till_line_ending, opt(line_ending))).parse_next(input)
 }
 
 fn parse_metadata<'s>(text: &str) -> impl Parser<&'s str, &'s str, ContextError> {
     preceded(
         (literal(text), space0),
         terminated(take_until(1.., "\n"), line_ending),
+    )
+}
+
+fn parse_metadata_opt<'s>(text: &str) -> impl Parser<&'s str, Option<&'s str>, ContextError> {
+    preceded(
+        (literal(text), space0),
+        alt((
+            terminated(take_until(1.., "\n"), line_ending).map(Some),
+            line_ending.map(|_| None),
+        )),
     )
 }
 

@@ -209,6 +209,7 @@ version = "0.0.0"
 dependencies = [
  "argon2",
  "derive_more",
+ "dotenvy",
  "enum_dispatch",
  "hmac",
  "lazy-regex",
@@ -3491,7 +3492,6 @@ dependencies = [
  "config",
  "derive_more",
  "diesel",
- "dotenvy",
  "models",
  "openssl",
  "pq-sys",
@@ -4461,6 +4461,7 @@ dependencies = [
  "config",
  "diesel",
  "diesel-async",
+ "dotenvy",
  "models",
  "recipya-scraper",
  "repository",

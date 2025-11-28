@@ -59,7 +59,13 @@
     </cargoProject>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="" />
+    <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.cargo/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/.cargo/config.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -854,7 +860,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "169-cant-parse-json-recipe-that-has-a-propertyvalue-as-a-recipeingredient",
+    "git-widget-placeholder": "#173 on 169-cant-parse-json-recipe-that-h…dient",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/schema-org/src",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -897,7 +903,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test accuchef::tests">
+  <component name="RunManager" selected="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -934,8 +940,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::edit::tests::test_put_update_image_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_update_image_ok -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_search::test_search_by_instructions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_instructions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -1004,19 +1010,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
       <item itemvalue="Cargo.Test accuchef::tests" />
-      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
       <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
       <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
       <item itemvalue="Cargo.Test time::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
         <item itemvalue="Cargo.Test accuchef::tests" />
         <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
         <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
         <item itemvalue="Cargo.Test time::tests" />
-        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
       </list>
     </recent_temporary>
   </component>
