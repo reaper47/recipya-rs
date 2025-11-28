@@ -193,10 +193,14 @@ pub fn view_recipe_helper(
                                     }
                                 }
                                 div class={
-                                    "grid grid-flow-col border-gray-700 col-span-6 print:border-none"
+                                    "grid-flow-col border-gray-700 col-span-6 print:border-none"
+                                    @if data.is_preview { " flex flex-col" } @else { " grid" }
                                     @if recipe_details.nutrition.is_none() { " print:hidden" }
                                 } {
-                                    div class="col-span-3 min-h-40 md:h-full md:border-r md:row-span-1 print:hidden" {
+                                    div class={
+                                        "col-span-3 md:h-full md:border-r md:row-span-1 print:hidden"
+                                        @if data.is_preview { " border-b" } @else { " min-h-40" }
+                                    } {
                                         textarea readonly class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {
                                             @if let Some(description) = &recipe.description {
                                                 (description)
@@ -204,7 +208,7 @@ pub fn view_recipe_helper(
                                                 "No description"
                                             }
                                         }
-                                        }
+                                    }
                                     div class="col-span-3" {
                                         (render_nutrition(&recipe_details))
                                     }

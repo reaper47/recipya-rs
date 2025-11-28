@@ -342,8 +342,26 @@ mod tests {
                 additional_images: got.additional_images.clone(),
                 category: recipe.category.expect("Should have category"),
                 cuisine: recipe.cuisine,
-                ingredients: recipe.ingredients,
-                instructions: recipe.instructions,
+                ingredients: match recipe.ingredients {
+                    SectionComponents::Grouped(section_items) => SectionComponents::Flat(
+                        section_items
+                            .into_iter()
+                            .map(|item| item.items)
+                            .flatten()
+                            .collect()
+                    ),
+                    SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                },
+                instructions: match recipe.instructions {
+                    SectionComponents::Grouped(section_items) => SectionComponents::Flat(
+                        section_items
+                            .into_iter()
+                            .map(|item| item.items)
+                            .flatten()
+                            .collect()
+                    ),
+                    SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                },
                 keywords: vec!["fruits".into(), "healthy".into(), "strawberries".into()],
                 nutrition: Some(Nutrition {
                     id: 1,

@@ -50,7 +50,7 @@ and share your favorite recipes. It is focused on simplicity for the whole famil
 The [Recipya](https://github.com/reaper47/recipya) project is currently being rewritten in Rust as
 announced [here](https://github.com/reaper47/recipya/discussions/422). The Rust project is not ready for production nor
 to selfhost.
-The user interface should look exactly the same as the original.
+The user interface is better than the the original.
 
 ## Features
 

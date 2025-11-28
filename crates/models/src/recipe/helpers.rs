@@ -9,6 +9,7 @@ use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 
 use repository::schema;
+use support::regexp::time::TimeParser;
 use support::strings::normalise_vulgar_fractions;
 use uuid::Uuid;
 
@@ -217,7 +218,7 @@ where
                     .iter()
                     .map(|item| InstructionForInsert {
                         name: item.text.clone(),
-                        duration_seconds: item.duration_seconds,
+                        duration_seconds: TimeParser::new().parse_max_time_seconds(&item.text),
                     })
                     .filter(|s| uniques.insert(s.name.clone()))
                     .collect::<Vec<_>>(),

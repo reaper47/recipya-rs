@@ -18,7 +18,7 @@ pub type StructuredValueAdditionalTypeFieldEnum = String;
 #[serde(rename_all = "camelCase")]
 pub struct StructuredValue {
     #[serde(rename = "@type")]
-    pub r#type: Option<String>,
+    pub r#type: String,
     #[serde(rename = "@context")]
     pub context: Option<String>,
     ///<https://schema.org/disambiguatingDescription>

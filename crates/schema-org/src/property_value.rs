@@ -22,7 +22,7 @@ pub type PropertyValueUnitCodeFieldEnum = String;
 #[serde(rename_all = "camelCase")]
 pub struct PropertyValue {
     #[serde(rename = "@type")]
-    pub r#type: Option<String>,
+    pub r#type: String,
     #[serde(rename = "@context")]
     pub context: Option<String>,
     ///<https://schema.org/measurementMethod>

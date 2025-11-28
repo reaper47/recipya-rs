@@ -589,7 +589,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     recipe_category: vec!["Backen".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
-                            r#type: Some(AtType::ItemList.to_string()),
+                            r#type: AtType::ItemList.to_string(),
                             item_list_element: vec![
                                 ItemListItemListElementFieldEnum::Text("250 g Mehl".into()),
                                 ItemListItemListElementFieldEnum::Text("1 Pr Salz".into()),
@@ -601,7 +601,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                             ..Default::default()
                         }),
                         RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
-                            r#type: Some(AtType::ItemList.to_string()),
+                            r#type: AtType::ItemList.to_string(),
                             item_list_element: vec![
                                 ItemListItemListElementFieldEnum::Text("6 gr Zwiebeln".into()),
                                 ItemListItemListElementFieldEnum::Text("Kümmel [gemahlen]".into()),

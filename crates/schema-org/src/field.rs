@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::Value;
 
 use crate::enums::{GenderTypeEnum, ItemListOrderTypeEnum, MeasurementMethodEnumEnum};
 use crate::{
@@ -826,7 +827,9 @@ impl FieldEnum20 {
                     .map(|v| v.parse::<i16>().unwrap_or_default())
                     .unwrap_or_default(),
             }),
-            FieldEnum20::Text(s) => s.parse::<i16>().ok(),
+            FieldEnum20::Text(s) => s
+                .split_whitespace()
+                .find_map(|part| part.parse::<i16>().ok()),
         }
     }
 }
@@ -1720,22 +1723,60 @@ pub type RecipeStepsFieldEnum = FieldEnum141;
 ///<https://schema.org/steps>
 pub type HowToStepsFieldEnum = FieldEnum141;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
-#[serde(untagged)]
 pub enum FieldEnum149 {
-    ///<https://schema.org/ItemList>
-    ItemList(ItemList),
     ///<https://schema.org/PropertyValue>
     PropertyValue(PropertyValue),
+    ///<https://schema.org/ItemList>
+    ItemList(ItemList),
     ///<https://schema.org/Text>
     Text(String),
 }
+
 impl Default for FieldEnum149 {
     fn default() -> Self {
         Self::Text(String::new())
     }
 }
+
+impl<'de> Deserialize<'de> for FieldEnum149 {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?;
+
+        match &value {
+            Value::String(s) => Ok(FieldEnum149::Text(s.clone())),
+            Value::Object(map) => {
+                match map.get("@type").and_then(|v| v.as_str()) {
+                    Some("PropertyValue") => {
+                        serde_json::from_value(value)
+                            .map(FieldEnum149::PropertyValue)
+                            .map_err(serde::de::Error::custom)
+                    }
+                    Some("ItemList") => {
+                        serde_json::from_value(value)
+                            .map(FieldEnum149::ItemList)
+                            .map_err(serde::de::Error::custom)
+                    }
+                    _ => {
+                        serde_json::from_value::<PropertyValue>(value.clone())
+                            .map(FieldEnum149::PropertyValue)
+                            .or_else(|_| {
+                                serde_json::from_value(value)
+                                    .map(FieldEnum149::ItemList)
+                            })
+                            .map_err(serde::de::Error::custom)
+                    }
+                }
+            }
+            _ => Err(serde::de::Error::custom("Expected string or object for FieldEnum149")),
+        }
+    }
+}
+
 ///<https://schema.org/recipeIngredient>
 pub type RecipeRecipeIngredientFieldEnum = FieldEnum149;
 
@@ -1743,7 +1784,7 @@ impl RecipeRecipeIngredientFieldEnum {
     /// Creates a new ItemList that contains a title and a list of items.
     pub fn new_section(name: &str, items: Vec<&str>) -> Self {
         Self::ItemList(ItemList {
-            r#type: Some(AtType::ItemList.to_string()),
+            r#type: AtType::ItemList.to_string(),
             item_list_element: items
                 .iter()
                 .map(|v| ItemListItemListElementFieldEnum::Text(v.to_string()))

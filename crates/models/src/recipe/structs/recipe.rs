@@ -1,4 +1,5 @@
 use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
+use schema_org::ToIso8601;
 use uuid::Uuid;
 use whatlang::Lang;
 
@@ -308,16 +309,9 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             notes: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             nutrition: schema.nutrition.first().map(NutritionForCreate::from),
             times: Some(TimesForCreate::from_components(
-                schema
-                    .prep_time
-                    .first()
-                    .map(|d| d.to_iso8601())
-                    .unwrap_or_default(),
-                schema
-                    .cook_time
-                    .first()
-                    .map(|d| d.to_iso8601())
-                    .unwrap_or_default(),
+                schema.prep_time.to_is8601_duration(),
+                schema.cook_time.to_is8601_duration(),
+                schema.total_time.to_is8601_duration(),
             )),
             tools: schema.tool.iter().map(ToolForCreate::from).collect(),
         }

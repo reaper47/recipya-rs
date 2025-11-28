@@ -3,6 +3,16 @@ use serde::{Deserialize, Serialize};
 use crate::field::DurationDescriptionFieldEnum;
 use crate::helpers::one_or_many;
 
+pub trait ToIso8601 {
+    fn to_is8601_duration(&self) -> Option<iso8601::Duration>;
+}
+
+impl ToIso8601 for Vec<DurationOrText> {
+    fn to_is8601_duration(&self) -> Option<iso8601::Duration> {
+        self.first().map(|d| d.to_iso8601()).unwrap_or_default()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]

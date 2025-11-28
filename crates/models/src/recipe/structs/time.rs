@@ -38,20 +38,45 @@ impl TimesForCreate {
     pub fn from_components(
         prep: Option<iso8601::Duration>,
         cook: Option<iso8601::Duration>,
+        total: Option<iso8601::Duration>,
     ) -> Self {
+        let prep_seconds = prep
+            .map(|d| {
+                let duration: std::time::Duration = d.into();
+                duration.as_secs()
+            })
+            .unwrap_or_else(|| 15 * 60) as i32;
+
+        let cook_seconds = cook
+            .map(|d| {
+                let duration: std::time::Duration = d.into();
+                duration.as_secs()
+            })
+            .unwrap_or_else(|| 30 * 60) as i32;
+
+        let total_seconds = total
+            .map(|d| {
+                let duration: std::time::Duration = d.into();
+                duration.as_secs()
+            })
+            .unwrap_or_else(|| 15 * 60 + 30 * 60) as i32;
+
+        let (prep_seconds, cook_seconds) = match total {
+            Some(_) => {
+                if prep.is_some() && cook.is_none() {
+                    (prep_seconds, total_seconds - prep_seconds)
+                } else if prep.is_none() && cook.is_some() {
+                    (total_seconds - cook_seconds, cook_seconds)
+                } else {
+                    (prep_seconds, cook_seconds)
+                }
+            }
+            None => (prep_seconds, cook_seconds),
+        };
+
         Self {
-            prep_seconds: prep
-                .map(|d| {
-                    let duration: std::time::Duration = d.into();
-                    duration.as_secs()
-                })
-                .unwrap_or_else(|| 15 * 60) as i32,
-            cook_seconds: cook
-                .map(|d| {
-                    let duration: std::time::Duration = d.into();
-                    duration.as_secs()
-                })
-                .unwrap_or_else(|| 30 * 60) as i32,
+            prep_seconds,
+            cook_seconds,
         }
     }
 }

@@ -13,7 +13,7 @@ use crate::helpers::one_or_many;
 #[serde(rename_all = "camelCase")]
 pub struct ItemList {
     #[serde(rename = "@type")]
-    pub r#type: Option<String>,
+    pub r#type: String,
     ///<https://schema.org/aggregateElement>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

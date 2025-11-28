@@ -359,7 +359,7 @@ impl From<CookmlRecipe> for Recipe {
                             .collect::<Vec<_>>()
                     } else {
                         vec![RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
-                            r#type: Some(AtType::ItemList.to_string()),
+                            r#type: AtType::ItemList.to_string(),
                             item_list_element: p
                                 .ingredient
                                 .into_iter()

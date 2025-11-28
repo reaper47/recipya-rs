@@ -18,7 +18,7 @@ pub type QuantitativeValueUnitCodeFieldEnum = String;
 #[serde(rename_all = "camelCase")]
 pub struct QuantitativeValue {
     #[serde(rename = "@type")]
-    pub r#type: Option<String>,
+    pub r#type: String,
     #[serde(rename = "@context")]
     pub context: Option<String>,
     ///<https://schema.org/minValue>
@@ -67,7 +67,7 @@ impl QuantitativeValue {
     /// Creates a new `QuantitativeValue` for the given value.
     pub fn new(value: f32) -> Self {
         Self {
-            r#type: Some(AtType::QuantitativeValue.to_string()),
+            r#type: AtType::QuantitativeValue.to_string(),
             value: vec![QuantitativeValueValueFieldEnum::Number(value)],
             ..Default::default()
         }
