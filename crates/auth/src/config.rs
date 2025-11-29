@@ -29,6 +29,10 @@ pub struct AuthConfig {
 
 impl AuthConfig {
     fn load_from_env() -> envs::Result<AuthConfig> {
+        if let Err(err) = dotenvy::dotenv() {
+            println!("Failed to load environment variables: {err:?}");
+        }
+
         Ok(AuthConfig {
             PASSWORD_KEY: get_env_b64u_as_u8s("RECIPYA_AUTH_PASSWORD_KEY")?,
 

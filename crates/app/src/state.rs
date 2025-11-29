@@ -10,9 +10,9 @@ use config::{Config, DataDir};
 use email::EmailClient;
 use models::data::ViewRecipe;
 use models::recipe::{RecipeCache, RecipeCacheKey};
-use recipe_schema::RecipeSchema;
 use recipya_scraper::{HttpClient, Scraper};
 use repository::ModelManager;
+use schema_org::Recipe;
 use support::fs::{AppFs, FsSupport};
 
 use crate::Result;
@@ -146,7 +146,7 @@ impl AppState {
     }
 
     /// Scrapes a recipe from the specified website.
-    pub fn scrape(&self, url: Url) -> Result<RecipeSchema> {
+    pub fn scrape(&self, url: Url) -> Result<Recipe> {
         let url = url.as_str();
         Ok(self.scraper.scrape(url)?)
     }

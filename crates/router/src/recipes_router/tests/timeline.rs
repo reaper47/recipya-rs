@@ -2,11 +2,11 @@
 mod tests {
     use axum_test::http::StatusCode;
     use axum_test::multipart::MultipartForm;
-    use chrono::{NaiveDateTime, Utc};
+    use chrono::{DateTime, Utc};
+    use models::recipe::structs::test_utils::a_complete_recipe_for_create;
     use uuid::Uuid;
 
     use models::Recipe;
-    use models::recipe::test_utils::a_complete_recipe_for_create;
     use models::recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate};
     use reqwest::Method;
     use testing::utils::{
@@ -22,10 +22,6 @@ mod tests {
 
     fn base_uri_timeline(recipe_id: i64, timeline_id: i64, index: usize, max_index: i64) -> String {
         format!("/recipes/{recipe_id}/timelines/{timeline_id}?index={index}&max-index={max_index}")
-    }
-
-    fn base_uri_edit(recipe_id: i32, timeline_id: i32) -> String {
-        format!("/recipes/{recipe_id}/timelines/{timeline_id}/edit")
     }
 
     fn create_timeline_event_form() -> MultipartForm {
@@ -64,8 +60,9 @@ mod tests {
         let state = create_app_state(config).await;
         let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
         let an_image = Uuid::new_v4();
-        // TODO: let now = chrono::DateTime::from_timestamp(1643609600, 0);
-        let now = NaiveDateTime::from_timestamp(1643609600, 0);
+        let now = DateTime::from_timestamp(1643609600, 0)
+            .expect("Invalid timestamp")
+            .naive_utc();
         let today = Utc::now();
         let _ = RecipeTimeline::create(
             &state.mm,
@@ -155,7 +152,9 @@ mod tests {
     async fn test_get_timeline_event_exists_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
-        let now = NaiveDateTime::from_timestamp(1543609500, 0);
+        let now = DateTime::from_timestamp(1543609500, 0)
+            .expect("Invalid timestamp")
+            .naive_utc();
         let state = create_app_state(config).await;
         let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
         let event_id = RecipeTimeline::create(

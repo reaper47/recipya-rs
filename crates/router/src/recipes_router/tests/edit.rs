@@ -3,16 +3,21 @@ mod tests {
     use axum::http::HeaderValue;
     use axum_test::TestResponse;
     use chrono::Duration;
-    use recipe_schema::SectionItem;
     use reqwest::Method;
     use uuid::Uuid;
 
-    use models::recipe::{
-        Nutrition, NutritionForCreate, RecipeForCreate, Times, TimesForCreate, ToolForCreate,
-        ToolRecipe, VideoForCreate, test_utils::a_complete_recipe_for_create,
+    use models::{
+        Recipe, RecipeDetails,
+        recipe::structs::{
+            media::VideoForCreate,
+            nutrition::{Nutrition, NutritionForCreate},
+            recipe::RecipeForCreate,
+            section::{Item, SectionComponents, SectionItem},
+            test_utils::a_complete_recipe_for_create,
+            time::{Times, TimesForCreate},
+            tool::{ToolForCreate, ToolRecipe},
+        },
     };
-    use models::{Recipe, RecipeDetails};
-    use recipe_schema::Sections;
     use testing::utils::{
         TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
         build_server_ws, create_app_state,
@@ -79,8 +84,8 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("1 apple")])]),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
+            ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
             ..Default::default()
         };
 
@@ -99,7 +104,7 @@ mod tests {
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
             ..Default::default()
         };
 
@@ -118,7 +123,7 @@ mod tests {
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
+            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
             ..Default::default()
         };
 
@@ -165,8 +170,8 @@ mod tests {
         let mut recipe = a_complete_recipe_for_create();
         Recipe::create(&state.mm, 1, &recipe).await?;
         recipe.name = "Maple Syrup Korean Chicken".into();
-        recipe.ingredients = Sections::from([("".into(), vec![SectionItem::new("4 apples")])]);
-        recipe.instructions = Sections::from([("".into(), vec![SectionItem::new("Drink juice")])]);
+        recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
+        recipe.instructions = SectionComponents::Flat(vec![Item::new("Drink juice")]);
 
         let res = server
             .put(&base_uri(1))
@@ -214,8 +219,8 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let mut recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
             ..Default::default()
         };
         Recipe::create(&state.mm, 1, &recipe).await?;
@@ -245,7 +250,7 @@ mod tests {
             description: Some("Trust me. They're delicious.".into()),
             images: vec![Uuid::new_v4(), Uuid::new_v4()],
             measurement_system_id: 2,
-            yield_: Some(12),
+            r#yield: Some(12),
             source: "My father's maple syrup recipes cookbook".into(),
             is_favourite: false,
             rating: Some(4),
@@ -256,18 +261,15 @@ mod tests {
                 embed_url: Some("https://www.youtube.com/embed/embeded".into()),
             }],
             category: Some("breakfast".into()),
-            instructions: Sections::from([
-                (
-                    "".into(),
+            instructions: SectionComponents::Grouped(vec![
+                SectionItem::new(
+                    "",
                     vec![
-                        SectionItem::new("Mix the blueberries"),
-                        SectionItem::new("Mix the strawberries"),
+                        Item::new("Mix the blueberries"),
+                        Item::new("Mix the strawberries"),
                     ],
                 ),
-                (
-                    "Finalize".into(),
-                    vec![SectionItem::new("Whisk the fruits until smooth")],
-                ),
+                SectionItem::new("Finalize", vec![Item::new("Whisk the fruits until smooth")]),
             ]),
             keywords: vec!["blueberries".into(), "vegan".into()],
             notes: Some("# Ze notes\n\nbip bop".into()),
@@ -289,13 +291,10 @@ mod tests {
                 prep_seconds: 2000,
                 cook_seconds: 800,
             }),
-            ingredients: Sections::from([(
-                "".into(),
-                vec![
-                    SectionItem::new("8 lbs blueberries"),
-                    SectionItem::new("12 lbs strawberries"),
-                ],
-            )]),
+            ingredients: SectionComponents::Flat(vec![
+                Item::new("8 lbs blueberries"),
+                Item::new("12 lbs strawberries"),
+            ]),
             cuisine: Some("quebec".into()),
             tools: vec![ToolForCreate {
                 name: "medium bowl".into(),
@@ -324,22 +323,16 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let mut recipe = a_complete_recipe_for_create();
         Recipe::create(&state.mm, 1, &recipe).await?;
-        recipe.instructions = Sections::from([(
-            "".into(),
-            vec![
-                SectionItem::new("Mix the apples"),
-                SectionItem::new("Eat"),
-                SectionItem::new("Mix the apples"),
-            ],
-        )]);
-        recipe.ingredients = Sections::from([(
-            "".into(),
-            vec![
-                SectionItem::new("8 apples"),
-                SectionItem::new("4 oranges"),
-                SectionItem::new("8 apples"),
-            ],
-        )]);
+        recipe.instructions = SectionComponents::Flat(vec![
+            Item::new("Mix the apples"),
+            Item::new("Eat"),
+            Item::new("Mix the apples"),
+        ]);
+        recipe.ingredients = SectionComponents::Flat(vec![
+            Item::new("8 apples"),
+            Item::new("4 oranges"),
+            Item::new("8 apples"),
+        ]);
         recipe.keywords = vec!["drinks".into(), "vodka".into(), "drinks".into()];
         recipe.tools = vec![
             ToolForCreate {
@@ -366,17 +359,11 @@ mod tests {
         );
         pretty_assertions::assert_eq!(
             got.ingredients,
-            Sections::from([(
-                "".into(),
-                vec![SectionItem::new("8 apples"), SectionItem::new("4 oranges")]
-            )])
+            SectionComponents::Flat(vec![Item::new("8 apples"), Item::new("4 oranges")])
         );
         pretty_assertions::assert_eq!(
             got.instructions,
-            Sections::from([(
-                "".into(),
-                vec![SectionItem::new("Mix the apples"), SectionItem::new("Eat")]
-            )])
+            SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")])
         );
         pretty_assertions::assert_eq!(
             got.tools,
@@ -437,7 +424,7 @@ mod tests {
                 name: recipe_c.name,
                 description: recipe_c.description,
                 image: reference.recipe.image,
-                yield_: recipe_c.yield_.unwrap_or(4),
+                yield_: recipe_c.r#yield.unwrap_or(4),
                 language: "eng".into(),
                 measurement_system_id: 2,
                 notes: recipe_c.notes,

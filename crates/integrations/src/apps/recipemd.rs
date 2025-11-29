@@ -1,49 +1,63 @@
 use std::io::{Read, Seek};
 
 use recipemd::{Factor, Ingredient, Recipe};
-
-use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
+use schema_org::field::{
+    RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
+    RecipeRecipeInstructionsFieldEnum,
+};
 
 use crate::apps::helpers::read_file;
 use crate::error::Result;
-use crate::helpers::{sections_to_itemlist, sections_to_vec, to_defined_text, to_text, to_yield};
+use crate::helpers::to_yield;
 
 /// Parses a RecipeMD recipe from the file's content.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<schema_org::Recipe>>
 where
     R: Read + Seek,
 {
     let content = read_file(r)?;
     let recipe = Recipe::parse(content.as_str())?;
 
-    let ingredients = Sections::from([("".into(), ingredients_to_string(recipe.ingredients))]);
+    let ingredients = ingredients_to_string(recipe.ingredients)
+        .into_iter()
+        .map(RecipeRecipeIngredientFieldEnum::Text)
+        .collect::<Vec<_>>();
     let ingredients_with_groups = recipe
         .ingredient_groups
         .into_iter()
-        .map(|group| (group.title, ingredients_to_string(group.ingredients)))
+        .map(|group| {
+            RecipeRecipeIngredientFieldEnum::new_section(
+                &group.title,
+                ingredients_to_string(group.ingredients)
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect(),
+            )
+        })
         .collect::<Vec<_>>();
 
-    Ok(vec![RecipeSchema {
-        at_context: Default::default(),
-        at_type: Some(AtType::Recipe),
-        description: to_text(recipe.description.unwrap_or_default()),
-        keywords: to_defined_text(recipe.tags.join(",")),
-        name: Some(recipe.title),
+    Ok(vec![schema_org::Recipe {
+        description: vec![RecipeDescriptionFieldEnum::Text(
+            recipe.description.unwrap_or_default(),
+        )],
+        keywords: recipe
+            .tags
+            .into_iter()
+            .map(RecipeKeywordsFieldEnum::TextOrURL)
+            .collect(),
+        name: vec![recipe.title],
         recipe_ingredient: if ingredients_with_groups.is_empty() {
-            sections_to_vec(ingredients)
+            ingredients
         } else {
-            sections_to_vec(ingredients_with_groups)
+            ingredients_with_groups
         },
-        recipe_instructions: sections_to_itemlist(Sections::from([(
-            "".into(),
-            recipe
-                .instructions
-                .unwrap_or_default()
-                .replace("\r\n", "\n\n")
-                .split("\n\n")
-                .map(|s| SectionItem::new(s.replace("\n", " ")))
-                .collect(),
-        )])),
+        recipe_instructions: recipe
+            .instructions
+            .unwrap_or_default()
+            .replace("\r\n", "\n\n")
+            .split("\n\n")
+            .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace("\n", " ")))
+            .collect(),
         recipe_yield: to_yield(
             recipe
                 .yields
@@ -59,11 +73,11 @@ where
     }])
 }
 
-fn ingredients_to_string(ingredients: Vec<Ingredient>) -> Vec<SectionItem> {
+fn ingredients_to_string(ingredients: Vec<Ingredient>) -> Vec<String> {
     ingredients.into_iter().map(ingredient_to_string).collect()
 }
 
-fn ingredient_to_string(ingredient: Ingredient) -> SectionItem {
+fn ingredient_to_string(ingredient: Ingredient) -> String {
     let amount = ingredient
         .amount
         .map(|amount| {
@@ -82,7 +96,7 @@ fn ingredient_to_string(ingredient: Ingredient) -> SectionItem {
         Some(link) => format!("[{link}]"),
     };
 
-    SectionItem::new(format!("{amount} {} {link}", ingredient.name).trim())
+    format!("{amount} {} {link}", ingredient.name).trim().into()
 }
 
 #[cfg(test)]
@@ -123,30 +137,22 @@ Eat, mix and sleep!
 
         pretty_assertions::assert_eq!(
             got,
-            vec![RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                description: to_text("Some people call it guac.".into()),
-                keywords: to_defined_text(["sauce", "vegan"].join(",")),
-                name: Some("Guacamole".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new("1 avocado"),
-                        SectionItem::new("0.5 teaspoon salt"),
-                        SectionItem::new("1.5 pinches red pepper flakes"),
-                        SectionItem::new("lemon juice"),
-                    ]
-                )])),
-                recipe_instructions: sections_to_itemlist(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new(
-                            "Remove flesh from avocado and roughly mash with fork. Season to taste with salt, pepper and lemon juice."
-                        ),
-                        SectionItem::new("Eat, mix and sleep!"),
-                    ]
-                )])),
+            vec![schema_org::Recipe {
+                description: vec![RecipeDescriptionFieldEnum::Text("Some people call it guac.".into())],
+                keywords: ["sauce", "vegan"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
+                name: vec!["Guacamole".into()],
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("1 avocado".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("0.5 teaspoon salt".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1.5 pinches red pepper flakes".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("lemon juice".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Remove flesh from avocado and roughly mash with fork. Season to taste with salt, pepper and lemon juice.".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text("Eat, mix and sleep!".into()),
+                ],
                 recipe_yield: to_yield(4),
                 ..Default::default()
             }]

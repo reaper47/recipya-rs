@@ -1,7 +1,8 @@
-use super::{Mass, MassUnit};
+use crate::cooking::units::UnitType;
 use crate::cooking::units::custom::{MassDekagramExt, MassHectogramExt};
+use crate::cooking::units::mass::units::{Mass, MassUnit};
 use crate::cooking::units::traits::{UnitConverter, UnitOperations};
-use crate::cooking::units::{Unit, UnitType};
+use crate::cooking::units::unit::Unit;
 use crate::{Error, Result};
 
 impl UnitConverter for Mass {
@@ -128,8 +129,7 @@ impl UnitConverter for Mass {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cooking::units::MassUnit::*;
-    use crate::cooking::units::traits::UnitOperations;
+    use crate::cooking::units::mass::units::MassUnit::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

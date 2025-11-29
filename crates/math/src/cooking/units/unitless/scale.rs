@@ -1,7 +1,7 @@
-use super::Unitless;
 use crate::Result;
-use crate::cooking::units::Unit;
 use crate::cooking::units::traits::UnitScaler;
+use crate::cooking::units::unit::Unit;
+use crate::cooking::units::unitless::units::Unitless;
 
 impl UnitScaler for Unitless {
     fn scale(&self, factor: f64) -> Result<Unit> {

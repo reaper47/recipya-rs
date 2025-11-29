@@ -3,7 +3,6 @@ mod server;
 mod sponsors;
 
 use clap::{Parser, Subcommand};
-use dotenvy::dotenv;
 use rustls::crypto::ring;
 use tracing::info;
 use tracing::log::warn;
@@ -36,7 +35,6 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<()> {
     init_crypto();
-    dotenv().ok();
     init_tracing()?;
 
     match Cli::parse().command {
@@ -110,10 +108,10 @@ fn copy_assets_to_fs() -> Result<()> {
         (placeholder_recipe, "placeholder.recipe.original.webp"),
     ] {
         let dest = placeholders.join(dest);
-        if let Err(err) = copy_to_fs(src, dest) {
-            if !matches!(err, router::Error::FileExists) {
-                return Err(Error::Server(err.to_string()));
-            }
+        if let Err(err) = copy_to_fs(src, dest)
+            && !matches!(err, router::Error::FileExists)
+        {
+            return Err(Error::Server(err.to_string()));
         }
     }
 

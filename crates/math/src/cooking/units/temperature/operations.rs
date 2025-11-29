@@ -1,5 +1,5 @@
-use super::{Temperature, TemperatureUnit};
 use crate::cooking::units::UnitType;
+use crate::cooking::units::temperature::units::{Temperature, TemperatureUnit};
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Temperature {
@@ -39,8 +39,6 @@ impl UnitOperations for Temperature {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     fn create_temperature_variants() -> Vec<Temperature> {
         vec![Temperature::Celsius(25.0), Temperature::Fahrenheit(77.0)]
@@ -517,10 +515,6 @@ mod tests {
     fn test_temperature_ranges() {
         let sub_zero_c = Temperature::Celsius(-50.0);
         let sub_zero_f = Temperature::Fahrenheit(-58.0);
-        let room_temp_c = Temperature::Celsius(22.0);
-        let room_temp_f = Temperature::Fahrenheit(72.0);
-        let hot_day_c = Temperature::Celsius(40.0);
-        let hot_day_f = Temperature::Fahrenheit(104.0);
 
         let cold_to_hot_c = sub_zero_c.with_value(40.0);
         let cold_to_hot_f = sub_zero_f.with_value(104.0);

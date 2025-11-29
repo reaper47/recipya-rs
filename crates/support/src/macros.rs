@@ -35,7 +35,7 @@ macro_rules! name_entity_with_relations {
             /// Represents an insertable version of the entity for database insertion.
             #[derive(Insertable)]
             #[diesel(table_name = schema::$table_name)]
-            pub(super) struct [<$struct_name ForInsert>] {
+            pub(crate) struct [<$struct_name ForInsert>] {
                 pub name: Option<String>,
             }
         }

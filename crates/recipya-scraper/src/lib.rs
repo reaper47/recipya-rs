@@ -11,12 +11,11 @@ pub use error::{Error, Result};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use recipe_schema::{AtType, GraphObject, RecipeSchema};
+use crate::websites::Website;
+use schema_org::{AtType, GraphObject, Recipe};
 use scraper::{Html, Selector};
 use support::fs::FsSupport;
 use tracing::error;
-
-use crate::websites::Website;
 
 /// Represents the object responsible for scraping recipes from websites.
 #[derive(Clone)]
@@ -35,7 +34,7 @@ impl Scraper {
     }
 
     /// Scrapes the given URL and returns a `RecipeSchema`.
-    pub fn scrape(&self, url: &str) -> Result<RecipeSchema> {
+    pub fn scrape(&self, url: &str) -> Result<Recipe> {
         let content = self.client.get(Website::from(url)?, url)?;
         let doc = Html::parse_document(&content);
 
@@ -43,7 +42,7 @@ impl Scraper {
         doc.select(&sel)
             .filter_map(|el| {
                 let json = el.inner_html();
-                serde_json::from_str::<RecipeSchema>(&json)
+                serde_json::from_str::<Recipe>(&json)
                     .map_err(|err| {
                         error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
                         err
@@ -51,10 +50,10 @@ impl Scraper {
                     .ok()
             })
             .find_map(|recipe| {
-                recipe.at_graph.and_then(|graph| {
+                recipe.graph.and_then(|graph| {
                     graph.into_iter().find_map(|item| match item {
                         GraphObject::Recipe(mut r) => {
-                            r.at_type = Some(AtType::Recipe);
+                            r.r#type = Some(AtType::Recipe.to_string());
                             Some(*r)
                         }
                         _ => None,

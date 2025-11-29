@@ -7,24 +7,25 @@ use diesel::data_types::PgInterval;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, RunQueryDsl};
+
+use repository::schema;
+use support::regexp::time::TimeParser;
+use support::strings::normalise_vulgar_fractions;
 use uuid::Uuid;
 
-use recipe_schema::Sections;
-use repository::schema;
-use support::strings::normalise_vulgar_fractions;
-
 use crate::Result;
-use crate::recipe::structs::{
-    AdditionalImageForInsert, CategoryForInsert, CuisineForInsert, IngredientForInsert,
-    IngredientRecipeForInsert, InstructionForInsert, InstructionRecipeForInsert, KeywordForInsert,
-    NutritionForInsert, SectionForInsert, ToolForInsert, ToolRecipeForInsert, VideoForInsert,
+use crate::recipe::structs::media::{AdditionalImageForInsert, VideoForCreate, VideoForInsert};
+use crate::recipe::structs::nutrition::{NutritionForCreate, NutritionForInsert};
+use crate::recipe::structs::recipe::{
+    CategoryForInsert, CuisineForInsert, IngredientForInsert, IngredientRecipeForInsert,
+    InstructionForInsert, InstructionRecipeForInsert, KeywordForInsert, KeywordRecipe,
+    RecipeForCreate,
 };
-use crate::recipe::{
-    KeywordRecipe, NutritionForCreate, RecipeForCreate, ToolForCreate, VideoForCreate,
-};
+use crate::recipe::structs::section::{Item, SectionComponents, SectionForInsert};
+use crate::recipe::structs::tool::{ToolForCreate, ToolForInsert, ToolRecipeForInsert};
 use crate::user::UserKeyword;
 
-pub(super) async fn get_category_id<C>(mut conn: &mut C, category: &Option<String>) -> Result<i64>
+pub(crate) async fn get_category_id<C>(mut conn: &mut C, category: &Option<String>) -> Result<i64>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -53,7 +54,7 @@ where
         .await?)
 }
 
-pub(super) async fn get_cuisine_id<C>(mut conn: &mut C, cuisine: String) -> Result<i64>
+pub(crate) async fn get_cuisine_id<C>(mut conn: &mut C, cuisine: String) -> Result<i64>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -69,7 +70,7 @@ where
         .await?)
 }
 
-pub(super) async fn insert_additional_images<C>(
+pub(crate) async fn insert_additional_images<C>(
     mut conn: &mut C,
     recipe_id: i64,
     additional_images: Vec<Uuid>,
@@ -90,10 +91,10 @@ where
     Ok(())
 }
 
-pub(super) async fn insert_ingredients<C>(
+pub(crate) async fn insert_ingredients<C>(
     mut conn: &mut C,
     sections_map: &HashMap<String, i64>,
-    ingredients: &Sections,
+    ingredients: &SectionComponents,
     recipe_id: i64,
 ) -> Result<()>
 where
@@ -101,89 +102,152 @@ where
 {
     let mut uniques = HashSet::new();
 
-    for (section, ingredients) in ingredients.iter() {
-        let ingredient_recipes: Vec<_> = diesel::insert_into(schema::ingredients::table)
+    match ingredients {
+        SectionComponents::Grouped(sections) => {
+            for section in sections.iter() {
+                let section_id = *sections_map.get(&section.title).unwrap_or(&1);
+                process_ingredients(
+                    &section.items,
+                    section_id,
+                    recipe_id,
+                    &mut uniques,
+                    &mut conn,
+                )
+                .await?;
+            }
+        }
+        SectionComponents::Flat(items) => {
+            process_ingredients(items, 1, recipe_id, &mut uniques, &mut conn).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn process_ingredients<C>(
+    items: &[Item],
+    section_id: i64,
+    recipe_id: i64,
+    uniques: &mut HashSet<String>,
+    conn: &mut C,
+) -> Result<()>
+where
+    C: AsyncConnection<Backend = diesel::pg::Pg>,
+{
+    let ingredient_recipes: Vec<_> = diesel::insert_into(schema::ingredients::table)
+        .values(
+            items
+                .iter()
+                .map(|item| IngredientForInsert {
+                    name: normalise_vulgar_fractions(&item.text),
+                })
+                .filter(|item| uniques.insert(item.name.clone()))
+                .collect::<Vec<_>>(),
+        )
+        .on_conflict(schema::ingredients::name)
+        .do_update()
+        .set(schema::ingredients::name.eq(excluded(schema::ingredients::name)))
+        .returning((schema::ingredients::id, schema::ingredients::name))
+        .get_results::<(i64, String)>(conn)
+        .await?
+        .into_iter()
+        .enumerate()
+        .map(|(idx, (id, _))| IngredientRecipeForInsert {
+            ingredient_id: id,
+            recipe_id,
+            section_id,
+            item_order: idx as i16,
+        })
+        .collect::<Vec<_>>();
+
+    diesel::insert_into(schema::ingredients_recipes::table)
+        .values(&ingredient_recipes)
+        .execute(conn)
+        .await?;
+
+    Ok(())
+}
+
+pub(crate) async fn insert_instructions<C>(
+    mut conn: &mut C,
+    sections_map: &HashMap<String, i64>,
+    instructions: &SectionComponents,
+    recipe_id: i64,
+) -> Result<()>
+where
+    C: AsyncConnection<Backend = diesel::pg::Pg>,
+{
+    let mut uniques = HashSet::new();
+
+    match instructions {
+        SectionComponents::Grouped(sections) => {
+            for section in sections.iter() {
+                let section_id = *sections_map.get(&section.title).unwrap_or(&1);
+                process_instructions(
+                    &section.items,
+                    section_id,
+                    recipe_id,
+                    &mut uniques,
+                    &mut conn,
+                )
+                .await?;
+            }
+        }
+        SectionComponents::Flat(items) => {
+            process_instructions(items, 1, recipe_id, &mut uniques, &mut conn).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn process_instructions<C>(
+    items: &[Item],
+    section_id: i64,
+    recipe_id: i64,
+    uniques: &mut HashSet<String>,
+    conn: &mut C,
+) -> Result<()>
+where
+    C: AsyncConnection<Backend = diesel::pg::Pg>,
+{
+    let instruction_recipes: Vec<InstructionRecipeForInsert> =
+        diesel::insert_into(schema::instructions::table)
             .values(
-                ingredients
+                items
                     .iter()
-                    .map(|item| IngredientForInsert {
-                        name: normalise_vulgar_fractions(&item.text),
+                    .map(|item| InstructionForInsert {
+                        name: item.text.clone(),
+                        duration_seconds: TimeParser::new().parse_max_time_seconds(&item.text),
                     })
-                    .filter(|item| uniques.insert(item.name.clone()))
+                    .filter(|s| uniques.insert(s.name.clone()))
                     .collect::<Vec<_>>(),
             )
-            .on_conflict(schema::ingredients::name)
+            .on_conflict(schema::instructions::name)
             .do_update()
-            .set(schema::ingredients::name.eq(excluded(schema::ingredients::name)))
-            .returning((schema::ingredients::id, schema::ingredients::name))
-            .get_results::<(i64, String)>(&mut conn)
+            .set(schema::instructions::name.eq(excluded(schema::instructions::name)))
+            .returning((schema::instructions::id, schema::instructions::name))
+            .get_results::<(i64, String)>(conn)
             .await?
             .into_iter()
             .enumerate()
-            .map(|(idx, (id, _))| IngredientRecipeForInsert {
-                ingredient_id: id,
+            .map(|(idx, (id, _))| InstructionRecipeForInsert {
+                instruction_id: id,
                 recipe_id,
-                section_id: *sections_map.get(section).unwrap_or(&1),
+                section_id: section_id,
                 item_order: idx as i16,
             })
             .collect::<Vec<_>>();
 
-        diesel::insert_into(schema::ingredients_recipes::table)
-            .values(&ingredient_recipes)
-            .execute(&mut conn)
-            .await?;
-    }
+    diesel::insert_into(schema::instructions_recipes::table)
+        .values(&instruction_recipes)
+        .execute(conn)
+        .await?;
 
     Ok(())
 }
 
-pub(super) async fn insert_instructions<C>(
-    mut conn: &mut C,
-    sections_map: &HashMap<String, i64>,
-    instructions: &Sections,
-    recipe_id: i64,
-) -> Result<()>
-where
-    C: AsyncConnection<Backend = diesel::pg::Pg>,
-{
-    let mut uniques = HashSet::new();
-
-    for (section, instructions) in instructions.iter() {
-        let instruction_recipes: Vec<InstructionRecipeForInsert> =
-            diesel::insert_into(schema::instructions::table)
-                .values(
-                    instructions
-                        .iter()
-                        .map(InstructionForInsert::from)
-                        .filter(|s| uniques.insert(s.name.clone()))
-                        .collect::<Vec<_>>(),
-                )
-                .on_conflict(schema::instructions::name)
-                .do_update()
-                .set(schema::instructions::name.eq(excluded(schema::instructions::name)))
-                .returning((schema::instructions::id, schema::instructions::name))
-                .get_results::<(i64, String)>(&mut conn)
-                .await?
-                .into_iter()
-                .enumerate()
-                .map(|(idx, (id, _))| InstructionRecipeForInsert {
-                    instruction_id: id,
-                    recipe_id,
-                    section_id: *sections_map.get(section).unwrap_or(&1),
-                    item_order: idx as i16,
-                })
-                .collect::<Vec<_>>();
-
-        diesel::insert_into(schema::instructions_recipes::table)
-            .values(&instruction_recipes)
-            .execute(&mut conn)
-            .await?;
-    }
-
-    Ok(())
-}
-
-pub(super) async fn insert_keywords<C>(
+pub(crate) async fn insert_keywords<C>(
     mut conn: &mut C,
     keywords: &[String],
     user_id: i64,
@@ -231,7 +295,7 @@ where
     Ok(())
 }
 
-pub(super) async fn insert_nutrition<C>(
+pub(crate) async fn insert_nutrition<C>(
     mut conn: &mut C,
     nutrition: &NutritionForCreate,
     recipe_id: i64,
@@ -261,7 +325,7 @@ where
     Ok(())
 }
 
-pub(super) async fn insert_sections<C>(
+pub(crate) async fn insert_sections<C>(
     mut conn: &mut C,
     recipe_c: &RecipeForCreate,
 ) -> Result<HashMap<String, i64>>
@@ -270,13 +334,14 @@ where
 {
     let sections_for_insert = recipe_c
         .ingredients
-        .iter()
-        .chain(recipe_c.instructions.iter())
-        .map(|(name, _)| name.clone())
+        .titles()
+        .chain(recipe_c.instructions.titles())
         .collect::<BTreeSet<_>>()
         .into_iter()
         .rev()
-        .map(|name| SectionForInsert { name })
+        .map(|name| SectionForInsert {
+            name: name.to_string(),
+        })
         .filter(|s| !s.name.is_empty())
         .collect::<Vec<_>>();
 
@@ -296,7 +361,7 @@ where
     }
 }
 
-pub(super) async fn insert_tools<C>(
+pub(crate) async fn insert_tools<C>(
     mut conn: &mut C,
     tools: &[ToolForCreate],
     recipe_id: i64,
@@ -342,7 +407,7 @@ where
     Ok(())
 }
 
-pub(super) async fn insert_videos<C>(
+pub(crate) async fn insert_videos<C>(
     mut conn: &mut C,
     videos: &[VideoForCreate],
     recipe_id: i64,
@@ -420,7 +485,7 @@ pub async fn text_trim(field: Field<'_>) -> Option<String> {
     }
 }
 
-pub(super) async fn update_category<C>(
+pub(crate) async fn update_category<C>(
     mut conn: &mut C,
     user_id: i64,
     recipe_id: i64,

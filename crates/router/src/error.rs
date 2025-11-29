@@ -5,7 +5,6 @@ use axum::response::{IntoResponse, Response};
 use derive_more::derive::From;
 use serde::Serialize;
 use support::impl_display_as_debug;
-use validator::Validate;
 
 /// Result type for errors related to the server.
 pub type Result<T> = core::result::Result<T, Error>;
@@ -163,24 +162,4 @@ pub enum ClientError {
     LOGOUT_FAIL,
     MISSING_PARAMS,
     SERVICE_ERROR,
-}
-
-/// Collects validation errors from a form and formats them as a vector of error messages.
-pub fn collect_errors<T: Validate>(form: &T) -> Vec<String> {
-    match form.validate() {
-        Ok(_) => Vec::new(),
-        Err(errors) => errors
-            .field_errors()
-            .into_iter()
-            .flat_map(|(field, errors)| {
-                errors.iter().map(move |err| {
-                    format!(
-                        "Field '{}': {}",
-                        field,
-                        err.message.as_deref().unwrap_or("Unknown error")
-                    )
-                })
-            })
-            .collect(),
-    }
 }

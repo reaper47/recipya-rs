@@ -4,14 +4,20 @@ mod tests {
     use axum::http::Method;
     use axum_test::TestResponse;
     use chrono::Duration;
+    use models::recipe::structs::media::VideoForCreate;
+    use models::recipe::structs::nutrition::NutritionForCreate;
+    use models::recipe::structs::section::Item;
+    use models::recipe::structs::section::SectionComponents;
+    use models::recipe::structs::section::SectionItem;
+    use models::recipe::structs::time::TimesForCreate;
     use uuid::Uuid;
 
-    use models::recipe::{
-        Nutrition, NutritionForCreate, RecipeForCreate, Times, TimesForCreate, ToolForCreate,
-        ToolRecipe, VideoForCreate,
-    };
+    use models::recipe::structs::nutrition::Nutrition;
+    use models::recipe::structs::recipe::RecipeForCreate;
+    use models::recipe::structs::time::Times;
+    use models::recipe::structs::tool::ToolForCreate;
+    use models::recipe::structs::tool::ToolRecipe;
     use models::{Recipe, RecipeDetails};
-    use recipe_schema::{SectionItem, Sections};
     use testing::utils::{
         TestDb, assert_must_be_logged_in, build_server_logged_in, create_app_state,
     };
@@ -61,8 +67,8 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("1 apple")])]),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
+            ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -79,7 +85,7 @@ mod tests {
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -96,7 +102,7 @@ mod tests {
         let server = build_server_logged_in(config).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
+            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -113,8 +119,8 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
             ..Default::default()
         };
         let form = create_form(&recipe);
@@ -135,8 +141,8 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
             category: Some("breakfast,dinner".into()),
             ..Default::default()
         };
@@ -157,22 +163,16 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([(
-                "".into(),
-                vec![
-                    SectionItem::new("Mix the apples"),
-                    SectionItem::new("Eat"),
-                    SectionItem::new("Mix the apples"),
-                ],
-            )]),
-            ingredients: Sections::from([(
-                "".into(),
-                vec![
-                    SectionItem::new("8 apples"),
-                    SectionItem::new("4 oranges"),
-                    SectionItem::new("8 apples"),
-                ],
-            )]),
+            instructions: SectionComponents::Flat(vec![
+                Item::new("Mix the apples"),
+                Item::new("Eat"),
+                Item::new("Mix the apples"),
+            ]),
+            ingredients: SectionComponents::Flat(vec![
+                Item::new("8 apples"),
+                Item::new("4 oranges"),
+                Item::new("8 apples"),
+            ]),
             keywords: vec!["drinks".into(), "vodka".into(), "drinks".into()],
             tools: vec![
                 ToolForCreate {
@@ -199,17 +199,11 @@ mod tests {
         );
         pretty_assertions::assert_eq!(
             got.ingredients,
-            Sections::from([(
-                "".into(),
-                vec![SectionItem::new("8 apples"), SectionItem::new("4 oranges")]
-            )])
+            SectionComponents::Flat(vec![Item::new("8 apples"), Item::new("4 oranges")]),
         );
         pretty_assertions::assert_eq!(
             got.instructions,
-            Sections::from([(
-                "".into(),
-                vec![SectionItem::new("Mix the apples"), SectionItem::new("Eat")]
-            )])
+            SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")]),
         );
         pretty_assertions::assert_eq!(
             got.tools,
@@ -228,8 +222,8 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
-            instructions: Sections::from([("".into(), vec![SectionItem::new("Mix the apples")])]),
-            ingredients: Sections::from([("".into(), vec![SectionItem::new("8 apples")])]),
+            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
             category: Some("drinks:vodka".into()),
             ..Default::default()
         };
@@ -253,7 +247,7 @@ mod tests {
             description: Some("Your mouth will drool like never before".into()),
             images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
             measurement_system_id: 2,
-            yield_: Some(6),
+            r#yield: Some(6),
             source: "My mother's maple syrup recipes cookbook".into(),
             is_favourite: false,
             rating: Some(4),
@@ -264,17 +258,17 @@ mod tests {
                 embed_url: Some("https://www.youtube.com/embed/embed".into()),
             }],
             category: Some("dinner".into()),
-            instructions: Sections::from([
-                (
-                    "Prepare".into(),
+            instructions: SectionComponents::Grouped(vec![
+                SectionItem::new(
+                    "Prepare",
                     vec![
-                        SectionItem::new("Mix the apples"),
-                        SectionItem::new("Mix the blueberries"),
+                        Item::new("Mix the apples"),
+                        Item::new("Mix the blueberries"),
                     ],
                 ),
-                (
-                    "Execution".into(),
-                    vec![SectionItem::new(
+                SectionItem::new(
+                    "Execution",
+                    vec![Item::new(
                         "Add whip cream and whisk the fruits until smooth",
                     )],
                 ),
@@ -299,18 +293,12 @@ mod tests {
                 prep_seconds: 3600,
                 cook_seconds: 72000,
             }),
-            ingredients: Sections::from([
-                (
-                    "Prepare".into(),
-                    vec![
-                        SectionItem::new("8 apples"),
-                        SectionItem::new("5 lbs blueberries"),
-                    ],
+            ingredients: SectionComponents::Grouped(vec![
+                SectionItem::new(
+                    "Prepare",
+                    vec![Item::new("8 apples"), Item::new("5 lbs blueberries")],
                 ),
-                (
-                    "Execution".into(),
-                    vec![SectionItem::new("200g 30% whip cream")],
-                ),
+                SectionItem::new("Execution", vec![Item::new("200g 30% whip cream")]),
             ]),
             cuisine: Some("japanese".into()),
             tools: vec![
@@ -354,22 +342,26 @@ mod tests {
                 additional_images: got.additional_images.clone(),
                 category: recipe.category.expect("Should have category"),
                 cuisine: recipe.cuisine,
-                ingredients: Sections::from([(
-                    "".into(),
-                    recipe
-                        .ingredients
-                        .iter()
-                        .flat_map(|(_, xs)| xs.iter().cloned())
-                        .collect::<Vec<_>>()
-                )]),
-                instructions: Sections::from([(
-                    "".into(),
-                    recipe
-                        .instructions
-                        .iter()
-                        .flat_map(|(_, xs)| xs.iter().cloned())
-                        .collect::<Vec<_>>()
-                )]),
+                ingredients: match recipe.ingredients {
+                    SectionComponents::Grouped(section_items) => SectionComponents::Flat(
+                        section_items
+                            .into_iter()
+                            .map(|item| item.items)
+                            .flatten()
+                            .collect()
+                    ),
+                    SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                },
+                instructions: match recipe.instructions {
+                    SectionComponents::Grouped(section_items) => SectionComponents::Flat(
+                        section_items
+                            .into_iter()
+                            .map(|item| item.items)
+                            .flatten()
+                            .collect()
+                    ),
+                    SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                },
                 keywords: vec!["fruits".into(), "healthy".into(), "strawberries".into()],
                 nutrition: Some(Nutrition {
                     id: 1,

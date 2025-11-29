@@ -4,8 +4,7 @@ use diesel_async::RunQueryDsl;
 
 use repository::{ModelManager, schema};
 
-use super::structs::*;
-use crate::{Error, Result};
+use crate::{Error, Result, recipe::structs::recipe::Recipe};
 
 impl Recipe {
     /// Deletes a user's recipe from the database.
@@ -94,8 +93,8 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
-    use self::test_utils::a_complete_recipe_for_create;
     use super::*;
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
     use testing::utils::{TestDb, create_app_state, insert_user};
 

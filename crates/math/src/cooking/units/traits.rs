@@ -1,5 +1,7 @@
-use crate::Result;
-use crate::cooking::units::{Unit, UnitType};
+use crate::{
+    Result,
+    cooking::units::{UnitType, unit::Unit},
+};
 
 pub trait UnitOperations {
     fn abbrev(&self) -> &str;

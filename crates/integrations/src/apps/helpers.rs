@@ -11,7 +11,11 @@ use url::Url;
 use uuid::Uuid;
 use zip::ZipArchive;
 
-use recipe_schema::{ImageObjectOrUrl, ImageObjectType, RecipeSchema, SectionItem, Sections};
+use schema_org::field::{
+    ImageObjectImageFieldEnum, ItemListItemListElementFieldEnum, RecipeImageFieldEnum,
+    RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+};
+use schema_org::{ImageObject, Recipe};
 use support::strings::auto_convert_to_utf8;
 
 use crate::Result;
@@ -40,73 +44,113 @@ where
 }
 
 pub(super) trait ToSections<'a> {
-    fn to_sections(&self) -> Sections;
+    type Section;
+    fn to_sections(&self) -> Vec<Self::Section>;
 }
 
 impl ToSections<'_> for Vec<Ingredient<'_>> {
-    fn to_sections(&self) -> Sections {
+    type Section = RecipeRecipeIngredientFieldEnum;
+
+    fn to_sections(&self) -> Vec<RecipeRecipeIngredientFieldEnum> {
         self.iter()
-            .fold(Sections::new(), |mut acc, ing| {
+            .filter(|ing| match ing {
+                Ingredient::Line(name) => !name.is_empty(),
+                Ingredient::Section(name) => !name.is_empty(),
+            })
+            .fold(Vec::new(), |mut acc, ing| {
                 match ing {
                     Ingredient::Line(name) => {
                         let name_trimmed = name.split_whitespace().collect::<Vec<_>>().join(" ");
                         let name_trimmed = name_trimmed.trim_end_matches('-').trim().to_string();
 
                         if name.starts_with("           ") && name.ends_with("--") {
-                            acc.push((name_trimmed, Vec::new()));
+                            acc.push(RecipeRecipeIngredientFieldEnum::new_section(
+                                &name_trimmed,
+                                vec![],
+                            ));
                             return acc;
                         }
 
-                        if let Some((_, lines)) = acc.last_mut() {
-                            lines.push(SectionItem::new(name_trimmed));
+                        if let Some(schema_org::field::FieldEnum149::ItemList(list)) =
+                            acc.last_mut()
+                        {
+                            list.item_list_element
+                                .push(ItemListItemListElementFieldEnum::Text(name_trimmed));
+                            list.number_of_items.get_mut(0).map(|i| *i + 1);
                         } else {
-                            acc.push(("".into(), vec![SectionItem::new(name_trimmed)]));
+                            acc.push(RecipeRecipeIngredientFieldEnum::Text(name_trimmed));
                         }
                     }
                     Ingredient::Section(section) => {
-                        acc.push((section.to_string(), Vec::new()));
+                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
+                            section,
+                            vec![],
+                        ));
                     }
                 }
                 acc
             })
             .into_iter()
-            .map(|(section, lines)| {
-                let lines = lines
-                    .into_iter()
-                    .filter(|l| !l.text.is_empty())
-                    .collect::<Vec<_>>();
+            .map(|element| match element {
+                RecipeRecipeIngredientFieldEnum::ItemList(list) => {
+                    let lines = list
+                        .item_list_element
+                        .into_iter()
+                        .filter_map(|l| match l {
+                            ItemListItemListElementFieldEnum::ListItem(_) => None,
+                            ItemListItemListElementFieldEnum::Text(s) => {
+                                (!s.is_empty()).then_some(s)
+                            }
+                            ItemListItemListElementFieldEnum::Thing(_) => None,
+                        })
+                        .collect::<Vec<_>>();
 
-                let merged = (0..lines.len())
-                    .filter_map(|i| {
-                        let line = &lines[i];
+                    let merged = (0..lines.len())
+                        .filter_map(|i| {
+                            let line = &lines[i];
 
-                        if line.text.ends_with(';') && i + 2 < lines.len() {
-                            Some((i, format!("{} {}", line.text, lines[i + 2].text)))
-                        } else if i > 1 && lines[i - 2].text.ends_with(';') {
-                            None
-                        } else {
-                            Some((i, line.text.clone()))
-                        }
-                    })
-                    .map(|(_, line)| SectionItem::new(line))
-                    .collect();
+                            if line.ends_with(';') && i + 2 < lines.len() {
+                                Some((i, format!("{} {}", line, lines[i + 2])))
+                            } else if i > 1 && lines[i - 2].ends_with(';') {
+                                None
+                            } else {
+                                Some((i, line.clone()))
+                            }
+                        })
+                        .map(|(_, s)| s)
+                        .collect::<Vec<_>>();
 
-                (section, merged)
+                    RecipeRecipeIngredientFieldEnum::new_section(
+                        &list.name[0],
+                        merged.iter().map(|s| s.as_str()).collect(),
+                    )
+                }
+                RecipeRecipeIngredientFieldEnum::PropertyValue(v) => {
+                    RecipeRecipeIngredientFieldEnum::PropertyValue(v)
+                }
+                RecipeRecipeIngredientFieldEnum::Text(s) => {
+                    RecipeRecipeIngredientFieldEnum::Text(s)
+                }
             })
             .collect()
     }
 }
 
 impl ToSections<'_> for Vec<Instruction<'_>> {
-    fn to_sections(&self) -> Sections {
+    type Section = RecipeRecipeInstructionsFieldEnum;
+
+    fn to_sections(&self) -> Vec<RecipeRecipeInstructionsFieldEnum> {
         self.iter()
-            .fold(Sections::new(), |mut acc, ins| {
+            .fold(Vec::new(), |mut acc, ins| {
                 match ins {
                     Instruction::Section(section) => {
-                        acc.push((section.to_string(), Vec::new()));
+                        acc.push(RecipeRecipeInstructionsFieldEnum::new_section::<String>(
+                            section,
+                            vec![],
+                        ));
                     }
                     Instruction::Line(line) => {
-                        let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
+                        let line = line.trim().split_whitespace().collect::<Vec<_>>().join(" ");
 
                         let line = match line.trim().find('.') {
                             Some(i) if i < 3 => line[i + 1..].trim().to_string(),
@@ -114,29 +158,21 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
                         };
 
                         if !line.is_empty() {
-                            if acc.is_empty() {
-                                acc.push(("".into(), Vec::new()));
+                            if let Some(schema_org::field::FieldEnum141::ItemList(list)) =
+                                acc.last_mut()
+                            {
+                                list.item_list_element
+                                    .push(ItemListItemListElementFieldEnum::Text(line));
+                                list.number_of_items.get_mut(0).map(|i| *i + 1);
+                            } else {
+                                acc.push(RecipeRecipeInstructionsFieldEnum::Text(line));
                             }
-
-                            if let Some((_, lines)) = acc.last_mut() {
-                                lines.push(SectionItem::new(line));
-                            }
-                        } else if let Some((_, lines)) = acc.last_mut() {
-                            lines.push(SectionItem::new(line));
                         }
                     }
                 }
                 acc
             })
             .into_iter()
-            .map(|(section, mut lines)| {
-                if let Some(l) = lines.last()
-                    && l.text.is_empty()
-                {
-                    lines.pop();
-                }
-                (section, lines)
-            })
             .collect()
     }
 }
@@ -147,7 +183,7 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
 
 pub(super) fn extract_archive_contents<R>(
     mut archive: ZipArchive<R>,
-) -> Result<(Vec<RecipeSchema>, HashMap<String, PathBuf>)>
+) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,
 {
@@ -196,48 +232,53 @@ where
     Ok((recipes, images))
 }
 
-pub(super) fn update_recipe_image_paths(
-    recipes: &mut [RecipeSchema],
-    images: &HashMap<String, PathBuf>,
-) {
+pub(super) fn update_recipe_image_paths(recipes: &mut [Recipe], images: &HashMap<String, PathBuf>) {
     for recipe in recipes {
-        let Some(recipe_images) = recipe.image.as_mut() else {
-            continue;
-        };
+        recipe
+            .image
+            .iter_mut()
+            .for_each(|img| rewrite_image_id(img, images));
+    }
+}
 
-        match recipe_images {
-            ImageObjectOrUrl::ImageObject(obj) => rewrite_image_id(obj, images),
-            ImageObjectOrUrl::ImageObjects(objects) => {
-                objects
-                    .iter_mut()
-                    .for_each(|obj| rewrite_image_id(obj, images));
-            }
-            _ => {}
+fn rewrite_image_id(img: &mut RecipeImageFieldEnum, images: &HashMap<String, PathBuf>) {
+    match img {
+        RecipeImageFieldEnum::ImageObject(obj) => {
+            obj.image.iter().for_each(|img| match img {
+                ImageObjectImageFieldEnum::ImageObject(_) => {}
+                ImageObjectImageFieldEnum::URL(path) => {
+                    let Some(name) = Path::new(path).file_name().and_then(|s| s.to_str()) else {
+                        return;
+                    };
+
+                    let Some(_) = images.get(name) else {
+                        return;
+                    };
+                }
+            });
+        }
+        RecipeImageFieldEnum::URL(path) => {
+            let Some(name) = Path::new(path).file_name().and_then(|s| s.to_str()) else {
+                return;
+            };
+
+            let Some(_) = images.get(name) else {
+                return;
+            };
+
+            // obj.at_id = Some(path.to_string_lossy().into_owned());
         }
     }
 }
 
-fn rewrite_image_id(obj: &mut ImageObjectType, images: &HashMap<String, PathBuf>) {
-    let Some(id) = obj.at_id.as_deref() else {
-        return;
-    };
-
-    let Some(name) = Path::new(id).file_name().and_then(|s| s.to_str()) else {
-        return;
-    };
-
-    let Some(path) = images.get(name) else {
-        return;
-    };
-
-    obj.at_id = Some(path.to_string_lossy().into_owned());
-}
-
-pub(super) fn urls_to_image_object(urls: Vec<String>) -> Option<ImageObjectOrUrl> {
-    let urls: Vec<Url> = urls
-        .into_iter()
+pub(super) fn urls_to_image_object(urls: Vec<String>) -> Vec<RecipeImageFieldEnum> {
+    urls.into_iter()
         .filter_map(|image| Url::parse(&image).ok())
-        .collect();
-
-    (!urls.is_empty()).then_some(ImageObjectOrUrl::Urls(urls))
+        .map(|url| {
+            RecipeImageFieldEnum::ImageObject(Box::from(ImageObject {
+                url: vec![url.to_string()],
+                ..Default::default()
+            }))
+        })
+        .collect()
 }

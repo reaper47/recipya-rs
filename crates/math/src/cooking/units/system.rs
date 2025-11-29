@@ -1,11 +1,14 @@
-use std::collections::HashMap;
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use strum::{Display, EnumIter};
 
-use crate::cooking::units::traits::UnitScaler;
-use crate::cooking::units::{Length, Mass, Temperature, Unit, Volume};
-use crate::{Error, Result};
+use crate::{
+    Error, Result,
+    cooking::units::{
+        length::units::Length, mass::units::Mass, temperature::units::Temperature,
+        traits::UnitScaler, unit::Unit, volume::units::Volume,
+    },
+};
 
 #[derive(Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd, Display, EnumIter)]
 pub enum MeasurementSystem {
@@ -321,7 +324,6 @@ mod tests {
 
     mod tests_from_unit {
         use super::*;
-        use crate::cooking::units::{Length, Mass, Temperature, Volume};
 
         #[test]
         fn test_length() {

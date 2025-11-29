@@ -1,22 +1,22 @@
 use std::io::{Read, Seek};
 
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::character::complete::{line_ending, not_line_ending, space0, tab};
-use nom::combinator::{eof, map, map_opt, opt};
-use nom::multi::many1;
-use nom::sequence::{preceded, terminated};
-use nom::{IResult, Parser};
 use url::Url;
+use winnow::Result as WResult;
+use winnow::ascii::{line_ending, space0, tab, till_line_ending};
+use winnow::combinator::{alt, opt, preceded, repeat, seq, terminated};
+use winnow::error::ContextError;
+use winnow::prelude::*;
+use winnow::token::{literal, take_until};
 
-use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
+use schema_org::Recipe;
+use schema_org::field::{
+    RecipeDescriptionFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+};
 use support::time::parse_duration;
 
 use crate::apps::helpers::{read_file, urls_to_image_object};
-use crate::error::Result;
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, to_is_based_on, to_text, to_yield,
-};
+use crate::error::{Error, Result};
+use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 
 struct SaffronRecipe {
     title: String,
@@ -26,14 +26,17 @@ struct SaffronRecipe {
     servings: Option<i16>,
     prep_seconds: Option<i32>,
     cook_seconds: Option<i32>,
+    #[allow(unused)]
     total_seconds: Option<i32>,
     cookbook: Option<String>,
+    #[allow(unused)]
     section: Option<String>,
     image: Option<String>,
     ingredients: Vec<String>,
     instructions: Vec<String>,
 }
 
+#[derive(Default)]
 struct RecipeComponents<'a> {
     title: &'a str,
     description: Option<&'a str>,
@@ -70,131 +73,112 @@ impl From<RecipeComponents<'_>> for SaffronRecipe {
     }
 }
 
-impl From<SaffronRecipe> for RecipeSchema {
+impl From<SaffronRecipe> for Recipe {
     fn from(r: SaffronRecipe) -> Self {
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
             cook_time: seconds_to_duration(r.cook_seconds.unwrap_or_default()),
-            description: to_text(r.description.unwrap_or_default()),
-            headline: r.cookbook,
+            description: r
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            headline: r.cookbook.map(|s| vec![s]).unwrap_or_default(),
             image: urls_to_image_object(vec![r.image.unwrap_or_default()]),
-            name: Some(r.title),
-            is_based_on: to_is_based_on(r.source.unwrap_or_default()),
+            name: vec![r.title],
+            is_based_on: to_is_based_on(&r.source.unwrap_or_default()),
             prep_time: seconds_to_duration(r.prep_seconds.unwrap_or_default()),
-            recipe_ingredient: Some(r.ingredients).filter(|v| !v.is_empty()),
-            recipe_instructions: sections_to_itemlist(Sections::from([(
-                "".into(),
-                r.instructions.iter().map(SectionItem::new).collect(),
-            )])),
+            recipe_ingredient: r
+                .ingredients
+                .into_iter()
+                .map(RecipeRecipeIngredientFieldEnum::Text)
+                .collect(),
+            recipe_instructions: r
+                .instructions
+                .into_iter()
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect(),
             recipe_yield: to_yield(r.servings.unwrap_or_default() as i64),
-            url: r.original_url,
+            url: r
+                .original_url
+                .map(|u| vec![u.to_string()])
+                .unwrap_or_default(),
             ..Default::default()
         }
     }
 }
 
 /// Parses a Saffron recipe from the file's content.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    let recipe = parse_saffron_recipe(&content)?;
-    Ok(vec![RecipeSchema::from(recipe)])
+    let mut input = content.as_str();
+
+    let recipe = parse_saffron_recipe(&mut input).map_err(|err| Error::Parse(err.to_string()))?;
+    Ok(vec![Recipe::from(recipe)])
 }
 
-fn parse_saffron_recipe(input: &str) -> Result<SaffronRecipe> {
-    Ok(map(recipe, SaffronRecipe::from)
-        .parse(input)
-        .map(|(_, r)| r)?)
+fn parse_saffron_recipe<'s>(input: &mut &'s str) -> WResult<SaffronRecipe> {
+    Ok(parse_recipe.map(SaffronRecipe::from).parse_next(input)?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            title,
-            description,
-            source,
-            original_url,
-            servings,
-            prep_seconds,
-            cook_seconds,
-            total_seconds,
-            cookbook,
-            section,
-            image,
-            ingredients,
-            instructions,
-        ),
-        |(
-            title,
-            description,
-            source,
-            original_url,
-            servings,
-            prep_seconds,
-            cook_seconds,
-            total_seconds,
-            cookbook,
-            section,
-            image,
-            ingredients,
-            instructions,
-        )| {
-            RecipeComponents {
-                title,
-                description: description.filter(|s| !s.is_empty()),
-                source,
-                original_url,
-                servings,
-                prep_seconds,
-                cook_seconds,
-                total_seconds,
-                cookbook,
-                section,
-                image: image.filter(|s| !s.is_empty()),
-                ingredients,
-                instructions,
-            }
-        },
-    )
-    .parse(input)
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        title: parse_title,
+        description: parse_description,
+        source: parse_source,
+        original_url: parse_original_url,
+        servings: parse_servings,
+        prep_seconds: parse_prep_seconds,
+        cook_seconds: parse_cook_seconds,
+        total_seconds: parse_total_seconds,
+        cookbook: parse_cookbook,
+        section: parse_section,
+        image: parse_image,
+        ingredients: parse_ingredients,
+        instructions: parse_instructions,
+    }}
+    .parse_next(input)
 }
 
-fn title(input: &str) -> IResult<&str, &str> {
-    preceded(tag("Title: "), rest).parse(input)
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    parse_metadata("Title: ").parse_next(input)
 }
 
-fn description(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Description: "), rest)).parse(input)
+fn parse_description<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_metadata_opt("Description:").parse_next(input)
 }
 
-fn source(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Source: "), rest)).parse(input)
+fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_metadata_opt("Source:").parse_next(input)
 }
 
-fn original_url(input: &str) -> IResult<&str, Option<Url>> {
-    map(preceded(tag("Original URL: "), rest), |s| {
-        Url::parse(s).ok()
-    })
-    .parse(input)
+fn parse_original_url<'s>(input: &mut &'s str) -> WResult<Option<Url>> {
+    parse_metadata_opt("Original URL:")
+        .map(|opt: Option<&str>| opt.and_then(|s| Url::parse(s.trim()).ok()))
+        .parse_next(input)
 }
 
-fn servings(input: &str) -> IResult<&str, Option<i16>> {
-    map(preceded(tag("Yield: "), rest), |s| s.parse().ok()).parse(input)
+fn parse_servings<'s>(input: &mut &'s str) -> WResult<Option<i16>> {
+    parse_metadata_opt("Yield:")
+        .map(|s: Option<&str>| s.unwrap_or_default().parse().ok())
+        .parse_next(input)
 }
 
-fn prep_seconds(input: &str) -> IResult<&str, Option<i32>> {
-    opt(map_opt(preceded(tag("Prep: "), rest), parse_time)).parse(input)
+fn parse_prep_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+    parse_metadata("Prep:").map(parse_time).parse_next(input)
 }
 
-fn cook_seconds(input: &str) -> IResult<&str, Option<i32>> {
-    opt(map_opt(preceded(tag("Cook: "), rest), parse_time)).parse(input)
+fn parse_cook_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+    opt(parse_metadata("Cook:"))
+        .map(|opt| opt.and_then(parse_time))
+        .parse_next(input)
 }
 
-fn total_seconds(input: &str) -> IResult<&str, Option<i32>> {
-    opt(map_opt(preceded(tag("Total: "), rest), parse_time)).parse(input)
+fn parse_total_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+    opt(parse_metadata("Total:"))
+        .map(|opt| opt.and_then(parse_time))
+        .parse_next(input)
 }
 
 fn parse_time(s: &str) -> Option<i32> {
@@ -205,39 +189,55 @@ fn parse_time(s: &str) -> Option<i32> {
     }
 }
 
-fn cookbook(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Cookbook: "), rest)).parse(input)
+fn parse_cookbook<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_metadata_opt("Cookbook:").parse_next(input)
 }
 
-fn section(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("Section: "), rest)).parse(input)
+fn parse_section<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_metadata_opt("Section:").parse_next(input)
 }
 
-fn image(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded((tag("Image: "), space0), rest)).parse(input)
+fn parse_image<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_metadata_opt("Image:").parse_next(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<&str>> {
-    preceded(preceded(tag("Ingredients: "), rest), many1(tabbed_line)).parse(input)
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    preceded(("Ingredients:", line_ending), repeat(1.., tabbed_line)).parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<&str>> {
-    preceded(preceded(tag("Instructions: "), rest), many1(tabbed_line)).parse(input)
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    preceded(("Instructions:", line_ending), repeat(1.., tabbed_line)).parse_next(input)
 }
 
-fn tabbed_line(input: &str) -> IResult<&str, &str> {
-    preceded(tab, rest).parse(input)
+fn tabbed_line<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    preceded(tab, terminated(till_line_ending, opt(line_ending))).parse_next(input)
 }
 
-fn rest(input: &str) -> IResult<&str, &str> {
-    terminated(not_line_ending, alt((line_ending, eof))).parse(input)
+fn parse_metadata<'s>(text: &str) -> impl Parser<&'s str, &'s str, ContextError> {
+    preceded(
+        (literal(text), space0),
+        terminated(take_until(1.., "\n"), line_ending),
+    )
+}
+
+fn parse_metadata_opt<'s>(text: &str) -> impl Parser<&'s str, Option<&'s str>, ContextError> {
+    preceded(
+        (literal(text), space0),
+        alt((
+            terminated(take_until(1.., "\n"), line_ending).map(Some),
+            line_ending.map(|_| None),
+        )),
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use files::*;
     use std::io::Cursor;
+
+    use files::*;
+    use schema_org::Recipe;
+
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -248,37 +248,33 @@ mod tests {
 
         let got = parse(buf)?;
 
-        pretty_assertions::assert_eq!(got, vec![RecipeSchema {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
+        pretty_assertions::assert_eq!(got, vec![Recipe {
             cook_time: seconds_to_duration(1800),
-            description: to_text("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into()),
-            headline: Some("First Cookbook".into()),
+            description: vec![RecipeDescriptionFieldEnum::Text("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into())],
+            headline: vec!["First Cookbook".into()],
             is_based_on: to_is_based_on("KMKIDMAN5".into()),
-            name: Some("Apple Puff Pancake".into()),
+            name: vec!["Apple Puff Pancake".into()],
             prep_time: seconds_to_duration(900),
-            recipe_ingredient: Some(vec![
-                "6 eggs".into(),
-                "1.5 cups milk".into(),
-                "1 teaspoon vanilla extract".into(),
-                "1 cup all-purpose flour".into(),
-                "3 tablespoons sugar".into(),
-                "0.5 teaspoon salt".into(),
-                "0.25 teaspoon ground cinnamon".into(),
-                "2 tablespoons butter".into(),
-                "2 apples - peeled, cored and sliced".into(),
-                "3 tablespoons brown sugar".into(),
-            ]),
-            recipe_instructions: sections_to_itemlist(Sections::from([
-                ("".into(), vec![
-                    SectionItem::new("Preheat the oven to 425 degrees F (220 degrees C)."),
-                    SectionItem::new("Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside."),
-                    SectionItem::new("Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top."),
-                    SectionItem::new("Bake in the preheated oven until puffed and lightly browned, about 20 minutes."),
-                ])
-            ])),
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("6 eggs".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1.5 cups milk".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup all-purpose flour".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 tablespoons sugar".into()),
+                RecipeRecipeIngredientFieldEnum::Text("0.5 teaspoon salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("0.25 teaspoon ground cinnamon".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tablespoons butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 apples - peeled, cored and sliced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 tablespoons brown sugar".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Preheat the oven to 425 degrees F (220 degrees C).".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Bake in the preheated oven until puffed and lightly browned, about 20 minutes.".into()),
+            ],
             recipe_yield: to_yield(9),
-            url: Url::parse("https://www.allrecipes.com/recipe/50936/apple-puff-pancake/").ok(),
+            url: vec!["https://www.allrecipes.com/recipe/50936/apple-puff-pancake/".into()],
             ..Default::default()
         }]);
         Ok(())
@@ -293,23 +289,21 @@ mod tests {
 
         pretty_assertions::assert_eq!(
             got,
-            vec![RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
+            vec![Recipe {
                 cook_time: seconds_to_duration(0),
-                headline: Some("First Cookbook".into()),
+                headline: vec!["First Cookbook".into()],
                 is_based_on: to_is_based_on("Mom".into()),
-                name: Some("Yay".into()),
+                name: vec!["Yay".into()],
                 prep_time: seconds_to_duration(4500),
-                recipe_ingredient: Some(vec!["1 kg chicken".into(), "1 egg".into()]),
-                recipe_instructions: sections_to_itemlist(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new("Mix stuff"),
-                        SectionItem::new("Eat a melon"),
-                        SectionItem::new("Profit"),
-                    ]
-                )])),
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("1 kg chicken".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1 egg".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text("Mix stuff".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Eat a melon".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Profit".into()),
+                ],
                 recipe_yield: to_yield(0),
                 ..Default::default()
             }]
@@ -329,8 +323,8 @@ Cook: 30 minutes
 Total: 45 minutes
 Cookbook: First Cookbook
 Section: First Section
-Image: 
-Ingredients: 
+Image:
+Ingredients:
 	6 eggs
 	1.5 cups milk
 	1 teaspoon vanilla extract
@@ -341,7 +335,7 @@ Ingredients:
 	2 tablespoons butter
 	2 apples - peeled, cored and sliced
 	3 tablespoons brown sugar
-Instructions: 
+Instructions:
 	Preheat the oven to 425 degrees F (220 degrees C).
 	Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.
 	Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.
@@ -350,18 +344,18 @@ Instructions:
 
         pub fn recipe2_file<'a>() -> &'a str {
             r#"Title: Yay
-Description: 
+Description:
 Source: Mom
-Original URL: 
-Yield: 
+Original URL:
+Yield:
 Prep: 1 hour and 15 minutes
 Cookbook: First Cookbook
 Section: First Section
-Image: 
-Ingredients: 
+Image:
+Ingredients:
 	1 kg chicken
 	1 egg
-Instructions: 
+Instructions:
 	Mix stuff
 	Eat a melon
 	Profit"#

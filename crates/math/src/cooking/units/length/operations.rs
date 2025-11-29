@@ -1,5 +1,5 @@
-use super::{Length, LengthUnit};
 use crate::cooking::units::UnitType;
+use crate::cooking::units::length::units::{Length, LengthUnit};
 use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Length {
@@ -55,7 +55,6 @@ impl UnitOperations for Length {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cooking::units::Unit;
 
     fn create_length_variants() -> Vec<Length> {
         vec![

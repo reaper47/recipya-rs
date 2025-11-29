@@ -6,9 +6,11 @@ mod tests {
 
     use config::Config;
     use models::Recipe;
-    use models::recipe::RecipeForCreate;
-    use models::recipe::test_utils::a_complete_recipe_for_create;
-    use recipe_schema::{SectionItem, Sections};
+    use models::recipe::structs::recipe::RecipeForCreate;
+    use models::recipe::structs::section::Item;
+    use models::recipe::structs::section::SectionComponents;
+    use models::recipe::structs::section::SectionItem;
+    use models::recipe::structs::test_utils::a_complete_recipe_for_create;
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_ws,
         create_app_state,
@@ -90,46 +92,44 @@ mod tests {
             1,
             &RecipeForCreate {
                 name: "Best Chinese Kale".into(),
-                yield_: Some(4),
-                ingredients: Sections::from([
-                    (
-                        "Sauce".into(),
+                r#yield: Some(4),
+                ingredients: SectionComponents::Grouped(vec![
+                    SectionItem::new(
+                        "Sauce",
                         vec![
-                            SectionItem::new("1 cup blue spinach"),
-                            SectionItem::new("1/2 tbsp cinnamon"),
-                            SectionItem::new("2lb chicken"),
-                            SectionItem::new("1/2 cup bread loaf"),
-                            SectionItem::new("½ tbsp beef broth"),
-                            SectionItem::new("7 1/2 cups flour"),
-                            SectionItem::new("2 big apples"),
-                            SectionItem::new("Lots of big apples"),
-                            SectionItem::new("2.5 slices of bacon"),
-                            SectionItem::new("2 1/3 cans of bamboo sticks"),
-                            SectionItem::new("1½can of tomato paste"),
-                            SectionItem::new("6 ¾ peanut butter jars"),
-                            SectionItem::new("7.5mL of whiskey"),
-                            SectionItem::new("2 tsp lemon juice"),
+                            Item::new("1 cup blue spinach"),
+                            Item::new("1/2 tbsp cinnamon"),
+                            Item::new("2lb chicken"),
+                            Item::new("1/2 cup bread loaf"),
+                            Item::new("½ tbsp beef broth"),
+                            Item::new("7 1/2 cups flour"),
+                            Item::new("2 big apples"),
+                            Item::new("Lots of big apples"),
+                            Item::new("2.5 slices of bacon"),
+                            Item::new("2 1/3 cans of bamboo sticks"),
+                            Item::new("1½can of tomato paste"),
+                            Item::new("6 ¾ peanut butter jars"),
+                            Item::new("7.5mL of whiskey"),
+                            Item::new("2 tsp lemon juice"),
                         ],
                     ),
-                    (
-                        "Main".into(),
+                    SectionItem::new(
+                        "Sauce",
                         vec![
-                            SectionItem::new("Ground ginger"),
-                            SectionItem::new("3 Large or 4 medium ripe Hass avocados"),
-                            SectionItem::new("1/4-1/2 teaspoon salt plus more for seasoning"),
-                            SectionItem::new(
-                                "1/2 fresh pineapple, cored and cut into 1 1/2-inch pieces",
-                            ),
-                            SectionItem::new("Un sac de chips de 1kg"),
-                            SectionItem::new("Two 15-ounce can Goya beans"),
-                            SectionItem::new("4 pounds top quality chicken filet"),
-                            SectionItem::new("1/8 cup lemon juice"),
+                            Item::new("Ground ginger"),
+                            Item::new("3 Large or 4 medium ripe Hass avocados"),
+                            Item::new("1/4-1/2 teaspoon salt plus more for seasoning"),
+                            Item::new("1/2 fresh pineapple, cored and cut into 1 1/2-inch pieces"),
+                            Item::new("Un sac de chips de 1kg"),
+                            Item::new("Two 15-ounce can Goya beans"),
+                            Item::new("4 pounds top quality chicken filet"),
+                            Item::new("1/8 cup lemon juice"),
                         ],
                     ),
                 ]),
-                instructions: Sections::from([(
-                    "Sauce".into(),
-                    vec![SectionItem::new("Mix all these ingredients")],
+                instructions: SectionComponents::Grouped(vec![SectionItem::new(
+                    "Sauce",
+                    vec![Item::new("Mix all these ingredients")],
                 )]),
                 ..Default::default()
             },

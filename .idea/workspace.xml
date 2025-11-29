@@ -30,9 +30,6 @@
         <enabledFeature name="test-utils" />
         <enabledFeature name="default" />
       </package>
-      <package file="$PROJECT_DIR$/crates/recipe-schema">
-        <enabledFeature name="default" />
-      </package>
       <package file="$PROJECT_DIR$/crates/recipya-cli">
         <enabledFeature name="default" />
       </package>
@@ -43,6 +40,10 @@
         <enabledFeature name="default" />
       </package>
       <package file="$PROJECT_DIR$/crates/router">
+        <enabledFeature name="default" />
+      </package>
+      <package file="$PROJECT_DIR$/crates/schema-org">
+        <enabledFeature name="json-schema" />
         <enabledFeature name="default" />
       </package>
       <package file="$PROJECT_DIR$/crates/support">
@@ -59,23 +60,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.cargo/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/.cargo/config.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/icons.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/view.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/app/wakelock.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/wakelock.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/public/js/wakelock.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/js/wakelock.min.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/web/app/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Rust File" />
         <option value="JavaScript File" />
+        <option value="Rust File" />
       </list>
     </option>
   </component>
@@ -136,6 +137,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Cargo.Run.executor": "Run",
+    "Cargo.Test accuchef::tests.executor": "Run",
     "Cargo.Test admin_router::tests.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_ok.executor": "Run",
@@ -858,8 +860,8 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "171-fix-wakelock",
-    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/shit",
+    "git-widget-placeholder": "#173 on 169-cant-parse-json-recipe-that-h…dient",
+    "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/schema-org/src",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -883,25 +885,25 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/crates/schema-org/src" />
+      <recent name="$PROJECT_DIR$/crates/schema-org/ref" />
+      <recent name="$PROJECT_DIR$/crates/schema-org/src/thing/medical_entity/medical_intangible/dose_schedule" />
       <recent name="$PROJECT_DIR$/crates/shit" />
       <recent name="$PROJECT_DIR$/crates/support/src" />
-      <recent name="$PROJECT_DIR$/crates/app/cofig" />
-      <recent name="$PROJECT_DIR$/crates/foundation/config/src" />
-      <recent name="$PROJECT_DIR$/crates/foundation/src/macros" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/crates/router/src/recipes_router" />
-      <recent name="$PROJECT_DIR$/crates/router/src" />
-      <recent name="$PROJECT_DIR$/crates/templates/src/templates/recipes" />
-      <recent name="$PROJECT_DIR$/crates/testing" />
-      <recent name="$PROJECT_DIR$/crates/math/src/cooking/units" />
+      <recent name="$PROJECT_DIR$/crates/models/src/recipe/structs" />
+      <recent name="$PROJECT_DIR$/crates/schema-org/ref" />
+      <recent name="$PROJECT_DIR$/crates/schema-org/src/backup" />
+      <recent name="$PROJECT_DIR$/crates/schema-org/src/thing/intangible/structured_value" />
+      <recent name="$PROJECT_DIR$/crates/schema-org/src/thing/creative_work" />
     </key>
   </component>
   <component name="RsExternalLinterProjectSettings">
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Run">
+  <component name="RunManager" selected="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -920,8 +922,9 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_submit_recipe_ok -- --exact" />
+    <configuration name="Test accuchef::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="buildProfileId" value="test" />
+      <option name="command" value="test --package integrations --lib apps::accuchef::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -937,8 +940,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test recipes_router::tests::edit::tests::test_put_update_image_ok" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package router --lib recipes_router::tests::edit::tests::test_put_update_image_ok -- --exact" />
+    <configuration name="Test recipe::search::tests::tests_search::test_search_by_instructions" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package models --lib recipe::search::tests::tests_search::test_search_by_instructions -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
       <option name="emulateTerminal" value="true" />
@@ -1007,19 +1010,19 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
-      <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
+      <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
+      <item itemvalue="Cargo.Test accuchef::tests" />
       <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
       <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
       <item itemvalue="Cargo.Test time::tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions" />
+        <item itemvalue="Cargo.Test accuchef::tests" />
         <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_zulu::test_seconds" />
         <item itemvalue="Cargo.Test regexp::time::tests::tests_time_parser::tests_parse_max_time::tests_afrikaans::test_seconds" />
         <item itemvalue="Cargo.Test time::tests" />
-        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_update_image_ok" />
-        <item itemvalue="Cargo.Test recipes_router::tests::edit::tests::test_put_submit_recipe_ok" />
       </list>
     </recent_temporary>
   </component>

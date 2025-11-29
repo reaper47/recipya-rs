@@ -110,10 +110,8 @@ async fn clean_files(
                             num_files_deleted += 1;
                             space_reclaimed_bytes += metadata.len();
 
-                            if is_delete_thumbnails {
-                                if let Ok(bytes) = process_thumbnail(&path) {
-                                    space_reclaimed_bytes += bytes;
-                                }
+                            if is_delete_thumbnails && let Ok(bytes) = process_thumbnail(path) {
+                                space_reclaimed_bytes += bytes;
                             }
                         }
                     }

@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::io::{Read, Seek};
 
 use nom::branch::alt;
@@ -9,17 +10,17 @@ use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use url::Url;
 
-use recipe_schema::{
-    AggregateRating, AtType, DefinedTermOrTextOrUrl, NumberOrText, RecipeCategory, RecipeSchema,
-    SectionItem, Sections,
+use schema_org::field::{
+    AggregateRatingRatingValueFieldEnum, ItemListItemListElementFieldEnum, RecipeKeywordsFieldEnum,
+    RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
 };
+use schema_org::{AggregateRating, AtType, ItemList, Recipe};
 
 use super::helpers::read_file;
 use crate::Result;
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield,
-};
+use crate::helpers::{seconds_to_duration, to_yield};
 
+#[allow(dead_code)]
 struct BigOvenRecipe {
     title: String,
     servings: f32,
@@ -28,7 +29,7 @@ struct BigOvenRecipe {
     effort_rating: u8,
     appearance_rating: u8,
     affordability_rating: u8,
-    ingredients: Sections,
+    ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
     instructions: Vec<String>,
     active_minutes: u16,
     total_minutes: u16,
@@ -51,11 +52,13 @@ struct RecipeComponents<'a> {
     categories: Vec<&'a str>,
 }
 
+#[allow(dead_code)]
 enum IngredientType<'a> {
     Line(Ingredient<'a>),
     Section(Ingredient<'a>),
 }
 
+#[allow(dead_code)]
 struct Ingredient<'a> {
     heading: u16,
     quantity: Option<&'a str>,
@@ -66,6 +69,20 @@ struct Ingredient<'a> {
     line_order: u16,
     nutrient_info: u16,
     base_recipe_gmwt: f32,
+}
+
+impl Display for Ingredient<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = format!(
+            "{} {} {}",
+            self.quantity.map(|i| i.to_string()).unwrap_or_default(),
+            self.measure.unwrap_or_default(),
+            self.name
+        )
+        .replace("  ", " ");
+
+        write!(f, "{s}")
+    }
 }
 
 impl From<RecipeComponents<'_>> for BigOvenRecipe {
@@ -80,32 +97,7 @@ impl From<RecipeComponents<'_>> for BigOvenRecipe {
             effort_rating: r.effort_rating,
             appearance_rating: r.appearance_rating,
             affordability_rating: r.affordability_rating,
-            ingredients: r
-                .ingredients
-                .into_iter()
-                .fold(Sections::new(), |mut acc, ing| {
-                    match ing {
-                        IngredientType::Line(ing) => {
-                            let s = format!(
-                                "{} {} {}",
-                                ing.quantity.map(|i| i.to_string()).unwrap_or_default(),
-                                ing.measure.unwrap_or_default(),
-                                ing.name
-                            )
-                            .replace("  ", " ");
-
-                            if let Some((_, lines)) = acc.last_mut() {
-                                lines.push(SectionItem::new(s));
-                            } else {
-                                acc.push(("".into(), vec![SectionItem::new(s.trim())]));
-                            }
-                        }
-                        IngredientType::Section(ing) => {
-                            acc.push((ing.name.to_string(), Vec::new()));
-                        }
-                    }
-                    acc
-                }),
+            ingredients: transform_ingredient_types(&r.ingredients),
             instructions: r.instructions.into_iter().map(String::from).collect(),
             active_minutes: r.active_minutes,
             total_minutes: r.total_minutes,
@@ -117,46 +109,132 @@ impl From<RecipeComponents<'_>> for BigOvenRecipe {
     }
 }
 
-impl From<BigOvenRecipe> for RecipeSchema {
+fn transform_ingredient_types<'a>(
+    input: &'a [IngredientType<'a>],
+) -> Vec<RecipeRecipeIngredientFieldEnum> {
+    if input
+        .iter()
+        .any(|v| matches!(v, IngredientType::Section(_)))
+    {
+        let mut result = Vec::new();
+        let mut current_section = None;
+        let mut items = Vec::new();
+
+        for item in input {
+            match item {
+                IngredientType::Line(ing) => {
+                    let s = format!(
+                        "{} {} {}",
+                        ing.quantity.map(|i| i.to_string()).unwrap_or_default(),
+                        ing.measure.unwrap_or_default(),
+                        ing.name
+                    )
+                    .replace("  ", " ");
+
+                    if current_section.is_some() {
+                        items.push(s)
+                    }
+                }
+                IngredientType::Section(ing) => {
+                    if let Some(section) = current_section {
+                        result.push((section, items.clone()));
+                        items.clear();
+                    }
+                    current_section = Some(ing.name.to_string());
+                }
+            }
+        }
+
+        if let Some(section) = current_section {
+            result.push((section, items))
+        }
+
+        result
+            .into_iter()
+            .map(|(section, items)| {
+                let num_items = items.len();
+
+                RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                    r#type: AtType::ItemList.to_string(),
+                    item_list_element: items
+                        .into_iter()
+                        .map(ItemListItemListElementFieldEnum::Text)
+                        .collect(),
+                    name: vec![section.trim_matches('-').trim().to_string()],
+                    number_of_items: vec![num_items as i32],
+                    ..Default::default()
+                })
+            })
+            .collect()
+    } else {
+        let flat: Vec<&Ingredient> = input
+            .iter()
+            .filter_map(|v| match v {
+                IngredientType::Line(ing) => Some(ing),
+                _ => None,
+            })
+            .collect();
+
+        flat.iter()
+            .map(|ing| {
+                let s = format!(
+                    "{} {} {}",
+                    ing.quantity.map(|i| i.to_string()).unwrap_or_default(),
+                    ing.measure.unwrap_or_default(),
+                    ing.name
+                )
+                .replace("  ", " ");
+
+                RecipeRecipeIngredientFieldEnum::Text(s)
+            })
+            .collect()
+    }
+}
+
+impl From<BigOvenRecipe> for Recipe {
     fn from(r: BigOvenRecipe) -> Self {
         let url = Url::parse(&r.source.clone().unwrap_or_default()).ok();
 
-        RecipeSchema {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
+        Recipe {
+            r#type: Some(AtType::Recipe.to_string()),
             aggregate_rating: if r.taste_rating > 0 {
-                Some(AggregateRating {
-                    at_type: AtType::AggregateRating,
-                    rating_value: Some(NumberOrText::Number(r.taste_rating as f64)),
+                vec![AggregateRating {
+                    r#type: Some(AtType::AggregateRating.to_string()),
+                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(
+                        r.taste_rating as f32,
+                    )],
                     ..Default::default()
-                })
+                }]
             } else {
-                None
+                vec![]
             },
             cook_time: seconds_to_duration((r.total_minutes - r.active_minutes) as i32),
-            is_based_on: if url.is_some() {
-                None
-            } else {
-                to_is_based_on(r.source.to_owned().unwrap())
-            },
-            keywords: Some(DefinedTermOrTextOrUrl::Text(r.keywords.join(","))),
-            name: Some(r.title).filter(|s| !s.is_empty()),
+            keywords: r
+                .keywords
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
+            name: Some(r.title)
+                .filter(|s| !s.is_empty())
+                .into_iter()
+                .collect(),
             prep_time: seconds_to_duration(r.active_minutes as i32),
-            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
-            recipe_ingredient: sections_to_vec(r.ingredients),
-            recipe_instructions: sections_to_itemlist(Sections::from([(
-                "".into(),
-                r.instructions.iter().map(SectionItem::new).collect(),
-            )])),
+            recipe_category: r.category.into_iter().collect(),
+            recipe_ingredient: r.ingredients,
+            recipe_instructions: r
+                .instructions
+                .into_iter()
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect(),
             recipe_yield: to_yield(r.servings.round() as i64),
-            url,
+            url: url.map(String::from).into_iter().collect(),
             ..Default::default()
         }
     }
 }
 
 /// Parses a BigOven text file recipe.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -164,7 +242,7 @@ where
     Ok(vec![parse_text_file(&content)?])
 }
 
-fn parse_text_file(input: &str) -> Result<RecipeSchema> {
+fn parse_text_file(input: &str) -> Result<Recipe> {
     Ok(map(recipe, BigOvenRecipe::from)
         .parse(input)
         .map(|(_, r)| r.into())?)
@@ -397,19 +475,6 @@ fn parse_u16(
     move |input| {
         map_res(parse_tag(start_tag, closing_tag, empty_tag), |s| {
             s.parse::<u16>()
-        })
-        .parse(input)
-    }
-}
-
-fn parse_i16(
-    start_tag: &str,
-    closing_tag: &str,
-    empty_tag: &str,
-) -> impl FnMut(&str) -> IResult<&str, i16> {
-    move |input| {
-        map_res(parse_tag(start_tag, closing_tag, empty_tag), |s| {
-            s.parse::<i16>()
         })
         .parse(input)
     }
@@ -783,59 +848,61 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
 
     mod results {
         use super::*;
+        use schema_org::Recipe;
+        use schema_org::field::RecipeKeywordsFieldEnum;
 
-        pub fn recipe1() -> RecipeSchema {
-            RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                keywords: Some(DefinedTermOrTextOrUrl::Text(["Low Fat",
-                    "Summer",
-                    "Spring",
-                    "Vegetables",
-                    "Salads",
-                    "Main Dish"].join(","))),
-                is_based_on: None,
-                name: Some("Applebee's Oriental Chicken Salad".into()),
-                recipe_category: RecipeCategory::Text("Low Carb".into()),
-                recipe_ingredient: Some(vec![
-                    "<section>-- Salad Dressing --</section>".into(),
-                    "6 tablespoon Honey".into(),
-                    "3 tablespoon Rice wine vinegar".into(),
-                    "1/2 cup Mayonnaise".into(),
-                    "2 teaspoon Grey Poupon Dijon Mustard".into(),
-                    "1/4 teaspoon Sesame Oil".into(),
-                    "<section>-- Salad --</section>".into(),
-                    "1 package Breaded Chicken Tenders".into(),
-                    "6 cups Romaine lettuce".into(),
-                    "2 cup Red cabbage".into(),
-                    "1 Carrot".into(),
-                    "2 Green Onion".into(),
-                    "2 tablespoon Sliced almonds".into(),
-                    "1 cup Chow mein noodles".into(),
-                ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([
-                    ("".into(), vec![
-                        SectionItem::new("Below assumes you are making your own chicken tenders, whereas the recipe above uses pre-packaged chicken tenders."),
-                        SectionItem::new("Directions"),
-                        SectionItem::new("Preheat oil in deep fryer or deep pan over medium heat."),
-                        SectionItem::new("You want the temperature of the oil to be around 350 degrees."),
-                        SectionItem::new("Blend together all ingredients for dressing in a small bowl with an electric mixer."),
-                        SectionItem::new("Put dressing in refrigerator to chill while you prepare the salad."),
-                        SectionItem::new("In a small, shallow bowl beat egg, add milk, and mix well."),
-                        SectionItem::new("In another bowl, combine flour with corn flake crumbs, salt and pepper."),
-                        SectionItem::new("Cut chicken breast into 4 or 5 long strips."),
-                        SectionItem::new("Dip each strip of chicken first into egg mixture then into the flour mixture, coating each piece completely."),
-                        SectionItem::new("Fry each chicken finger for 5 minutes or until coating has darkened to brown."),
-                        SectionItem::new("Prepare salad by tossing the chopped romaine with the chopped red cabbage, Napa cabbage, and carrots."),
-                        SectionItem::new("Sprinkle sliced green onion on top of the lettuce."),
-                        SectionItem::new("Sprinkle almonds over the salad, then the chow mein noodles."),
-                        SectionItem::new("Cut the chicken into small bite-size chunks."),
-                        SectionItem::new("Place the chicken onto the salad forming a pile in the middle."),
-                        SectionItem::new("Serve with salad dressing drizzled over it or on the side."),
-                    ])
-                ])),
+        pub fn recipe1() -> Recipe {
+            Recipe {
+                r#type: Some(AtType::Recipe.to_string()),
+                keywords: vec![
+                    RecipeKeywordsFieldEnum::TextOrURL("Low Fat".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Summer".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Spring".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Vegetables".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Salads".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Main Dish".into()),
+                ],
+                name: vec!["Applebee's Oriental Chicken Salad".into()],
+                recipe_category: vec!["Low Carb".into()],
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Salad Dressing", vec![
+                        "6 tablespoon Honey",
+                        "3 tablespoon Rice wine vinegar",
+                        "1/2 cup Mayonnaise",
+                        "2 teaspoon Grey Poupon Dijon Mustard",
+                        "1/4 teaspoon Sesame Oil",
+                    ]),
+                    RecipeRecipeIngredientFieldEnum::new_section("Salad", vec![
+                        "1 package Breaded Chicken Tenders",
+                        "6 cups Romaine lettuce",
+                        "2 cup Red cabbage",
+                        "1 Carrot",
+                        "2 Green Onion",
+                        "2 tablespoon Sliced almonds",
+                        "1 cup Chow mein noodles",
+                    ]),
+                ],
+                recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("Below assumes you are making your own chicken tenders, whereas the recipe above uses pre-packaged chicken tenders.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Directions".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Preheat oil in deep fryer or deep pan over medium heat.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("You want the temperature of the oil to be around 350 degrees.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Blend together all ingredients for dressing in a small bowl with an electric mixer.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Put dressing in refrigerator to chill while you prepare the salad.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("In a small, shallow bowl beat egg, add milk, and mix well.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("In another bowl, combine flour with corn flake crumbs, salt and pepper.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Cut chicken breast into 4 or 5 long strips.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Dip each strip of chicken first into egg mixture then into the flour mixture, coating each piece completely.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Fry each chicken finger for 5 minutes or until coating has darkened to brown.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Prepare salad by tossing the chopped romaine with the chopped red cabbage, Napa cabbage, and carrots.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Sprinkle sliced green onion on top of the lettuce.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Sprinkle almonds over the salad, then the chow mein noodles.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Cut the chicken into small bite-size chunks.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Place the chicken onto the salad forming a pile in the middle.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text("Serve with salad dressing drizzled over it or on the side.".into()),
+                ],
                 recipe_yield: to_yield(4),
-                url: Url::parse("http://www.food.com/recipe/tsr-version-of-applebees-oriental-chicken-salad-by-todd-wilbur-19253?ftab=reviews").ok(),
+                url: vec!["http://www.food.com/recipe/tsr-version-of-applebees-oriental-chicken-salad-by-todd-wilbur-19253?ftab=reviews".into()],
                 ..Default::default()
             }
         }

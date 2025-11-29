@@ -138,9 +138,9 @@ dependencies = [
  "email",
  "models",
  "pretty_assertions",
- "recipe-schema",
  "recipya-scraper",
  "repository",
+ "schema-org",
  "support",
  "tokio",
  "tracing",
@@ -209,6 +209,7 @@ version = "0.0.0"
 dependencies = [
  "argon2",
  "derive_more",
+ "dotenvy",
  "enum_dispatch",
  "hmac",
  "lazy-regex",
@@ -2014,12 +2015,11 @@ dependencies = [
  "derive_more",
  "humantime",
  "iso8601",
- "itertools 0.14.0",
  "libpaprika",
  "nom 8.0.0",
  "pretty_assertions",
- "recipe-schema",
  "recipemd",
+ "schema-org",
  "serde",
  "serde-xml-rs",
  "serde_json",
@@ -2030,6 +2030,7 @@ dependencies = [
  "tracing",
  "url",
  "uuid",
+ "winnow",
  "zip 6.0.0",
 ]
 
@@ -2573,9 +2574,9 @@ dependencies = [
  "math",
  "paste",
  "pretty_assertions",
- "recipe-schema",
  "recipya-scraper",
  "repository",
+ "schema-org",
  "serde",
  "strum 0.27.2",
  "support",
@@ -3468,20 +3469,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "recipe-schema"
-version = "0.1.0"
-dependencies = [
- "iso8601",
- "reqwest",
- "schemars",
- "serde",
- "serde_json",
- "support",
- "tracing",
- "url",
-]
-
-[[package]]
 name = "recipemd"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3505,7 +3492,6 @@ dependencies = [
  "config",
  "derive_more",
  "diesel",
- "dotenvy",
  "models",
  "openssl",
  "pq-sys",
@@ -3529,8 +3515,8 @@ dependencies = [
  "async-trait",
  "axum",
  "derive_more",
- "recipe-schema",
  "reqwest",
+ "schema-org",
  "scraper",
  "serde_json",
  "support",
@@ -3727,11 +3713,11 @@ dependencies = [
  "mime_guess",
  "models",
  "pretty_assertions",
- "recipe-schema",
  "recipya-scraper",
  "repository",
  "reqwest",
  "rust-embed",
+ "schema-org",
  "serde",
  "serde_json",
  "serial_test",
@@ -3875,10 +3861,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "schema-org"
+version = "0.0.0"
+dependencies = [
+ "iso8601",
+ "schemars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "schemars"
-version = "1.0.4"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d20c4491bc164fa2f6c5d44565947a52ad80b9505d8e36f8d54c27c739fcd0"
+checksum = "9558e172d4e8533736ba97870c4b2cd63f84b382a3d6eb063da41b91cce17289"
 dependencies = [
  "dyn-clone",
  "ref-cast",
@@ -3889,9 +3885,9 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "1.0.4"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33d020396d1d138dc19f1165df7545479dcd58d93810dc5d646a16e55abefa80"
+checksum = "301858a4023d78debd2353c7426dc486001bddc91ae31a76fb1f55132f7e2633"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3966,14 +3962,14 @@ dependencies = [
 
 [[package]]
 name = "serde-xml-rs"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53630160a98edebde0123eb4dfd0fce6adff091b2305db3154a9e920206eb510"
+checksum = "cc2215ce3e6a77550b80a1c37251b7d294febaf42e36e21b7b411e0bf54d540d"
 dependencies = [
  "log",
  "serde",
- "thiserror 1.0.69",
- "xml-rs",
+ "thiserror 2.0.16",
+ "xml",
 ]
 
 [[package]]
@@ -4465,6 +4461,7 @@ dependencies = [
  "config",
  "diesel",
  "diesel-async",
+ "dotenvy",
  "models",
  "recipya-scraper",
  "repository",
@@ -5560,10 +5557,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea2f10b9bb0928dfb1b42b65e1f9e36f7f54dbdf08457afefb38afcdec4fa2bb"
 
 [[package]]
-name = "xml-rs"
-version = "0.8.26"
+name = "xml"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a62ce76d9b56901b19a74f19431b0d8b3bc7ca4ad685a746dfd78ca8f4fc6bda"
+checksum = "838dd679b10a4180431ce7c2caa6e5585a7c8f63154c19ae99345126572e80cc"
 
 [[package]]
 name = "yansi"

@@ -23,6 +23,7 @@ axum-test.workspace = true
 config.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
+dotenvy = "0.15.7"
 models.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true

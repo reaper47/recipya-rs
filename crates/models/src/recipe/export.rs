@@ -1,6 +1,7 @@
 use std::fmt::Write;
 
-use super::RecipeDetails;
+use crate::recipe::structs::recipe::RecipeDetails;
+use crate::recipe::structs::section::SectionComponents;
 use crate::time::FormattedTimes;
 use crate::{Error, Result};
 
@@ -60,14 +61,24 @@ impl RecipeDetails {
             writeln!(&mut md, "## Ingredients")?;
             writeln!(&mut md)?;
 
-            for (section, ingredients) in &self.ingredients {
-                writeln!(&mut md, "### {section}")?;
-                writeln!(&mut md)?;
+            match &self.ingredients {
+                SectionComponents::Grouped(section_items) => {
+                    for section in section_items {
+                        writeln!(&mut md, "### {}", section.title)?;
+                        writeln!(&mut md)?;
 
-                for item in ingredients {
-                    writeln!(&mut md, "* {}", item.text)?;
+                        for item in section.items.iter() {
+                            writeln!(&mut md, "* {}", item.text)?;
+                        }
+                        writeln!(&mut md)?;
+                    }
                 }
-                writeln!(&mut md)?;
+                SectionComponents::Flat(items) => {
+                    for item in items {
+                        writeln!(&mut md, "* {}", item.text)?;
+                    }
+                    writeln!(&mut md)?;
+                }
             }
         }
 
@@ -75,14 +86,24 @@ impl RecipeDetails {
             writeln!(&mut md, "## Instructions")?;
             writeln!(&mut md)?;
 
-            for (section, instructions) in &self.instructions {
-                writeln!(&mut md, "### {section}")?;
-                writeln!(&mut md)?;
+            match &self.instructions {
+                SectionComponents::Grouped(section_items) => {
+                    for section in section_items {
+                        writeln!(&mut md, "### {}", section.title)?;
+                        writeln!(&mut md)?;
 
-                for (idx, item) in instructions.iter().enumerate() {
-                    writeln!(&mut md, "{}. {}", idx + 1, item.text)?;
+                        for (idx, item) in section.items.iter().enumerate() {
+                            writeln!(&mut md, "{}. {}", idx + 1, item.text)?;
+                        }
+                        writeln!(&mut md)?;
+                    }
                 }
-                writeln!(&mut md)?;
+                SectionComponents::Flat(items) => {
+                    for (idx, item) in items.iter().enumerate() {
+                        writeln!(&mut md, "{}. {}", idx + 1, item.text)?;
+                    }
+                    writeln!(&mut md)?;
+                }
             }
         }
 
@@ -154,8 +175,9 @@ impl RecipeDetails {
 
 #[cfg(test)]
 mod tests {
-    use crate::recipe::test_utils::a_complete_recipe;
     use uuid::Uuid;
+
+    use crate::recipe::structs::test_utils::a_complete_recipe;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

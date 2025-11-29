@@ -37,7 +37,7 @@ pub struct ShareRecipe {
 /// A struct for inserting a new shared recipe into the database.
 #[derive(Insertable)]
 #[diesel(table_name = schema::shares_recipes)]
-pub(super) struct SharedRecipeForInsert {
+pub(crate) struct SharedRecipeForInsert {
     pub user_id: i64,
     pub recipe_id: i64,
     pub expires_at: Option<NaiveDateTime>,
@@ -93,7 +93,7 @@ mod tests {
     use testing::utils::build_server_logged_in;
 
     use super::*;
-    use crate::recipe::test_utils::a_complete_recipe_for_create;
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

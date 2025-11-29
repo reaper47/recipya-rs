@@ -1,5 +1,21 @@
 [workspace]
-members = ["crates/*"]
+members = [
+    "crates/app",
+    "crates/auth",
+    "crates/config",
+    "crates/email",
+    "crates/integrations",
+    "crates/math",
+    "crates/models",
+    "crates/schema-org",
+    "crates/recipya-cli",
+    "crates/recipya-scraper",
+    "crates/repository",
+    "crates/router",
+    "crates/support",
+    "crates/templates",
+    "crates/testing",
+]
 resolver = "3"
 
 [workspace.package]
@@ -27,7 +43,7 @@ email = { path = "./crates/email" }
 integrations = { path = "./crates/integrations" }
 math = { path = "./crates/math" }
 models = { path = "./crates/models" }
-recipe-schema = { path = "crates/recipe-schema" }
+schema-org = { path = "./crates/schema-org", default-features = false }
 recipya-scraper = { path = "crates/recipya-scraper" }
 repository = { path = "./crates/repository" }
 router = { path = "./crates/router" }

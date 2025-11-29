@@ -5,10 +5,9 @@ use std::{
 };
 
 use axum::body::Bytes;
-use tracing::error;
-
-use recipe_schema::RecipeSchema;
+use schema_org::Recipe;
 use support::fs::MockFs;
+use tracing::error;
 
 use super::websites::websites_for_tests;
 use crate::client::HttpClient;
@@ -46,7 +45,7 @@ fn mock_scraper() -> &'static Scraper {
 }
 
 /// Fetches the recipe from a website and stores the content in an HTML file.
-pub fn scrape(website: Website, number: usize) -> Result<RecipeSchema> {
+pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
     let url = match websites_for_tests().get(&website) {
         Some(urls) => urls.get(number).expect("url to test not in vector of urls"),
         None => panic!("website '{website}' not found in map"),

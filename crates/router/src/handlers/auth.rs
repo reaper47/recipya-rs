@@ -131,25 +131,24 @@ pub async fn forgot_password_post_handler(
 
     let user_email = form.email;
 
-    if let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await {
-        if let Ok(token) = generate_web_token(&user_email, user.token_salt) {
-            if let Some(email) = state.email_service {
-                let payload = Email {
-                    to: user_email.clone(),
-                    subject: "Reset your password".into(),
-                    body: "".to_string(),
-                    template: Some(Template::ForgotPassword),
-                    data: Some(Data {
-                        token: token.to_string(),
-                        username: user_email,
-                        url: state.config.read().await.base_url.clone(),
-                    }),
-                };
+    if let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await
+        && let Ok(token) = generate_web_token(&user_email, user.token_salt)
+        && let Some(email) = state.email_service
+    {
+        let payload = Email {
+            to: user_email.clone(),
+            subject: "Reset your password".into(),
+            body: "".to_string(),
+            template: Some(Template::ForgotPassword),
+            data: Some(Data {
+                token: token.to_string(),
+                username: user_email,
+                url: state.config.read().await.base_url.clone(),
+            }),
+        };
 
-                if let Err(err) = email.send(&payload) {
-                    error!("Could not send email 'Reset your password': {:?}", err);
-                }
-            }
+        if let Err(err) = email.send(&payload) {
+            error!("Could not send email 'Reset your password': {:?}", err);
         }
     }
 

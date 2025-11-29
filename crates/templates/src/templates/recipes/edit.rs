@@ -4,7 +4,8 @@ use maud::{Markup, PreEscaped, html};
 
 use config::DataDir;
 use models::data::{Data, ViewRecipe};
-use models::recipe::{Category, Keyword};
+use models::recipe::structs::recipe::{Category, Keyword};
+use models::recipe::structs::section::SectionComponents;
 use models::settings::UserSettingDetails;
 use support::fs::FsSupport;
 
@@ -181,11 +182,22 @@ fn render_ingredients(view: &ViewRecipe) -> Markup {
             sup .text-red-600 { "*" }
         }
         ol #ingredients-list class="pl-4" {
-             @if !view.recipe_details.ingredients.is_empty() {
-                @for (_section, ingredients) in &view.recipe_details.ingredients {
-                    @for ing in ingredients.iter() {
-                        (add_ingredient(&ing.text))
-                    }
+            @let ingredients = &view.recipe_details.ingredients;
+
+            @if !ingredients.is_empty() {
+                @match ingredients {
+                    SectionComponents::Grouped(section_items) => {
+                        @for section in section_items.iter() {
+                            @for ing in section.items.iter() {
+                                (add_ingredient(&ing.text))
+                            }
+                        }
+                    },
+                    SectionComponents::Flat(items) => {
+                        @for ing in items.iter() {
+                            (add_ingredient(&ing.text))
+                        }
+                    },
                 }
             } @else {
                 (add_ingredient(""))
@@ -201,11 +213,22 @@ fn render_instructions(view: &ViewRecipe) -> Markup {
             sup .text-red-600 { "*" }
         }
         ol #instructions-list class="grid list-decimal" {
-             @if !view.recipe_details.instructions.is_empty() {
-                @for (_section, instructions) in &view.recipe_details.instructions {
-                    @for ins in instructions.iter() {
-                        (add_instruction(&ins.text))
-                    }
+            @let instructions = &view.recipe_details.instructions;
+
+            @if !instructions.is_empty() {
+                 @match instructions {
+                    SectionComponents::Grouped(section_items) => {
+                        @for section in section_items.iter() {
+                            @for ins in section.items.iter() {
+                                (add_instruction(&ins.text))
+                            }
+                        }
+                    },
+                    SectionComponents::Flat(items) => {
+                        @for ins in items.iter() {
+                            (add_instruction(&ins.text))
+                        }
+                    },
                 }
             } @else {
                 (add_instruction(""))

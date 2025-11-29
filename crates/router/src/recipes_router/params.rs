@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 use integrations::{App, FileFormat, parse_recipe};
 use models::recipe::{save_media_field, text_trim};
-use recipe_schema::RecipeSchema;
+use schema_org::Recipe;
 
 /// Represents the content of the "Add Recipe -> Import from an app" form.
 #[derive(Default)]
@@ -81,7 +81,7 @@ where
 
 impl ImportFromAppForm {
     /// Parses the recipe file contained in the form.
-    pub fn parse_recipes(&mut self) -> crate::error::Result<Vec<RecipeSchema>> {
+    pub fn parse_recipes(&mut self) -> crate::error::Result<Vec<Recipe>> {
         let mut data = Cursor::new(&self.file_data);
         let app = &self.app;
         let file_name = &self.file_name;

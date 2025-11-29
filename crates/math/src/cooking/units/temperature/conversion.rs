@@ -1,6 +1,7 @@
-use super::{Temperature, TemperatureUnit};
+use crate::cooking::units::UnitType;
+use crate::cooking::units::temperature::units::{Temperature, TemperatureUnit};
 use crate::cooking::units::traits::{UnitConverter, UnitOperations};
-use crate::cooking::units::{Unit, UnitType};
+use crate::cooking::units::unit::Unit;
 use crate::{Error, Result};
 
 impl UnitConverter for Temperature {

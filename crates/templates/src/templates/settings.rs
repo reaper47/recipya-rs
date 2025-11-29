@@ -1,10 +1,11 @@
-use math::cooking::units::MeasurementSystem;
 use maud::{Markup, PreEscaped, html};
+use strum::IntoEnumIterator;
+
+use math::cooking::units::system::MeasurementSystem;
 use models::data::Data;
-use models::recipe::Category;
+use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
-use strum::IntoEnumIterator;
 
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
@@ -545,7 +546,7 @@ fn new_user_row(num_users: usize) -> Markup {
     }
 }
 
-fn settings_data(data: &Data) -> Markup {
+fn settings_data(_data: &Data) -> Markup {
     html! {
        div #settings-data class="hidden p-3" {
             div class="flex justify-between items-center text-sm" {

@@ -7,24 +7,22 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::bytes::streaming::take_until;
-use nom::bytes::{take_till, take_while};
-use nom::character::complete::{char, digit1, line_ending, not_line_ending, space0, space1};
-use nom::combinator::{complete, map, map_res, not, opt, peek, recognize, rest};
-use nom::multi::{many0, many1, separated_list0};
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser};
-use recipe_schema::{AtType, RecipeCategory, RecipeSchema};
-
-use crate::Result;
-use crate::apps::helpers::{Ingredient, Instruction, ToSections, read_file};
-use crate::helpers::{
-    sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on, to_organization_type,
-    to_yield,
+use winnow::Result as WResult;
+use winnow::ascii::{alphanumeric1, dec_int, line_ending, space0, space1};
+use winnow::combinator::{
+    alt, delimited, opt, peek, preceded, repeat, repeat_till, separated, seq, terminated,
 };
+use winnow::prelude::*;
+use winnow::token::{literal, take_till, take_until, take_while};
 
+use schema_org::Recipe;
+use schema_org::field::{RecipeAuthorFieldEnum, RecipeKeywordsFieldEnum};
+
+use crate::apps::helpers::{Ingredient, Instruction, ToSections, read_file};
+use crate::helpers::{to_is_based_on, to_yield};
+use crate::{Error, Result};
+
+#[derive(Default)]
 struct RecipeComponents<'a> {
     software_version: &'a str,
     title: &'a str,
@@ -38,7 +36,7 @@ struct RecipeComponents<'a> {
     erfasst: Option<&'a str>,
 }
 
-impl From<RecipeComponents<'_>> for RecipeSchema {
+impl From<RecipeComponents<'_>> for Recipe {
     fn from(r: RecipeComponents<'_>) -> Self {
         let (category, keywords) = match r
             .category
@@ -62,46 +60,24 @@ impl From<RecipeComponents<'_>> for RecipeSchema {
         };
 
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            author: to_organization_type(r.author.unwrap_or_default().into()),
+            author: r
+                .author
+                .map(|s| vec![RecipeAuthorFieldEnum::new_person(s)])
+                .unwrap_or_default(),
             is_based_on: to_is_based_on(
                 r.software_version
                     .replace("(unreg.) ", "")
                     .trim_start_matches("Recipe via")
-                    .trim_end_matches("=====")
-                    .trim()
-                    .into(),
+                    .trim(),
             ),
-            keywords: to_defined_text(keywords.join(",")),
-            name: Some(r.title.into()),
-            recipe_category: RecipeCategory::Text(category),
-            recipe_ingredient: sections_to_vec(
-                r.ingredients
-                    .into_iter()
-                    .filter(|i| match i {
-                        Ingredient::Line(s) => !s.is_empty(),
-                        Ingredient::Section(s) => !s.is_empty(),
-                    })
-                    .fold(Vec::new(), |mut acc, item| {
-                        match item {
-                            Ingredient::Line(s) if s.starts_with('-') => match acc.last_mut() {
-                                Some(Ingredient::Line(prev)) => {
-                                    *prev = Cow::Owned(format!(
-                                        "{}, {}",
-                                        prev,
-                                        s.replace("-", "").trim()
-                                    ));
-                                }
-                                _ => acc.push(Ingredient::Line(s)),
-                            },
-                            _ => acc.push(item),
-                        }
-                        acc
-                    })
-                    .to_sections(),
-            ),
-            recipe_instructions: sections_to_itemlist(r.instructions.to_sections()),
+            keywords: keywords
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
+            name: vec![r.title.into()],
+            recipe_category: vec![category],
+            recipe_ingredient: r.ingredients.to_sections(),
+            recipe_instructions: r.instructions.to_sections(),
             recipe_yield: to_yield(r.r#yield as i64),
             ..Default::default()
         }
@@ -109,251 +85,261 @@ impl From<RecipeComponents<'_>> for RecipeSchema {
 }
 
 /// Parses the recipes in a REZKONV file.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
     let content = read_file(r)?;
+    let mut input = content.as_str();
 
-    Ok(parse_recipes(&content)?
+    Ok(parse_recipes(&mut input)
+        .map_err(|err| Error::Parse(err.to_string()))?
         .into_iter()
-        .map(RecipeSchema::from)
+        .map(Recipe::from)
         .collect())
 }
 
-fn parse_recipes(input: &str) -> Result<Vec<RecipeComponents<'_>>> {
-    Ok(many1(recipe)
-        .parse(input)
-        .map(|(_, recipes)| recipes.into_iter().collect())?)
+fn parse_recipes<'s>(input: &mut &'s str) -> WResult<Vec<RecipeComponents<'s>>> {
+    Ok(repeat(1.., parse_recipe).parse_next(input)?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            terminated(header, line_ending),
-            title,
-            opt(category),
-            servings,
-            many1(line_ending),
-            ingredients,
-            opt(quelle),
-            instructions,
-            keywords,
-            opt(author),
-            opt(erfasst),
-            (footer, many0(line_ending)),
-        ),
-        |(
-            header,
-            title,
-            category,
-            servings,
-            _,
-            ingredients,
-            _,
-            instructions,
-            keywords,
-            author,
-            erfasst,
-            _,
-        )| {
-            RecipeComponents {
-                software_version: header,
-                title,
-                category: category.unwrap_or_default(),
-                r#yield: servings,
-                ingredients,
-                instructions,
-                keywords,
-                author,
-                erfasst,
-            }
-        },
-    )
-    .parse(input)
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        software_version: parse_header,
+        title: parse_title,
+        category: parse_category,
+        r#yield: parse_yield,
+        ingredients: parse_ingredients,
+        _: parse_quelle,
+        instructions: parse_instructions,
+        keywords: parse_keywords,
+        author: parse_author,
+        _: parse_erfasst,
+        _: repeat::<_, _, (), _, _>(1.., line_ending),
+        _: "=====",
+        _: repeat::<_, _, (), _, _>(0.., line_ending),
+        ..Default::default()
+    }}
+    .parse_next(input)
 }
 
-fn header(input: &str) -> IResult<&str, &str> {
-    terminated(
-        alt((
-            preceded(
-                peek(tag("========== ")),
-                preceded(tag("========== "), not_line_ending),
-            ),
-            preceded(
-                peek(tag("===== ")),
-                preceded(tag("===== "), not_line_ending),
-            ),
-        )),
-        line_ending,
-    )
-    .parse(input)
-}
-
-fn title(input: &str) -> IResult<&str, &str> {
+fn parse_header<'s>(input: &mut &'s str) -> WResult<&'s str> {
     delimited(
-        (space0, tag("Titel: ")),
-        take_till(|c| c == '\n'),
-        line_ending,
+        take_while(5..=10, '='),
+        preceded(' ', take_till(1.., |c| c == '\n' || c == '=')),
+        (opt(take_while(5..=10, '=')), line_ending, line_ending),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn category(input: &str) -> IResult<&str, Vec<&str>> {
-    delimited(
-        (space0, tag("Kategorien: ")),
-        separated_list0(
-            tag(","),
-            nom::bytes::complete::take_till(|c| c == ',' || c == '\n'),
-        ),
-        line_ending,
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    preceded(
+        (space1, "Titel:", space0),
+        terminated(take_until(1.., "\n"), line_ending),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn servings(input: &str) -> IResult<&str, i16> {
-    map_res(
-        delimited(
-            (space0, tag("Menge: ")),
-            digit1,
-            (take_till(|c| c == '\n'), line_ending),
-        ),
-        |digits: &str| digits.parse::<i16>(),
-    )
-    .parse(input)
-}
-
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    terminated(
-        alt((ingredients_list, ingredient_sections)),
-        many1(line_ending),
-    )
-    .parse(input)
-}
-
-fn ingredients_list(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    many1(ingredient).parse(input)
-}
-
-fn ingredient_sections(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    many1(preceded(not(stopping_section), alt((section, ingredient)))).parse(input)
-}
-
-fn stopping_section(input: &str) -> IResult<&str, &str> {
-    recognize((
-        opt(line_ending),
-        take_while(|c| c == '='),
-        tag(" QUELLE "),
-        take_while(|c| c == '='),
-        line_ending,
-    ))
-    .parse(input)
-}
-
-fn section(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(
-        delimited(
-            (
-                opt(line_ending),
-                tag("="),
-                take_while(|c| c == '='),
-                char(' '),
-            ),
-            take_until(" ="),
-            (tag(" ="), take_while(|c| c == '='), line_ending),
-        ),
-        |s| Ingredient::Section(Cow::Borrowed(s)),
-    )
-    .parse(input)
-}
-
-fn ingredient(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(
-        delimited(
-            alt(((tag("    "), space0), (tag("  "), space0))),
-            take_till(|c| c == '\n'),
+fn parse_category<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    preceded(
+        (space0, "Kategorien:", space0),
+        terminated(
+            separated(0.., take_till(0.., |c| c == ',' || c == '\n'), ","),
             line_ending,
         ),
-        |s: &str| {
-            Ingredient::Line(Cow::Owned(
-                s.split_whitespace().collect::<Vec<_>>().join(" "),
-            ))
-        },
     )
-    .parse(input)
+    .map(|cats: Vec<&str>| {
+        cats.into_iter()
+            .filter(|cat| !cat.trim().is_empty())
+            .collect()
+    })
+    .parse_next(input)
 }
 
-fn quelle(input: &str) -> IResult<&str, Vec<&str>> {
+fn parse_yield(input: &mut &str) -> WResult<i16> {
     preceded(
-        stopping_section,
-        terminated(many1(tabbed_line), line_ending),
+        (space1, "Menge:", space0),
+        terminated(
+            dec_int,
+            (
+                take_till(0.., |c| c == '\n'),
+                (line_ending, opt(line_ending), opt(line_ending)),
+            ),
+        ),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn tabbed_line(input: &str) -> IResult<&str, &str> {
-    delimited(space1, take_till(|c: char| c == '\n'), line_ending).parse(input)
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    alt((parse_ingredient_list, parse_ingredient_block)).parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
-    preceded(
-        not(metadata_stop),
-        map(paragraphs, |s| {
-            s.split("\n\n")
-                .map(|s| Instruction::Line(Cow::Borrowed(s)))
-                .collect()
-        }),
-    )
-    .parse(input)
-}
-
-fn paragraphs(input: &str) -> IResult<&str, &str> {
-    alt((
-        recognize(terminated(
-            alt((
-                complete(take_until("\n\n:")),
-                complete(take_until("\n\n\n\n\n=====")),
-                complete(take_until("\r\n\r\n:")),
-                complete(take_until("\r\n\r\n\r\n\r\n\r\n=====")),
-            )),
-            double_line_ending,
+fn parse_ingredient_list<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    terminated(
+        repeat_till(
+            1..,
+            parse_ingredient,
+            peek(alt((
+                (line_ending, line_ending),
+                (
+                    line_ending,
+                    "============================= QUELLE ================================",
+                ),
+                (line_ending, alphanumeric1),
+            ))),
+        )
+        .map(|(ingredients, _)| ingredients),
+        alt((
+            (line_ending, take_while(6.., '=')),
+            (line_ending, line_ending),
+            line_ending.map(|s| (s, "")),
         )),
-        recognize(rest),
-    ))
-    .parse(input)
-}
-
-fn metadata_stop(input: &str) -> IResult<&str, &str> {
-    recognize((tag(":"), take_while(|c| c != ':'), tag(": "))).parse(input)
-}
-
-fn double_line_ending(input: &str) -> IResult<&str, &str> {
-    recognize((line_ending, line_ending)).parse(input)
-}
-
-fn keywords(input: &str) -> IResult<&str, Vec<&str>> {
-    many0(keyword).parse(input)
-}
-
-fn keyword(input: &str) -> IResult<&str, &str> {
-    delimited(tag(":Stichworte: "), take_till(|c| c == '\n'), line_ending).parse(input)
-}
-
-fn author(input: &str) -> IResult<&str, &str> {
-    delimited(
-        tag(":Erfasser/Name: "),
-        take_till(|c| c == '\n'),
-        line_ending,
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn erfasst(input: &str) -> IResult<&str, &str> {
-    delimited(tag(":Erfasst am: "), take_till(|c| c == '\n'), line_ending).parse(input)
+fn parse_ingredient<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+    let main_line = if input.starts_with("\n====") {
+        delimited(line_ending, take_till(1.., |c| c == '\n'), line_ending).parse_next(input)?
+    } else {
+        terminated(take_till(1.., |c| c == '\n'), line_ending).parse_next(input)?
+    };
+
+    let continuations: Vec<&str> = repeat(
+        0..,
+        preceded(
+            ((space0, opt(line_ending)), peek('-')),
+            terminated(take_till(1.., |c| c == '\n'), line_ending),
+        ),
+    )
+    .parse_next(input)?;
+
+    if continuations.is_empty() {
+        if main_line.starts_with('=') {
+            Ok(Ingredient::Section(Cow::Borrowed(
+                main_line.trim_matches('=').trim(),
+            )))
+        } else {
+            Ok(Ingredient::Line(Cow::Borrowed(main_line)))
+        }
+    } else {
+        let mut full_text = main_line.to_string();
+        for s in continuations {
+            full_text.push(' ');
+            full_text.push_str(s.trim());
+        }
+        Ok(Ingredient::Line(Cow::Owned(full_text)))
+    }
 }
 
-fn footer(input: &str) -> IResult<&str, &str> {
-    recognize((many1(line_ending), tag("====="), line_ending)).parse(input)
+fn parse_ingredient_block<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    terminated(
+        take_until(0.., "\n\n\n"),
+        (line_ending, line_ending, line_ending),
+    )
+    .map(|block: &str| {
+        block
+            .lines()
+            .filter_map(|line| {
+                let cleaned_line = line.trim();
+                if cleaned_line.is_empty() {
+                    None
+                } else {
+                    let s = line.trim().split_whitespace().collect::<Vec<_>>().join(" ");
+                    Some(Ingredient::Line(Cow::Owned(s)))
+                }
+            })
+            .fold(Vec::new(), |mut acc, item| {
+                match &item {
+                    Ingredient::Line(line) if line.trim().starts_with('-') => {
+                        if let Some(Ingredient::Line(last_line)) = acc.last_mut() {
+                            last_line.to_mut().push(' ');
+                            last_line.to_mut().push_str(&line[1..]);
+                        } else {
+                            acc.push(item.clone());
+                        }
+                    }
+                    Ingredient::Section(_) => {
+                        acc.push(item.clone());
+                    }
+                    _ => {
+                        acc.push(item.clone());
+                    }
+                }
+
+                acc
+            })
+    })
+    .parse_next(input)
+}
+
+fn parse_quelle<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt((
+        " QUELLE ================================",
+        line_ending,
+        take_until(1.., "\n\n"),
+        (line_ending, line_ending),
+    ))
+    .map(|result| result.map(|(_, _, name, _): (_, _, &str, _)| name.trim()))
+    .parse_next(input)
+}
+
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
+    let cut_at = input.find("=====").unwrap_or(input.len());
+
+    if input[..cut_at].find(":Stichworte:").is_some() {
+        take_until(1.., ":Stichworte:")
+            .map(|s: &str| {
+                s.split("\n\n")
+                    .into_iter()
+                    .filter_map(|l| {
+                        if l.trim().is_empty() {
+                            None
+                        } else {
+                            Some(Instruction::Line(Cow::Borrowed(l.trim())))
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .parse_next(input)
+    } else {
+        separated(1.., take_until(1.., "\n\n"), "\n\n")
+            .map(|blocks: Vec<&str>| {
+                blocks
+                    .into_iter()
+                    .map(|s| Instruction::Line(Cow::Borrowed(s.trim())))
+                    .collect::<Vec<_>>()
+            })
+            .parse_next(input)
+    }
+}
+
+fn parse_keywords<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    parse_metadata(input, ":Stichworte: ")
+}
+
+fn parse_author<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(terminated(
+        preceded(literal(":Erfasser/Name:"), take_while(0.., |c| c != '\n')),
+        line_ending,
+    ))
+    .map(|s: Option<&str>| s.map(|s: &str| s.trim()))
+    .parse_next(input)
+}
+
+fn parse_erfasst<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    parse_metadata(input, ":Erfass")
+}
+
+fn parse_metadata<'s>(input: &mut &'s str, line: &'s str) -> WResult<Vec<&'s str>> {
+    repeat(
+        0..,
+        terminated(
+            preceded(literal(line), take_while(0.., |c| c != '\n')),
+            line_ending,
+        ),
+    )
+    .parse_next(input)
 }
 
 #[cfg(test)]
@@ -400,9 +386,9 @@ Kategorien: Pork/ham, Poultry, Fish/sea, Spanish
 
       1    Chicken, cut up (Or 4
            -thighs 1 3/4 oz Jar
-           
+
            -and legs) 2 ts Capers,
-           
+
            Salt and pepper to thaste
            -4 oz Jar pimento-stiffed
            -green
@@ -415,13 +401,13 @@ Kategorien: Pork/ham, Poultry, Fish/sea, Spanish
            -Water
            Cut into 1 1/2 inch
            -julliene 4 Chicken
-           
+
       1 ts Saffron threads
     1/2 lg Bell pepper 2 1/2 c Uncle
-           
+
       1 lg Carrot -uncooked
       1    Stalk celery 3 Hard boiled
-           
+
       1    c Frozen green peas 1/2 lb
            -Unpeeled shrimp (heads
            -on)
@@ -466,13 +452,13 @@ Kategorien: German
       Menge: 4
 
      80 g  Flour (3/4 cup) 8 Egg
-           
+
       1 l  Milk (approx. 1 qt) -peaks
     120 g  Sugar (1/2 cup plus 1/2
-           
+
       1 pn Salt
       8    Egg yolks, whisked to a 50
-           
+
            -froth
 
 
@@ -503,7 +489,7 @@ Kategorien: Ethnic, Breads
       4 oz Dry bread, diced Salt and
            -pepper
     1/2 oz (1 Tbsp) butter or lard 1
-           
+
       1    Egg -(parsley, chervil,
     1/2    c Milk -marjoram) -
       3 oz (3/4 cup) flour
@@ -543,13 +529,13 @@ Kategorien: Italian, Breads
       Menge: 2
 
       1 ts Active dry yeast or 1/3
-           
+
            -small cake (6 grams)
            -fresh 2/3 c Milk at room
            -temperature
       1    c (135 grams) unbleached
       1    Scant tsp. malt syrup
-           
+
 
 
 This takes 2 days but is worth the wait. Makes 2 round loaves Starter
@@ -588,7 +574,7 @@ minutes of baking.
             r##"========== 'Kalorio V4.03' (unreg.) nach REZKONV
 
      Titel: Ananas-Käsekuchen
-Kategorien: , , 
+Kategorien: , ,
      Menge: 1 Kuchen
 
     150     Gramm  Kokoszwieback
@@ -653,7 +639,7 @@ Das restliche Ananaskompott extra zum Kuchen servieren.
 ========== 'Kalorio V4.03' (unreg.) nach REZKONV
 
      Titel: Flammenkuchen von Marc
-Kategorien: 
+Kategorien:
      Menge: 2 Backbleche
 
 
@@ -688,8 +674,8 @@ Zuerst den Teig vorbereiten: Mehl,Salz und Pfeffer in eine Schüssel
 geben. Die Hefe im Wasser auflösen und anschließend über das Mehl
 gießen, dabei mit einem Handmixer oder gleich mit der Hand kneten. Den
 Teig rühren bis er nicht mehr klebt (eventuell noch etwas mehr Mehl
-beimischen). 
-Den Teig aus der Schüssel herrausnehmen und mit den Händen auf 
+beimischen).
+Den Teig aus der Schüssel herrausnehmen und mit den Händen auf
 der Arbeitsplatte weiter verarbeiten, bis er schön geschmeidig wird.
 Dabei immer ein bißchen Mehl auf die Platte streuen damit der Teig
 nicht kleben bleibt ! Den Teig während der Zubereitung
@@ -725,7 +711,7 @@ Und jetzt: "A güata !" wie man bei uns sagt
 ========== 'Kalorio V4.03' (unreg.) nach REZKONV
 
      Titel: Möhren-Mandel-Muffins
-Kategorien: , , , 
+Kategorien: , , ,
      Menge: 12 Muffins
 
       4            Eiweiß
@@ -766,7 +752,7 @@ fertigen Muffins damit bestreichen.
 ========== 'Kalorio V4.03' (unreg.) nach REZKONV
 
      Titel: Zwiebelkuchen
-Kategorien: , 
+Kategorien: ,
      Menge: 4 Portionen
 
 
@@ -819,325 +805,248 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
     mod results {
         use super::*;
 
-        use recipe_schema::{SectionItem, Sections};
+        use schema_org::Recipe;
+        use schema_org::field::{
+            RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+        };
 
-        pub fn cookmate() -> Vec<RecipeSchema> {
+        pub fn cookmate() -> Vec<Recipe> {
             vec![
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
                     is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
-                    keywords: to_defined_text(["Poultry", "Fish/sea", "Spanish"].join(",")),
-                    name: Some("Aunt Julia's Paella".into()),
-                    recipe_category: RecipeCategory::Text("Pork/ham".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "1 Chicken, cut up (Or 4, thighs 1 3/4 oz Jar, and legs) 2 ts Capers,",
-                            ),
-                            SectionItem::new(
-                                "Salt and pepper to thaste, 4 oz Jar pimentostiffed, green",
-                            ),
-                            SectionItem::new("1 lb Lean pork, cut into 1-inch, olives"),
-                            SectionItem::new("1/2 lb Calamari (squid), cleaned"),
-                            SectionItem::new("1 md Onion, minced -and, sliced"),
-                            SectionItem::new("2 Toes garlic, minced 5 c, Water"),
-                            SectionItem::new("Cut into 1 1/2 inch, julliene 4 Chicken"),
-                            SectionItem::new("1 ts Saffron threads"),
-                            SectionItem::new("1/2 lg Bell pepper 2 1/2 c Uncle"),
-                            SectionItem::new("1 lg Carrot -uncooked"),
-                            SectionItem::new("1 Stalk celery 3 Hard boiled"),
-                            SectionItem::new(
-                                "1 c Frozen green peas 1/2 lb, Unpeeled shrimp (heads, on)",
-                            ),
-                            SectionItem::new("1 1/2 lb Peeled shrimp Oil for, frying"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![SectionItem::new(
-                            "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant } In a large electric skillet or paella pan, brown the chicken pieces (that have been seasoned with salt and pepper) in a little oil. Remove from the pan. Add the pork cubes to the drippinfs and brown for about 5 minutes. Remove from the pan. To the pan drippings (add a little more oil if necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry for 2 minutes. Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork. Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the bouillon cubes and saffron. Let it stand for 5 minutes until dissolved. Gently stir the rice into the skillet mixture. Slowly pour in enough of the bouillon mixture to cover the rice and chicken pieces. Cover and cook over low heat for about 20 minutes. Uncover and decoaratively arrange the egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary to keep the rice moist. Cover and steam for another 10 minutes until the shrimp are cooked and the rice is tender. (Paella should be moist but not wet!) Place the pan on a hot pad on the serving table and let everyone help themselves. Serve with a mixed green salad, red ripe tomatoes and some French bread. Also mix up a pitcher of Sangria and enjoy! Serves: 12. [ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ] Posted by Fred Peters",
-                        )],
-                    )])),
+                    keywords: ["Poultry", "Fish/sea", "Spanish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
+                    name: vec!["Aunt Julia's Paella".into()],
+                    recipe_category: vec!["Pork/ham".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar and legs) 2 ts Capers,".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 lb Lean pork, cut into 1-inch -olives".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 lb Calamari (squid), cleaned".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 md Onion, minced -and sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Toes garlic, minced 5 c Water".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Cut into 1 1/2 inch julliene 4 Chicken".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ts Saffron threads".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 lg Bell pepper 2 1/2 c Uncle".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 lg Carrot -uncooked".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Stalk celery 3 Hard boiled".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 1/2 lb Peeled shrimp Oil for frying".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant } In a large electric skillet or paella pan, brown the chicken pieces (that have been seasoned with salt and pepper) in a little oil. Remove from the pan. Add the pork cubes to the drippinfs and brown for about 5 minutes. Remove from the pan. To the pan drippings (add a little more oil if necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry for 2 minutes. Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork. Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the bouillon cubes and saffron. Let it stand for 5 minutes until dissolved. Gently stir the rice into the skillet mixture. Slowly pour in enough of the bouillon mixture to cover the rice and chicken pieces. Cover and cook over low heat for about 20 minutes. Uncover and decoaratively arrange the egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary to keep the rice moist. Cover and steam for another 10 minutes until the shrimp are cooked and the rice is tender. (Paella should be moist but not wet!) Place the pan on a hot pad on the serving table and let everyone help themselves. Serve with a mixed green salad, red ripe tomatoes and some French bread. Also mix up a pitcher of Sangria and enjoy! Serves: 12. [ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ] Posted by Fred Peters".into(),
+                    )],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
                     is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
-                    name: Some("Ausgezogenes Mehlmus".into()),
-                    recipe_category: RecipeCategory::Text("German".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("80 g Flour (3/4 cup) 8 Egg"),
-                            SectionItem::new("1 l Milk (approx. 1 qt) -peaks"),
-                            SectionItem::new("120 g Sugar (1/2 cup plus 1/2"),
-                            SectionItem::new("1 pn Salt"),
-                            SectionItem::new("8 Egg yolks, whisked to a 50, froth"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![SectionItem::new(
-                            "From Central Swabia. From grandmother's more thrifty times; rarely encountered today. Combine the flour and a little milk, and stir until smooth. Gradually add the remainder of the milk, the sugar and salt. Bring to a boil. Remove the pot from the heat, add the grated lemon peel. Carefully fold in the egg yolk froth and beaten egg whites. Pour the mixture into a buttered casserole dish and bake at medium heat for 20 minutes. Serves 4. From: D'SCHWAEBISCH' KUCHE' by Aegidius Kolb and Leonhard Lidel, Allgaeuer Zeitungsverlag, Kempten. 1976. (Translation/Conversion: Karin Brewer) Posted by: Karin Brewer, Cooking Echo, 8/92",
-                        )],
-                    )])),
+                    name: vec!["Ausgezogenes Mehlmus".into()],
+                    recipe_category: vec!["German".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("80 g Flour (3/4 cup) 8 Egg".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 l Milk (approx. 1 qt) -peaks".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("120 g Sugar (1/2 cup plus 1/2".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 pn Salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("8 Egg yolks, whisked to a 50 froth".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        "From Central Swabia. From grandmother's more thrifty times; rarely encountered today. Combine the flour and a little milk, and stir until smooth. Gradually add the remainder of the milk, the sugar and salt. Bring to a boil. Remove the pot from the heat, add the grated lemon peel. Carefully fold in the egg yolk froth and beaten egg whites. Pour the mixture into a buttered casserole dish and bake at medium heat for 20 minutes. Serves 4. From: D'SCHWAEBISCH' KUCHE' by Aegidius Kolb and Leonhard Lidel, Allgaeuer Zeitungsverlag, Kempten. 1976. (Translation/Conversion: Karin Brewer) Posted by: Karin Brewer, Cooking Echo, 8/92".into(),
+                    )],
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
                     is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
-                    keywords: to_defined_text("Breads".into()),
-                    name: Some("Austrian Bread Dumplings".into()),
-                    recipe_category: RecipeCategory::Text("Ethnic".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("4 oz Dry bread, diced Salt and, pepper"),
-                            SectionItem::new("1/2 oz (1 Tbsp) butter or lard 1"),
-                            SectionItem::new("1 Egg -(parsley, chervil,"),
-                            SectionItem::new("1/2 c Milk -marjoram)"),
-                            SectionItem::new("3 oz (3/4 cup) flour"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![SectionItem::new(
-                            "Tbsp chopped fresh herbs (parsley, chervil, marjoram) - optional, but a great improvement You will need a frying pan, a large and a small bowl, and a saucepan of water or soup. Fry the diced bread lightly in the fat in a frying pan. Meanwhile, mix the egg and the milk in a small bowl. Tip the contents of the frying pan into a large bowl, and pour the egg and milk over all. Stir in the flour, and season with salt and pepper. Add the herbs, if using. You may need more milk to make a soft dough. Allow it to stand for 1/2 an hour. Dip your hand into cold water and roll the mixture into a dozen small balls. Put a pot of salted water on to boil, if there isn't a simmering soup pot waiting. Drop little balls of dough into the boiling salted water or the soup. Poach them for 10 to 15 minutes, until they are light and firm and well risen. Yield: 12 dumplings Time: 1 hour Notes: You may include chopped fried bacon or cubed pork cracklings in the mixture. Leaving out flour will result in a lighter dumpling. From: THE OLD WORLD KITCHEN - THE RICH TRADITION OF EUROPEAN PEASANT COOKING by Elisabeth Luard, ISBN 0-553-05219-5 Posted by: Karin Brewer, Cooking Echo, 7/92",
-                        )],
-                    )])),
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Breads".into())],
+                    name: vec!["Austrian Bread Dumplings".into()],
+                    recipe_category: vec!["Ethnic".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("4 oz Dry bread, diced Salt and pepper".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 oz (1 Tbsp) butter or lard 1".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Egg -(parsley, chervil,".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 c Milk -marjoram)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 oz (3/4 cup) flour".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        "Tbsp chopped fresh herbs (parsley, chervil, marjoram) - optional, but a great improvement You will need a frying pan, a large and a small bowl, and a saucepan of water or soup. Fry the diced bread lightly in the fat in a frying pan. Meanwhile, mix the egg and the milk in a small bowl. Tip the contents of the frying pan into a large bowl, and pour the egg and milk over all. Stir in the flour, and season with salt and pepper. Add the herbs, if using. You may need more milk to make a soft dough. Allow it to stand for 1/2 an hour. Dip your hand into cold water and roll the mixture into a dozen small balls. Put a pot of salted water on to boil, if there isn't a simmering soup pot waiting. Drop little balls of dough into the boiling salted water or the soup. Poach them for 10 to 15 minutes, until they are light and firm and well risen. Yield: 12 dumplings Time: 1 hour Notes: You may include chopped fried bacon or cubed pork cracklings in the mixture. Leaving out flour will result in a lighter dumpling. From: THE OLD WORLD KITCHEN - THE RICH TRADITION OF EUROPEAN PEASANT COOKING by Elisabeth Luard, ISBN 0-553-05219-5 Posted by: Karin Brewer, Cooking Echo, 7/92".into(),
+                    )],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
+                Recipe {
                     is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
-                    keywords: to_defined_text("Breads".into()),
-                    name: Some("Authentic Italian Bread".into()),
-                    recipe_category: RecipeCategory::Text("Italian".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "1 ts Active dry yeast or 1/3, small cake (6 grams), fresh 2/3 c Milk at room, temperature",
-                            ),
-                            SectionItem::new("1 c (135 grams) unbleached"),
-                            SectionItem::new("1 Scant tsp. malt syrup"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![SectionItem::new(
-                            "This takes 2 days but is worth the wait. Makes 2 round loaves Starter Stir the yeast and malt into the water; let stand until foamy, about 10 minutes. Stir in the milk and beat in the flour with a rubber spatula or wooden spoon about 100 strokes until smooth. Cover with plastic wrap and let stand until bubbly, at least 4 hours but preferably overnight. Dough 2 cups water, at room temperature 6 1/4 cups (860 grams) unbleached all-purpose flour 1 T. salt Cornmeal Mix the starter and the water in a mixer until the starter is well broken up. Add the flour and salt and mix for 2 to 3 minutes at low speed. The dough will be smooth but won't pull away from the side of the bowl. Change to the dough hook and knead at medium speed, scraping down the side of the bowl as necessary, until the dough is elastic but slightly sticky, 3 to 4 minutes. Finish kneading by hand on a floured work surface. First rise Place in a well-oiled bowl, cover tightly with plastic wrap, and let rise until doubled, about 1 1/2 hours. The dough is ready when it is very bubbled and blistered. Shaping and second rise Cut the dough in half on a floured surface and shape into 2 round loaves. Place on an oiled cookie sheet sprinkled with cornmeal. Cover and let rise till doubled, about 1 hour. Baking Preheat oven to 400 degrees F. Bake about 1 hour and cool on racks. To get a really good crust spray the loaves with water 3 times in the first minutes of baking.",
-                        )],
-                    )])),
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Breads".into())],
+                    name: vec!["Authentic Italian Bread".into()],
+                    recipe_category: vec!["Italian".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 ts Active dry yeast or 1/3 small cake (6 grams) fresh 2/3 c Milk at room temperature".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 c (135 grams) unbleached".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Scant tsp. malt syrup".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        "This takes 2 days but is worth the wait. Makes 2 round loaves Starter Stir the yeast and malt into the water; let stand until foamy, about 10 minutes. Stir in the milk and beat in the flour with a rubber spatula or wooden spoon about 100 strokes until smooth. Cover with plastic wrap and let stand until bubbly, at least 4 hours but preferably overnight. Dough 2 cups water, at room temperature 6 1/4 cups (860 grams) unbleached all-purpose flour 1 T. salt Cornmeal Mix the starter and the water in a mixer until the starter is well broken up. Add the flour and salt and mix for 2 to 3 minutes at low speed. The dough will be smooth but won't pull away from the side of the bowl. Change to the dough hook and knead at medium speed, scraping down the side of the bowl as necessary, until the dough is elastic but slightly sticky, 3 to 4 minutes. Finish kneading by hand on a floured work surface. First rise Place in a well-oiled bowl, cover tightly with plastic wrap, and let rise until doubled, about 1 1/2 hours. The dough is ready when it is very bubbled and blistered. Shaping and second rise Cut the dough in half on a floured surface and shape into 2 round loaves. Place on an oiled cookie sheet sprinkled with cornmeal. Cover and let rise till doubled, about 1 hour. Baking Preheat oven to 400 degrees F. Bake about 1 hour and cool on racks. To get a really good crust spray the loaves with water 3 times in the first minutes of baking.".into(),
+                    )],
                     recipe_yield: to_yield(2),
                     ..Default::default()
                 },
             ]
         }
 
-        pub fn kalorio_v4_03() -> Vec<RecipeSchema> {
+        pub fn kalorio_v4_03() -> Vec<Recipe> {
             vec![
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    author: to_organization_type("Petra Holzapfel".into()),
+                Recipe {
+                    author: vec![RecipeAuthorFieldEnum::new_person("Petra Holzapfel")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
-                    keywords: to_defined_text(["Käse", "Kuchen"].join(",")),
-                    name: Some("Ananas-Käsekuchen".into()),
-                    recipe_category: RecipeCategory::Text("Ananas".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("150 Gramm Kokoszwieback"),
-                            SectionItem::new("60 Gramm Butter"),
-                            SectionItem::new("600 Gramm Doppelrahmfrischkäse"),
-                            SectionItem::new("150 Gramm Saure Sahne"),
-                            SectionItem::new("120 Gramm Zucker"),
-                            SectionItem::new("4 Eier"),
-                            SectionItem::new("1 Limette"),
-                            SectionItem::new("1 Essl Mehl"),
-                            SectionItem::new("1 klein. Ananas, a 1 kg"),
-                            SectionItem::new("2 Essl. Rum"),
-                            SectionItem::new("200 ml Ananassaft"),
-                            SectionItem::new("3 Essl. Vanille-Puddingpulver"),
-                            SectionItem::new("1 Spritzer Zitrone"),
-                            SectionItem::new("20 Gramm Kokosraspel"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und unter die Brösel mischen. Den Boden einer Springform (24 cm Durchmesser) mit Backpapier auslegen. Die Brösel als Boden darauf verteilen und gut andrücken. Kalt stellen.",
-                            ),
-                            SectionItem::new(
-                                "Frischkäse, saure Sahne und 100 g Zucker mit den Quirlen des Handrührers glattrühren. Nacheinander die Eier dazugeben. Die Limettenschale fein abreiben, die Limette auspressen. Limettensaft und Mehl unter die Käsemasse heben. Die Masse auf dem Boden in der Springform verteilen. Im heissen Backofen auf der 2. Einschubleiste von unten bei 160GradC 15 Minuten backen. Dann die Temperatur auf 150GradC reduzieren und weitere 35 Minuten backen. Den Kuchen in der Form auf einem Gitter auskühlen lassen und dann mindestens 2 Stunden kalt stellen.",
-                            ),
-                            SectionItem::new(
-                                "Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren.",
-                            ),
-                            SectionItem::new(
-                                "Das restliche Ananaskompott extra zum Kuchen servieren.",
-                            ),
-                        ],
-                    )])),
+                    keywords: ["Käse", "Kuchen"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
+                    name: vec!["Ananas-Käsekuchen".into()],
+                    recipe_category: vec!["Ananas".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("150 Gramm Kokoszwieback".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("60 Gramm Butter".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("600 Gramm Doppelrahmfrischkäse".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("150 Gramm Saure Sahne".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("120 Gramm Zucker".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 Eier".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Limette".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Essl Mehl".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 klein. Ananas - a 1 kg".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Essl. Rum".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("200 ml Ananassaft".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 Essl. Vanille-Puddingpulver".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Spritzer Zitrone".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("20 Gramm Kokosraspel".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Zwieback in der Küchenmaschine gron zerkleinern. Butter schmelzen und unter die Brösel mischen. Den Boden einer Springform (24 cm Durchmesser) mit Backpapier auslegen. Die Brösel als Boden darauf verteilen und gut andrücken. Kalt stellen.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Frischkäse, saure Sahne und 100 g Zucker mit den Quirlen des Handrührers glattrühren. Nacheinander die Eier dazugeben. Die Limettenschale fein abreiben, die Limette auspressen. Limettensaft und Mehl unter die Käsemasse heben. Die Masse auf dem Boden in der Springform verteilen. Im heissen Backofen auf der 2. Einschubleiste von unten bei 160GradC 15 Minuten backen. Dann die Temperatur auf 150GradC reduzieren und weitere 35 Minuten backen. Den Kuchen in der Form auf einem Gitter auskühlen lassen und dann mindestens 2 Stunden kalt stellen.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Die Ananas grosszügig schälen, vierteln und den Strunk entfernen. Jedes Viertel längs halbieren und quer in 4 mm dicke Scheiben schneiden. Restlichen Zucker in einem Topf mit dem Rum und Ananassaft zum Kochen bringen. Ananasscheiben dazugeben und aufkochen. Puddingpulver mit etwas Rum, Wasser und einem Zitronenspritzer glattrühren und das Kompott damitbinden. Das Kompott auskühlen lassen und die Hälfte auf dem Käsekuchen verteilen. Den Kuchen mit Kokosraspeln garnieren.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Das restliche Ananaskompott extra zum Kuchen servieren.".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(1),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    author: to_organization_type("Jochen Herz".into()),
+                Recipe {
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen Herz")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
-                    keywords: to_defined_text(["Elsass", "Hefe"].join(",")),
-                    name: Some("Flammenkuchen von Marc".into()),
-                    recipe_category: RecipeCategory::Text("Frankreich".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([
-                        (
-                            "Für den Brotteig:".into(),
-                            vec![
-                                SectionItem::new("6 Essl. Mehl"),
-                                SectionItem::new("1/2 Teel. ; Salz"),
-                                SectionItem::new("1 Prise ; Pfeffer"),
-                                SectionItem::new("1/2 Würfel Hefe"),
-                                SectionItem::new("1/4 Litr. ; Wasser, (lauwarm)"),
-                            ],
+                    keywords: ["Elsass", "Hefe"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
+                    name: vec!["Flammenkuchen von Marc".into()],
+                    recipe_category: vec!["Frankreich".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", vec![
+                            "6 Essl. Mehl",
+                            "1/2 Teel. ; Salz",
+                            "1 Prise ; Pfeffer",
+                            "1/2 Würfel Hefe",
+                            "1/4 Litr. ; Wasser - (lauwarm)",
+                        ]),
+                        RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", vec![
+                            "250 Gramm Quark - 40% Fett",
+                            "1 Be Saure Sahne",
+                            "1/2 Teel. ; Salz",
+                            "1 Prise ; Pfeffer",
+                            "1 Zitrone",
+                        ]),
+                        RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", vec![
+                            "5 groß. Zwiebel",
+                            "125 Gramm Durchwachsener Speck",
+                            "125 Gramm Reibkäse - (optional)",
+                        ]),
+
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Zuerst den Teig vorbereiten: Mehl,Salz und Pfeffer in eine Schüssel geben. Die Hefe im Wasser auflösen und anschließend über das Mehl gießen, dabei mit einem Handmixer oder gleich mit der Hand kneten. Den Teig rühren bis er nicht mehr klebt (eventuell noch etwas mehr Mehl beimischen). Den Teig aus der Schüssel herrausnehmen und mit den Händen auf der Arbeitsplatte weiter verarbeiten, bis er schön geschmeidig wird. Dabei immer ein bißchen Mehl auf die Platte streuen damit der Teig nicht kleben bleibt ! Den Teig während der Zubereitung der Sauce und Garnitur ruhen lassen.".into(),
                         ),
-                        (
-                            "Für den Belag".into(),
-                            vec![
-                                SectionItem::new("250 Gramm Quark, 40% Fett"),
-                                SectionItem::new("1 Be Saure Sahne"),
-                                SectionItem::new("1/2 Teel. ; Salz"),
-                                SectionItem::new("1 Prise ; Pfeffer"),
-                                SectionItem::new("1 Zitrone"),
-                            ],
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Für die Sauce (Belag), den Quark, die saure Sahne, Salz und Pfeffer in einer Schüssel mischen. Damit diese Sauce einen noch sauerlicheren Geschmack bekommt, wird der Saft einer Zitrone untergerührt.".into(),
                         ),
-                        (
-                            "Für die Garnitur".into(),
-                            vec![
-                                SectionItem::new("5 groß. Zwiebel"),
-                                SectionItem::new("125 Gramm Durchwachsener Speck"),
-                                SectionItem::new("125 Gramm Reibkäse, (optional)"),
-                            ],
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Die Zwiebeln schälen und halbieren, dann in dünne Scheiben (1 bis 2 mm dick) schneiden. Den Speck in kleine Würfel schneiden. Den Teigballen in 2 gleichgroße Hälften teilen. Jede Hälfte so dünn wie möglich ausrollen (je dünner, umso schmackhafter !). Die Teigplatten auf Backbleche mit Backpapier legen. Die Sauce dünn auftragen. Die Zwiebeln gleichmäßig darauf verteilen. Ebenso die Speckwürfel. Eventuell auch Käse dazu. (Traditioneller Flammenkuchen ist ohne Käse !)".into(),
                         ),
-                    ])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Zuerst den Teig vorbereiten: Mehl,Salz und Pfeffer in eine Schüssel geben. Die Hefe im Wasser auflösen und anschließend über das Mehl gießen, dabei mit einem Handmixer oder gleich mit der Hand kneten. Den Teig rühren bis er nicht mehr klebt (eventuell noch etwas mehr Mehl beimischen). Den Teig aus der Schüssel herrausnehmen und mit den Händen auf der Arbeitsplatte weiter verarbeiten, bis er schön geschmeidig wird. Dabei immer ein bißchen Mehl auf die Platte streuen damit der Teig nicht kleben bleibt ! Den Teig während der Zubereitung der Sauce und Garnitur ruhen lassen.",
-                            ),
-                            SectionItem::new(
-                                "Für die Sauce (Belag), den Quark, die saure Sahne, Salz und Pfeffer in einer Schüssel mischen. Damit diese Sauce einen noch sauerlicheren Geschmack bekommt, wird der Saft einer Zitrone untergerührt.",
-                            ),
-                            SectionItem::new(
-                                "Die Zwiebeln schälen und halbieren, dann in dünne Scheiben (1 bis 2 mm dick) schneiden. Den Speck in kleine Würfel schneiden. Den Teigballen in 2 gleichgroße Hälften teilen. Jede Hälfte so dünn wie möglich ausrollen (je dünner, umso schmackhafter !). Die Teigplatten auf Backbleche mit Backpapier legen. Die Sauce dünn auftragen. Die Zwiebeln gleichmäßig darauf verteilen. Ebenso die Speckwürfel. Eventuell auch Käse dazu. (Traditioneller Flammenkuchen ist ohne Käse !)",
-                            ),
-                            SectionItem::new(
-                                r#"Backzeit: 20 Minuten im vorgeheizten Backofen bei 200°C (oder bis der Teig an den Rändern goldbraun wird) Dazu ein Kerner Spätlese halbtrocken aus der Pfalz oder ganz einfach ein schönes elsäßisches Bier (Fischer Ambré). Und jetzt: "A güata !" wie man bei uns sagt"#,
-                            ),
-                        ],
-                    )])),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            r#"Backzeit: 20 Minuten im vorgeheizten Backofen bei 200°C (oder bis der Teig an den Rändern goldbraun wird) Dazu ein Kerner Spätlese halbtrocken aus der Pfalz oder ganz einfach ein schönes elsäßisches Bier (Fischer Ambré). Und jetzt: "A güata !" wie man bei uns sagt"#.into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(2),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    author: to_organization_type("Jochen 'Nunz' Herz".into()),
+                Recipe {
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
-                    keywords: to_defined_text("Karotten".into()),
-                    name: Some("Möhren-Mandel-Muffins".into()),
-                    recipe_category: RecipeCategory::Text("Muffins".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("4 Eiweiß"),
-                            SectionItem::new("4 Eigelb"),
-                            SectionItem::new("50 Gramm Zucker"),
-                            SectionItem::new("200 Gramm geraspelte Möhren"),
-                            SectionItem::new("200 Gramm gemahlene Mandeln"),
-                            SectionItem::new("1 Teel. Kirschwasser"),
-                            SectionItem::new("1/2 Teel. Zimt"),
-                            SectionItem::new("1/2 Zitrone (Schale davon)"),
-                            SectionItem::new("25 Gramm Stärkemehl"),
-                            SectionItem::new("150 Gramm Puderzucker"),
-                            SectionItem::new("Zitronensaft"),
-                        ],
-                    )])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Die Eiweiß zu festem Schnee schlagen, Eigelb und Zucker schaumig rühren. Dann die geraspelten Möhren in die Eiermasse rühren, die Mandeln nach und nach dazugeben. Kirschwasser, Zimt, Zitronenschale und Stärkemehl unter die Teigmasse rühren, zum Schluss den Eischnee vorsichtig unter die Teigmasse heben.",
-                            ),
-                            SectionItem::new(
-                                "Muffinform mit Papierförmchen auslegen (evtl. leicht fetten) und die Teigmasse gleichmäßig auf die zwölf Förmchen verteilen. 20 Minuten auf mittlerer Schiene im Ofen bei 175°C abbacken (Umluft 160°C). Puderzucker und Zitronensaft zu einem glattem Guss verrühren und die fertigen Muffins damit bestreichen.",
-                            ),
-                        ],
-                    )])),
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Karotten".into())],
+                    name: vec!["Möhren-Mandel-Muffins".into()],
+                    recipe_category: vec!["Muffins".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("4 Eiweiß".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 Eigelb".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("50 Gramm Zucker".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("200 Gramm geraspelte Möhren".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("200 Gramm gemahlene Mandeln".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Teel. Kirschwasser".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 Teel. Zimt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 Zitrone (Schale davon)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("25 Gramm Stärkemehl".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("150 Gramm Puderzucker".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Zitronensaft".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Die Eiweiß zu festem Schnee schlagen, Eigelb und Zucker schaumig rühren. Dann die geraspelten Möhren in die Eiermasse rühren, die Mandeln nach und nach dazugeben. Kirschwasser, Zimt, Zitronenschale und Stärkemehl unter die Teigmasse rühren, zum Schluss den Eischnee vorsichtig unter die Teigmasse heben.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Muffinform mit Papierförmchen auslegen (evtl. leicht fetten) und die Teigmasse gleichmäßig auf die zwölf Förmchen verteilen. 20 Minuten auf mittlerer Schiene im Ofen bei 175°C abbacken (Umluft 160°C). Puderzucker und Zitronensaft zu einem glattem Guss verrühren und die fertigen Muffins damit bestreichen.".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(12),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    author: to_organization_type("Jochen 'Nunz' Herz".into()),
+                Recipe {
+                    author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
-                    keywords: to_defined_text("Zwiebeln".into()),
-                    name: Some("Zwiebelkuchen".into()),
-                    recipe_category: RecipeCategory::Text("Backen".into()),
-                    recipe_ingredient: sections_to_vec(Sections::from([
-                        (
-                            "Teig".into(),
-                            vec![
-                                SectionItem::new("250 Gramm Mehl"),
-                                SectionItem::new("125 Gramm Margarine"),
-                                SectionItem::new("1 Prise Salz"),
-                                SectionItem::new("1 Eier"),
-                            ],
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Zwiebeln".into())],
+                    name: vec!["Zwiebelkuchen".into()],
+                    recipe_category: vec!["Backen".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Teig", vec![
+                            "250 Gramm Mehl",
+                            "125 Gramm Margarine",
+                            "1 Prise Salz",
+                            "1 Eier",
+                        ]),
+                        RecipeRecipeIngredientFieldEnum::new_section("Füllung", vec![
+                            "6 groß. Zwiebeln",
+                            "75 Gramm Butter",
+                            "1 Be Joghurt",
+                            "1 Be Saure Sahne - oder Schmand",
+                            "3 Eier",
+                            "Kümmel - gemahlen",
+                            "Pfeffer",
+                            "Paprika - edelsüss",
+                            "1 Teel. Speisestärke",
+                        ]),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mehl, Margarine und Salz verrühren, 1 Ei schnell unterkneten und Teig 1-2 Stunden kalt stellen. Teig in 28er Kuchenform auswellen und hohen Rand kneten.".into(),
                         ),
-                        (
-                            "Füllung".into(),
-                            vec![
-                                SectionItem::new("6 groß. Zwiebeln"),
-                                SectionItem::new("75 Gramm Butter"),
-                                SectionItem::new("1 Be Joghurt"),
-                                SectionItem::new("1 Be Saure Sahne, oder Schmand"),
-                                SectionItem::new("3 Eier"),
-                                SectionItem::new("Kümmel, gemahlen"),
-                                SectionItem::new("Pfeffer"),
-                                SectionItem::new("Paprika, edelsüss"),
-                                SectionItem::new("1 Teel. Speisestärke"),
-                            ],
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Zwiebel schälen und in Streifen schneiden und in 75 g Butter und eventuell etwas Fondor eine halbe Stunde dünsten. Kalt stellen.".into(),
                         ),
-                    ])),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Mehl, Margarine und Salz verrühren, 1 Ei schnell unterkneten und Teig 1-2 Stunden kalt stellen. Teig in 28er Kuchenform auswellen und hohen Rand kneten.",
-                            ),
-                            SectionItem::new(
-                                "Zwiebel schälen und in Streifen schneiden und in 75 g Butter und eventuell etwas Fondor eine halbe Stunde dünsten. Kalt stellen.",
-                            ),
-                            SectionItem::new(
-                                "Joghurt, Sahne, Eier, Speisestärke, Paprika, Salz und Pfeffer verrühren. und die Zwiebeln untermischen. Die Füllung auf den Teigboden und den rand herunterdrücken damit er nicht übersteht.",
-                            ),
-                            SectionItem::new(
-                                "Oben mit Kümmel oder Käse nach Belieben verfeindern und im vorgeheizten Backofen bei 220 Grad 30 Minuten backen.",
-                            ),
-                        ],
-                    )])),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Joghurt, Sahne, Eier, Speisestärke, Paprika, Salz und Pfeffer verrühren. und die Zwiebeln untermischen. Die Füllung auf den Teigboden und den rand herunterdrücken damit er nicht übersteht.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Oben mit Kümmel oder Käse nach Belieben verfeindern und im vorgeheizten Backofen bei 220 Grad 30 Minuten backen.".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },

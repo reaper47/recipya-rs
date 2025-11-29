@@ -1,7 +1,8 @@
 use chrono::NaiveTime;
 
+use crate::recipe::structs::time::Times;
+
 use super::Result;
-use super::recipe::Times;
 
 /// Stores recipe times formatted for display to the user.
 #[derive(Debug, Clone, PartialEq)]

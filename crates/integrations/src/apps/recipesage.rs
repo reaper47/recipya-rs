@@ -2,41 +2,42 @@ use std::io::{Read, Seek};
 use std::str::FromStr;
 
 use iso8601::DateTime;
+use nom::branch::alt;
 use nom::bytes::complete::{tag, take_till, take_until};
 use nom::character::complete::line_ending;
 use nom::combinator::{map, opt};
 use nom::multi::{many_till, many1, separated_list0};
-use nom::sequence::{preceded, terminated};
+use nom::sequence::{delimited, preceded, terminated};
 use nom::{IResult, Parser};
 use serde::Deserialize;
-use support::strings::extract_number;
-use tracing::{error, warn};
+use tracing::error;
 use url::Url;
 
-use recipe_schema::{
-    AtType, CommentType, CreativeWorkOrItemListOrText, CreativeWorkOrText, DateOrDateTime,
-    QuantitativeValueOrText, RecipeCategory, RecipeSchema, SectionItem, Sections, TextOrTextObject,
+use schema_org::field::{
+    CreativeWorkIsBasedOnFieldEnum, QuantitativeValueValueFieldEnum, RecipeAuthorFieldEnum,
+    RecipeDescriptionFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum,
+    RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum,
 };
+use schema_org::{Comment, Recipe};
+use support::strings::extract_number;
 
 use crate::apps::helpers::read_file;
 use crate::error::{Error, Result};
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_defined_text, to_is_based_on,
-    to_organization_type, to_text, to_yield,
-};
+use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 
 struct RecipeSage {
     category: Option<String>,
     description: Option<String>,
-    ingredients: Sections,
-    instructions: Sections,
+    ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
+    instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
     keywords: Vec<String>,
     notes: Option<String>,
     source: Option<String>,
     title: String,
-    yield_: i16,
+    r#yield: i16,
 }
 
+#[allow(dead_code)]
 struct RecipeComponents<'a> {
     category: Option<&'a str>,
     description: Option<&'a str>,
@@ -51,16 +52,12 @@ struct RecipeComponents<'a> {
 }
 
 #[derive(Deserialize)]
-struct RecipeSageXMLRoot {
-    pub data: RecipeSageXMLData,
-}
-
-#[derive(Deserialize)]
 struct RecipeSageXMLData {
     #[serde(rename = "recipe")]
     pub recipes: Vec<RecipeSageXMLRecipe>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RecipeSageXMLRecipe {
@@ -90,6 +87,7 @@ struct Label {
     title: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 struct Images {
     id: String,
@@ -101,17 +99,16 @@ impl From<RecipeComponents<'_>> for RecipeSage {
         Self {
             category: r.category.map(|s| s.into()),
             description: r.description.map(|s| s.into()),
-            ingredients: Sections::from([(
-                "".into(),
-                r.ingredients.into_iter().map(SectionItem::new).collect(),
-            )]),
-            instructions: Sections::from([(
-                "".into(),
-                r.instructions
-                    .split_terminator("\n\n")
-                    .map(|s| SectionItem::new(s.trim().replace("\n", " ")))
-                    .collect(),
-            )]),
+            ingredients: r
+                .ingredients
+                .into_iter()
+                .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.into()))
+                .collect(),
+            instructions: r
+                .instructions
+                .split_terminator("\n\n")
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().replace("\n", " ")))
+                .collect(),
             keywords: r
                 .keywords
                 .into_iter()
@@ -121,7 +118,7 @@ impl From<RecipeComponents<'_>> for RecipeSage {
             source: r.source.map(|s| s.into()),
             notes: r.notes.filter(|s| !s.is_empty()).map(|s| s.into()),
             title: r.title.into(),
-            yield_: r.servings.unwrap_or_default(),
+            r#yield: r.servings.unwrap_or_default(),
         }
     }
 }
@@ -134,17 +131,16 @@ impl From<RecipeSageXMLRecipe> for RecipeSage {
         Self {
             category: items.map(|(a, _b)| a.title.clone()),
             description: Some(r.description).filter(|s| !s.is_empty()),
-            ingredients: Sections::from([(
-                "".into(),
-                r.ingredients.lines().map(SectionItem::new).collect(),
-            )]),
-            instructions: Sections::from([(
-                "".into(),
-                r.instructions
-                    .split_terminator("\n\n")
-                    .map(|s| SectionItem::new(s.trim().replace("\n", " ")))
-                    .collect(),
-            )]),
+            ingredients: r
+                .ingredients
+                .lines()
+                .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.into()))
+                .collect(),
+            instructions: r
+                .instructions
+                .split_terminator("\n\n")
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().replace("\n", " ")))
+                .collect(),
             keywords: items
                 .map(|(_a, b)| b.iter().map(|s| s.title.clone()).collect())
                 .unwrap_or_default(),
@@ -155,102 +151,124 @@ impl From<RecipeSageXMLRecipe> for RecipeSage {
             },
             notes: Some(r.notes).filter(|s| !s.is_empty()),
             title: r.title,
-            yield_: extract_number(r.r#yield).unwrap_or_default(),
+            r#yield: extract_number(r.r#yield).unwrap_or_default(),
         }
     }
 }
 
-impl From<RecipeSchema> for RecipeSage {
-    fn from(r: RecipeSchema) -> Self {
+impl From<Recipe> for RecipeSage {
+    fn from(r: Recipe) -> Self {
         Self {
-            category: match r.recipe_category {
-                RecipeCategory::Text(s) => Some(s),
-            },
+            category: r.recipe_category.first().cloned(),
             description: r
                 .description
+                .into_iter()
                 .map(|s| match s {
-                    TextOrTextObject::Text(s) => s,
-                    TextOrTextObject::TextObject(obj) => {
-                        warn!("RecipeSage: TextObject not supported: {:?}", obj);
-                        "".into()
+                    RecipeDescriptionFieldEnum::Text(s) => s,
+                    RecipeDescriptionFieldEnum::TextObject(obj) => {
+                        obj.text.first().cloned().unwrap_or_default()
                     }
                 })
-                .filter(|s| !s.is_empty()),
-            ingredients: Sections::from([(
-                "".into(),
-                r.recipe_ingredient
-                    .map(|v| v.iter().map(SectionItem::new).collect())
-                    .unwrap_or_default(),
-            )]),
-            instructions: Sections::from([(
-                "".into(),
-                r.recipe_instructions
-                    .into_iter()
-                    .flat_map(|ins| match ins {
-                        CreativeWorkOrItemListOrText::CreativeWork(obj) => {
-                            obj.name.into_iter().collect::<Vec<_>>()
-                        }
-                        CreativeWorkOrItemListOrText::ItemList(item) => {
-                            item.into_iter().map(|obj| obj.text).collect()
-                        }
-                        CreativeWorkOrItemListOrText::Text(s) => vec![s],
-                    })
-                    .filter(|s| !s.is_empty())
-                    .map(SectionItem::new)
-                    .collect::<Vec<_>>(),
-            )]),
-            keywords: vec![],
-            source: r.is_based_on.map(|c| match c {
-                CreativeWorkOrText::CreativeWork(c) => c.name.unwrap_or_default(),
-                CreativeWorkOrText::Text(s) => s,
-            }),
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+                .first()
+                .cloned(),
+            ingredients: r.recipe_ingredient,
+            instructions: r.recipe_instructions,
+            source: r
+                .is_based_on
+                .first()
+                .cloned()
+                .map(|s| match s {
+                    RecipeIsBasedOnFieldEnum::CreativeWork(obj) => {
+                        obj.is_based_on.first().cloned().map(|s| match s {
+                            CreativeWorkIsBasedOnFieldEnum::CreativeWork(_) => "".into(),
+                            CreativeWorkIsBasedOnFieldEnum::Product(_) => "".into(),
+                            CreativeWorkIsBasedOnFieldEnum::URL(s) => s,
+                        })
+                    }
+                    RecipeIsBasedOnFieldEnum::Product(_) => Some("".to_string()),
+                    RecipeIsBasedOnFieldEnum::URL(s) => s.into(),
+                })
+                .unwrap_or_default(),
             notes: r
                 .comment
-                .map(|v| {
-                    v.into_iter()
-                        .map(|c| c.text)
-                        .collect::<Vec<_>>()
-                        .join("\n\n")
+                .first()
+                .cloned()
+                .map(|v| v.text)
+                .filter(|s| !s.is_empty())
+                .unwrap_or_default()
+                .first()
+                .cloned(),
+            title: r.name.first().cloned().unwrap_or_default(),
+            r#yield: r
+                .recipe_yield
+                .first()
+                .map(|v| match v {
+                    RecipeRecipeYieldFieldEnum::QuantitativeValue(v) => v
+                        .value
+                        .first()
+                        .cloned()
+                        .map(|v| match v {
+                            QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => {
+                                s.parse::<i16>().ok().unwrap_or_default()
+                            }
+                            QuantitativeValueValueFieldEnum::Number(i) => i as i16,
+                            QuantitativeValueValueFieldEnum::StructuredValue(_) => 0,
+                        })
+                        .unwrap_or_default(),
+                    RecipeRecipeYieldFieldEnum::Text(s) => {
+                        s.parse::<i16>().ok().unwrap_or_default()
+                    }
                 })
-                .filter(|s| !s.is_empty()),
-            title: r.name.unwrap_or_default(),
-            yield_: match r.recipe_yield {
-                QuantitativeValueOrText::QuantitativeValue(v) => v.value as i16,
-                QuantitativeValueOrText::Text(s) => extract_number(s).unwrap_or_default(),
-            },
+                .unwrap_or_default(),
+            keywords: r
+                .keywords
+                .into_iter()
+                .map(|k| match k {
+                    RecipeKeywordsFieldEnum::DefinedTerm(t) => {
+                        t.name.first().cloned().unwrap_or_default()
+                    }
+                    RecipeKeywordsFieldEnum::TextOrURL(s) => s,
+                })
+                .collect(),
         }
     }
 }
 
-impl From<RecipeSage> for RecipeSchema {
+impl From<RecipeSage> for Recipe {
     fn from(r: RecipeSage) -> Self {
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
             comment: r
                 .notes
                 .filter(|s| !s.is_empty())
-                .map(|s| CommentType {
-                    r#type: AtType::Review,
-                    text: s,
+                .map(|s| Comment {
+                    text: vec![s],
                     ..Default::default()
                 })
-                .map(|c| vec![c]),
-            keywords: to_defined_text(r.keywords.join(",")),
-            name: Some(r.title),
-            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
-            recipe_ingredient: sections_to_vec(r.ingredients),
-            recipe_instructions: sections_to_itemlist(r.instructions),
-            recipe_yield: to_yield(r.yield_ as i64),
-            url: Url::parse(&r.source.clone().unwrap_or_default()).ok(),
-            description: to_text(r.description.unwrap_or_default()),
-            is_based_on: to_is_based_on(r.source.unwrap_or_default()),
+                .map(|c| vec![c])
+                .unwrap_or_default(),
+            keywords: r
+                .keywords
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
+            name: vec![r.title],
+            recipe_category: r.category.map(|s| vec![s]).unwrap_or_default(),
+            recipe_ingredient: r.ingredients,
+            recipe_instructions: r.instructions,
+            recipe_yield: to_yield(r.r#yield as i64),
+            description: r
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            is_based_on: to_is_based_on(&r.source.unwrap_or_default()),
             ..Default::default()
         }
     }
 }
 
-impl From<RecipeSageXMLRecipe> for RecipeSchema {
+impl From<RecipeSageXMLRecipe> for Recipe {
     fn from(r: RecipeSageXMLRecipe) -> Self {
         let categories = r.labels.unwrap_or_default();
         let categories = categories.split_first();
@@ -274,85 +292,84 @@ impl From<RecipeSageXMLRecipe> for RecipeSchema {
         let url = Url::parse(&r.url).ok();
 
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            author: to_organization_type(r.from_user),
-            comment: Some(
-                vec![r.notes]
-                    .into_iter()
-                    .filter(|s| !s.is_empty())
-                    .map(|c| CommentType {
-                        r#type: AtType::Review,
-                        text: c,
-                        ..Default::default()
-                    })
-                    .collect(),
-            )
-            .filter(|v: &Vec<CommentType>| !v.is_empty()),
-            cook_time: seconds_to_duration(total_time_secs - active_time_secs),
-            date_created: DateTime::from_str(&r.created_at).ok().map(|d| {
-                DateOrDateTime::DateTime(DateTime {
-                    date: d.date,
-                    time: d.time,
-                })
-            }),
-            date_modified: DateTime::from_str(&r.updated_at).ok().map(|d| {
-                DateOrDateTime::DateTime(DateTime {
-                    date: d.date,
-                    time: d.time,
-                })
-            }),
-            description: to_text(r.description),
-            is_based_on: if url.is_none() && !r.url.is_empty() {
-                to_is_based_on(r.url)
-            } else {
-                to_is_based_on(r.source)
+            author: {
+                if r.from_user.is_empty() {
+                    vec![]
+                } else {
+                    vec![RecipeAuthorFieldEnum::new_person(&r.from_user)]
+                }
             },
-            keywords: to_defined_text(
-                categories
-                    .map(|(_, b)| b.iter().map(|s| s.title.to_string()).collect::<Vec<_>>())
-                    .map(|v| v.join(","))
-                    .unwrap_or_default(),
-            ),
-            name: Some(r.title),
+            comment: if r.notes.is_empty() {
+                vec![]
+            } else {
+                vec![Comment {
+                    text: vec![r.notes],
+                    ..Default::default()
+                }]
+            },
+            cook_time: seconds_to_duration(total_time_secs - active_time_secs),
+            date_created: DateTime::from_str(&r.created_at)
+                .ok()
+                .map(|d| vec![d.to_string()])
+                .unwrap_or_default(),
+            date_modified: DateTime::from_str(&r.updated_at)
+                .ok()
+                .map(|d| vec![d.to_string()])
+                .unwrap_or_default(),
+            description: if r.description.is_empty() {
+                vec![]
+            } else {
+                vec![RecipeDescriptionFieldEnum::Text(r.description)]
+            },
+            is_based_on: if url.is_none() && !r.url.is_empty() {
+                to_is_based_on(&r.url)
+            } else {
+                to_is_based_on(&r.source)
+            },
+            keywords: categories
+                .map(|(_, b)| b.iter().map(|s| s.title.to_string()).collect::<Vec<_>>())
+                .map(|v| {
+                    v.into_iter()
+                        .map(RecipeKeywordsFieldEnum::TextOrURL)
+                        .collect()
+                })
+                .unwrap_or_default(),
+            name: vec![r.title],
             prep_time: seconds_to_duration(active_time_secs),
-            recipe_category: RecipeCategory::Text(
-                categories
-                    .map(|(a, _b)| a.title.to_string())
-                    .unwrap_or_default(),
-            ),
-            recipe_ingredient: sections_to_vec(Sections::from([(
-                "".into(),
-                r.ingredients.lines().map(SectionItem::new).collect(),
-            )])),
-            recipe_instructions: sections_to_itemlist(Sections::from([(
-                "".into(),
-                r.instructions
-                    .split_terminator("\n\n")
-                    .map(|s| SectionItem::new(s.trim().replace("\n", " ")))
-                    .collect(),
-            )])),
+            recipe_category: categories
+                .map(|(a, _b)| vec![a.title.to_string()])
+                .unwrap_or_default(),
+            recipe_ingredient: r
+                .ingredients
+                .lines()
+                .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.into()))
+                .collect(),
+            recipe_instructions: r
+                .instructions
+                .split_terminator("\n\n")
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().replace("\n", " ")))
+                .collect(),
             recipe_yield: to_yield(extract_number(r.r#yield).unwrap_or_default()),
-            url,
+            url: url.map(|u| vec![u.to_string()]).unwrap_or_default(),
             ..Default::default()
         }
     }
 }
 
 /// Parses a RecipeSage recipes text file.
-pub fn parse_txt<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_txt<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
     let content = read_file(r)?;
     Ok(parse_text_file(&content)?
         .into_iter()
-        .map(RecipeSchema::from)
+        .map(Recipe::from)
         .collect())
 }
 
 /// Parses a RecipeSage recipes XML file.
-pub fn parse_xml<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_xml<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
 {
@@ -361,15 +378,15 @@ where
         Error::Parse(err.to_string())
     })?;
 
-    Ok(root.recipes.into_iter().map(RecipeSchema::from).collect())
+    Ok(root.recipes.into_iter().map(Recipe::from).collect())
 }
 
 /// Parses a RecipeSage recipes JSON file.
-pub fn parse_json<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse_json<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
 {
-    let res: Vec<RecipeSchema> = serde_json::from_reader(r).map_err(|err| {
+    let res: Vec<Recipe> = serde_json::from_reader(r).map_err(|err| {
         error!("Failed to read RecipeSage JSON file: {err}");
         Error::Parse(err.to_string())
     })?;
@@ -534,8 +551,14 @@ fn images(input: &str) -> IResult<&str, Option<&str>> {
 fn parse_tag(prefix: &str) -> impl FnMut(&str) -> IResult<&str, Option<&str>> {
     move |input| {
         preceded(
-            (tag(prefix), tag(": ")),
-            terminated(opt(take_until("\n")), tag("\n")),
+            tag(prefix),
+            alt((
+                map(tag(":\n"), |_| None),
+                map(
+                    delimited(tag(": "), take_till(|c| c == '\n'), line_ending),
+                    |s: &str| if s.is_empty() { None } else { Some(s) },
+                ),
+            )),
         )
         .parse(input)
     }
@@ -592,13 +615,13 @@ mod tests {
 
 id: 5ba3144a-e86e-431e-b5bb-c4109ebb8c04
 title: Asparagus Soup (Zuppa Di Asparagi)
-description: 
+description:
 yield: 6 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 2 tb Extra-virgin olive oil 1 qt Chicken broth
 2 Cloves garlic, minced 4 Eggs
 2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or
@@ -633,17 +656,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: italian, soups/stews, vegetables
-images: 
+images:
 
 id: d646992d-4726-48b4-ae7a-a85260b27811
 title: Aubergine and Sesame Pate
-description: 
+description:
 yield: 2 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1/2 md Aubergine 1/4 Juice of 1 lemon
 1 Crushed garlic cloves 1 tb Olive oil
 1 1/2 tb Tahini Seasoning
@@ -663,17 +686,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: appetizers, greek, vegetarian
-images: 
+images:
 
 id: adea4c61-fd42-4700-a2be-48338cc44818
 title: Aubergines a la Toulousaine (Eggplant A La Toulouse)
-description: 
+description:
 yield: 4 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1 md Eggplant 2 tb Snipped parsley
 1/4 c Salad oil 1 cl Galic, minced
 3 lg Tomatoes, peeled 1 tb Salad oil
@@ -696,17 +719,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: vegetables, french, casseroles
-images: 
+images:
 
 id: 03237963-3eca-4731-8586-ddaee265b98b
 title: August Goerg's Grilled Steak (Spiessbraten August Goerg)
-description: 
+description:
 yield: 6 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1 Shallot or small onion cut 1 pn Mace
 -into small pieces 1 lg Steak (just over 1 lb), at
 Freshly ground black pepper -least 1 1/4 inches
@@ -737,17 +760,17 @@ createdAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 updatedAt: Wed Apr 16 2025 00:12:39 GMT+0000 (Coordinated Universal Time)
 userId: ac292a74-bb5d-4fbf-9c44-557560821f53
 labels: german, beef
-images: 
+images:
 
 id: 4c23ec92-fc6f-4636-bb69-e1edbfa965c3
 title: Aunt Julia's Paella
-description: 
+description:
 yield: 6 servings
-activeTime: 
-totalTime: 
-source: 
+activeTime:
+totalTime:
+source:
 url: MMF
-notes: 
+notes:
 ingredients: 1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento
 -and legs) 2 ts Capers, with juice
 Salt and pepper to thaste 4 oz Jar pimento-stiffed green
@@ -1074,199 +1097,168 @@ Posted by Fred Peters</instructions>
     mod results {
         use super::*;
 
-        pub(crate) fn all_recipes() -> Vec<RecipeSchema> {
+        pub(crate) fn all_recipes() -> Vec<Recipe> {
             vec![
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    keywords: to_defined_text(["soups/stews", "vegetables"].join(",")),
+                Recipe {
+                    keywords: ["soups/stews", "vegetables"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
-                    name: Some("Asparagus Soup (Zuppa Di Asparagi)".into()),
-                    recipe_category: RecipeCategory::Text("italian".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "2 tb Extra-virgin olive oil 1 qt Chicken broth".into(),
-                        "2 Cloves garlic, minced 4 Eggs".into(),
-                        "2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into(),
-                        "-and cut (1 inch pieces) -pecorino cheese".into(),
-                        "Salt and pepper 6 sl Italian bread, toasted".into(),
-                    ]),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new("<section></section>"),
-                            SectionItem::new(
-                                "Heat the oil and garlic in a soup pot until the garlic is golden. Add the asparagus and cook until they begin to color. Season with salt and pepper. Add the broth and bring to a boil; reduce the heat and simmer for 15 minutes, or until the asparagus is tender.",
-                            ),
-                            SectionItem::new(
-                                "Beat the eggs and cheese together. When the asparagus is tender, reduce the heat so the soup is no longer simmering. Very slowly ladle some of the hot soup into the beaten eggs, stirring continuously. After adding about 2 cups of the hot soup to the eggs, reverse the process and gradually stir the eggs mixture into the soup pot. The soup must not boil or the eggs will scramble. Heat until thickened.",
-                            ),
-                            SectionItem::new(
-                                "Put one slice of toasted bread into each soup dish. Ladle the hot soup on top and pass additional grated cheese.",
-                            ),
-                            SectionItem::new("Serves 6."),
-                            SectionItem::new(
-                                "NOTE: To trim asparagus, hold the tip in one hand and the base of the stalk in the other. Bend gently. The asparagus will snap, leaving the tender part with the tip.",
-                            ),
-                            SectionItem::new(
-                                "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]",
-                            ),
-                            SectionItem::new("Posted by Fred Peters."),
-                        ],
-                    )])),
+                    name: vec!["Asparagus Soup (Zuppa Di Asparagi)".into()],
+                    recipe_category: vec!["italian".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("2 tb Extra-virgin olive oil 1 qt Chicken broth".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Cloves garlic, minced 4 Eggs".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 lb Asparagus, trimmed, peeled 1/2 c Freshly grated Parmesan or".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-and cut (1 inch pieces) -pecorino cheese".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Salt and pepper 6 sl Italian bread, toasted".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Heat the oil and garlic in a soup pot until the garlic is golden. Add the asparagus and cook until they begin to color. Season with salt and pepper. Add the broth and bring to a boil; reduce the heat and simmer for 15 minutes, or until the asparagus is tender.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Beat the eggs and cheese together. When the asparagus is tender, reduce the heat so the soup is no longer simmering. Very slowly ladle some of the hot soup into the beaten eggs, stirring continuously. After adding about 2 cups of the hot soup to the eggs, reverse the process and gradually stir the eggs mixture into the soup pot. The soup must not boil or the eggs will scramble. Heat until thickened.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Put one slice of toasted bread into each soup dish. Ladle the hot soup on top and pass additional grated cheese.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Serves 6.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "NOTE: To trim asparagus, hold the tip in one hand and the base of the stalk in the other. Bend gently. The asparagus will snap, leaving the tender part with the tip.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Posted by Fred Peters.".into()),
+                    ],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    keywords: to_defined_text(["greek", "vegetarian"].join(",")),
+                Recipe {
+                    keywords: ["greek", "vegetarian"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
-                    name: Some("Aubergine and Sesame Pate".into()),
-                    recipe_category: RecipeCategory::Text("appetizers".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "1/2 md Aubergine 1/4 Juice of 1 lemon".into(),
-                        "1 Crushed garlic cloves 1 tb Olive oil".into(),
-                        "1 1/2 tb Tahini Seasoning".into(),
-                        "Toasted Sesame seeds Flatleaf Parsley".into(),
-                        "Cayenne Pepper".into(),
-                        "25-30 minutes until tender. Cool slightly , then peel and".into(),
-                    ]),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for puree the flesh in a blender or processor.",
-                            ),
-                            SectionItem::new(
-                                "Add the garlic, tahini and lemon juice and process until mixed. With the motor running, drizzle in the oil to make a smooth paste. Season to taste.",
-                            ),
-                            SectionItem::new(
-                                "Transfer to a serving dish, garnish and serve cold with pitta bread.",
-                            ),
-                        ],
-                    )])),
+                    name: vec!["Aubergine and Sesame Pate".into()],
+                    recipe_category: vec!["appetizers".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 md Aubergine 1/4 Juice of 1 lemon".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Crushed garlic cloves 1 tb Olive oil".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 1/2 tb Tahini Seasoning".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Toasted Sesame seeds Flatleaf Parsley".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Cayenne Pepper".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("25-30 minutes until tender. Cool slightly , then peel and".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for puree the flesh in a blender or processor.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Add the garlic, tahini and lemon juice and process until mixed. With the motor running, drizzle in the oil to make a smooth paste. Season to taste.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(2),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    keywords: to_defined_text(["french", "casseroles"].join(",")),
+                Recipe {
+                    keywords: ["french", "casseroles"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
-                    name: Some("Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()),
-                    recipe_category: RecipeCategory::Text("vegetables".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "1 md Eggplant 2 tb Snipped parsley".into(),
-                        "1/4 c Salad oil 1 cl Galic, minced".into(),
-                        "3 lg Tomatoes, peeled 1 tb Salad oil".into(),
-                        "2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into(),
-                    ]),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper towels; sprinkle each generously with salt. let stand for 30 minutes; then blot dry with paper towels. Start heating oven to 400 deg. F. Saute eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2 inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper. Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread cubes are golden and eggplant is tender.",
-                            ),
-                            SectionItem::new(
-                                "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book Publishers Chicago 1, Illinois 1958",
-                            ),
-                        ],
-                    )])),
+                    name: vec!["Aubergines a la Toulousaine (Eggplant A La Toulouse)".into()],
+                    recipe_category: vec!["vegetables".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 md Eggplant 2 tb Snipped parsley".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 c Salad oil 1 cl Galic, minced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 lg Tomatoes, peeled 1 tb Salad oil".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 c Fresh bread cubes 1/4 c Grated Parmesan cheese".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Cut eggplant into 1/2-inch thick slices: pared. Place slices on paper towels; sprinkle each generously with salt. let stand for 30 minutes; then blot dry with paper towels. Start heating oven to 400 deg. F. Saute eggplant in 1/4 cup salad oil until golden. Add more oils as needed. Cut tomatoes into 1/2-inch thick slices; saute in same skillet. In a 10x6x2 inch baking dish, arrange eggplant and tomatoes in alternate layers, (4 in all), sprinkling each layer with 1/4 teaspoon salt and 1/8 teaspoon pepper. Combine bread cubes with parsley, garlic, 1 tablespoon salad oil and cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread cubes are golden and eggplant is tender.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book Publishers Chicago 1, Illinois 1958".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(4),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    keywords: to_defined_text("beef".into()),
+                Recipe {
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("beef".into())],
                     is_based_on: to_is_based_on("MMF".into()),
-                    name: Some("August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()),
-                    recipe_category: RecipeCategory::Text("german".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "1 Shallot or small onion cut 1 pn Mace".into(),
-                        "-into small pieces 1 lg Steak (just over 1 lb), at".into(),
-                        "Freshly ground black pepper -least 1 1/4 inches".into(),
-                    ]),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "((Note: Per Horst Scharfenberg, this recipe originated in the town of Idar-Oberstein in the 19 th century, when gemstone prospectors returning from South America created their own version of gaucho-grilled steaks. The dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))",
-                            ),
-                            SectionItem::new("Per person: thick, trimmed"),
-                            SectionItem::new(
-                                "Mix together the shallot or onion with the pepper and mace. Insert a few shallot pieces into the steak using the point of a small knife. Coat the steak with the shallot mixture, pressing it in so it will adhere.",
-                            ),
-                            SectionItem::new(
-                                "Remove the loose shallot pieces and grill the steak (over a fire of oak logs, says August Goerg, from which the bark has been removed).* Take the steaks off the grill while they are still pink inside. Sprinkle them with salt.",
-                            ),
-                            SectionItem::new(
-                                "*Note: A special grill is used, suspended with 3 chains from an iron tripod and constantly swinging through the flames.",
-                            ),
-                            SectionItem::new(
-                                "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon & Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking Echo, 8/92",
-                            ),
-                        ],
-                    )])),
+                    name: vec!["August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()],
+                    recipe_category: vec!["german".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 Shallot or small onion cut 1 pn Mace".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-into small pieces 1 lg Steak (just over 1 lb), at".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Freshly ground black pepper -least 1 1/4 inches".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "((Note: Per Horst Scharfenberg, this recipe originated in the town of Idar-Oberstein in the 19 th century, when gemstone prospectors returning from South America created their own version of gaucho-grilled steaks. The dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Per person: thick, trimmed".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mix together the shallot or onion with the pepper and mace. Insert a few shallot pieces into the steak using the point of a small knife. Coat the steak with the shallot mixture, pressing it in so it will adhere.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Remove the loose shallot pieces and grill the steak (over a fire of oak logs, says August Goerg, from which the bark has been removed).* Take the steaks off the grill while they are still pink inside. Sprinkle them with salt.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "*Note: A special grill is used, suspended with 3 chains from an iron tripod and constantly swinging through the flames.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon & Schuster/Poseidon Press, New York. 1989 Posted by: Karin Brewer, Cooking Echo, 8/92".into(),
+                        ),
+                    ],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },
-                RecipeSchema {
-                    at_context: Default::default(),
-                    at_type: Some(AtType::Recipe),
-                    keywords: to_defined_text("pork/ham,poultry,spanish".into()),
+                Recipe {
+                    keywords: ["pork/ham", "poultry", "spanish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     is_based_on: to_is_based_on("MMF".into()),
-                    name: Some("Aunt Julia's Paella".into()),
-                    recipe_category: RecipeCategory::Text("fish/sea".into()),
-                    recipe_ingredient: Some(vec![
-                        "<section></section>".into(),
-                        "1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into(),
-                        "-and legs) 2 ts Capers, with juice".into(),
-                        "Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into(),
-                        "1 lb Lean pork, cut into 1-inch -olives".into(),
-                        "-cubes 1/2 lb Calamari (squid), cleaned".into(),
-                        "1 md Onion, minced -and sliced".into(),
-                        "2 Toes garlic, minced 5 c Water".into(),
-                        "Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into(),
-                        "-strips: 1 ts Saffron threads".into(),
-                        "1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into(),
-                        "1 lg Carrot -uncooked".into(),
-                        "1 Stalk celery 3 Hard boiled eggs, sliced".into(),
-                        "1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into(),
-                        "1 1/2 lb Peeled shrimp Oil for frying".into(),
-                    ]),
-                    recipe_instructions: sections_to_itemlist(Sections::from([(
-                        "".into(),
-                        vec![
-                            SectionItem::new(
-                                "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }",
-                            ),
-                            SectionItem::new(
-                                "In a large electric skillet or paella pan, brown the chicken pieces (that have been seasoned with salt and pepper) in a little oil. Remove from the pan. Add the pork cubes to the drippinfs and brown for about 5 minutes. Remove from the pan. To the pan drippings (add a little more oil if necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry for 2 minutes.",
-                            ),
-                            SectionItem::new(
-                                "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork. Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.",
-                            ),
-                            SectionItem::new(
-                                "Gently stir the rice into the skillet mixture. Slowly pour in enough of the bouillon mixture to cover the rice and chicken pieces. Cover and cook over low heat for about 20 minutes. Uncover and decoaratively arrange the egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary to keep the rice moist.",
-                            ),
-                            SectionItem::new(
-                                "Cover and steam for another 10 minutes until the shrimp are cooked and the rice is tender. (Paella should be moist but not wet!) Place the pan on a hot pad on the serving table and let everyone help themselves.",
-                            ),
-                            SectionItem::new(
-                                "Serve with a mixed green salad, red ripe tomatoes and some French bread. Also mix up a pitcher of Sangria and enjoy!",
-                            ),
-                            SectionItem::new("Serves: 12."),
-                            SectionItem::new(
-                                "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]",
-                            ),
-                            SectionItem::new("Posted by Fred Peters"),
-                        ],
-                    )])),
+                    name: vec!["Aunt Julia's Paella".into()],
+                    recipe_category: vec!["fish/sea".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 Chicken, cut up (Or 4 thighs 1 3/4 oz Jar sliced pimento".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-and legs) 2 ts Capers, with juice".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Salt and pepper to thaste 4 oz Jar pimento-stiffed green".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 lb Lean pork, cut into 1-inch -olives".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-cubes 1/2 lb Calamari (squid), cleaned".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 md Onion, minced -and sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Toes garlic, minced 5 c Water".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Cut into 1 1/2 inch julliene 4 Chicken bouillon cubes".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-strips: 1 ts Saffron threads".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 lg Bell pepper 2 1/2 c Uncle Ben's (c) rice,".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 lg Carrot -uncooked".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 Stalk celery 3 Hard boiled eggs, sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 c Frozen green peas 1/2 lb Unpeeled shrimp (heads on)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 1/2 lb Peeled shrimp Oil for frying".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "In a large electric skillet or paella pan, brown the chicken pieces (that have been seasoned with salt and pepper) in a little oil. Remove from the pan. Add the pork cubes to the drippinfs and brown for about 5 minutes. Remove from the pan. To the pan drippings (add a little more oil if necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry for 2 minutes.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork. Stir. In a separate pot, bring the 5 cups of water to a boil; stir in the bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Gently stir the rice into the skillet mixture. Slowly pour in enough of the bouillon mixture to cover the rice and chicken pieces. Cover and cook over low heat for about 20 minutes. Uncover and decoaratively arrange the egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary to keep the rice moist.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Cover and steam for another 10 minutes until the shrimp are cooked and the rice is tender. (Paella should be moist but not wet!) Place the pan on a hot pad on the serving table and let everyone help themselves.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Serve with a mixed green salad, red ripe tomatoes and some French bread. Also mix up a pitcher of Sangria and enjoy!".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Serves: 12.".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Posted by Fred Peters".into()),
+                    ],
                     recipe_yield: to_yield(6),
                     ..Default::default()
                 },

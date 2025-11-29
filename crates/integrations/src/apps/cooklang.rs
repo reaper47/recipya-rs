@@ -1,21 +1,22 @@
 use std::io::{Read, Seek};
 
 use cooklang::{Content, CooklangParser, Item, Value};
-use recipe_schema::{
-    AtType, DefinedTermOrTextOrUrl, Diets, HowToToolOrText, HowToToolType, RecipeCategory,
-    RecipeCuisine, RecipeSchema, RestrictedDiet, SectionItem, Sections,
-};
-use support::time::parse_duration;
 use tracing::{error, warn};
 use url::Url;
 
-use super::helpers::{read_file, urls_to_image_object};
+use schema_org::enums::RestrictedDietEnum;
+use schema_org::field::{
+    HowToToolRequiredQuantityFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
+    RecipeImageFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum,
+    RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum, RecipeToolFieldEnum,
+};
+use schema_org::{AtType, HowToTool, Recipe};
+use support::time::parse_duration;
+
+use super::helpers::read_file;
 use crate::Result;
 use crate::common::{Times, Tool};
-use crate::helpers::{
-    seconds_to_duration, sections_to_itemlist, sections_to_vec, to_is_based_on,
-    to_organization_type, to_text, to_yield,
-};
+use crate::helpers::{seconds_to_duration, to_yield};
 
 /// A wrapper around the Cooklang parser that provides a consistent interface for parsing
 /// and executing Cooklang code.
@@ -24,6 +25,7 @@ pub struct CookLang {
     parser: CooklangParser,
 }
 
+#[allow(dead_code)]
 struct CooklangRecipe {
     author: Option<String>,
     category: Option<String>,
@@ -33,8 +35,8 @@ struct CooklangRecipe {
     difficulty: Option<String>,
     locale: Option<String>,
     images: Vec<String>,
-    ingredients: Sections,
-    instructions: Sections,
+    ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
+    instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
     name: String,
     servings: Option<i16>,
     source: Option<String>,
@@ -43,52 +45,83 @@ struct CooklangRecipe {
     tools: Vec<Tool>,
 }
 
-impl From<CooklangRecipe> for RecipeSchema {
+impl From<CooklangRecipe> for Recipe {
     fn from(r: CooklangRecipe) -> Self {
         Self {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            author: to_organization_type(r.author.unwrap_or_default()),
+            r#type: Some(AtType::Recipe.to_string()),
+            author: r
+                .author
+                .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
+                .unwrap_or_default(),
             cook_time: seconds_to_duration(r.times.cook_seconds),
-            description: to_text(r.description.unwrap_or_default()),
-            is_based_on: to_is_based_on(r.source.to_owned().unwrap()),
-            keywords: Some(DefinedTermOrTextOrUrl::Text(r.tags.join(","))),
-            name: Some(r.name).filter(|s| !s.is_empty()),
+            description: r
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            is_based_on: r
+                .source
+                .clone()
+                .map(|s| {
+                    if let Some(_) = s.parse::<Url>().ok() {
+                        vec![RecipeIsBasedOnFieldEnum::URL(s)]
+                    } else {
+                        vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]
+                    }
+                })
+                .unwrap_or_default(),
+            keywords: r
+                .tags
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
+            name: Some(r.name)
+                .filter(|s| !s.is_empty())
+                .map(|s| vec![s])
+                .unwrap_or_default(),
             prep_time: seconds_to_duration(r.times.prep_seconds),
-            recipe_category: RecipeCategory::Text(r.category.unwrap_or_default()),
-            recipe_cuisine: Some(RecipeCuisine::Text(r.cuisine.unwrap_or_default())).filter(|s| {
-                match s {
-                    RecipeCuisine::Text(s) => !s.is_empty(),
-                }
-            }),
-            image: urls_to_image_object(r.images),
-            recipe_ingredient: sections_to_vec(r.ingredients),
-            recipe_instructions: sections_to_itemlist(r.instructions),
+            recipe_category: r.category.map(|s| vec![s]).unwrap_or_default(),
+            recipe_cuisine: r
+                .cuisine
+                .filter(|s| !s.is_empty())
+                .map(|s| vec![s])
+                .unwrap_or_default(),
+            image: r
+                .images
+                .into_iter()
+                .map(RecipeImageFieldEnum::URL)
+                .collect(),
+            recipe_ingredient: r.ingredients,
+            recipe_instructions: r.instructions,
             recipe_yield: to_yield(r.servings.map(i64::from).unwrap_or_default()),
             suitable_for_diet: r
                 .diet
                 .map(|diets| {
                     diets
                         .into_iter()
-                        .map(RestrictedDiet::from)
-                        .filter(|d| !matches!(d, RestrictedDiet::UnspecifiedDiet))
+                        .map(RestrictedDietEnum::from)
+                        .filter(|d| !matches!(d, RestrictedDietEnum::UnspecifiedDiet))
                         .collect::<Vec<_>>()
                 })
-                .and_then(|v| (!v.is_empty()).then_some(Diets::RestrictedDiet(v))),
-            tool: Some(
-                r.tools
-                    .into_iter()
-                    .map(|t| {
-                        HowToToolOrText::HowToTool(HowToToolType {
-                            r#type: AtType::HowToTool,
-                            name: t.name,
+                .unwrap_or_default(),
+            tool: r
+                .tools
+                .into_iter()
+                .map(|t| {
+                    if t.quantity == 0 {
+                        RecipeToolFieldEnum::Text(t.name)
+                    } else {
+                        RecipeToolFieldEnum::HowToTool(Box::from(HowToTool {
+                            r#type: Some(AtType::HowToTool.to_string()),
+                            name: vec![t.name],
+                            required_quantity: vec![HowToToolRequiredQuantityFieldEnum::Number(
+                                t.quantity as f32,
+                            )],
                             ..Default::default()
-                        })
-                    })
-                    .collect::<Vec<_>>(),
-            )
-            .filter(|v| !v.is_empty()),
-            url: Url::parse(&r.source.unwrap_or_default()).ok(),
+                        }))
+                    }
+                })
+                .collect(),
+            url: r.source.into_iter().collect(),
             ..Default::default()
         }
     }
@@ -96,7 +129,7 @@ impl From<CooklangRecipe> for RecipeSchema {
 
 impl CookLang {
     /// Parses a Cooklang recipe from the file's content.
-    pub fn parse<R>(&self, r: R, file_name: &str) -> Result<Vec<RecipeSchema>>
+    pub fn parse<R>(&self, r: R, file_name: &str) -> Result<Vec<Recipe>>
     where
         R: Read + Seek,
     {
@@ -251,78 +284,44 @@ impl CookLang {
                         .collect::<Vec<_>>()
                 })
                 .unwrap_or_default(),
-            ingredients: Sections::from([(
-                "".into(),
-                recipe
-                    .ingredients
-                    .into_iter()
-                    .map(|ing| {
-                        let name = ing.display_name().to_string();
-                        let s = match ing.quantity {
-                            None => name,
-                            Some(q) => {
-                                let unit = q.unit().unwrap_or_default();
-                                match q.value() {
-                                    Value::Number(v) => format!("{} {unit} {name}", v.value()),
-                                    Value::Range { start, end } => {
-                                        format!("{}-{} {unit} {name}", start.value(), end.value())
-                                    }
-                                    Value::Text(s) => format!("{s} {unit} {name}"),
+            ingredients: recipe
+                .ingredients
+                .into_iter()
+                .map(|ing| {
+                    let name = ing.display_name().to_string();
+                    let s = match ing.quantity {
+                        None => name,
+                        Some(q) => {
+                            let unit = q.unit().unwrap_or_default();
+                            match q.value() {
+                                Value::Number(v) => format!("{} {unit} {name}", v.value()),
+                                Value::Range { start, end } => {
+                                    format!("{}-{} {unit} {name}", start.value(), end.value())
                                 }
+                                Value::Text(s) => format!("{s} {unit} {name}"),
                             }
-                        };
-                        SectionItem::new(s)
-                    })
-                    .collect(),
-            )]),
+                        }
+                    };
+                    RecipeRecipeIngredientFieldEnum::Text(s)
+                })
+                .collect(),
             instructions: recipe
                 .sections
                 .into_iter()
-                .map(|section| {
-                    (
-                        section.name.unwrap_or_default(),
-                        section
-                            .content
-                            .into_iter()
-                            .filter_map(|content| {
-                                let s = match content {
-                                    Content::Step(s) => {
-                                        let parts: Vec<&str> = s
-                                            .items
-                                            .iter()
-                                            .filter_map(|item| match item {
-                                                Item::Text { value } => {
-                                                    let trimmed = value.trim();
-                                                    (!trimmed.is_empty()).then_some(trimmed)
-                                                }
-                                                _ => None,
-                                            })
-                                            .collect();
+                .flat_map(|section| {
+                    let content = section.content.into_iter().filter_map(clean_content);
 
-                                        if parts.is_empty() {
-                                            return None;
-                                        }
-                                        parts.join(" ")
-                                    }
-                                    Content::Text(s) => {
-                                        let trimmed = s.trim();
-                                        if trimmed.is_empty() {
-                                            return None;
-                                        }
-                                        trimmed.to_string()
-                                    }
-                                };
-
-                                let cleaned = if s.contains(" ,") {
-                                    s.replace(" ,", ",")
-                                } else {
-                                    s
-                                };
-
-                                Some(SectionItem::new(cleaned))
-                            })
+                    match section.name {
+                        Some(name) => {
+                            vec![RecipeRecipeInstructionsFieldEnum::new_section(
+                                &name,
+                                content.collect(),
+                            )]
+                        }
+                        None => content
+                            .map(RecipeRecipeInstructionsFieldEnum::Text)
                             .collect(),
-                    )
+                    }
                 })
                 .collect(),
             servings: recipe
@@ -372,40 +371,50 @@ impl CookLang {
     }
 }
 
-/// A builder pattern for constructing a `CookLang` parser.
-pub struct ParserBuilder {
-    parser: Option<CooklangParser>,
-}
+fn clean_content(content: Content) -> Option<String> {
+    let s = match content {
+        Content::Step(s) => {
+            let parts: Vec<&str> = s
+                .items
+                .iter()
+                .filter_map(|item| match item {
+                    Item::Text { value } => {
+                        let trimmed = value.trim();
+                        (!trimmed.is_empty()).then_some(trimmed)
+                    }
+                    _ => None,
+                })
+                .collect();
 
-impl ParserBuilder {
-    /// Creates a new `ParserBuilder` with no parser initialized.
-    pub fn new() -> Self {
-        Self { parser: None }
-    }
-
-    /// Adds a parser to this builder, making it available for use during the build process.
-    pub fn with_parser(mut self, parser: CooklangParser) -> Self {
-        self.parser = Some(parser);
-        self
-    }
-
-    /// Builds a new `Parser` using the configured options or defaults.
-    pub fn build(self) -> CookLang {
-        CookLang {
-            parser: self.parser.unwrap_or_default(),
+            if parts.is_empty() {
+                return None;
+            }
+            parts.join(" ")
         }
-    }
+        Content::Text(s) => {
+            let trimmed = s.trim();
+            if trimmed.is_empty() {
+                return None;
+            }
+            trimmed.to_string()
+        }
+    };
+
+    Some(if s.contains(" ,") {
+        s.replace(" ,", ",")
+    } else {
+        s
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use recipe_schema::ImageObjectOrUrl;
-    use recipe_schema::{
-        OrganizationTypeOrText, QuantitativeValueOrText, QuantitativeValueType, RecipeCuisine,
-        TextOrTextObject,
-    };
     use std::io::Cursor;
+
+    use schema_org::Recipe;
+    use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeYieldFieldEnum};
+
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -447,72 +456,61 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
 
         pretty_assertions::assert_eq!(
             got,
-            vec![RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
-                author: Some(OrganizationTypeOrText::Text("John Doe".into())),
+            vec![Recipe {
+                r#type: Some(AtType::Recipe.to_string()),
+                author: vec![RecipeAuthorFieldEnum::new_person("John Doe")],
                 cook_time: seconds_to_duration(60 * 60),
-                description: Some(TextOrTextObject::Text("This is the best recipe!".into())),
-                image: Some(ImageObjectOrUrl::Urls(vec![
-                    Url::parse("https://example.org/recipe_image.jpg")?,
-                    Url::parse("https://example.org/recipe_image2.jpg")?,
-                ]),),
-                is_based_on: to_is_based_on("https://example.org/recipe".into()),
-                keywords: Some(DefinedTermOrTextOrUrl::Text(
-                    ["2022", "baking", "summer"].join(",")
-                )),
-                name: Some("Spaghetti Carbonara".into()),
+                description: vec![RecipeDescriptionFieldEnum::Text(
+                    "This is the best recipe!".into()
+                )],
+                image: vec![
+                    RecipeImageFieldEnum::URL("https://example.org/recipe_image.jpg".into()),
+                    RecipeImageFieldEnum::URL("https://example.org/recipe_image2.jpg".into()),
+                ],
+                is_based_on: vec![RecipeIsBasedOnFieldEnum::URL(
+                    "https://example.org/recipe".into()
+                )],
+                keywords: vec![
+                    RecipeKeywordsFieldEnum::TextOrURL("2022".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("baking".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("summer".into()),
+                ],
+                name: vec!["Spaghetti Carbonara".into()],
                 prep_time: seconds_to_duration(2 * 60 * 60 + 30 * 60),
-                recipe_category: RecipeCategory::Text("dinner".into()),
-                recipe_cuisine: Some(RecipeCuisine::Text("French".into())),
-                recipe_ingredient: Some(vec![
-                    "<section></section>".into(),
-                    "100 g potatoes".into(),
-                    "50 g onions".into(),
-                    "200 g mushrooms".into(),
-                    "oil".into(),
-                    "4 g salt".into(),
-                    "0.25 tsp pepper".into(),
-                    "0.25 tsp rosemary".into(),
-                    "50 g double cream".into(),
-                    "salt".into(),
-                ]),
-                recipe_instructions: sections_to_itemlist(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new(
-                            "Peel and chop the, and into chunks. The potatoes will need to be cut a bit smaller."
-                        ),
-                        SectionItem::new(
-                            "Heat a over a medium heat with a little and sauté the vegetables until golden. Season with, and chopped fresh ."
-                        ),
-                        SectionItem::new(
-                            "Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender."
-                        ),
-                        SectionItem::new(
-                            "Remove the soup from the heat and blend with a, add the and to taste. Garnish with freshly cracked black pepper."
-                        ),
-                    ]
-                ),])),
-                recipe_yield: QuantitativeValueOrText::QuantitativeValue(QuantitativeValueType {
-                    value: 1
-                }),
-                suitable_for_diet: Some(Diets::RestrictedDiet(vec![
-                    RestrictedDiet::GlutenFreeDiet
-                ])),
-                tool: Some(vec![
-                    HowToToolOrText::HowToTool(HowToToolType {
-                        r#type: AtType::HowToTool,
-                        name: "frying pan".into(),
-                        ..Default::default()
-                    }),
-                    HowToToolOrText::HowToTool(HowToToolType {
-                        r#type: AtType::HowToTool,
-                        name: "blender".into(),
-                        ..Default::default()
-                    }),
-                ]),
-                url: Url::parse("https://example.org/recipe").ok(),
+                recipe_category: vec!["dinner".into()],
+                recipe_cuisine: vec!["French".into()],
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("100 g potatoes".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("50 g onions".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("200 g mushrooms".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("oil".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("4 g salt".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("0.25 tsp pepper".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("0.25 tsp rosemary".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("50 g double cream".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("salt".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Peel and chop the, and into chunks. The potatoes will need to be cut a bit smaller.".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Heat a over a medium heat with a little and sauté the vegetables until golden. Season with, and chopped fresh .".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender.".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Remove the soup from the heat and blend with a, add the and to taste. Garnish with freshly cracked black pepper.".into()
+                    ),
+                ],
+                recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(1.0)],
+                suitable_for_diet: vec![RestrictedDietEnum::GlutenFreeDiet],
+                tool: vec![
+                    RecipeToolFieldEnum::new_tool("frying pan", 1.0),
+                    RecipeToolFieldEnum::new_tool("blender", 1.0),
+                ],
+                url: vec!["https://example.org/recipe".into()],
                 ..Default::default()
             }]
         );

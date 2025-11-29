@@ -50,7 +50,7 @@ and share your favorite recipes. It is focused on simplicity for the whole famil
 The [Recipya](https://github.com/reaper47/recipya) project is currently being rewritten in Rust as
 announced [here](https://github.com/reaper47/recipya/discussions/422). The Rust project is not ready for production nor
 to selfhost.
-The user interface should look exactly the same as the original.
+The user interface is better than the the original.
 
 ## Features
 
@@ -148,10 +148,12 @@ This project was mainly coded to blasting the following albums:
 - [4am](https://www.youtube.com/watch?v=tBcPji_jRDc)
 - [Abysmal Dawn - Phylogenesis](https://www.youtube.com/watch?v=xJMybqRMedk&pp=ygUMYWJ5c21hbCBkYXdu)
 - [Archspire - Bleed the Future](https://www.youtube.com/watch?v=o8H9ahswldM)
+- [Astralborne - Eternity's End](https://www.youtube.com/watch?v=MilBEj5W9io)
 - [Atavistia - Cosmic Warfare](https://www.youtube.com/watch?v=VjJ_zb4RF2E)
 - [Beast In Black - Dark Connection](https://www.youtube.com/watch?v=7NyON-NzBr4)
 - [Cattle Decapitation - Terrasite](https://www.youtube.com/watch?v=x6rEDMqM36I)
 - [Ensiferum - From Afar](https://www.youtube.com/watch?v=6r8OPu3SRSM)
+- [Fires in the Distance - Echoes From Deep November](https://www.youtube.com/watch?v=dnOE5nm6rfo)
 - [Kahlmah - Swamplord](https://www.youtube.com/watch?v=FhMsOB88dfo&list=PLkROH3Eqs0T9b5E2WDDOS0JgYLf24_dNs)
 - [Lofi Girl - lofi hip hop radio](https://www.youtube.com/watch?v=jfKfPfyJRdk)
 - [Lofi Girl - synthwave radio](https://www.youtube.com/watch?v=4xDzrJKXOOY)

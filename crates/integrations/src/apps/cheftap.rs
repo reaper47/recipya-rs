@@ -8,19 +8,19 @@ use nom::character::complete::{digit1, line_ending, not_line_ending, space0};
 use nom::combinator::{map, map_res, opt};
 use nom::multi::{many_till, many1};
 use nom::sequence::{preceded, terminated};
-use url::Url;
 
-use recipe_schema::{AtType, RecipeSchema, SectionItem, Sections};
+use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
+use schema_org::{AtType, Recipe};
 
 use super::helpers::read_file;
 use crate::Result;
-use crate::helpers::{sections_to_itemlist, sections_to_vec, to_is_based_on, to_yield};
+use crate::helpers::{to_is_based_on, to_yield};
 
 pub struct ChefTapRecipe {
     title: String,
     yield_: Option<i16>,
-    ingredients: Sections,
-    instructions: Sections,
+    ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
+    instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
     source: Option<String>,
 }
 
@@ -32,17 +32,16 @@ struct RecipeComponents<'a> {
     source: Option<&'a str>,
 }
 
-impl From<ChefTapRecipe> for RecipeSchema {
+impl From<ChefTapRecipe> for Recipe {
     fn from(r: ChefTapRecipe) -> Self {
-        RecipeSchema {
-            at_context: Default::default(),
-            at_type: Some(AtType::Recipe),
-            is_based_on: to_is_based_on(r.source.to_owned().unwrap_or_default()),
-            name: Some(r.title),
-            recipe_ingredient: sections_to_vec(r.ingredients),
-            recipe_instructions: sections_to_itemlist(r.instructions),
+        Recipe {
+            r#type: Some(AtType::Recipe.to_string()),
+            is_based_on: to_is_based_on(&r.source.clone().unwrap_or_default()),
+            name: vec![r.title],
+            recipe_ingredient: r.ingredients,
+            recipe_instructions: r.instructions,
             recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
-            url: Url::parse(r.source.unwrap_or_default().as_ref()).ok(),
+            url: r.source.into_iter().collect(),
             ..Default::default()
         }
     }
@@ -53,21 +52,23 @@ impl From<RecipeComponents<'_>> for ChefTapRecipe {
         Self {
             title: c.title.to_owned(),
             yield_: c.servings,
-            ingredients: Sections::from([(
-                "".into(),
-                c.ingredients.into_iter().map(SectionItem::new).collect(),
-            )]),
-            instructions: Sections::from([(
-                "".into(),
-                c.instructions.into_iter().map(SectionItem::new).collect(),
-            )]),
+            ingredients: c
+                .ingredients
+                .into_iter()
+                .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.into()))
+                .collect(),
+            instructions: c
+                .instructions
+                .into_iter()
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
+                .collect(),
             source: c.source.map(String::from),
         }
     }
 }
 
 /// Parses a ChefTap recipe from the file's content.
-pub fn parse<R>(r: R) -> Result<Vec<RecipeSchema>>
+pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -146,6 +147,7 @@ fn instruction(input: &str) -> IResult<&str, &str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use schema_org::Recipe;
     use std::io::Cursor;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -159,42 +161,40 @@ mod tests {
 
         pretty_assertions::assert_eq!(
             got,
-            vec![RecipeSchema {
-                at_context: Default::default(),
-                at_type: Some(AtType::Recipe),
+            vec![Recipe {
+                r#type: Some(AtType::Recipe.to_string()),
                 is_based_on: to_is_based_on(
                     "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()
                 ),
-                name: Some("Deviled Eggs".into()),
-                recipe_ingredient: sections_to_vec(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new("6 large eggs"),
-                        SectionItem::new("¼ cup mayonnaise"),
-                        SectionItem::new("2 tablespoons finely chopped onion"),
-                        SectionItem::new("1 tablespoon prepared horseradish"),
-                        SectionItem::new("1 tablespoon prepared mustard"),
-                        SectionItem::new("1/4 teaspoon paprika, or as needed, for garnish"),
-                        SectionItem::new("salt and pepper to taste"),
-                    ]
-                )])),
-                recipe_instructions: sections_to_itemlist(Sections::from([(
-                    "".into(),
-                    vec![
-                        SectionItem::new(
-                            "Place eggs in a medium saucepan and cover with cold water. Bring water to a boil and immediately remove from heat. Cover and let eggs stand in hot water for 10 to 12 minutes. Remove from hot water, cool, and peel."
-                        ),
-                        SectionItem::new(
-                            "Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined."
-                        ),
-                        SectionItem::new(
-                            "Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving."
-                        ),
-                    ]
-                )])),
+                name: vec!["Deviled Eggs".into()],
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("6 large eggs".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("¼ cup mayonnaise".into()),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "2 tablespoons finely chopped onion".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "1 tablespoon prepared horseradish".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text("1 tablespoon prepared mustard".into()),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "1/4 teaspoon paprika, or as needed, for garnish".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text("salt and pepper to taste".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Place eggs in a medium saucepan and cover with cold water. Bring water to a boil and immediately remove from heat. Cover and let eggs stand in hot water for 10 to 12 minutes. Remove from hot water, cool, and peel.".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined.".into()
+                    ),
+                    RecipeRecipeInstructionsFieldEnum::Text(
+                        "Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving.".into()
+                    ),
+                ],
                 recipe_yield: to_yield(6),
-                url: Url::parse("https://www.allrecipes.com/recipe/22390/special-deviled-eggs/")
-                    .ok(),
+                url: vec!["https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()],
                 ..Default::default()
             }]
         );

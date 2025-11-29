@@ -170,7 +170,7 @@ mod tests {
     use testing::utils::{TestDb, build_server_anonymous, create_app_state, insert_other_user};
 
     use super::*;
-    use crate::recipe::test_utils::a_complete_recipe_for_create;
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

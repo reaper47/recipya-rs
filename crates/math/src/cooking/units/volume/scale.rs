@@ -1,8 +1,8 @@
-use super::Volume;
 use crate::Result;
-use crate::cooking::units::Unit;
 use crate::cooking::units::custom::factors::volume::*;
 use crate::cooking::units::traits::{UnitOperations, UnitScaler};
+use crate::cooking::units::unit::Unit;
+use crate::cooking::units::volume::units::Volume;
 
 impl UnitScaler for Volume {
     fn scale(&self, factor: f64) -> Result<Unit> {

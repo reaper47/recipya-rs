@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use maud::{Markup, PreEscaped, html};
+use models::recipe::structs::section::SectionComponents;
 use serde_json::json;
 use url::Url;
 
@@ -13,7 +14,12 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::render_rating;
 use crate::recipes::timeline::render_dialog;
-use crate::templates::icons::{icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_clock, icon_cooking_pot, icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart, icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share, icon_stop, icon_timeline, icon_trash};
+use crate::templates::icons::{
+    icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_clock, icon_cooking_pot,
+    icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart,
+    icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share, icon_stop,
+    icon_timeline, icon_trash,
+};
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
 use crate::{Error, Result};
@@ -187,10 +193,14 @@ pub fn view_recipe_helper(
                                     }
                                 }
                                 div class={
-                                    "grid grid-flow-col border-gray-700 col-span-6 print:border-none"
+                                    "grid-flow-col border-gray-700 col-span-6 print:border-none"
+                                    @if data.is_preview { " flex flex-col" } @else { " grid" }
                                     @if recipe_details.nutrition.is_none() { " print:hidden" }
                                 } {
-                                    div class="col-span-3 min-h-40 md:h-full md:border-r md:row-span-1 print:hidden" {
+                                    div class={
+                                        "col-span-3 md:h-full md:border-r md:row-span-1 print:hidden"
+                                        @if data.is_preview { " border-b" } @else { " min-h-40" }
+                                    } {
                                         textarea readonly class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {
                                             @if let Some(description) = &recipe.description {
                                                 (description)
@@ -198,7 +208,7 @@ pub fn view_recipe_helper(
                                                 "No description"
                                             }
                                         }
-                                        }
+                                    }
                                     div class="col-span-3" {
                                         (render_nutrition(&recipe_details))
                                     }
@@ -486,16 +496,30 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
             } else {
                 "column-count: 1"
             }) {
-            @for (_section, ingredients) in recipe_details.ingredients.iter() {
-                @for ing in ingredients.iter() {
-                    li class="text-sm" {
-                        label {
-                            input type="checkbox";
+                @match &recipe_details.ingredients {
+                    SectionComponents::Grouped(section) => {
+                        @for section in section.iter() {
+                            @for ing in section.items.iter() {
+                                li class="text-sm" {
+                                    label {
+                                        input type="checkbox";
+                                    }
+                                    span class="pl-2" { (ing.text) }
+                                }
+                            }
                         }
-                        span class="pl-2" { (ing.text) }
-                    }
+                    },
+                    SectionComponents::Flat(items) => {
+                        @for ing in items.iter() {
+                            li class="text-sm" {
+                                label {
+                                    input type="checkbox";
+                                }
+                                span class="pl-2" { (ing.text) }
+                            }
+                        }
+                    },
                 }
-            }
         }
     }
 }
@@ -506,14 +530,27 @@ fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
             b { "Instructions" }
         }
         ol class="col-span-6 list-decimal w-full ml-6" {
-            @for (_section, instructions) in recipe_details.instructions.iter() {
-                @for ins in instructions.iter() {
-                    li class="print:mr-4" {
-                        span class="text-sm whitespace-pre-line" {
-                            (ins.text)
+            @match &recipe_details.instructions {
+                SectionComponents::Grouped(section) => {
+                    @for section in section.iter() {
+                        @for ins in section.items.iter() {
+                            li class="print:mr-4" {
+                                span class="text-sm whitespace-pre-line" {
+                                    (ins.text)
+                                }
+                            }
                         }
                     }
-                }
+                },
+                SectionComponents::Flat(items) => {
+                    @for ins in items.iter() {
+                        li class="print:mr-4" {
+                            span class="text-sm whitespace-pre-line" {
+                                (ins.text)
+                            }
+                        }
+                    }
+                },
             }
         }
     }
@@ -773,42 +810,82 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 }
                 h2 class="font-semibold text-center underline pb-1" { "Ingredients" }
                 ul class="list grid gap-1" {
-                    @for (_section, ingredients) in recipe.ingredients.iter() {
-                        @for ingredient in ingredients.iter() {
-                             li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
-                                label class="flex items-center w-full" {
-                                    input type="checkbox" class="checkbox";
-                                    span class="pl-2" { (ingredient.text) }
+                    @match &recipe.ingredients {
+                        SectionComponents::Grouped(section) => {
+                            @for section in section.iter() {
+                                @for ingredient in section.items.iter() {
+                                     li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                        label class="flex items-center w-full" {
+                                            input type="checkbox" class="checkbox";
+                                            span class="pl-2" { (ingredient.text) }
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        },
+                        SectionComponents::Flat(items) => {
+                            @for ingredient in items.iter() {
+                                 li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                    label class="flex items-center w-full" {
+                                        input type="checkbox" class="checkbox";
+                                        span class="pl-2" { (ingredient.text) }
+                                    }
+                                }
+                            }
+                        },
                     }
                 }
             }
             div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden" {
                 h2 class="font-semibold text-center underline pb-1" { "Instructions" }
                 ol class="grid list-decimal" {
-                    @for (_section, instruction) in recipe.instructions.iter() {
-                        @for (idx, instruction) in instruction.iter().enumerate() {
-                            li class="min-w-full py-2 select-none hover:bg-base-300" {
-                                div class="flex" {
-                                    div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
-                                        (instruction.text)
-                                    }
-                                     @if let Some(d) = instruction.duration_seconds {
-                                        div id=(format!("timer-container-{idx}")) class="timer-container" {
-                                            button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
-                                                   _="on click add .hidden to me
-                                                      remove .hidden from the next <div/>
-                                                      call initTimer(event)" {
-                                                (icon_alarm_clock())
+                    @match &recipe.instructions {
+                        SectionComponents::Grouped(section) => {
+                            @for section in section.iter() {
+                                @for (idx, instruction) in section.items.iter().enumerate() {
+                                    li class="min-w-full py-2 select-none hover:bg-base-300" {
+                                        div class="flex" {
+                                            div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
+                                                (instruction.text)
                                             }
-                                            (render_countdown(&format!("countdown-step-{idx}"), d))
+                                             @if let Some(d) = instruction.duration_seconds {
+                                                div id=(format!("timer-container-{idx}")) class="timer-container" {
+                                                    button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                                                           _="on click add .hidden to me
+                                                              remove .hidden from the next <div/>
+                                                              call initTimer(event)" {
+                                                        (icon_alarm_clock())
+                                                    }
+                                                    (render_countdown(&format!("countdown-step-{idx}"), d))
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
+                        },
+                        SectionComponents::Flat(items) => {
+                            @for (idx, instruction) in items.iter().enumerate() {
+                                li class="min-w-full py-2 select-none hover:bg-base-300" {
+                                    div class="flex" {
+                                        div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
+                                            (instruction.text)
+                                        }
+                                         @if let Some(d) = instruction.duration_seconds {
+                                            div id=(format!("timer-container-{idx}")) class="timer-container" {
+                                                button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                                                       _="on click add .hidden to me
+                                                          remove .hidden from the next <div/>
+                                                          call initTimer(event)" {
+                                                    (icon_alarm_clock())
+                                                }
+                                                (render_countdown(&format!("countdown-step-{idx}"), d))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
                     }
                 }
             }

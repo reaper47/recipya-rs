@@ -1,20 +1,16 @@
 use axum_test::multipart::{MultipartForm, Part};
 
-use models::recipe::RecipeForCreate;
+use models::recipe::structs::recipe::RecipeForCreate;
 
 pub(super) fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
     let mut form = MultipartForm::new().add_part("title", Part::text(&recipe.name));
 
-    for (_section, ingredients) in &recipe.ingredients {
-        for ingredient in ingredients {
-            form = form.add_part("ingredient", Part::text(&ingredient.text));
-        }
+    for ingredient in &recipe.ingredients.items_as_text() {
+        form = form.add_part("ingredient", Part::text(ingredient));
     }
 
-    for (_section, instructions) in &recipe.instructions {
-        for instruction in instructions {
-            form = form.add_part("instruction", Part::text(&instruction.text));
-        }
+    for instruction in &recipe.instructions.items_as_text() {
+        form = form.add_part("instruction", Part::text(instruction));
     }
 
     for tool in &recipe.tools {
@@ -28,7 +24,7 @@ pub(super) fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         form = form.add_part("keyword", Part::text(keyword));
     }
 
-    if let Some(n) = &recipe.yield_ {
+    if let Some(n) = &recipe.r#yield {
         form = form.add_part("yield", Part::text(n.to_string()));
     }
 

@@ -11,13 +11,12 @@ pub(super) fn shared_routes() -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
+    use models::recipe::structs::recipe::RecipeForCreate;
     use uuid::Uuid;
 
     use axum_test::TestResponse;
-    use models::Recipe;
-    use models::recipe::RecipeForCreate;
-    use models::recipe::test_utils::a_complete_recipe_for_create;
     use models::share::ShareRecipe;
+    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
     use testing::utils::{
         TestDb, assert_html, assert_not_in_html, build_server_anonymous, build_server_logged_in,
         create_app_state, insert_other_user,
