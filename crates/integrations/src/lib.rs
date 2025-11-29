@@ -1,9 +1,11 @@
+mod api;
 mod app;
-mod apps;
 mod common;
 mod error;
 mod fileformat;
 mod helpers;
+
+pub mod apps;
 
 pub use app::{App, all_apps};
 pub use error::{Error, Result};

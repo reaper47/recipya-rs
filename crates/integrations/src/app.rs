@@ -24,7 +24,7 @@ pub enum App {
     Unknown,
 }
 
-/// TODO: Write
+/// Returns a list of all recipe management applications Recipya can import.
 pub fn all_apps() -> Vec<App> {
     App::iter().filter(|a| !matches!(a, App::Unknown)).collect()
 }

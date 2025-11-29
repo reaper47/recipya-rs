@@ -102,8 +102,8 @@ fn render_import_apps_card() -> Markup {
                     "various apps,"
                 }
                 " plain text files or files that adhere to the "
-                a href="https://schema.org/Recipe" target="_blank" class="link" { "recipe schema " }
-                "standard. You may import all your Mealie or Tandoor recipes from the "
+                a href="https://schema.org/Recipe" target="_blank" class="link" { "recipe schema" }
+                " standard. You may import all your Mealie or Tandoor recipes from the "
                 b { "Data" }
                 " tab in the settings."
             }
@@ -460,7 +460,7 @@ fn websites_dialog() -> Markup {
                         label class="floating-label" {
                             span { "Enter one or more URLs, each on a new line." }
                             // TODO: Validate whether we can inline the placeholder line breaks.
-                            textarea class="textarea whitespace-pre-line" name="urls" rows="5" placeholder="URL 1
+                            textarea class="textarea w-full whitespace-pre-line" name="urls" rows="5" placeholder="URL 1
 URL 2
 URL 3
 URL 4

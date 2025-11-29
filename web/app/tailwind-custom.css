@@ -5,40 +5,76 @@
 
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {
-    themes: light --default, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, valentine, garden, forest --prefersdark, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, automn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk;
+    themes:
+        light --default,
+        dark,
+        cupcake,
+        bumblebee,
+        emerald,
+        corporate,
+        synthwave,
+        retro,
+        cyberpunk,
+        valentine,
+        halloween,
+        valentine,
+        garden,
+        forest --prefersdark,
+        aqua,
+        lofi,
+        pastel,
+        fantasy,
+        wireframe,
+        black,
+        luxury,
+        dracula,
+        cmyk,
+        automn,
+        business,
+        acid,
+        lemonade,
+        night,
+        coffee,
+        winter,
+        dim,
+        nord,
+        sunset,
+        caramellatte,
+        abyss,
+        silk;
 }
 
 @layer components {
     .link {
-        @apply underline text-blue-600 hover:text-blue-600 visited:text-purple-600 dark:hover:text-blue-300 dark:visited:text-purple-300 dark:text-blue-400
+        @apply underline text-blue-700 hover:text-blue-700 visited:text-purple-700 dark:hover:text-blue-300 dark:visited:text-purple-300 dark:text-blue-400;
     }
 
     .text-input {
-        @apply w-full rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-900
+        @apply w-full rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-900;
     }
 
     .pagination-ellipsis {
-        @apply inline-flex items-center px-4 py-2 text-sm border border-gray-300 select-none
+        @apply inline-flex items-center px-4 py-2 text-sm border border-gray-300 select-none;
     }
 
     .pagination-hover {
-        @apply hover:bg-gray-50 dark:hover:bg-gray-700
+        @apply hover:bg-gray-50 dark:hover:bg-gray-700;
     }
 
     .pagination-selected {
-        @apply z-10 px-4 py-2 text-sm text-indigo-600 border border-indigo-500 bg-indigo-50
+        @apply z-10 px-4 py-2 text-sm text-indigo-600 border border-indigo-500 bg-indigo-50;
     }
 
     .pagination-selected-edge-button-mobile {
-        @apply w-20 z-10 px-4 py-2 ml-3 border border-gray-300 rounded cursor-not-allowed
+        @apply w-20 z-10 px-4 py-2 ml-3 border border-gray-300 rounded cursor-not-allowed;
     }
 
     .pagination-selected-middle-button-mobile {
-        @apply w-20 px-4 py-2 border border-gray-300 rounded select-none
+        @apply w-20 px-4 py-2 border border-gray-300 rounded select-none;
     }
 
     .pagination-square {
-        @apply inline-flex items-center text-sm border border-gray-300
+        @apply inline-flex items-center text-sm border border-gray-300;
     }
 
     .recipes-sidebar-selected {
