@@ -24,6 +24,7 @@ pub struct ShortNomError {
 /// Enumeration of errors related to integrations.
 #[derive(Debug, From)]
 pub enum Error {
+    ApiError(String),
     MissingRequiredField(RequiredField),
     NomStr(ShortNomError),
     Parse(String),
@@ -38,6 +39,8 @@ pub enum Error {
     Paprika(libpaprika::Error),
     #[from]
     RecipeMD(recipemd::Error),
+    #[from]
+    Reqwest(reqwest::Error),
     #[from]
     Serde(serde_json::Error),
     #[from]
