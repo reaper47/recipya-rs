@@ -215,6 +215,7 @@ impl From<Recipe> for RecipeSage {
                             }
                             QuantitativeValueValueFieldEnum::Number(i) => i as i16,
                             QuantitativeValueValueFieldEnum::StructuredValue(_) => 0,
+                            QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
                         })
                         .unwrap_or_default(),
                     RecipeRecipeYieldFieldEnum::Text(s) => {
