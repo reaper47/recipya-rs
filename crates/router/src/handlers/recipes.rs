@@ -13,7 +13,7 @@ use axum_htmx::HX_REDIRECT;
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
 use futures_util::stream::{self, StreamExt};
-use integrations::api::Credentials;
+use integrations::api::{Credentials, FailedRecipes};
 use itertools::izip;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -806,10 +806,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
-                let toast = MessageHtmx::warning("No recipes found.");
-                if let Ok(json) = serde_json::to_string(&toast) {
-                    state.broadcast(user_id, Message::Text(json.into())).await;
-                }
+                broadcast_warning(&state, user_id, "No recipes found.").await;
                 return;
             }
             Err(_) => {
@@ -824,50 +821,17 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
             }
         };
 
-        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
-        let mut curr = 0;
-        let total_recipes = recipes.len() as i64;
-        let mut recipe_ids = Vec::new();
+        let num_recipes = recipes.len() as i64;
 
-        for schema in recipes {
-            curr += 1;
-            state
-                .broadcast_progress("Saving recipes", curr, total_recipes, true, user_id)
-                .await;
-
-            let recipe = schema_to_recipe_for_create(&state, schema).await;
-
-            match Recipe::create(&state.mm, user_id, &recipe).await {
-                Ok(recipe_id) => {
-                    report
-                        .report_logs
-                        .push(ReportLogForCreate::new_success(recipe.name));
-                    recipe_ids.push(recipe_id);
-                }
-                Err(DuplicateEntity) => {
-                    warn!("Recipe exists: {}", recipe.name);
-                    report.report_logs.push(ReportLogForCreate::new_warning(
-                        recipe.name,
-                        "Recipe exists".into(),
-                    ));
-                }
-                Err(err) => {
-                    error!("Error saving recipe '{}': {err}", recipe.name);
-                    report
-                        .report_logs
-                        .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
-                }
-            }
-        }
-
+        let (mut report, recipe_ids) = push_recipes_to_db(&state, recipes, user_id).await;
         report.exec_time_ms = start_time.elapsed().as_millis() as i64;
         state.hide_broadcast(user_id).await;
 
         let num_success = recipe_ids.len() as i64;
-        let num_skipped = total_recipes - num_success;
+        let num_skipped = num_recipes - num_success;
 
         info!(
-            "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={total_recipes}"
+            "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={num_recipes}"
         );
 
         let redirect = if num_success == 1 {
@@ -945,14 +909,11 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
         let state = state.clone();
         let start_time = Instant::now();
 
-        let recipes = match process_recipes_from_api(&state, form, user_id).await {
+        let (success, failures) = match process_recipes_from_api(&state, form, user_id).await {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
-                let toast = MessageHtmx::warning("No recipes found.");
-                if let Ok(json) = serde_json::to_string(&toast) {
-                    state.broadcast(user_id, Message::Text(json.into())).await;
-                }
+                broadcast_warning(&state, user_id, "No recipes found.").await;
                 return;
             }
             Err(_) => {
@@ -973,7 +934,13 @@ async fn process_recipes_from_api(
     state: &AppState,
     form: ImportFromApiForm,
     user_id: i64,
-) -> Result<Vec<schema_org::Recipe>> {
+) -> Result<(Vec<schema_org::Recipe>, FailedRecipes)> {
+    // TODO: Find a way to broadcast progress from form.api.fetch_recipes()
+
+    state
+        .broadcast_progress("Fetching recipes...", 1, 100, true, user_id)
+        .await;
+
     let recipes = match form
         .api
         .fetch_recipes(&form.url, Credentials::new(form.username, form.password))
@@ -983,12 +950,84 @@ async fn process_recipes_from_api(
         Err(_) => todo!(),
     };
 
-    if recipes.is_empty() {
-        warn!("No recipes found in file");
+    if recipes.0.is_empty() && recipes.1.is_empty() {
+        warn!("No recipes fetched using the API");
         return Err(Error::NoRecipe);
     }
 
     Ok(recipes)
+}
+
+async fn push_recipes_to_db(
+    state: &AppState,
+    recipes: Vec<schema_org::Recipe>,
+    user_id: i64,
+) -> (ReportForCreate, Vec<i64>) {
+    let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+    let mut curr = 0;
+    let mut recipe_ids = Vec::new();
+    let num_recipes = recipes.len() as i64;
+
+    for schema in recipes {
+        curr += 1;
+        state
+            .broadcast_progress("Saving recipes", curr, num_recipes, true, user_id)
+            .await;
+
+        let recipe = schema_to_recipe_for_create(&state, schema).await;
+
+        match Recipe::create(&state.mm, user_id, &recipe).await {
+            Ok(recipe_id) => {
+                report
+                    .report_logs
+                    .push(ReportLogForCreate::new_success(recipe.name));
+                recipe_ids.push(recipe_id);
+            }
+            Err(DuplicateEntity) => {
+                warn!("Recipe exists: {}", recipe.name);
+                report.report_logs.push(ReportLogForCreate::new_warning(
+                    recipe.name,
+                    "Recipe exists".into(),
+                ));
+            }
+            Err(err) => {
+                error!("Error saving recipe '{}': {err}", recipe.name);
+                report
+                    .report_logs
+                    .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
+            }
+        }
+    }
+
+    return (report, recipe_ids);
+}
+
+async fn broadcast_import_done_toast() {
+    info!(
+        "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={num_recipes}"
+    );
+
+    let redirect = if num_success == 1 {
+        format!("View /recipes/{}", recipe_ids.first().unwrap_or(&-1))
+    } else {
+        "View /reports?view=latest".to_string()
+    };
+
+    let toast = MessageHtmx::builder(
+        MessageType::Toast,
+        "Operation Successful",
+        format!("Imported {num_success} recipes. Skipped {num_skipped}."),
+    )
+    .action(Some(&redirect))
+    .build();
+
+    if let Ok(json) = serde_json::to_string(&toast) {
+        state.broadcast(user_id, Message::Text(json.into())).await;
+    }
+
+    if let Err(err) = report.insert(&state.mm).await {
+        error!("Error inserting report into the database: {err}");
+    }
 }
 
 /// Handles generating a preview of the recipe based on the input JSON recipe schema.

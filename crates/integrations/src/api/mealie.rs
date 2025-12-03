@@ -7,7 +7,7 @@ use reqwest::{
     header::{AUTHORIZATION, HeaderMap, HeaderValue},
 };
 use serde::{Deserialize, Serialize};
-use tracing::{error, warn};
+use tracing::error;
 use uuid::Uuid;
 
 use schema_org::{
@@ -23,7 +23,7 @@ use support::fs::new_fs_support;
 
 use crate::{
     Error, Result,
-    api::common::{Credentials, RecipeClient},
+    api::common::{Credentials, FailedRecipes, RecipeClient},
 };
 
 #[derive(Clone)]
@@ -372,7 +372,7 @@ pub trait Unauthenticated<C: RecipeClient>: Send + Sync {
 #[async_trait]
 pub trait Authenticated<C: RecipeClient>: Send + Sync {
     /// Fetches recipes from connected host.
-    async fn fetch_recipes(&self) -> Result<Vec<Recipe>>;
+    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)>;
     /// Logs out of the Mealie instance.
     async fn logout(&mut self) -> Result<Mealie<UnauthenticatedState, C>>;
 }
@@ -391,7 +391,7 @@ impl<C: RecipeClient + Send> Unauthenticated<C> for Mealie<UnauthenticatedState,
 
 #[async_trait]
 impl<C: RecipeClient + Send> Authenticated<C> for Mealie<AuthenticatedState, C> {
-    async fn fetch_recipes(&self) -> Result<Vec<Recipe>> {
+    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)> {
         Ok(self.recipe_client.fetch_recipes().await?)
     }
 
@@ -471,17 +471,11 @@ impl RecipeClient for MealieRecipeClient {
         Ok(())
     }
 
-    async fn fetch_recipes(&self) -> Result<Vec<Recipe>> {
+    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)> {
         let recipe_ids = self.fetch_recipe_ids().await?;
         let recipe_details = self.fetch_recipes_helper(recipe_ids).await?;
-
-        for (id, err) in recipe_details.1 {
-            warn!("Mealie API Import - Failed to fetch recipe details for id='{id}': {err}");
-        }
-
-        let mut users = HashMap::new();
-
         let mut recipes = Vec::with_capacity(recipe_details.0.len());
+        let mut users = HashMap::new();
 
         for recipe in recipe_details.0 {
             if !users.contains_key(&recipe.user_id) {
@@ -494,7 +488,7 @@ impl RecipeClient for MealieRecipeClient {
             recipes.push(schema_recipe);
         }
 
-        Ok(recipes)
+        Ok((recipes, recipe_details.1))
     }
 
     async fn logout(&mut self) -> Result<()> {

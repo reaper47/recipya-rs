@@ -1,7 +1,11 @@
 use async_trait::async_trait;
+use uuid::Uuid;
+
 use schema_org::Recipe;
 
-use crate::Result;
+use crate::{Error, Result};
+
+pub type FailedRecipes = Vec<(Uuid, Error)>;
 
 pub struct Credentials {
     pub username: String,
@@ -22,7 +26,7 @@ pub trait RecipeClient: Clone + Send + Sync {
     async fn login(&mut self, credentials: Credentials) -> Result<()>;
 
     /// Fetches recipes from connected host.
-    async fn fetch_recipes(&self) -> Result<Vec<Recipe>>;
+    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)>;
 
     /// Logs out of the connected host.
     async fn logout(&mut self) -> Result<()>;

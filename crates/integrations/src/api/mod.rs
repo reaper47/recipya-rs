@@ -2,7 +2,7 @@ mod common;
 
 pub(crate) mod mealie;
 
-pub use common::Credentials;
+pub use common::{Credentials, FailedRecipes};
 
 use std::str::FromStr;
 
@@ -44,7 +44,11 @@ pub fn all_apis() -> Vec<Api> {
 
 impl Api {
     /// Fetches recipes from the given input source and returns a vector of `schema_org::Recipe` objects.
-    pub async fn fetch_recipes(&self, host: &str, credentials: Credentials) -> Result<Vec<Recipe>> {
+    pub async fn fetch_recipes(
+        &self,
+        host: &str,
+        credentials: Credentials,
+    ) -> Result<(Vec<Recipe>, FailedRecipes)> {
         match self {
             Api::Mealie => {
                 let recipe_client = MealieRecipeClient::new(host);
