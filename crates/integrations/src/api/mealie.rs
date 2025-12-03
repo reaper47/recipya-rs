@@ -1,14 +1,24 @@
 use std::{collections::HashMap, marker::PhantomData, path::PathBuf};
 
+use async_trait::async_trait;
+use futures::StreamExt;
 use reqwest::{
     Client,
     header::{AUTHORIZATION, HeaderMap, HeaderValue},
 };
 use serde::{Deserialize, Serialize};
-use tracing::error;
+use tracing::{error, warn};
 use uuid::Uuid;
 
-use schema_org::{AtType, Recipe, field::FieldEnum22};
+use schema_org::{
+    AggregateRating, AtType, Comment, Duration, DurationOrText, Energy, Mass, NutritionInformation,
+    Recipe,
+    field::{
+        CommentAuthorFieldEnum, FieldEnum22, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
+        RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
+        RecipeRecipeInstructionsFieldEnum, RecipeToolFieldEnum, RecipeYieldFieldEnum,
+    },
+};
 use support::fs::new_fs_support;
 
 use crate::{
@@ -21,7 +31,11 @@ struct Host(String);
 
 impl Host {
     fn new(host: impl Into<String>) -> Self {
-        Self(host.into())
+        let mut host = host.into();
+        if host.ends_with('/') {
+            host.pop();
+        }
+        Self(host)
     }
 
     fn login_url(&self) -> String {
@@ -39,6 +53,10 @@ impl Host {
         )
     }
 
+    fn recipe_url(&self, recipe_id: Uuid) -> String {
+        format!("{}/api/recipes/{recipe_id}", self.0)
+    }
+
     fn recipes_url(&self, page: String) -> String {
         format!("{}/api/recipes?page={page}", self.0)
     }
@@ -50,6 +68,7 @@ impl Host {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(unused)]
 struct MealieRecipes {
     page: u32,
     per_page: u32,
@@ -62,7 +81,7 @@ struct MealieRecipes {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
+#[allow(unused)]
 struct MealieRecipe {
     id: Option<Uuid>,
     user_id: Uuid,
@@ -90,21 +109,19 @@ struct MealieRecipe {
     created_at: Option<String>,
     updated_at: Option<String>,
     last_made: Option<String>,
+    recipe_ingredient: Vec<MealieIngredient>,
+    recipe_instructions: Option<Vec<MealieInstruction>>,
+    nutrition: Option<MealieNutrition>,
+    settings: Option<MealieSettings>,
+    assets: Option<Vec<MealieAsset>>,
+    notes: Option<Vec<MealieNote>>,
+    comments: Option<Vec<MealieComment>>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-struct MealieItem {
-    id: Option<String>,
-    group_id: Option<String>,
-    name: String,
-    slug: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
+#[allow(unused)]
 struct MealieTool {
     id: Option<String>,
     group_id: Option<String>,
@@ -115,7 +132,7 @@ struct MealieTool {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
+#[allow(unused)]
 struct MealieUser {
     id: Uuid,
     username: Option<String>,
@@ -141,14 +158,195 @@ struct MealieUser {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
+#[allow(unused)]
 struct UserToken {
     name: String,
     id: u32,
     created_at: Option<String>,
 }
 
-struct AuthenticatedState;
-struct UnauthenticatedState;
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(unused)]
+struct MealieIngredient {
+    quantity: Option<u32>,
+    unit: Option<MealieIngredientUnit>,
+    food: Option<Vec<MealieIngredientFood>>,
+    note: Option<String>,
+    display: String,
+    title: Option<String>,
+    original_text: Option<String>,
+    reference_id: Uuid,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(unused)]
+struct MealieIngredientUnit {
+    id: Uuid,
+    name: String,
+    plural_name: Option<String>,
+    description: String,
+    fraction: bool,
+    abbreviation: String,
+    plural_abbreviation: Option<String>,
+    use_abbreviation: bool,
+    aliases: Vec<MealieItem>,
+    created_at: Option<String>,
+    updated_at: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(unused)]
+struct MealieIngredientFood {
+    id: Uuid,
+    name: String,
+    plural_name: Option<String>,
+    description: String,
+    label_id: Option<String>,
+    aliases: Vec<MealieItem>,
+    created_at: Option<String>,
+    updated_at: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[allow(unused)]
+struct MealieItem {
+    id: Option<String>,
+    group_id: Option<String>,
+    name: String,
+    slug: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(unused)]
+struct MealieInstruction {
+    id: Option<String>,
+    title: Option<String>,
+    summary: Option<String>,
+    text: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+struct MealieNutrition {
+    calories: Option<String>,
+    carbohydrate_content: Option<String>,
+    cholesterol_content: Option<String>,
+    fat_content: Option<String>,
+    fiber_content: Option<String>,
+    protein_content: Option<String>,
+    saturated_fat_content: Option<String>,
+    sodium_content: Option<String>,
+    sugar_content: Option<String>,
+    trans_fat_content: Option<String>,
+    unsaturated_fat_content: Option<String>,
+}
+
+impl From<MealieNutrition> for NutritionInformation {
+    fn from(n: MealieNutrition) -> Self {
+        Self {
+            calories: n.calories.map(|s| vec![Energy::new(s)]).unwrap_or_default(),
+            carbohydrate_content: n
+                .carbohydrate_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            cholesterol_content: n
+                .cholesterol_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            context: Some("https://schema.org".into()),
+            fat_content: n
+                .fat_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            fiber_content: n
+                .fiber_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            protein_content: n
+                .protein_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            saturated_fat_content: n
+                .saturated_fat_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            serving_size: vec![],
+            sodium_content: n
+                .sodium_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            sugar_content: n
+                .sugar_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            r#type: Some(AtType::NutritionInformation.to_string()),
+            trans_fat_content: n
+                .trans_fat_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+            unsaturated_fat_content: n
+                .unsaturated_fat_content
+                .map(|s| vec![Mass::new(s)])
+                .unwrap_or_default(),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[allow(unused)]
+struct MealieSettings {
+    public: bool,
+    show_nutrition: bool,
+    show_assets: bool,
+    landscape_view: bool,
+    disable_comments: bool,
+    locked: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[allow(unused)]
+struct MealieAsset {
+    name: String,
+    icon: String,
+    file_name: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[allow(unused)]
+struct MealieNote {
+    title: String,
+    text: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[allow(unused)]
+struct MealieComment {
+    recipe_id: Uuid,
+    text: String,
+    id: Uuid,
+    created_at: String,
+    updated_at: String,
+    user_id: Uuid,
+    user: MealieUser,
+}
+
+pub struct AuthenticatedState;
+pub struct UnauthenticatedState;
 
 #[derive(Clone)]
 pub struct Mealie<State, C: RecipeClient> {
@@ -165,7 +363,22 @@ impl<C: RecipeClient> Mealie<UnauthenticatedState, C> {
     }
 }
 
-impl<C: RecipeClient> Unauthenticated<C> for Mealie<UnauthenticatedState, C> {
+#[async_trait]
+pub trait Unauthenticated<C: RecipeClient>: Send + Sync {
+    /// Establishes a connection to the host using the provided credentials. Returns a token upon successful login.
+    async fn login(&mut self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>>;
+}
+
+#[async_trait]
+pub trait Authenticated<C: RecipeClient>: Send + Sync {
+    /// Fetches recipes from connected host.
+    async fn fetch_recipes(&self) -> Result<Vec<Recipe>>;
+    /// Logs out of the Mealie instance.
+    async fn logout(&mut self) -> Result<Mealie<UnauthenticatedState, C>>;
+}
+
+#[async_trait]
+impl<C: RecipeClient + Send> Unauthenticated<C> for Mealie<UnauthenticatedState, C> {
     async fn login(&mut self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>> {
         self.recipe_client.login(credentials).await?;
 
@@ -176,7 +389,8 @@ impl<C: RecipeClient> Unauthenticated<C> for Mealie<UnauthenticatedState, C> {
     }
 }
 
-impl<C: RecipeClient> Authenticated<C> for Mealie<AuthenticatedState, C> {
+#[async_trait]
+impl<C: RecipeClient + Send> Authenticated<C> for Mealie<AuthenticatedState, C> {
     async fn fetch_recipes(&self) -> Result<Vec<Recipe>> {
         Ok(self.recipe_client.fetch_recipes().await?)
     }
@@ -189,18 +403,6 @@ impl<C: RecipeClient> Authenticated<C> for Mealie<AuthenticatedState, C> {
             _state: PhantomData,
         })
     }
-}
-
-trait Unauthenticated<C: RecipeClient>: Send + Sync {
-    /// Establishes a connection to the host using the provided credentials. Returns a token upon successful login.
-    async fn login(&mut self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>>;
-}
-
-trait Authenticated<C: RecipeClient>: Send + Sync {
-    /// Fetches recipes from connected host.
-    async fn fetch_recipes(&self) -> Result<Vec<Recipe>>;
-    /// Logs out of the Mealie instance.
-    async fn logout(&mut self) -> Result<Mealie<UnauthenticatedState, C>>;
 }
 
 #[derive(Serialize)]
@@ -216,6 +418,44 @@ pub struct MealieRecipeClient {
     client: Client,
 }
 
+impl MealieRecipe {
+    fn extract_category_and_keywords(&self) -> (Vec<String>, Vec<RecipeKeywordsFieldEnum>) {
+        let mut categories = self
+            .recipe_category
+            .iter()
+            .flatten()
+            .map(|c| c.name.clone());
+
+        let category = categories.next().map(|c| vec![c]).unwrap_or_default();
+
+        let mut keywords = categories.collect::<Vec<_>>();
+        keywords.extend(self.tags.iter().flatten().map(|tag| tag.name.clone()));
+
+        (
+            category,
+            keywords
+                .into_iter()
+                .map(|keyword| RecipeKeywordsFieldEnum::TextOrURL(keyword))
+                .collect(),
+        )
+    }
+}
+
+impl MealieUser {
+    fn author(&self) -> Option<String> {
+        if let Some(u) = self.full_name.clone() {
+            Some(u)
+        } else if let Some(u) = self.username.clone() {
+            Some(u)
+        } else if let Some(u) = self.email.clone() {
+            Some(u)
+        } else {
+            None
+        }
+    }
+}
+
+#[async_trait]
 impl RecipeClient for MealieRecipeClient {
     async fn login(&mut self, credentials: Credentials) -> Result<()> {
         let token = self.login_helper(credentials).await?;
@@ -232,122 +472,26 @@ impl RecipeClient for MealieRecipeClient {
     }
 
     async fn fetch_recipes(&self) -> Result<Vec<Recipe>> {
-        let mut recipes = Vec::new();
-        let mut next_page = Some("1".to_string());
+        let recipe_ids = self.fetch_recipe_ids().await?;
+        let recipe_details = self.fetch_recipes_helper(recipe_ids).await?;
 
-        while let Some(page) = next_page {
-            let mealie_recipes = self.fetch_recipes_page(page).await?;
+        for (id, err) in recipe_details.1 {
+            warn!("Mealie API Import - Failed to fetch recipe details for id='{id}': {err}");
+        }
 
-            let mut users = HashMap::new();
+        let mut users = HashMap::new();
 
-            for mealie_recipe in mealie_recipes.items {
-                if !users.contains_key(&mealie_recipe.user_id) {
-                    let user = self.fetch_user(mealie_recipe.user_id).await?;
-                    users.insert(mealie_recipe.user_id.clone(), user);
-                }
+        let mut recipes = Vec::with_capacity(recipe_details.0.len());
 
-                let _user = &users[&mealie_recipe.user_id];
-
-                recipes.push(Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
-                    context: Some("https://schema.org".into()),
-                    // nutrition: (),
-                    // cooking_method: (),
-                    // recipe_yield: (),
-                    // recipe_cuisine: (),
-                    // ingredients: (),
-                    // recipe_ingredient: (),
-                    // suitable_for_diet: (),
-                    // cook_time: (),
-                    // recipe_instructions: (),
-                    // recipe_category: (),
-                    // steps: (),
-                    // r#yield: (),
-                    // tool: (),
-                    // step: (),
-                    // prep_time: (),
-                    // estimated_cost: (),
-                    // total_time: (),
-                    // perform_time: (),
-                    // supply: (),
-                    // comment: (),
-                    // is_based_on_url: (),
-                    // translation_of_work: (),
-                    // work_translation: (),
-                    // mentions: (),
-                    // date_created: (),
-                    // word_count: (),
-                    // size: (),
-                    // maintainer: (),
-                    // license: (),
-                    // expires: (),
-                    // comment_count: (),
-                    // time_required: (),
-                    // review: (),
-                    // contributor: (),
-                    // interaction_statistic: (),
-                    // publisher: (),
-                    // credit_text: (),
-                    // headline: (),
-                    // editor: (),
-                    // date_modified: (),
-                    // is_accessible_for_free: (),
-                    // keywords: (),
-                    // provider: (),
-                    // creator: (),
-                    // sd_date_published: (),
-                    // content_reference_time: (),
-                    // archived_at: (),
-                    // discussion_url: (),
-                    // content_rating: (),
-                    // country_of_origin: (),
-                    // text: (),
-                    // award: (),
-                    // is_based_on: (),
-                    // aggregate_rating: (),
-                    // in_language: (),
-                    // date_published: (),
-                    // sd_publisher: (),
-                    // audio: (),
-                    // alternative_headline: (),
-                    // about: (),
-                    // is_part_of: (),
-                    // thumbnail: (),
-                    // thumbnail_url: (),
-                    // copyright_year: (),
-                    // work_example: (),
-                    // citation: (),
-                    // video: (),
-                    // awards: (),
-                    // producer: (),
-                    // schema_version: (),
-                    // author: (),
-                    // translator: (),
-                    // reviews: (),
-                    // disambiguating_description: (),
-                    image: match self
-                        .fetch_recipe_image(mealie_recipe.id, mealie_recipe.image)
-                        .await?
-                    {
-                        Some(s) => vec![FieldEnum22::URL(
-                            s.to_str().map(String::from).unwrap_or_default(),
-                        )],
-                        None => vec![],
-                    },
-                    // same_as: (),
-                    // description: (),
-                    // alternate_name: (),
-                    // url: (),
-                    // subject_of: (),
-                    name: match mealie_recipe.name {
-                        Some(s) => vec![s],
-                        None => vec![mealie_recipe.slug],
-                    },
-                    ..Default::default()
-                });
+        for recipe in recipe_details.0 {
+            if !users.contains_key(&recipe.user_id) {
+                let user = self.fetch_user(recipe.user_id).await?;
+                users.insert(recipe.user_id.clone(), user);
             }
+            let user = &users[&recipe.user_id];
 
-            next_page = mealie_recipes.next;
+            let schema_recipe = self.build_schema_recipe(recipe, user).await?;
+            recipes.push(schema_recipe);
         }
 
         Ok(recipes)
@@ -435,6 +579,19 @@ impl MealieRecipeClient {
         }
     }
 
+    async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>> {
+        let mut recipe_ids = Vec::new();
+        let mut next_page = Some("1".to_string());
+
+        while let Some(page) = next_page {
+            let all_recipes = self.fetch_recipes_page(page).await?;
+            recipe_ids.extend(all_recipes.items.into_iter().filter_map(|recipe| recipe.id));
+            next_page = all_recipes.next;
+        }
+
+        Ok(recipe_ids)
+    }
+
     async fn fetch_recipes_page(&self, page: String) -> Result<MealieRecipes> {
         let res = self.client.get(&self.host.recipes_url(page)).send().await?;
 
@@ -447,6 +604,192 @@ impl MealieRecipeClient {
         }
 
         Ok(res.json().await?)
+    }
+
+    async fn fetch_recipes_helper(
+        &self,
+        ids: Vec<Uuid>,
+    ) -> Result<(Vec<MealieRecipe>, Vec<(Uuid, Error)>)> {
+        let results = futures::stream::iter(ids.into_iter().map(|id| async move {
+            match self.client.get(&self.host.recipe_url(id)).send().await {
+                Ok(res) => match res.json::<MealieRecipe>().await {
+                    Ok(recipe) => Ok((id, recipe)),
+                    Err(err) => Err((id, err)),
+                },
+                Err(err) => Err((id, err)),
+            }
+        }))
+        .buffer_unordered(100)
+        .collect::<Vec<_>>()
+        .await;
+
+        let mut recipes = Vec::new();
+        let mut failures = Vec::new();
+
+        for result in results {
+            match result {
+                Ok((_, recipe)) => recipes.push(recipe),
+                Err((id, err)) => failures.push((
+                    id,
+                    Error::ApiError(format!(
+                        "Failed to fetch recipe '{id}' using the Mealie API: {err}"
+                    )),
+                )),
+            }
+        }
+
+        Ok((recipes, failures))
+    }
+
+    async fn build_schema_recipe(&self, recipe: MealieRecipe, user: &MealieUser) -> Result<Recipe> {
+        let (recipe_category, keywords) = recipe.extract_category_and_keywords();
+
+        let recipe_yield = format!(
+            "{} {}",
+            recipe.recipe_yield_quantity, recipe.recipe_servings
+        );
+
+        let num_comments = recipe.comments.iter().len();
+
+        let mut instructions = recipe
+            .recipe_instructions
+            .map(|instructions| {
+                instructions
+                    .into_iter()
+                    .map(|ins| match ins.summary {
+                        Some(summary) => RecipeRecipeInstructionsFieldEnum::new_section(
+                            &summary,
+                            ins.text.lines().collect(),
+                        ),
+                        None => RecipeRecipeInstructionsFieldEnum::Text(ins.text),
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+
+        instructions.extend(
+            recipe
+                .notes
+                .map(|notes| {
+                    notes
+                        .into_iter()
+                        .map(|note| {
+                            if note.title.is_empty() {
+                                RecipeRecipeInstructionsFieldEnum::Text(note.text)
+                            } else {
+                                RecipeRecipeInstructionsFieldEnum::new_section(
+                                    &note.title,
+                                    note.text.lines().collect(),
+                                )
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default(),
+        );
+
+        Ok(Recipe {
+            r#type: Some(AtType::Recipe.to_string()),
+            context: Some("https://schema.org".into()),
+            nutrition: recipe
+                .nutrition
+                .map(|n| vec![NutritionInformation::from(n)])
+                .unwrap_or_default(),
+            recipe_yield: match recipe_yield.trim() {
+                "" => vec![],
+                s => vec![RecipeYieldFieldEnum::Text(s.to_string())],
+            },
+            recipe_ingredient: recipe
+                .recipe_ingredient
+                .into_iter()
+                .map(|ing| RecipeRecipeIngredientFieldEnum::Text(ing.display))
+                .collect(),
+            cook_time: recipe
+                .cook_time
+                .map(|s| vec![DurationOrText::Text(s)])
+                .unwrap_or_default(),
+            recipe_instructions: instructions,
+            recipe_category,
+            tool: recipe
+                .tools
+                .into_iter()
+                .map(|tool| RecipeToolFieldEnum::Text(tool.name))
+                .collect(),
+            prep_time: recipe
+                .prep_time
+                .map(|s| vec![DurationOrText::Text(s)])
+                .unwrap_or_default(),
+            total_time: recipe
+                .total_time
+                .map(|s| vec![DurationOrText::Text(s)])
+                .unwrap_or_default(),
+            perform_time: recipe
+                .perform_time
+                .map(|s| match iso8601::datetime(&s) {
+                    Ok(d) => vec![Duration {
+                        name: vec![d.to_string()],
+                        ..Default::default()
+                    }],
+                    Err(_) => vec![],
+                })
+                .unwrap_or_default(),
+            comment: recipe
+                .comments
+                .map(|comments| {
+                    comments
+                        .into_iter()
+                        .map(|comment| Comment {
+                            r#type: Some(AtType::Comment.to_string()),
+                            context: Some("https://schema.org".into()),
+                            text: vec![comment.text],
+                            date_created: vec![comment.created_at],
+                            date_modified: vec![comment.updated_at],
+                            author: comment
+                                .user
+                                .author()
+                                .map(|s| vec![CommentAuthorFieldEnum::new_person(&s)])
+                                .unwrap_or_default(),
+                            ..Default::default()
+                        })
+                        .collect()
+                })
+                .unwrap_or_default(),
+            date_created: recipe.created_at.map(|s| vec![s]).unwrap_or_default(),
+            comment_count: if num_comments > 0 {
+                vec![num_comments as i32]
+            } else {
+                vec![]
+            },
+            date_modified: recipe.updated_at.map(|s| vec![s]).unwrap_or_default(),
+            keywords,
+            aggregate_rating: recipe
+                .rating
+                .map(|i| vec![AggregateRating::new(i as f32, 1)])
+                .unwrap_or_default(),
+            author: user
+                .author()
+                .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
+                .unwrap_or_default(),
+            image: match self.fetch_recipe_image(recipe.id, recipe.image).await? {
+                Some(s) => vec![FieldEnum22::URL(
+                    s.to_str().map(String::from).unwrap_or_default(),
+                )],
+                None => vec![],
+            },
+            description: recipe
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            url: recipe
+                .org_url
+                .map(|u| vec![u.to_string()])
+                .unwrap_or_default(),
+            name: match recipe.name {
+                Some(s) => vec![s],
+                None => vec![recipe.slug],
+            },
+            ..Default::default()
+        })
     }
 
     async fn fetch_user(&self, user_id: Uuid) -> Result<MealieUser> {
@@ -462,50 +805,4 @@ impl MealieRecipeClient {
 
         Ok(res.json().await?)
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
-    #[derive(Clone)]
-    struct MockRecipeClient;
-
-    impl MockRecipeClient {
-        pub fn new() -> Self {
-            Self {}
-        }
-    }
-
-    impl RecipeClient for MockRecipeClient {
-        async fn login(&mut self, _: Credentials) -> crate::Result<()> {
-            Ok(())
-        }
-
-        async fn fetch_recipes(&self) -> crate::Result<Vec<schema_org::Recipe>> {
-            todo!()
-        }
-
-        async fn logout(&mut self) -> crate::Result<()> {
-            Ok(())
-        }
-    }
-
-    // #[tokio::test]
-    // async fn test_new() -> Result<()> {
-    //     let mut mealie = Mealie::new(MockRecipeClient::new());
-    //     let mut connected_mealie = mealie
-    //         .login(Credentials {
-    //             username: "demo-user".into(),
-    //             password: "admin".into(),
-    //         })
-    //         .await?;
-
-    //     let recipes = connected_mealie.fetch_recipes().await?;
-
-    //     connected_mealie.logout().await?;
-    //     Ok(())
-    // }
 }

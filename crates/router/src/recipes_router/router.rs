@@ -42,9 +42,10 @@ pub fn recipes_routes(state: AppState) -> Router<AppState> {
         )
         .layer(DefaultBodyLimit::max(FIFTY_MB))
         .route("/add", get(add_recipes_handler))
+        .route("/add/import/api", post(add_recipe_import_api_handler))
         .route(
-            "/add/import",
-            post(add_recipe_import_handler).layer(DefaultBodyLimit::max(FIFTY_MB)),
+            "/add/import/app",
+            post(add_recipe_import_app_handler).layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route(
             "/add/import/preview",

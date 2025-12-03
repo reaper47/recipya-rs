@@ -1,3 +1,4 @@
+use integrations::api::all_apis;
 use integrations::{FileFormat, all_apps};
 use maud::{Markup, PreEscaped, html};
 use models::data::Data;
@@ -230,28 +231,23 @@ fn import_recipes_dialog(recipe_schema: String) -> Markup {
                     }
                     div class="tab-content bg-base-100 border-base-300 p-3" {
                         form class="space-y-4 w-fit max-w-md" enctype="multipart/form-data"
-                                hx-post="/recipes/add/import"
+                                hx-post="/recipes/add/import/app"
                                 hx-indicator="#fullscreen-loader"
                                 hx-swap="none"
                                 hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()" {
                             div .w-fit {
-                                div .pb-2 {
-                                    label for="app-select" class="floating-label text-sm font-semibold mb-1" {
-                                        "Choose an application"
-                                    }
+                                fieldset .fieldset {
+                                    legend class="fieldset-legend" { "Choose an application" }
                                     select #app-select name="app" .select {
+                                        option disabled selected { "Pick an application" }
                                         @for app in all_apps() {
                                             option value=(app.to_string()) { (format!("{app:?}")) }
                                         }
                                     }
                                 }
-                                div class="grid mb-4" {
-                                    label for="import-dialog-file" class="floating-label text-sm font-semibold mb-1" {
-                                        "Select a file"
-                                    }
-                                    input #import-dialog-file type="file" name="file" required
-                                          accept=(FileFormat::extensions().join(","))
-                                          class="file-input";
+                                fieldset .fieldset {
+                                    legend class="fieldset-legend" { "Select a file" }
+                                    input #import-dialog-file type="file" name="file" required class="file-input" accept=(FileFormat::extensions().join(","));
                                 }
                             }
                             button type="submit" class="btn btn-block btn-sm btn-primary" {
@@ -260,8 +256,47 @@ fn import_recipes_dialog(recipe_schema: String) -> Markup {
                         }
                     }
 
-                    // Tab #2: Paste JSON
-                    label class="tab" {
+                    // Tab #2: Import from an application using the app's API
+                    label .tab {
+                        input type="radio" name="import-recipe-tab" _="on click remove .max-w-none from #import-recipes-dialog-container";
+                        "API"
+                    }
+                    div class="tab-content bg-base-100 border-base-300 p-3" {
+                        form class="space-y-4 w-fit max-w-md" enctype="multipart/form-data"
+                                hx-post="/recipes/add/import/api"
+                                hx-indicator="#fullscreen-loader"
+                                hx-swap="none"
+                                hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()" {
+                            div .w-fit {
+                                fieldset .fieldset {
+                                    legend class="fieldset-legend" { "Choose an API" }
+                                    select #api-select name="api" .select {
+                                        option disabled selected { "Pick an API" }
+                                        @for api in all_apis() {
+                                            option value=(api.to_string()) { (format!("{api:?}")) }
+                                        }
+                                    }
+                                }
+                                fieldset .fieldset {
+                                    legend class="fieldset-legend" { "Base URL" }
+                                    input type="url" name="url" required class="input" placeholder="http://localhost:9925";
+                                }
+                                fieldset .fieldset {
+                                    legend class="fieldset-legend" { "Username" }
+                                    input type="text" name="username" required class="input" placeholder="Enter your username";
+                                }
+                                fieldset .fieldset {
+                                    legend class="fieldset-legend" { "Password" }
+                                    input type="password" name="password" required class="input" placeholder="Enter your password";
+                                }
+                            }
+                            button type="submit" class="btn btn-block btn-sm btn-primary" {
+                                "Submit"
+                            }
+                        }
+                    }
+
+                    label .tab {
                         input type="radio" name="import-recipe-tab" _="on click add .max-w-none to #import-recipes-dialog-container then call initJSONHighlighter('import-recipes-json')";
                         "JSON"
                     }

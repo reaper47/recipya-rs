@@ -2010,9 +2010,11 @@ dependencies = [
 name = "integrations"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "base64",
  "cooklang",
  "derive_more",
+ "futures",
  "humantime",
  "iso8601",
  "libpaprika",

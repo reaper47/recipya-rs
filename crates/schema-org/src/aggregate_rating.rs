@@ -80,6 +80,19 @@ pub struct AggregateRating {
     pub name: Vec<String>,
 }
 
+impl AggregateRating {
+    /// Create a new `AggregateRating` with the minimum fields populated for a single rating.
+    pub fn new(rating_value: f32, rating_count: i32) -> Self {
+        Self {
+            r#type: set_type(),
+            context: Some("https://schema.org".to_string()),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(rating_value)],
+            rating_count: vec![rating_count],
+            ..Default::default()
+        }
+    }
+}
+
 fn set_type() -> Option<String> {
     Some(AtType::AggregateRating.to_string())
 }

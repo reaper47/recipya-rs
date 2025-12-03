@@ -13,6 +13,7 @@ use axum_htmx::HX_REDIRECT;
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
 use futures_util::stream::{self, StreamExt};
+use integrations::api::Credentials;
 use itertools::izip;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -51,8 +52,8 @@ use crate::handlers::message::{
 };
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_router::params::{
-    FavouriteParams, ImportFromAppForm, OrderParams, PreviewForm, RecipeCategoryForm,
-    RecipeScrapeForm, ShareRecipeForm, TimelineEventForm,
+    FavouriteParams, ImportFromApiForm, ImportFromAppForm, OrderParams, PreviewForm,
+    RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm, TimelineEventForm,
 };
 use crate::{Error, Result};
 
@@ -784,8 +785,8 @@ pub async fn add_recipes_handler(
     .into_response())
 }
 
-/// Handles the import recipes endpoint.
-pub async fn add_recipe_import_handler(
+/// Handles the importing recipes from an application endpoint.
+pub async fn add_recipe_import_app_handler(
     ctx: CtxW,
     State(state): State<AppState>,
     form: ImportFromAppForm,
@@ -917,6 +918,69 @@ async fn parse_recipes(
 
             return Err(err);
         }
+    };
+
+    if recipes.is_empty() {
+        warn!("No recipes found in file");
+        return Err(Error::NoRecipe);
+    }
+
+    Ok(recipes)
+}
+
+/// Handles the importing recipes from an API endpoint.
+pub async fn add_recipe_import_api_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<ImportFromApiForm>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+    fetch_recipes_from_api(state, form, user_id);
+
+    (StatusCode::ACCEPTED, "").into_response()
+}
+
+fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64) {
+    tokio::spawn(async move {
+        let state = state.clone();
+        let start_time = Instant::now();
+
+        let recipes = match process_recipes_from_api(&state, form, user_id).await {
+            Ok(r) => r,
+            Err(Error::NoRecipe) => {
+                state.hide_broadcast(user_id).await;
+                let toast = MessageHtmx::warning("No recipes found.");
+                if let Ok(json) = serde_json::to_string(&toast) {
+                    state.broadcast(user_id, Message::Text(json.into())).await;
+                }
+                return;
+            }
+            Err(_) => {
+                state.hide_broadcast(user_id).await;
+                broadcast_error(
+                    &state,
+                    user_id,
+                    "An error occurred while parsing the recipes. Please check the logs.",
+                )
+                .await;
+                return;
+            }
+        };
+    });
+}
+
+async fn process_recipes_from_api(
+    state: &AppState,
+    form: ImportFromApiForm,
+    user_id: i64,
+) -> Result<Vec<schema_org::Recipe>> {
+    let recipes = match form
+        .api
+        .fetch_recipes(&form.url, Credentials::new(form.username, form.password))
+        .await
+    {
+        Ok(r) => r,
+        Err(_) => todo!(),
     };
 
     if recipes.is_empty() {

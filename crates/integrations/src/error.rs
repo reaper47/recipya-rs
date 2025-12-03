@@ -28,6 +28,7 @@ pub enum Error {
     MissingRequiredField(RequiredField),
     NomStr(ShortNomError),
     Parse(String),
+    UnsupportedApi,
     UnsupportedApp,
     UnsupportedFileFormat,
 
