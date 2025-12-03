@@ -799,6 +799,7 @@ pub async fn add_recipe_import_app_handler(
 
 fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
     tokio::spawn(async move {
+        let app = form.app.to_string();
         let state = state.clone();
         let start_time = Instant::now();
 
@@ -825,36 +826,8 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
 
         let (mut report, recipe_ids) = push_recipes_to_db(&state, recipes, user_id).await;
         report.exec_time_ms = start_time.elapsed().as_millis() as i64;
-        state.hide_broadcast(user_id).await;
 
-        let num_success = recipe_ids.len() as i64;
-        let num_skipped = num_recipes - num_success;
-
-        info!(
-            "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={num_recipes}"
-        );
-
-        let redirect = if num_success == 1 {
-            format!("View /recipes/{}", recipe_ids.first().unwrap_or(&-1))
-        } else {
-            "View /reports?view=latest".to_string()
-        };
-
-        let toast = MessageHtmx::builder(
-            MessageType::Toast,
-            "Operation Successful",
-            format!("Imported {num_success} recipes. Skipped {num_skipped}."),
-        )
-        .action(Some(&redirect))
-        .build();
-
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
-
-        if let Err(err) = report.insert(&state.mm).await {
-            error!("Error inserting report into the database: {err}");
-        }
+        broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
     });
 }
 
@@ -906,27 +879,36 @@ pub async fn add_recipe_import_api_handler(
 
 fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64) {
     tokio::spawn(async move {
+        let api = form.api.to_string();
         let state = state.clone();
         let start_time = Instant::now();
 
-        let (success, failures) = match process_recipes_from_api(&state, form, user_id).await {
-            Ok(r) => r,
-            Err(Error::NoRecipe) => {
-                state.hide_broadcast(user_id).await;
-                broadcast_warning(&state, user_id, "No recipes found.").await;
-                return;
-            }
-            Err(_) => {
-                state.hide_broadcast(user_id).await;
-                broadcast_error(
-                    &state,
-                    user_id,
-                    "An error occurred while parsing the recipes. Please check the logs.",
-                )
-                .await;
-                return;
-            }
-        };
+        let (success_reipes, failure_recipes) =
+            match process_recipes_from_api(&state, form, user_id).await {
+                Ok(r) => r,
+                Err(Error::NoRecipe) => {
+                    state.hide_broadcast(user_id).await;
+                    broadcast_warning(&state, user_id, "No recipes found.").await;
+                    return;
+                }
+                Err(_) => {
+                    state.hide_broadcast(user_id).await;
+                    broadcast_error(
+                        &state,
+                        user_id,
+                        "An error occurred while parsing the recipes. Please check the logs.",
+                    )
+                    .await;
+                    return;
+                }
+            };
+
+        let num_recipes = (success_reipes.len() + failure_recipes.len()) as i64;
+
+        let (mut report, recipe_ids) = push_recipes_to_db(&state, success_reipes, user_id).await;
+        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
+
+        broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, api, user_id).await;
     });
 }
 
@@ -947,7 +929,10 @@ async fn process_recipes_from_api(
         .await
     {
         Ok(r) => r,
-        Err(_) => todo!(),
+        Err(err) => {
+            state.hide_broadcast(user_id).await;
+            return Err(Error::Integration(err));
+        }
     };
 
     if recipes.0.is_empty() && recipes.1.is_empty() {
@@ -1002,9 +987,21 @@ async fn push_recipes_to_db(
     return (report, recipe_ids);
 }
 
-async fn broadcast_import_done_toast() {
+async fn broadcast_import_done_toast(
+    state: &AppState,
+    recipe_ids: Vec<i64>,
+    num_recipes: i64,
+    report: ReportForCreate,
+    import_source: String,
+    user_id: i64,
+) {
+    state.hide_broadcast(user_id).await;
+
+    let num_success = recipe_ids.len() as i64;
+    let num_skipped = num_recipes - num_success;
+
     info!(
-        "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={num_recipes}"
+        "Imported recipes ({import_source}): user_id={user_id}, success={num_success}, skipped={num_skipped}, total={num_recipes}"
     );
 
     let redirect = if num_success == 1 {

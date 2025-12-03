@@ -7,7 +7,7 @@ use reqwest::{
     header::{AUTHORIZATION, HeaderMap, HeaderValue},
 };
 use serde::{Deserialize, Serialize};
-use tracing::error;
+use tracing::{error, info};
 use uuid::Uuid;
 
 use schema_org::{
@@ -345,6 +345,11 @@ struct MealieComment {
     user: MealieUser,
 }
 
+#[derive(Deserialize)]
+struct TokenResponse {
+    access_token: String,
+}
+
 pub struct AuthenticatedState;
 pub struct UnauthenticatedState;
 
@@ -366,7 +371,7 @@ impl<C: RecipeClient> Mealie<UnauthenticatedState, C> {
 #[async_trait]
 pub trait Unauthenticated<C: RecipeClient>: Send + Sync {
     /// Establishes a connection to the host using the provided credentials. Returns a token upon successful login.
-    async fn login(&mut self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>>;
+    async fn login(self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>>;
 }
 
 #[async_trait]
@@ -374,16 +379,16 @@ pub trait Authenticated<C: RecipeClient>: Send + Sync {
     /// Fetches recipes from connected host.
     async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)>;
     /// Logs out of the Mealie instance.
-    async fn logout(&mut self) -> Result<Mealie<UnauthenticatedState, C>>;
+    async fn logout(self) -> Result<Mealie<UnauthenticatedState, C>>;
 }
 
 #[async_trait]
 impl<C: RecipeClient + Send> Unauthenticated<C> for Mealie<UnauthenticatedState, C> {
-    async fn login(&mut self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>> {
-        self.recipe_client.login(credentials).await?;
+    async fn login(mut self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>> {
+        let client = self.recipe_client.login(credentials).await?;
 
         Ok(Mealie {
-            recipe_client: self.recipe_client.clone(),
+            recipe_client: client,
             _state: PhantomData,
         })
     }
@@ -395,11 +400,9 @@ impl<C: RecipeClient + Send> Authenticated<C> for Mealie<AuthenticatedState, C> 
         Ok(self.recipe_client.fetch_recipes().await?)
     }
 
-    async fn logout(&mut self) -> Result<Mealie<UnauthenticatedState, C>> {
-        self.recipe_client.logout().await?;
-
+    async fn logout(self) -> Result<Mealie<UnauthenticatedState, C>> {
         Ok(Mealie {
-            recipe_client: self.recipe_client.clone(),
+            recipe_client: self.recipe_client.logout().await?,
             _state: PhantomData,
         })
     }
@@ -457,7 +460,8 @@ impl MealieUser {
 
 #[async_trait]
 impl RecipeClient for MealieRecipeClient {
-    async fn login(&mut self, credentials: Credentials) -> Result<()> {
+    async fn login(self, credentials: Credentials) -> Result<Self> {
+        let host = self.host.clone();
         let token = self.login_helper(credentials).await?;
 
         let mut headers = HeaderMap::new();
@@ -467,8 +471,10 @@ impl RecipeClient for MealieRecipeClient {
                 .map_err(|err| Error::ApiError(format!("Invalid token: {err}")))?,
         );
 
-        self.client = Client::builder().default_headers(headers).build()?;
-        Ok(())
+        Ok(Self {
+            host,
+            client: Client::builder().default_headers(headers).build()?,
+        })
     }
 
     async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)> {
@@ -491,7 +497,9 @@ impl RecipeClient for MealieRecipeClient {
         Ok((recipes, recipe_details.1))
     }
 
-    async fn logout(&mut self) -> Result<()> {
+    async fn logout(self) -> Result<Self> {
+        info!("Mealie API: Logging out");
+        let host = self.host.clone();
         let res = self.client.post(&self.host.logout_url()).send().await?;
 
         if res.status().is_client_error() {
@@ -502,8 +510,10 @@ impl RecipeClient for MealieRecipeClient {
             )));
         }
 
-        self.client = reqwest::Client::new();
-        Ok(())
+        Ok(Self {
+            host,
+            client: reqwest::Client::new(),
+        })
     }
 }
 
@@ -536,13 +546,13 @@ impl MealieRecipeClient {
             )));
         }
 
-        let token: String = res.text().await.map_err(|err| {
+        let token: TokenResponse = res.json().await.map_err(|err| {
             let base = "Failed to parse the token returned from the Mealie API response";
             error!("{base}: {err}");
             Error::ApiError(format!("{base}."))
         })?;
 
-        Ok(token)
+        Ok(token.access_token)
     }
 
     async fn fetch_recipe_image(
@@ -590,7 +600,7 @@ impl MealieRecipeClient {
         let res = self.client.get(&self.host.recipes_url(page)).send().await?;
 
         if res.status().is_client_error() {
-            let base = "Failed to fetch recipes using the Mealie API";
+            let base = "Failed to fetch all recipes using the Mealie API";
             error!("{base}: {}", res.text().await?);
             return Err(Error::ApiError(format!(
                 "{base} because of a validation error (422)."

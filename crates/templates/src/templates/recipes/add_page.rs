@@ -262,7 +262,7 @@ fn import_recipes_dialog(recipe_schema: String) -> Markup {
                         "API"
                     }
                     div class="tab-content bg-base-100 border-base-300 p-3" {
-                        form class="space-y-4 w-fit max-w-md" enctype="multipart/form-data"
+                        form class="space-y-4 w-fit max-w-md"
                                 hx-post="/recipes/add/import/api"
                                 hx-indicator="#fullscreen-loader"
                                 hx-swap="none"
@@ -282,7 +282,7 @@ fn import_recipes_dialog(recipe_schema: String) -> Markup {
                                     input type="url" name="url" required class="input" placeholder="http://localhost:9925";
                                 }
                                 fieldset .fieldset {
-                                    legend class="fieldset-legend" { "Username" }
+                                    legend class="fieldset-legend" { "Username or email" }
                                     input type="text" name="username" required class="input" placeholder="Enter your username";
                                 }
                                 fieldset .fieldset {
