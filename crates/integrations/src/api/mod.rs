@@ -51,8 +51,9 @@ impl Api {
     ) -> Result<(Vec<Recipe>, FailedRecipes)> {
         match self {
             Api::Mealie => {
-                let recipe_client = MealieRecipeClient::new(host);
-                let mealie = Mealie::new(recipe_client).login(credentials).await?;
+                let mealie = Mealie::new(MealieRecipeClient::new(host))
+                    .login(credentials)
+                    .await?;
                 let recipes = mealie.fetch_recipes().await?;
                 mealie.logout().await?;
                 Ok(recipes)

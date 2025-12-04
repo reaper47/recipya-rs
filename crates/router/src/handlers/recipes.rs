@@ -891,7 +891,8 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
                     broadcast_warning(&state, user_id, "No recipes found.").await;
                     return;
                 }
-                Err(_) => {
+                Err(err) => {
+                    error!("Fetching recipes using the Mealie API failed: {err}");
                     state.hide_broadcast(user_id).await;
                     broadcast_error(
                         &state,

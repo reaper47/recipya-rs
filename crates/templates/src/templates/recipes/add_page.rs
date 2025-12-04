@@ -270,8 +270,8 @@ fn import_recipes_dialog(recipe_schema: String) -> Markup {
                             div .w-fit {
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Choose an API" }
-                                    select #api-select name="api" .select {
-                                        option disabled selected { "Pick an API" }
+                                    select #api-select name="api" .select required {
+                                        option value="" disabled selected { "Pick an API" }
                                         @for api in all_apis() {
                                             option value=(api.to_string()) { (format!("{api:?}")) }
                                         }

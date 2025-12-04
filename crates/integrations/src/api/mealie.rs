@@ -7,6 +7,7 @@ use reqwest::{
     header::{AUTHORIZATION, HeaderMap, HeaderValue},
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Number;
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -67,7 +68,6 @@ impl Host {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 #[allow(unused)]
 struct MealieRecipes {
     page: u32,
@@ -90,8 +90,8 @@ struct MealieRecipe {
     name: Option<String>,
     slug: String,
     image: Option<String>,
-    recipe_servings: u32,
-    recipe_yield_quantity: u32,
+    recipe_servings: Number,
+    recipe_yield_quantity: Number,
     recipe_yield: Option<String>,
     total_time: Option<String>,
     prep_time: Option<String>,
@@ -101,7 +101,7 @@ struct MealieRecipe {
     recipe_category: Option<Vec<MealieItem>>,
     tags: Option<Vec<MealieItem>>,
     tools: Vec<MealieTool>,
-    rating: Option<u8>,
+    rating: Option<Number>,
     #[serde(rename = "orgURL")]
     org_url: Option<String>,
     date_added: Option<String>,
@@ -109,6 +109,7 @@ struct MealieRecipe {
     created_at: Option<String>,
     updated_at: Option<String>,
     last_made: Option<String>,
+    #[serde(default)]
     recipe_ingredient: Vec<MealieIngredient>,
     recipe_instructions: Option<Vec<MealieInstruction>>,
     nutrition: Option<MealieNutrition>,
@@ -127,7 +128,7 @@ struct MealieTool {
     group_id: Option<String>,
     name: String,
     slug: String,
-    households_with_tools: Vec<String>,
+    households_with_tool: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -169,7 +170,7 @@ struct UserToken {
 #[serde(rename_all = "camelCase")]
 #[allow(unused)]
 struct MealieIngredient {
-    quantity: Option<u32>,
+    quantity: Option<Number>,
     unit: Option<MealieIngredientUnit>,
     food: Option<Vec<MealieIngredientFood>>,
     note: Option<String>,
@@ -461,6 +462,8 @@ impl MealieUser {
 #[async_trait]
 impl RecipeClient for MealieRecipeClient {
     async fn login(self, credentials: Credentials) -> Result<Self> {
+        info!("Mealie API: Authenticating");
+
         let host = self.host.clone();
         let token = self.login_helper(credentials).await?;
 
@@ -478,6 +481,8 @@ impl RecipeClient for MealieRecipeClient {
     }
 
     async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)> {
+        info!("Mealie API: Fetching recipes");
+
         let recipe_ids = self.fetch_recipe_ids().await?;
         let recipe_details = self.fetch_recipes_helper(recipe_ids).await?;
         let mut recipes = Vec::with_capacity(recipe_details.0.len());
@@ -499,6 +504,7 @@ impl RecipeClient for MealieRecipeClient {
 
     async fn logout(self) -> Result<Self> {
         info!("Mealie API: Logging out");
+
         let host = self.host.clone();
         let res = self.client.post(&self.host.logout_url()).send().await?;
 
@@ -623,7 +629,7 @@ impl MealieRecipeClient {
                 Err(err) => Err((id, err)),
             }
         }))
-        .buffer_unordered(100)
+        .buffer_unordered(10)
         .collect::<Vec<_>>()
         .await;
 
@@ -768,7 +774,11 @@ impl MealieRecipeClient {
             keywords,
             aggregate_rating: recipe
                 .rating
-                .map(|i| vec![AggregateRating::new(i as f32, 1)])
+                .map(|n| {
+                    n.as_f64()
+                        .map(|n| vec![AggregateRating::new(n as f32, 1)])
+                        .unwrap_or_default()
+                })
                 .unwrap_or_default(),
             author: user
                 .author()

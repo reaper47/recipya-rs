@@ -58,8 +58,16 @@ impl FromStr for Mass {
 
                         let frac_parts: Vec<&str> =
                             parts.last().unwrap_or(&"").split('/').collect();
-                        let numerator: f64 = frac_parts[0].parse()?;
-                        let denominator: f64 = frac_parts[1].parse()?;
+
+                        let numerator: f64 = frac_parts
+                            .first()
+                            .map(|n| n.parse::<f64>().ok().unwrap_or_default())
+                            .unwrap_or_default();
+
+                        let denominator: f64 = frac_parts
+                            .get(1)
+                            .map(|n| n.parse::<f64>().ok().unwrap_or_default())
+                            .unwrap_or_default();
 
                         Ok::<f64, std::num::ParseFloatError>(base + numerator / denominator)
                     })
