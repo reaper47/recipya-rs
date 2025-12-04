@@ -2410,7 +2410,6 @@ dependencies = [
  "measurements",
  "regex",
  "strum 0.27.2",
- "tracing",
 ]
 
 [[package]]
