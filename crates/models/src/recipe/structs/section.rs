@@ -237,6 +237,22 @@ impl From<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                             PropertyValueValueFieldEnum::StructuredValue(v) => {
                                 v.name.first().cloned().unwrap_or_default()
                             }
+                            PropertyValueValueFieldEnum::QuantitativeValue(q) => q
+                                .value
+                                .first()
+                                .map(|v| match v {
+                                    schema_org::field::FieldEnum64::BooleanEnumOrText(s) => {
+                                        s.clone()
+                                    }
+                                    schema_org::field::FieldEnum64::Number(n) => n.to_string(),
+                                    schema_org::field::FieldEnum64::StructuredValue(v) => {
+                                        v.name.first().cloned().unwrap_or_default()
+                                    }
+                                    schema_org::field::FieldEnum64::QuantitativeValue(_) => {
+                                        String::new()
+                                    }
+                                })
+                                .unwrap_or_default(),
                         })
                         .unwrap_or_default();
 
@@ -249,12 +265,21 @@ impl From<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                             .map(|s| s.to_string())
                             .unwrap_or_default()
                             .to_string();
-                        let text = prop
-                            .unit_text
-                            .first()
-                            .map(|s| s.to_string())
-                            .unwrap_or_default()
-                            .to_string();
+
+                        let text = if let Some(s) = prop.value.first().map(|v| match v {
+                            PropertyValueValueFieldEnum::QuantitativeValue(q) => {
+                                q.unit_text.first().cloned().unwrap_or_default()
+                            }
+                            _ => String::new(),
+                        }) {
+                            s
+                        } else {
+                            prop.unit_text
+                                .first()
+                                .map(|s| s.to_string())
+                                .unwrap_or_default()
+                                .to_string()
+                        };
 
                         if code.is_empty() { text } else { code }
                     };

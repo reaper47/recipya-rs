@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::AtType;
 use crate::field::{
-    QuantitativeValueDescriptionFieldEnum, QuantitativeValueValueFieldEnum,
+    FieldEnum64, QuantitativeValueDescriptionFieldEnum, QuantitativeValueValueFieldEnum,
     QuantitativeValueValueReferenceFieldEnum,
 };
 use crate::helpers::one_or_many;
@@ -71,5 +71,22 @@ impl QuantitativeValue {
             value: vec![QuantitativeValueValueFieldEnum::Number(value)],
             ..Default::default()
         }
+    }
+
+    /// Gets the numerical value.
+    pub fn to_number(&self) -> i16 {
+        self.value
+            .first()
+            .map(|v| match v {
+                FieldEnum64::BooleanEnumOrText(s) => s.parse().ok().unwrap_or_default(),
+                FieldEnum64::Number(n) => *n as i16,
+                FieldEnum64::StructuredValue(v) => v
+                    .name
+                    .first()
+                    .map(|v| v.parse::<i16>().unwrap_or_default())
+                    .unwrap_or_default(),
+                FieldEnum64::QuantitativeValue(_) => 0,
+            })
+            .unwrap_or_default()
     }
 }

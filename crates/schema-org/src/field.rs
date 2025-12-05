@@ -826,6 +826,7 @@ impl FieldEnum20 {
                     .first()
                     .map(|v| v.parse::<i16>().unwrap_or_default())
                     .unwrap_or_default(),
+                QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
             }),
             FieldEnum20::Text(s) => s
                 .split_whitespace()
@@ -1416,6 +1417,7 @@ impl FieldEnum60 {
                         t.parse().ok().unwrap_or_default()
                     }
                     QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
+                    QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
                     QuantitativeValueValueFieldEnum::StructuredValue(v) => v
                         .name
                         .first()
@@ -1467,7 +1469,7 @@ pub type QualitativeValueValueReferenceFieldEnum = FieldEnum63;
 ///<https://schema.org/valueReference>
 pub type PropertyValueValueReferenceFieldEnum = FieldEnum63;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum64 {
@@ -1478,12 +1480,43 @@ pub enum FieldEnum64 {
     Number(f32),
     ///<https://schema.org/StructuredValue>
     StructuredValue(Box<StructuredValue>),
+    ///<https://schema.org/QuantitativeValue>
+    QuantitativeValue(Box<QuantitativeValue>),
 }
 impl Default for FieldEnum64 {
     fn default() -> Self {
         Self::Number(Default::default())
     }
 }
+
+impl<'de> Deserialize<'de> for FieldEnum64 {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?;
+
+        match &value {
+            Value::String(s) => Ok(FieldEnum64::BooleanEnumOrText(s.clone())),
+            Value::Number(n) => Ok(FieldEnum64::Number(n.as_f64().unwrap_or_default() as f32)),
+            Value::Object(map) => match map.get("@type").and_then(|v| v.as_str()) {
+                Some("StructuredValue") => serde_json::from_value(value)
+                    .map(FieldEnum64::StructuredValue)
+                    .map_err(serde::de::Error::custom),
+                Some("QuantitativeValue") => serde_json::from_value(value)
+                    .map(FieldEnum64::QuantitativeValue)
+                    .map_err(serde::de::Error::custom),
+                _ => Err(serde::de::Error::custom(
+                    "Expected StructuredValue or QuantitativeValue object for FieldEnum64",
+                )),
+            },
+            _ => Err(serde::de::Error::custom(
+                "Expected string or object for FieldEnum64",
+            )),
+        }
+    }
+}
+
 ///<https://schema.org/value>
 pub type QuantitativeValueValueFieldEnum = FieldEnum64;
 ///<https://schema.org/value>
@@ -1749,30 +1782,21 @@ impl<'de> Deserialize<'de> for FieldEnum149 {
 
         match &value {
             Value::String(s) => Ok(FieldEnum149::Text(s.clone())),
-            Value::Object(map) => {
-                match map.get("@type").and_then(|v| v.as_str()) {
-                    Some("PropertyValue") => {
-                        serde_json::from_value(value)
-                            .map(FieldEnum149::PropertyValue)
-                            .map_err(serde::de::Error::custom)
-                    }
-                    Some("ItemList") => {
-                        serde_json::from_value(value)
-                            .map(FieldEnum149::ItemList)
-                            .map_err(serde::de::Error::custom)
-                    }
-                    _ => {
-                        serde_json::from_value::<PropertyValue>(value.clone())
-                            .map(FieldEnum149::PropertyValue)
-                            .or_else(|_| {
-                                serde_json::from_value(value)
-                                    .map(FieldEnum149::ItemList)
-                            })
-                            .map_err(serde::de::Error::custom)
-                    }
-                }
-            }
-            _ => Err(serde::de::Error::custom("Expected string or object for FieldEnum149")),
+            Value::Object(map) => match map.get("@type").and_then(|v| v.as_str()) {
+                Some("PropertyValue") => serde_json::from_value(value)
+                    .map(FieldEnum149::PropertyValue)
+                    .map_err(serde::de::Error::custom),
+                Some("ItemList") => serde_json::from_value(value)
+                    .map(FieldEnum149::ItemList)
+                    .map_err(serde::de::Error::custom),
+                _ => serde_json::from_value::<PropertyValue>(value.clone())
+                    .map(FieldEnum149::PropertyValue)
+                    .or_else(|_| serde_json::from_value(value).map(FieldEnum149::ItemList))
+                    .map_err(serde::de::Error::custom),
+            },
+            _ => Err(serde::de::Error::custom(
+                "Expected string or object for FieldEnum149",
+            )),
         }
     }
 }
