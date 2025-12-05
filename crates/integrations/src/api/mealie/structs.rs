@@ -340,7 +340,7 @@ impl MealieRecipeComment {
     pub fn author(&self) -> Option<String> {
         if let Some(u) = self.full_name.clone() {
             Some(u)
-        } else { self.username.clone().map(|u| u) }
+        } else { self.username.clone() }
     }
 }
 
