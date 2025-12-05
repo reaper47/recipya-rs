@@ -150,7 +150,7 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
                         ));
                     }
                     Instruction::Line(line) => {
-                        let line = line.trim().split_whitespace().collect::<Vec<_>>().join(" ");
+                        let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
 
                         let line = match line.trim().find('.') {
                             Some(i) if i < 3 => line[i + 1..].trim().to_string(),

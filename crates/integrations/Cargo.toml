@@ -38,6 +38,7 @@ url.workspace = true
 uuid.workspace = true
 winnow = "0.7.13"
 zip = "6.0.0"
+tokio.workspace = true
 
 [dev-dependencies]
 pretty_assertions.workspace = true

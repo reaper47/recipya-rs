@@ -1,6 +1,6 @@
 mod common;
 
-pub(crate) mod mealie;
+pub mod mealie;
 
 pub use common::{Credentials, FailedRecipes};
 

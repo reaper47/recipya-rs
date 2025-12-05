@@ -1,5 +1,5 @@
 [env]
-RUST_LOG = "debug,tokio_cron_scheduler=off"
+RUST_LOG = "debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn"
 
 RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432"
 RECIPYA_BASE_URL = "http://localhost:8078"

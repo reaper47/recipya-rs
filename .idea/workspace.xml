@@ -60,24 +60,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.cargo/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/.cargo/config.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/integrations/src/api/mealie.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/api/mealie.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/api/mealie.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/integrations/src/api/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/api/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/length/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/length/units.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/mass/units.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/unitless/units.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/units.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/math/src/cooking/units/volume/units.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/cooklang.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/helpers.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/rezkonv.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/apps/saffron.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add_page.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/templates/src/templates/recipes/add_page.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/support/src/fs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/support/src/fs.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/docker-compose.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:test" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -142,7 +144,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Cargo.Run.executor": "Run",
+    "Cargo.Run.executor": "Debug",
     "Cargo.Test accuchef::tests.executor": "Run",
     "Cargo.Test admin_router::tests.executor": "Run",
     "Cargo.Test admin_router::tests::tests_user::test_add_user_email_exists_ok.executor": "Run",
@@ -909,7 +911,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Test recipe::search::tests::tests_search::test_search_by_instructions">
+  <component name="RunManager" selected="Cargo.Run">
     <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
       <option name="command" value="run --package recipya-cli --bin recipya-cli -- server" />
@@ -1064,6 +1066,15 @@
     <option name="LAST_COMMIT_MESSAGE" value="" />
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/crates/router/src/handlers/recipes.rs</url>
+          <line>908</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
       <configuration name="CargoCommandRunConfiguration">
         <watch expression="v[1].0" />

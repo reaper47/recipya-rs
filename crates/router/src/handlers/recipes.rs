@@ -883,7 +883,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
         let state = state.clone();
         let start_time = Instant::now();
 
-        let (success_reipes, failure_recipes) =
+        let (success_recipes, failure_recipes) =
             match process_recipes_from_api(&state, form, user_id).await {
                 Ok(r) => r,
                 Err(Error::NoRecipe) => {
@@ -904,9 +904,9 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
                 }
             };
 
-        let num_recipes = (success_reipes.len() + failure_recipes.len()) as i64;
+        let num_recipes = (success_recipes.len() + failure_recipes.len()) as i64;
 
-        let (mut report, recipe_ids) = push_recipes_to_db(&state, success_reipes, user_id).await;
+        let (mut report, recipe_ids) = push_recipes_to_db(&state, success_recipes, user_id).await;
         report.exec_time_ms = start_time.elapsed().as_millis() as i64;
 
         broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, api, user_id).await;
@@ -960,7 +960,7 @@ async fn push_recipes_to_db(
             .broadcast_progress("Saving recipes", curr, num_recipes, true, user_id)
             .await;
 
-        let recipe = schema_to_recipe_for_create(&state, schema).await;
+        let recipe = schema_to_recipe_for_create(state, schema).await;
 
         match Recipe::create(&state.mm, user_id, &recipe).await {
             Ok(recipe_id) => {
@@ -985,7 +985,7 @@ async fn push_recipes_to_db(
         }
     }
 
-    return (report, recipe_ids);
+    (report, recipe_ids)
 }
 
 async fn broadcast_import_done_toast(

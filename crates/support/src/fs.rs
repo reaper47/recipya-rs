@@ -14,6 +14,7 @@ use image::codecs::webp::WebPEncoder;
 use image::imageops::FilterType;
 use image::{DynamicImage, ExtendedColorType, GenericImageView, ImageEncoder, ImageReader};
 use regex::Regex;
+use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tokio::task;
 use tokio::time::Instant;
@@ -76,12 +77,19 @@ impl FsSupport for AppFs {
         mut file_name: String,
         output_dir: &Path,
     ) -> Result<()> {
-        let img = ImageReader::open(input_path)?
+        let metadata = fs::metadata(input_path)
+            .map_err(|err| Error::General(format!("Cannot read file metadata: {err}")))?;
+
+        if metadata.len() == 0 {
+            return Err(Error::General("File is empty".to_string()));
+        }
+
+        let img = ImageReader::open(input_path)
+            .map_err(|err| Error::General(format!("Cannot open image: {err}")))?
             .with_guessed_format()?
             .decode()?;
 
         let webp_bytes = encode_webp(&img)?;
-
         file_name.push_str(".webp");
         fs::write(output_dir.join(file_name), webp_bytes)?;
         Ok(())
@@ -215,12 +223,17 @@ impl FsSupport for AppFs {
 
     async fn upload_to_temp(&self, content: Bytes) -> Result<PathBuf> {
         let file_uuid = Uuid::new_v4();
-        let temp = temp_dir().join(file_uuid.to_string());
-        tokio::fs::write(&temp, content).await.map_err(|err| {
-            error!("Error uploading to temporary directory: {err}");
-            Error::UploadFile
-        })?;
-        Ok(temp)
+        let temp_path = temp_dir().join(file_uuid.to_string());
+        let mut file = tokio::fs::File::create(&temp_path).await?;
+        file.write_all(&content).await?;
+        file.sync_all().await?;
+
+        // tokio::fs::write(&temp, content).await.map_err(|err| {
+        //     error!("Error uploading to temporary directory: {err}");
+        //     Error::UploadFile
+        // })?;
+        info!("Uploaded file '{temp_path:?}' to temporary directory");
+        Ok(temp_path)
     }
 
     fn upload_image(&self, path: &Path, file_name: Uuid, output_path: &Path) {

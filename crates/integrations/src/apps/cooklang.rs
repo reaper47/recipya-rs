@@ -62,7 +62,7 @@ impl From<CooklangRecipe> for Recipe {
                 .source
                 .clone()
                 .map(|s| {
-                    if let Some(_) = s.parse::<Url>().ok() {
+                    if s.parse::<Url>().is_ok() {
                         vec![RecipeIsBasedOnFieldEnum::URL(s)]
                     } else {
                         vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]

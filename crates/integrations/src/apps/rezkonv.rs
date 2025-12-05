@@ -100,7 +100,7 @@ where
 }
 
 fn parse_recipes<'s>(input: &mut &'s str) -> WResult<Vec<RecipeComponents<'s>>> {
-    Ok(repeat(1.., parse_recipe).parse_next(input)?)
+    repeat(1.., parse_recipe).parse_next(input)
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
@@ -245,7 +245,7 @@ fn parse_ingredient_block<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>
                 if cleaned_line.is_empty() {
                     None
                 } else {
-                    let s = line.trim().split_whitespace().collect::<Vec<_>>().join(" ");
+                    let s = line.split_whitespace().collect::<Vec<_>>().join(" ");
                     Some(Ingredient::Line(Cow::Owned(s)))
                 }
             })
@@ -287,11 +287,10 @@ fn parse_quelle<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
 fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
     let cut_at = input.find("=====").unwrap_or(input.len());
 
-    if input[..cut_at].find(":Stichworte:").is_some() {
+    if input[..cut_at].contains(":Stichworte:") {
         take_until(1.., ":Stichworte:")
             .map(|s: &str| {
                 s.split("\n\n")
-                    .into_iter()
                     .filter_map(|l| {
                         if l.trim().is_empty() {
                             None
