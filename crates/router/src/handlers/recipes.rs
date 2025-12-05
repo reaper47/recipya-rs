@@ -12,8 +12,9 @@ use axum::response::{Html, IntoResponse};
 use axum_htmx::HX_REDIRECT;
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
+use futures_util::pin_mut;
 use futures_util::stream::{self, StreamExt};
-use integrations::api::{Credentials, FailedRecipes};
+use integrations::api::Credentials;
 use itertools::izip;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -865,85 +866,6 @@ async fn parse_recipes(
     Ok(recipes)
 }
 
-/// Handles the importing recipes from an API endpoint.
-pub async fn add_recipe_import_api_handler(
-    ctx: CtxW,
-    State(state): State<AppState>,
-    Form(form): Form<ImportFromApiForm>,
-) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-    fetch_recipes_from_api(state, form, user_id);
-
-    (StatusCode::ACCEPTED, "").into_response()
-}
-
-fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64) {
-    tokio::spawn(async move {
-        let api = form.api.to_string();
-        let state = state.clone();
-        let start_time = Instant::now();
-
-        let (success_recipes, failure_recipes) =
-            match process_recipes_from_api(&state, form, user_id).await {
-                Ok(r) => r,
-                Err(Error::NoRecipe) => {
-                    state.hide_broadcast(user_id).await;
-                    broadcast_warning(&state, user_id, "No recipes found.").await;
-                    return;
-                }
-                Err(err) => {
-                    error!("Fetching recipes using the Mealie API failed: {err}");
-                    state.hide_broadcast(user_id).await;
-                    broadcast_error(
-                        &state,
-                        user_id,
-                        "An error occurred while parsing the recipes. Please check the logs.",
-                    )
-                    .await;
-                    return;
-                }
-            };
-
-        let num_recipes = (success_recipes.len() + failure_recipes.len()) as i64;
-
-        let (mut report, recipe_ids) = push_recipes_to_db(&state, success_recipes, user_id).await;
-        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
-
-        broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, api, user_id).await;
-    });
-}
-
-async fn process_recipes_from_api(
-    state: &AppState,
-    form: ImportFromApiForm,
-    user_id: i64,
-) -> Result<(Vec<schema_org::Recipe>, FailedRecipes)> {
-    // TODO: Find a way to broadcast progress from form.api.fetch_recipes()
-
-    state
-        .broadcast_progress("Fetching recipes...", 1, 100, true, user_id)
-        .await;
-
-    let recipes = match form
-        .api
-        .fetch_recipes(&form.url, Credentials::new(form.username, form.password))
-        .await
-    {
-        Ok(r) => r,
-        Err(err) => {
-            state.hide_broadcast(user_id).await;
-            return Err(Error::Integration(err));
-        }
-    };
-
-    if recipes.0.is_empty() && recipes.1.is_empty() {
-        warn!("No recipes fetched using the API");
-        return Err(Error::NoRecipe);
-    }
-
-    Ok(recipes)
-}
-
 async fn push_recipes_to_db(
     state: &AppState,
     recipes: Vec<schema_org::Recipe>,
@@ -986,6 +908,114 @@ async fn push_recipes_to_db(
     }
 
     (report, recipe_ids)
+}
+
+/// Handles the importing recipes from an API endpoint.
+pub async fn add_recipe_import_api_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<ImportFromApiForm>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+    fetch_recipes_from_api(state, form, user_id);
+
+    (StatusCode::ACCEPTED, "").into_response()
+}
+
+fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64) {
+    tokio::spawn(async move {
+        let api = form.api.to_string();
+        let state = state.clone();
+        let start_time = Instant::now();
+
+        let api_stream = form
+            .api
+            .fetch_recipes_stream(&form.url, Credentials::new(form.username, form.password));
+
+        let mut processed = 0;
+        let mut successes = Vec::new();
+        let mut failures = Vec::new();
+        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+
+        pin_mut!(api_stream);
+        while let Some(res) = api_stream.next().await {
+            match res {
+                Ok((id, recipe, num_recipes)) => {
+                    state
+                        .broadcast_progress(
+                            "Fetching recipes...",
+                            processed,
+                            num_recipes,
+                            true,
+                            user_id,
+                        )
+                        .await;
+
+                    match push_recipe_in_db(&state, recipe, &mut report, user_id).await {
+                        Ok(id) => {
+                            successes.push(id);
+                        }
+                        Err(err) => {
+                            error!("Pushing {api} recipe with id '{id}' into database: {err}");
+                            failures.push((id, Error::Database));
+                        }
+                    }
+                }
+                Err((id, num_recipes, err)) => {
+                    state
+                        .broadcast_progress(
+                            "Fetching recipes...",
+                            processed,
+                            num_recipes,
+                            true,
+                            user_id,
+                        )
+                        .await;
+
+                    error!("Fetching recipe with id '{id}' using the {api} API failed: {err}");
+                    failures.push((id, Error::FailFetch));
+                }
+            }
+
+            processed += 1;
+        }
+
+        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
+        broadcast_import_done_toast(&state, successes, processed, report, api, user_id).await;
+    });
+}
+
+async fn push_recipe_in_db(
+    state: &AppState,
+    recipe: schema_org::Recipe,
+    report: &mut ReportForCreate,
+    user_id: i64,
+) -> Result<i64> {
+    let recipe = schema_to_recipe_for_create(state, recipe).await;
+
+    match Recipe::create(&state.mm, user_id, &recipe).await {
+        Ok(recipe_id) => {
+            report
+                .report_logs
+                .push(ReportLogForCreate::new_success(recipe.name));
+            Ok(recipe_id)
+        }
+        Err(DuplicateEntity) => {
+            warn!("Recipe exists: {}", recipe.name);
+            report.report_logs.push(ReportLogForCreate::new_warning(
+                recipe.name,
+                "Recipe exists".into(),
+            ));
+            Err(Error::Model(DuplicateEntity))
+        }
+        Err(err) => {
+            error!("Error saving recipe '{}': {err}", recipe.name);
+            report
+                .report_logs
+                .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
+            Err(Error::Model(err))
+        }
+    }
 }
 
 async fn broadcast_import_done_toast(
@@ -1524,11 +1554,22 @@ async fn extract_images(
         .collect()
 }
 
-fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, _url: &str) -> Option<Uuid> {
-    let path = PathBuf::new();
+fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, file_path: &str) -> Option<Uuid> {
+    let path = if file_path.starts_with("/tmp") {
+        PathBuf::from(file_path)
+    } else {
+        PathBuf::new()
+    };
 
     let file_name = Uuid::new_v4();
     fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
+
+    let thumbnails_dir = state.data_dir.images.thumbnails.clone();
+    let fs_support = Arc::clone(&state.fs_support);
+    tokio::spawn(async move {
+        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+    });
+
     state
         .fs_support
         .is_file_exists(file_name, &state.data_dir.images.root, ".webp")

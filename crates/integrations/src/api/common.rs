@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 use uuid::Uuid;
 
 use schema_org::Recipe;
 
-use crate::{Error, Result};
+use crate::{Error, Result, api::mealie::structs::MealieUser};
 
 pub type FailedRecipes = Vec<(Uuid, Error)>;
 
@@ -25,8 +27,12 @@ pub trait RecipeClient: Clone + Send + Sync {
     /// Replaces the client's state with the new authenticated connection.
     async fn login(self, credentials: Credentials) -> Result<Self>;
 
-    /// Fetches recipes from connected host.
-    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)>;
+    /// Fetches all recipe IDs from the connected host.
+    async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>>;
+
+    /// Fetches a recipe from the connected host.
+    async fn fetch_recipe(&self, id: Uuid, users: &mut HashMap<Uuid, MealieUser>)
+    -> Result<Recipe>;
 
     /// Logs out of the connected host.
     async fn logout(self) -> Result<Self>;

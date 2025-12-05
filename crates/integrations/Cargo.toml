@@ -39,6 +39,8 @@ uuid.workspace = true
 winnow = "0.7.13"
 zip = "6.0.0"
 tokio.workspace = true
+async-stream = "0.3.6"
+futures-core = "0.3.31"
 
 [dev-dependencies]
 pretty_assertions.workspace = true

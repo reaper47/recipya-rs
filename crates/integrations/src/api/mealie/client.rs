@@ -3,7 +3,6 @@ use std::marker::PhantomData;
 use std::path::PathBuf;
 
 use async_trait::async_trait;
-use futures::StreamExt;
 use reqwest::Client;
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 use schema_org::field::{
@@ -19,7 +18,6 @@ use tracing::{error, info};
 use uuid::Uuid;
 
 use super::host::Host;
-use crate::api::FailedRecipes;
 use crate::api::mealie::structs::{
     AuthPayload, MealieRecipe, MealieRecipes, MealieUser, TokenResponse,
 };
@@ -37,10 +35,18 @@ pub trait Unauthenticated<C: RecipeClient>: Send + Sync {
 
 #[async_trait]
 pub trait Authenticated<C: RecipeClient>: Send + Sync {
-    /// Fetches recipes from connected host.
-    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)>;
     /// Logs out of the Mealie instance.
     async fn logout(self) -> Result<Mealie<UnauthenticatedState, C>>;
+
+    /// Fetches all recipe IDs from the connected host.
+    async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>>;
+
+    /// Fetches a recipe from the connected host.
+    async fn fetch_recipe(
+        &self,
+        id: Uuid,
+        users: &mut HashMap<Uuid, MealieUser>,
+    ) -> std::result::Result<Recipe, (Uuid, Error)>;
 }
 
 #[derive(Clone)]
@@ -72,15 +78,26 @@ impl<C: RecipeClient + Send> Unauthenticated<C> for Mealie<UnauthenticatedState,
 
 #[async_trait]
 impl<C: RecipeClient + Send> Authenticated<C> for Mealie<AuthenticatedState, C> {
-    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)> {
-        Ok(self.recipe_client.fetch_recipes().await?)
-    }
-
     async fn logout(self) -> Result<Mealie<UnauthenticatedState, C>> {
         Ok(Mealie {
             recipe_client: self.recipe_client.logout().await?,
             _state: PhantomData,
         })
+    }
+
+    async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>> {
+        Ok(self.recipe_client.fetch_recipe_ids().await?)
+    }
+
+    async fn fetch_recipe(
+        &self,
+        id: Uuid,
+        users: &mut HashMap<Uuid, MealieUser>,
+    ) -> std::result::Result<Recipe, (Uuid, Error)> {
+        match self.recipe_client.fetch_recipe(id, users).await {
+            Ok(recipe) => Ok(recipe),
+            Err(err) => Err((id, err)),
+        }
     }
 }
 
@@ -111,26 +128,32 @@ impl RecipeClient for MealieRecipeClient {
         })
     }
 
-    async fn fetch_recipes(&self) -> Result<(Vec<Recipe>, FailedRecipes)> {
-        info!("Mealie API: Fetching recipes");
+    async fn fetch_recipe(
+        &self,
+        id: Uuid,
+        users: &mut HashMap<Uuid, MealieUser>,
+    ) -> Result<Recipe> {
+        match self.fetch_single_recipe_with_retry(id).await {
+            Ok((_, recipe)) => {
+                if let hash_map::Entry::Vacant(entry) = users.entry(recipe.user_id) {
+                    let user = self.fetch_user(recipe.user_id).await?;
+                    entry.insert(user);
+                }
+                let user = &users[&recipe.user_id];
 
-        let recipe_ids = self.fetch_recipe_ids().await?;
-        let recipe_details = self.fetch_recipes_helper(recipe_ids).await?;
-        let mut recipes = Vec::with_capacity(recipe_details.0.len());
-        let mut users = HashMap::new();
-
-        for recipe in recipe_details.0 {
-            if let hash_map::Entry::Vacant(entry) = users.entry(recipe.user_id) {
-                let user = self.fetch_user(recipe.user_id).await?;
-                entry.insert(user);
+                let schema_recipe = self.build_schema_recipe(recipe, user).await?;
+                Ok(schema_recipe)
             }
-            let user = &users[&recipe.user_id];
-
-            let schema_recipe = self.build_schema_recipe(recipe, user).await?;
-            recipes.push(schema_recipe);
+            Err(err) => Err(Error::ApiError(format!(
+                "Failed to fetch Mealie recipe with ID '{}': {}",
+                err.0, err.1
+            ))),
         }
+    }
 
-        Ok((recipes, recipe_details.1))
+    async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>> {
+        info!("Mealie API: Fetching recipes");
+        Ok(self.fetch_recipe_ids().await?)
     }
 
     async fn logout(self) -> Result<Self> {
@@ -248,128 +271,55 @@ impl MealieRecipeClient {
         Ok(res.json().await?)
     }
 
-    async fn fetch_recipes_helper(
+    async fn fetch_single_recipe_with_retry(
         &self,
-        ids: Vec<Uuid>,
-    ) -> Result<(Vec<MealieRecipe>, Vec<(Uuid, Error)>)> {
-        let mut all_recipes = Vec::new();
-        let mut all_failures = Vec::new();
+        id: Uuid,
+    ) -> std::result::Result<(Uuid, MealieRecipe), (Uuid, Error)> {
+        const MAX_ATTEMPTS: usize = 3;
 
-        const BATCH_SIZE: usize = 10;
+        for attempt in 1..=MAX_ATTEMPTS {
+            let delay = std::time::Duration::from_millis(50 * attempt as u64);
 
-        for (batch_num, batch) in ids.chunks(BATCH_SIZE).enumerate() {
-            info!(
-                "Mealie API Import - Processing batch {} ({} recipes)",
-                batch_num + 1,
-                batch.len()
-            );
+            match self.client.get(self.host.recipe_url(id)).send().await {
+                Ok(res) if res.status().is_success() => {
+                    let bytes = res
+                        .bytes()
+                        .await
+                        .map_err(|err| (id, Error::ApiError(err.to_string())))?;
 
-            let results = futures::stream::iter(batch.iter().copied().map(|id| {
-                let client = self.client.clone();
-                let host = self.host.clone();
-
-                async move {
-                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-
-                    for attempt in 0..3 {
-                        return match client.get(host.recipe_url(id)).send().await {
-                            Ok(res) => {
-                                let status = res.status();
-
-                                if !status.is_success() {
-                                    if attempt < 2 {
-                                        tokio::time::sleep(std::time::Duration::from_millis(
-                                            200 * (attempt + 1) as u64,
-                                        ))
-                                        .await;
-                                        continue;
-                                    }
-                                    return Err((id, Error::ApiError(format!("HTTP {status}"))));
-                                }
-
-                                match res.bytes().await {
-                                    Ok(bytes) => {
-                                        if bytes.is_empty() {
-                                            if attempt < 2 {
-                                                tokio::time::sleep(
-                                                    std::time::Duration::from_millis(
-                                                        200 * (attempt + 1) as u64,
-                                                    ),
-                                                )
-                                                .await;
-                                                continue;
-                                            }
-                                            return Err((
-                                                id,
-                                                Error::ApiError("Empty response body".into()),
-                                            ));
-                                        }
-
-                                        match serde_json::from_slice::<MealieRecipe>(&bytes) {
-                                            Ok(recipe) => Ok((id, recipe)),
-                                            Err(err) => {
-                                                if attempt < 2 {
-                                                    tokio::time::sleep(
-                                                        std::time::Duration::from_millis(
-                                                            200 * (attempt + 1) as u64,
-                                                        ),
-                                                    )
-                                                    .await;
-                                                    continue;
-                                                }
-                                                Err((id, err.into()))
-                                            }
-                                        }
-                                    }
-                                    Err(err) => {
-                                        if attempt < 2 {
-                                            tokio::time::sleep(std::time::Duration::from_millis(
-                                                200 * (attempt + 1) as u64,
-                                            ))
-                                            .await;
-                                            continue;
-                                        }
-                                        Err((id, Error::ApiError(err.to_string())))
-                                    }
-                                }
-                            }
-                            Err(err) => {
-                                if attempt < 2 {
-                                    tokio::time::sleep(std::time::Duration::from_millis(
-                                        200 * (attempt + 1) as u64,
-                                    ))
-                                    .await;
-                                    continue;
-                                }
-                                Err((id, Error::ApiError(err.to_string())))
-                            }
-                        };
+                    if bytes.is_empty() {
+                        if attempt < MAX_ATTEMPTS {
+                            tokio::time::sleep(delay).await;
+                            continue;
+                        }
+                        return Err((id, Error::ApiError("Empty response body".into())));
                     }
-                    unreachable!()
-                }
-            }))
-            .buffer_unordered(10)
-            .collect::<Vec<_>>()
-            .await;
 
-            for result in results {
-                match result {
-                    Ok((_, recipe)) => all_recipes.push(recipe),
-                    Err((id, err)) => all_failures.push((
-                        id,
-                        Error::ApiError(format!(
-                            "Failed to fetch recipe '{id}' using the Mealie API: {err}"
-                        )),
-                    )),
-                }
-            }
+                    let recipe = serde_json::from_slice::<MealieRecipe>(&bytes)
+                        .map_err(|err| (id, err.into()))?;
 
-            if batch_num < (ids.len() / BATCH_SIZE) {
-                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                    return Ok((id, recipe));
+                }
+
+                Ok(res) => {
+                    if attempt < MAX_ATTEMPTS {
+                        tokio::time::sleep(delay).await;
+                        continue;
+                    }
+                    return Err((id, Error::ApiError(res.text().await.unwrap_or_default())));
+                }
+
+                Err(err) => {
+                    if attempt < MAX_ATTEMPTS {
+                        tokio::time::sleep(delay).await;
+                        continue;
+                    }
+                    return Err((id, Error::ApiError(err.to_string())));
+                }
             }
         }
 
-        Ok((all_recipes, all_failures))
+        Err((id, Error::ApiError("Mealie API - Exhausted retries".into())))
     }
 
     async fn build_schema_recipe(&self, recipe: MealieRecipe, user: &MealieUser) -> Result<Recipe> {
