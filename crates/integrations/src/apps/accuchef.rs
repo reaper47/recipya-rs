@@ -127,7 +127,8 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             instructions: r
                 .instructions
                 .into_iter()
-                .filter(|&s| (!s.is_empty())).map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
+                .filter(|&s| !s.is_empty())
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
                 .collect(),
             source: r.header.into(),
         }
