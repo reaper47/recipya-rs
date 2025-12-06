@@ -227,18 +227,28 @@ function addItem(event, isPastedText = false) {
   clone.querySelector(el).focus();
 }
 
+// Secure UUID v4 generator using window.crypto.getRandomValues
+function secureUuidV4() {
+  const bytes = new Uint8Array(16);
+  window.crypto.getRandomValues(bytes);
+  // Per RFC4122 v4 UUID variant and version bits
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+  const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return [
+    hex.substring(0, 8),
+    hex.substring(8, 12),
+    hex.substring(12, 16),
+    hex.substring(16, 20),
+    hex.substring(20, 32)
+  ].join('-');
+}
+
 async function pasteImage(event) {
   try {
     const clipboardItems = await navigator.clipboard.read();
     clipboardItems.forEach(async (item) => {
-      const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-        /[xy]/g,
-        function (c) {
-          const r = (Math.random() * 16) | 0;
-          const v = c === "x" ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        },
-      );
+      const uuid = secureUuidV4();
 
       const blob = await item.getType(
         item.types.find((t) => t.startsWith("image/")),
