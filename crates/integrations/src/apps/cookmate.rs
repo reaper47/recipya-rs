@@ -65,7 +65,7 @@ impl From<CookmateRecipe> for Recipe {
         let num_comments = comments.len();
 
         Self {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             aggregate_rating: if r.rating > 0 {
                 vec![AggregateRating {
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(
@@ -163,7 +163,7 @@ impl From<CookmateRecipe> for Recipe {
                         let s = url.to_string();
 
                         RecipeVideoFieldEnum::VideoObject(Box::new(VideoObject {
-                            r#type: Some(AtType::VideoObject.to_string()),
+                            r#type: AtType::VideoObject.to_opt(),
                             content_url: vec![s.clone()],
                             embed_url: vec![s],
                             ..Default::default()
@@ -501,7 +501,7 @@ mod tests {
         pub fn xml_recipes() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Soups/stews".into()),
@@ -581,7 +581,7 @@ mod tests {
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Appetizers".into()),
@@ -629,7 +629,7 @@ mod tests {
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Casseroles".into()),
@@ -690,7 +690,7 @@ mod tests {
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("German".into())],
                     name: vec!["August Goerg's Grilled Steak (Spiessbraten August Goerg)".into()],
@@ -760,7 +760,7 @@ mod tests {
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("MMF")],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Poultry".into()),

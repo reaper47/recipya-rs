@@ -12,7 +12,9 @@ use axum::response::{Html, IntoResponse};
 use axum_htmx::HX_REDIRECT;
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
+use futures_util::pin_mut;
 use futures_util::stream::{self, StreamExt};
+use integrations::api::Credentials;
 use itertools::izip;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -51,8 +53,8 @@ use crate::handlers::message::{
 };
 use crate::middleware::mw_auth::CtxW;
 use crate::recipes_router::params::{
-    FavouriteParams, ImportFromAppForm, OrderParams, PreviewForm, RecipeCategoryForm,
-    RecipeScrapeForm, ShareRecipeForm, TimelineEventForm,
+    FavouriteParams, ImportFromApiForm, ImportFromAppForm, OrderParams, PreviewForm,
+    RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm, TimelineEventForm,
 };
 use crate::{Error, Result};
 
@@ -784,8 +786,8 @@ pub async fn add_recipes_handler(
     .into_response())
 }
 
-/// Handles the import recipes endpoint.
-pub async fn add_recipe_import_handler(
+/// Handles the importing recipes from an application endpoint.
+pub async fn add_recipe_import_app_handler(
     ctx: CtxW,
     State(state): State<AppState>,
     form: ImportFromAppForm,
@@ -798,6 +800,7 @@ pub async fn add_recipe_import_handler(
 
 fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
     tokio::spawn(async move {
+        let app = form.app.to_string();
         let state = state.clone();
         let start_time = Instant::now();
 
@@ -805,10 +808,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
-                let toast = MessageHtmx::warning("No recipes found.");
-                if let Ok(json) = serde_json::to_string(&toast) {
-                    state.broadcast(user_id, Message::Text(json.into())).await;
-                }
+                broadcast_warning(&state, user_id, "No recipes found.").await;
                 return;
             }
             Err(_) => {
@@ -823,73 +823,12 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
             }
         };
 
-        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
-        let mut curr = 0;
-        let total_recipes = recipes.len() as i64;
-        let mut recipe_ids = Vec::new();
+        let num_recipes = recipes.len() as i64;
 
-        for schema in recipes {
-            curr += 1;
-            state
-                .broadcast_progress("Saving recipes", curr, total_recipes, true, user_id)
-                .await;
-
-            let recipe = schema_to_recipe_for_create(&state, schema).await;
-
-            match Recipe::create(&state.mm, user_id, &recipe).await {
-                Ok(recipe_id) => {
-                    report
-                        .report_logs
-                        .push(ReportLogForCreate::new_success(recipe.name));
-                    recipe_ids.push(recipe_id);
-                }
-                Err(DuplicateEntity) => {
-                    warn!("Recipe exists: {}", recipe.name);
-                    report.report_logs.push(ReportLogForCreate::new_warning(
-                        recipe.name,
-                        "Recipe exists".into(),
-                    ));
-                }
-                Err(err) => {
-                    error!("Error saving recipe '{}': {err}", recipe.name);
-                    report
-                        .report_logs
-                        .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
-                }
-            }
-        }
-
+        let (mut report, recipe_ids) = push_recipes_to_db(&state, recipes, user_id).await;
         report.exec_time_ms = start_time.elapsed().as_millis() as i64;
-        state.hide_broadcast(user_id).await;
 
-        let num_success = recipe_ids.len() as i64;
-        let num_skipped = total_recipes - num_success;
-
-        info!(
-            "Imported recipes: user_id={user_id}, success={num_success}, skipped={num_skipped}, total={total_recipes}"
-        );
-
-        let redirect = if num_success == 1 {
-            format!("View /recipes/{}", recipe_ids.first().unwrap_or(&-1))
-        } else {
-            "View /reports?view=latest".to_string()
-        };
-
-        let toast = MessageHtmx::builder(
-            MessageType::Toast,
-            "Operation Successful",
-            format!("Imported {num_success} recipes. Skipped {num_skipped}."),
-        )
-        .action(Some(&redirect))
-        .build();
-
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
-        }
-
-        if let Err(err) = report.insert(&state.mm).await {
-            error!("Error inserting report into the database: {err}");
-        }
+        broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
     });
 }
 
@@ -925,6 +864,198 @@ async fn parse_recipes(
     }
 
     Ok(recipes)
+}
+
+async fn push_recipes_to_db(
+    state: &AppState,
+    recipes: Vec<schema_org::Recipe>,
+    user_id: i64,
+) -> (ReportForCreate, Vec<i64>) {
+    let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+    let mut curr = 0;
+    let mut recipe_ids = Vec::new();
+    let num_recipes = recipes.len() as i64;
+
+    for schema in recipes {
+        curr += 1;
+        state
+            .broadcast_progress("Saving recipes", curr, num_recipes, true, user_id)
+            .await;
+
+        let recipe = schema_to_recipe_for_create(state, schema).await;
+
+        match Recipe::create(&state.mm, user_id, &recipe).await {
+            Ok(recipe_id) => {
+                report
+                    .report_logs
+                    .push(ReportLogForCreate::new_success(recipe.name));
+                recipe_ids.push(recipe_id);
+            }
+            Err(DuplicateEntity) => {
+                warn!("Recipe exists: {}", recipe.name);
+                report.report_logs.push(ReportLogForCreate::new_warning(
+                    recipe.name,
+                    "Recipe exists".into(),
+                ));
+            }
+            Err(err) => {
+                error!("Error saving recipe '{}': {err}", recipe.name);
+                report
+                    .report_logs
+                    .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
+            }
+        }
+    }
+
+    (report, recipe_ids)
+}
+
+/// Handles the importing recipes from an API endpoint.
+pub async fn add_recipe_import_api_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(form): Form<ImportFromApiForm>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+    fetch_recipes_from_api(state, form, user_id);
+
+    (StatusCode::ACCEPTED, "").into_response()
+}
+
+fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64) {
+    tokio::spawn(async move {
+        let api = form.api.to_string();
+        let state = state.clone();
+        let start_time = Instant::now();
+
+        let api_stream = form
+            .api
+            .fetch_recipes_stream(&form.url, Credentials::new(form.username, form.password));
+
+        let mut processed = 0;
+        let mut successes = Vec::new();
+        let mut failures = Vec::new();
+        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+
+        pin_mut!(api_stream);
+        while let Some(res) = api_stream.next().await {
+            match res {
+                Ok((id, recipe, num_recipes)) => {
+                    state
+                        .broadcast_progress(
+                            "Fetching recipes...",
+                            processed,
+                            num_recipes,
+                            true,
+                            user_id,
+                        )
+                        .await;
+
+                    match push_recipe_in_db(&state, recipe, &mut report, user_id).await {
+                        Ok(id) => {
+                            successes.push(id);
+                        }
+                        Err(err) => {
+                            error!("Pushing {api} recipe with id '{id}' into database: {err}");
+                            failures.push((id, Error::Database));
+                        }
+                    }
+                }
+                Err((id, num_recipes, err)) => {
+                    state
+                        .broadcast_progress(
+                            "Fetching recipes...",
+                            processed,
+                            num_recipes,
+                            true,
+                            user_id,
+                        )
+                        .await;
+
+                    error!("Fetching recipe with id '{id}' using the {api} API failed: {err}");
+                    failures.push((id, Error::FailFetch));
+                }
+            }
+
+            processed += 1;
+        }
+
+        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
+        broadcast_import_done_toast(&state, successes, processed, report, api, user_id).await;
+    });
+}
+
+async fn push_recipe_in_db(
+    state: &AppState,
+    recipe: schema_org::Recipe,
+    report: &mut ReportForCreate,
+    user_id: i64,
+) -> Result<i64> {
+    let recipe = schema_to_recipe_for_create(state, recipe).await;
+
+    match Recipe::create(&state.mm, user_id, &recipe).await {
+        Ok(recipe_id) => {
+            report
+                .report_logs
+                .push(ReportLogForCreate::new_success(recipe.name));
+            Ok(recipe_id)
+        }
+        Err(DuplicateEntity) => {
+            warn!("Recipe exists: {}", recipe.name);
+            report.report_logs.push(ReportLogForCreate::new_warning(
+                recipe.name,
+                "Recipe exists".into(),
+            ));
+            Err(Error::Model(DuplicateEntity))
+        }
+        Err(err) => {
+            error!("Error saving recipe '{}': {err}", recipe.name);
+            report
+                .report_logs
+                .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
+            Err(Error::Model(err))
+        }
+    }
+}
+
+async fn broadcast_import_done_toast(
+    state: &AppState,
+    recipe_ids: Vec<i64>,
+    num_recipes: i64,
+    report: ReportForCreate,
+    import_source: String,
+    user_id: i64,
+) {
+    state.hide_broadcast(user_id).await;
+
+    let num_success = recipe_ids.len() as i64;
+    let num_skipped = num_recipes - num_success;
+
+    info!(
+        "Imported recipes ({import_source}): user_id={user_id}, success={num_success}, skipped={num_skipped}, total={num_recipes}"
+    );
+
+    let redirect = if num_success == 1 {
+        format!("View /recipes/{}", recipe_ids.first().unwrap_or(&-1))
+    } else {
+        "View /reports?view=latest".to_string()
+    };
+
+    let toast = MessageHtmx::builder(
+        MessageType::Toast,
+        "Operation Successful",
+        format!("Imported {num_success} recipes. Skipped {num_skipped}."),
+    )
+    .action(Some(&redirect))
+    .build();
+
+    if let Ok(json) = serde_json::to_string(&toast) {
+        state.broadcast(user_id, Message::Text(json.into())).await;
+    }
+
+    if let Err(err) = report.insert(&state.mm).await {
+        error!("Error inserting report into the database: {err}");
+    }
 }
 
 /// Handles generating a preview of the recipe based on the input JSON recipe schema.
@@ -1423,11 +1554,22 @@ async fn extract_images(
         .collect()
 }
 
-fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, _url: &str) -> Option<Uuid> {
-    let path = PathBuf::new();
+fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, file_path: &str) -> Option<Uuid> {
+    let path = if file_path.starts_with("/tmp") {
+        PathBuf::from(file_path)
+    } else {
+        PathBuf::new()
+    };
 
     let file_name = Uuid::new_v4();
     fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
+
+    let thumbnails_dir = state.data_dir.images.thumbnails.clone();
+    let fs_support = Arc::clone(&state.fs_support);
+    tokio::spawn(async move {
+        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+    });
+
     state
         .fs_support
         .is_file_exists(file_name, &state.data_dir.images.root, ".webp")

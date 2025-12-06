@@ -196,10 +196,10 @@ impl From<BigOvenRecipe> for Recipe {
         let url = Url::parse(&r.source.clone().unwrap_or_default()).ok();
 
         Recipe {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             aggregate_rating: if r.taste_rating > 0 {
                 vec![AggregateRating {
-                    r#type: Some(AtType::AggregateRating.to_string()),
+                    r#type: AtType::AggregateRating.to_opt(),
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(
                         r.taste_rating as f32,
                     )],
@@ -853,7 +853,7 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
 
         pub fn recipe1() -> Recipe {
             Recipe {
-                r#type: Some(AtType::Recipe.to_string()),
+                r#type: AtType::Recipe.to_opt(),
                 keywords: vec![
                     RecipeKeywordsFieldEnum::TextOrURL("Low Fat".into()),
                     RecipeKeywordsFieldEnum::TextOrURL("Summer".into()),

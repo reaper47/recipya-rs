@@ -6,6 +6,7 @@ use std::str::FromStr;
 use axum::extract::multipart::{InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
 use chrono::{NaiveDate, NaiveDateTime};
+use integrations::api::Api;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 use uuid::Uuid;
@@ -14,13 +15,24 @@ use integrations::{App, FileFormat, parse_recipe};
 use models::recipe::{save_media_field, text_trim};
 use schema_org::Recipe;
 
-/// Represents the content of the "Add Recipe -> Import from an app" form.
+/// Represents the content of the "Add Recipe -> Import -> Software" form.
 #[derive(Default)]
 pub struct ImportFromAppForm {
     pub file_data: Vec<u8>,
     pub file_name: String,
     pub app: App,
     pub file_format: FileFormat,
+}
+
+impl ImportFromAppForm {
+    /// Parses the recipe file contained in the form.
+    pub fn parse_recipes(&mut self) -> crate::error::Result<Vec<Recipe>> {
+        let mut data = Cursor::new(&self.file_data);
+        let app = &self.app;
+        let file_name = &self.file_name;
+        let file_format = &self.file_format;
+        Ok(parse_recipe(&mut data, app, file_name, file_format)?)
+    }
 }
 
 impl<S> FromRequest<S> for ImportFromAppForm
@@ -79,15 +91,13 @@ where
     }
 }
 
-impl ImportFromAppForm {
-    /// Parses the recipe file contained in the form.
-    pub fn parse_recipes(&mut self) -> crate::error::Result<Vec<Recipe>> {
-        let mut data = Cursor::new(&self.file_data);
-        let app = &self.app;
-        let file_name = &self.file_name;
-        let file_format = &self.file_format;
-        Ok(parse_recipe(&mut data, app, file_name, file_format)?)
-    }
+/// Represents the content of the "Add Recipe -> Import -> API" form.
+#[derive(Deserialize)]
+pub struct ImportFromApiForm {
+    pub api: Api,
+    pub url: String,
+    pub username: String,
+    pub password: String,
 }
 
 /// Represents the content of the share recipe form.

@@ -14,6 +14,7 @@ rust-version.workspace = true
 
 [dependencies]
 app.workspace = true
+async-stream.workspace = true
 auth.workspace = true
 axum.workspace = true
 axum-htmx = "0.8.1"
@@ -21,19 +22,20 @@ chrono.workspace = true
 config.workspace = true
 derive_more.workspace = true
 email.workspace = true
+futures-core.workspace = true
 futures-util.workspace = true
 humantime.workspace = true
 infer.workspace = true
 integrations.workspace = true
 itertools.workspace = true
-mime_guess = "2.0.5"
 math.workspace = true
+mime_guess = "2.0.5"
 models = { workspace = true, features = ["test-utils"] }
-schema-org = { path = "../schema-org", features = ["json-schema"] }
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
 rust-embed = { version = "8.7.2", features = ["axum-ex"] }
+schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
 strum_macros.workspace = true

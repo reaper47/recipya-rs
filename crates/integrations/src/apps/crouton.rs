@@ -145,7 +145,7 @@ where
     });
 
     Ok(vec![Recipe {
-        r#type: Some(AtType::Recipe.to_string()),
+        r#type: AtType::Recipe.to_opt(),
         cook_time: seconds_to_duration((crouton.cooking_duration * 60) as i32),
         description: vec![RecipeDescriptionFieldEnum::Text(
             "Imported from Crouton".into(),
@@ -166,7 +166,7 @@ where
             .collect(),
         name: vec![crouton.name],
         nutrition: Some(NutritionInformation {
-            r#type: Some(AtType::NutritionInformation.to_string()),
+            r#type: AtType::NutritionInformation.to_opt(),
             calories: nutrition
                 .calories_kcal
                 .map(|c| vec![Energy::new(c.to_string())])
@@ -263,7 +263,7 @@ mod tests {
         let got = parse(buf)?;
 
         pretty_assertions::assert_eq!(got, vec![Recipe {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             cook_time: seconds_to_duration(60 * 60),
             description: vec![RecipeDescriptionFieldEnum::Text("Imported from Crouton".into())],
             image: vec![
@@ -273,7 +273,7 @@ mod tests {
             name: vec!["Japanese Strawberry Shortcake".into()],
             nutrition: vec![
                 NutritionInformation {
-                    r#type: Some(AtType::NutritionInformation.to_string()),
+                    r#type: AtType::NutritionInformation.to_opt(),
                     calories: vec![Energy::new("258")],
                     protein_content: vec![Mass::new("4")],
                     ..Default::default()

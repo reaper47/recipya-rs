@@ -16,7 +16,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    AggregateRating, AtType, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
+    AggregateRating, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
     InteractionCounter, NutritionInformation, Person, Review, Thing,
 };
 
@@ -62,7 +62,7 @@ impl Default for GraphObject {
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Recipe {
-    #[serde(rename = "@type", default = "set_recipe_type")]
+    #[serde(rename = "@type")]
     pub r#type: Option<String>,
     #[serde(rename = "@graph")]
     pub graph: Option<Vec<GraphObject>>,
@@ -391,10 +391,6 @@ pub struct Recipe {
     #[serde(rename = "name")]
     #[serde(default, deserialize_with = "one_or_many")]
     pub name: Vec<String>,
-}
-
-pub fn set_recipe_type() -> Option<String> {
-    Some(AtType::Recipe.to_string())
 }
 
 impl Recipe {

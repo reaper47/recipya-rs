@@ -118,6 +118,11 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+/// Returns the context for schema.org.
+pub fn at_context() -> Option<String> {
+    Some(String::from("https://schema.org"))
+}
+
 /// Enumeration of all possible @type values.
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
@@ -125,6 +130,7 @@ pub enum AtType {
     AggregateRating,
     Comment,
     CreativeWork,
+    Duration,
     Energy,
     HowToTool,
     ImageObject,
@@ -147,6 +153,7 @@ impl Display for AtType {
             match self {
                 AtType::Comment => "Comment".to_string(),
                 AtType::CreativeWork => "CreativeWork".to_string(),
+                AtType::Duration => "Duration".to_string(),
                 AtType::Energy => "Energy".to_string(),
                 AtType::Recipe => "Recipe".to_string(),
                 AtType::AggregateRating => "AggregateRating".to_string(),
@@ -161,5 +168,92 @@ impl Display for AtType {
                 AtType::VideoObject => "VideoObject".to_string(),
             }
         )
+    }
+}
+
+impl AtType {
+    /// Sets the value of the `@type` attribute.
+    pub fn to_opt(&self) -> Option<String> {
+        match self {
+            AtType::AggregateRating => Some(Self::AggregateRating.to_string()),
+            AtType::Comment => Some(Self::Comment.to_string()),
+            AtType::CreativeWork => Some(Self::CreativeWork.to_string()),
+            AtType::Duration => Some(Self::Duration.to_string()),
+            AtType::Energy => Some(Self::Energy.to_string()),
+            AtType::HowToTool => Some(Self::HowToTool.to_string()),
+            AtType::ImageObject => Some(Self::ImageObject.to_string()),
+            AtType::ItemList => Some(Self::ItemList.to_string()),
+            AtType::ListItem => Some(Self::ListItem.to_string()),
+            AtType::MusicAlbum => Some(Self::MusicAlbum.to_string()),
+            AtType::NutritionInformation => Some(Self::NutritionInformation.to_string()),
+            AtType::QuantitativeValue => Some(Self::QuantitativeValue.to_string()),
+            AtType::Recipe => Some(Self::Recipe.to_string()),
+            AtType::Review => Some(Self::Review.to_string()),
+            AtType::VideoObject => Some(Self::VideoObject.to_string()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_at_type_display() {
+        assert_eq!(AtType::Comment.to_string(), "Comment");
+        assert_eq!(AtType::CreativeWork.to_string(), "CreativeWork");
+        assert_eq!(AtType::Duration.to_string(), "Duration");
+        assert_eq!(AtType::Energy.to_string(), "Energy");
+        assert_eq!(AtType::Recipe.to_string(), "Recipe");
+        assert_eq!(AtType::AggregateRating.to_string(), "AggregateRating");
+        assert_eq!(AtType::HowToTool.to_string(), "HowToTool");
+        assert_eq!(AtType::ImageObject.to_string(), "ImageObject");
+        assert_eq!(AtType::ItemList.to_string(), "ItemList");
+        assert_eq!(AtType::ListItem.to_string(), "ListItem");
+        assert_eq!(AtType::MusicAlbum.to_string(), "MusicAlbum");
+        assert_eq!(
+            AtType::NutritionInformation.to_string(),
+            "NutritionInformation"
+        );
+        assert_eq!(AtType::QuantitativeValue.to_string(), "QuantitativeValue");
+        assert_eq!(AtType::Review.to_string(), "Review");
+        assert_eq!(AtType::VideoObject.to_string(), "VideoObject");
+    }
+
+    #[test]
+    fn test_to_opt() {
+        assert_eq!(AtType::Comment.to_opt(), Some("Comment".to_string()));
+        assert_eq!(
+            AtType::CreativeWork.to_opt(),
+            Some("CreativeWork".to_string())
+        );
+        assert_eq!(AtType::Duration.to_opt(), Some("Duration".to_string()));
+        assert_eq!(AtType::Energy.to_opt(), Some("Energy".to_string()));
+        assert_eq!(AtType::Recipe.to_opt(), Some("Recipe".to_string()));
+        assert_eq!(
+            AtType::AggregateRating.to_opt(),
+            Some("AggregateRating".to_string())
+        );
+        assert_eq!(AtType::HowToTool.to_opt(), Some("HowToTool".to_string()));
+        assert_eq!(
+            AtType::ImageObject.to_opt(),
+            Some("ImageObject".to_string())
+        );
+        assert_eq!(AtType::ItemList.to_opt(), Some("ItemList".to_string()));
+        assert_eq!(AtType::ListItem.to_opt(), Some("ListItem".to_string()));
+        assert_eq!(AtType::MusicAlbum.to_opt(), Some("MusicAlbum".to_string()));
+        assert_eq!(
+            AtType::NutritionInformation.to_opt(),
+            Some("NutritionInformation".to_string())
+        );
+        assert_eq!(
+            AtType::QuantitativeValue.to_opt(),
+            Some("QuantitativeValue".to_string())
+        );
+        assert_eq!(AtType::Review.to_opt(), Some("Review".to_string()));
+        assert_eq!(
+            AtType::VideoObject.to_opt(),
+            Some("VideoObject".to_string())
+        );
     }
 }

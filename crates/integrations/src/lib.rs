@@ -1,9 +1,13 @@
+#![recursion_limit = "256"]
+
 mod app;
-mod apps;
 mod common;
 mod error;
 mod fileformat;
 mod helpers;
+
+pub mod api;
+pub mod apps;
 
 pub use app::{App, all_apps};
 pub use error::{Error, Result};

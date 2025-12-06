@@ -53,7 +53,7 @@ impl Scraper {
                 recipe.graph.and_then(|graph| {
                     graph.into_iter().find_map(|item| match item {
                         GraphObject::Recipe(mut r) => {
-                            r.r#type = Some(AtType::Recipe.to_string());
+                            r.r#type = AtType::Recipe.to_opt();
                             Some(*r)
                         }
                         _ => None,

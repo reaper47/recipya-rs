@@ -10,7 +10,7 @@ use crate::field::{
     ImageObjectSubjectOfFieldEnum, ImageObjectWidthFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Comment, InteractionCounter, MediaObject, Thing};
+use crate::{Comment, InteractionCounter, MediaObject, Thing};
 
 ///<https://schema.org/encodingFormat>
 ///<https://schema.org/Text>
@@ -42,7 +42,7 @@ pub type ImageObjectDatePublishedFieldEnum = String;
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ImageObject {
-    #[serde(rename = "@type", default = "set_type")]
+    #[serde(rename = "@type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: Option<String>,
@@ -254,8 +254,4 @@ pub struct ImageObject {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-}
-
-fn set_type() -> Option<String> {
-    Some(AtType::ImageObject.to_string())
 }

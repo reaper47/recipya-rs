@@ -35,7 +35,7 @@ tower-cookies.workspace = true
 tracing.workspace = true
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 
-[target.'x86_64-unknown-linux-musl'.dependencies]
+[target.'aarch64-unknown-linux-gnu'.dependencies]
 openssl = { version = "0.10.72", features = ["vendored"] }
 pq-sys = { version = "0.7.1", features = ["bundled"] }
 
@@ -43,6 +43,6 @@ pq-sys = { version = "0.7.1", features = ["bundled"] }
 openssl = { version = "0.10.72", features = ["vendored"] }
 pq-sys = { version = "0.7.1", features = ["bundled"] }
 
-[target.'aarch64-unknown-linux-gnu'.dependencies]
+[target.'x86_64-unknown-linux-musl'.dependencies]
 openssl = { version = "0.10.72", features = ["vendored"] }
 pq-sys = { version = "0.7.1", features = ["bundled"] }

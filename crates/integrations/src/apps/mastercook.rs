@@ -92,10 +92,10 @@ impl From<RecipeComponents<'_>> for Recipe {
         }
 
         Self {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             aggregate_rating: if rating > 0.0 {
                 vec![AggregateRating {
-                    r#type: Some(AtType::AggregateRating.to_string()),
+                    r#type: AtType::AggregateRating.to_opt(),
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(rating)],
                     ..Default::default()
                 }]
@@ -314,7 +314,7 @@ impl From<MastercookRecipe> for Recipe {
             .trim_start_matches("Per Serving (excluding unknown items): ");
 
         Self {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             aggregate_rating: r
                 .ratings
                 .map(|r| {
@@ -322,7 +322,7 @@ impl From<MastercookRecipe> for Recipe {
                     let denominator: f32 = r.rating.value.parse().unwrap_or_default();
 
                     vec![AggregateRating {
-                        r#type: Some(AtType::AggregateRating.to_string()),
+                        r#type: AtType::AggregateRating.to_opt(),
                         rating_value: Some(AggregateRatingRatingValueFieldEnum::Number(
                             numerator / denominator,
                         ))
@@ -342,7 +342,7 @@ impl From<MastercookRecipe> for Recipe {
             image: (!r.img.is_empty())
                 .then_some(vec![RecipeImageFieldEnum::ImageObject(Box::new(
                     ImageObject {
-                        r#type: Some(AtType::ImageObject.to_string()),
+                        r#type: AtType::ImageObject.to_opt(),
                         image: vec![ImageObjectImageFieldEnum::URL(r.img)],
                         ..Default::default()
                     },
@@ -408,7 +408,7 @@ fn parse_time(s: &str) -> i32 {
 
 fn parse_nutrition_schema(s: Vec<&str>) -> Vec<NutritionInformation> {
     let mut nutrition = NutritionInformation {
-        r#type: Some(AtType::NutritionInformation.to_string()),
+        r#type: AtType::NutritionInformation.to_opt(),
         ..Default::default()
     };
     s.iter().for_each(|s| {
@@ -1148,7 +1148,7 @@ Nutr. Assoc. : 0 0 0
         pub fn mxp() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     name: vec!["Apple Slaw".into()],
                     recipe_category: vec!["Side Dish".into()],
@@ -1176,7 +1176,7 @@ Nutr. Assoc. : 0 0 0
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     name: vec!["Apples and Noodles".into()],
                     recipe_category: vec!["Side Dish".into()],
@@ -1200,7 +1200,7 @@ Nutr. Assoc. : 0 0 0
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     name: vec!["ARTICHOKES AND PEAS".into()],
                     keywords: ["Vegetables", "Side Dish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
@@ -1220,7 +1220,7 @@ Nutr. Assoc. : 0 0 0
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("Exported from  MasterCook II")],
                     keywords: ["Appetizers", "Jewish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     name: vec![r#"Aunt Sadie's Fabulous Chopped Liver "Pineapple"#.into()],
@@ -1248,10 +1248,10 @@ Nutr. Assoc. : 0 0 0
         pub fn txt() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Macpoule")],
                     aggregate_rating: vec![AggregateRating {
-                        r#type: Some(AtType::AggregateRating.to_string()),
+                        r#type: AtType::AggregateRating.to_opt(),
                         rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(0.5)],
                         ..Default::default()
                     }],
@@ -1264,7 +1264,7 @@ Nutr. Assoc. : 0 0 0
                     )],
                     name: vec!["Best Chicken".into()],
                     nutrition: vec![NutritionInformation {
-                        r#type: Some(AtType::NutritionInformation.to_string()),
+                        r#type: AtType::NutritionInformation.to_opt(),
                         calories: vec![Energy::new("340")],
                         cholesterol_content: vec![Mass::new("97mg")],
                         fat_content: vec![Mass::new("23g")],
@@ -1293,7 +1293,7 @@ Nutr. Assoc. : 0 0 0
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Macpoule".into())],
                     description: vec![RecipeDescriptionFieldEnum::Text(
                         "Ramen has never been soooo delicious".into(),
@@ -1303,7 +1303,7 @@ Nutr. Assoc. : 0 0 0
                     )],
                     name: vec!["Delicious Ramen".into()],
                     nutrition: vec![NutritionInformation {
-                        r#type: Some(AtType::NutritionInformation.to_string()),
+                        r#type: AtType::NutritionInformation.to_opt(),
                         calories: vec![Energy::new("34")],
                         carbohydrate_content: vec![Mass::new("6g")],
                         cholesterol_content: vec![Mass::new("31mg")],

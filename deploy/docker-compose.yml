@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     image: reaper99/recipya-rs
     environment:
-      - RUST_LOG=debug,tokio_cron_scheduler=off
+      - RUST_LOG="debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn"
       - RECIPYA_DATABASE_URL=postgres://postgres:postgres@recipya-db:5432
       - RECIPYA_BASE_URL=http://0.0.0.0:8078
       - RECIPYA_IS_AUTOLOGIN=true
@@ -22,7 +22,7 @@ services:
     depends_on:
       recipya-db:
         condition: service_healthy
-  
+
   recipya-db:
     container_name: recipya-rs-db
     restart: unless-stopped
@@ -40,6 +40,6 @@ services:
       interval: 3s
       timeout: 5s
       retries: 10
-      
+
 volumes:
   recipya-rs-db:

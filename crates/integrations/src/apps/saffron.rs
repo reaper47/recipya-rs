@@ -118,8 +118,8 @@ where
     Ok(vec![Recipe::from(recipe)])
 }
 
-fn parse_saffron_recipe<'s>(input: &mut &'s str) -> WResult<SaffronRecipe> {
-    Ok(parse_recipe.map(SaffronRecipe::from).parse_next(input)?)
+fn parse_saffron_recipe(input: &mut &str) -> WResult<SaffronRecipe> {
+    parse_recipe.map(SaffronRecipe::from).parse_next(input)
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
@@ -153,29 +153,29 @@ fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
     parse_metadata_opt("Source:").parse_next(input)
 }
 
-fn parse_original_url<'s>(input: &mut &'s str) -> WResult<Option<Url>> {
+fn parse_original_url(input: &mut &str) -> WResult<Option<Url>> {
     parse_metadata_opt("Original URL:")
         .map(|opt: Option<&str>| opt.and_then(|s| Url::parse(s.trim()).ok()))
         .parse_next(input)
 }
 
-fn parse_servings<'s>(input: &mut &'s str) -> WResult<Option<i16>> {
+fn parse_servings(input: &mut &str) -> WResult<Option<i16>> {
     parse_metadata_opt("Yield:")
         .map(|s: Option<&str>| s.unwrap_or_default().parse().ok())
         .parse_next(input)
 }
 
-fn parse_prep_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+fn parse_prep_seconds(input: &mut &str) -> WResult<Option<i32>> {
     parse_metadata("Prep:").map(parse_time).parse_next(input)
 }
 
-fn parse_cook_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+fn parse_cook_seconds(input: &mut &str) -> WResult<Option<i32>> {
     opt(parse_metadata("Cook:"))
         .map(|opt| opt.and_then(parse_time))
         .parse_next(input)
 }
 
-fn parse_total_seconds<'s>(input: &mut &'s str) -> WResult<Option<i32>> {
+fn parse_total_seconds(input: &mut &str) -> WResult<Option<i32>> {
     opt(parse_metadata("Total:"))
         .map(|opt| opt.and_then(parse_time))
         .parse_next(input)

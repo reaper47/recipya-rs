@@ -15,7 +15,7 @@ use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
     RecipeRecipeInstructionsFieldEnum,
 };
-use schema_org::{Recipe, set_recipe_type};
+use schema_org::{AtType, Recipe};
 
 use super::helpers::read_file;
 use crate::Result;
@@ -51,7 +51,7 @@ struct Ingredient<'a> {
 impl From<AccuChefRecipe> for Recipe {
     fn from(r: AccuChefRecipe) -> Self {
         Self {
-            r#type: set_recipe_type(),
+            r#type: AtType::Recipe.to_opt(),
             context: Default::default(),
             cook_time: seconds_to_duration(r.times.cook_seconds),
             is_based_on: to_is_based_on(&r.source),
@@ -127,9 +127,8 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
             instructions: r
                 .instructions
                 .into_iter()
-                .filter_map(|s| {
-                    (!s.is_empty()).then(|| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
-                })
+                .filter(|&s| !s.is_empty())
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
                 .collect(),
             source: r.header.into(),
         }
@@ -281,7 +280,7 @@ mod tests {
             got,
             vec![
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["24 Hour Fruit Salad".into()],
@@ -310,7 +309,7 @@ mod tests {
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["7 Layer Salad".into()],
@@ -339,7 +338,7 @@ mod tests {
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["Aebleskiver".into()],
@@ -365,7 +364,7 @@ mod tests {
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["Ambrosia Delight".into()],

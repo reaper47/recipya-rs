@@ -7,14 +7,14 @@ use crate::field::{
     AggregateRatingWorstRatingFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Thing};
+use crate::{AtType, Thing, at_context};
 
 ///<https://schema.org/AggregateRating>
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct AggregateRating {
-    #[serde(rename = "@type", default = "set_type")]
+    #[serde(rename = "@type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: Option<String>,
@@ -80,6 +80,33 @@ pub struct AggregateRating {
     pub name: Vec<String>,
 }
 
-fn set_type() -> Option<String> {
-    Some(AtType::AggregateRating.to_string())
+impl AggregateRating {
+    /// Create a new `AggregateRating` with the minimum fields populated for a single rating.
+    pub fn new(rating_value: f32, rating_count: i32) -> Self {
+        Self {
+            r#type: AtType::AggregateRating.to_opt(),
+            context: at_context(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(rating_value)],
+            rating_count: vec![rating_count],
+            ..Default::default()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let rating = AggregateRating::new(4.5, 10);
+
+        assert_eq!(rating.r#type, AtType::AggregateRating.to_opt());
+        assert_eq!(rating.context, at_context());
+        assert_eq!(
+            rating.rating_value,
+            vec![AggregateRatingRatingValueFieldEnum::Number(4.5)]
+        );
+        assert_eq!(rating.rating_count, vec![10]);
+    }
 }

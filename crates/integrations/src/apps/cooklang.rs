@@ -48,7 +48,7 @@ struct CooklangRecipe {
 impl From<CooklangRecipe> for Recipe {
     fn from(r: CooklangRecipe) -> Self {
         Self {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             author: r
                 .author
                 .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
@@ -62,7 +62,7 @@ impl From<CooklangRecipe> for Recipe {
                 .source
                 .clone()
                 .map(|s| {
-                    if let Some(_) = s.parse::<Url>().ok() {
+                    if s.parse::<Url>().is_ok() {
                         vec![RecipeIsBasedOnFieldEnum::URL(s)]
                     } else {
                         vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]
@@ -111,7 +111,7 @@ impl From<CooklangRecipe> for Recipe {
                         RecipeToolFieldEnum::Text(t.name)
                     } else {
                         RecipeToolFieldEnum::HowToTool(Box::from(HowToTool {
-                            r#type: Some(AtType::HowToTool.to_string()),
+                            r#type: AtType::HowToTool.to_opt(),
                             name: vec![t.name],
                             required_quantity: vec![HowToToolRequiredQuantityFieldEnum::Number(
                                 t.quantity as f32,
@@ -457,7 +457,7 @@ Remove the soup from the heat and blend with a #blender, add the @double cream{5
         pretty_assertions::assert_eq!(
             got,
             vec![Recipe {
-                r#type: Some(AtType::Recipe.to_string()),
+                r#type: AtType::Recipe.to_opt(),
                 author: vec![RecipeAuthorFieldEnum::new_person("John Doe")],
                 cook_time: seconds_to_duration(60 * 60),
                 description: vec![RecipeDescriptionFieldEnum::Text(

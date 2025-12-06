@@ -43,6 +43,7 @@ pub enum Error {
     EntityNotFound {
         entity: &'static str,
     },
+    FailFetch,
     FailParse,
     Form,
     InvalidPayload,
