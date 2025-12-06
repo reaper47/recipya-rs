@@ -3,7 +3,9 @@ use serde_json::Number;
 use tracing::error;
 use uuid::Uuid;
 
-use schema_org::{AtType, Energy, Mass, NutritionInformation, field::RecipeKeywordsFieldEnum};
+use schema_org::{
+    AtType, Energy, Mass, NutritionInformation, at_context, field::RecipeKeywordsFieldEnum,
+};
 
 #[derive(Deserialize)]
 #[allow(unused)]
@@ -241,7 +243,7 @@ impl From<MealieNutrition> for NutritionInformation {
                 .cholesterol_content
                 .map(|s| vec![Mass::new(s)])
                 .unwrap_or_default(),
-            context: Some("https://schema.org".into()),
+            context: at_context(),
             fat_content: n
                 .fat_content
                 .map(|s| vec![Mass::new(s)])
@@ -267,7 +269,7 @@ impl From<MealieNutrition> for NutritionInformation {
                 .sugar_content
                 .map(|s| vec![Mass::new(s)])
                 .unwrap_or_default(),
-            r#type: Some(AtType::NutritionInformation.to_string()),
+            r#type: AtType::NutritionInformation.to_opt(),
             trans_fat_content: n
                 .trans_fat_content
                 .map(|s| vec![Mass::new(s)])
@@ -340,7 +342,9 @@ impl MealieRecipeComment {
     pub fn author(&self) -> Option<String> {
         if let Some(u) = self.full_name.clone() {
             Some(u)
-        } else { self.username.clone() }
+        } else {
+            self.username.clone()
+        }
     }
 }
 

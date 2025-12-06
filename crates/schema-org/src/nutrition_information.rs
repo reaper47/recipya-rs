@@ -79,3 +79,20 @@ impl NutritionInformation {
             && self.unsaturated_fat_content.is_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_empty() {
+        let empty = NutritionInformation::default();
+        assert!(empty.is_empty());
+
+        let non_empty = NutritionInformation {
+            calories: vec![Energy::new("100 kcal")],
+            ..Default::default()
+        };
+        assert!(!non_empty.is_empty());
+    }
+}

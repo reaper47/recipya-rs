@@ -12,6 +12,7 @@ use schema_org::field::{
 };
 use schema_org::{
     AggregateRating, AtType, Comment, Duration, DurationOrText, NutritionInformation, Recipe,
+    at_context,
 };
 use support::fs::new_fs_support;
 use tracing::{error, info};
@@ -370,8 +371,8 @@ impl MealieRecipeClient {
         );
 
         Ok(Recipe {
-            r#type: Some(AtType::Recipe.to_string()),
-            context: Some("https://schema.org".into()),
+            r#type: AtType::Recipe.to_opt(),
+            context: at_context(),
             nutrition: recipe
                 .nutrition
                 .map(|n| vec![NutritionInformation::from(n)])
@@ -420,8 +421,8 @@ impl MealieRecipeClient {
                     comments
                         .into_iter()
                         .map(|comment| Comment {
-                            r#type: Some(AtType::Comment.to_string()),
-                            context: Some("https://schema.org".into()),
+                            r#type: AtType::Comment.to_opt(),
+                            context: at_context(),
                             text: vec![comment.text],
                             date_created: vec![comment.created_at],
                             date_modified: vec![comment.updated_at],

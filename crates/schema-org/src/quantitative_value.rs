@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::field::{
     FieldEnum64, QuantitativeValueDescriptionFieldEnum, QuantitativeValueValueFieldEnum,
     QuantitativeValueValueReferenceFieldEnum,
 };
 use crate::helpers::one_or_many;
+use crate::{AtType, at_context};
 
 ///<https://schema.org/unitCode>
 ///<https://schema.org/Text>
@@ -68,6 +68,7 @@ impl QuantitativeValue {
     pub fn new(value: f32) -> Self {
         Self {
             r#type: AtType::QuantitativeValue.to_string(),
+            context: at_context(),
             value: vec![QuantitativeValueValueFieldEnum::Number(value)],
             ..Default::default()
         }
@@ -88,5 +89,33 @@ impl QuantitativeValue {
                 FieldEnum64::QuantitativeValue(_) => 0,
             })
             .unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let value = 42.0;
+
+        let got = QuantitativeValue::new(value);
+
+        assert_eq!(got.r#type, AtType::QuantitativeValue.to_string());
+        assert_eq!(got.context, at_context());
+        assert_eq!(
+            got.value,
+            vec![QuantitativeValueValueFieldEnum::Number(value)]
+        );
+    }
+
+    #[test]
+    fn test_to_number() {
+        let value = 42.0;
+
+        let got = QuantitativeValue::new(value).to_number();
+
+        assert_eq!(got, 42);
     }
 }

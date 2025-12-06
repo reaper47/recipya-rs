@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+use crate::Thing;
 use crate::field::{
     ListItemDescriptionFieldEnum, ListItemImageFieldEnum, ListItemPositionFieldEnum,
     ListItemSubjectOfFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AtType, Thing};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
@@ -17,7 +17,7 @@ pub type ListItemAdditionalTypeFieldEnum = String;
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ListItem {
-    #[serde(rename = "@type", default = "set_type")]
+    #[serde(rename = "@type")]
     pub r#type: Option<String>,
     #[serde(rename = "@context")]
     pub context: Option<String>,
@@ -65,8 +65,4 @@ pub struct ListItem {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
-}
-
-fn set_type() -> Option<String> {
-    Some(AtType::ListItem.to_string())
 }

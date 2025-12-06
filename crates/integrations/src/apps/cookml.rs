@@ -266,7 +266,7 @@ impl From<CookmlRecipe> for Recipe {
             .collect::<Vec<_>>();
 
         let nutrition = NutritionInformation {
-            r#type: Some(AtType::NutritionInformation.to_string()),
+            r#type: AtType::NutritionInformation.to_opt(),
             carbohydrate_content: r
                 .head
                 .carbohydrates
@@ -282,10 +282,10 @@ impl From<CookmlRecipe> for Recipe {
         };
 
         Self {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             aggregate_rating: if quality.is_some() {
                 vec![AggregateRating {
-                    r#type: Some(AtType::Review.to_string()),
+                    r#type: AtType::Review.to_opt(),
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(
                         quality.unwrap_or_default(),
                     )],
@@ -644,9 +644,9 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
 
         pub fn all_recipes1() -> Vec<Recipe> {
             vec![Recipe {
-                r#type: Some(AtType::Recipe.to_string()),
+                r#type: AtType::Recipe.to_opt(),
                 aggregate_rating: vec![AggregateRating {
-                    r#type: Some(AtType::Review.to_string()),
+                    r#type: AtType::Review.to_opt(),
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(4.0)],
                     ..Default::default()
                 }],
@@ -685,7 +685,7 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("1 Kuchen".into())],
                 ..Default::default()
             }, Recipe {
-                r#type: Some(AtType::Recipe.to_string()),
+                r#type: AtType::Recipe.to_opt(),
                 author: vec![RecipeAuthorFieldEnum::new_person("Ulrich Reinders".into())],
                 date_modified: vec!["2008-03-22".into()],
                 image: vec![
@@ -718,9 +718,9 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("16 Stücke".into())],
                 ..Default::default()
             }, Recipe {
-                r#type: Some(AtType::Recipe.to_string()),
+                r#type: AtType::Recipe.to_opt(),
                 aggregate_rating: vec![AggregateRating {
-                    r#type: Some(AtType::Review.to_string()),
+                    r#type: AtType::Review.to_opt(),
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(5.0)],
                     ..Default::default()
                 }],

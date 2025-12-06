@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::AtType;
 use crate::field::{MassDescriptionFieldEnum, MassImageFieldEnum};
 use crate::helpers::one_or_many;
+use crate::{AtType, at_context};
 
 ///<https://schema.org/Mass>
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
@@ -31,7 +31,8 @@ impl Mass {
     /// Creates a new Mass struct with the given value.
     pub fn new(mass: impl Into<String>) -> Self {
         Self {
-            r#type: Some(AtType::NutritionInformation.to_string()),
+            r#type: AtType::NutritionInformation.to_opt(),
+            context: at_context(),
             name: vec![mass.into()],
             ..Default::default()
         }
@@ -47,5 +48,26 @@ impl Mass {
                     .sum()
             })
             .unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let mass = Mass::new("100 grams");
+
+        assert_eq!(mass.r#type, AtType::NutritionInformation.to_opt());
+        assert_eq!(mass.context, at_context());
+        assert_eq!(mass.name, vec!["100 grams"]);
+    }
+
+    #[test]
+    fn test_to_number() {
+        let mass = Mass::new("100 grams");
+
+        assert_eq!(mass.to_number(), 100);
     }
 }

@@ -57,7 +57,7 @@ impl Default for FieldEnum4 {
 impl FieldEnum4 {
     pub fn new_creative_work_text(s: &str) -> Self {
         Self::CreativeWork(Box::new(CreativeWork {
-            r#type: Some(AtType::CreativeWork.to_string()),
+            r#type: AtType::CreativeWork.to_opt(),
             text: vec![s.to_string()],
             ..Default::default()
         }))
@@ -1854,7 +1854,7 @@ impl Default for FieldEnum150 {
 impl FieldEnum150 {
     pub fn new_tool(name: impl Into<String>, quantity: f32) -> Self {
         Self::HowToTool(Box::new(HowToTool {
-            r#type: Some(AtType::HowToTool.to_string()),
+            r#type: AtType::HowToTool.to_opt(),
             name: vec![name.into()],
             required_quantity: vec![HowToToolRequiredQuantityFieldEnum::Number(quantity)],
             ..Default::default()

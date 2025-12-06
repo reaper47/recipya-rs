@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::field::DurationDescriptionFieldEnum;
 use crate::helpers::one_or_many;
+use crate::{AtType, at_context};
 
+/// Converts a value to an ISO 8601 duration string representation.
 pub trait ToIso8601 {
     fn to_is8601_duration(&self) -> Option<iso8601::Duration>;
 }
@@ -13,6 +15,16 @@ impl ToIso8601 for Vec<DurationOrText> {
     }
 }
 
+/// A flexible duration representation that can be either a structured duration or a text string.
+///
+/// This enum allows for parsing duration values that may come in different formats,
+/// such as from configuration files or API responses where durations might be
+/// specified either as structured data or as ISO 8601 duration strings.
+///
+/// # Variants
+///
+/// * `Duration` - A structured duration value
+/// * `Text` - A string representation of a duration (e.g. ISO 8601 format)
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
@@ -66,6 +78,8 @@ pub struct Duration {
 impl From<iso8601::Duration> for Duration {
     fn from(value: iso8601::Duration) -> Self {
         Self {
+            r#type: AtType::Duration.to_opt(),
+            context: at_context(),
             name: vec![value.to_string()],
             ..Default::default()
         }
@@ -75,5 +89,29 @@ impl From<iso8601::Duration> for Duration {
 impl From<iso8601::Duration> for DurationOrText {
     fn from(value: iso8601::Duration) -> Self {
         Self::new_text(value.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_text() {
+        let s = "20250607";
+
+        let got = DurationOrText::new_text(s);
+
+        assert_eq!(got, DurationOrText::Text(s.into()));
+    }
+
+    #[test]
+    fn test_to_iso8601() {
+        let s = "P1Y2M3DT4H5M6S";
+        let d = DurationOrText::new_text(s);
+
+        let got = d.to_iso8601();
+
+        assert_eq!(got, iso8601::duration(s).ok());
     }
 }

@@ -97,7 +97,7 @@ impl From<KalorioTextRecipe> for Recipe {
         };
 
         Self {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
             is_based_on: r
                 .kalorio_version
@@ -496,7 +496,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
         pub fn all_recipes_txt() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Petra Holzapfel")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
                         "Kalorio! V4.04".into(),
@@ -538,7 +538,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
                         "Kalorio! V4.04".into(),
@@ -577,7 +577,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 ..Default::default()
                 },
                 Recipe {
-                    r#type: Some(AtType::Recipe.to_string()),
+                    r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
                         "Kalorio! V4.04".into(),

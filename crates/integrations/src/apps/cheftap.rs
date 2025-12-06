@@ -35,7 +35,7 @@ struct RecipeComponents<'a> {
 impl From<ChefTapRecipe> for Recipe {
     fn from(r: ChefTapRecipe) -> Self {
         Recipe {
-            r#type: Some(AtType::Recipe.to_string()),
+            r#type: AtType::Recipe.to_opt(),
             is_based_on: to_is_based_on(&r.source.clone().unwrap_or_default()),
             name: vec![r.title],
             recipe_ingredient: r.ingredients,
@@ -162,7 +162,7 @@ mod tests {
         pretty_assertions::assert_eq!(
             got,
             vec![Recipe {
-                r#type: Some(AtType::Recipe.to_string()),
+                r#type: AtType::Recipe.to_opt(),
                 is_based_on: to_is_based_on(
                     "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()
                 ),

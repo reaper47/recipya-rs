@@ -23,7 +23,7 @@ pub(super) fn to_is_based_on(value: &str) -> Vec<RecipeIsBasedOnFieldEnum> {
             Err(_) => {
                 vec![RecipeIsBasedOnFieldEnum::CreativeWork(Box::new(
                     CreativeWork {
-                        r#type: Some(AtType::CreativeWork.to_string()),
+                        r#type: AtType::CreativeWork.to_opt(),
                         text: vec![value.into()],
                         ..Default::default()
                     },
