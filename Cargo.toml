@@ -31,11 +31,7 @@ repository = "https://github.com/reaper47/recipya-rs"
 rust-version = "1.90.0"
 
 [workspace.dependencies]
-# local crates
 app = { path = "./crates/app" }
-# in-tree crates that are published separately and follow semver.
-
-# non-local crates
 async-stream = "0.3.6"
 async-trait = "0.1.89"
 auth = { path = "./crates/auth" }
