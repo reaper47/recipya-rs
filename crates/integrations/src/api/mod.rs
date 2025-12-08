@@ -1,25 +1,33 @@
 mod common;
 
 pub mod mealie;
+pub mod nextcloud;
 
-pub use common::{Credentials, FailedRecipes};
-use futures::{StreamExt, pin_mut};
-use tokio::sync::Mutex;
-use uuid::Uuid;
+pub use common::*;
 
 use std::{collections::HashMap, str::FromStr, sync::Arc};
 
 use async_stream::stream;
+use futures::{StreamExt, pin_mut};
 use futures_core::Stream;
 use serde::Deserialize;
 use strum::{EnumIter, EnumString, IntoEnumIterator};
+use tokio::sync::Mutex;
+use uuid::Uuid;
 
 use schema_org::Recipe;
 
+use crate::api::mealie::{
+    Authenticated as AuthenticatedMealie, Unauthenticated as UnauthenticatedMealie,
+};
+use crate::api::nextcloud::{
+    Authenticated as AuthenticatedNextcloud, Unauthenticated as UnauthenticatedNextcloud,
+};
 use crate::{
     Error,
-    api::mealie::{
-        Authenticated, Mealie, MealieRecipeClient, Unauthenticated, structs::MealieUser,
+    api::{
+        mealie::{Mealie, MealieRecipeClient, structs::MealieUser},
+        nextcloud::{Nextcloud, NextcloudRecipeClient},
     },
 };
 
@@ -55,17 +63,17 @@ impl Api {
     /// Fetches recipes from the given input source and returns a vector of `schema_org::Recipe` objects.
     pub fn fetch_recipes_stream(
         &self,
-        host: &str,
+        base_url: &str,
         credentials: Credentials,
-    ) -> impl Stream<Item = std::result::Result<(Uuid, Recipe, NumRecipes), (Uuid, NumRecipes, Error)>>
+    ) -> impl Stream<Item = std::result::Result<(String, Recipe, NumRecipes), (String, NumRecipes, Error)>>
     {
         stream! {
             match self {
                 Api::Mealie => {
-                        let mealie = match Mealie::new(MealieRecipeClient::new(host)).login(credentials).await {
+                        let mealie = match Mealie::new(MealieRecipeClient::new(base_url)).login(credentials).await {
                             Ok(m) => Arc::new(m),
                             Err(err) => {
-                                yield Err((Uuid::nil(), 0,  err));
+                                yield Err((String::new(), 0,  err));
                                 return;
                             }
                         };
@@ -73,7 +81,7 @@ impl Api {
                         let recipe_ids = match mealie.fetch_recipe_ids().await {
                             Ok(ids) => ids,
                             Err(err) => {
-                                yield Err((Uuid::nil(), 0, err));
+                                yield Err((String::new(), 0, err));
                                 return;
                             }
                         };
@@ -97,8 +105,8 @@ impl Api {
                             pin_mut!(fetches);
                             while let Some((id, recipe)) = fetches.next().await {
                                 match recipe {
-                                    Ok(recipe) => yield Ok((id, recipe, num_recipes)),
-                                    Err(err) => yield Err((err.0, num_recipes, err.1)),
+                                    Ok(recipe) => yield Ok((id.to_string(), recipe, num_recipes)),
+                                    Err((id, err)) => yield Err((id.to_string(), num_recipes, err)),
                                 }
                             }
                         }
@@ -106,16 +114,53 @@ impl Api {
                         match Arc::try_unwrap(mealie) {
                             Ok(mealie) => {
                                 if let Err(err) = mealie.logout().await {
-                                    yield Err((Uuid::nil(), num_recipes, err));
+                                    yield Err((String::new(), num_recipes, err));
                                 }
                             },
-                            Err(_) => yield Err((Uuid::nil(), num_recipes, Error::ApiError("Failed to logout: Arc still shared".into()))),
+                            Err(_) => yield Err((String::new(), num_recipes, Error::ApiError("Failed to logout: Arc still shared".into()))),
                         }
                 }
-                Api::Nextcloud => todo!("Nextcloud API not implemented"),
+                Api::Nextcloud => {
+                    let nextcloud = match Nextcloud::new(NextcloudRecipeClient::new(base_url)).login(credentials).await {
+                        Ok(n) => Arc::new(n),
+                        Err(err) => {
+                            yield Err((String::new(), 0,  err));
+                            return;
+                        }
+                    };
+
+                    let recipe_ids = match nextcloud.fetch_recipe_ids().await {
+                        Ok(ids) => ids,
+                        Err(err) => {
+                            yield Err((String::new(), 0, err));
+                            return;
+                        }
+                    };
+
+                    let num_recipes = recipe_ids.len() as i64;
+
+                    let fetches = futures::stream::iter(recipe_ids).map(|id| {
+                        let nc = Arc::clone(&nextcloud);
+
+                        async move {
+                            match nc.fetch_recipe(id.clone()).await {
+                                Ok(recipe) => Ok((id, recipe)),
+                                Err(err) => Err(err),
+                            }
+                        }
+                    }).buffer_unordered(50);
+
+                    pin_mut!(fetches);
+                    while let Some(result) = fetches.next().await {
+                        match result {
+                            Ok((id, recipe)) => yield Ok((id, recipe, num_recipes)),
+                            Err((id, err)) => yield Err((id, num_recipes, err)),
+                        }
+                    }
+                },
                 Api::Tandoor => todo!("Tandoor API not implemented"),
                 Api::Unknown => {
-                    yield Err((Uuid::nil(), 0, Error::UnsupportedApi));
+                    yield Err((String::new(), 0, Error::UnsupportedApi));
                     return;
                 }
             }

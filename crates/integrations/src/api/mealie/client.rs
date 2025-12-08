@@ -22,11 +22,25 @@ use super::host::Host;
 use crate::api::mealie::structs::{
     AuthPayload, MealieRecipe, MealieRecipes, MealieUser, TokenResponse,
 };
-use crate::api::{Credentials, common::RecipeClient};
+use crate::api::{AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState};
 use crate::{Error, Result};
 
-pub struct AuthenticatedState;
-pub struct UnauthenticatedState;
+#[async_trait]
+pub trait RecipeClient: Clone + Send + Sync {
+    /// Establishes a connection to the host using the provided credentials.
+    /// Replaces the client's state with the new authenticated connection.
+    async fn login(self, credentials: Credentials) -> Result<Self>;
+
+    /// Fetches all recipe IDs from the connected host.
+    async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>>;
+
+    /// Fetches a recipe from the connected host.
+    async fn fetch_recipe(&self, id: Uuid, users: &mut HashMap<Uuid, MealieUser>)
+    -> Result<Recipe>;
+
+    /// Logs out of the connected host.
+    async fn logout(self) -> Result<Self>;
+}
 
 #[async_trait]
 pub trait Unauthenticated<C: RecipeClient>: Send + Sync {
@@ -68,10 +82,8 @@ impl<C: RecipeClient> Mealie<UnauthenticatedState, C> {
 #[async_trait]
 impl<C: RecipeClient + Send> Unauthenticated<C> for Mealie<UnauthenticatedState, C> {
     async fn login(mut self, credentials: Credentials) -> Result<Mealie<AuthenticatedState, C>> {
-        let client = self.recipe_client.login(credentials).await?;
-
         Ok(Mealie {
-            recipe_client: client,
+            recipe_client: self.recipe_client.login(credentials).await?,
             _state: PhantomData,
         })
     }
@@ -154,7 +166,17 @@ impl RecipeClient for MealieRecipeClient {
 
     async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>> {
         info!("Mealie API: Fetching recipes");
-        Ok(self.fetch_recipe_ids().await?)
+
+        let mut recipe_ids = Vec::new();
+        let mut next_page = Some("1".to_string());
+
+        while let Some(page) = next_page {
+            let all_recipes = self.fetch_recipes_page(page).await?;
+            recipe_ids.extend(all_recipes.items.into_iter().filter_map(|recipe| recipe.id));
+            next_page = all_recipes.next;
+        }
+
+        Ok(recipe_ids)
     }
 
     async fn logout(self) -> Result<Self> {
@@ -180,9 +202,9 @@ impl RecipeClient for MealieRecipeClient {
 
 impl MealieRecipeClient {
     /// Creates a new instance of the MealieRecipeClient.
-    pub fn new(host: impl Into<String>) -> Self {
+    pub fn new(base_url: impl Into<String>) -> Self {
         Self {
-            host: Host::new(host),
+            host: Host::new(base_url),
             client: Client::new(),
         }
     }
@@ -245,19 +267,6 @@ impl MealieRecipeClient {
         }
     }
 
-    async fn fetch_recipe_ids(&self) -> Result<Vec<Uuid>> {
-        let mut recipe_ids = Vec::new();
-        let mut next_page = Some("1".to_string());
-
-        while let Some(page) = next_page {
-            let all_recipes = self.fetch_recipes_page(page).await?;
-            recipe_ids.extend(all_recipes.items.into_iter().filter_map(|recipe| recipe.id));
-            next_page = all_recipes.next;
-        }
-
-        Ok(recipe_ids)
-    }
-
     async fn fetch_recipes_page(&self, page: String) -> Result<MealieRecipes> {
         let res = self.client.get(self.host.recipes_url(page)).send().await?;
 
@@ -276,9 +285,7 @@ impl MealieRecipeClient {
         &self,
         id: Uuid,
     ) -> std::result::Result<(Uuid, MealieRecipe), (Uuid, Error)> {
-        const MAX_ATTEMPTS: usize = 3;
-
-        for attempt in 1..=MAX_ATTEMPTS {
+        for attempt in 1..=MAX_RETRY_ATTEMPTS {
             let delay = std::time::Duration::from_millis(50 * attempt as u64);
 
             match self.client.get(self.host.recipe_url(id)).send().await {
@@ -289,7 +296,7 @@ impl MealieRecipeClient {
                         .map_err(|err| (id, Error::ApiError(err.to_string())))?;
 
                     if bytes.is_empty() {
-                        if attempt < MAX_ATTEMPTS {
+                        if attempt < MAX_RETRY_ATTEMPTS {
                             tokio::time::sleep(delay).await;
                             continue;
                         }
@@ -301,17 +308,15 @@ impl MealieRecipeClient {
 
                     return Ok((id, recipe));
                 }
-
                 Ok(res) => {
-                    if attempt < MAX_ATTEMPTS {
+                    if attempt < MAX_RETRY_ATTEMPTS {
                         tokio::time::sleep(delay).await;
                         continue;
                     }
                     return Err((id, Error::ApiError(res.text().await.unwrap_or_default())));
                 }
-
                 Err(err) => {
-                    if attempt < MAX_ATTEMPTS {
+                    if attempt < MAX_RETRY_ATTEMPTS {
                         tokio::time::sleep(delay).await;
                         continue;
                     }

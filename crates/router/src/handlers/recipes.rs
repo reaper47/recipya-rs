@@ -928,6 +928,10 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
         let state = state.clone();
         let start_time = Instant::now();
 
+        state
+            .broadcast_progress("Fetching recipes...", 0, 100, true, user_id)
+            .await;
+
         let api_stream = form
             .api
             .fetch_recipes_stream(&form.url, Credentials::new(form.username, form.password));
