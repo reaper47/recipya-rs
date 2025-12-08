@@ -61,8 +61,11 @@
   <component name="ChangeListManager">
     <list default="true" id="e21f6fad-3429-4b72-974e-21e51aed12b6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/api/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/api/common.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/api/mealie/client.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/api/mealie/client.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/integrations/src/api/mealie/host.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/api/mealie/host.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/integrations/src/api/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/integrations/src/api/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/router/src/handlers/recipes.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -858,7 +861,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "SHELLCHECK.PATH": "/home/macpoule/.local/share/JetBrains/RustRover2024.3/Shell Script/shellcheck",
-    "git-widget-placeholder": "#179 on 177-import-recipes-using-mealie-api",
+    "git-widget-placeholder": "181-import-recipes-using-the-nextcloud-cookbook-api",
     "last_opened_file_path": "/home/macpoule/Documents/Projects/recipya-rs/crates/schema-org/src",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -1060,7 +1063,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/crates/router/src/handlers/recipes.rs</url>
-          <line>983</line>
+          <line>987</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
       </breakpoints>

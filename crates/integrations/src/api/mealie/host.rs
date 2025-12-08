@@ -4,6 +4,7 @@ use uuid::Uuid;
 pub struct Host(String);
 
 impl Host {
+    /// Creates a new host instance.
     pub fn new(host: impl Into<String>) -> Self {
         let mut host = host.into();
         if host.ends_with('/') {
@@ -12,14 +13,17 @@ impl Host {
         Self(host)
     }
 
+    /// Assembles the login URL.
     pub fn login_url(&self) -> String {
         format!("{}/api/auth/token", self.0)
     }
 
+    /// Assembles the logout URL.
     pub fn logout_url(&self) -> String {
         format!("{}/api/auth/logout", self.0)
     }
 
+    /// Assembles the URL to fetch a recipe image.
     pub fn recipe_image_url(&self, recipe_id: Uuid) -> String {
         format!(
             "{}/api/media/recipes/{recipe_id}/images/original.webp",
@@ -27,14 +31,17 @@ impl Host {
         )
     }
 
+    /// Assembles the URL to fetch a recipe.
     pub fn recipe_url(&self, recipe_id: Uuid) -> String {
         format!("{}/api/recipes/{recipe_id}", self.0)
     }
 
+    /// Assembles the URL to fetch recipes.
     pub fn recipes_url(&self, page: String) -> String {
         format!("{}/api/recipes?page={page}", self.0)
     }
 
+    /// Assembles the URL to fetch a user.
     pub fn user_url(&self, user_id: Uuid) -> String {
         format!("{}/api/admin/users/{user_id}", self.0)
     }
