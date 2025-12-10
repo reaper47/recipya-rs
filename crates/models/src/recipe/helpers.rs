@@ -234,7 +234,7 @@ where
             .map(|(idx, (id, _))| InstructionRecipeForInsert {
                 instruction_id: id,
                 recipe_id,
-                section_id: section_id,
+                section_id,
                 item_order: idx as i16,
             })
             .collect::<Vec<_>>();

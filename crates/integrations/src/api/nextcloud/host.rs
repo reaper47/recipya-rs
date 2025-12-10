@@ -2,9 +2,13 @@
 pub struct Host(String);
 
 impl Host {
-    /// Creates a new host instance.
-    pub fn new(url: impl Into<String>) -> Self {
-        Host(url.into())
+    /// Creates a new `Host` instance.
+    pub fn new(base_url: impl Into<String>) -> Self {
+        let mut host = base_url.into();
+        if host.ends_with('/') {
+            host.pop();
+        }
+        Self(host)
     }
 
     /// Assembles the URL to fetch recipes.

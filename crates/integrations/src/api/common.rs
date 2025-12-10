@@ -1,6 +1,9 @@
+use std::fmt;
+
+use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 use uuid::Uuid;
 
-use crate::Error;
+use crate::{Error, Result};
 
 pub type FailedRecipes = Vec<(Uuid, Error)>;
 
@@ -21,3 +24,32 @@ impl Credentials {
 
 pub struct AuthenticatedState;
 pub struct UnauthenticatedState;
+
+/// Assembles a token header for authentication.
+pub fn assemble_token_header(auth_type: AuthType, token: &str) -> Result<HeaderMap> {
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        AUTHORIZATION,
+        HeaderValue::from_str(&format!("{auth_type} {token}"))
+            .map_err(|err| Error::ApiError(format!("Invalid token: {err}")))?,
+    );
+    Ok(headers)
+}
+
+pub enum AuthType {
+    Basic,
+    Bearer,
+}
+
+impl fmt::Display for AuthType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                AuthType::Basic => "Basic",
+                AuthType::Bearer => "Bearer",
+            }
+        )
+    }
+}
