@@ -936,15 +936,43 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
             .api
             .fetch_recipes_stream(&form.url, Credentials::new(form.username, form.password));
 
+        let db_stream = api_stream
+            .map(|res| {
+                let state = state.clone();
+
+                async move {
+                    match res {
+                        Ok((id, recipe, num_recipes)) => {
+                            match push_recipe_in_db(&state, recipe, user_id).await {
+                                Ok(recipe_id_db) => Ok((recipe_id_db, num_recipes)),
+                                Err(err) => {
+                                    error!(
+                                        "Failed to push recipe with id '{id}' to database: {err}",
+                                    );
+                                    Err((id, num_recipes, Error::Database))
+                                }
+                            }
+                        }
+                        Err((id, num_recipes, err)) => {
+                            error!("Failed to fetch recipe with id '{id}' from API: {err}");
+                            Err((id, num_recipes, Error::FailFetch))
+                        }
+                    }
+                }
+            })
+            .buffer_unordered(16);
+
+        pin_mut!(db_stream);
+
         let mut processed = 0;
         let mut successes = Vec::new();
         let mut failures = Vec::new();
         let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
 
-        pin_mut!(api_stream);
-        while let Some(res) = api_stream.next().await {
+        while let Some(res) = db_stream.next().await {
             match res {
-                Ok((id, recipe, num_recipes)) => {
+                Ok((recipe_id, num_recipes)) => {
+                    successes.push(recipe_id);
                     state
                         .broadcast_progress(
                             "Fetching recipes...",
@@ -955,29 +983,18 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
                         )
                         .await;
 
-                    match push_recipe_in_db(&state, recipe, &mut report, user_id).await {
-                        Ok(id) => {
-                            successes.push(id);
-                        }
-                        Err(err) => {
-                            error!("Pushing {api} recipe with id '{id}' into database: {err}");
-                            failures.push((id, Error::Database));
-                        }
-                    }
+                    // match push_recipe_in_db(&state, recipe, &mut report, user_id).await {
+                    //     Ok(id) => {
+                    //         successes.push(id);
+                    //     }
+                    //     Err(err) => {
+                    //         error!("Pushing {api} recipe with id '{id}' into database: {err}");
+                    //         failures.push((id, Error::Database));
+                    //     }
+                    // }
                 }
-                Err((id, num_recipes, err)) => {
-                    state
-                        .broadcast_progress(
-                            "Fetching recipes...",
-                            processed,
-                            num_recipes,
-                            true,
-                            user_id,
-                        )
-                        .await;
-
-                    error!("Fetching recipe with id '{id}' using the {api} API failed: {err}");
-                    failures.push((id, Error::FailFetch));
+                Err((recipe_api_id, _, err)) => {
+                    failures.push((recipe_api_id, err));
                 }
             }
 
@@ -992,9 +1009,8 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
 async fn push_recipe_in_db(
     state: &AppState,
     recipe: schema_org::Recipe,
-    report: &mut ReportForCreate,
     user_id: i64,
-) -> Result<i64> {
+) -> std::result::Result<i64, Error> {
     let recipe = schema_to_recipe_for_create(state, recipe).await;
 
     match Recipe::create(&state.mm, user_id, &recipe).await {
