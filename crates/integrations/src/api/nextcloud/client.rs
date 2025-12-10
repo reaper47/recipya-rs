@@ -2,10 +2,7 @@ use std::{marker::PhantomData, path::PathBuf};
 
 use async_trait::async_trait;
 use base64::{Engine as _, engine::general_purpose};
-use reqwest::{
-    Client,
-    header::{AUTHORIZATION, HeaderMap, HeaderValue},
-};
+use reqwest::Client;
 use schema_org::{
     AtType, DurationOrText, NutritionInformation, at_context,
     field::{
@@ -20,7 +17,8 @@ use tracing::info;
 use crate::{
     Error, Result,
     api::{
-        AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState,
+        AuthType, AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState,
+        assemble_token_header,
         nextcloud::{
             host::Host,
             structs::{Recipe, Recipes},
@@ -65,6 +63,7 @@ pub struct Nextcloud<State, C: RecipeClient> {
 }
 
 impl<C: RecipeClient> Nextcloud<UnauthenticatedState, C> {
+    /// Creates a new unauthenticated Nextcloud client.
     pub fn new(recipe_client: C) -> Self {
         Self {
             recipe_client,
@@ -114,21 +113,13 @@ pub struct NextcloudRecipeClient {
 impl RecipeClient for NextcloudRecipeClient {
     async fn login(self, credentials: Credentials) -> Result<Self> {
         let credentials = format!("{}:{}", credentials.username, credentials.password);
-        let auth_value = format!(
-            "Basic {}",
-            general_purpose::STANDARD.encode(credentials.as_bytes())
-        );
-
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(&auth_value)
-                .map_err(|_| Error::ApiError("Nextcloud API: Invalid auth header".into()))?,
-        );
+        let token = general_purpose::STANDARD.encode(credentials.as_bytes());
 
         Ok(Self {
             host: self.host,
-            client: Client::builder().default_headers(headers).build()?,
+            client: Client::builder()
+                .default_headers(assemble_token_header(AuthType::Basic, &token)?)
+                .build()?,
         })
     }
 

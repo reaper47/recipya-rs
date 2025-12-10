@@ -4,9 +4,9 @@ use uuid::Uuid;
 pub struct Host(String);
 
 impl Host {
-    /// Creates a new host instance.
-    pub fn new(host: impl Into<String>) -> Self {
-        let mut host = host.into();
+    /// Creates a new `Host` instance.
+    pub fn new(base_url: impl Into<String>) -> Self {
+        let mut host = base_url.into();
         if host.ends_with('/') {
             host.pop();
         }

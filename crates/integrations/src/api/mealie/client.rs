@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 use reqwest::Client;
-use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 use schema_org::field::{
     CommentAuthorFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
     RecipeImageFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
@@ -22,7 +21,10 @@ use super::host::Host;
 use crate::api::mealie::structs::{
     AuthPayload, MealieRecipe, MealieRecipes, MealieUser, TokenResponse,
 };
-use crate::api::{AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState};
+use crate::api::{
+    AuthType, AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState,
+    assemble_token_header,
+};
 use crate::{Error, Result};
 
 #[async_trait]
@@ -71,6 +73,7 @@ pub struct Mealie<State, C: RecipeClient> {
 }
 
 impl<C: RecipeClient> Mealie<UnauthenticatedState, C> {
+    /// Creates a new unauthenticated Mealie client.
     pub fn new(recipe_client: C) -> Self {
         Self {
             recipe_client,
@@ -125,19 +128,13 @@ impl RecipeClient for MealieRecipeClient {
     async fn login(self, credentials: Credentials) -> Result<Self> {
         info!("Mealie API: Authenticating");
 
-        let host = self.host.clone();
         let token = self.login_helper(credentials).await?;
 
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {token}"))
-                .map_err(|err| Error::ApiError(format!("Invalid token: {err}")))?,
-        );
-
         Ok(Self {
-            host,
-            client: Client::builder().default_headers(headers).build()?,
+            host: self.host.clone(),
+            client: Client::builder()
+                .default_headers(assemble_token_header(AuthType::Bearer, &token)?)
+                .build()?,
         })
     }
 

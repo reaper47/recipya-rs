@@ -2,6 +2,7 @@ mod common;
 
 pub mod mealie;
 pub mod nextcloud;
+pub mod tandoor;
 
 pub use common::*;
 
@@ -23,6 +24,10 @@ use crate::api::mealie::{
 use crate::api::nextcloud::{
     Authenticated as AuthenticatedNextcloud, Unauthenticated as UnauthenticatedNextcloud,
 };
+use crate::api::tandoor::{
+    Authenticated as AuthenticatedTandoor, Unauthenticated as UnauthenticatedTandoor,
+};
+use crate::api::tandoor::{Tandoor, TandoorRecipeClient};
 use crate::{
     Error,
     api::{
@@ -158,7 +163,44 @@ impl Api {
                         }
                     }
                 },
-                Api::Tandoor => todo!("Tandoor API not implemented"),
+                Api::Tandoor => {
+                    let tandoor = match Tandoor::new(TandoorRecipeClient::new(base_url)).login(credentials).await {
+                        Ok(t) => Arc::new(t),
+                        Err(err) => {
+                            yield Err((String::new(), 0,  err));
+                            return;
+                        }
+                    };
+
+                    let recipe_ids = match tandoor.fetch_recipe_ids().await {
+                        Ok(ids) => ids,
+                        Err(err) => {
+                            yield Err((String::new(), 0, err));
+                            return;
+                        }
+                    };
+
+                    let num_recipes = recipe_ids.len() as i64;
+
+                    let fetches = futures::stream::iter(recipe_ids).map(|id| {
+                        let tan = Arc::clone(&tandoor);
+
+                        async move {
+                            match tan.fetch_recipe(id).await {
+                                Ok(recipe) => Ok((id, recipe)),
+                                Err(err) => Err(err),
+                            }
+                        }
+                    }).buffer_unordered(50);
+
+                    pin_mut!(fetches);
+                    while let Some(result) = fetches.next().await {
+                        match result {
+                            Ok((id, recipe)) => yield Ok((id.to_string(), recipe, num_recipes)),
+                            Err((id, err)) => yield Err((id.to_string(), num_recipes, err)),
+                        }
+                    }
+                },
                 Api::Unknown => {
                     yield Err((String::new(), 0, Error::UnsupportedApi));
                     return;
