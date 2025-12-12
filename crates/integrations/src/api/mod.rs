@@ -153,7 +153,7 @@ impl Api {
                                 Err(err) => Err(err),
                             }
                         }
-                    }).buffer_unordered(50);
+                    }).buffer_unordered(16);
 
                     pin_mut!(fetches);
                     while let Some(result) = fetches.next().await {
@@ -191,7 +191,7 @@ impl Api {
                                 Err(err) => Err(err),
                             }
                         }
-                    }).buffer_unordered(50);
+                    }).buffer_unordered(16);
 
                     pin_mut!(fetches);
                     while let Some(result) = fetches.next().await {

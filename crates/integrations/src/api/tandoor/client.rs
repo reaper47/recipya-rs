@@ -334,11 +334,15 @@ impl TandoorRecipeClient {
                 .filter(|s| !s.is_empty())
                 .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
                 .unwrap_or_default(),
-            image: match self.fetch_recipe_image(recipe.image).await? {
-                Some(s) => vec![RecipeImageFieldEnum::URL(
-                    s.to_str().map(String::from).unwrap_or_default(),
-                )],
-                None => vec![],
+            image: if let Some(image) = recipe.image {
+                match self.fetch_recipe_image(image).await? {
+                    Some(s) => vec![RecipeImageFieldEnum::URL(
+                        s.to_str().map(String::from).unwrap_or_default(),
+                    )],
+                    None => vec![],
+                }
+            } else {
+                vec![]
             },
             description: recipe
                 .description

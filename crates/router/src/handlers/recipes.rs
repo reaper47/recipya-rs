@@ -929,7 +929,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
         let start_time = Instant::now();
 
         state
-            .broadcast_progress("Fetching recipes...", 0, 100, true, user_id)
+            .broadcast_progress("Preparing import...", 0, 100, true, user_id)
             .await;
 
         let api_stream = form
@@ -943,19 +943,21 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
                 async move {
                     match res {
                         Ok((id, recipe, num_recipes)) => {
+                            let recipe_name = recipe.name.first().cloned().unwrap_or_default();
+
                             match push_recipe_in_db(&state, recipe, user_id).await {
-                                Ok(recipe_id_db) => Ok((recipe_id_db, num_recipes)),
-                                Err(err) => {
+                                Ok(recipe_id_db) => Ok((recipe_id_db, recipe_name, num_recipes)),
+                                Err((name, err)) => {
                                     error!(
                                         "Failed to push recipe with id '{id}' to database: {err}",
                                     );
-                                    Err((id, num_recipes, Error::Database))
+                                    Err((id, Some(name), num_recipes, Error::Database))
                                 }
                             }
                         }
                         Err((id, num_recipes, err)) => {
                             error!("Failed to fetch recipe with id '{id}' from API: {err}");
-                            Err((id, num_recipes, Error::FailFetch))
+                            Err((id, None, num_recipes, Error::FailFetch))
                         }
                     }
                 }
@@ -964,42 +966,75 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
 
         pin_mut!(db_stream);
 
+        let mut total = -1;
         let mut processed = 0;
         let mut successes = Vec::new();
         let mut failures = Vec::new();
         let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
 
+        let mut last_progress_time = Instant::now();
+        let progress_interval = std::time::Duration::from_millis(500);
+        let batch_size = 10;
+
         while let Some(res) = db_stream.next().await {
             match res {
-                Ok((recipe_id, num_recipes)) => {
-                    successes.push(recipe_id);
-                    state
-                        .broadcast_progress(
-                            "Fetching recipes...",
-                            processed,
-                            num_recipes,
-                            true,
-                            user_id,
-                        )
-                        .await;
+                Ok((recipe_id, recipe_name, num_recipes)) => {
+                    if total == -1 {
+                        total = num_recipes;
+                    }
 
-                    // match push_recipe_in_db(&state, recipe, &mut report, user_id).await {
-                    //     Ok(id) => {
-                    //         successes.push(id);
-                    //     }
-                    //     Err(err) => {
-                    //         error!("Pushing {api} recipe with id '{id}' into database: {err}");
-                    //         failures.push((id, Error::Database));
-                    //     }
-                    // }
+                    report
+                        .report_logs
+                        .push(ReportLogForCreate::new_success(recipe_name));
+
+                    successes.push(recipe_id);
                 }
-                Err((recipe_api_id, _, err)) => {
+                Err((recipe_api_id, recipe_name, num_recipes, err)) => {
+                    if total == -1 {
+                        total = num_recipes;
+                    }
+
+                    match err {
+                        Error::Model(DuplicateEntity) if recipe_name.is_some() => {
+                            report.report_logs.push(ReportLogForCreate::new_warning(
+                                recipe_name.unwrap_or_default(),
+                                "Recipe exists".into(),
+                            ));
+                        }
+                        Error::Model(..) if recipe_name.is_some() => {
+                            report.report_logs.push(ReportLogForCreate::new_error(
+                                recipe_name.unwrap_or_default(),
+                                err.to_string(),
+                            ));
+                        }
+                        _ => {
+                            report.report_logs.push(ReportLogForCreate::new_error(
+                                "Fetch Failure".into(),
+                                err.to_string(),
+                            ));
+                        }
+                    }
+
                     failures.push((recipe_api_id, err));
                 }
             }
 
             processed += 1;
+
+            if processed % batch_size == 0
+                || last_progress_time.elapsed() >= progress_interval
+                || processed == total
+            {
+                state
+                    .broadcast_progress("Fetching recipes...", processed, total, true, user_id)
+                    .await;
+                last_progress_time = Instant::now();
+            }
         }
+
+        state
+            .broadcast_progress("Fetching recipes...", processed, total, true, user_id)
+            .await;
 
         report.exec_time_ms = start_time.elapsed().as_millis() as i64;
         broadcast_import_done_toast(&state, successes, processed, report, api, user_id).await;
@@ -1010,30 +1045,18 @@ async fn push_recipe_in_db(
     state: &AppState,
     recipe: schema_org::Recipe,
     user_id: i64,
-) -> std::result::Result<i64, Error> {
+) -> std::result::Result<i64, (String, Error)> {
     let recipe = schema_to_recipe_for_create(state, recipe).await;
 
     match Recipe::create(&state.mm, user_id, &recipe).await {
-        Ok(recipe_id) => {
-            report
-                .report_logs
-                .push(ReportLogForCreate::new_success(recipe.name));
-            Ok(recipe_id)
-        }
+        Ok(recipe_id) => Ok(recipe_id),
         Err(DuplicateEntity) => {
             warn!("Recipe exists: {}", recipe.name);
-            report.report_logs.push(ReportLogForCreate::new_warning(
-                recipe.name,
-                "Recipe exists".into(),
-            ));
-            Err(Error::Model(DuplicateEntity))
+            Err((recipe.name, Error::Model(DuplicateEntity)))
         }
         Err(err) => {
             error!("Error saving recipe '{}': {err}", recipe.name);
-            report
-                .report_logs
-                .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
-            Err(Error::Model(err))
+            Err((recipe.name, Error::Model(err)))
         }
     }
 }
@@ -1554,24 +1577,39 @@ async fn extract_images(
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<Uuid> {
-    schema
+    let fetches: Vec<_> = schema
         .image
         .iter()
         .filter_map(|img| {
+            let state = state.clone();
             let fs_support = fs_support.clone();
 
-            match img {
+            let url_opt = match img {
                 schema_org::field::FieldEnum22::ImageObject(image_object) => {
-                    if let Some(img) = image_object.url.first() {
-                        fetch_image(state, fs_support, img)
-                    } else {
-                        None
-                    }
+                    image_object.url.first().map(|s| s.clone())
                 }
-                schema_org::field::FieldEnum22::URL(u) => fetch_image(state, fs_support, u),
-            }
+                schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
+            };
+
+            url_opt.map(|url| async move { fetch_image_async(&state, fs_support, &url).await })
         })
-        .collect()
+        .collect();
+
+    join_all(fetches).await.into_iter().flatten().collect()
+}
+
+async fn fetch_image_async(
+    state: &AppState,
+    fs_support: Arc<dyn FsSupport>,
+    file_path: &str,
+) -> Option<Uuid> {
+    let file_path = file_path.to_string();
+    let state = state.clone();
+
+    tokio::task::spawn_blocking(move || fetch_image(&state, fs_support, &file_path))
+        .await
+        .ok()
+        .flatten()
 }
 
 fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, file_path: &str) -> Option<Uuid> {

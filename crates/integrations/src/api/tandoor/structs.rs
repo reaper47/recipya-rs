@@ -24,7 +24,7 @@ pub struct RecipeOverview {
 pub struct RecipeRetrieve {
     pub name: String,
     pub description: Option<String>,
-    pub image: String,
+    pub image: Option<String>,
     pub keywords: Option<Vec<Keyword>>,
     pub steps: Vec<Step>,
     pub working_time: Option<i32>,
