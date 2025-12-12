@@ -10,6 +10,8 @@ pub enum Error {
     Server(String),
 
     #[from]
+    Fs(support::fs::Error),
+    #[from]
     Io(std::io::Error),
     #[from]
     Jobs(tokio_cron_scheduler::JobSchedulerError),

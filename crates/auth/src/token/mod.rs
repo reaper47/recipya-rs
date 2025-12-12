@@ -1,4 +1,3 @@
-mod error;
 mod http;
 
 use hmac::{Hmac, Mac};
@@ -11,7 +10,7 @@ use support::time::{now_utc_plus_sec_str, parse_utc};
 
 use super::config::auth_config;
 
-pub use self::error::{Error, Result};
+pub use crate::{Error, Result};
 pub use http::{AUTH_TOKEN, remove_token_cookie, set_token_cookie};
 
 /// Represents a web token consisting of an identifier, expiration date, and signature.
@@ -60,19 +59,24 @@ impl std::fmt::Display for Token {
 /// Generates a short-lived web token for the given user and salt.
 pub fn generate_web_token(user: &str, salt: Uuid) -> Result<Token> {
     let config = &auth_config();
-    _generate_token(user, config.TOKEN_DURATION_SEC, salt, &config.TOKEN_KEY)
+    _generate_token(
+        user,
+        config.token_duration_sec,
+        salt,
+        &config.decoded_token_key,
+    )
 }
 
 /// Generates a long-lasting web token for the given user and salt.
 pub fn generate_long_lasting_web_token(user: &str, salt: Uuid) -> Result<Token> {
     let config = &auth_config();
-    _generate_token(user, 2_678_400., salt, &config.TOKEN_KEY)
+    _generate_token(user, 2_678_400., salt, &config.decoded_token_key)
 }
 
 /// Validates a web token by checking its signature and expiration date.
 pub fn validate_web_token(origin_token: &Token, salt: Uuid) -> Result<()> {
     let config = &auth_config();
-    _validate_token_sign_and_exp(origin_token, salt, &config.TOKEN_KEY)?;
+    _validate_token_sign_and_exp(origin_token, salt, &config.decoded_token_key)?;
 
     Ok(())
 }
@@ -171,7 +175,7 @@ mod tests {
         let fx_user = "user_one";
         let fx_salt = Uuid::parse_str("f05e8961-d6ad-4086-9e78-a6de065e5453").unwrap();
         let fx_duration_sec = 0.02; // 20ms
-        let token_key = &auth_config().TOKEN_KEY;
+        let token_key = &auth_config().decoded_token_key;
         let fx_token = _generate_token(fx_user, fx_duration_sec, fx_salt, token_key)?;
 
         thread::sleep(Duration::from_millis(10));
@@ -186,7 +190,7 @@ mod tests {
         let fx_user = "user_one";
         let fx_salt = Uuid::parse_str("f05e8961-d6ad-4086-9e78-a6de065e5453").unwrap();
         let fx_duration_sec = 0.01; // 10ms
-        let token_key = &auth_config().TOKEN_KEY;
+        let token_key = &auth_config().decoded_token_key;
         let fx_token = _generate_token(fx_user, fx_duration_sec, fx_salt, token_key)?;
 
         thread::sleep(Duration::from_millis(20));

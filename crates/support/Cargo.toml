@@ -18,6 +18,7 @@ axum.workspace = true
 base64.workspace = true
 chrono.workspace = true
 derive_more.workspace = true
+directories = "6.0.0"
 encoding_rs = "0.8.35"
 futures-util.workspace = true
 image = { version = "0.25.8", features = ["webp"] }

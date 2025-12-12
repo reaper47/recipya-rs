@@ -1,7 +1,7 @@
 mod data;
 mod error;
 
-pub use data::{DataDir, get_base_dir};
+pub use data::DataDir;
 pub use error::{Error, Result};
 
 use std::env;

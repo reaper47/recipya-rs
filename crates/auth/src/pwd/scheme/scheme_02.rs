@@ -41,7 +41,7 @@ fn get_argon2() -> &'static Argon2<'static> {
     static INSTANCE: OnceLock<Argon2<'static>> = OnceLock::new();
 
     INSTANCE.get_or_init(|| {
-        let key = &auth_config().PASSWORD_KEY;
+        let key = &auth_config().decoded_password_key;
         Argon2::new_with_secret(
             key,
             argon2::Algorithm::Argon2id,
@@ -67,7 +67,7 @@ mod tests {
             content: "hello world".to_string(),
             salt: Uuid::parse_str("f05e8961-d6ad-4086-9e78-a6de065e5453")?,
         };
-        let fx_res = "$argon2id$v=19$m=19456,t=2,p=1$8F6JYdatQIaeeKbeBl5UUw$TaRnmmbDdQ1aTzk2qQ2yQzPQoZfnKqhrfuTH/TRP5V4";
+        let fx_res = "$argon2id$v=19$m=19456,t=2,p=1$8F6JYdatQIaeeKbeBl5UUw$1j7eN2XoMhvQT8hbi4NmpZ70NO/H6e9ItDhIh6OkgBQ";
 
         let scheme = Scheme02;
         let res = scheme.hash(&fx_to_hash)?;
