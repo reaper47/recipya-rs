@@ -83,7 +83,15 @@ impl AppState {
             <div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default {}">
                 <div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md">
                     <p class="font-medium text-center pb-1">{title}</p>
-                    <div id="export-progress"><progress max="100" value="{percentage:.2}"></progress></div>
+
+                    <div class="flex justify-between items-center text-sm mb-2">
+                        <span class="font-semibold">{current_value} of {total}</span>
+                        <span class="font-semibold">{percentage:.1}%</span>
+                    </div>
+
+                    <div id="export-progress">
+                        <progress max="100" value="{percentage:.2}"></progress>
+                    </div>
                 </div>
             </div>"#,
             if is_notification_visible { "" } else { "hidden" }

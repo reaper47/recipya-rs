@@ -39,7 +39,7 @@ pub async fn make_db_pool(database_url: &str) -> Result<DbPool, bb8::RunError> {
     config.custom_setup = Box::new(|url| establish(url).boxed());
 
     let manager = AsyncDieselConnectionManager::<PgConn>::new_with_config(database_url, config);
-    let pool = bb8::Pool::builder().build(manager).await?;
+    let pool = bb8::Pool::builder().max_size(16).build(manager).await?;
     Ok(DbPool(pool))
 }
 

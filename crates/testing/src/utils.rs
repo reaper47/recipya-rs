@@ -30,7 +30,7 @@ pub const TEST_USER_EMAIL: &str = "test@test.com";
 pub const TEST_USER_PASSWORD: &str = "12345678";
 
 /// The HTML returned when the websocket notification should be hidden.
-pub const HIDDEN_WS_NOTIFICATION: &str = r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#;
+pub const HIDDEN_WS_NOTIFICATION: &str = r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#;
 
 /// The database URL used for connecting to the database in test environments.
 pub fn test_database_url() -> String {
