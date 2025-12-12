@@ -44,7 +44,6 @@ impl AuthConfig {
             Ok(config_str) => {
                 info!("Loading auth config from file");
                 let mut auth: AuthConfig = serde_json::from_str(&config_str)?;
-                println!("{auth:?}");
                 auth.decoded_password_key = URL_SAFE_NO_PAD
                     .decode(&auth.password_key)
                     .expect("Invalid auth config password key");
