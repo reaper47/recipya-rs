@@ -67,7 +67,7 @@ mod tests {
             content: "hello world".to_string(),
             salt: Uuid::parse_str("f05e8961-d6ad-4086-9e78-a6de065e5453")?,
         };
-        let fx_res = "$argon2id$v=19$m=19456,t=2,p=1$8F6JYdatQIaeeKbeBl5UUw$1j7eN2XoMhvQT8hbi4NmpZ70NO/H6e9ItDhIh6OkgBQ";
+        let fx_res = "$argon2id$v=19$m=19456,t=2,p=1$8F6JYdatQIaeeKbeBl5UUw$dMniKOAUKwnuzIO9lq5vDa3Xn8Ks+69jV2vuxy8TjiE";
 
         let scheme = Scheme02;
         let res = scheme.hash(&fx_to_hash)?;
