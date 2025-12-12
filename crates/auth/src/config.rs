@@ -38,8 +38,8 @@ pub fn auth_config() -> &'static AuthConfig {
 impl AuthConfig {
     fn load_from_file() -> Result<AuthConfig> {
         let data_dir = get_base_dir()?;
-
         let config_path = data_dir.join("auth_config.json");
+
         match fs::read_to_string(&config_path) {
             Ok(config_str) => {
                 info!("Loading auth config from file");
@@ -55,6 +55,11 @@ impl AuthConfig {
             Err(err) => {
                 warn!("Failed to read auth config: {err}");
                 info!("Creating auth config");
+
+                if let Err(err) = fs::create_dir_all(data_dir) {
+                    error!("Failed to create parent directories for auth config: {err:?}");
+                    return Err(Error::ConfigFileWriteFailed);
+                }
 
                 let password_key = URL_SAFE_NO_PAD.encode(&generate_key());
                 let token_key = URL_SAFE_NO_PAD.encode(&generate_key());
