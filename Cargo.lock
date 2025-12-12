@@ -232,7 +232,6 @@ dependencies = [
  "argon2",
  "base64",
  "derive_more",
- "dotenvy",
  "enum_dispatch",
  "hmac",
  "lazy-regex",
@@ -2809,9 +2808,9 @@ checksum = "a4895175b425cb1f87721b59f0f286c2092bd4af812243672510e1ac53e2e0ad"
 
 [[package]]
 name = "openssl"
-version = "0.10.73"
+version = "0.10.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8505734d46c8ab1e19a1dce3aef597ad87dcb4c37e7188231769bd6bd51cebf8"
+checksum = "08838db121398ad17ab8531ce9de97b244589089e290a384c900cb9ff7434328"
 dependencies = [
  "bitflags",
  "cfg-if",
@@ -2835,18 +2834,18 @@ dependencies = [
 
 [[package]]
 name = "openssl-src"
-version = "300.5.0+3.5.0"
+version = "300.5.4+3.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8ce546f549326b0e6052b649198487d91320875da901e7bd11a06d1ee3f9c2f"
+checksum = "a507b3792995dae9b0df8a1c1e3771e8418b7c2d9f0baeba32e6fe8b06c7cb72"
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.109"
+version = "0.9.111"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90096e2e47630d78b7d1c20952dc621f957103f8bc2c8359ec81290d75238571"
+checksum = "82cab2d520aa75e3c58898289429321eb788c3106963d0dc886ec7a5f4adc321"
 dependencies = [
  "cc",
  "libc",
@@ -3137,9 +3136,9 @@ dependencies = [
 
 [[package]]
 name = "pq-src"
-version = "0.3.9+libpq-17.5"
+version = "0.3.10+libpq-18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24ee82a51d19317d15e43b82e496db215ad5bf09a245786e7ac75cb859e5ba46"
+checksum = "56ef39ce621f4993d6084fdcd4cbf1e01c84bdba53109cfad095d2cf441b85b9"
 dependencies = [
  "cc",
  "openssl-sys",
@@ -3726,7 +3725,6 @@ name = "router"
 version = "0.0.0"
 dependencies = [
  "app",
- "async-stream",
  "auth",
  "axum",
  "axum-htmx",
@@ -3737,7 +3735,6 @@ dependencies = [
  "diesel",
  "diesel-async",
  "email",
- "futures-core",
  "futures-util",
  "humantime",
  "image",

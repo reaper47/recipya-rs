@@ -14,7 +14,6 @@ rust-version.workspace = true
 
 [dependencies]
 app.workspace = true
-async-stream.workspace = true
 auth.workspace = true
 axum.workspace = true
 axum-htmx = "0.8.1"
@@ -22,7 +21,6 @@ chrono.workspace = true
 config.workspace = true
 derive_more.workspace = true
 email.workspace = true
-futures-core.workspace = true
 futures-util.workspace = true
 humantime.workspace = true
 infer.workspace = true
