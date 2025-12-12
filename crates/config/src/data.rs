@@ -1,10 +1,12 @@
 use std::fs;
 use std::path::PathBuf;
 
-use directories::BaseDirs;
+use support::fs::get_base_dir;
 use tracing::info;
 
-use super::{Error, Result};
+use crate::Error;
+
+use super::Result;
 
 /// Stores paths to various application directories.
 #[derive(Clone)]
@@ -27,20 +29,11 @@ pub struct ImagesDir {
     pub thumbnails: PathBuf,
 }
 
-/// Gets the base directory where the application's data is stored.
-pub fn get_base_dir() -> Result<PathBuf> {
-    let Some(dirs) = BaseDirs::new() else {
-        return Err(Error::NoValidHomeDir);
-    };
-
-    Ok(dirs.data_dir().join("Recipya"))
-}
-
 impl DataDir {
     /// Creates a new `Dir` instance with predefined subdirectories inside the
     /// user's data directory.
     pub fn new() -> Result<DataDir> {
-        let base_dir = get_base_dir()?;
+        let base_dir = get_base_dir().map_err(|_| Error::NoValidHomeDir)?;
         let media_dir = base_dir.join("Media");
         let images_dir = media_dir.join("Images");
 
@@ -96,6 +89,8 @@ impl DataDir {
 
 #[cfg(test)]
 mod tests {
+    use directories::BaseDirs;
+
     use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;

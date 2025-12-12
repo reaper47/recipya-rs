@@ -9,6 +9,7 @@ use async_trait::async_trait;
 use axum::body::Bytes;
 use chrono::Duration;
 use derive_more::derive::From;
+use directories::BaseDirs;
 use futures_util::future::join_all;
 use image::codecs::webp::WebPEncoder;
 use image::imageops::FilterType;
@@ -308,6 +309,15 @@ fn encode_webp(image: &DynamicImage) -> Result<Vec<u8>> {
         .to_vec())
 }
 
+/// Gets the base directory where the application's data is stored.
+pub fn get_base_dir() -> Result<PathBuf> {
+    let Some(dirs) = BaseDirs::new() else {
+        return Err(Error::NoValidHomeDir);
+    };
+
+    Ok(dirs.data_dir().join("Recipya"))
+}
+
 /// A mock that implements the filesystem trait.
 pub struct MockFs;
 
@@ -357,6 +367,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     Calculate,
     General(String),
+    NoValidHomeDir,
     SoftwareNotInstalled,
     UploadFile,
 

@@ -1586,7 +1586,7 @@ async fn extract_images(
 
             let url_opt = match img {
                 schema_org::field::FieldEnum22::ImageObject(image_object) => {
-                    image_object.url.first().map(|s| s.clone())
+                    image_object.url.first().cloned()
                 }
                 schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
             };

@@ -8,10 +8,9 @@ use tracing::info;
 use tracing::log::warn;
 use tracing_subscriber::EnvFilter;
 
-use config::get_base_dir;
 use repository::create_database_if_not_exists;
 use router::copy_to_fs;
-use support::software;
+use support::{fs::get_base_dir, software};
 
 use error::{Error, Result};
 use server::server;

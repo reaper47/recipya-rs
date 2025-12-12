@@ -230,17 +230,21 @@ name = "auth"
 version = "0.0.0"
 dependencies = [
  "argon2",
+ "base64",
  "derive_more",
  "dotenvy",
  "enum_dispatch",
  "hmac",
  "lazy-regex",
+ "rand 0.9.2",
  "serde",
+ "serde_json",
  "sha2",
  "support",
  "time",
  "tokio",
  "tower-cookies",
+ "tracing",
  "uuid",
 ]
 
@@ -657,6 +661,7 @@ dependencies = [
  "derive_more",
  "directories",
  "pretty_assertions",
+ "support",
  "tracing",
 ]
 
@@ -4357,6 +4362,7 @@ dependencies = [
  "base64",
  "chrono",
  "derive_more",
+ "directories",
  "encoding_rs",
  "futures-util",
  "image",

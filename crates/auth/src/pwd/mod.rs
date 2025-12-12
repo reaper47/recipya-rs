@@ -1,7 +1,6 @@
 //! The pwd module is responsible for hashing and validating hashes.
 //! It follows a multi-scheme hashing code design, allowing each
 //! scheme to provide its own hashing and validation methods.
-mod error;
 pub mod scheme;
 
 use std::str::FromStr;
@@ -11,7 +10,7 @@ use uuid::Uuid;
 
 use self::scheme::{DEFAULT_SCHEME, Scheme, SchemeStatus, get_scheme};
 
-pub use self::error::{Error, Result};
+pub use crate::{Error, Result};
 
 /// The clean content to hash, with the salt.
 ///
