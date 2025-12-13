@@ -9,22 +9,27 @@ use models::user::User;
 
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
-    icon_circle_stack, icon_cloud, icon_cube_transparent, icon_download_cloud,
-    icon_information_circle, icon_pencil, icon_plus_circle, icon_server, icon_trash,
-    icon_user_circle, icon_x_circle,
+    icon_circle_stack, icon_cloud, icon_cube_transparent, icon_information_circle, icon_pencil,
+    icon_plus_circle, icon_server, icon_trash, icon_user_circle, icon_x_circle,
 };
 
+/// Stores all the settings required for rendering the settings page.
 pub struct SettingsForView {
     pub is_autologin: bool,
-    pub is_no_signups: bool,
-    pub is_production: bool,
+    pub is_allow_signups: bool,
+    pub is_demo: bool,
 
-    pub email_admin: String,
-    pub smtp_host: String,
-    pub smtp_username: String,
-    pub smtp_password: String,
+    pub email: EmailSettingsForView,
     pub azure_di_key: String,
     pub azure_di_endpoint: String,
+}
+
+/// Components for the email configuration settings.
+pub struct EmailSettingsForView {
+    pub email_admin: String,
+    pub host: String,
+    pub username: String,
+    pub is_connected: bool,
 }
 
 /// Renders a new recipe category form.
@@ -274,40 +279,49 @@ fn settings_connections(config: &SettingsForView) -> Markup {
                         br;
                         span class="text-xs font-normal" {
                             "This connection is set up using environment variables."
-                            br;
-                            "Cannot be edited at runtime."
                         }
                     }
-                    div class="pt-2 overflow-x-auto" {
-                        table class="table table-xs" {
-                            thead {
-                                tr {
-                                    th {}
-                                    th { "Setting" }
-                                    th { "Environment Variable" }
-                                    th { "Value" }
-                                }
-                            }
-                            tbody {
-                                @for (setting, env, value) in [
-                                    ("Host", "RECIPYA_EMAIL_SMTP_HOST", &config.smtp_host),
-                                    ("From", "RECIPYA_EMAIL_ADMIN", &config.email_admin),
-                                    ("Username", "RECIPYA_EMAIL_SMTP_USERNAME", &config.smtp_username),
-                                    ("Password", "RECIPYA_EMAIL_SMTP_PASSWORD", &"Not displayed".to_string()),
-                                ] {
+                    div class="pt-2" {
+                        div class="overflow-x-auto" {
+                            table class="table table-xs" {
+                                thead {
                                     tr {
-                                        th { }
-                                        td { (setting) }
-                                        td { (env) }
-                                        td { (value) }
+                                        th {}
+                                        th { "Setting" }
+                                        th { "Environment" }
+                                        th { "Value" }
+                                    }
+                                }
+                                tbody {
+                                    @for (setting, env, value) in [
+                                        ("Host", "RECIPYA_EMAIL_SMTP_HOST", &config.email.host),
+                                        ("From", "RECIPYA_EMAIL_ADMIN", &config.email.email_admin),
+                                        ("Username", "RECIPYA_EMAIL_SMTP_USERNAME", &config.email.username),
+                                        ("Password", "RECIPYA_EMAIL_SMTP_PASSWORD", &"Not displayed".to_string()),
+                                    ] {
+                                        tr {
+                                            th { }
+                                            td { (setting) }
+                                            td { (env) }
+                                            td { (value) }
+                                        }
                                     }
                                 }
                             }
                         }
+                        p class="pt-2 text-xs text-center" {
+                            "Cannot be edited at runtime."
+                        }
                     }
                 }
-                button type="button" title="Test connection" class="btn btn-xs float-right self-baseline hover:text-secondary" hx-get="/integrations/test-connection?api=smtp" hx-swap="none" {
-                    (icon_arrow_path())
+                @if config.email.is_connected {
+                    div class="float-right self-baseline" title="Connection established" {
+                        (icon_check_circle())
+                    }
+                } @else {
+                    div class="float-right self-baseline" title="No connection" {
+                        (icon_x_circle())
+                    }
                 }
             }
             div class="divider m-0" {}
@@ -346,30 +360,40 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
     html! {
         div #settings-server class="hidden p-3 md:max-h-96" {
             div class="flex justify-between items-center text-sm" {
-                form class="grid w-full" hx-put="/settings/config" hx-swap="none" {
+                div class="pt-2" {
                     p class="font-semibold pb-2" {
                         "Configuration"
                     }
-                    fieldset class="fieldset" {
-                        label class="label text-base-content" {
-                            input name="server.autologin" type="checkbox" checked[data.is_autologin] class="checkbox";
-                            "Autologin"
+                    div class="overflow-x-auto" {
+                        table class="table table-xs" {
+                            thead {
+                                tr {
+                                    th {}
+                                    th { "Setting" }
+                                    th { "Description" }
+                                    th { "Environment" }
+                                    th { "Value" }
+                                }
+                            }
+                            tbody {
+                                @for (setting, description, env, value) in [
+                                    ("Autologin", "Automatically logs in the default user without credentials.", "RECIPYA_IS_AUTOLOGIN", &data.is_autologin),
+                                    ("Allow Signups", "Allows new users to create accounts.", "RECIPYA_IS_ALLOW_SIGNUPS", &config.is_allow_signups),
+                                    ("Is demo", "Enables demo mode with restricted write operations.", "RECIPYA_IS_DEMO", &config.is_demo),
+                                ] {
+                                    tr {
+                                        th { }
+                                        td { (setting) }
+                                        td { (description) }
+                                        td { (env) }
+                                        td { (value) }
+                                    }
+                                }
+                            }
                         }
                     }
-                    fieldset class="fieldset" {
-                        label class="label text-base-content" {
-                            input name="server.noSignups" type="checkbox" checked[config.is_no_signups] class="checkbox";
-                            "No signups"
-                        }
-                    }
-                    fieldset class="fieldset" {
-                        label class="label text-base-content" {
-                            input name="server.production" type="checkbox" checked=(config.is_production) class="checkbox";
-                            "Is production"
-                        }
-                    }
-                    button class="btn btn-sm mt-2" {
-                        "Update"
+                    p class="pt-2 text-xs text-center" {
+                        "Cannot be edited at runtime."
                     }
                 }
             }
@@ -557,44 +581,6 @@ fn new_user_row(num_users: usize) -> Markup {
 fn settings_data(_data: &Data) -> Markup {
     html! {
        div #settings-data class="hidden p-3" {
-            div class="flex justify-between items-center text-sm" {
-                details class="w-full" {
-                    summary class="font-semibold cursor-default select-none" {
-                        "Import data"
-                        br;
-                        span class="text-xs font-normal" {
-                            "Import from Mealie, Tandoor, Nextcloud, etc."
-                        }
-                    }
-                    form class="flex flex-col text-sm" hx-post="/integrations/import" hx-swap="none" {
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "Solution" }
-                            select name="integration" class="w-fit select select-sm" {
-                                option value="mealie" selected { "Mealie" }
-                                option value="nextcloud" { "Nextcloud" }
-                                option value="tandoor" { "Tandoor" }
-                            }
-                        }
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "Base URL" }
-                            input type="url" name="url" placeholder="https://instance.mydomain.com" class="input input-bordered input-sm" required;
-                        }
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "Username" }
-                            input type="text" name="username" placeholder="Enter your username" class="input input-bordered input-sm" required;
-                        }
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "Password" }
-                            input type="password" name="password" placeholder="Enter your password" class="input input-bordered input-sm" required;
-                        }
-                        button class="btn btn-soft btn-sm mt-2" {
-                            (icon_download_cloud())
-                            "Import"
-                        }
-                    }
-                }
-            }
-            div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {
                 div {
                     p class="font-semibold" {
@@ -917,7 +903,7 @@ fn settings_about(data: Data) -> Markup {
                             (vec!["Ctrl", "X"], "Share the recipe"),
                             (vec!["Ctrl", "Del"], "Delete the recipe"),
                         ]))
-                        p {
+                        p .text-center {
                             kbd class="kbd" { "Ctrl" } " can also be replaced with " kbd class="kbd" { "Cmd" } " instead for macOS users"
                         }
                     }

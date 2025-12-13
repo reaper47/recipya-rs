@@ -5,7 +5,7 @@ RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432"
 RECIPYA_BASE_URL = "http://localhost:8078"
 RECIPYA_IS_AUTOLOGIN = "true"
 RECIPYA_IS_DEMO = "false"
-RECIPYA_IS_NO_SIGNUPS = "false"
+RECIPYA_IS_ALLOW_SIGNUPS = "false"
 
 RECIPYA_EMAIL_ADMIN = "example@gmail.com"
 RECIPYA_EMAIL_SMTP_HOST = "smtp.gmail.com"

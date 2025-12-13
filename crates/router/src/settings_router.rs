@@ -93,7 +93,7 @@ mod tests {
             assert_html(
                 res,
                 vec![
-                    r##"<div class="pt-2 overflow-x-auto"><table class="table table-xs"><thead><tr><th></th><th>Setting</th><th>Environment Variable</th><th>Value</th></tr></thead><tbody><tr><th></th>"##,
+                    r##"<table class="table table-xs"><thead><tr><th></th><th>Setting</th><th>Environment</th><th>Value</th></tr></thead><tbody>"##,
                     r#"<td>Host</td><td>RECIPYA_EMAIL_SMTP_HOST</td><td>smtp.gmail.com</td></tr>"#,
                     r#"<tr><th></th><td>From</td><td>RECIPYA_EMAIL_ADMIN</td><td>demo@demo.com</td></tr>"#,
                     r#"<tr><th></th><td>Username</td><td>RECIPYA_EMAIL_SMTP_USERNAME</td><td>demo@demo.com</td></tr>"#,
