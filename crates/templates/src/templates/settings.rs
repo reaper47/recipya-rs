@@ -270,31 +270,39 @@ fn settings_connections(config: &SettingsForView) -> Markup {
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
                     summary class="font-semibold cursor-default select-none" {
-                        "SMTP Server"
+                        "Email Configuration"
                         br;
                         span class="text-xs font-normal" {
-                            "This connection is used to send emails."
+                            "This connection is set up using environment variables."
+                            br;
+                            "Cannot be edited at runtime."
                         }
                     }
-                    form class="grid w-full " hx-put="/settings/config" hx-swap="none" {
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "From" }
-                            input name="email.from" type="email" placeholder="SMTP email" value=(config.email_admin) autocomplete="off" class="input input-sm";
-                        }
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "Host" }
-                            input name="email.host" type="text" placeholder="smtp.gmail.com" value=(config.smtp_host) autocomplete="off" class="input input-bordered input-sm";
-                        }
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "Username" }
-                            input name="email.username" type="email" placeholder="email@example.com" value=(config.smtp_username) autocomplete="off" class="input input-bordered input-sm";
-                        }
-                        fieldset class="fieldset" {
-                            legend class="fieldset-legend" { "Password" }
-                            input name="email.password" type="password" placeholder="SMTP password or app password" value=(config.smtp_password) autocomplete="off" class="input input-bordered input-sm";
-                        }
-                        button class="btn btn-soft btn-sm mt-2" {
-                            "Update"
+                    div class="pt-2 overflow-x-auto" {
+                        table class="table table-xs" {
+                            thead {
+                                tr {
+                                    th {}
+                                    th { "Setting" }
+                                    th { "Environment Variable" }
+                                    th { "Value" }
+                                }
+                            }
+                            tbody {
+                                @for (setting, env, value) in [
+                                    ("Host", "RECIPYA_EMAIL_SMTP_HOST", &config.smtp_host),
+                                    ("From", "RECIPYA_EMAIL_ADMIN", &config.email_admin),
+                                    ("Username", "RECIPYA_EMAIL_SMTP_USERNAME", &config.smtp_username),
+                                    ("Password", "RECIPYA_EMAIL_SMTP_PASSWORD", &"Not displayed".to_string()),
+                                ] {
+                                    tr {
+                                        th { }
+                                        td { (setting) }
+                                        td { (env) }
+                                        td { (value) }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
