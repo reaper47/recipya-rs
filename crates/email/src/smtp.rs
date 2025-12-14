@@ -2,7 +2,7 @@ use lettre::message::Mailbox;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
-use tracing::error;
+use tracing::{error, info, warn};
 
 use super::config::email_config;
 use super::{Email, EmailSender, Error, Result};
@@ -44,7 +44,7 @@ impl EmailSender for SmtpEmailSender {
 
         let mailer = match SmtpTransport::relay(&email_config().smtp_host) {
             Ok(transport) => {
-                let creds = Credentials::new(username.into(), password.into());
+                let creds = Credentials::new(username.clone(), password.clone());
 
                 transport.credentials(creds).build()
             }
@@ -64,5 +64,34 @@ impl EmailSender for SmtpEmailSender {
         }
 
         Ok(())
+    }
+
+    fn test_connection(&self) -> bool {
+        let config = &email_config();
+
+        match SmtpTransport::relay(&config.smtp_host) {
+            Ok(relay) => match relay
+                .credentials(Credentials::new(
+                    config.smtp_username.clone(),
+                    config.smtp_password.clone(),
+                ))
+                .timeout(Some(std::time::Duration::from_secs(1)))
+                .build()
+                .test_connection()
+            {
+                Ok(_) => {
+                    info!("SMTP connection established");
+                    true
+                }
+                Err(err) => {
+                    warn!("Failed to test SMTP connection: {err}");
+                    false
+                }
+            },
+            Err(err) => {
+                warn!("Failed to create email module: {err}");
+                false
+            }
+        }
     }
 }

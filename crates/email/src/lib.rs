@@ -36,6 +36,7 @@ pub struct Data {
 /// A client for sending emails using different email services.
 #[derive(Clone)]
 pub struct EmailClient {
+    pub is_connected: bool,
     service: EmailService,
 }
 
@@ -43,8 +44,11 @@ impl EmailClient {
     /// Creates a new `EmailClient` based on the configured email provider.
     pub fn new() -> Result<Self> {
         if let Ok(service) = SmtpEmailSender::new() {
+            let service = EmailService::Smtp(service);
+
             return Ok(Self {
-                service: EmailService::Smtp(service),
+                is_connected: service.test_connection(),
+                service,
             });
         }
 
@@ -55,6 +59,11 @@ impl EmailClient {
     pub fn send(&self, email: &Email) -> Result<()> {
         self.service.send_email(email)
     }
+
+    /// Tests the SMTP connection.
+    pub fn test_connection(&self) -> bool {
+        self.service.test_connection()
+    }
 }
 
 #[derive(Clone)]
@@ -64,6 +73,7 @@ enum EmailService {
 
 trait EmailSender {
     fn send_email(&self, email: &Email) -> Result<()>;
+    fn test_connection(&self) -> bool;
 }
 
 impl EmailSender for EmailService {
@@ -98,6 +108,12 @@ impl EmailSender for EmailService {
 
         match self {
             EmailService::Smtp(sender) => sender.send_email(&email_to_send),
+        }
+    }
+
+    fn test_connection(&self) -> bool {
+        match self {
+            EmailService::Smtp(sender) => sender.test_connection(),
         }
     }
 }

@@ -9,7 +9,7 @@ use models::data::{AboutData, Data};
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
 use repository::ModelManager;
-use templates::settings::SettingsForView;
+use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::Error;
 use crate::handlers::helpers::is_hx_request;
@@ -87,12 +87,17 @@ pub async fn settings_handler(
         categories,
         &SettingsForView {
             is_autologin: config.is_autologin,
-            is_no_signups: config.is_no_signups,
-            is_production: false,
-            email_admin: email_config.email_admin.clone(),
-            smtp_host: email_config.smtp_host.clone(),
-            smtp_username: email_config.smtp_username.clone(),
-            smtp_password: email_config.smtp_password.clone(),
+            is_allow_signups: config.is_no_signups,
+            is_demo: config.is_demo,
+            email: EmailSettingsForView {
+                email_admin: email_config.email_admin.clone(),
+                host: email_config.smtp_host.clone(),
+                username: email_config.smtp_username.clone(),
+                is_connected: state
+                    .email_service
+                    .map(|s| s.is_connected)
+                    .unwrap_or_default(),
+            },
             azure_di_key: "".to_string(),
             azure_di_endpoint: "".to_string(),
         },

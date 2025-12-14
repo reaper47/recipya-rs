@@ -93,10 +93,11 @@ mod tests {
             assert_html(
                 res,
                 vec![
-                    r##"<input name="email.from" type="email" placeholder="SMTP email" value="demo@demo.com" autocomplete="off" class="input input-sm">"##,
-                    r##"<input name="email.host" type="text" placeholder="smtp.gmail.com" value="smtp.gmail.com" autocomplete="off" class="input input-bordered input-sm">"##,
-                    r##"<input name="email.username" type="email" placeholder="email@example.com" value="demo@demo.com" autocomplete="off" class="input input-bordered input-sm">"##,
-                    r##"<input name="email.password" type="password" placeholder="SMTP password or app password" value="demo-password" autocomplete="off" class="input input-bordered input-sm">"##,
+                    r##"<table class="table table-xs"><thead><tr><th></th><th>Setting</th><th>Environment</th><th>Value</th></tr></thead><tbody>"##,
+                    r#"<td>Host</td><td>RECIPYA_EMAIL_SMTP_HOST</td><td>smtp.gmail.com</td></tr>"#,
+                    r#"<tr><th></th><td>From</td><td>RECIPYA_EMAIL_ADMIN</td><td>demo@demo.com</td></tr>"#,
+                    r#"<tr><th></th><td>Username</td><td>RECIPYA_EMAIL_SMTP_USERNAME</td><td>demo@demo.com</td></tr>"#,
+                    r#"<tr><th></th><td>Password</td><td>RECIPYA_EMAIL_SMTP_PASSWORD</td><td>Not displayed</td></tr></tbody></table></div>"#,
                     // TODO: Add Azure OCR key and endpoint
                 ],
             );

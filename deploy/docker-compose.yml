@@ -1,42 +1,42 @@
 services:
-  recipya-app:
-    container_name: recipya
-    restart: unless-stopped
-    image: reaper99/recipya-rs
-    environment:
-      - RUST_LOG="debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn"
-      - RECIPYA_DATABASE_URL=postgres://postgres:postgres@recipya-db:5432
-      - RECIPYA_BASE_URL=http://0.0.0.0:8078
-      - RECIPYA_IS_AUTOLOGIN=true
-      - RECIPYA_IS_DEMO=false
-      - RECIPYA_IS_NO_SIGNUPS=false
-      - RECIPYA_EMAIL_ADMIN=""
-      - RECIPYA_EMAIL_SMTP_HOST=smtp.gmail.com
-      - RECIPYA_EMAIL_SMTP_USERNAME=""
-      - RECIPYA_EMAIL_SMTP_PASSWORD=abcd abcd bcd abcd
-    ports:
-      - "8078:8078"
-    depends_on:
-      recipya-db:
-        condition: service_healthy
+    recipya-app:
+        container_name: recipya
+        restart: unless-stopped
+        image: reaper99/recipya-rs
+        environment:
+            - RUST_LOG="debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn"
+            - RECIPYA_DATABASE_URL=postgres://postgres:postgres@recipya-db:5432
+            - RECIPYA_BASE_URL=http://0.0.0.0:8078
+            - RECIPYA_IS_AUTOLOGIN=true
+            - RECIPYA_IS_DEMO=false
+            - RECIPYA_IS_ALLOW_SIGNUPS=false
+            - RECIPYA_EMAIL_ADMIN=""
+            - RECIPYA_EMAIL_SMTP_HOST=smtp.gmail.com
+            - RECIPYA_EMAIL_SMTP_USERNAME=""
+            - RECIPYA_EMAIL_SMTP_PASSWORD=abcd abcd bcd abcd
+        ports:
+            - "8078:8078"
+        depends_on:
+            recipya-db:
+                condition: service_healthy
 
-  recipya-db:
-    container_name: recipya-rs-db
-    restart: unless-stopped
-    image: recipya-rs-db
-    environment:
-      POSTGRES_DB: recipya
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - recipya-rs-db:/var/lib/postgresql/data
-    ports:
-      - "9000:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 3s
-      timeout: 5s
-      retries: 10
+    recipya-db:
+        container_name: recipya-rs-db
+        restart: unless-stopped
+        image: recipya-rs-db
+        environment:
+            POSTGRES_DB: recipya
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        volumes:
+            - recipya-rs-db:/var/lib/postgresql/data
+        ports:
+            - "9000:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 3s
+            timeout: 5s
+            retries: 10
 
 volumes:
-  recipya-rs-db:
+    recipya-rs-db:

@@ -61,8 +61,8 @@ impl AuthConfig {
                     return Err(Error::ConfigFileWriteFailed);
                 }
 
-                let password_key = URL_SAFE_NO_PAD.encode(&generate_key());
-                let token_key = URL_SAFE_NO_PAD.encode(&generate_key());
+                let password_key = URL_SAFE_NO_PAD.encode(generate_key());
+                let token_key = URL_SAFE_NO_PAD.encode(generate_key());
 
                 let config = AuthConfig {
                     password_key: password_key.clone(),
