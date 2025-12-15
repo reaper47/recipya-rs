@@ -117,6 +117,14 @@ impl RecipeDetails {
             .copied()
             .collect()
     }
+
+    /// Returns whether the recipe is right-to-left.
+    pub fn is_rtl(&self) -> bool {
+        match Lang::from_code(&self.recipe.language).unwrap_or(Lang::Eng) {
+            Lang::Ara | Lang::Heb | Lang::Yid | Lang::Urd | Lang::Pes => true,
+            _ => false,
+        }
+    }
 }
 
 impl From<RecipeForCreate> for RecipeDetails {

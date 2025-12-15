@@ -94,7 +94,8 @@ pub fn view_recipe_helper(
             @if !data.is_preview { "p-2" }
         } data-layout="no-aside" {
             div class="flex justify-center" {
-                div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none" {
+                div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none"
+                    dir=(if recipe_details.is_rtl() { "rtl" } else { "ltr" }) {
                     div class="card-body contents" style="padding: 0" {
                         (render_header(recipe_id, &data, recipe_details, recipe.is_favourite))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
@@ -802,7 +803,7 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                             li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
                                 label class="flex items-center w-full" {
                                     input type="checkbox" class="checkbox";
-                                    span class="pl-2" { (tool.quantity.to_string()) " " (tool.name) }
+                                    span class="px-2" { (tool.quantity.to_string()) " " (tool.name) }
                                 }
                             }
                         }
@@ -817,7 +818,7 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                                      li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
                                         label class="flex items-center w-full" {
                                             input type="checkbox" class="checkbox";
-                                            span class="pl-2" { (ingredient.text) }
+                                            span class="px-2" { (ingredient.text) }
                                         }
                                     }
                                 }
@@ -828,7 +829,7 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                                  li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
                                     label class="flex items-center w-full" {
                                         input type="checkbox" class="checkbox";
-                                        span class="pl-2" { (ingredient.text) }
+                                        span class="px-2" { (ingredient.text) }
                                     }
                                 }
                             }
