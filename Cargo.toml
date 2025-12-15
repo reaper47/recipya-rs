@@ -79,6 +79,7 @@ url = { version = "2.5.7", features = ["serde"] }
 uuid = { version = "1.18.1", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 whatlang = "0.16.4"
+winnow = "0.7.13"
 
 [workspace.metadata.tasks]
 web-install-deps = "npm --prefix ./web/app install"

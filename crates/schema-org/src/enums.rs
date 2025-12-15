@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use serde::{Deserialize, Serialize};
 
 ///<https://schema.org/MusicAlbumProductionType>
@@ -79,7 +81,7 @@ pub enum OfferItemConditionEnum {
 ///<https://schema.org/RestrictedDiet>
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
-#[serde(untagged)]
+#[serde(try_from = "String")]
 pub enum RestrictedDietEnum {
     ///<https://schema.org/HinduDiet>
     HinduDiet,
@@ -107,36 +109,40 @@ pub enum RestrictedDietEnum {
     UnspecifiedDiet,
 }
 
-impl From<String> for RestrictedDietEnum {
-    fn from(value: String) -> Self {
+impl TryFrom<String> for RestrictedDietEnum {
+    type Error = Infallible;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let value = value.to_lowercase();
+
         if value.contains("diabetic") {
-            RestrictedDietEnum::DiabeticDiet
+            Ok(RestrictedDietEnum::DiabeticDiet)
         } else if value.contains("gluten") {
-            RestrictedDietEnum::GlutenFreeDiet
+            Ok(RestrictedDietEnum::GlutenFreeDiet)
         } else if value.contains("halal") {
-            RestrictedDietEnum::HalalDiet
+            Ok(RestrictedDietEnum::HalalDiet)
         } else if value.contains("hindu") {
-            RestrictedDietEnum::HinduDiet
+            Ok(RestrictedDietEnum::HinduDiet)
         } else if value.contains("kosher") {
-            RestrictedDietEnum::KosherDiet
+            Ok(RestrictedDietEnum::KosherDiet)
         } else if value.contains("low") {
             if value.contains("calorie") {
-                RestrictedDietEnum::LowCalorieDiet
+                Ok(RestrictedDietEnum::LowCalorieDiet)
             } else if value.contains("fat") {
-                RestrictedDietEnum::LowFatDiet
+                Ok(RestrictedDietEnum::LowFatDiet)
             } else if value.contains("lactose") {
-                RestrictedDietEnum::LowLactoseDiet
+                Ok(RestrictedDietEnum::LowLactoseDiet)
             } else if value.contains("salt") {
-                RestrictedDietEnum::LowSaltDiet
+                Ok(RestrictedDietEnum::LowSaltDiet)
             } else {
-                RestrictedDietEnum::UnspecifiedDiet
+                Ok(RestrictedDietEnum::UnspecifiedDiet)
             }
         } else if value.contains("vegan") {
-            RestrictedDietEnum::VeganDiet
+            Ok(RestrictedDietEnum::VeganDiet)
         } else if value.contains("vegetarian") {
-            RestrictedDietEnum::VegetarianDiet
+            Ok(RestrictedDietEnum::VegetarianDiet)
         } else {
-            RestrictedDietEnum::UnspecifiedDiet
+            Ok(RestrictedDietEnum::UnspecifiedDiet)
         }
     }
 }

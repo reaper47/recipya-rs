@@ -299,7 +299,10 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             is_favourite: false,
             rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             videos: vec![],
-            category: schema.recipe_category.first().cloned(),
+            category: match schema.recipe_category.first() {
+                Some(category) => Some(category.clone()),
+                None => Some("uncategorized".into()),
+            },
             cuisine: schema.recipe_cuisine.first().cloned(),
             ingredients,
             instructions: SectionComponents::from(schema.recipe_instructions.clone()),

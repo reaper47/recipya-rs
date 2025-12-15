@@ -32,7 +32,7 @@ models = { workspace = true, features = ["test-utils"] }
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
-rust-embed = { version = "8.7.2", features = ["axum-ex"] }
+rust-embed = { version = "8.9.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
@@ -51,7 +51,7 @@ validator.workspace = true
 axum-test.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
-image = "0.25.8"
+image = "0.25.9"
 pretty_assertions.workspace = true
 serial_test = "3.2.0"
 testing = { path = "../testing", features = ["test-utils"] }

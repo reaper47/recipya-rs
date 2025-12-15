@@ -18,7 +18,7 @@ rust-version.workspace = true
 async-stream.workspace = true
 async-trait.workspace = true
 base64.workspace = true
-cooklang = "0.17.1"
+cooklang = "0.17.4"
 derive_more.workspace = true
 futures = "0.3.31"
 futures-core.workspace = true
@@ -39,7 +39,7 @@ tokio.workspace = true
 tracing.workspace = true
 url.workspace = true
 uuid.workspace = true
-winnow = "0.7.13"
+winnow.workspace = true
 zip = "6.0.0"
 
 [dev-dependencies]

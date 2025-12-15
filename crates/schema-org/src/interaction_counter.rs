@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Action;
-use crate::field::InteractionCounterDescriptionFieldEnum;
+use crate::ActionOrText;
+use crate::field::{IntegerOrText, InteractionCounterDescriptionFieldEnum};
 use crate::helpers::one_or_many;
 
 ///<https://schema.org/InteractionCounter>
@@ -16,11 +16,11 @@ pub struct InteractionCounter {
     ///<https://schema.org/userInteractionCount>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub user_interaction_count: Vec<i32>,
+    pub user_interaction_count: Vec<IntegerOrText>,
     ///<https://schema.org/interactionType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub interaction_type: Vec<Action>,
+    pub interaction_type: Vec<ActionOrText>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
