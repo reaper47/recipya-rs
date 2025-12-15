@@ -178,6 +178,7 @@ pub enum FieldEnum6 {
     Organization(Organization),
     ///<https://schema.org/Person>
     Person(Person),
+    Text(String),
 }
 impl Default for FieldEnum6 {
     fn default() -> Self {
@@ -320,6 +321,7 @@ pub type RecipeSdPublisherFieldEnum = FieldEnum6;
 pub type RecipeProducerFieldEnum = FieldEnum6;
 ///<https://schema.org/author>
 pub type RecipeAuthorFieldEnum = FieldEnum6;
+
 impl RecipeAuthorFieldEnum {
     pub fn new_person(name: &str) -> Self {
         Self::Person(Person {
@@ -1907,3 +1909,16 @@ impl Default for FieldEnum152 {
 pub type RecipeSupplyFieldEnum = FieldEnum152;
 ///<https://schema.org/supply>
 pub type HowToSupplyFieldEnum = FieldEnum152;
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
+#[serde(untagged)]
+pub enum IntegerOrText {
+    Integer(i32),
+    Text(String),
+}
+impl Default for IntegerOrText {
+    fn default() -> Self {
+        Self::Integer(0)
+    }
+}

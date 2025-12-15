@@ -18,7 +18,7 @@ rust-version.workspace = true
 app.workspace = true
 auth.workspace = true
 axum.workspace = true
-clap = { version = "4.5.49", features = ["derive"] }
+clap = { version = "4.5.53", features = ["derive"] }
 config.workspace = true
 derive_more.workspace = true
 diesel.workspace = true
@@ -30,10 +30,10 @@ router.workspace = true
 rustls.workspace = true
 support.workspace = true
 tokio.workspace = true
-tokio-cron-scheduler = "0.15.0"
+tokio-cron-scheduler = "0.15.1"
 tower-cookies.workspace = true
 tracing.workspace = true
-tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 [target.'aarch64-unknown-linux-gnu'.dependencies]
 openssl = { version = "0.10.72", features = ["vendored"] }

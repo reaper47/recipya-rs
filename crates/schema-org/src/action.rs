@@ -124,3 +124,16 @@ pub struct Action {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
 }
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
+#[serde(untagged)]
+pub enum ActionOrText {
+    Action(Action),
+    Text(String),
+}
+impl Default for ActionOrText {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
+}

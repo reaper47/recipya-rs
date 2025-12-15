@@ -98,7 +98,7 @@ impl From<CooklangRecipe> for Recipe {
                 .map(|diets| {
                     diets
                         .into_iter()
-                        .map(RestrictedDietEnum::from)
+                        .map(|diet| RestrictedDietEnum::try_from(diet).unwrap_or_default())
                         .filter(|d| !matches!(d, RestrictedDietEnum::UnspecifiedDiet))
                         .collect::<Vec<_>>()
                 })

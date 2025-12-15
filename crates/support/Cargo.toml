@@ -21,7 +21,7 @@ derive_more.workspace = true
 directories = "6.0.0"
 encoding_rs = "0.8.35"
 futures-util.workspace = true
-image = { version = "0.25.8", features = ["webp"] }
+image = { version = "0.25.9", features = ["webp"] }
 nom.workspace = true
 regex.workspace = true
 time = { workspace = true, features = ["formatting", "parsing"] }
