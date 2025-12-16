@@ -37,6 +37,8 @@ pub enum Error {
     HumanTime(humantime::DurationError),
     #[from]
     Run(diesel_async::pooled_connection::bb8::RunError),
+    #[from]
+    SerdeJson(serde_json::Error),
 }
 
 impl From<diesel::result::Error> for Error {

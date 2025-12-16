@@ -2625,6 +2625,7 @@ dependencies = [
  "repository",
  "schema-org",
  "serde",
+ "serde_json",
  "strum 0.27.2",
  "support",
  "testing",

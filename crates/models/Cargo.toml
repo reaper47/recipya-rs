@@ -37,6 +37,7 @@ recipya-scraper.workspace = true
 repository.workspace = true
 schema-org.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 strum.workspace = true
 support.workspace = true
 tokio.workspace = true
