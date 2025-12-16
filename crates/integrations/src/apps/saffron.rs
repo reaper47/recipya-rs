@@ -12,7 +12,7 @@ use schema_org::Recipe;
 use schema_org::field::{
     RecipeDescriptionFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
 };
-use support::time::parse_duration;
+use support::time::parse_hours_minutes;
 
 use crate::apps::helpers::{read_file, urls_to_image_object};
 use crate::error::{Error, Result};
@@ -181,8 +181,8 @@ fn parse_total_seconds(input: &mut &str) -> WResult<Option<i32>> {
         .parse_next(input)
 }
 
-fn parse_time(s: &str) -> Option<i32> {
-    if let Ok((_, (hours, minutes))) = parse_duration(s) {
+fn parse_time(mut s: &str) -> Option<i32> {
+    if let Ok((hours, minutes)) = parse_hours_minutes(&mut s) {
         Some((hours * 60 * 60 + minutes * 60) as i32)
     } else {
         None
