@@ -4358,7 +4358,6 @@ dependencies = [
  "encoding_rs",
  "futures-util",
  "image",
- "nom",
  "pretty_assertions",
  "regex",
  "time",
@@ -4367,6 +4366,7 @@ dependencies = [
  "uuid",
  "webp",
  "whatlang",
+ "winnow",
 ]
 
 [[package]]
