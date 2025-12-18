@@ -1,20 +1,17 @@
 use std::io::{Read, Seek};
 
-use nom::IResult;
-use nom::Parser;
-use nom::bytes::complete::tag;
-use nom::bytes::take_until;
-use nom::character::complete::{digit1, line_ending, not_line_ending, space0};
-use nom::combinator::{map, map_res, opt};
-use nom::multi::{many_till, many1};
-use nom::sequence::{preceded, terminated};
+use winnow::Result as WResult;
+use winnow::ascii::{digit1, line_ending, space0, till_line_ending};
+use winnow::combinator::{eof, opt, peek, preceded, repeat, repeat_till, seq, terminated};
+use winnow::prelude::*;
 
 use schema_org::field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum};
 use schema_org::{AtType, Recipe};
+use winnow::token::{literal, take_until};
 
 use super::helpers::read_file;
-use crate::Result;
 use crate::helpers::{to_is_based_on, to_yield};
+use crate::{Error, Result};
 
 pub struct ChefTapRecipe {
     title: String,
@@ -73,75 +70,83 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    let recipe = parse_cheftap_recipe(&content)?;
+    let recipe = parse_cheftap_recipe(&mut content.as_str())?;
     Ok(vec![recipe.into()])
 }
 
-fn parse_cheftap_recipe(input: &str) -> Result<ChefTapRecipe> {
-    Ok(map(recipe, ChefTapRecipe::from)
-        .parse(input)
-        .map(|(_, r)| r)?)
+fn parse_cheftap_recipe(input: &mut &str) -> Result<ChefTapRecipe> {
+    Ok(parse_recipe
+        .map(ChefTapRecipe::from)
+        .parse_next(input)
+        .map_err(|err| Error::Parse(err.to_string()))?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (title, source, servings, ingredients, instructions),
-        |(title, source, servings, ingredients, instructions)| RecipeComponents {
-            title,
-            servings,
-            ingredients,
-            instructions,
-            source,
-        },
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        title: parse_title,
+        source: parse_source,
+        servings: parse_servings,
+        ingredients: parse_ingredients,
+        instructions: parse_instructions,
+    }}
+    .parse_next(input)
+}
+
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    terminated(
+        till_line_ending,
+        repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn title(input: &str) -> IResult<&str, &str> {
-    terminated(not_line_ending, many1(line_ending)).parse(input)
-}
-
-fn source(input: &str) -> IResult<&str, Option<&str>> {
-    opt(terminated(not_line_ending, many1(line_ending))).parse(input)
-}
-
-fn servings(input: &str) -> IResult<&str, Option<i16>> {
-    let kw = "yields ";
-    opt(map_res(
-        preceded(
-            terminated(take_until(kw), (tag(kw), space0)),
-            terminated(digit1, (not_line_ending, line_ending)),
-        ),
-        str::parse,
+fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    println!("parse_source: {:?}", input);
+    opt(terminated(
+        till_line_ending,
+        repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
     ))
-    .parse(input)
+    .parse_next(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<&str>> {
-    map(
-        many_till(
-            ingredient,
-            (line_ending, tag("Directions"), many1(line_ending)),
+fn parse_servings(input: &mut &str) -> WResult<Option<i16>> {
+    let kw = "yields ";
+    opt(preceded(
+        terminated(take_until(0.., kw), (literal(kw), space0)),
+        terminated(digit1, (till_line_ending, line_ending)),
+    )
+    .try_map(str::parse))
+    .parse_next(input)
+}
+
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    repeat_till(
+        0..,
+        parse_ingredient,
+        (
+            line_ending,
+            literal("Directions"),
+            repeat(1.., line_ending).fold(|| (), |_, _| ()),
         ),
-        |(v, _)| v,
     )
-    .parse(input)
+    .map(|(v, _)| v)
+    .parse_next(input)
 }
 
-fn ingredient(input: &str) -> IResult<&str, &str> {
-    terminated(not_line_ending, line_ending).parse(input)
+fn parse_ingredient<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    terminated(till_line_ending, line_ending).parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<&str>> {
-    many1(instruction).parse(input)
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    repeat_till(1.., parse_instruction, peek(eof))
+        .map(|(v, _)| v)
+        .parse_next(input)
 }
 
-fn instruction(input: &str) -> IResult<&str, &str> {
-    map(
-        (not_line_ending, line_ending, opt(line_ending)),
-        |(s, _, _)| s,
-    )
-    .parse(input)
+fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    (till_line_ending, line_ending, opt(line_ending))
+        .map(|(s, _, _)| s)
+        .parse_next(input)
 }
 
 #[cfg(test)]
