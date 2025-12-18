@@ -121,11 +121,11 @@ diesel::table! {
 
     fdc_food_portions (id) {
         id -> Int8,
-        value -> Numeric,
+        value -> Float8,
         nutrition_measure_unit_id -> Int8,
         modifier -> Nullable<Text>,
-        gram_weight -> Numeric,
-        amount -> Numeric,
+        gram_weight -> Float8,
+        amount -> Float8,
     }
 }
 
@@ -157,23 +157,12 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    fdc_nutrients (id) {
-        id -> Int8,
-        name -> Text,
-        unit_name -> Text,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
     fdc_foods_fdc_nutrients (id) {
         id -> Int8,
         food_id -> Int8,
         nutrient_id -> Int8,
-        median -> Numeric,
-        amount -> Numeric,
+        median -> Float8,
+        amount -> Float8,
     }
 }
 
@@ -181,24 +170,10 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    food_portions (id) {
+    fdc_nutrients (id) {
         id -> Int8,
-        value -> Numeric,
-        nutrition_measure_unit_id -> Int8,
-        modifier -> Nullable<Text>,
-        gram_weight -> Numeric,
-        amount -> Numeric,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    food_portions_fdc_foods (id) {
-        id -> Int8,
-        foundation_id -> Int8,
-        portion_id -> Int8,
+        name -> Text,
+        unit_name -> Text,
     }
 }
 
@@ -273,17 +248,6 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    measure_unit (id) {
-        id -> Int8,
-        name -> Text,
-        abbreviation -> Text,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
     measure_units (id) {
         id -> Int8,
         name -> Text,
@@ -298,41 +262,6 @@ diesel::table! {
     measurement_systems (id) {
         id -> Int2,
         name -> Text,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrients (id) {
-        id -> Int8,
-        name -> Text,
-        unit_name -> Text,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrients_fdc_foods (id) {
-        id -> Int8,
-        foundation_id -> Int8,
-        nutrient_id -> Int8,
-        median -> Numeric,
-        amount -> Numeric,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrients_fdc_foundation (id) {
-        id -> Int8,
-        name -> Text,
-        unit_name -> Text,
     }
 }
 
@@ -355,81 +284,6 @@ diesel::table! {
         fiber_g -> Nullable<Int2>,
         trans_fat_g -> Nullable<Int2>,
         serving_size -> Nullable<Text>,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrition_database_fdc_foundation (id) {
-        id -> Int8,
-        food_class -> Text,
-        description -> Text,
-        food_category -> Text,
-        fdc_id -> Int8,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrition_database_fdc_foundation_nutrients_fdc_foundation (id) {
-        id -> Int8,
-        foundation_id -> Int8,
-        nutrient_id -> Int8,
-        median -> Numeric,
-        amount -> Numeric,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrition_database_fdc_foundation_nutrition_food_portions_fdc_f (id) {
-        id -> Int8,
-        foundation_id -> Int8,
-        portion_id -> Int8,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrition_databases (id) {
-        id -> Int8,
-        name -> Text,
-        description -> Text,
-        url -> Text,
-        country -> Text,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrition_food_portions_fdc_foundation (id) {
-        id -> Int8,
-        value -> Numeric,
-        nutrition_measure_unit_id -> Int8,
-        modifier -> Nullable<Text>,
-        gram_weight -> Numeric,
-        amount -> Numeric,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    nutrition_measure_unit (id) {
-        id -> Int8,
-        name -> Text,
-        abbreviation -> Text,
     }
 }
 
@@ -722,8 +576,6 @@ diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_food_portions (portion_id))
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_foods (food_id));
 diesel::joinable!(fdc_foods_fdc_nutrients -> fdc_foods (food_id));
 diesel::joinable!(fdc_foods_fdc_nutrients -> fdc_nutrients (nutrient_id));
-diesel::joinable!(food_portions -> nutrition_measure_unit (nutrition_measure_unit_id));
-diesel::joinable!(food_portions_fdc_foods -> food_portions (portion_id));
 diesel::joinable!(ingredients_recipes -> ingredients (ingredient_id));
 diesel::joinable!(ingredients_recipes -> recipes (recipe_id));
 diesel::joinable!(ingredients_recipes -> sections (section_id));
@@ -732,13 +584,7 @@ diesel::joinable!(instructions_recipes -> recipes (recipe_id));
 diesel::joinable!(instructions_recipes -> sections (section_id));
 diesel::joinable!(keywords_recipes -> keywords (keyword_id));
 diesel::joinable!(keywords_recipes -> recipes (recipe_id));
-diesel::joinable!(nutrients_fdc_foods -> nutrients (nutrient_id));
 diesel::joinable!(nutrition -> recipes (recipe_id));
-diesel::joinable!(nutrition_database_fdc_foundation_nutrients_fdc_foundation -> nutrients_fdc_foundation (nutrient_id));
-diesel::joinable!(nutrition_database_fdc_foundation_nutrients_fdc_foundation -> nutrition_database_fdc_foundation (foundation_id));
-diesel::joinable!(nutrition_database_fdc_foundation_nutrition_food_portions_fdc_f -> nutrition_database_fdc_foundation (foundation_id));
-diesel::joinable!(nutrition_database_fdc_foundation_nutrition_food_portions_fdc_f -> nutrition_food_portions_fdc_foundation (portion_id));
-diesel::joinable!(nutrition_food_portions_fdc_foundation -> nutrition_measure_unit (nutrition_measure_unit_id));
 diesel::joinable!(recipe_timelines -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> users (user_id));
 diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
@@ -778,29 +624,17 @@ diesel::allow_tables_to_appear_in_same_query!(
     fdc_food_portions,
     fdc_food_portions_fdc_foods,
     fdc_foods,
-    fdc_nutrients,
     fdc_foods_fdc_nutrients,
-    food_portions,
-    food_portions_fdc_foods,
+    fdc_nutrients,
     ingredients,
     ingredients_recipes,
     instructions,
     instructions_recipes,
     keywords,
     keywords_recipes,
-    measure_unit,
     measure_units,
     measurement_systems,
-    nutrients,
-    nutrients_fdc_foods,
-    nutrients_fdc_foundation,
     nutrition,
-    nutrition_database_fdc_foundation,
-    nutrition_database_fdc_foundation_nutrients_fdc_foundation,
-    nutrition_database_fdc_foundation_nutrition_food_portions_fdc_f,
-    nutrition_databases,
-    nutrition_food_portions_fdc_foundation,
-    nutrition_measure_unit,
     nutrition_sources,
     recipe_timelines,
     recipes,

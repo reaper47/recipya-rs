@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{collections::VecDeque, io::Read};
 
 use diesel_async::{AsyncConnection, RunQueryDsl as _};
 use repository::{ModelManager, schema};
@@ -7,8 +7,14 @@ use serde_json::Value;
 
 use crate::{
     Error, Result,
-    nutrition::structs::{FdcNutrientForInsert, FoundationFoodForInsert},
+    nutrition::structs::{
+        FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert, FdcFoodPortionForInsert,
+        FdcNutrientForInsert, FoundationFoodForInsert, MeasureUnitForInsert,
+    },
 };
+
+/// Contains all the details of a foundation food.
+pub struct FoundationFoodDetails {}
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -156,7 +162,8 @@ pub async fn populate_db(mm: &ModelManager, r: impl Read) -> Result<()> {
 
     conn.transaction::<_, Error, _>(|mut conn| {
         Box::pin(async move {
-            diesel::insert_into(schema::fdc_foods::table)
+            // fdc_foods
+            let fdc_foods_ids: Vec<i64> = diesel::insert_into(schema::fdc_foods::table)
                 .values(
                     root.foundation_foods
                         .iter()
@@ -168,10 +175,12 @@ pub async fn populate_db(mm: &ModelManager, r: impl Read) -> Result<()> {
                         })
                         .collect::<Vec<_>>(),
                 )
-                .execute(&mut conn)
+                .returning(schema::fdc_foods::id)
+                .get_results(&mut conn)
                 .await?;
 
-            diesel::insert_into(schema::fdc_nutrients::table)
+            // fdc_nutrients
+            let fdc_nutrients_ids: Vec<i64> = diesel::insert_into(schema::fdc_nutrients::table)
                 .values(
                     root.foundation_foods
                         .iter()
@@ -185,11 +194,111 @@ pub async fn populate_db(mm: &ModelManager, r: impl Read) -> Result<()> {
                         })
                         .collect::<Vec<_>>(),
                 )
+                .returning(schema::fdc_nutrients::id)
+                .get_results(&mut conn)
+                .await?;
+
+            // fdc_foods_fdc_nutrients
+            let mut fdc_nutrients_ids = VecDeque::from(fdc_nutrients_ids);
+
+            let mut ids = Vec::new();
+            for (ff, fdc_food_db_id) in root.foundation_foods.iter().zip(fdc_foods_ids.clone()) {
+                ff.food_nutrients.iter().for_each(|nutrient| {
+                    if let Some(id) = fdc_nutrients_ids.pop_front() {
+                        ids.push((
+                            fdc_food_db_id,
+                            id,
+                            nutrient.median.unwrap_or_default(),
+                            nutrient.amount.unwrap_or_default(),
+                        ));
+                    }
+                });
+            }
+
+            diesel::insert_into(schema::fdc_foods_fdc_nutrients::table)
+                .values(
+                    ids.into_iter()
+                        .map(
+                            |(food_id, nutrient_id, median, amount)| FdcFoodFdcNutrientForInsert {
+                                food_id,
+                                nutrient_id,
+                                median,
+                                amount,
+                            },
+                        )
+                        .collect::<Vec<_>>(),
+                )
                 .execute(&mut conn)
                 .await?;
 
-            diesel::insert_into(schema::fdc_foods_fdc_nutrients::table)
-                .values()
+            // measure_units
+            let measure_unit_ids: Vec<i64> = diesel::insert_into(schema::measure_units::table)
+                .values(
+                    root.foundation_foods
+                        .iter()
+                        .flat_map(|food| {
+                            food.food_portions
+                                .iter()
+                                .map(|portion| MeasureUnitForInsert {
+                                    name: portion.measure_unit.name.clone(),
+                                    abbreviation: portion.measure_unit.abbreviation.clone(),
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<Vec<_>>(),
+                )
+                .returning(schema::measure_units::id)
+                .get_results(&mut conn)
+                .await?;
+
+            // fdc_food_portions
+            let mut measure_unit_ids = VecDeque::from(measure_unit_ids);
+
+            let portion_ids: Vec<i64> = diesel::insert_into(schema::fdc_food_portions::table)
+                .values(
+                    root.foundation_foods
+                        .iter()
+                        .flat_map(|food| {
+                            food.food_portions
+                                .iter()
+                                .map(|portion| FdcFoodPortionForInsert {
+                                    value: portion.value,
+                                    nutrition_measure_unit_id: measure_unit_ids
+                                        .pop_front()
+                                        .unwrap_or_default(),
+                                    modifier: portion.modifier.clone(),
+                                    gram_weight: portion.gram_weight,
+                                    amount: portion.amount,
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<Vec<_>>(),
+                )
+                .returning(schema::fdc_food_portions::id)
+                .get_results(&mut conn)
+                .await?;
+
+            // fdc_food_portions_fdc_foods
+            let mut portion_ids = VecDeque::from(portion_ids);
+
+            let mut ids = Vec::new();
+            for (ff, fdc_food_db_id) in root.foundation_foods.iter().zip(fdc_foods_ids) {
+                ff.food_portions.iter().for_each(|_| {
+                    if let Some(id) = portion_ids.pop_front() {
+                        ids.push((fdc_food_db_id, id));
+                    }
+                });
+            }
+
+            diesel::insert_into(schema::fdc_food_portions_fdc_foods::table)
+                .values(
+                    ids.into_iter()
+                        .map(|(food_id, portion_id)| FdcFoodPortionFdcFoodForInsert {
+                            food_id,
+                            portion_id,
+                        })
+                        .collect::<Vec<_>>(),
+                )
                 .execute(&mut conn)
                 .await?;
 
