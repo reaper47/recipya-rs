@@ -2,16 +2,15 @@ use std::io::{Read, Seek};
 use std::str::FromStr;
 
 use iso8601::DateTime;
-use nom::branch::alt;
-use nom::bytes::complete::{tag, take_till, take_until};
-use nom::character::complete::line_ending;
-use nom::combinator::{map, opt};
-use nom::multi::{many_till, many1, separated_list0};
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser};
 use serde::Deserialize;
 use tracing::error;
 use url::Url;
+use winnow::ascii::line_ending;
+use winnow::combinator::{
+    alt, delimited, opt, preceded, repeat, repeat_till, separated, terminated,
+};
+use winnow::error::ContextError;
+use winnow::{Parser, Result as WResult};
 
 use schema_org::field::{
     CreativeWorkIsBasedOnFieldEnum, QuantitativeValueValueFieldEnum, RecipeAuthorFieldEnum,
@@ -20,6 +19,7 @@ use schema_org::field::{
 };
 use schema_org::{Comment, Recipe};
 use support::strings::extract_number;
+use winnow::token::{literal, take_till, take_until};
 
 use crate::apps::helpers::read_file;
 use crate::error::{Error, Result};
@@ -363,7 +363,7 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    Ok(parse_text_file(&content)?
+    Ok(parse_text_file(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect())
@@ -395,173 +395,175 @@ where
     Ok(res.into_iter().collect())
 }
 
-fn parse_text_file(input: &str) -> Result<Vec<RecipeSage>> {
+fn parse_text_file(input: &mut &str) -> Result<Vec<RecipeSage>> {
     Ok(preceded(
-        (tag("==== Recipes ===="), line_ending, line_ending),
-        many1(map(recipe, RecipeSage::from)),
+        (literal("==== Recipes ===="), line_ending, line_ending),
+        repeat(1.., parse_recipe.map(RecipeSage::from)),
     )
-    .parse(input)
-    .map(|(_, r)| r)?)
+    .parse_next(input)
+    .map_err(|err| Error::Parse(err.to_string()))?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    (
+        (parse_id, opt(line_ending)),
+        parse_title,
+        parse_description,
+        parse_servings,
+        parse_active_time,
+        parse_total_time,
+        parse_source,
+        parse_url,
+        parse_notes,
+        parse_ingredients,
+        parse_instructions,
         (
-            (id, opt(line_ending)),
-            title,
-            description,
-            servings,
-            active_time,
-            total_time,
-            source,
-            url,
-            notes,
-            ingredients,
-            instructions,
-            (folder, created_at, updated_at, user_id),
-            labels,
-            images,
-            opt(line_ending),
+            parse_folder,
+            parse_created_at,
+            parse_updated_at,
+            parse_user_id,
         ),
-        |(
-            _,
-            title,
-            description,
-            servings,
-            _,
-            _,
-            source,
-            url,
-            notes,
-            ingredients,
-            instructions,
-            (_, _, _, _),
-            labels,
-            images,
-            _,
-        )| {
-            let items = labels.split_first();
-
-            RecipeComponents {
-                category: items.map(|(&a, _b)| a),
-                description: description.filter(|s| !s.is_empty()),
-                image: images,
+        parse_labels,
+        parse_images,
+        opt(line_ending),
+    )
+        .map(
+            |(
+                _,
+                title,
+                description,
+                servings,
+                _,
+                _,
+                source,
+                url,
+                notes,
                 ingredients,
                 instructions,
-                keywords: items.map(|(_a, b)| b.to_vec()).unwrap_or_default(),
-                notes,
-                servings: servings
-                    .filter(|s| !s.is_empty())
-                    .map(|s| extract_number(s.to_string()).unwrap_or_default()),
-                source: source
-                    .filter(|s| !s.is_empty())
-                    .or(url.filter(|s| !s.is_empty())),
-                title: title.unwrap_or(""),
-            }
-        },
-    )
-    .parse(input)
+                _,
+                labels,
+                image,
+                _,
+            )| {
+                let items = labels.split_first();
+
+                RecipeComponents {
+                    title: title.unwrap_or(""),
+                    description: description.filter(|s| !s.is_empty()),
+                    servings: servings
+                        .filter(|s| !s.is_empty())
+                        .map(|s| extract_number(s.to_string()).unwrap_or_default()),
+                    source: source
+                        .filter(|s| !s.is_empty())
+                        .or(url.filter(|s| !s.is_empty())),
+                    notes,
+                    ingredients,
+                    instructions,
+                    category: items.map(|(&a, _b)| a),
+                    keywords: items.map(|(_a, b)| b.to_vec()).unwrap_or_default(),
+                    image,
+                }
+            },
+        )
+        .parse_next(input)
 }
 
-fn id(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("id").parse(input)
+fn parse_id<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("id").parse_next(input)
 }
 
-fn title(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("title").parse(input)
+fn parse_title<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("title").parse_next(input)
 }
 
-fn description(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("description").parse(input)
+fn parse_description<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("description").parse_next(input)
 }
 
-fn servings(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("yield").parse(input)
+fn parse_servings<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("yield").parse_next(input)
 }
 
-fn active_time(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("activeTime").parse(input)
+fn parse_active_time<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("activeTime").parse_next(input)
 }
 
-fn total_time(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("totalTime").parse(input)
+fn parse_total_time<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("totalTime").parse_next(input)
 }
 
-fn source(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("source").parse(input)
+fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("source").parse_next(input)
 }
 
-fn url(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("url").parse(input)
+fn parse_url<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("url").parse_next(input)
 }
 
-fn notes(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("notes").parse(input)
+fn parse_notes<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("notes").parse_next(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<&str>> {
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     preceded(
-        tag("ingredients: "),
-        many_till(
-            terminated(take_until("\n"), line_ending),
-            tag("instructions:"),
+        literal("ingredients: "),
+        repeat_till(
+            0..,
+            terminated(take_until(0.., "\n"), line_ending),
+            literal("instructions:"),
         )
         .map(|(lines, _)| lines),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, &str> {
-    preceded(tag(" "), take_until("folder:")).parse(input)
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    preceded(literal(" "), take_until(0.., "folder:")).parse_next(input)
 }
 
-fn folder(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("folder").parse(input)
+fn parse_folder<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("folder").parse_next(input)
 }
 
-fn created_at(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("createdAt").parse(input)
+fn parse_created_at<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("createdAt").parse_next(input)
 }
 
-fn updated_at(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("updatedAt").parse(input)
+fn parse_updated_at<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("updatedAt").parse_next(input)
 }
 
-fn user_id(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("userId").parse(input)
+fn parse_user_id<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("userId").parse_next(input)
 }
 
-fn labels(input: &str) -> IResult<&str, Vec<&str>> {
-    map(
-        preceded(
-            tag("labels: "),
-            (
-                separated_list0(tag(","), take_till(|c| c == ',' || c == '\n')),
-                line_ending,
-            ),
+fn parse_labels<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    preceded(
+        literal("labels: "),
+        (
+            separated(0.., take_till(0.., |c| c == ',' || c == '\n'), literal(",")),
+            line_ending,
         ),
-        |(s, _)| s,
     )
-    .parse(input)
+    .map(|(s, _)| s)
+    .parse_next(input)
 }
 
-fn images(input: &str) -> IResult<&str, Option<&str>> {
-    parse_tag("images").parse(input)
+fn parse_images<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    parse_tag("images").parse_next(input)
 }
 
-fn parse_tag(prefix: &str) -> impl FnMut(&str) -> IResult<&str, Option<&str>> {
-    move |input| {
+fn parse_tag<'a>(prefix: &'a str) -> impl Parser<&'a str, Option<&'a str>, ContextError> + 'a {
+    move |input: &mut &'a str| {
         preceded(
-            tag(prefix),
+            literal(prefix),
             alt((
-                map(tag(":\n"), |_| None),
-                map(
-                    delimited(tag(": "), take_till(|c| c == '\n'), line_ending),
-                    |s: &str| if s.is_empty() { None } else { Some(s) },
-                ),
+                literal(":\n").value(None),
+                delimited(literal(": "), take_till(0.., |c| c == '\n'), line_ending)
+                    .map(|s: &str| if s.is_empty() { None } else { Some(s) }),
             )),
         )
-        .parse(input)
+        .parse_next(input)
     }
 }
 
