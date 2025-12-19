@@ -1,14 +1,12 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
-use nom::IResult;
-use nom::Parser;
-use nom::branch::alt;
-use nom::bytes::complete::{tag, take_until};
-use nom::character::complete::{digit1, line_ending, space0, space1};
-use nom::combinator::{map, opt, recognize, rest};
-use nom::multi::{many1, separated_list0};
-use nom::sequence::{delimited, preceded, terminated};
+use winnow::Result as WResult;
+use winnow::ascii::{digit1, line_ending, space0, space1};
+use winnow::combinator::{
+    alt, delimited, empty, opt, preceded, repeat, separated, seq, terminated,
+};
+use winnow::prelude::*;
 
 use schema_org::field::{
     AggregateRatingRatingValueFieldEnum, ImageObjectImageFieldEnum, RecipeAuthorFieldEnum,
@@ -19,6 +17,7 @@ use schema_org::{
     AggregateRating, AtType, Energy, ImageObject, Mass, NutritionInformation, Recipe,
 };
 use serde::Deserialize;
+use winnow::token::{literal, rest, take_until};
 
 use crate::apps::helpers::{
     Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
@@ -473,7 +472,7 @@ where
 {
     let content = read_file(r)?;
 
-    let recipes = parse_mxp_helper(&content)?
+    let recipes = parse_mxp_helper(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect::<Vec<_>>();
@@ -492,98 +491,75 @@ where
     Ok(recipes)
 }
 
-fn parse_mxp_helper(input: &str) -> Result<Vec<RecipeComponents<'_>>> {
-    Ok(many1(map(recipe_mxp, |r| r)).parse(input).map(|(_, r)| r)?)
+fn parse_mxp_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
+    Ok(repeat(1.., parse_recipe_mxp.map(|r| r))
+        .parse(input)
+        .map(|r| r)
+        .map_err(|err| Error::Parse(err.to_string()))?)
 }
 
-fn recipe_mxp(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            header_mxp,
-            title,
-            author,
-            serving_size,
-            prep_time,
-            categories_mxp,
-            line_ending,
-            ingredients,
-            line_ending,
-            instructions_mxp,
-            flush_mxp,
-        ),
-        |(
-            _,
-            title,
-            author,
-            serving_size,
-            prep_time,
-            categories,
-            _,
-            ingredients,
-            _,
-            instructions,
-            _,
-        )| RecipeComponents {
-            author,
-            categories,
-            ingredients,
-            instructions,
-            prep_time,
-            title,
-            r#yield: serving_size,
-            source: Some("Exported from  MasterCook II"),
-            ..Default::default()
-        },
-    )
-    .parse(input)
+fn parse_recipe_mxp<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents{
+        _: parse_header_mxp,
+        title: parse_title,
+        author: parse_author,
+        r#yield: parse_serving_size,
+        prep_time: parse_prep_time,
+        categories: parse_categories_mxp,
+        _: line_ending,
+        ingredients: parse_ingredients,
+        _: line_ending,
+        instructions: parse_instructions_mxp,
+        _: parse_flush_mxp,
+        source: empty.value(Some("Exported from  MasterCook II")),
+        ..Default::default()
+    }}
+    .parse_next(input)
 }
 
-fn header_mxp(input: &str) -> IResult<&str, &str> {
-    recognize((
+fn parse_header_mxp<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    (
         space0,
-        tag("*  Exported from  MasterCook II  *"),
+        literal("*  Exported from  MasterCook II  *"),
         line_ending,
         line_ending,
-    ))
-    .parse(input)
-}
-
-fn categories_mxp(input: &str) -> IResult<&str, Vec<&str>> {
-    map(
-        delimited(
-            tag("Categories    :"),
-            take_until("\n\n  Amount"),
-            line_ending,
-        ),
-        |s: &str| {
-            s.split("  ")
-                .filter_map(|s| match s.trim() {
-                    trimmed if !trimmed.is_empty() => Some(trimmed),
-                    _ => None,
-                })
-                .collect::<Vec<&str>>()
-        },
     )
-    .parse(input)
+        .take()
+        .parse_next(input)
 }
 
-fn instructions_mxp(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
-    map(
-        take_until("- - - - - - - - - - - - - - - - - -"),
-        |content: &str| {
+fn parse_categories_mxp<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    delimited(
+        literal("Categories    :"),
+        take_until(0.., "\n\n  Amount"),
+        line_ending,
+    )
+    .map(|s: &str| {
+        s.split("  ")
+            .filter_map(|s| match s.trim() {
+                trimmed if !trimmed.is_empty() => Some(trimmed),
+                _ => None,
+            })
+            .collect::<Vec<&str>>()
+    })
+    .parse_next(input)
+}
+
+fn parse_instructions_mxp<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
+    take_until(0.., "- - - - - - - - - - - - - - - - - -")
+        .map(|content: &str| {
             content
                 .split("\n\n")
                 .map(|s| s.trim())
                 .filter(|s| !s.is_empty())
                 .map(|s| Instruction::Line(Cow::Borrowed(s)))
                 .collect()
-        },
-    )
-    .parse(input)
+        })
+        .parse_next(input)
 }
 
-fn flush_mxp(input: &str) -> IResult<&str, &str> {
-    alt((take_until("*  Exported from  MasterCook II  *"), rest)).parse(input)
+fn parse_flush_mxp<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((take_until(0.., "*  Exported from  MasterCook II  *"), rest)).parse_next(input)
 }
 
 /// Parses a MasterCook TXT file.
@@ -594,7 +570,7 @@ where
     let mut content = String::new();
     r.read_to_string(&mut content)?;
 
-    let recipes = parse_txt_helper(&content)?
+    let recipes = parse_txt_helper(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect::<Vec<_>>();
@@ -602,207 +578,193 @@ where
     Ok(recipes)
 }
 
-fn parse_txt_helper(input: &str) -> Result<Vec<RecipeComponents<'_>>> {
-    Ok(many1(map(recipe_txt, |r| r)).parse(input).map(|(_, r)| r)?)
+fn parse_txt_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
+    Ok(repeat(1.., parse_recipe_txt.map(|r| r))
+        .parse_next(input)
+        .map_err(|err| Error::Parse(err.to_string()))?)
 }
 
-fn recipe_txt(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            header,
-            title,
-            author,
-            serving_size,
-            prep_time,
-            categories,
-            line_ending,
-            ingredients,
-            line_ending,
-            instructions,
-            description,
-            opt(source),
-            opt(servings),
-            opt(total_time),
-            opt(rating),
-            metasection,
-            nutrition,
-            flush,
-        ),
-        |(
-            _,
-            title,
-            author,
-            serving_size,
-            prep_time,
-            categories,
-            _,
-            ingredients,
-            _,
-            instructions,
-            description,
-            source,
-            _,
-            total_time,
-            rating,
-            _,
-            nutrition,
-            _,
-        )| RecipeComponents {
-            author,
-            categories,
-            description,
-            ingredients,
-            instructions,
-            nutrition,
-            prep_time,
-            rating,
-            source,
-            title,
-            total_time,
-            r#yield: serving_size,
-        },
-    )
-    .parse(input)
+fn parse_recipe_txt<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents{
+        _: parse_header,
+        title: parse_title,
+        author: parse_author,
+        r#yield: parse_serving_size,
+        prep_time: parse_prep_time,
+        categories: parse_categories,
+        _: line_ending,
+        ingredients: parse_ingredients,
+        _: line_ending,
+        instructions: parse_instructions,
+        description: parse_description,
+        source: opt(parse_source),
+        _: opt(parse_servings),
+        total_time: opt(parse_total_time),
+        rating: opt(parse_rating),
+        _: parse_metasection,
+        nutrition: parse_nutrition,
+        _: parse_flush,
+    }}
+    .parse_next(input)
 }
 
-fn header(input: &str) -> IResult<&str, &str> {
-    recognize((
+fn parse_header<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    (
         space0,
         line_ending,
-        tag("* Exported from MasterCook *"),
+        literal("* Exported from MasterCook *"),
         line_ending,
         line_ending,
-    ))
-    .parse(input)
-}
-
-fn title(input: &str) -> IResult<&str, &str> {
-    delimited(space1, take_until("\n"), (line_ending, line_ending)).parse(input)
-}
-
-fn author(input: &str) -> IResult<&str, &str> {
-    delimited(tag("Recipe By     :"), take_until("\n"), line_ending).parse(input)
-}
-
-fn serving_size(input: &str) -> IResult<&str, i64> {
-    map(
-        delimited(tag("Serving Size  : "), digit1, space1),
-        |s: &str| s.parse::<i64>().unwrap_or_default(),
     )
-    .parse(input)
+        .take()
+        .parse_next(input)
 }
 
-fn prep_time(input: &str) -> IResult<&str, &str> {
-    delimited(tag("Preparation Time :"), take_until("\n"), line_ending).parse(input)
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(space1, take_until(0.., "\n"), (line_ending, line_ending)).parse_next(input)
 }
 
-fn categories(input: &str) -> IResult<&str, Vec<&str>> {
-    separated_list0(
-        tag(","),
-        delimited(tag("Categories    :"), take_until("\n"), line_ending),
+fn parse_author<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(
+        literal("Recipe By     :"),
+        take_until(0.., "\n"),
+        line_ending,
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    map(
-        (
-            (
-                tag("  Amount  Measure       Ingredient -- Preparation Method"),
-                line_ending,
-            ),
-            (
-                tag("--------  ------------  --------------------------------"),
-                line_ending,
-            ),
-            many1(ingredient),
+fn parse_serving_size(input: &mut &str) -> WResult<i64> {
+    delimited(literal("Serving Size  : "), digit1, space1)
+        .map(|s: &str| s.parse::<i64>().unwrap_or_default())
+        .parse_next(input)
+}
+
+fn parse_prep_time<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(
+        literal("Preparation Time :"),
+        take_until(0.., "\n"),
+        line_ending,
+    )
+    .parse_next(input)
+}
+
+fn parse_categories<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    separated(
+        0..,
+        delimited(
+            literal("Categories    :"),
+            take_until(0.., "\n"),
+            line_ending,
         ),
-        |(_, _, v)| v,
+        literal(","),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn ingredient(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(delimited(space1, take_until("\n"), line_ending), |s| {
-        Ingredient::Line(Cow::Borrowed(s))
-    })
-    .parse(input)
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    (
+        (
+            literal("  Amount  Measure       Ingredient -- Preparation Method"),
+            line_ending,
+        ),
+        (
+            literal("--------  ------------  --------------------------------"),
+            line_ending,
+        ),
+        repeat(1.., parse_ingredient),
+    )
+        .map(|(_, _, v)| v)
+        .parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
-    map(take_until("Description:"), |content: &str| {
-        content
-            .split("\n\n")
-            .map(|s| s.trim())
-            .filter(|s| !s.is_empty())
-            .map(|s| Instruction::Line(Cow::Borrowed(s)))
-            .collect()
-    })
-    .parse(input)
+fn parse_ingredient<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+    delimited(space1, take_until(0.., "\n"), line_ending)
+        .map(|s| Ingredient::Line(Cow::Borrowed(s)))
+        .parse_next(input)
 }
 
-fn description(input: &str) -> IResult<&str, &str> {
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
+    take_until(0.., "Description:")
+        .map(|content: &str| {
+            content
+                .split("\n\n")
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .map(|s| Instruction::Line(Cow::Borrowed(s)))
+                .collect()
+        })
+        .parse_next(input)
+}
+
+fn parse_description<'s>(input: &mut &'s str) -> WResult<&'s str> {
     delimited(
-        (tag("Description:"), line_ending, tag("  \"")),
-        take_until("\n"),
+        (literal("Description:"), line_ending, literal("  \"")),
+        take_until(0.., "\n"),
         line_ending,
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn source(input: &str) -> IResult<&str, &str> {
+fn parse_source<'s>(input: &mut &'s str) -> WResult<&'s str> {
     delimited(
-        (tag("Source:"), line_ending, tag("  \"")),
-        take_until("\n"),
+        (literal("Source:"), line_ending, literal("  \"")),
+        take_until(0.., "\n"),
         line_ending,
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn servings(input: &str) -> IResult<&str, &str> {
+fn parse_servings<'s>(input: &mut &'s str) -> WResult<&'s str> {
     delimited(
-        (tag("Yield:"), line_ending, tag("  \"")),
-        take_until("\n"),
+        (literal("Yield:"), line_ending, literal("  \"")),
+        take_until(0.., "\n"),
         line_ending,
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn total_time(input: &str) -> IResult<&str, &str> {
+fn parse_total_time<'s>(input: &mut &'s str) -> WResult<&'s str> {
     delimited(
-        (tag("Start to Finish Time:"), line_ending, tag("  \"")),
-        take_until("\n"),
+        (
+            literal("Start to Finish Time:"),
+            line_ending,
+            literal("  \""),
+        ),
+        take_until(0.., "\n"),
         line_ending,
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn rating(input: &str) -> IResult<&str, &str> {
-    delimited(tag("Ratings       : "), take_until("\n"), line_ending).parse(input)
+fn parse_rating<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(
+        literal("Ratings       : "),
+        take_until(0.., "\n"),
+        line_ending,
+    )
+    .parse_next(input)
 }
 
-fn metasection(input: &str) -> IResult<&str, &str> {
+fn parse_metasection<'s>(input: &mut &'s str) -> WResult<&'s str> {
     delimited(
         (opt(line_ending), space0),
-        tag("- - - - - - - - - - - - - - - - - - -"),
+        literal("- - - - - - - - - - - - - - - - - - -"),
         (space0, line_ending, line_ending),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn nutrition(input: &str) -> IResult<&str, Vec<&str>> {
+fn parse_nutrition<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     preceded(
-        tag("Per Serving (excluding unknown items): "),
-        map(
-            terminated(take_until("\n"), line_ending),
-            |content: &str| content.split(';').map(|s| s.trim()).collect::<Vec<&str>>(),
-        ),
+        literal("Per Serving (excluding unknown items): "),
+        terminated(take_until(0.., "\n"), line_ending)
+            .map(|content: &str| content.split(';').map(|s| s.trim()).collect::<Vec<&str>>()),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn flush(input: &str) -> IResult<&str, &str> {
-    alt((take_until("\n* Exported from MasterCook *"), rest)).parse(input)
+fn parse_flush<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((take_until(0.., "\n* Exported from MasterCook *"), rest)).parse_next(input)
 }
 
 #[cfg(test)]

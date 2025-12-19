@@ -1,14 +1,11 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
-use nom::branch::alt;
-use nom::bytes::complete::{tag, take_until, take_while, take_while_m_n};
-use nom::character::complete::{char, line_ending, space0, space1};
-use nom::character::satisfy;
-use nom::combinator::{map, opt, recognize, verify};
-use nom::multi::{many0, many1, separated_list1};
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser};
+use winnow::Result as WResult;
+use winnow::ascii::{line_ending, space0, space1};
+use winnow::combinator::{alt, delimited, opt, preceded, repeat, separated, seq, terminated};
+use winnow::prelude::*;
+use winnow::token::{literal, one_of, take_until, take_while};
 
 use schema_org::field::{
     RecipeAuthorFieldEnum, RecipeIsBasedOnFieldEnum, RecipeKeywordsFieldEnum,
@@ -17,7 +14,7 @@ use schema_org::field::{
 use schema_org::{AtType, Recipe};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
-use crate::Result;
+use crate::{Error, Result};
 
 struct KalorioTextRecipe {
     title: String,
@@ -124,7 +121,7 @@ where
 {
     let content = read_file(r)?;
 
-    let mut recipes = parse_txt(&content)?
+    let mut recipes = parse_txt(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect::<Vec<_>>();
@@ -140,209 +137,223 @@ where
     Ok(recipes)
 }
 
-fn parse_txt(input: &str) -> Result<Vec<KalorioTextRecipe>> {
-    Ok(many0(alt((
-        map(
-            preceded(take_while_m_n(1, 10, is_vchar_or_space), line_ending),
-            |_| None,
-        ),
-        map(recipe, |r| Some(r.into())),
-    )))
-    .parse(input)
-    .map(|(_, recipes)| recipes.into_iter().flatten().collect())?)
-}
-
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            line_ending,
-            title,
-            ingredients,
-            instructions,
-            opt(fingerprint),
-            opt(keywords),
-            opt(author),
-            opt(registered_on),
-            footer,
-            opt(version),
-        ),
-        |(_, title, ingredients, instructions, _, keywords, author, _, _, version)| {
-            RecipeComponents {
-                title,
-                author,
-                keywords: keywords.unwrap_or_default(),
-                ingredients,
-                instructions,
-                version: version.map(|s| s.trim()),
-            }
-        },
-    )
-    .parse(input)
-}
-
-fn title(input: &str) -> IResult<&str, &str> {
-    preceded(space1, terminated(take_until("\n"), many1(line_ending))).parse(input)
-}
-
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    alt((twocolumn, onecolumn)).parse(input)
-}
-
-fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    many1(alt((
-        map(section, |s| vec![Ingredient::Section(Cow::Borrowed(s))]),
-        map(
-            (tag("    "), ingredtwo, tag("    "), ingredone, line_ending),
-            |(_, ing1, _, ing2, _)| vec![ing1, ing2],
-        ),
-        map(
-            (tag("    "), ingredone, many1(line_ending)),
-            |(_, ing, _)| vec![ing],
-        ),
-    )))
-    .parse(input)
-    .map(|(rest, nested)| (rest, nested.into_iter().flatten().collect()))
-}
-
-fn ingredtwo(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(
-        recognize((
-            amount,
-            char(' '),
-            unit,
-            char(' '),
-            take_while_m_n(27, 27, is_vchar_or_space),
+fn parse_txt(input: &mut &str) -> Result<Vec<KalorioTextRecipe>> {
+    Ok(repeat(
+        0..,
+        alt((
+            preceded(take_while(1..=10, is_vchar_or_space), line_ending).map(|_| None),
+            parse_recipe.map(|r| Some(r.into())),
         )),
-        |s| Ingredient::Line(Cow::Borrowed(s.trim())),
     )
-    .parse(input)
+    .parse_next(input)
+    .map(|recipes: Vec<_>| recipes.into_iter().flatten().collect())
+    .map_err(|err| Error::Parse(err.to_string()))?)
 }
 
-fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    many0(alt((
-        map(section, |s| Ingredient::Section(Cow::Borrowed(s))),
-        terminated(ingredone, line_ending),
-        map((space0, line_ending), |_| {
-            Ingredient::Line(Cow::Borrowed(""))
-        }),
-    )))
-    .parse(input)
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents{
+        _: line_ending,
+        title: parse_title,
+        ingredients: parse_ingredients,
+        instructions: parse_instructions,
+        _:opt(parse_fingerprint),
+        keywords: parse_keywords,
+        author:opt(author),
+        _: opt(parse_registered_on),
+        _: parse_footer,
+        version: opt(parse_version),
+    }}
+    .parse_next(input)
 }
 
-fn ingredone(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(
-        recognize((
-            amount,
-            char(' '),
-            unit,
-            char(' '),
-            take_while_m_n(1, 27, is_vchar_or_space),
-        )),
-        |s| Ingredient::Line(Cow::Borrowed(s.trim())),
-    )
-    .parse(input)
-}
-
-fn section(input: &str) -> IResult<&str, &str> {
-    map(
-        (
-            (opt(line_ending), char(' ')),
-            recognize((
-                satisfy(|c| c.is_alphabetic()),
-                take_while(is_vchar_or_space),
-            )),
-            line_ending,
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    preceded(
+        space1,
+        terminated(
+            take_until(0.., "\n"),
+            repeat(1.., line_ending).fold(|| (), |_, _| ()),
         ),
-        |(_, s, _)| s,
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn amount(input: &str) -> IResult<&str, &str> {
-    take_while_m_n(1, 3, |c: char| is_vchar_or_space(c) || c == '.' || c == '/').parse(input)
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    alt((twocolumn, onecolumn)).parse_next(input)
 }
 
-fn unit(input: &str) -> IResult<&str, &str> {
-    take_while_m_n(2, 2, is_vchar_or_space).parse(input)
+fn twocolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    repeat(
+        1..,
+        alt((
+            parse_section.map(|s| vec![Ingredient::Section(Cow::Borrowed(s))]),
+            (
+                literal("    "),
+                ingredtwo,
+                literal("    "),
+                ingredone,
+                line_ending,
+            )
+                .map(|(_, ing1, _, ing2, _)| vec![ing1, ing2]),
+            (
+                literal("    "),
+                ingredone,
+                repeat(1.., line_ending).fold(|| (), |_, _| ()),
+            )
+                .map(|(_, ing, _)| vec![ing]),
+        )),
+    )
+    .map(|nested: Vec<_>| nested.into_iter().flatten().collect())
+    .parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
-    many1(map(instruction, |s| Instruction::Line(Cow::Borrowed(s)))).parse(input)
+fn ingredtwo<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+    (
+        parse_amount,
+        one_of(' '),
+        parse_unit,
+        one_of(' '),
+        take_while(27..=27, is_vchar_or_space),
+    )
+        .take()
+        .map(|s: &str| Ingredient::Line(Cow::Borrowed(s.trim())))
+        .parse_next(input)
 }
 
-fn instruction(input: &str) -> IResult<&str, &str> {
+fn onecolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    repeat(
+        0..,
+        alt((
+            parse_section.map(|s| Ingredient::Section(Cow::Borrowed(s))),
+            terminated(ingredone, line_ending),
+            (space0, line_ending).map(|_| Ingredient::Line(Cow::Borrowed(""))),
+        )),
+    )
+    .parse_next(input)
+}
+
+fn ingredone<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+    (
+        parse_amount,
+        one_of(' '),
+        parse_unit,
+        one_of(' '),
+        take_while(1..=27, is_vchar_or_space),
+    )
+        .take()
+        .map(|s: &str| Ingredient::Line(Cow::Borrowed(s.trim())))
+        .parse_next(input)
+}
+
+fn parse_section<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    (
+        (opt(line_ending), one_of(' ')),
+        (
+            one_of(|c: char| c.is_alphabetic()),
+            take_while(0.., is_vchar_or_space),
+        )
+            .take(),
+        line_ending,
+    )
+        .map(|(_, s, _)| s)
+        .parse_next(input)
+}
+
+fn parse_amount<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    take_while(1..=3, |c: char| {
+        is_vchar_or_space(c) || c == '.' || c == '/'
+    })
+    .parse_next(input)
+}
+
+fn parse_unit<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    take_while(2..=2, is_vchar_or_space).parse_next(input)
+}
+
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
+    repeat(
+        1..,
+        parse_instruction.map(|s| Instruction::Line(Cow::Borrowed(s))),
+    )
+    .parse_next(input)
+}
+
+fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
     terminated(
-        verify(take_until("\n\n"), |text: &str| {
-            !text.starts_with(":") && !text.trim_start().starts_with("-----")
-        }),
+        take_until(0.., "\n\n")
+            .verify(|text: &str| !text.starts_with(":") && !text.trim_start().starts_with("-----")),
         (line_ending, line_ending),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn fingerprint(input: &str) -> IResult<&str, &str> {
+fn parse_fingerprint<'s>(input: &mut &'s str) -> WResult<&'s str> {
     delimited(
-        tag(":Fingerprint: "),
-        take_until("\n"),
+        literal(":Fingerprint: "),
+        take_until(0.., "\n"),
         (line_ending, opt(line_ending)),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn keywords(input: &str) -> IResult<&str, Vec<&str>> {
+fn parse_keywords<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     preceded(
-        tag(":Stichworte: "),
+        literal(":Stichworte: "),
         terminated(
-            separated_list1(
-                char(','),
+            separated(
+                1..,
                 preceded(
                     space0,
-                    take_while_m_n(1, 18, |c: char| is_vchar_or_space(c) && c != ','),
+                    take_while(1..=18, |c: char| is_vchar_or_space(c) && c != ','),
                 ),
+                one_of(','),
             ),
             line_ending,
         ),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn author(input: &str) -> IResult<&str, &str> {
+fn author<'s>(input: &mut &'s str) -> WResult<&'s str> {
     preceded(
-        tag(":Erfasser/Name: "),
+        literal(":Erfasser/Name: "),
         terminated(
-            take_while(is_vchar_or_space),
+            take_while(1.., is_vchar_or_space),
             (line_ending, opt(line_ending)),
         ),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn registered_on(input: &str) -> IResult<&str, &str> {
+fn parse_registered_on<'s>(input: &mut &'s str) -> WResult<&'s str> {
     preceded(
-        tag(":Erfasst am: "),
-        terminated(take_while(is_vchar_or_space), (line_ending, line_ending)),
-    )
-    .parse(input)
-}
-
-fn footer(input: &str) -> IResult<&str, &str> {
-    delimited(
-        opt(line_ending),
-        tag("----------------------------------------------------------------------------"),
-        line_ending,
-    )
-    .parse(input)
-}
-
-fn version(input: &str) -> IResult<&str, &str> {
-    preceded(
-        char(' '),
-        preceded(
-            take_until("Kalorio"),
-            alt((take_until("["), take_while(is_vchar_or_space))),
+        literal(":Erfasst am: "),
+        terminated(
+            take_while(1.., is_vchar_or_space),
+            (line_ending, line_ending),
         ),
     )
-    .parse(input)
+    .parse_next(input)
+}
+
+fn parse_footer<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(
+        opt(line_ending),
+        literal("----------------------------------------------------------------------------"),
+        line_ending,
+    )
+    .parse_next(input)
+}
+
+fn parse_version<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    preceded(
+        one_of(' '),
+        preceded(
+            take_until(0.., "Kalorio"),
+            alt((take_until(0.., "["), take_while(1.., is_vchar_or_space))),
+        ),
+    )
+    .map(|s: &str| s.trim())
+    .parse_next(input)
 }
 
 #[cfg(test)]
