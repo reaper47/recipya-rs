@@ -17,25 +17,22 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
-use nom::branch::alt;
-use nom::bytes::complete::{tag, tag_no_case, take_until, take_while_m_n, take_while1};
-use nom::bytes::take_while;
-use nom::character::complete::{char, line_ending, multispace0, multispace1, space0, space1};
-use nom::combinator::{map, map_res, opt, peek, recognize, verify};
-use nom::multi::{many0, many1, separated_list1};
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser};
 use url::Url;
+use winnow::ascii::{Caseless, line_ending, multispace0, multispace1, space0, space1};
+use winnow::combinator::{alt, delimited, opt, peek, preceded, repeat, separated, seq, terminated};
+use winnow::error::ContextError;
+use winnow::{Parser, Result as WResult};
 
 use schema_org::Recipe;
 use schema_org::field::{
     RecipeAuthorFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
     RecipeRecipeInstructionsFieldEnum,
 };
+use winnow::token::{literal, one_of, take_until, take_while};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
-use crate::Result;
 use crate::helpers::{to_is_based_on, to_yield};
+use crate::{Error, Result};
 
 struct MealMasterRecipe {
     author: Option<String>,
@@ -153,438 +150,429 @@ where
 {
     let content = read_file(r)?.replace("\n \n", "\n\n");
 
-    Ok(parse_meal_master_recipe(&content)?
+    Ok(parse_meal_master_recipe(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect())
 }
 
-fn parse_meal_master_recipe(input: &str) -> Result<Vec<MealMasterRecipe>> {
-    let res = many1(alt((
-        map(
-            preceded(take_while_m_n(1, 10, is_vchar_or_space), line_ending),
-            |_| None,
-        ),
-        map(recipe, |r| Some(r.into())),
-    )))
-    .parse(input)
-    .map(|(_, recipes)| recipes.into_iter().flatten().collect::<Vec<_>>())?;
+fn parse_meal_master_recipe(input: &mut &str) -> Result<Vec<MealMasterRecipe>> {
+    let res = repeat(
+        1..,
+        alt((
+            preceded(take_while(1..=10, is_vchar_or_space), line_ending).map(|_| None),
+            parse_recipe.map(|r| Some(r.into())),
+        )),
+    )
+    .parse_next(input)
+    .map(|recipes: Vec<_>| recipes.into_iter().flatten().collect::<Vec<_>>())
+    .map_err(|err| Error::Parse(err.to_string()))?;
 
     Ok(res)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            many0(line_ending),
-            header,
-            title,
-            categories,
-            opt(tags),
-            servings,
-            opt(author),
-            ingredients,
-            opt(ingredient_notes),
-            instructions,
-            footer,
-        ),
-        |(
-            _,
-            (header_tag, header_rest),
-            title,
-            categories,
-            tags,
-            servings,
-            author,
-            ingredients,
-            ingredient_notes,
-            instructions,
-            _,
-        )| {
-            RecipeComponents {
-                author,
-                header: (header_tag, header_rest),
-                title,
-                categories,
-                tags,
-                servings,
-                ingredients,
-                ingredient_notes,
-                instructions,
-            }
-        },
-    )
-    .parse(input)
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        _: repeat(0.., line_ending).fold(|| (), |_, _| ()),
+        header: parse_header,
+        title: parse_title,
+        categories: parse_categories,
+        tags: opt(parse_tags),
+        servings: parse_servings,
+        author: opt(parse_author),
+        ingredients: parse_ingredients,
+        ingredient_notes: opt(parse_ingredient_notes),
+        instructions: parse_instructions,
+        _: parse_footer,
+    }}
+    .parse_next(input)
 }
-
-fn header(input: &str) -> IResult<&str, (&str, &str)> {
+fn parse_header<'s>(input: &mut &'s str) -> WResult<(&'s str, &'s str)> {
     let meal_master = "Meal-Master";
     let now_youre_cooking = "Now You're Cooking!";
     let cookmate = "Cookmate";
 
-    map(
-        (
-            separator,
-            alt((
-                take_until(now_youre_cooking),
-                take_until(cookmate),
-                take_until(meal_master),
-            )),
-            alt((tag(now_youre_cooking), tag(cookmate), tag(meal_master))),
-            take_while(is_vchar_or_space),
-            many1(eol),
-        ),
-        |(_, _, tag, rest, _)| (tag, rest),
-    )
-    .parse(input)
-}
-
-fn title(input: &str) -> IResult<&str, &str> {
-    map(
-        (
-            opt(char(' ')),
-            opt((eol, char(' '))),
-            space0,
-            tag("Title: "),
-            take_while_m_n(0, 60, is_vchar_or_space),
-            eol,
-        ),
-        |(_, _, _, _, s, _)| s,
-    )
-    .parse(input)
-}
-
-fn categories(input: &str) -> IResult<&str, Vec<&str>> {
-    alt((
-        preceded(
-            (opt(char(' ')), opt(tag("       ")), tag("Categories: ")),
-            terminated(categlist, many1(eol)),
-        ),
-        preceded(
-            (opt(char(' ')), opt(tag("       ")), tag("Categories: ")),
-            terminated(categlist_spaces, many1(eol)),
-        ),
-    ))
-    .parse(input)
-}
-
-fn tags(input: &str) -> IResult<&str, Vec<&str>> {
-    alt((
-        preceded(
-            (tag("Tags:"), alt((space0, line_ending))),
-            terminated(categlist, many1(eol)),
-        ),
-        map((tag("Tags:"), take_until("\n"), many1(line_ending)), |_| {
-            Vec::new()
-        }),
-    ))
-    .parse(input)
-}
-
-fn categlist(input: &str) -> IResult<&str, Vec<&str>> {
-    separated_list1(
-        char(','),
-        preceded(
-            space0,
-            take_while_m_n(1, 80, |c: char| is_vchar_or_space(c) && c != ','),
-        ),
-    )
-    .parse(input)
-}
-
-fn categlist_spaces(input: &str) -> IResult<&str, Vec<&str>> {
-    separated_list1(
-        char(' '),
-        preceded(
-            space0,
-            take_while_m_n(1, 11, |c: char| c.is_ascii_graphic() && c != ' '),
-        ),
-    )
-    .parse(input)
-}
-
-fn servings(input: &str) -> IResult<&str, i16> {
-    alt((
-        map_res(
-            (
-                space0,
-                alt((tag("Servings: "), tag("Yield: "))),
-                opt(char(' ')),
-                take_while_m_n(1, 4, |c: char| c.is_ascii_digit()),
-                opt((char(' '), take_until("\n"))),
-                many1(eol),
-                opt((space0, eol)),
-            ),
-            |(_, _, _, digits, _, _, _)| digits.parse(),
-        ),
-        map(
-            (
-                space0,
-                alt((tag("Servings: "), tag("Yield: "))),
-                many1(eol),
-                opt((space0, eol)),
-            ),
-            |_| 2,
-        ),
-    ))
-    .parse(input)
-}
-
-fn author(input: &str) -> IResult<&str, &str> {
-    map(
-        (
-            space0,
-            tag("Contributor: "),
-            take_while_m_n(0, 60, is_vchar_or_space),
-            line_ending,
-        ),
-        |(_, _, s, _)| s,
-    )
-    .parse(input)
-}
-
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    alt((twocolumn, onecolumn)).parse(input)
-}
-
-fn onecolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    many0(alt((
-        map(section, |s| Ingredient::Section(Cow::Borrowed(s))),
-        terminated(ingredone, eol),
-        map((space0, eol), |_| Ingredient::Line(Cow::Borrowed(""))),
-    )))
-    .parse(input)
-}
-
-fn twocolumn(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    many1(alt((
-        map(section, |s| vec![Ingredient::Section(Cow::Borrowed(s))]),
-        map(
-            (ingredtwo, char(' '), ingredone, many0(line_ending)),
-            |(ing1, _, ing2, _)| vec![ing1, ing2],
-        ),
-        map(terminated(ingredone, many0(eol)), |ing| vec![ing]),
-    )))
-    .parse(input)
-    .map(|(rest, nested)| (rest, nested.into_iter().flatten().collect()))
-}
-
-fn ingredone(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(
-        recognize((
-            amount,
-            char(' '),
-            unit,
-            space1,
-            take_while_m_n(1, 90, is_vchar_or_space),
+    (
+        parse_separator,
+        alt((
+            take_until(0.., now_youre_cooking),
+            take_until(0.., cookmate),
+            take_until(0.., meal_master),
         )),
-        |s| Ingredient::Line(Cow::Borrowed(s)),
-    )
-    .parse(input)
-}
-
-fn ingredtwo(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(
-        recognize((
-            amount,
-            char(' '),
-            unit,
-            char(' '),
-            take_while_m_n(29, 29, is_vchar_or_space),
+        alt((
+            literal(now_youre_cooking),
+            literal(cookmate),
+            literal(meal_master),
         )),
-        |s| Ingredient::Line(Cow::Borrowed(s)),
+        take_while(0.., is_vchar_or_space),
+        repeat(1.., line_ending).fold(|| (), |_, _| ()),
     )
-    .parse(input)
+        .map(|(_, _, tag, rest, _)| (tag, rest))
+        .parse_next(input)
 }
 
-fn amount(input: &str) -> IResult<&str, &str> {
-    take_while_m_n(1, 7, |c: char| is_vchar_or_space(c) || c == '.' || c == '/').parse(input)
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    (
+        opt(one_of(' ')),
+        opt((line_ending, one_of(' '))),
+        space0,
+        literal("Title: "),
+        take_while(0..=60, is_vchar_or_space),
+        line_ending,
+    )
+        .map(|(_, _, _, _, s, _)| s)
+        .parse_next(input)
 }
 
-fn unit(input: &str) -> IResult<&str, &str> {
-    alt((units1, units2, units3, units4)).parse(input)
-}
-
-fn units1(input: &str) -> IResult<&str, &str> {
+fn parse_categories<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     alt((
-        tag_no_case("x "),
-        tag_no_case("sm"),
-        tag_no_case("md"),
-        tag_no_case("lg"),
-        tag_no_case("cn"),
-        tag_no_case("pk"),
-        tag_no_case("pn"),
-        tag_no_case("dr"),
-        tag_no_case("ds"),
-        tag_no_case("ct"),
-        tag_no_case("bn"),
+        preceded(
+            (
+                opt(one_of(' ')),
+                opt(literal("       ")),
+                literal("Categories: "),
+            ),
+            terminated(
+                parse_categlist,
+                repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
+            ),
+        ),
+        preceded(
+            (
+                opt(one_of(' ')),
+                opt(literal("       ")),
+                literal("Categories: "),
+            ),
+            terminated(
+                parse_categlist_spaces,
+                repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
+            ),
+        ),
     ))
-    .parse(input)
+    .parse_next(input)
 }
 
-fn units2(input: &str) -> IResult<&str, &str> {
+fn parse_tags<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     alt((
-        tag_no_case("ea"),
-        tag_no_case("t "),
-        tag_no_case("ts"),
-        tag_no_case("T "),
-        tag_no_case("tb"),
-        tag_no_case("fl"),
-        tag_no_case("c "),
-        tag_no_case("pt"),
-        tag_no_case("qt"),
-        tag_no_case("ga"),
-        tag_no_case("oz"),
-        tag_no_case("lb"),
+        preceded(
+            (literal("Tags:"), alt((space0, line_ending))),
+            terminated(
+                parse_categlist,
+                repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
+            ),
+        ),
+        (
+            literal("Tags:"),
+            take_until(0.., "\n"),
+            repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
+        )
+            .map(|_| Vec::new()),
     ))
-    .parse(input)
+    .parse_next(input)
 }
 
-fn units3(input: &str) -> IResult<&str, &str> {
+fn parse_categlist<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    separated(
+        1..,
+        preceded(
+            space0,
+            take_while(1..=80, |c: char| is_vchar_or_space(c) && c != ','),
+        ),
+        one_of(','),
+    )
+    .parse_next(input)
+}
+
+fn parse_categlist_spaces<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    separated(
+        1..,
+        preceded(
+            space0,
+            take_while(1..=11, |c: char| c.is_ascii_graphic() && c != ' '),
+        ),
+        one_of(' '),
+    )
+    .parse_next(input)
+}
+
+fn parse_servings(input: &mut &str) -> WResult<i16> {
     alt((
-        tag_no_case("ml"),
-        tag_no_case("cb"),
-        tag_no_case("cl"),
-        tag_no_case("dl"),
-        tag_no_case("l "),
-        tag_no_case("mg"),
-        tag_no_case("cg"),
-        tag_no_case("dg"),
-        tag_no_case("g "),
-        tag_no_case("kg"),
+        (
+            space0,
+            alt((literal("Servings: "), literal("Yield: "))),
+            opt(one_of(' ')),
+            take_while(1..=4, |c: char| c.is_ascii_digit()),
+            opt((one_of(' '), take_until(0.., "\n"))),
+            repeat(1.., line_ending).fold(|| (), |_, _| ()),
+            opt((space0, line_ending)),
+        )
+            .try_map(|(_, _, _, digits, _, _, _): (_, _, _, &str, _, _, _)| digits.parse()),
+        (
+            space0,
+            alt((literal("Servings: "), literal("Yield: "))),
+            repeat(1.., line_ending).fold(|| (), |_, _| ()),
+            opt((space0, line_ending)),
+        )
+            .map(|_| 2),
     ))
-    .parse(input)
+    .parse_next(input)
 }
 
-fn units4(input: &str) -> IResult<&str, &str> {
+fn parse_author<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    (
+        space0,
+        literal("Contributor: "),
+        take_while(0..=60, is_vchar_or_space),
+        line_ending,
+    )
+        .map(|(_, _, s, _)| s)
+        .parse_next(input)
+}
+
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    alt((parse_twocolumn, parse_onecolumn)).parse_next(input)
+}
+
+fn parse_onecolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    repeat(
+        0..,
+        alt((
+            parse_section.map(|s| Ingredient::Section(Cow::Borrowed(s))),
+            terminated(ingredone, line_ending),
+            (space0, line_ending).map(|_| Ingredient::Line(Cow::Borrowed(""))),
+        )),
+    )
+    .parse_next(input)
+}
+
+fn parse_twocolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    repeat(
+        1..,
+        alt((
+            parse_section.map(|s| vec![Ingredient::Section(Cow::Borrowed(s))]),
+            (
+                ingredtwo,
+                one_of(' '),
+                ingredone,
+                repeat(0.., line_ending).fold(|| (), |_, _| ()),
+            )
+                .map(|(ing1, _, ing2, _)| vec![ing1, ing2]),
+            terminated(ingredone, repeat(0.., line_ending).fold(|| (), |_, _| ()))
+                .map(|ing| vec![ing]),
+        )),
+    )
+    .map(|nested: Vec<_>| nested.into_iter().flatten().collect())
+    .parse_next(input)
+}
+
+fn ingredone<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+    (
+        parse_amount,
+        one_of(' '),
+        parse_unit,
+        space1,
+        take_while(1..=90, is_vchar_or_space),
+    )
+        .take()
+        .map(|s| Ingredient::Line(Cow::Borrowed(s)))
+        .parse_next(input)
+}
+
+fn ingredtwo<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+    (
+        parse_amount,
+        one_of(' '),
+        parse_unit,
+        one_of(' '),
+        take_while(29..=29, is_vchar_or_space),
+    )
+        .take()
+        .map(|s| Ingredient::Line(Cow::Borrowed(s)))
+        .parse_next(input)
+}
+
+fn parse_amount<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    take_while(1..=7, |c: char| {
+        is_vchar_or_space(c) || c == '.' || c == '/'
+    })
+    .parse_next(input)
+}
+
+fn parse_unit<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((parse_units1, parse_units2, parse_units3, parse_units4)).parse_next(input)
+}
+
+fn parse_units1<'s>(input: &mut &'s str) -> WResult<&'s str> {
     alt((
-        tag_no_case("st"),
-        tag_no_case("cv"),
-        tag_no_case("sp"),
-        tag_no_case("sl"),
-        tag_no_case("sk"),
-        tag_no_case("sks"),
-        tag_no_case("ta"),
-        tag_no_case("lh"),
-        tag_no_case("hd"),
-        tag_no_case("bx"),
-        tag_no_case("lf"),
-        tag_no_case("  "),
+        Caseless("x "),
+        Caseless("sm"),
+        Caseless("md"),
+        Caseless("lg"),
+        Caseless("cn"),
+        Caseless("pk"),
+        Caseless("pn"),
+        Caseless("dr"),
+        Caseless("ds"),
+        Caseless("ct"),
+        Caseless("bn"),
     ))
-    .parse(input)
+    .parse_next(input)
 }
 
-fn ingredient_notes(input: &str) -> IResult<&str, Ingredient<'_>> {
+fn parse_units2<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((
+        Caseless("ea"),
+        Caseless("t "),
+        Caseless("ts"),
+        Caseless("T "),
+        Caseless("tb"),
+        Caseless("fl"),
+        Caseless("c "),
+        Caseless("pt"),
+        Caseless("qt"),
+        Caseless("ga"),
+        Caseless("oz"),
+        Caseless("lb"),
+    ))
+    .parse_next(input)
+}
+
+fn parse_units3<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((
+        Caseless("ml"),
+        Caseless("cb"),
+        Caseless("cl"),
+        Caseless("dl"),
+        Caseless("l "),
+        Caseless("mg"),
+        Caseless("cg"),
+        Caseless("dg"),
+        Caseless("g "),
+        Caseless("kg"),
+    ))
+    .parse_next(input)
+}
+
+fn parse_units4<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((
+        Caseless("st"),
+        Caseless("cv"),
+        Caseless("sp"),
+        Caseless("sl"),
+        Caseless("sk"),
+        Caseless("sks"),
+        Caseless("ta"),
+        Caseless("lh"),
+        Caseless("hd"),
+        Caseless("bx"),
+        Caseless("lf"),
+        Caseless("  "),
+    ))
+    .parse_next(input)
+}
+
+fn parse_ingredient_notes<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
     let delim = "*----------------------------------------------------------------------*";
     let delim2 = "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
-
-    let take_until_either = alt((take_until(delim), take_until(delim2)));
-
+    let take_until_either = alt((take_until(0.., delim), take_until(0.., delim2)));
     let closing_delim = alt((
-        (multispace0, tag(delim), line_ending),
-        (multispace0, tag(delim2), line_ending),
+        (multispace0, literal(delim), line_ending),
+        (multispace0, literal(delim2), line_ending),
     ));
-
-    map(
-        preceded(
-            peek(delimited(
-                (multispace1, tag("*"), space1),
-                alt((take_until(delim), take_until(delim2))),
-                alt((
-                    (multispace0, tag(delim), line_ending),
-                    (multispace0, tag(delim2), line_ending),
-                )),
+    preceded(
+        peek(delimited(
+            (multispace1, literal("*"), space1),
+            alt((take_until(0.., delim), take_until(0.., delim2))),
+            alt((
+                (multispace0, literal(delim), line_ending),
+                (multispace0, literal(delim2), line_ending),
             )),
-            delimited(
-                (multispace1, tag("*"), space1),
-                take_until_either,
-                closing_delim,
-            ),
+        )),
+        delimited(
+            (multispace1, literal("*"), space1),
+            take_until_either,
+            closing_delim,
         ),
-        |s| Ingredient::Line(Cow::Borrowed(s)),
     )
-    .parse(input)
+    .map(|s| Ingredient::Line(Cow::Borrowed(s)))
+    .parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<Instruction<'_>>> {
-    many0(alt((
-        map((multispace0, section), |(_, s)| {
-            Instruction::Section(Cow::Borrowed(s))
-        }),
-        map(instruction, |s| Instruction::Line(Cow::Borrowed(s))),
-    )))
-    .parse(input)
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
+    repeat(
+        0..,
+        alt((
+            (multispace0, parse_section).map(|(_, s)| Instruction::Section(Cow::Borrowed(s))),
+            parse_instruction.map(|s| Instruction::Line(Cow::Borrowed(s))),
+        )),
+    )
+    .parse_next(input)
 }
 
-fn instruction(input: &str) -> IResult<&str, &str> {
+fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
     terminated(
-        verify(
-            take_until_earliest_of(&["\n-----", "\n\n"]),
-            |line: &str| {
-                !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
-            },
-        ),
-        many1(line_ending),
+        take_until_earliest_of(&["\n-----", "\n\n"]).verify(|line: &str| {
+            !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
+        }),
+        repeat(1.., line_ending).fold(|| (), |_, _| ()),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn take_until_earliest_of(patterns: &[&str]) -> impl Fn(&str) -> IResult<&str, &str> {
-    move |input: &str| {
-        let mut earliest_pos = input.len();
+fn take_until_earliest_of<'a>(
+    patterns: &'a [&'a str],
+) -> impl Parser<&'a str, &'a str, ContextError> + 'a {
+    move |input: &mut &'a str| {
+        let original = *input;
+        let mut earliest_pos = original.len();
         let mut found_pattern = None;
-
         for &pattern in patterns {
-            if let Some(pos) = input.find(pattern)
-                && pos < earliest_pos
-            {
-                earliest_pos = pos;
-                found_pattern = Some(pattern);
+            if let Some(pos) = original.find(pattern) {
+                if pos < earliest_pos {
+                    earliest_pos = pos;
+                    found_pattern = Some(pattern);
+                }
             }
         }
-
-        if let Some(_pattern) = found_pattern {
-            Ok((&input[earliest_pos..], &input[..earliest_pos]))
+        if found_pattern.is_some() {
+            *input = &original[earliest_pos..];
+            Ok(&original[..earliest_pos])
         } else {
-            Err(nom::Err::Error(nom::error::Error::new(
-                input,
-                nom::error::ErrorKind::TakeUntil,
-            )))
+            Err(ContextError::new())
         }
     }
 }
-
-fn section(input: &str) -> IResult<&str, &str> {
+fn parse_section<'s>(input: &mut &'s str) -> WResult<&'s str> {
     preceded(
-        separator,
-        terminated(delimited(dashes, not_dash, dashes), line_ending),
+        parse_separator,
+        terminated(
+            delimited(parse_dashes, parse_not_dash, parse_dashes),
+            line_ending,
+        ),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn dashes(input: &str) -> IResult<&str, &str> {
-    recognize(many1(char('-'))).parse(input)
+fn parse_dashes<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    take_while(1.., '-').parse_next(input)
 }
 
-fn not_dash(input: &str) -> IResult<&str, &str> {
-    take_while1(|c: char| c != '-').parse(input) // Take until we hit a dash again
+fn parse_not_dash<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    take_while(1.., |c: char| c != '-').parse_next(input) // Take until we hit a dash again
 }
-fn footer(input: &str) -> IResult<&str, &str> {
-    terminated(separator, multispace0).parse(input)
-}
-
-fn separator(input: &str) -> IResult<&str, &str> {
-    recognize(alt((
-        tag("MMMMM"),
-        tag("-----"),
-        tag("-------------"),
-        tag("-----------------------------------------------------------------------------"),
-    )))
-    .parse(input)
+fn parse_footer<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    terminated(parse_separator, multispace0).parse_next(input)
 }
 
-fn eol(input: &str) -> IResult<&str, &str> {
-    recognize(alt((tag("\r\n"), tag("\n")))).parse(input)
+fn parse_separator<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((
+        literal("MMMMM"),
+        literal("-----"),
+        literal("-------------"),
+        literal("-----------------------------------------------------------------------------"),
+    ))
+    .take()
+    .parse_next(input)
 }
 
 #[cfg(test)]

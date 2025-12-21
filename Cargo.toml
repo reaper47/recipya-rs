@@ -55,7 +55,6 @@ itertools = "0.14.0"
 lru = "0.16.2"
 math = { path = "./crates/math" }
 models = { path = "./crates/models" }
-nom = "8.0.0"
 pretty_assertions = "1.4.1"
 recipya-scraper = { path = "crates/recipya-scraper" }
 regex = "1.12.2"
