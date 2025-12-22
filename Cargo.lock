@@ -2096,7 +2096,6 @@ dependencies = [
  "humantime",
  "iso8601",
  "libpaprika",
- "nom",
  "pretty_assertions",
  "recipemd",
  "reqwest",
