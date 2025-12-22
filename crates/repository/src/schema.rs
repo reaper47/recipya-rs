@@ -122,7 +122,7 @@ diesel::table! {
     fdc_food_portions (id) {
         id -> Int8,
         value -> Float8,
-        nutrition_measure_unit_id -> Int8,
+        measure_unit_id -> Int8,
         modifier -> Nullable<Text>,
         gram_weight -> Float8,
         amount -> Float8,
@@ -150,6 +150,7 @@ diesel::table! {
         description -> Text,
         food_category -> Text,
         fdc_id -> Int8,
+        description_tsv -> Nullable<Tsvector>,
     }
 }
 
@@ -161,7 +162,7 @@ diesel::table! {
         id -> Int8,
         food_id -> Int8,
         nutrient_id -> Int8,
-        median -> Float8,
+        median -> Nullable<Float8>,
         amount -> Float8,
     }
 }
@@ -571,7 +572,7 @@ diesel::joinable!(cookbooks_recipes -> recipes (recipe_id));
 diesel::joinable!(counts -> users (user_id));
 diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
 diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
-diesel::joinable!(fdc_food_portions -> measure_units (nutrition_measure_unit_id));
+diesel::joinable!(fdc_food_portions -> measure_units (measure_unit_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_food_portions (portion_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_foods (food_id));
 diesel::joinable!(fdc_foods_fdc_nutrients -> fdc_foods (food_id));

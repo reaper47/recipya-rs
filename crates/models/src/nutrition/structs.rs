@@ -1,4 +1,8 @@
-use diesel::{Selectable, prelude::*};
+use diesel::{
+    Selectable,
+    prelude::*,
+    sql_types::{BigInt, Float8, Text},
+};
 
 use repository::schema;
 
@@ -26,6 +30,22 @@ pub struct FoundationFood {
     pub fdc_id: i64,
 }
 
+#[derive(Debug, QueryableByName)]
+#[allow(unused)]
+pub struct FdcFoodResult {
+    #[diesel(sql_type = BigInt)]
+    pub id: i64,
+    #[diesel(sql_type = BigInt)]
+    pub fdc_id: i64,
+    #[diesel(sql_type = Text)]
+    pub food_class: String,
+    #[diesel(sql_type = Text)]
+    pub description: String,
+    #[diesel(sql_type = Text)]
+    pub food_category: String,
+    #[diesel(sql_type = Float8)]
+    pub rank: f64,
+}
 #[derive(Insertable)]
 #[diesel(table_name = schema::fdc_foods)]
 pub(crate) struct FoundationFoodForInsert<'a> {
@@ -85,7 +105,7 @@ pub(crate) struct MeasureUnitForInsert {
 pub struct FdcFoodPortion {
     pub id: i64,
     pub value: f64,
-    pub nutrition_measure_unit_id: i64,
+    pub measure_unit_id: i64,
     pub modifier: Option<String>,
     pub gram_weight: f64,
     pub amount: f64,
@@ -95,7 +115,7 @@ pub struct FdcFoodPortion {
 #[diesel(table_name = schema::fdc_food_portions)]
 pub(crate) struct FdcFoodPortionForInsert {
     pub value: f64,
-    pub nutrition_measure_unit_id: i64,
+    pub measure_unit_id: i64,
     pub modifier: Option<String>,
     pub gram_weight: f64,
     pub amount: f64,
