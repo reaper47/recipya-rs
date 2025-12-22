@@ -1,15 +1,12 @@
 use std::io::{Read, Seek};
 
 use humantime::parse_duration;
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::character::char;
-use nom::character::complete::{digit1, not_line_ending, space0};
-use nom::combinator::{map, opt, recognize};
-use nom::multi::{many0, many1};
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser};
 use tracing::error;
+use winnow::Result as WResult;
+use winnow::ascii::{digit1, line_ending, space0, till_line_ending};
+use winnow::combinator::{alt, delimited, opt, preceded, repeat, seq, terminated};
+use winnow::prelude::*;
+use winnow::token::{literal, one_of};
 
 use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
@@ -18,9 +15,9 @@ use schema_org::field::{
 use schema_org::{AtType, Recipe};
 
 use super::helpers::read_file;
-use crate::Result;
 use crate::common::Times;
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
+use crate::{Error, Result};
 
 struct AccuChefRecipe {
     title: String,
@@ -141,116 +138,106 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    let recipe = parse_accuchef_recipe(&content)?;
+    let recipe = parse_accuchef_recipe(&mut content.as_str())?;
     Ok(recipe.into_iter().map(Recipe::from).collect())
 }
 
-fn parse_accuchef_recipe(input: &str) -> Result<Vec<AccuChefRecipe>> {
-    Ok(many0(map(recipe, |r| Some(AccuChefRecipe::from(r))))
-        .parse(input)
-        .map(|(_, recipes)| recipes.into_iter().flatten().collect())?)
+fn parse_accuchef_recipe(input: &mut &str) -> Result<Vec<AccuChefRecipe>> {
+    Ok(repeat(0.., recipe.map(|r| Some(AccuChefRecipe::from(r))))
+        .parse_next(input)
+        .map(|recipes: Vec<_>| recipes.into_iter().flatten().collect())
+        .map_err(|err| Error::Parse(err.to_string()))?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            header,
-            title,
-            category,
-            servings,
-            prep_time,
-            ingredients,
-            instructions,
-            footer,
-        ),
-        |(header, title, category, servings, prep_time, ingredients, instructions, _)| {
-            RecipeComponents {
-                header,
-                title,
-                category,
-                servings: servings.and_then(|s| s.parse::<i16>().ok()),
-                prep_time,
-                ingredients,
-                instructions,
-            }
-        },
-    )
-    .parse(input)
+fn recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        header: parse_header,
+        title: parse_title,
+        category: parse_category,
+        servings: parse_servings,
+        prep_time: parse_prep_time,
+        ingredients: parse_ingredients,
+        instructions: parse_instructions,
+        _: parse_footer,
+    }}
+    .parse_next(input)
 }
 
-fn header(input: &str) -> IResult<&str, &str> {
+fn parse_header<'s>(input: &mut &'s str) -> WResult<&'s str> {
     terminated(
-        delimited(separator, tag("AccuChef Import File"), not_line_ending),
-        many1(eol),
-    )
-    .parse(input)
-}
-
-fn title(input: &str) -> IResult<&str, &str> {
-    terminated(preceded(char('A'), not_line_ending), eol).parse(input)
-}
-
-fn category(input: &str) -> IResult<&str, Option<&str>> {
-    opt(terminated(preceded(char('B'), not_line_ending), eol)).parse(input)
-}
-
-fn servings(input: &str) -> IResult<&str, Option<&str>> {
-    let (input, _) = (char('M'), tag("Servings"), space0).parse(input)?;
-    let (input, num) = opt(terminated(digit1, space0)).parse(input)?;
-    let (input, _) = eol.parse(input)?;
-    Ok((input, num))
-}
-
-fn prep_time(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(
-        (char('P'), space0, char(':')),
-        terminated(not_line_ending, eol),
-    ))
-    .parse(input)
-}
-
-fn ingredients(input: &str) -> IResult<&str, Vec<Ingredient<'_>>> {
-    many1(ingredient).parse(input)
-}
-
-fn ingredient(input: &str) -> IResult<&str, Ingredient<'_>> {
-    map(
-        (
-            preceded(char('H'), not_line_ending),
-            eol,
-            preceded(char('I'), not_line_ending),
-            eol,
+        delimited(
+            parse_separator,
+            literal("AccuChef Import File"),
+            till_line_ending,
         ),
-        |(quantity, _, name, _)| Ingredient {
-            name: if name.trim().is_empty() { "" } else { name },
-            quantity: if quantity.trim().is_empty() {
-                ""
-            } else {
-                quantity
-            },
-        },
+        repeat(1.., parse_eol).map(|_: Vec<_>| ()),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<&str>> {
-    many1(instruction).parse(input)
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    terminated(preceded('A', till_line_ending), parse_eol).parse_next(input)
 }
 
-fn instruction(input: &str) -> IResult<&str, &str> {
-    preceded(char('J'), terminated(not_line_ending, eol)).parse(input)
+fn parse_category<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(terminated(preceded('B', till_line_ending), parse_eol)).parse_next(input)
 }
 
-fn footer(input: &str) -> IResult<&str, &str> {
-    recognize((tag("Z.....End of recipe definition"), opt(eol))).parse(input)
+fn parse_servings(input: &mut &str) -> WResult<Option<i16>> {
+    preceded(
+        (one_of('M'), literal("Servings"), space0),
+        terminated(opt(digit1), (space0, line_ending)),
+    )
+    .parse_next(input)
+    .map(|servings| servings.map(|s| s.parse().unwrap_or_default()))
 }
 
-fn separator(input: &str) -> IResult<&str, &str> {
-    recognize(tag("*****")).parse(input)
+fn parse_prep_time<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(preceded(
+        ('P', space0, ':'),
+        terminated(till_line_ending, parse_eol),
+    ))
+    .parse_next(input)
 }
 
-fn eol(input: &str) -> IResult<&str, &str> {
-    recognize(alt((tag("\r\n"), tag("\n")))).parse(input)
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    repeat(1.., parse_ingredient).parse_next(input)
+}
+
+fn parse_ingredient<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+    (
+        preceded(one_of('H'), till_line_ending),
+        line_ending,
+        preceded(one_of('I'), till_line_ending),
+        line_ending,
+    )
+        .map(|(quantity, _, name, _): (&str, _, &str, _)| Ingredient {
+            name: name.trim(),
+            quantity: quantity.trim(),
+        })
+        .parse_next(input)
+}
+
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    repeat(1.., parse_instruction).parse_next(input)
+}
+
+fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    preceded('J', terminated(till_line_ending, parse_eol)).parse_next(input)
+}
+
+fn parse_footer<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    (literal("Z.....End of recipe definition"), opt(parse_eol))
+        .take()
+        .parse_next(input)
+}
+
+fn parse_separator<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    literal("*****").parse_next(input)
+}
+
+fn parse_eol<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    alt((literal("\r\n"), literal("\n"))).parse_next(input)
 }
 
 #[cfg(test)]

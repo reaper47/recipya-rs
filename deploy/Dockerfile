@@ -1,19 +1,19 @@
 # ---------------------------------------------------
 # 1 - Build Stage
 # ---------------------------------------------------
-FROM rust:1.90.0-slim AS build
+FROM rust:1.92.0-slim AS build
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential \
-        pkg-config \
-        libssl-dev \
-        libpq-dev \
-        ffmpeg \
-        pax-utils \
-        ca-certificates \
-        perl \
-        perl-base && \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    libpq-dev \
+    ffmpeg \
+    pax-utils \
+    ca-certificates \
+    perl \
+    perl-base && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/recipya
@@ -32,10 +32,10 @@ RUN cp /usr/bin/ffmpeg /usr/bin/ffprobe /runtime-deps/usr/bin/ && \
     xargs -I '{}' cp -L --parents '{}' /runtime-deps/ 2>/dev/null || true
 
 RUN find /usr/lib/${ARCH}-linux-gnu /lib/${ARCH}-linux-gnu -name "libpq.so*" -o \
-         -name "libssl.so*" -o -name "libcrypto.so*" -o -name "libgssapi_krb5.so*" -o \
-         -name "libldap*.so*" -o -name "libkrb5*.so*" -o -name "libk5crypto.so*" -o \
-         -name "libsasl2.so*" -o -name "libgnutls.so*" -o -name "libcom_err.so*" -o \
-         -name "libkeyutils.so*" | \
+    -name "libssl.so*" -o -name "libcrypto.so*" -o -name "libgssapi_krb5.so*" -o \
+    -name "libldap*.so*" -o -name "libkrb5*.so*" -o -name "libk5crypto.so*" -o \
+    -name "libsasl2.so*" -o -name "libgnutls.so*" -o -name "libcom_err.so*" -o \
+    -name "libkeyutils.so*" | \
     xargs -I '{}' cp -L '{}' /runtime-deps/usr/lib/ 2>/dev/null || true
 
 # ---------------------------------------------------
@@ -44,8 +44,8 @@ RUN find /usr/lib/${ARCH}-linux-gnu /lib/${ARCH}-linux-gnu -name "libpq.so*" -o 
 FROM gcr.io/distroless/cc-debian12
 
 LABEL org.opencontainers.image.source="https://github.com/reaper47/recipya-rs" \
-      org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy." \
-      org.opencontainers.image.licenses="AGPL-3.0"
+    org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy." \
+    org.opencontainers.image.licenses="AGPL-3.0"
 
 # Copy runtime dependencies
 COPY --from=build /runtime-deps/usr /usr

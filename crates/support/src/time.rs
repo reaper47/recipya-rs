@@ -1,12 +1,12 @@
-use nom::branch::alt;
-use nom::bytes::complete::{tag, take_till};
-use nom::character::complete::{char, digit1, space0};
-use nom::combinator::{map_res, opt};
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser};
 use time::{Duration, OffsetDateTime};
+use winnow::Result as WResult;
+use winnow::ascii::{digit1, space0};
+use winnow::combinator::{alt, delimited, opt, preceded, terminated};
+use winnow::prelude::*;
+use winnow::token::{literal, take_till};
 
 use crate::impl_display_as_debug;
+
 pub use time::format_description::well_known::Rfc3339;
 
 /// Formats a given `OffsetDateTime` into a string in RFC3339 format.
@@ -26,39 +26,36 @@ pub fn parse_utc(moment: &str) -> Result<OffsetDateTime> {
 }
 
 /// Extracts the hours and minutes from a duration, e.g. 2h30m.
-pub fn parse_duration(input: &str) -> IResult<&str, (u32, u32)> {
-    let (input, hours) = opt(parse_hour).parse(input)?;
-    let (input, minutes) = opt(parse_minute).parse(input)?;
-    Ok((input, (hours.unwrap_or(0), minutes.unwrap_or(0))))
+pub fn parse_hours_minutes(input: &mut &str) -> WResult<(u32, u32)> {
+    let hours = opt(parse_hour).parse_next(input)?;
+    let minutes = opt(parse_minute).parse_next(input)?;
+    Ok((hours.unwrap_or(0), minutes.unwrap_or(0)))
 }
 
-fn parse_hour(input: &str) -> IResult<&str, u32> {
+fn parse_hour(input: &mut &str) -> WResult<u32> {
     alt((
-        preceded(
-            space0,
-            terminated(parse_number, preceded(space0, char('h'))),
-        ),
-        terminated(parse_number, delimited(space0, tag("hour"), space0)),
-        terminated(parse_number, delimited(space0, tag("hours"), space0)),
+        preceded(space0, terminated(parse_number, preceded(space0, 'h'))),
+        terminated(parse_number, delimited(space0, literal("hour"), space0)),
+        terminated(parse_number, delimited(space0, literal("hours"), space0)),
     ))
-    .parse(input)
+    .parse_next(input)
 }
 
-fn parse_minute(input: &str) -> IResult<&str, u32> {
+fn parse_minute(input: &mut &str) -> WResult<u32> {
     preceded(
-        take_till(|c: char| c.is_ascii_digit()),
+        take_till(0.., |c: char| c.is_ascii_digit()),
         alt((
-            terminated(parse_number, char('m')),
-            terminated(parse_number, delimited(space0, tag("minute"), space0)),
-            terminated(parse_number, delimited(space0, tag("minutes"), space0)),
+            terminated(parse_number, 'm'),
+            terminated(parse_number, delimited(space0, literal("minute"), space0)),
+            terminated(parse_number, delimited(space0, literal("minutes"), space0)),
             preceded(space0, parse_number),
         )),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn parse_number(input: &str) -> IResult<&str, u32> {
-    map_res(digit1, str::parse::<u32>).parse(input)
+fn parse_number(input: &mut &str) -> WResult<u32> {
+    digit1.try_map(str::parse::<u32>).parse_next(input)
 }
 
 /// Result type for errors related to time.
@@ -84,48 +81,49 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_parse_duration_1() -> Result<()> {
-            let (_rem, got) = parse_duration("3h")?;
+        fn test_parse_hours_minutes_1() -> Result<()> {
+            let got = parse_hours_minutes(&mut "3h").map_err(|err| err.to_string())?;
 
             pretty_assertions::assert_eq!(got, (3, 0));
             Ok(())
         }
 
         #[test]
-        fn test_parse_duration_2() -> Result<()> {
-            let (_rem, got) = parse_duration("3 hours")?;
+        fn test_parse_hours_minutes_2() -> Result<()> {
+            let got = parse_hours_minutes(&mut "3 hours").map_err(|err| err.to_string())?;
 
             pretty_assertions::assert_eq!(got, (3, 0));
             Ok(())
         }
 
         #[test]
-        fn test_parse_duration_3() -> Result<()> {
-            let (_rem, got) = parse_duration("3 h")?;
+        fn test_parse_hours_minutes_3() -> Result<()> {
+            let got = parse_hours_minutes(&mut "3 h").map_err(|err| err.to_string())?;
 
             pretty_assertions::assert_eq!(got, (3, 0));
             Ok(())
         }
 
         #[test]
-        fn test_parse_duration_4() -> Result<()> {
-            let (_rem, got) = parse_duration("3h25")?;
+        fn test_parse_hours_minutes_4() -> Result<()> {
+            let got = parse_hours_minutes(&mut "3h25").map_err(|err| err.to_string())?;
 
             pretty_assertions::assert_eq!(got, (3, 25));
             Ok(())
         }
 
         #[test]
-        fn test_parse_duration_5() -> Result<()> {
-            let (_rem, got) = parse_duration("3h25m")?;
+        fn test_parse_hours_minutes_5() -> Result<()> {
+            let got = parse_hours_minutes(&mut "3h25m").map_err(|err| err.to_string())?;
 
             pretty_assertions::assert_eq!(got, (3, 25));
             Ok(())
         }
 
         #[test]
-        fn test_parse_duration_6() -> Result<()> {
-            let (_rem, got) = parse_duration("3hours 25 minutes")?;
+        fn test_parse_hours_minutes_6() -> Result<()> {
+            let got =
+                parse_hours_minutes(&mut "3hours 25 minutes").map_err(|err| err.to_string())?;
 
             pretty_assertions::assert_eq!(got, (3, 25));
             Ok(())

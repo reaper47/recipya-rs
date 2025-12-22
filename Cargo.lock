@@ -2096,7 +2096,6 @@ dependencies = [
  "humantime",
  "iso8601",
  "libpaprika",
- "nom",
  "pretty_assertions",
  "recipemd",
  "reqwest",
@@ -4359,7 +4358,6 @@ dependencies = [
  "encoding_rs",
  "futures-util",
  "image",
- "nom",
  "pretty_assertions",
  "regex",
  "time",
@@ -4368,6 +4366,7 @@ dependencies = [
  "uuid",
  "webp",
  "whatlang",
+ "winnow",
 ]
 
 [[package]]

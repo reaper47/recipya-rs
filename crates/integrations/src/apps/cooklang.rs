@@ -11,7 +11,7 @@ use schema_org::field::{
     RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum, RecipeToolFieldEnum,
 };
 use schema_org::{AtType, HowToTool, Recipe};
-use support::time::parse_duration;
+use support::time::parse_hours_minutes;
 
 use super::helpers::read_file;
 use crate::Result;
@@ -196,10 +196,7 @@ impl CookLang {
             .or(time_required.clone())
             .or(duration.clone())
             .filter(|_| time.is_some() || time_required.is_some() || duration.is_some())
-            .map(|v| {
-                let (_, duration) = parse_duration(&v).unwrap_or(("", (0, 15)));
-                duration
-            })
+            .map(|v| parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 15)))
             .unwrap_or((0, 15));
 
         let prep_time = metadata
@@ -216,10 +213,7 @@ impl CookLang {
             .clone()
             .or(time_prep.clone())
             .filter(|_| prep_time.is_some() || time_prep.is_some())
-            .map(|v| {
-                let (_, duration) = parse_duration(&v).unwrap_or(("", total_time));
-                duration
-            })
+            .map(|v| parse_hours_minutes(&mut v.as_str()).unwrap_or(total_time))
             .unwrap_or(total_time);
 
         let cook_time = metadata
@@ -236,10 +230,7 @@ impl CookLang {
             .clone()
             .or(time_cook.clone())
             .filter(|_| cook_time.is_some() || time_cook.is_some())
-            .map(|v| {
-                let (_, duration) = parse_duration(&v).unwrap_or(("", (0, 30)));
-                duration
-            })
+            .map(|v| parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 30)))
             .unwrap_or((0, 30));
 
         let cooklang_recipe = CooklangRecipe {

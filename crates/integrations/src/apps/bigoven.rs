@@ -1,14 +1,13 @@
 use std::fmt::Display;
 use std::io::{Read, Seek};
 
-use nom::branch::alt;
-use nom::bytes::complete::{tag, take_until};
-use nom::character::complete::line_ending;
-use nom::combinator::{map, map_res, opt};
-use nom::multi::many1;
-use nom::sequence::{delimited, preceded, terminated};
-use nom::{IResult, Parser};
 use url::Url;
+use winnow::Result as WResult;
+use winnow::ascii::line_ending;
+use winnow::combinator::{alt, delimited, opt, preceded, repeat, seq, terminated};
+use winnow::error::ContextError;
+use winnow::prelude::*;
+use winnow::token::{literal, take_until};
 
 use schema_org::field::{
     AggregateRatingRatingValueFieldEnum, ItemListItemListElementFieldEnum, RecipeKeywordsFieldEnum,
@@ -17,8 +16,8 @@ use schema_org::field::{
 use schema_org::{AggregateRating, AtType, ItemList, Recipe};
 
 use super::helpers::read_file;
-use crate::Result;
 use crate::helpers::{seconds_to_duration, to_yield};
+use crate::{Error, Result};
 
 #[allow(dead_code)]
 struct BigOvenRecipe {
@@ -239,127 +238,96 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    Ok(vec![parse_text_file(&content)?])
+    Ok(vec![parse_text_file(&mut content.as_str())?])
 }
 
-fn parse_text_file(input: &str) -> Result<Recipe> {
-    Ok(map(recipe, BigOvenRecipe::from)
-        .parse(input)
-        .map(|(_, r)| r.into())?)
+fn parse_text_file(input: &mut &str) -> Result<Recipe> {
+    Ok(parse_recipe
+        .map(BigOvenRecipe::from)
+        .parse_next(input)
+        .map(|r: BigOvenRecipe| r.into())
+        .map_err(|err| Error::Parse(err.to_string()))?)
 }
 
-fn recipe(input: &str) -> IResult<&str, RecipeComponents<'_>> {
-    map(
-        (
-            header,
-            title,
-            servings,
-            instructions,
-            source,
-            taste_rating,
-            effort_rating,
-            appearance_rating,
-            affordability_rating,
-            ingredients,
-            active_minutes,
-            total_minutes,
-            categories,
-        ),
-        |(
-            _,
-            title,
-            servings,
-            instructions,
-            source,
-            taste_rating,
-            effort_rating,
-            appearance_rating,
-            affordability_rating,
-            ingredients,
-            active_minutes,
-            total_minutes,
-            categories,
-        )| {
-            RecipeComponents {
-                title,
-                servings,
-                source,
-                taste_rating,
-                effort_rating,
-                appearance_rating,
-                affordability_rating,
-                ingredients,
-                instructions,
-                active_minutes,
-                total_minutes,
-                categories,
-            }
-        },
-    )
-    .parse(input)
+fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        _: parse_header,
+        title: parse_title,
+        servings: parse_servings,
+        instructions: parse_instructions,
+        source: parse_source,
+        taste_rating: parse_taste_rating,
+        effort_rating: parse_effort_rating,
+        appearance_rating: parse_appearance_rating,
+        affordability_rating: parse_affordability_rating,
+        ingredients: parse_ingredients,
+        active_minutes: parse_active_minutes,
+        total_minutes: parse_total_minutes,
+        categories: parse_categories,
+    }}
+    .parse_next(input)
 }
 
-fn header(input: &str) -> IResult<&str, &str> {
-    take_until("<RECIPE>").parse(input)
+fn parse_header<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    take_until(1.., "<RECIPE>").parse_next(input)
 }
 
-fn title(input: &str) -> IResult<&str, &str> {
-    parse_str("<TITLE>", "</TITLE>", "<TITLE/>").parse(input)
+fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    parse_str("<TITLE>", "</TITLE>", "<TITLE/>").parse_next(input)
 }
 
-fn servings(input: &str) -> IResult<&str, f32> {
-    parse_f32("<YIELDQTY>", "</YIELDQTY>", "<YIELDQTY/").parse(input)
+fn parse_servings(input: &mut &str) -> WResult<f32> {
+    parse_f32("<YIELDQTY>", "</YIELDQTY>", "<YIELDQTY/>").parse_next(input)
 }
 
-fn instructions(input: &str) -> IResult<&str, Vec<&str>> {
-    map(
-        parse_str("<INSTRUCTIONS>", "</INSTRUCTIONS>", "<INSTRUCTIONS/>"),
-        |s: &str| {
+fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    parse_str("<INSTRUCTIONS>", "</INSTRUCTIONS>", "<INSTRUCTIONS/>")
+        .map(|s: &str| {
             s.lines()
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .collect::<Vec<_>>()
-        },
-    )
-    .parse(input)
+        })
+        .parse_next(input)
 }
 
-fn source(input: &str) -> IResult<&str, Option<&str>> {
-    opt(parse_str("<SUBHEAD>", "</SUBHEAD>", "<SUBHEAD/>")).parse(input)
+fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+    opt(parse_str("<SUBHEAD>", "</SUBHEAD>", "<SUBHEAD/>")).parse_next(input)
 }
 
-fn effort_rating(input: &str) -> IResult<&str, u8> {
-    parse_u8("<EFFORTRATING>", "</EFFORTRATING>", "EFFORTRATING/>").parse(input)
+fn parse_taste_rating(input: &mut &str) -> WResult<u8> {
+    parse_u8("<TASTERATING>", "</TASTERATING>", "<TASTERATING/>").parse_next(input)
 }
 
-fn appearance_rating(input: &str) -> IResult<&str, u8> {
+fn parse_effort_rating(input: &mut &str) -> WResult<u8> {
+    parse_u8("<EFFORTRATING>", "</EFFORTRATING>", "EFFORTRATING/>").parse_next(input)
+}
+
+fn parse_appearance_rating(input: &mut &str) -> WResult<u8> {
     parse_u8(
         "<APPEARANCERATING>",
         "</APPEARANCERATING>",
         "<APPEARANCERATING/>",
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn taste_rating(input: &str) -> IResult<&str, u8> {
-    parse_u8("<TASTERATING>", "</TASTERATING>", "<TASTERATING/>").parse(input)
-}
-
-fn affordability_rating(input: &str) -> IResult<&str, u8> {
+fn parse_affordability_rating(input: &mut &str) -> WResult<u8> {
     parse_u8(
         "<AFFORDABLERATING>",
         "</AFFORDABLERATING>",
         "<AFFORDABLERATING/>",
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn ingredients(input: &str) -> IResult<&str, Vec<IngredientType<'_>>> {
+fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<IngredientType<'s>>> {
     delimited(
-        (tag("<INGREDIENTLIST>"), line_ending),
-        many1(map(
+        (literal("<INGREDIENTLIST>"), line_ending),
+        repeat(
+            1..,
             (
-                (tag("<INGREDIENTLINE>"), line_ending),
+                (literal("<INGREDIENTLINE>"), line_ending),
                 parse_u16("<BHEADING>", "</BHEADING>", "<BHEADING/>"),
                 opt(parse_str("<TEXTQTY>", "</TEXTQTY>", "<TEXTQTY/>")),
                 opt(parse_str("<MEASURE>", "</MEASURE>", "<MEASURE/>")),
@@ -373,127 +341,127 @@ fn ingredients(input: &str) -> IResult<&str, Vec<IngredientType<'_>>> {
                     "</DBBASERECIPEGMWT>",
                     "<DBBASERECIPEGMWT/>",
                 ),
-                (tag("</INGREDIENTLINE>"), line_ending),
-            ),
-            |(
-                _,
-                heading,
-                quantity,
-                measure,
-                name,
-                prep_notes,
-                dbl_quantity,
-                line_order,
-                nutrient_info,
-                gmnt,
-                _,
-            )| {
-                let ingredient = Ingredient {
-                    heading,
-                    quantity,
-                    measure,
-                    name,
-                    prep_notes,
-                    double_qty: dbl_quantity,
-                    line_order,
-                    nutrient_info,
-                    base_recipe_gmwt: gmnt,
-                };
-
-                if name.starts_with("--") {
-                    IngredientType::Section(ingredient)
-                } else {
-                    IngredientType::Line(ingredient)
-                }
-            },
-        )),
-        (tag("</INGREDIENTLIST>"), line_ending),
+                (literal("</INGREDIENTLINE>"), line_ending),
+            )
+                .map(
+                    |(
+                        _,
+                        heading,
+                        quantity,
+                        measure,
+                        name,
+                        prep_notes,
+                        dbl_quantity,
+                        line_order,
+                        nutrient_info,
+                        gmnt,
+                        _,
+                    )| {
+                        let ingredient = Ingredient {
+                            heading,
+                            quantity,
+                            measure,
+                            name,
+                            prep_notes,
+                            double_qty: dbl_quantity,
+                            line_order,
+                            nutrient_info,
+                            base_recipe_gmwt: gmnt,
+                        };
+                        if name.starts_with("--") {
+                            IngredientType::Section(ingredient)
+                        } else {
+                            IngredientType::Line(ingredient)
+                        }
+                    },
+                ),
+        ),
+        (literal("</INGREDIENTLIST>"), line_ending),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn active_minutes(input: &str) -> IResult<&str, u16> {
-    parse_u16("<ACTIVEMINUTES>", "</ACTIVEMINUTES>", "<ACTIVEMINUTES/>").parse(input)
+fn parse_active_minutes(input: &mut &str) -> WResult<u16> {
+    parse_u16("<ACTIVEMINUTES>", "</ACTIVEMINUTES>", "<ACTIVEMINUTES/>").parse_next(input)
 }
 
-fn total_minutes(input: &str) -> IResult<&str, u16> {
-    parse_u16("<TOTALMINUTES>", "</TOTALMINUTES>", "<TOTALMINUTES/>").parse(input)
+fn parse_total_minutes(input: &mut &str) -> WResult<u16> {
+    parse_u16("<TOTALMINUTES>", "</TOTALMINUTES>", "<TOTALMINUTES/>").parse_next(input)
 }
 
-fn categories(input: &str) -> IResult<&str, Vec<&str>> {
+fn parse_categories<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     delimited(
-        (tag("<CATEGORIES>"), line_ending),
-        many1(parse_str(
-            "<CATEGORYNAME>",
-            "</CATEGORYNAME>",
-            "<CATEGORYNAME/>",
-        )),
-        (tag("</CATEGORIES>"), line_ending),
+        (literal("<CATEGORIES>"), line_ending),
+        repeat(
+            1..,
+            parse_str("<CATEGORYNAME>", "</CATEGORYNAME>", "<CATEGORYNAME/>"),
+        ),
+        (literal("</CATEGORIES>"), line_ending),
     )
-    .parse(input)
+    .parse_next(input)
 }
 
-fn parse_str(
-    start_tag: &str,
-    closing_tag: &str,
-    empty_tag: &str,
-) -> impl FnMut(&str) -> IResult<&str, &str> {
-    move |input| parse_tag(start_tag, closing_tag, empty_tag).parse(input)
+fn parse_str<'s>(
+    start_tag: &'s str,
+    closing_tag: &'s str,
+    empty_tag: &'s str,
+) -> impl Parser<&'s str, &'s str, ContextError> + 's {
+    move |input: &mut &'s str| parse_tag(start_tag, closing_tag, empty_tag).parse_next(input)
 }
 
-fn parse_f32(
-    start_tag: &str,
-    closing_tag: &str,
-    empty_tag: &str,
-) -> impl FnMut(&str) -> IResult<&str, f32> {
-    move |input| {
-        map_res(parse_tag(start_tag, closing_tag, empty_tag), |s| {
-            s.parse::<f32>()
-        })
-        .parse(input)
+fn parse_f32<'s>(
+    start_tag: &'s str,
+    closing_tag: &'s str,
+    empty_tag: &'s str,
+) -> impl Parser<&'s str, f32, ContextError> + 's {
+    move |input: &mut &'s str| {
+        parse_tag(start_tag, closing_tag, empty_tag)
+            .try_map(|s: &str| s.parse::<f32>())
+            .parse_next(input)
     }
 }
 
-fn parse_u8(
-    start_tag: &str,
-    closing_tag: &str,
-    empty_tag: &str,
-) -> impl FnMut(&str) -> IResult<&str, u8> {
-    move |input| {
-        map_res(parse_tag(start_tag, closing_tag, empty_tag), |s| {
-            s.parse::<u8>()
-        })
-        .parse(input)
+fn parse_u8<'s>(
+    start_tag: &'s str,
+    closing_tag: &'s str,
+    empty_tag: &'s str,
+) -> impl Parser<&'s str, u8, ContextError> + 's {
+    move |input: &mut &'s str| {
+        parse_tag(start_tag, closing_tag, empty_tag)
+            .try_map(|s: &str| s.parse::<u8>())
+            .parse_next(input)
     }
 }
 
-fn parse_u16(
-    start_tag: &str,
-    closing_tag: &str,
-    empty_tag: &str,
-) -> impl FnMut(&str) -> IResult<&str, u16> {
-    move |input| {
-        map_res(parse_tag(start_tag, closing_tag, empty_tag), |s| {
-            s.parse::<u16>()
-        })
-        .parse(input)
+fn parse_u16<'s>(
+    start_tag: &'s str,
+    closing_tag: &'s str,
+    empty_tag: &'s str,
+) -> impl Parser<&'s str, u16, ContextError> + 's {
+    move |input: &mut &'s str| {
+        parse_tag(start_tag, closing_tag, empty_tag)
+            .try_map(|s: &str| s.parse::<u16>())
+            .parse_next(input)
     }
 }
 
-fn parse_tag(
-    start_tag: &str,
-    closing_tag: &str,
-    empty_tag: &str,
-) -> impl FnMut(&str) -> IResult<&str, &str> {
-    move |input| {
+fn parse_tag<'s>(
+    start_tag: &'s str,
+    closing_tag: &'s str,
+    empty_tag: &'s str,
+) -> impl Parser<&'s str, &'s str, ContextError> + 's {
+    move |input: &mut &'s str| {
         alt((
-            map((tag(empty_tag), line_ending), |_| ""),
+            (literal(empty_tag), line_ending).map(|_| ""),
             preceded(
-                (take_until(start_tag), tag(start_tag)),
-                terminated(take_until(closing_tag), (tag(closing_tag), line_ending)),
+                (take_until(0.., start_tag), literal(start_tag)),
+                terminated(
+                    take_until(0.., closing_tag),
+                    (literal(closing_tag), line_ending),
+                ),
             ),
         ))
-        .parse(input)
+        .parse_next(input)
     }
 }
 
