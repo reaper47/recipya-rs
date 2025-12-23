@@ -30,6 +30,8 @@ DROP TRIGGER IF EXISTS trig_update_keywords_fts_ai ON keywords_recipes;
 
 DROP TRIGGER IF EXISTS trig_update_tools_fts_ai ON tools_recipes;
 
+DROP TRIGGER IF EXISTS update_nutrition_sources_updated_at ON nutrition_sources;
+
 DROP FUNCTION IF EXISTS trig_update_search_vectors;
 
 DROP FUNCTION IF EXISTS get_tsv_config (character) CASCADE;
@@ -65,6 +67,8 @@ DROP FUNCTION IF EXISTS trig_times_au_func;
 DROP FUNCTION IF EXISTS trig_recipes_au_func;
 
 DROP FUNCTION IF EXISTS users_ai_func;
+
+DROP FUNCTION IF EXISTS update_nutrition_sources_updated_at_column;
 
 DROP TABLE IF EXISTS videos_recipes;
 
@@ -155,4 +159,3 @@ DROP TABLE IF EXISTS fdc_nutrients;
 DROP TABLE IF EXISTS measure_units;
 
 DROP TABLE IF EXISTS nutrition_sources;
-

@@ -922,7 +922,7 @@ CREATE TRIGGER trig_update_tools_fts_ai
 CREATE TRIGGER update_nutrition_sources_updated_at
     BEFORE UPDATE ON nutrition_sources
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_nutrition_sources_updated_at_column ();
 
 ---
 --- Cron Jobs
