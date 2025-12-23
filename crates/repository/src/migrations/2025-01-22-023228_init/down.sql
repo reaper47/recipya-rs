@@ -30,7 +30,7 @@ DROP TRIGGER IF EXISTS trig_update_keywords_fts_ai ON keywords_recipes;
 
 DROP TRIGGER IF EXISTS trig_update_tools_fts_ai ON tools_recipes;
 
-DROP TRIGGER IF EXISTS update_nutrition_sources_updated_at ON nutrition_sources;
+DROP TRIGGER IF EXISTS update_nutrition_sources_updated_at ON fdc_foods;
 
 DROP FUNCTION IF EXISTS trig_update_search_vectors;
 

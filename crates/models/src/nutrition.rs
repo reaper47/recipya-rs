@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::NaiveDate;
 use diesel::{
     Selectable,
     prelude::*,
@@ -17,7 +17,8 @@ pub struct NutritionSource {
     pub description: String,
     pub url: String,
     pub country: String,
-    pub updated_at: Option<NaiveDateTime>,
+    pub created_at: NaiveDate,
+    pub updated_at: NaiveDate,
 }
 
 /// Represents a foundation food.

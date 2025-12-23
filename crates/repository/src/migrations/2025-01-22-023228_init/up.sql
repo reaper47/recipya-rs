@@ -297,7 +297,8 @@ CREATE TABLE nutrition_sources (
   description text NOT NULL,
   url text NOT NULL,
   country text NOT NULL,
-  updated_at timestamp DEFAULT CURRENT_TIMESTAMP,
+  created_at DATE NOT NULL DEFAULT CURRENT_DATE,
+  updated_at DATE NOT NULL DEFAULT CURRENT_DATE,
   UNIQUE (name, country)
 );
 
@@ -831,7 +832,10 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION update_nutrition_sources_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    UPDATE nutrition_sources
+    SET updated_at = CURRENT_TIMESTAMP
+    WHERE name = 'USDA FoodData Central';
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -920,7 +924,7 @@ CREATE TRIGGER trig_update_tools_fts_ai
   EXECUTE FUNCTION update_tools_fts_func ();
 
 CREATE TRIGGER update_nutrition_sources_updated_at
-    BEFORE UPDATE ON nutrition_sources
+    AFTER UPDATE ON fdc_foods
     FOR EACH ROW
     EXECUTE FUNCTION update_nutrition_sources_updated_at_column ();
 

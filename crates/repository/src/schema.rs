@@ -298,7 +298,8 @@ diesel::table! {
         description -> Text,
         url -> Text,
         country -> Text,
-        updated_at -> Nullable<Timestamp>,
+        created_at -> Date,
+        updated_at -> Date,
     }
 }
 

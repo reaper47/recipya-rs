@@ -27,7 +27,7 @@ use crate::{
 
 #[async_trait]
 pub trait DataNotFetched<C: FdcFetcher>: Send + Sync {
-    /// Fetches the following data sets from the FoodData Central API:
+    /// Fetches the following data sets from the USDA FoodData Central API:
     /// - Foundation Food Data
     async fn fetch(self, client: &C) -> Result<FdcParser<DataFetchedState>>;
 }
@@ -51,7 +51,7 @@ pub struct FdcClient {
 #[async_trait]
 impl FdcFetcher for FdcClient {
     async fn fetch_foundation_foods(&self) -> Result<Vec<u8>> {
-        todo!()
+        unimplemented!("Fetch and parse FDC webpage to retrieve JSON")
     }
 }
 
