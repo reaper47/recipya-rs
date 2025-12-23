@@ -7,6 +7,7 @@ members = [
     "crates/integrations",
     "crates/math",
     "crates/models",
+    "crates/nutrition",
     "crates/recipya-cli",
     "crates/recipya-scraper",
     "crates/repository",
@@ -55,6 +56,7 @@ itertools = "0.14.0"
 lru = "0.16.2"
 math = { path = "./crates/math" }
 models = { path = "./crates/models" }
+nutrition = { path = "./crates/nutrition" }
 pretty_assertions = "1.4.1"
 recipya-scraper = { path = "crates/recipya-scraper" }
 regex = "1.12.2"

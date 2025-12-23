@@ -176,7 +176,7 @@ impl FoundationFoodDetails {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Root {
+struct FoundationFoodRoot {
     #[serde(rename = "FoundationFoods")]
     foundation_foods: Vec<FoundationFood>,
 }
@@ -314,7 +314,7 @@ struct FoodCategory2 {
 /// Populates the nutrition database tables using the **Foundation Food dataset (FNDDS)**
 /// from the USDA FoodData Central (FDC).
 pub async fn populate_db(mm: &ModelManager, r: impl Read) -> Result<()> {
-    let root: Root = serde_json::from_reader(r)?;
+    let root: FoundationFoodRoot = serde_json::from_reader(r)?;
 
     let mut conn = mm.pool.get().await?;
 

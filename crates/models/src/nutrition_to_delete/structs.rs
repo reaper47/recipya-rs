@@ -48,7 +48,7 @@ pub struct FdcFoodResult {
 }
 #[derive(Insertable)]
 #[diesel(table_name = schema::fdc_foods)]
-pub(crate) struct FoundationFoodForInsert<'a> {
+pub struct FoundationFoodForInsert<'a> {
     pub food_class: &'a str,
     pub description: &'a str,
     pub food_category: &'a str,
