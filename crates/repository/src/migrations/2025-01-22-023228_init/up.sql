@@ -297,6 +297,7 @@ CREATE TABLE nutrition_sources (
   description text NOT NULL,
   url text NOT NULL,
   country text NOT NULL,
+  updated_at timestamp DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (name, country)
 );
 
@@ -827,6 +828,14 @@ END;
 $$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION update_nutrition_sources_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 ---
 --- Triggers
 ---
@@ -909,6 +918,11 @@ CREATE TRIGGER trig_update_tools_fts_ai
   AFTER INSERT OR DELETE OR UPDATE ON tools_recipes
   FOR EACH ROW
   EXECUTE FUNCTION update_tools_fts_func ();
+
+CREATE TRIGGER update_nutrition_sources_updated_at
+    BEFORE UPDATE ON nutrition_sources
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 ---
 --- Cron Jobs
@@ -1404,4 +1418,3 @@ VALUES
   ('twosleevers.com', 'https://twosleevers.com'),
   ('unsophisticook.com', 'https://unsophisticook.com'),
   ('vegan-pratique.fr', 'https://vegan-pratique.fr/recettes/banana-bread/');
-

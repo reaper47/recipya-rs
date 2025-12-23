@@ -2808,10 +2808,16 @@ dependencies = [
  "diesel",
  "diesel-async",
  "models",
+ "pretty_assertions",
  "repository",
+ "reqwest",
  "serde",
  "serde_json",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "support",
+ "testing",
+ "tokio",
 ]
 
 [[package]]

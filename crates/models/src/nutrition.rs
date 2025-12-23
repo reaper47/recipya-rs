@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use diesel::{
     Selectable,
     prelude::*,
@@ -11,11 +12,12 @@ use repository::schema;
 #[diesel(table_name = schema::nutrition_sources)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NutritionSource {
-    id: i64,
-    name: String,
-    description: String,
-    url: String,
-    country: String,
+    pub id: i64,
+    pub name: String,
+    pub description: String,
+    pub url: String,
+    pub country: String,
+    pub updated_at: Option<NaiveDateTime>,
 }
 
 /// Represents a foundation food.
