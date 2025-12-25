@@ -25,6 +25,8 @@ use crate::{
     states::{DataFetchedState, DataNotFetchedState},
 };
 
+const FDC_DATASETS_DOWNLOAD_URL: &'static str = "https://fdc.nal.usda.gov/download-datasets";
+
 #[async_trait]
 pub trait DataNotFetched<C: FdcFetcher>: Send + Sync {
     /// Fetches the following data sets from the USDA FoodData Central API:
@@ -51,7 +53,9 @@ pub struct FdcClient {
 #[async_trait]
 impl FdcFetcher for FdcClient {
     async fn fetch_foundation_foods(&self) -> Result<Vec<u8>> {
-        unimplemented!("Fetch and parse FDC webpage to retrieve JSON")
+        let res = self.client.get(FDC_DATASETS_DOWNLOAD_URL).send().await?;
+
+        Ok(res.bytes().await?.into())
     }
 }
 

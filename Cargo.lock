@@ -2811,6 +2811,7 @@ dependencies = [
  "pretty_assertions",
  "repository",
  "reqwest",
+ "scraper",
  "serde",
  "serde_json",
  "strum 0.27.2",

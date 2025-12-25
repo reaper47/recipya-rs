@@ -297,8 +297,8 @@ CREATE TABLE nutrition_sources (
   description text NOT NULL,
   url text NOT NULL,
   country text NOT NULL,
-  created_at DATE NOT NULL DEFAULT CURRENT_DATE,
-  updated_at DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_on DATE NOT NULL DEFAULT CURRENT_DATE,
+  updated_on DATE,
   UNIQUE (name, country)
 );
 

@@ -11,6 +11,8 @@ pub enum Error {
     // Externals
     Diesel(String),
     #[from]
+    Reqwest(reqwest::Error),
+    #[from]
     Run(diesel_async::pooled_connection::bb8::RunError),
     #[from]
     Serde(serde_json::Error),

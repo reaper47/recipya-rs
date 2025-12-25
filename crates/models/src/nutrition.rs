@@ -1,11 +1,14 @@
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use diesel::{
     Selectable,
     prelude::*,
     sql_types::{BigInt, Float8, Text},
 };
+use diesel_async::{AsyncConnection, RunQueryDsl};
 
-use repository::schema;
+use repository::{ModelManager, schema};
+
+use crate::{Error, Result};
 
 /// Represents a nutrition database.
 #[derive(Queryable, Identifiable, PartialEq, Selectable)]
@@ -17,8 +20,8 @@ pub struct NutritionSource {
     pub description: String,
     pub url: String,
     pub country: String,
-    pub created_at: NaiveDate,
-    pub updated_at: NaiveDate,
+    pub created_on: NaiveDate,
+    pub updated_on: Option<NaiveDate>,
 }
 
 /// Represents a foundation food.
@@ -129,4 +132,97 @@ pub struct FdcFoodPortionForInsert {
 pub struct FdcFoodPortionFdcFoodForInsert {
     pub food_id: i64,
     pub portion_id: i64,
+}
+
+impl NutritionSource {
+    /// Checks whether the nutrition database can be updated based on when the data was last updated.
+    pub async fn is_current_data_old(
+        mm: &ModelManager,
+        source_name: &str,
+        date: NaiveDate,
+    ) -> Result<bool> {
+        let mut conn = mm.pool.get().await?;
+
+        let nutrition_source = schema::nutrition_sources::table
+            .filter(schema::nutrition_sources::name.eq(source_name))
+            .first::<NutritionSource>(&mut conn)
+            .await?;
+
+        match nutrition_source.updated_on {
+            Some(updated_on) => {
+                Ok((updated_on.year(), updated_on.month()) < (date.year(), date.month()))
+            }
+            None => Ok(true),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use testing::utils::{TestDb, create_app_state};
+
+    use super::*;
+
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod tests_nutrition_source {
+        use super::*;
+
+        fn usda_fdc_source_name<'a>() -> &'a str {
+            "USDA FoodData Central"
+        }
+
+        mod tests_is_current_data_old {
+            use chrono::Local;
+
+            use super::*;
+
+            #[tokio::test]
+            async fn test_updated_on_null_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+
+                let is_old = NutritionSource::is_current_data_old(
+                    &state.mm,
+                    usda_fdc_source_name(),
+                    Local::now().date_naive(),
+                )
+                .await?;
+
+                assert!(is_old);
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_updated_on_equal_current_date_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let mut conn = state.mm.pool.get().await?;
+                diesel::insert_into(schema::fdc_foods::table)
+                    .values(&FoundationFoodForInsert {
+                        food_class: "FinalFood",
+                        description: "kiwi, raw",
+                        food_category: "Fruits",
+                        fdc_id: 32196,
+                    })
+                    .execute(&mut conn)
+                    .await?;
+
+                let is_old = NutritionSource::is_current_data_old(
+                    &state.mm,
+                    usda_fdc_source_name(),
+                    Local::now().date_naive(),
+                )
+                .await?;
+
+                assert!(!is_old);
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_updated_on_before_current_date_ok() -> Result<()> {
+                todo!()
+            }
+        }
+    }
 }

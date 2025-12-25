@@ -65,6 +65,7 @@ reqwest = { version = "0.12.24", default-features = false, features = ["blocking
 router = { path = "./crates/router" }
 rustls = { version = "0.23.32", default-features = false, features = ["ring"] }
 schema-org = { path = "./crates/schema-org", default-features = false }
+scraper = "0.25.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 strum = { version = "0.27.2", features = ["derive"] }
