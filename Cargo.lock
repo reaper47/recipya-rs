@@ -2804,6 +2804,7 @@ name = "nutrition"
 version = "0.0.0"
 dependencies = [
  "async-trait",
+ "chrono",
  "derive_more",
  "diesel",
  "diesel-async",
@@ -2819,6 +2820,8 @@ dependencies = [
  "support",
  "testing",
  "tokio",
+ "tracing",
+ "zip 6.0.0",
 ]
 
 [[package]]

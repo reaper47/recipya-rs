@@ -4,11 +4,11 @@ use diesel::{
     prelude::*,
     sql_types::{BigInt, Float8, Text},
 };
-use diesel_async::{AsyncConnection, RunQueryDsl};
+use diesel_async::RunQueryDsl;
 
 use repository::{ModelManager, schema};
 
-use crate::{Error, Result};
+use crate::Result;
 
 /// Represents a nutrition database.
 #[derive(Queryable, Identifiable, PartialEq, Selectable)]
@@ -172,8 +172,17 @@ mod tests {
             "USDA FoodData Central"
         }
 
+        fn a_food<'a>() -> FoundationFoodForInsert<'a> {
+            FoundationFoodForInsert {
+                food_class: "FinalFood",
+                description: "kiwi, raw",
+                food_category: "Fruits",
+                fdc_id: 32196,
+            }
+        }
+
         mod tests_is_current_data_old {
-            use chrono::Local;
+            use chrono::{Duration, Local};
 
             use super::*;
 
@@ -199,12 +208,7 @@ mod tests {
                 let state = create_app_state(config.clone()).await;
                 let mut conn = state.mm.pool.get().await?;
                 diesel::insert_into(schema::fdc_foods::table)
-                    .values(&FoundationFoodForInsert {
-                        food_class: "FinalFood",
-                        description: "kiwi, raw",
-                        food_category: "Fruits",
-                        fdc_id: 32196,
-                    })
+                    .values(&a_food())
                     .execute(&mut conn)
                     .await?;
 
@@ -221,7 +225,23 @@ mod tests {
 
             #[tokio::test]
             async fn test_updated_on_before_current_date_ok() -> Result<()> {
-                todo!()
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let mut conn = state.mm.pool.get().await?;
+                diesel::insert_into(schema::fdc_foods::table)
+                    .values(&a_food())
+                    .execute(&mut conn)
+                    .await?;
+
+                let is_old = NutritionSource::is_current_data_old(
+                    &state.mm,
+                    usda_fdc_source_name(),
+                    Local::now().date_naive() + Duration::weeks(6),
+                )
+                .await?;
+
+                assert!(is_old);
+                Ok(())
             }
         }
     }

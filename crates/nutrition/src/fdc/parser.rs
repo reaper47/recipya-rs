@@ -5,6 +5,7 @@ use std::{
 };
 
 use async_trait::async_trait;
+use chrono::NaiveDate;
 use diesel::{
     dsl::sql,
     prelude::*,
@@ -15,12 +16,15 @@ use reqwest::Client;
 
 use models::nutrition::{
     FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert, FdcFoodPortionForInsert,
-    FdcNutrientForInsert, FoundationFoodForInsert, MeasureUnitForInsert,
+    FdcNutrientForInsert, FoundationFoodForInsert, MeasureUnitForInsert, NutritionSource,
 };
 use repository::{ModelManager, schema};
+use scraper::{Html, Selector};
+use tracing::error;
+use zip::ZipArchive;
 
 use crate::{
-    Error, Result,
+    Error, NutritionDataSource, Result,
     fdc::foundation_food::{FoundationFood, FoundationFoodRoot, MeasureUnit},
     states::{DataFetchedState, DataNotFetchedState},
 };
@@ -42,20 +46,96 @@ pub trait DataFetched: Send + Sync {
 
 #[async_trait]
 pub trait FdcFetcher: Send + Sync {
-    async fn fetch_foundation_foods(&self) -> Result<Vec<u8>>;
+    async fn fetch_foundation_foods(&self) -> Result<ZipArchive<Cursor<Vec<u8>>>>;
 }
 
 /// The HTTP client for fetching data sets from Food Data Central.
-pub struct FdcClient {
+pub struct FdcClient<'a> {
     client: Client,
+    mm: &'a ModelManager,
+}
+
+impl<'a> FdcClient<'a> {
+    /// Creates a new instance of `FdcClient`.
+    pub fn new(mm: &'a ModelManager) -> Self {
+        Self {
+            client: Client::new(),
+            mm: mm,
+        }
+    }
 }
 
 #[async_trait]
-impl FdcFetcher for FdcClient {
-    async fn fetch_foundation_foods(&self) -> Result<Vec<u8>> {
-        let res = self.client.get(FDC_DATASETS_DOWNLOAD_URL).send().await?;
+impl<'a> FdcFetcher for FdcClient<'a> {
+    async fn fetch_foundation_foods(&self) -> Result<ZipArchive<Cursor<Vec<u8>>>> {
+        let (foundation_food_release_date, json_url) = {
+            let html = self
+                .client
+                .get(FDC_DATASETS_DOWNLOAD_URL)
+                .send()
+                .await
+                .inspect_err(|_| error!("Failed to fetch USDA FDC download dataset page"))?
+                .text()
+                .await?;
 
-        Ok(res.bytes().await?.into())
+            let document = Html::parse_document(&html);
+
+            const BASE_SELECTOR: &str =
+                "table.usa-table-results.usa-table-borderless.header-alignment.no-wrap tbody tr";
+
+            let month_year_date = document
+                .select(
+                    &Selector::parse(&format!("{BASE_SELECTOR} td:nth-child(2)"))
+                        .expect("valid css selector for foundation food release date"),
+                )
+                .next()
+                .map(|element| element.text().collect::<String>().trim().to_string())
+                .ok_or(Error::InvalidCssSelector)
+                .inspect_err(|_| error!("Failed to parse foundation food release date"))?;
+
+            let release_date =
+                NaiveDate::parse_from_str(&format!("01/{month_year_date}"), "%d/%m/%Y")?;
+
+            let json_url = document
+                .select(
+                    &Selector::parse(&format!("{BASE_SELECTOR} td:nth-child(3) > a"))
+                        .expect("valid css selector for json url"),
+                )
+                .next()
+                .map(|element| element.attr("href").unwrap_or_default().to_string())
+                .ok_or(Error::InvalidCssSelector)
+                .inspect_err(|_| error!("Failed to parse foundation food json url"))?;
+
+            (release_date, format!("https://fdc.nal.usda.gov{json_url}"))
+        };
+
+        let is_data_old = NutritionSource::is_current_data_old(
+            &self.mm,
+            &NutritionDataSource::USDAFoodDataCentral.to_string(),
+            foundation_food_release_date,
+        )
+        .await?;
+
+        if !is_data_old {
+            return Err(Error::NoNeedToUpdateNutrition);
+        }
+
+        let zip_bytes = self
+            .client
+            .get(json_url)
+            .send()
+            .await
+            .inspect_err(|_| error!("Failed to download foundation food JSON dataset"))?
+            .bytes()
+            .await?;
+
+        let cursor = Cursor::new(zip_bytes.to_vec());
+        let archive = ZipArchive::new(cursor).map_err(|_| {
+            error!("Failed to zip foundation food archive from response");
+            Error::InvalidZipArchive
+        })?;
+
+        Ok(archive)
     }
 }
 
@@ -78,8 +158,9 @@ impl FdcParser<DataNotFetchedState> {
 #[async_trait]
 impl<C: FdcFetcher> DataNotFetched<C> for FdcParser<DataNotFetchedState> {
     async fn fetch(self, client: &C) -> Result<FdcParser<DataFetchedState>> {
-        let res = client.fetch_foundation_foods().await?;
-        let data: FoundationFoodRoot = serde_json::from_reader(Cursor::new(res))?;
+        let mut archive = client.fetch_foundation_foods().await?;
+        let mut file = archive.by_index(0).map_err(|_| Error::NoFileInZip)?;
+        let data: FoundationFoodRoot = serde_json::from_reader(&mut file)?;
 
         Ok(FdcParser {
             foundation_food_data: data.foundation_foods,
@@ -97,6 +178,19 @@ impl DataFetched for FdcParser<DataFetchedState> {
 
         conn.transaction::<_, Error, _>(|mut conn| {
             Box::pin(async move {
+                diesel::sql_query(
+                    "TRUNCATE TABLE
+                        fdc_foods,
+                        fdc_nutrients,
+                        measure_units,
+                        fdc_food_portions,
+                        fdc_foods_fdc_nutrients,
+                        fdc_food_portions_fdc_foods
+                    RESTART IDENTITY CASCADE",
+                )
+                .execute(conn)
+                .await?;
+
                 let foundation_foods = &self.foundation_food_data;
 
                 // fdc_foods
@@ -123,11 +217,11 @@ impl DataFetched for FdcParser<DataFetchedState> {
                             foundation_foods
                                 .iter()
                                 .flat_map(|food| {
-                                    food.food_nutrients.iter().map(|nutrient| {
-                                        FdcNutrientForInsert {
+                                    food.food_nutrients.iter().filter_map(|nutrient| {
+                                        Some(FdcNutrientForInsert {
                                             name: &nutrient.nutrient.name,
                                             unit_name: &nutrient.nutrient.unit_name,
-                                        }
+                                        })
                                     })
                                 })
                                 .collect::<Vec<_>>(),
@@ -173,21 +267,24 @@ impl DataFetched for FdcParser<DataFetchedState> {
                     });
                 }
 
-                diesel::insert_into(schema::fdc_foods_fdc_nutrients::table)
-                    .values(
-                        ids.into_iter()
-                            .map(|(food_id, nutrient_id, median, amount)| {
-                                FdcFoodFdcNutrientForInsert {
-                                    food_id,
-                                    nutrient_id,
-                                    median,
-                                    amount,
-                                }
-                            })
-                            .collect::<Vec<_>>(),
+                let records = ids
+                    .into_iter()
+                    .map(
+                        |(food_id, nutrient_id, median, amount)| FdcFoodFdcNutrientForInsert {
+                            food_id,
+                            nutrient_id,
+                            median,
+                            amount,
+                        },
                     )
-                    .execute(&mut conn)
-                    .await?;
+                    .collect::<Vec<_>>();
+
+                for chunk in records.chunks(1000) {
+                    diesel::insert_into(schema::fdc_foods_fdc_nutrients::table)
+                        .values(chunk)
+                        .execute(&mut conn)
+                        .await?;
+                }
 
                 // measure_units
                 let measure_units: Vec<(i64, String, String)> =
@@ -458,8 +555,10 @@ impl FoundationFoodDetails {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::io::Write;
 
     use testing::utils::{TestDb, create_app_state};
+    use zip::{ZipWriter, write::FileOptions};
 
     use super::*;
 
@@ -494,14 +593,26 @@ mod tests {
 
     #[async_trait]
     impl FdcFetcher for FdcClientForTests {
-        async fn fetch_foundation_foods(&self) -> super::Result<Vec<u8>> {
+        async fn fetch_foundation_foods(&self) -> super::Result<ZipArchive<Cursor<Vec<u8>>>> {
             let dataset = self
                 .datasets
                 .get(&self.selected_dataset)
                 .cloned()
                 .expect(&format!("dataset {}", self.selected_dataset));
 
-            Ok(dataset.into_bytes())
+            let mut zip_buffer = Cursor::new(Vec::new());
+            {
+                let mut zip = ZipWriter::new(&mut zip_buffer);
+                zip.start_file(
+                    "FoodData_Central_foundation_food_csv_2024-10.csv",
+                    FileOptions::<()>::default(),
+                )
+                .unwrap();
+                zip.write_all(dataset.as_bytes()).unwrap();
+            }
+
+            let bytes = zip_buffer.into_inner();
+            Ok(ZipArchive::new(Cursor::new(bytes)).unwrap())
         }
     }
 

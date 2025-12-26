@@ -8,8 +8,20 @@ pub type Result<T> = core::result::Result<T, Error>;
 /// Enumeration of errors related to the models.
 #[derive(Debug, From)]
 pub enum Error {
+    FailToParseDate,
+    InvalidCssSelector,
+    InvalidZipArchive,
+    NoNeedToUpdateNutrition,
+    NoFileInZip,
+
     // Externals
+    #[from]
+    Chrono(chrono::ParseError),
     Diesel(String),
+    #[from]
+    Io(std::io::Error),
+    #[from]
+    Model(models::Error),
     #[from]
     Reqwest(reqwest::Error),
     #[from]

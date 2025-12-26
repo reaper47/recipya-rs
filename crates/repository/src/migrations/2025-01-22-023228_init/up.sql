@@ -297,8 +297,8 @@ CREATE TABLE nutrition_sources (
   description text NOT NULL,
   url text NOT NULL,
   country text NOT NULL,
-  created_on DATE NOT NULL DEFAULT CURRENT_DATE,
-  updated_on DATE,
+  created_on date NOT NULL DEFAULT CURRENT_DATE,
+  updated_on date,
   UNIQUE (name, country)
 );
 
@@ -829,16 +829,20 @@ END;
 $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION update_nutrition_sources_updated_at_column()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION update_nutrition_sources_updated_on_column ()
+  RETURNS TRIGGER
+  AS $$
 BEGIN
-    UPDATE nutrition_sources
-    SET updated_at = CURRENT_TIMESTAMP
-    WHERE name = 'USDA FoodData Central';
-
-    RETURN NEW;
+  UPDATE
+    nutrition_sources
+  SET
+    updated_on = CURRENT_DATE
+  WHERE
+    name = 'USDA FoodData Central';
+  RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$
+LANGUAGE plpgsql;
 
 ---
 --- Triggers
@@ -923,25 +927,20 @@ CREATE TRIGGER trig_update_tools_fts_ai
   FOR EACH ROW
   EXECUTE FUNCTION update_tools_fts_func ();
 
-CREATE TRIGGER update_nutrition_sources_updated_at
-    AFTER UPDATE ON fdc_foods
-    FOR EACH ROW
-    EXECUTE FUNCTION update_nutrition_sources_updated_at_column ();
+CREATE TRIGGER update_nutrition_sources_updated_on
+  AFTER INSERT OR UPDATE ON fdc_foods
+  FOR EACH ROW
+  EXECUTE FUNCTION update_nutrition_sources_updated_on_column ();
 
 ---
 --- Cron Jobs
 ---
 DO $$
-    BEGIN
-        IF current_database() = 'recipya' THEN
-            EXECUTE format(
-                    'SELECT cron.schedule(%L, %L, %L)',
-                    'delete_expired_links',
-                    '0 0 * * *',
-                    'DELETE FROM shares_recipes WHERE expires_at < NOW()'
-                    );
-        END IF;
-    END
+BEGIN
+  IF current_database() = 'recipya' THEN
+    EXECUTE format('SELECT cron.schedule(%L, %L, %L)', 'delete_expired_links', '0 0 * * *', 'DELETE FROM shares_recipes WHERE expires_at < NOW()');
+  END IF;
+END
 $$;
 
 ---
@@ -1422,3 +1421,4 @@ VALUES
   ('twosleevers.com', 'https://twosleevers.com'),
   ('unsophisticook.com', 'https://unsophisticook.com'),
   ('vegan-pratique.fr', 'https://vegan-pratique.fr/recettes/banana-bread/');
+

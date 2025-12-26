@@ -100,7 +100,7 @@ pub struct FoodPortion {
     pub gram_weight: f64,
     pub sequence_number: i64,
     pub amount: f64,
-    pub min_year_acquired: i64,
+    pub min_year_acquired: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
