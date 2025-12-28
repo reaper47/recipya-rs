@@ -12,7 +12,10 @@ use tracing::{error, info};
 use app::jobs::clean_media;
 use app::state::AppState;
 use config::{Config, DataDir};
-use models::user::{User, UserForCreate};
+use models::{
+    nutrition::all_nutrition_sources,
+    user::{User, UserForCreate},
+};
 use recipya_scraper::AppHttpClient;
 use repository::ModelManager;
 use router::middleware::mw_auth::mw_ctx_resolver;
@@ -45,6 +48,11 @@ pub async fn server() -> Result<()> {
         Arc::clone(&state.fs_support),
     )
     .await?;
+
+    info!("Updating nutrition data sources");
+    for source in all_nutrition_sources() {
+        let _ = source.update_data(&state.mm).await;
+    }
 
     let router = router(state.clone())
         .await?

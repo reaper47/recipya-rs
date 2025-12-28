@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use app::state::AppState;
 
 use crate::handlers::settings::{
-    set_default_theme_handler, set_selected_theme_handler, settings_handler,
+    set_default_theme_handler, set_nutrition_source_handler, set_selected_theme_handler,
+    settings_handler,
 };
 use crate::middleware::mw_auth::{mw_ctx_require, mw_only_admin};
 
@@ -15,10 +16,18 @@ pub struct ThemePayload {
     pub theme: String,
 }
 
+/// Represents the payload for setting nutrition sources.
+#[derive(Deserialize, Serialize)]
+pub struct NutritionSourcePayload {
+    #[serde(rename = "nutrition-source")]
+    pub nutrition_source: String,
+}
+
 /// Defines the routes for endpoints related to the settings module.
 pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
+        .route("/nutrition-source", post(set_nutrition_source_handler))
         .route(
             "/theme-default",
             post(set_default_theme_handler).layer(middleware::from_fn(mw_only_admin)),
@@ -32,17 +41,18 @@ pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use axum::http::{Method, StatusCode};
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, build_server_logged_in,
         build_server_ws_other_user, create_app_state, insert_other_user,
     };
 
+    use super::*;
+
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_settings {
         use super::*;
-        use axum::http::Method;
 
         const BASE_URI: &str = "/settings";
 
@@ -153,10 +163,45 @@ mod tests {
         }
     }
 
-    mod tests_themes {
+    mod tests_nutrition {
+        use models::{nutrition::NutritionDataSource, settings::UserSettingDetails};
+
         use super::*;
-        use axum::http::{Method, StatusCode};
+
+        const BASE_URI: &str = "/settings/nutrition-source";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_post_set_same_nutrition_source_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+
+            let res = server
+                .post(&BASE_URI)
+                .form(&NutritionSourcePayload {
+                    nutrition_source: NutritionDataSource::USDAFoodDataCentral.to_string(),
+                })
+                .await;
+
+            res.assert_status(StatusCode::NO_CONTENT);
+            let got = UserSettingDetails::get_settings(&state.mm, 1).await?;
+            pretty_assertions::assert_eq!(
+                got.nutrition_source,
+                NutritionDataSource::USDAFoodDataCentral
+            );
+            Ok(())
+        }
+    }
+
+    mod tests_themes {
         use models::settings::{Theme, UserSettingDetails};
+
+        use super::*;
 
         const BASE_URI: &str = "/settings/theme";
 

@@ -15,7 +15,7 @@ use crate::Result;
 #[diesel(table_name = schema::nutrition_sources)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NutritionSource {
-    pub id: i64,
+    pub id: i16,
     pub name: String,
     pub description: String,
     pub url: String,
@@ -36,6 +36,18 @@ pub struct FoundationFood {
     pub fdc_id: i64,
 }
 
+impl FoundationFood {
+    /// Gets the number of entries in the database.
+    pub async fn count(mm: &ModelManager) -> Result<i64> {
+        let mut conn = mm.pool.get().await?;
+
+        Ok(schema::fdc_foods::table
+            .count()
+            .get_result(&mut conn)
+            .await?)
+    }
+}
+
 #[derive(Debug, QueryableByName)]
 #[allow(unused)]
 pub struct FdcFoodResult {
@@ -54,7 +66,7 @@ pub struct FdcFoodResult {
 }
 #[derive(Insertable)]
 #[diesel(table_name = schema::fdc_foods)]
-pub struct FoundationFoodForInsert<'a> {
+pub(crate) struct FoundationFoodForInsert<'a> {
     pub food_class: &'a str,
     pub description: &'a str,
     pub food_category: &'a str,
@@ -73,14 +85,14 @@ pub struct FdcNutrient {
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::fdc_nutrients)]
-pub struct FdcNutrientForInsert<'a> {
+pub(crate) struct FdcNutrientForInsert<'a> {
     pub name: &'a str,
     pub unit_name: &'a str,
 }
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::fdc_foods_fdc_nutrients)]
-pub struct FdcFoodFdcNutrientForInsert {
+pub(crate) struct FdcFoodFdcNutrientForInsert {
     pub food_id: i64,
     pub nutrient_id: i64,
     pub median: f64,
@@ -99,7 +111,7 @@ pub struct MeasureUnit {
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::measure_units)]
-pub struct MeasureUnitForInsert {
+pub(crate) struct MeasureUnitForInsert {
     pub name: String,
     pub abbreviation: String,
 }
@@ -119,7 +131,7 @@ pub struct FdcFoodPortion {
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::fdc_food_portions)]
-pub struct FdcFoodPortionForInsert {
+pub(crate) struct FdcFoodPortionForInsert {
     pub value: f64,
     pub measure_unit_id: i64,
     pub modifier: Option<String>,
@@ -129,7 +141,7 @@ pub struct FdcFoodPortionForInsert {
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::fdc_food_portions_fdc_foods)]
-pub struct FdcFoodPortionFdcFoodForInsert {
+pub(crate) struct FdcFoodPortionFdcFoodForInsert {
     pub food_id: i64,
     pub portion_id: i64,
 }
@@ -165,20 +177,40 @@ mod tests {
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
+    fn a_food<'a>() -> FoundationFoodForInsert<'a> {
+        FoundationFoodForInsert {
+            food_class: "FinalFood",
+            description: "kiwi, raw",
+            food_category: "Fruits",
+            fdc_id: 32196,
+        }
+    }
+
+    mod tests_foundation_food {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_insert_and_count() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut conn = state.mm.pool.get().await?;
+            diesel::insert_into(schema::fdc_foods::table)
+                .values(&a_food())
+                .execute(&mut conn)
+                .await?;
+
+            let got = FoundationFood::count(&state.mm).await?;
+
+            assert_eq!(got, 1);
+            Ok(())
+        }
+    }
+
     mod tests_nutrition_source {
         use super::*;
 
         fn usda_fdc_source_name<'a>() -> &'a str {
             "USDA FoodData Central"
-        }
-
-        fn a_food<'a>() -> FoundationFoodForInsert<'a> {
-            FoundationFoodForInsert {
-                food_class: "FinalFood",
-                description: "kiwi, raw",
-                food_category: "Fruits",
-                fdc_id: 32196,
-            }
         }
 
         mod tests_is_current_data_old {

@@ -13,20 +13,24 @@ use diesel::{
 };
 use diesel_async::{AsyncConnection as _, RunQueryDsl};
 use reqwest::Client;
-
-use models::nutrition::{
-    FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert, FdcFoodPortionForInsert,
-    FdcNutrientForInsert, FoundationFoodForInsert, MeasureUnitForInsert, NutritionSource,
-};
-use repository::{ModelManager, schema};
 use scraper::{Html, Selector};
 use tracing::error;
 use zip::ZipArchive;
 
+use repository::{ModelManager, schema};
+
 use crate::{
-    Error, NutritionDataSource, Result,
-    fdc::foundation_food::{FoundationFood, FoundationFoodRoot, MeasureUnit},
-    states::{DataFetchedState, DataNotFetchedState},
+    Error, Result,
+    nutrition::{
+        NutritionDataSource,
+        fdc::foundation_food::{FoundationFood, FoundationFoodRoot, MeasureUnit},
+        states::{DataFetchedState, DataNotFetchedState},
+        tables::{
+            self, FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert,
+            FdcFoodPortionForInsert, FdcNutrientForInsert, FoundationFoodForInsert,
+            MeasureUnitForInsert, NutritionSource,
+        },
+    },
 };
 
 const FDC_DATASETS_DOWNLOAD_URL: &'static str = "https://fdc.nal.usda.gov/download-datasets";
@@ -116,7 +120,7 @@ impl<'a> FdcFetcher for FdcClient<'a> {
         )
         .await?;
 
-        if !is_data_old {
+        if !is_data_old || tables::FoundationFood::count(&self.mm).await?.is_positive() {
             return Err(Error::NoNeedToUpdateNutrition);
         }
 

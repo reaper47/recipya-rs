@@ -2604,6 +2604,7 @@ name = "models"
 version = "0.0.0"
 dependencies = [
  "app",
+ "async-trait",
  "auth",
  "axum",
  "chrono",
@@ -2622,10 +2623,13 @@ dependencies = [
  "pretty_assertions",
  "recipya-scraper",
  "repository",
+ "reqwest",
  "schema-org",
+ "scraper",
  "serde",
  "serde_json",
  "strum 0.27.2",
+ "strum_macros 0.27.2",
  "support",
  "testing",
  "tokio",
@@ -2633,6 +2637,7 @@ dependencies = [
  "uuid",
  "whatlang",
  "winnow",
+ "zip 6.0.0",
 ]
 
 [[package]]
@@ -2797,31 +2802,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "nutrition"
-version = "0.0.0"
-dependencies = [
- "async-trait",
- "chrono",
- "derive_more",
- "diesel",
- "diesel-async",
- "models",
- "pretty_assertions",
- "repository",
- "reqwest",
- "scraper",
- "serde",
- "serde_json",
- "strum 0.27.2",
- "strum_macros 0.27.2",
- "support",
- "testing",
- "tokio",
- "tracing",
- "zip 6.0.0",
 ]
 
 [[package]]

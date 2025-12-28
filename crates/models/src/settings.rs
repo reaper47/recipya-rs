@@ -6,6 +6,7 @@ use strum::{Display, EnumIter, EnumString};
 use math::cooking::units::system::MeasurementSystem;
 use repository::{ModelManager, schema};
 
+use crate::nutrition::NutritionDataSource;
 use crate::{Error, Result};
 
 #[derive(Debug, Default, PartialEq, Display, EnumString, EnumIter)]
@@ -128,6 +129,7 @@ struct UserSetting {
     id: i64,
     user_id: i64,
     measurement_system_id: i16,
+    nutrition_source_id: i16,
     calculate_nutrition: bool,
     convert_automatically: bool,
     cookbooks_view: i32,
@@ -139,6 +141,7 @@ struct UserSetting {
 pub struct UserSettingDetails {
     pub user_id: i64,
     pub measurement_system: MeasurementSystem,
+    pub nutrition_source: NutritionDataSource,
     pub is_calculate_nutrition: bool,
     pub is_convert_automatically: bool,
     pub cookbooks_view: i32,
@@ -177,6 +180,7 @@ impl UserSettingDetails {
         Ok(Self {
             user_id,
             measurement_system: MeasurementSystem::from_id(settings.measurement_system_id)?,
+            nutrition_source: NutritionDataSource::from(settings.nutrition_source_id),
             is_calculate_nutrition: settings.calculate_nutrition,
             is_convert_automatically: settings.convert_automatically,
             cookbooks_view: settings.cookbooks_view,
@@ -207,6 +211,7 @@ mod tests {
             UserSettingDetails {
                 user_id: 1,
                 measurement_system: MeasurementSystem::ImperialUK,
+                nutrition_source: NutritionDataSource::USDAFoodDataCentral,
                 is_calculate_nutrition: false,
                 is_convert_automatically: false,
                 cookbooks_view: 0,

@@ -3,6 +3,7 @@ use strum::IntoEnumIterator;
 
 use math::cooking::units::system::MeasurementSystem;
 use models::data::Data;
+use models::nutrition::all_nutrition_sources;
 use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
@@ -197,6 +198,23 @@ fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) ->
                   hx-trigger="click";
             }
             div class="divider m-0" {}
+            div class="flex justify-between items-center text-sm" {
+                div {
+                    p class="font-semibold" {
+                        "Nutrition source"
+                    }
+                    p class="text-xs" {
+                        "Choose the nutrition database used to calculate nutrition facts."
+                    }
+                }
+                select #settings-recipes-nutrition-source name="nutrition-source" class="w-fit select select-bordered select-sm" hx-post="/settings/nutrition-source" hx-swap="none" {
+                    @for source in all_nutrition_sources() {
+                        option value=(source) selected[source == settings.nutrition_source] {
+                            (source)
+                        }
+                    }
+                }
+            }
             label class="flex justify-between items-center text-sm mt-2" for="settings-recipes-calc-nutrition" {
                 div {
                     span class="font-semibold" {
@@ -738,7 +756,7 @@ fn themes_palette(is_set_default: bool, default_theme: &Theme, selected_theme: &
 
     html! {
         div id=(palette_id) class="dropdown dropdown-end hidden z-30 [@supports(color:oklch(0%_0_0))]:block" _=(PreEscaped(init)) {
-            div tabindex="0" role="button" class="btn btn-outline w-40" {
+            div tabindex="0" role="button" class="btn btn-sm btn-outline w-40" {
                 svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-5 w-5 stroke-current md:hidden" {
                     path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" {}
                 }

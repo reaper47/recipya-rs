@@ -13,17 +13,25 @@ pub enum Error {
         entity: &'static str,
         id: i64,
     },
+    InvalidCssSelector,
+    InvalidZipArchive,
+    NoFileInZip,
+    NoNeedToUpdateNutrition,
     NoSearch,
     Time,
     ThemeNotFound,
 
     // Modules
     #[from]
+    Chrono(chrono::ParseError),
+    #[from]
     Config(config::Error),
     #[from]
     Scraper(recipya_scraper::Error),
     #[from]
     Repository(repository::Error),
+    #[from]
+    Reqwest(reqwest::Error),
     #[from]
     Pwd(auth::pwd::Error),
 
