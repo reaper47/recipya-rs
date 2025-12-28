@@ -28,6 +28,14 @@ pub fn all_nutrition_sources() -> Vec<NutritionDataSource> {
 }
 
 impl NutritionDataSource {
+    /// Updates the nutrition data for all sources.
+    pub async fn update_all(mm: &ModelManager) {
+        info!("Updating nutrition data sources");
+        for source in all_nutrition_sources() {
+            let _ = source.update_data(&mm).await;
+        }
+    }
+
     /// Updates the user's preferred nutrition data source.
     pub async fn save(&self, mm: &ModelManager, user_id: i64) -> Result<()> {
         let mut conn = mm.pool.get().await?;
