@@ -180,6 +180,7 @@ impl Recipe {
                                 let new_nutrition = Nutrition {
                                     id: old_nutrition.id,
                                     recipe_id,
+                                    is_precalculated: !new_nutrition_c.is_empty(),
                                     calories_kcal: new_nutrition_c.calories_kcal,
                                     total_carbohydrates: new_nutrition_c.total_carbohydrates,
                                     sugars_g: new_nutrition_c.sugars_g,

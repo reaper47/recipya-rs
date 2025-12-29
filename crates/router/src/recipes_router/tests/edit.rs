@@ -444,6 +444,7 @@ mod tests {
             nutrition: recipe_c.nutrition.map(|n| Nutrition {
                 id: 1,
                 recipe_id: 1,
+                is_precalculated: !n.is_empty(),
                 calories_kcal: n.calories_kcal,
                 total_carbohydrates: n.total_carbohydrates,
                 sugars_g: n.sugars_g,

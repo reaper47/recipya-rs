@@ -18,6 +18,8 @@ pub struct Nutrition {
     pub id: i64,
     /// Identifier of the associated recipe.
     pub recipe_id: i64,
+    /// Whether the nutrition values are pre-calculated by the source.
+    pub is_precalculated: bool,
     /// Total calories in kilocalories (kcal) per serving.
     pub calories_kcal: Option<i16>,
     /// Total carbohydrates in grams (g) per serving.
@@ -180,6 +182,7 @@ impl From<&NutritionInformation> for NutritionForCreate {
 #[diesel(table_name = schema::nutrition)]
 pub(crate) struct NutritionForInsert {
     pub recipe_id: i64,
+    pub is_precalculated: bool,
     pub calories_kcal: Option<i16>,
     pub total_carbohydrates: Option<i16>,
     pub sugars_g: Option<i16>,

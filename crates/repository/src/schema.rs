@@ -273,6 +273,7 @@ diesel::table! {
     nutrition (id) {
         id -> Int8,
         recipe_id -> Int8,
+        is_precalculated -> Bool,
         calories_kcal -> Nullable<Int2>,
         total_carbohydrates -> Nullable<Int2>,
         sugars_g -> Nullable<Int2>,
@@ -482,7 +483,6 @@ diesel::table! {
         user_id -> Int8,
         measurement_system_id -> Int2,
         nutrition_source_id -> Int2,
-        calculate_nutrition -> Bool,
         convert_automatically -> Bool,
         cookbooks_view -> Int4,
         default_theme -> Int4,

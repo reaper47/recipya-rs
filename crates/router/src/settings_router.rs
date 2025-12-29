@@ -27,7 +27,7 @@ pub struct NutritionSourcePayload {
 pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
-        .route("/nutrition-source", post(set_nutrition_source_handler))
+        .route("/nutrition/source", post(set_nutrition_source_handler))
         .route(
             "/theme-default",
             post(set_default_theme_handler).layer(middleware::from_fn(mw_only_admin)),
@@ -168,7 +168,7 @@ mod tests {
 
         use super::*;
 
-        const BASE_URI: &str = "/settings/nutrition-source";
+        const BASE_URI: &str = "/settings/nutrition/source";
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {

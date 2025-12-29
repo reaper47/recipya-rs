@@ -207,29 +207,13 @@ fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) ->
                         "Choose the nutrition database used to calculate nutrition facts."
                     }
                 }
-                select #settings-recipes-nutrition-source name="nutrition-source" class="w-fit select select-bordered select-sm" hx-post="/settings/nutrition-source" hx-swap="none" {
+                select #settings-recipes-nutrition-source name="nutrition-source" class="w-fit select select-bordered select-sm" hx-post="/settings/nutrition/source" hx-swap="none" {
                     @for source in all_nutrition_sources() {
                         option value=(source) selected[source == settings.nutrition_source] {
                             (source)
                         }
                     }
                 }
-            }
-            label class="flex justify-between items-center text-sm mt-2" for="settings-recipes-calc-nutrition" {
-                div {
-                    span class="font-semibold" {
-                        "Calculate nutrition facts"
-                    }
-                    br;
-                    span class="text-xs block max-w-[45ch]" {
-                        "Calculate the nutrition facts automatically when adding a recipe. The processing will be done in the background."
-                    }
-                }
-                input #settings-recipes-calc-nutrition type="checkbox" name="calculate-nutrition"
-                      checked[settings.is_calculate_nutrition]
-                      class="checkbox"
-                      hx-post="/settings/calculate-nutrition"
-                      hx-trigger="click";
             }
             div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {

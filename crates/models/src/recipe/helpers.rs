@@ -341,6 +341,7 @@ where
     diesel::insert_into(schema::nutrition::table)
         .values(&NutritionForInsert {
             recipe_id,
+            is_precalculated: !nutrition.is_empty(),
             calories_kcal: nutrition.calories_kcal,
             total_carbohydrates: nutrition.total_carbohydrates,
             sugars_g: nutrition.sugars_g,
