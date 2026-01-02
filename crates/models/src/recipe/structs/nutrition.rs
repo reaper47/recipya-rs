@@ -3,7 +3,7 @@ use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Sel
 use repository::schema;
 use schema_org::NutritionInformation;
 
-use crate::recipe::structs::recipe::Recipe;
+use crate::{nutrition::NutritionComponents, recipe::structs::recipe::Recipe};
 
 /// Represents a nutrition entity stored in the database.
 #[derive(
@@ -19,7 +19,7 @@ pub struct Nutrition {
     /// Identifier of the associated recipe.
     pub recipe_id: i64,
     /// Whether the nutrition values are pre-calculated by the source.
-    pub is_precalculated: bool,
+    pub is_precalculated_by_source: bool,
     /// Total calories in kilocalories (kcal) per serving.
     pub calories_kcal: Option<i16>,
     /// Total carbohydrates in grams (g) per serving.
@@ -182,7 +182,7 @@ impl From<&NutritionInformation> for NutritionForCreate {
 #[diesel(table_name = schema::nutrition)]
 pub(crate) struct NutritionForInsert {
     pub recipe_id: i64,
-    pub is_precalculated: bool,
+    pub is_precalculated_by_source: bool,
     pub calories_kcal: Option<i16>,
     pub total_carbohydrates: Option<i16>,
     pub sugars_g: Option<i16>,
@@ -195,4 +195,25 @@ pub(crate) struct NutritionForInsert {
     pub fiber_g: Option<i16>,
     pub trans_fat_g: Option<i16>,
     pub serving_size: Option<String>,
+}
+
+impl From<NutritionComponents> for NutritionForInsert {
+    fn from(n: NutritionComponents) -> Self {
+        Self {
+            recipe_id: 0,
+            is_precalculated_by_source: false,
+            calories_kcal: n.calories_kcal.into(),
+            total_carbohydrates: n.total_carbohydrates.into(),
+            sugars_g: n.sugars_g.into(),
+            protein_g: n.protein_g.into(),
+            total_fat_g: n.total_fat_g.into(),
+            saturated_fat_g: n.saturated_fat_g.into(),
+            unsaturated_fat_g: n.unsaturated_fat_g.into(),
+            cholesterol_mg: n.cholesterol_mg.into(),
+            sodium_mg: n.sodium_mg.into(),
+            fiber_g: n.fiber_g.into(),
+            trans_fat_g: n.trans_fat_g.into(),
+            serving_size: Some("100g".to_string()),
+        }
+    }
 }

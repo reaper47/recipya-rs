@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use ingredient::IngredientParser;
 use strum::{EnumIter, EnumString, IntoEnumIterator as _};
 use tracing::{error, info, warn};
 
@@ -7,7 +8,10 @@ use repository::{ModelManager, schema};
 
 use crate::{
     Error, Result,
-    nutrition::fdc::parser::{DataFetched as _, DataNotFetched as _, FdcClient, FdcParser},
+    nutrition::{
+        NutritionComponents,
+        fdc::parser::{DataFetched as _, DataNotFetched as _, FdcClient, FdcParser},
+    },
 };
 
 /// Nutrition data sources supported by the application.
@@ -28,6 +32,21 @@ pub fn all_nutrition_sources() -> Vec<NutritionDataSource> {
 }
 
 impl NutritionDataSource {
+    /// Calculate the nutritional information for a recipe based on its ingredients.
+    pub fn calculate_nutrition(&self, ingredients: &[&str]) -> Result<NutritionComponents> {
+        todo!()
+        // if self == &NutritionDataSource::Unknown {
+        //     return Err(Error::UnknownSource);
+        // }
+
+        // let ingredients = ingredients
+        //     .iter()
+        //     .map(|ing| IngredientParser::new(false).from_str(ing))
+        //     .collect::<Vec<_>>();
+
+        // Ok(nutrition)
+    }
+
     /// Updates the nutrition data for all sources.
     pub async fn update_all(mm: &ModelManager) {
         info!("Updating nutrition data sources");
@@ -132,5 +151,19 @@ mod tests {
             NutritionDataSource::USDAFoodDataCentral
         );
         pretty_assertions::assert_eq!(NutritionDataSource::from(2), NutritionDataSource::Unknown);
+    }
+
+    mod tests_calculate_nutrition {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_calculate_fdc_nutrition_simple_ok() -> Result<()> {
+            todo!()
+            // let ingredients = vec![];
+
+            // let got = NutritionDataSource::USDAFoodDataCentral.calculate_nutrition(ingredients)
+
+            // Ok(())
+        }
     }
 }

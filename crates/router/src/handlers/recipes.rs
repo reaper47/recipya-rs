@@ -165,6 +165,11 @@ pub async fn recipes_handler(
     .into_response())
 }
 
+/// Handles the recipe schema endpoint.
+pub async fn recipe_schema_handler(_ctx: CtxW) -> Result<impl IntoResponse> {
+    Ok(schema_org::Recipe::schema().into_response())
+}
+
 /// Handles the duplicate recipe endpoint.
 pub async fn duplicate_recipe_handler(
     ctx: CtxW,
@@ -422,7 +427,10 @@ pub async fn scale_recipe_handler(
 
             let factor = params.yield_param as f64 / recipe.recipe.yield_ as f64;
             let items = recipe.ingredients.items_as_text();
-            let scaled = measurement_system.scale(items, factor);
+            let scaled = measurement_system.scale(
+                items.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+                factor,
+            );
 
             for (x, y) in izip!(recipe.ingredients.iter_mut(), scaled) {
                 x.text = y;
@@ -780,7 +788,6 @@ pub async fn add_recipes_handler(
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
-        schema_org::Recipe::schema(),
         settings,
     )
     .into_response())
@@ -1296,7 +1303,9 @@ pub async fn add_manual_recipe_post_handler(
     };
 
     let ingredients = form.ingredients;
-    let measurement_system_id = system::MeasurementSystem::from(ingredients.clone()).id();
+    let measurement_system_id =
+        system::MeasurementSystem::from(ingredients.iter().map(|s| s.as_str()).collect::<Vec<_>>())
+            .id();
 
     let recipe_id = match Recipe::create(
         &state.mm,
@@ -1785,7 +1794,7 @@ pub async fn view_recipe_handler(
         }
     };
 
-    let user_settings = UserSettingDetails::get_settings(&state.mm, user_id).await?;
+    let user_settings = UserSettingDetails::get(&state.mm, user_id).await?;
 
     match templates::recipes::view_recipe(
         state.fs_support,

@@ -11,7 +11,7 @@ use repository::{ModelManager, schema};
 use crate::Result;
 
 /// Represents a nutrition database.
-#[derive(Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Debug, Queryable, Identifiable, PartialEq, Selectable)]
 #[diesel(table_name = schema::nutrition_sources)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NutritionSource {
@@ -22,6 +22,19 @@ pub struct NutritionSource {
     pub country: String,
     pub created_on: NaiveDate,
     pub updated_on: Option<NaiveDate>,
+}
+
+impl NutritionSource {
+    /// Fetches all nutrition sources.
+    pub async fn all(mm: &ModelManager) -> Result<Vec<Self>> {
+        let mut conn = mm.pool.get().await?;
+
+        schema::nutrition_sources::table
+            .select(Self::as_select())
+            .load(&mut conn)
+            .await
+            .map_err(Into::into)
+    }
 }
 
 /// Represents a foundation food.
@@ -171,6 +184,7 @@ impl NutritionSource {
 
 #[cfg(test)]
 mod tests {
+    use chrono::Local;
     use testing::utils::{TestDb, create_app_state};
 
     use super::*;
@@ -184,6 +198,29 @@ mod tests {
             food_category: "Fruits",
             fdc_id: 32196,
         }
+    }
+
+    #[tokio::test]
+    async fn test_all_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let now = Local::now().date_naive();
+
+        let got = NutritionSource::all(&state.mm).await?;
+
+        pretty_assertions::assert_eq!(
+            got,
+            vec![NutritionSource {
+                id: 1,
+                name: "USDA FoodData Central".into(),
+                description: "USDA FoodData Central".into(),
+                url: "https://fdc.nal.usda.gov/".into(),
+                country: "United States".into(),
+                created_on: now,
+                updated_on: None,
+            }]
+        );
+        Ok(())
     }
 
     mod tests_foundation_food {

@@ -366,7 +366,7 @@ mod tests {
                 nutrition: Some(Nutrition {
                     id: 1,
                     recipe_id: 1,
-                    is_precalculated: true,
+                    is_precalculated_by_source: true,
                     calories_kcal: Some(1),
                     total_carbohydrates: Some(2),
                     sugars_g: Some(3),

@@ -27,7 +27,7 @@ pub async fn settings_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let settings = match UserSettingDetails::get_settings(&state.mm, user_id).await {
+    let settings = match UserSettingDetails::get(&state.mm, user_id).await {
         Ok(settings) => settings,
         Err(err) => {
             error!("Error fetching user settings for user {user_id}: {err}");

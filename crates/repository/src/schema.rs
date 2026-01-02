@@ -273,7 +273,7 @@ diesel::table! {
     nutrition (id) {
         id -> Int8,
         recipe_id -> Int8,
-        is_precalculated -> Bool,
+        is_precalculated_by_source -> Bool,
         calories_kcal -> Nullable<Int2>,
         total_carbohydrates -> Nullable<Int2>,
         sugars_g -> Nullable<Int2>,

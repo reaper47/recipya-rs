@@ -189,7 +189,7 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            let got = UserSettingDetails::get_settings(&state.mm, 1).await?;
+            let got = UserSettingDetails::get(&state.mm, 1).await?;
             pretty_assertions::assert_eq!(
                 got.nutrition_source,
                 NutritionDataSource::USDAFoodDataCentral
@@ -243,8 +243,8 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            let got1 = UserSettingDetails::get_settings(&state.mm, 1).await?;
-            let got2 = UserSettingDetails::get_settings(&state.mm, other_user.id).await?;
+            let got1 = UserSettingDetails::get(&state.mm, 1).await?;
+            let got2 = UserSettingDetails::get(&state.mm, other_user.id).await?;
             pretty_assertions::assert_eq!(got1.default_theme, Theme::Aqua);
             pretty_assertions::assert_eq!(got2.default_theme, Theme::Aqua);
             Ok(())
@@ -264,7 +264,7 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            let got = UserSettingDetails::get_settings(&state.mm, 1).await?;
+            let got = UserSettingDetails::get(&state.mm, 1).await?;
             pretty_assertions::assert_eq!(got.selected_theme, Theme::Winter);
             Ok(())
         }

@@ -12,6 +12,7 @@ const FIFTY_MB: usize = 50 * 1024 * 1024;
 pub fn recipes_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(recipes_handler))
+        .route("/schema", get(recipe_schema_handler))
         .route(
             "/{recipe_id}",
             get(view_recipe_handler).delete(delete_recipe_handler),

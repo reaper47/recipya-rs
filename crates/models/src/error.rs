@@ -20,6 +20,7 @@ pub enum Error {
     NoSearch,
     Time,
     ThemeNotFound,
+    UnknownSource,
 
     // Modules
     #[from]

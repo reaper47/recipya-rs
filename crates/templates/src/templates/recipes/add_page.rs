@@ -7,23 +7,18 @@ use models::settings::UserSettingDetails;
 use crate::templates::layouts;
 
 /// Renders the add recipe page.
-pub fn add_page(
-    path: &str,
-    data: Data,
-    recipe_schema: String,
-    user_setting: UserSettingDetails,
-) -> Markup {
+pub fn add_page(path: &str, data: Data, user_setting: UserSettingDetails) -> Markup {
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
             span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
-            (render_add_page(recipe_schema))
+            (render_add_page())
         } @else {
             (layouts::main(
                 "Add Recipe",
                 path,
                 &data,
-                render_add_page(recipe_schema),
+                render_add_page(),
                 user_setting,
                 true
             ))
@@ -31,7 +26,7 @@ pub fn add_page(
     }
 }
 
-fn render_add_page(recipe_schema: String) -> Markup {
+fn render_add_page() -> Markup {
     html! {
         div class="grid w-full h-full grid-cols-1 gap-4 p-4 md:grid-cols-2 md:grid-rows-[auto_1fr] xl:m-auto xl:max-w-6xl md:grid-flow-col" {
             div class="card card-border bg-base-200 h-96 shadow-sm rounded-xl" {
@@ -47,7 +42,7 @@ fn render_add_page(recipe_schema: String) -> Markup {
                 (render_import_apps_card())
             }
             (add_ocr_dialog())
-            (import_recipes_dialog(recipe_schema))
+            (import_recipes_dialog())
             (supported_websites_dialog())
             (supported_apps_import_dialog())
             (websites_dialog())
@@ -215,7 +210,7 @@ fn add_ocr_dialog() -> Markup {
     }
 }
 
-fn import_recipes_dialog(recipe_schema: String) -> Markup {
+fn import_recipes_dialog() -> Markup {
     html! {
         dialog #import-recipes-dialog .modal {
             div #import-recipes-dialog-container class="modal-box w-[min(96vw,1100px)] max-h-[92vh] p-4 flex flex-col" {
@@ -344,7 +339,19 @@ fn import_recipes_dialog(recipe_schema: String) -> Markup {
                                             p class="floating-label text-sm font-semibold" {
                                                 "Preview"
                                             }
-                                            button type="button" class="btn btn-xs ml-auto" _="on mousedown toggle .hidden on #preview-output then toggle .hidden on #schema-output then toggle .btn-active" {
+                                            img #spinner class="htmx-indicator mr-1" src="/public/img/bars.svg" alt="Fetching...";
+                                            button type="button" class="btn btn-xs ml-auto"
+                                                hx-get="/recipes/schema"
+                                                hx-target="#json-schema"
+                                                hx-trigger="click once"
+                                                hx-indicator="#spinner"
+                                                hx-on:htmx:after-request="event.stopPropagation(); if(event.detail.successful) {
+                                                    const json = event.detail.xhr.responseText;
+                                                    document.querySelector('#json-schema').value = event.detail.xhr.responseText;
+                                                    document.querySelector('#highlighted-content2').textContent = json;
+                                                    initJSONHighlighter('import-recipes-json');
+                                                }"
+                                                _="on click toggle .hidden on #preview-output then toggle .hidden on #schema-output then toggle .btn-active" {
                                                 "Schema"
                                             }
                                         }
@@ -396,11 +403,11 @@ fn import_recipes_dialog(recipe_schema: String) -> Markup {
                                             div #schema-output class="hidden min-h-screen" {
                                                 div class="rounded relative min-h-screen border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600" {
                                                     div #highlighted-content2 class="highlighted-content text-gray-300 bg-neutral-900 pointer-events-none z-1 overflow-auto" {}
-                                                    textarea #json-schema readonly
+                                                    textarea #json-schema readonly name="json-schema" placeholder="Fetching schema..."
                                                         class="h-full w-full editor-textarea bg-transparent text-transparent caret-[#d4d4d4] z-2 overflow-auto [-webkit-text-fill-color:transparent]"
                                                         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" {
-                                                        (recipe_schema)
-                                                    }
+                                                            "Please wait while schema is being fetched..."
+                                                        }
                                                 }
                                             }
                                         }

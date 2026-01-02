@@ -25,7 +25,7 @@ pub async fn share_recipe_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let settings = UserSettingDetails::get_settings(&state.mm, user_id)
+    let settings = UserSettingDetails::get(&state.mm, user_id)
         .await
         .unwrap_or_else(|_| UserSettingDetails {
             user_id,

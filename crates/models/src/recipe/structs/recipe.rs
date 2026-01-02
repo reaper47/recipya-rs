@@ -221,7 +221,10 @@ impl RecipeForCreate {
 impl From<&RecipeForm> for RecipeForCreate {
     fn from(form: &RecipeForm) -> Self {
         let ingredients = &form.ingredients;
-        let measurement_system_id = system::MeasurementSystem::from(ingredients.clone()).id();
+        let measurement_system_id = system::MeasurementSystem::from(
+            ingredients.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+        )
+        .id();
 
         Self {
             name: form.title.clone(),
@@ -249,7 +252,10 @@ impl From<&RecipeForm> for RecipeForCreate {
 impl From<RecipeForm> for RecipeForCreate {
     fn from(form: RecipeForm) -> Self {
         let ingredients = form.ingredients;
-        let measurement_system_id = system::MeasurementSystem::from(ingredients.clone()).id();
+        let measurement_system_id = system::MeasurementSystem::from(
+            ingredients.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+        )
+        .id();
 
         Self {
             name: form.title,

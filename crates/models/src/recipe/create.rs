@@ -13,6 +13,7 @@ use crate::recipe::structs::recipe::{
     CategoryForInsert, CategoryRecipe, CuisineRecipe, Recipe, RecipeForCreate, RecipeForInsert,
 };
 use crate::recipe::structs::time::TimesForInsert;
+use crate::settings::UserSettingDetails;
 use crate::user::UserCategory;
 use crate::{Error, Result};
 
@@ -60,6 +61,8 @@ impl Recipe {
         let recipe_id = conn
             .transaction::<i64, Error, _>(|mut conn| {
                 Box::pin(async move {
+                    let user_settings = UserSettingDetails::get(&mm, user_id).await?;
+
                     // Images
                     let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
@@ -132,9 +135,14 @@ impl Recipe {
                     insert_keywords(&mut conn, &recipe_c.keywords, user_id, recipe_id).await?;
 
                     // Nutrition
-                    if let Some(nutrition) = &recipe_c.nutrition {
-                        insert_nutrition(conn, nutrition, recipe_id).await?;
-                    }
+                    insert_nutrition(
+                        conn,
+                        recipe_id,
+                        &recipe_c.nutrition,
+                        recipe_c.ingredients.items_as_text().as_slice(),
+                        user_settings.nutrition_source,
+                    )
+                    .await?;
 
                     // Times
                     let times = recipe_c.times.clone().unwrap_or_default();
@@ -300,7 +308,7 @@ mod tests {
             Some(n) => Some(Nutrition {
                 id: recipe_id,
                 recipe_id,
-                is_precalculated: !n.is_empty(),
+                is_precalculated_by_source: !n.is_empty(),
                 calories_kcal: n.calories_kcal,
                 total_carbohydrates: n.total_carbohydrates,
                 sugars_g: n.sugars_g,

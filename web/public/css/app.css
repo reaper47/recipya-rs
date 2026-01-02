@@ -73,7 +73,7 @@ dialog::backdrop,
     border: none;
     outline: none;
     resize: none;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-size: 14px;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -207,7 +207,10 @@ body.dragging #ingredients-list {
     border: none !important;
 }
 
-.EasyMDEContainer:has(.editor-preview.editor-preview-active):not(.sided--by--side) .CodeMirror-scroll {
+.EasyMDEContainer:has(.editor-preview.editor-preview-active):not(
+        .sided--by--side
+    )
+    .CodeMirror-scroll {
     visibility: hidden;
 }
 

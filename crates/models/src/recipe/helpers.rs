@@ -14,6 +14,7 @@ use support::strings::normalise_vulgar_fractions;
 use uuid::Uuid;
 
 use crate::Result;
+use crate::nutrition::NutritionDataSource;
 use crate::recipe::structs::media::{AdditionalImageForInsert, VideoForCreate, VideoForInsert};
 use crate::recipe::structs::nutrition::{NutritionForCreate, NutritionForInsert};
 use crate::recipe::structs::recipe::{
@@ -332,16 +333,18 @@ where
 
 pub(crate) async fn insert_nutrition<C>(
     mut conn: &mut C,
-    nutrition: &NutritionForCreate,
     recipe_id: i64,
+    nutrition: &Option<NutritionForCreate>,
+    ingredients: &[&str],
+    nutrition_source: NutritionDataSource,
 ) -> Result<()>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
-    diesel::insert_into(schema::nutrition::table)
-        .values(&NutritionForInsert {
+    let value = match nutrition {
+        Some(nutrition) if !nutrition.is_empty() => NutritionForInsert {
             recipe_id,
-            is_precalculated: !nutrition.is_empty(),
+            is_precalculated_by_source: true,
             calories_kcal: nutrition.calories_kcal,
             total_carbohydrates: nutrition.total_carbohydrates,
             sugars_g: nutrition.sugars_g,
@@ -354,7 +357,19 @@ where
             fiber_g: nutrition.fiber_g,
             trans_fat_g: nutrition.trans_fat_g,
             serving_size: nutrition.serving_size.clone(),
-        })
+        },
+        Some(_) | None => {
+            let components = nutrition_source.calculate_nutrition(ingredients)?;
+            NutritionForInsert::from(components)
+        }
+    };
+
+    diesel::delete(schema::nutrition::table.filter(schema::nutrition::recipe_id.eq(recipe_id)))
+        .execute(conn)
+        .await?;
+
+    diesel::insert_into(schema::nutrition::table)
+        .values(&value)
         .execute(&mut conn)
         .await?;
 

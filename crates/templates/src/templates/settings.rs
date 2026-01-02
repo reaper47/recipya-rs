@@ -3,7 +3,7 @@ use strum::IntoEnumIterator;
 
 use math::cooking::units::system::MeasurementSystem;
 use models::data::Data;
-use models::nutrition::all_nutrition_sources;
+use models::nutrition::NutritionDataSource;
 use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
@@ -131,6 +131,7 @@ pub fn settings(
                 (settings_about(data))
             }
         }
+        (supported_nutrition_sources_dialog(&user_setting))
     }
 }
 
@@ -201,16 +202,19 @@ fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) ->
             div class="flex justify-between items-center text-sm" {
                 div {
                     p class="font-semibold" {
-                        "Nutrition source"
+                        "Nutrition data source"
                     }
                     p class="text-xs" {
                         "Choose the nutrition database used to calculate nutrition facts."
                     }
+                    button class="btn btn-xs mt-2" onclick="document.querySelector('#supported-nutrition-sources-dialog').showModal()"  {
+                        "View sources"
+                    }
                 }
                 select #settings-recipes-nutrition-source name="nutrition-source" class="w-fit select select-bordered select-sm" hx-post="/settings/nutrition/source" hx-swap="none" {
-                    @for source in all_nutrition_sources() {
-                        option value=(source) selected[source == settings.nutrition_source] {
-                            (source)
+                    optgroup label="United States of America" {
+                        option value=(NutritionDataSource::USDAFoodDataCentral) selected[NutritionDataSource::USDAFoodDataCentral == settings.nutrition_source] {
+                            (NutritionDataSource::USDAFoodDataCentral)
                         }
                     }
                 }
@@ -266,6 +270,59 @@ fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) ->
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
+    html! {
+        dialog #supported-nutrition-sources-dialog class="justify-self-center self-center" {
+            div class="card bg-base-100 shadow-sm" {
+                div class="card-body" {
+                    h3 class="mb-1" {
+                        label class="input input-sm" {
+                            svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
+                                g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor" {
+                                    circle cx="11" cy="11" r="8" {}
+                                    path d="m21 21-4.3-4.3" {}
+                                 }
+                            }
+                            input type="search" placeholder="Search a source"
+                                  _=(PreEscaped("on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"));
+                        }
+                    }
+                    div class="overflow-auto h-96" {
+                        table class="table table-zebra table-sm" {
+                            thead {
+                                tr class="text-center" {
+                                    th class="py-1" { "Number" }
+                                    th class="py-1" { "Name" }
+                                    th class="py-1" { "Description" }
+                                    th class="py-1" { "Country" }
+                                    th class="py-1" { "Last updated" }
+                                    th class="py-1" { "Website" }
+                                }
+                            }
+                            tbody #search-results {
+                                @for (idx, source) in settings.nutrition_sources.iter().enumerate() {
+                                    tr {
+                                        td class="py-1" { (idx + 1) }
+                                        td class="py-1" { (source.name) }
+                                        td class="py-1" { (source.description) }
+                                        td class="py-1" { (source.country) }
+                                        td class="py-1" { (source.updated_on.map(|date| date.format("%Y-%m-%d").to_string()).unwrap_or("Unknown".to_string())) }
+                                        td class="py-1" { a class="link" href=(source.url) target="_blank" { "Visit" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                div class="card-actions justify-end" {
+                    button class="btn btn-sm" onclick="this.closest('dialog').close()" { "Close" }
+                }
+              }
             }
         }
     }
