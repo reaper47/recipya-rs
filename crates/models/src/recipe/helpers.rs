@@ -16,7 +16,10 @@ use uuid::Uuid;
 use crate::Result;
 use crate::nutrition::NutritionDataSource;
 use crate::recipe::structs::media::{AdditionalImageForInsert, VideoForCreate, VideoForInsert};
-use crate::recipe::structs::nutrition::{NutritionForCreate, NutritionForInsert};
+use crate::recipe::structs::nutrition::{
+    NutritionDetailsForCreate, NutritionForInsert, NutritionPer100gForInsert,
+    NutritionPerServingForInsert,
+};
 use crate::recipe::structs::recipe::{
     CategoryForInsert, CuisineForInsert, IngredientForInsert, IngredientRecipeForInsert,
     InstructionForInsert, InstructionRecipeForInsert, KeywordForInsert, KeywordRecipe,
@@ -334,44 +337,97 @@ where
 pub(crate) async fn insert_nutrition<C>(
     mut conn: &mut C,
     recipe_id: i64,
-    nutrition: &Option<NutritionForCreate>,
+    nutrition: &NutritionDetailsForCreate,
     ingredients: &[&str],
     nutrition_source: NutritionDataSource,
 ) -> Result<()>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
-    let value = match nutrition {
-        Some(nutrition) if !nutrition.is_empty() => NutritionForInsert {
-            recipe_id,
+    let nutrition_per_100g = match &nutrition.per_100g {
+        Some(n) if !n.is_empty() => Some(NutritionForInsert {
             is_precalculated_by_source: true,
-            calories_kcal: nutrition.calories_kcal,
-            total_carbohydrates: nutrition.total_carbohydrates,
-            sugars_g: nutrition.sugars_g,
-            protein_g: nutrition.protein_g,
-            total_fat_g: nutrition.total_fat_g,
-            saturated_fat_g: nutrition.saturated_fat_g,
-            unsaturated_fat_g: nutrition.unsaturated_fat_g,
-            cholesterol_mg: nutrition.cholesterol_mg,
-            sodium_mg: nutrition.sodium_mg,
-            fiber_g: nutrition.fiber_g,
-            trans_fat_g: nutrition.trans_fat_g,
-            serving_size: nutrition.serving_size.clone(),
-        },
-        Some(_) | None => {
-            let components = nutrition_source.calculate_nutrition(ingredients)?;
-            NutritionForInsert::from(components)
-        }
+            calories_kcal: n.calories_kcal,
+            total_carbohydrates: n.total_carbohydrates,
+            sugars_g: n.sugars_g,
+            protein_g: n.protein_g,
+            total_fat_g: n.total_fat_g,
+            saturated_fat_g: n.saturated_fat_g,
+            unsaturated_fat_g: n.unsaturated_fat_g,
+            cholesterol_mg: n.cholesterol_mg,
+            sodium_mg: n.sodium_mg,
+            fiber_g: n.fiber_g,
+            trans_fat_g: n.trans_fat_g,
+        }),
+        Some(_) | None => nutrition_source
+            .calculate_nutrition_per_100g(ingredients)
+            .ok()
+            .map(From::from),
     };
 
-    diesel::delete(schema::nutrition::table.filter(schema::nutrition::recipe_id.eq(recipe_id)))
+    let nutrition_per_serving = match &nutrition.per_serving {
+        Some(n) if !n.nutrition.is_empty() => Some(NutritionForInsert {
+            is_precalculated_by_source: true,
+            calories_kcal: n.nutrition.calories_kcal,
+            total_carbohydrates: n.nutrition.total_carbohydrates,
+            sugars_g: n.nutrition.sugars_g,
+            protein_g: n.nutrition.protein_g,
+            total_fat_g: n.nutrition.total_fat_g,
+            saturated_fat_g: n.nutrition.saturated_fat_g,
+            unsaturated_fat_g: n.nutrition.unsaturated_fat_g,
+            cholesterol_mg: n.nutrition.cholesterol_mg,
+            sodium_mg: n.nutrition.sodium_mg,
+            fiber_g: n.nutrition.fiber_g,
+            trans_fat_g: n.nutrition.trans_fat_g,
+        }),
+        Some(_) | None => nutrition_source
+            .calculate_nutrition_per_serving(ingredients)
+            .ok()
+            .map(From::from),
+    };
+
+    diesel::delete(schema::nutrition_per_100g::table)
+        .filter(schema::nutrition_per_100g::recipe_id.eq(recipe_id))
         .execute(conn)
         .await?;
 
-    diesel::insert_into(schema::nutrition::table)
-        .values(&value)
-        .execute(&mut conn)
+    diesel::delete(schema::nutrition_per_serving::table)
+        .filter(schema::nutrition_per_serving::recipe_id.eq(recipe_id))
+        .execute(conn)
         .await?;
+
+    if let Some(n) = nutrition_per_100g {
+        diesel::insert_into(schema::nutrition_per_100g::table)
+            .values(&NutritionPer100gForInsert {
+                recipe_id,
+                nutrition_id: diesel::insert_into(schema::nutrition::table)
+                    .values(&n)
+                    .returning(schema::nutrition::id)
+                    .get_result::<i64>(&mut conn)
+                    .await?,
+            })
+            .execute(conn)
+            .await?;
+    }
+
+    if let Some(n) = nutrition_per_serving {
+        diesel::insert_into(schema::nutrition_per_serving::table)
+            .values(&NutritionPerServingForInsert {
+                recipe_id,
+                nutrition_id: diesel::insert_into(schema::nutrition::table)
+                    .values(&n)
+                    .returning(schema::nutrition::id)
+                    .get_result::<i64>(&mut conn)
+                    .await?,
+                serving_size: nutrition
+                    .per_serving
+                    .as_ref()
+                    .map(|n| n.serving_size.clone())
+                    .unwrap_or_default(),
+            })
+            .execute(conn)
+            .await?;
+    }
 
     Ok(())
 }

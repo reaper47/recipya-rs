@@ -1,4 +1,4 @@
-use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
+use diesel::prelude::*;
 
 use repository::schema;
 

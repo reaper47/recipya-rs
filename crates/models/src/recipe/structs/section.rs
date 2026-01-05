@@ -1,6 +1,6 @@
 use std::{iter::FlatMap, slice::IterMut, vec};
 
-use diesel::{Identifiable, Insertable, Queryable, Selectable};
+use diesel::prelude::*;
 
 use itertools::Either;
 use repository::schema;

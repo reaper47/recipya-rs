@@ -75,10 +75,10 @@ where
 }
 
 fn parse_cheftap_recipe(input: &mut &str) -> Result<ChefTapRecipe> {
-    Ok(parse_recipe
+    parse_recipe
         .map(ChefTapRecipe::from)
         .parse_next(input)
-        .map_err(|err| Error::Parse(err.to_string()))?)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {

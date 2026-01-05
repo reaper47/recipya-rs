@@ -396,12 +396,12 @@ where
 }
 
 fn parse_text_file(input: &mut &str) -> Result<Vec<RecipeSage>> {
-    Ok(preceded(
+    preceded(
         (literal("==== Recipes ===="), line_ending, line_ending),
         repeat(1.., parse_recipe.map(RecipeSage::from)),
     )
     .parse_next(input)
-    .map_err(|err| Error::Parse(err.to_string()))?)
+    .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {

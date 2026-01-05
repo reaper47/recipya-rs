@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Not;
 use std::path::PathBuf;
 
 use axum::extract::multipart::{Field, InvalidBoundary, MultipartRejection};
@@ -9,7 +8,9 @@ use uuid::Uuid;
 
 use crate::recipe::helpers::text_trim;
 use crate::recipe::save_media_field;
-use crate::recipe::structs::nutrition::NutritionForCreate;
+use crate::recipe::structs::nutrition::{
+    NutritionDetailsForCreate, NutritionForCreate, NutritionPerServingDetailsForCreate,
+};
 use crate::recipe::structs::time::TimesForCreate;
 use crate::recipe::structs::tool::ToolForCreate;
 
@@ -23,7 +24,7 @@ pub struct RecipeForm {
     pub instructions: Vec<String>,
     pub keywords: Vec<String>,
     pub notes: Option<String>,
-    pub nutrition: Option<NutritionForCreate>,
+    pub nutrition: NutritionDetailsForCreate,
     pub rating: Option<i16>,
     pub source: Option<String>,
     pub times: Option<TimesForCreate>,
@@ -50,7 +51,8 @@ where
         let mut instructions: Vec<String> = Vec::new();
         let mut keywords: Vec<String> = Vec::new();
         let mut notes: Option<String> = None;
-        let mut nutrition = NutritionForCreate::default();
+        let mut nutrition_per_100g = NutritionForCreate::default();
+        let mut nutrition_per_serving = NutritionPerServingDetailsForCreate::default();
         let mut rating: Option<i16> = None;
         let mut source: Option<String> = None;
         let mut times: TimesForCreate = TimesForCreate {
@@ -133,66 +135,64 @@ where
                 }),
                 "yield" => yield_ = parse_i16(field).await,
 
-                "calories" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.calories_kcal = Some(v);
-                    }
+                "calories-per-100g" => nutrition_per_100g.calories_kcal = parse_i16(field).await,
+                "cholesterol-per-100g" => {
+                    nutrition_per_100g.cholesterol_mg = parse_i16(field).await
                 }
-                "cholesterol" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.cholesterol_mg = Some(v);
-                    }
+                "fiber-per-100g" => nutrition_per_100g.fiber_g = parse_i16(field).await,
+                "protein-per-100g" => nutrition_per_100g.protein_g = parse_i16(field).await,
+                "total-carbohydrates-per-100g" => {
+                    nutrition_per_100g.total_carbohydrates = parse_i16(field).await
                 }
-                "fiber" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.fiber_g = Some(v);
-                    }
+                "total-fat-per-100g" => nutrition_per_100g.total_fat_g = parse_i16(field).await,
+                "saturated-fat-per-100g" => {
+                    nutrition_per_100g.saturated_fat_g = parse_i16(field).await
                 }
-                "protein" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.protein_g = Some(v);
-                    }
+                "sodium-per-100g" => nutrition_per_100g.sodium_mg = parse_i16(field).await,
+                "sugars-per-100g" => nutrition_per_100g.sugars_g = parse_i16(field).await,
+                "trans-fat-per-100g" => nutrition_per_100g.trans_fat_g = parse_i16(field).await,
+                "unsaturated-fat-per-100g" => {
+                    nutrition_per_100g.unsaturated_fat_g = parse_i16(field).await
                 }
-                "total-carbohydrates" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.total_carbohydrates = Some(v);
-                    }
+
+                "calories-per-serving" => {
+                    nutrition_per_serving.nutrition.calories_kcal = parse_i16(field).await
                 }
-                "total-fat" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.total_fat_g = Some(v);
-                    }
+                "cholesterol-per-serving" => {
+                    nutrition_per_serving.nutrition.cholesterol_mg = parse_i16(field).await
                 }
-                "saturated-fat" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.saturated_fat_g = Some(v);
-                    }
+                "fiber-per-serving" => {
+                    nutrition_per_serving.nutrition.fiber_g = parse_i16(field).await
+                }
+                "protein-per-serving" => {
+                    nutrition_per_serving.nutrition.protein_g = parse_i16(field).await
+                }
+                "total-carbohydrates-per-serving" => {
+                    nutrition_per_serving.nutrition.total_carbohydrates = parse_i16(field).await
+                }
+                "total-fat-per-serving" => {
+                    nutrition_per_serving.nutrition.total_fat_g = parse_i16(field).await
+                }
+                "saturated-fat-per-serving" => {
+                    nutrition_per_serving.nutrition.saturated_fat_g = parse_i16(field).await
                 }
                 "serving-size" => field
                     .text()
                     .await
                     .ok()
                     .iter()
-                    .for_each(|s| nutrition.serving_size = s.parse().ok()),
-                "sodium" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.sodium_mg = Some(v);
-                    }
+                    .for_each(|s| nutrition_per_serving.serving_size = s.into()),
+                "sodium-per-serving" => {
+                    nutrition_per_serving.nutrition.sodium_mg = parse_i16(field).await
                 }
-                "sugars" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.sugars_g = Some(v);
-                    }
+                "sugars-per-serving" => {
+                    nutrition_per_serving.nutrition.sugars_g = parse_i16(field).await
                 }
-                "trans-fat" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.trans_fat_g = Some(v);
-                    }
+                "trans-fat-per-serving" => {
+                    nutrition_per_serving.nutrition.trans_fat_g = parse_i16(field).await
                 }
-                "unsaturated-fat" => {
-                    if let Some(v) = parse_i16(field).await {
-                        nutrition.unsaturated_fat_g = Some(v);
-                    }
+                "unsaturated-fat-per-serving" => {
+                    nutrition_per_serving.nutrition.unsaturated_fat_g = parse_i16(field).await
                 }
                 _ => {}
             }
@@ -212,7 +212,7 @@ where
             instructions,
             keywords,
             notes,
-            nutrition: nutrition.is_empty().not().then_some(nutrition),
+            nutrition: NutritionDetailsForCreate::new(nutrition_per_100g, nutrition_per_serving),
             rating,
             source,
             times: (times.prep_seconds > 0 && times.cook_seconds > 0).then_some(times),

@@ -272,7 +272,6 @@ diesel::table! {
 
     nutrition (id) {
         id -> Int8,
-        recipe_id -> Int8,
         is_precalculated_by_source -> Bool,
         calories_kcal -> Nullable<Int2>,
         total_carbohydrates -> Nullable<Int2>,
@@ -285,7 +284,29 @@ diesel::table! {
         sodium_mg -> Nullable<Int2>,
         fiber_g -> Nullable<Int2>,
         trans_fat_g -> Nullable<Int2>,
-        serving_size -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    nutrition_per_100g (id) {
+        id -> Int8,
+        recipe_id -> Int8,
+        nutrition_id -> Int8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    nutrition_per_serving (id) {
+        id -> Int8,
+        recipe_id -> Int8,
+        nutrition_id -> Int8,
+        serving_size -> Text,
     }
 }
 
@@ -588,7 +609,10 @@ diesel::joinable!(instructions_recipes -> recipes (recipe_id));
 diesel::joinable!(instructions_recipes -> sections (section_id));
 diesel::joinable!(keywords_recipes -> keywords (keyword_id));
 diesel::joinable!(keywords_recipes -> recipes (recipe_id));
-diesel::joinable!(nutrition -> recipes (recipe_id));
+diesel::joinable!(nutrition_per_100g -> nutrition (nutrition_id));
+diesel::joinable!(nutrition_per_100g -> recipes (recipe_id));
+diesel::joinable!(nutrition_per_serving -> nutrition (nutrition_id));
+diesel::joinable!(nutrition_per_serving -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> users (user_id));
 diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
@@ -640,6 +664,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     measure_units,
     measurement_systems,
     nutrition,
+    nutrition_per_100g,
+    nutrition_per_serving,
     nutrition_sources,
     recipe_timelines,
     recipes,

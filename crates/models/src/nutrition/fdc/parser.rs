@@ -33,7 +33,7 @@ use crate::{
     },
 };
 
-const FDC_DATASETS_DOWNLOAD_URL: &'static str = "https://fdc.nal.usda.gov/download-datasets";
+const FDC_DATASETS_DOWNLOAD_URL: &str = "https://fdc.nal.usda.gov/download-datasets";
 
 #[async_trait]
 pub trait DataNotFetched<C: FdcFetcher>: Send + Sync {
@@ -64,7 +64,7 @@ impl<'a> FdcClient<'a> {
     pub fn new(mm: &'a ModelManager) -> Self {
         Self {
             client: Client::new(),
-            mm: mm,
+            mm,
         }
     }
 }
@@ -114,13 +114,13 @@ impl<'a> FdcFetcher for FdcClient<'a> {
         };
 
         let is_data_old = NutritionSource::is_current_data_old(
-            &self.mm,
+            self.mm,
             &NutritionDataSource::USDAFoodDataCentral.to_string(),
             foundation_food_release_date,
         )
         .await?;
 
-        if !is_data_old || tables::FoundationFood::count(&self.mm).await?.is_positive() {
+        if !is_data_old || tables::FoundationFood::count(self.mm).await?.is_positive() {
             return Err(Error::NoNeedToUpdateNutrition);
         }
 
@@ -156,6 +156,12 @@ impl FdcParser<DataNotFetchedState> {
             foundation_food_data: Vec::new(),
             _state: PhantomData,
         }
+    }
+}
+
+impl Default for FdcParser<DataNotFetchedState> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -221,11 +227,11 @@ impl DataFetched for FdcParser<DataFetchedState> {
                             foundation_foods
                                 .iter()
                                 .flat_map(|food| {
-                                    food.food_nutrients.iter().filter_map(|nutrient| {
-                                        Some(FdcNutrientForInsert {
+                                    food.food_nutrients.iter().map(|nutrient| {
+                                        FdcNutrientForInsert {
                                             name: &nutrient.nutrient.name,
                                             unit_name: &nutrient.nutrient.unit_name,
-                                        })
+                                        }
                                     })
                                 })
                                 .collect::<Vec<_>>(),
@@ -254,13 +260,12 @@ impl DataFetched for FdcParser<DataFetchedState> {
                     ff.food_nutrients.iter().for_each(|food_nutrient| {
                         let food_nutrient = food_nutrient.clone();
 
-                        let id = fdc_nutrients_map
+                        let id = *fdc_nutrients_map
                             .get(&(
                                 food_nutrient.nutrient.name,
                                 food_nutrient.nutrient.unit_name,
                             ))
-                            .unwrap()
-                            .clone();
+                            .unwrap();
 
                         ids.push((
                             fdc_food_db_id,
@@ -569,8 +574,8 @@ mod tests {
     type Result<T> = core::result::Result<T, Error>;
     type Error = Box<dyn std::error::Error>;
 
-    const FDC_FF_DATASET_1: &'static str = "ff dataset 1";
-    const FDC_FF_DATASET_2: &'static str = "ff dataset 2";
+    const FDC_FF_DATASET_1: &str = "ff dataset 1";
+    const FDC_FF_DATASET_2: &str = "ff dataset 2";
 
     struct FdcClientForTests {
         datasets: HashMap<String, String>,
@@ -602,7 +607,7 @@ mod tests {
                 .datasets
                 .get(&self.selected_dataset)
                 .cloned()
-                .expect(&format!("dataset {}", self.selected_dataset));
+                .unwrap_or_else(|| panic!("dataset {}", self.selected_dataset));
 
             let mut zip_buffer = Cursor::new(Vec::new());
             {

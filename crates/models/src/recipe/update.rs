@@ -11,7 +11,6 @@ use crate::recipe::helpers::{
     insert_keywords, insert_nutrition, insert_sections, insert_tools, insert_videos,
     update_category,
 };
-use crate::recipe::structs::nutrition::NutritionForCreate;
 use crate::recipe::structs::recipe::RecipeForCreate;
 use crate::recipe::structs::time::TimesForInsert;
 use crate::settings::UserSettingDetails;
@@ -54,7 +53,7 @@ impl Recipe {
             recipe.rating = new_recipe.rating;
         }
 
-        let user_settings = UserSettingDetails::get(&mm, user_id).await?;
+        let user_settings = UserSettingDetails::get(mm, user_id).await?;
 
         mm.pool
             .get()
@@ -171,66 +170,16 @@ impl Recipe {
                     // Nutrition
                     let new_ingredients_slice = new_ingredients.as_slice();
 
-                    match old_recipe.nutrition {
-                        Some(old_nutrition) => match new_recipe.nutrition.clone() {
-                            Some(new_nutrition_c) => {
-                                let old_nutrition_c = NutritionForCreate {
-                                    calories_kcal: old_nutrition.calories_kcal,
-                                    total_carbohydrates: old_nutrition.total_carbohydrates,
-                                    sugars_g: old_nutrition.sugars_g,
-                                    protein_g: old_nutrition.protein_g,
-                                    total_fat_g: old_nutrition.total_fat_g,
-                                    saturated_fat_g: old_nutrition.saturated_fat_g,
-                                    unsaturated_fat_g: old_nutrition.unsaturated_fat_g,
-                                    cholesterol_mg: old_nutrition.cholesterol_mg,
-                                    sodium_mg: old_nutrition.sodium_mg,
-                                    fiber_g: old_nutrition.fiber_g,
-                                    trans_fat_g: old_nutrition.trans_fat_g,
-                                    serving_size: old_nutrition.serving_size,
-                                };
-
-                                if new_nutrition_c == old_nutrition_c && is_ingredients_changed {
-                                    insert_nutrition(
-                                        conn,
-                                        recipe_id,
-                                        &None,
-                                        new_ingredients_slice,
-                                        user_settings.nutrition_source,
-                                    )
-                                    .await?;
-                                } else if new_nutrition_c != old_nutrition_c {
-                                    insert_nutrition(
-                                        conn,
-                                        recipe_id,
-                                        &Some(new_nutrition_c),
-                                        new_ingredients_slice,
-                                        user_settings.nutrition_source,
-                                    )
-                                    .await?;
-                                }
-                            }
-                            None => {
-                                insert_nutrition(
-                                    conn,
-                                    recipe_id,
-                                    &None,
-                                    new_ingredients_slice,
-                                    user_settings.nutrition_source,
-                                )
-                                .await?;
-                            }
-                        },
-                        None => {
-                            insert_nutrition(
-                                conn,
-                                recipe_id,
-                                &new_recipe.nutrition,
-                                new_ingredients_slice,
-                                user_settings.nutrition_source,
-                            )
-                            .await?;
-                        }
-                    };
+                    if is_ingredients_changed {
+                        insert_nutrition(
+                            conn,
+                            recipe_id,
+                            &new_recipe.nutrition,
+                            new_ingredients_slice,
+                            user_settings.nutrition_source,
+                        )
+                        .await?;
+                    }
 
                     // Times
                     let times = new_recipe.times.clone().unwrap_or_default();

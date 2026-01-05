@@ -61,7 +61,7 @@ impl Recipe {
         let recipe_id = conn
             .transaction::<i64, Error, _>(|mut conn| {
                 Box::pin(async move {
-                    let user_settings = UserSettingDetails::get(&mm, user_id).await?;
+                    let user_settings = UserSettingDetails::get(mm, user_id).await?;
 
                     // Images
                     let (main_image, additional_images) = recipe_c.first_and_rest_images();
@@ -189,7 +189,7 @@ mod tests {
         RecipeDetails,
         recipe::structs::{
             media::Video,
-            nutrition::Nutrition,
+            nutrition::NutritionDetails,
             section::{Item, SectionComponents, SectionItem},
             test_utils::a_complete_recipe_for_create,
             time::Times,
@@ -303,26 +303,17 @@ mod tests {
 
         let times = recipe.times.unwrap_or_default();
 
-        let nutrition = match recipe.nutrition {
-            None => None,
-            Some(n) => Some(Nutrition {
-                id: recipe_id,
-                recipe_id,
-                is_precalculated_by_source: !n.is_empty(),
-                calories_kcal: n.calories_kcal,
-                total_carbohydrates: n.total_carbohydrates,
-                sugars_g: n.sugars_g,
-                protein_g: n.protein_g,
-                total_fat_g: n.total_fat_g,
-                saturated_fat_g: n.saturated_fat_g,
-                unsaturated_fat_g: n.unsaturated_fat_g,
-                cholesterol_mg: n.cholesterol_mg,
-                sodium_mg: n.sodium_mg,
-                fiber_g: n.fiber_g,
-                trans_fat_g: n.trans_fat_g,
-                serving_size: n.serving_size,
-            }),
-        };
+        let mut nutrition = NutritionDetails::from(&recipe.nutrition);
+        nutrition.per_100g.as_mut().map(|n| {
+            let other_n = got.nutrition.per_100g.as_ref().unwrap();
+            n.id = other_n.id;
+            n.is_precalculated_by_source = other_n.is_precalculated_by_source;
+        });
+        nutrition.per_serving.as_mut().map(|n| {
+            let other_n = got.nutrition.per_serving.as_ref().unwrap();
+            n.nutrition.id = other_n.nutrition.id;
+            n.nutrition.is_precalculated_by_source = other_n.nutrition.is_precalculated_by_source;
+        });
 
         RecipeDetails {
             recipe: Recipe {

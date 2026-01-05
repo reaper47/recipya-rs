@@ -33,7 +33,10 @@ pub fn all_nutrition_sources() -> Vec<NutritionDataSource> {
 
 impl NutritionDataSource {
     /// Calculate the nutritional information for a recipe based on its ingredients.
-    pub fn calculate_nutrition(&self, ingredients: &[&str]) -> Result<NutritionComponents> {
+    pub fn calculate_nutrition_per_100g(
+        &self,
+        ingredients: &[&str],
+    ) -> Result<NutritionComponents> {
         todo!()
         // if self == &NutritionDataSource::Unknown {
         //     return Err(Error::UnknownSource);
@@ -47,11 +50,19 @@ impl NutritionDataSource {
         // Ok(nutrition)
     }
 
+    /// Calculate the nutritional information for a recipe based on its ingredients.
+    pub fn calculate_nutrition_per_serving(
+        &self,
+        ingredients: &[&str],
+    ) -> Result<NutritionComponents> {
+        todo!()
+    }
+
     /// Updates the nutrition data for all sources.
     pub async fn update_all(mm: &ModelManager) {
         info!("Updating nutrition data sources");
         for source in all_nutrition_sources() {
-            let _ = source.update_data(&mm).await;
+            let _ = source.update_data(mm).await;
         }
     }
 
@@ -82,7 +93,7 @@ impl NutritionDataSource {
             NutritionDataSource::USDAFoodDataCentral => {
                 match FdcParser::new().fetch(&FdcClient::new(mm)).await {
                     Ok(f) => {
-                        f.push_into_database(&mm).await?;
+                        f.push_into_database(mm).await?;
                         info!("Updated nutrition data for '{self}'");
                         Ok(())
                     }

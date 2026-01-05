@@ -78,6 +78,21 @@ impl NutritionInformation {
             && self.trans_fat_content.is_empty()
             && self.unsaturated_fat_content.is_empty()
     }
+
+    /// Checks whether the nutrition is per 100g. If the serving size is not provided, it is assumed to be per 100g.
+    pub fn is_per_100g(&self) -> bool {
+        match &self.serving_size.first() {
+            Some(serving_size) => {
+                let normalized = serving_size.to_lowercase();
+
+                normalized.contains("per 100")
+                    || normalized.contains("100 g")
+                    || normalized.contains("100g")
+                    || normalized.contains("100 gram")
+            }
+            None => true,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -94,5 +109,63 @@ mod tests {
             ..Default::default()
         };
         assert!(!non_empty.is_empty());
+    }
+
+    mod tests_is_per_100g {
+        use super::*;
+
+        fn nutrition_with_serving(serving_size: Vec<String>) -> NutritionInformation {
+            NutritionInformation {
+                serving_size,
+                ..Default::default()
+            }
+        }
+
+        #[test]
+        fn test_no_serving_size_is_per_100g() {
+            let nutrition = nutrition_with_serving(vec![]);
+
+            assert!(nutrition.is_per_100g());
+        }
+
+        #[test]
+        fn test_empty_vec_is_per_100g() {
+            let nutrition = nutrition_with_serving(vec![]);
+
+            assert!(nutrition.is_per_100g());
+        }
+
+        #[test]
+        fn test_various_formats_is_per_100g() {
+            for case in [
+                "per 100g",
+                "Per 100G",
+                "PER 100 GRAM",
+                "100 g",
+                "100g",
+                "Nutrition per 100g",
+                "  per 100g  ",
+            ] {
+                let nutrition = nutrition_with_serving(vec![case.to_string()]);
+
+                assert!(nutrition.is_per_100g(), "Failed for: '{case}'");
+            }
+        }
+
+        #[test]
+        fn test_serving_sizes_is_per_serving() {
+            for case in [
+                "1 serving",
+                "1 cup",
+                "2 tablespoons",
+                "150g",
+                "per 100ml",
+                "1 slice",
+            ] {
+                let nutrition = nutrition_with_serving(vec![case.to_string()]);
+
+                assert!(!nutrition.is_per_100g(), "Should fail for: '{case}'");
+            }
+        }
     }
 }

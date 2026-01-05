@@ -32,6 +32,10 @@ DROP TRIGGER IF EXISTS trig_update_tools_fts_ai ON tools_recipes;
 
 DROP TRIGGER IF EXISTS update_nutrition_sources_updated_on ON fdc_foods;
 
+DROP TRIGGER IF EXISTS cleanup_nutrition_per_100g ON nutrition_per_100g;
+
+DROP TRIGGER IF EXISTS cleanup_nutrition_per_serving ON nutrition_per_serving;
+
 DROP FUNCTION IF EXISTS trig_update_search_vectors;
 
 DROP FUNCTION IF EXISTS get_tsv_config (character) CASCADE;
@@ -69,6 +73,8 @@ DROP FUNCTION IF EXISTS trig_recipes_au_func;
 DROP FUNCTION IF EXISTS users_ai_func;
 
 DROP FUNCTION IF EXISTS update_nutrition_sources_updated_on_column;
+
+DROP FUNCTION IF EXISTS delete_orphaned_nutrition;
 
 DROP TABLE IF EXISTS videos_recipes;
 
@@ -112,9 +118,13 @@ DROP TABLE IF EXISTS tools;
 
 DROP TABLE IF EXISTS times;
 
-DROP TABLE IF EXISTS additional_images_recipe;
+DROP TABLE IF EXISTS additional_images_recipe CASCADE;
 
-DROP TABLE IF EXISTS nutrition;
+DROP TABLE IF EXISTS nutrition_per_serving CASCADE;
+
+DROP TABLE IF EXISTS nutrition_per_100g CASCADE;
+
+DROP TABLE IF EXISTS nutrition CASCADE;
 
 DROP TABLE IF EXISTS recipes;
 
@@ -159,4 +169,3 @@ DROP TABLE IF EXISTS fdc_nutrients;
 DROP TABLE IF EXISTS measure_units;
 
 DROP TABLE IF EXISTS nutrition_sources;
-

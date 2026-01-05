@@ -107,13 +107,9 @@ impl RecipeDetails {
             }
         }
 
-        if let Some(nutrition) = &self.nutrition {
+        if let Some(nutrition) = &self.nutrition.per_100g {
             write!(&mut md, "## Nutrition Facts")?;
-            if let Some(serving_size) = &nutrition.serving_size {
-                writeln!(&mut md, " (per {serving_size})")?;
-            } else {
-                writeln!(&mut md)?;
-            }
+            writeln!(&mut md, " (per 100g)")?;
             writeln!(&mut md)?;
 
             writeln!(&mut md, "|                        |          |")?;

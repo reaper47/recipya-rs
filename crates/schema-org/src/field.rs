@@ -1333,7 +1333,7 @@ pub enum FieldEnum52 {
     ///<https://schema.org/Mass>
     Mass(Mass),
     ///<https://schema.org/QuantitativeValue>
-    QuantitativeValue(QuantitativeValue),
+    QuantitativeValue(Box<QuantitativeValue>),
 }
 impl Default for FieldEnum52 {
     fn default() -> Self {

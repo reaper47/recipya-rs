@@ -492,10 +492,9 @@ where
 }
 
 fn parse_mxp_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
-    Ok(repeat(1.., parse_recipe_mxp.map(|r| r))
+    repeat(1.., parse_recipe_mxp.map(|r| r))
         .parse(input)
-        .map(|r| r)
-        .map_err(|err| Error::Parse(err.to_string()))?)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn parse_recipe_mxp<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
@@ -579,9 +578,9 @@ where
 }
 
 fn parse_txt_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
-    Ok(repeat(1.., parse_recipe_txt.map(|r| r))
+    repeat(1.., parse_recipe_txt.map(|r| r))
         .parse_next(input)
-        .map_err(|err| Error::Parse(err.to_string()))?)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn parse_recipe_txt<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {

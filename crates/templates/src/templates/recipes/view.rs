@@ -170,7 +170,7 @@ pub fn view_recipe_helper(
                                 }
                                 div class={
                                         "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:row-span-1 print:border-none"
-                                        @if recipe_details.nutrition.is_none() { " print:hidden" }
+                                        @if recipe_details.nutrition.per_100g.is_none() { " print:hidden" }
                                         @if data.is_preview { " md:grid-cols-3" } @else { " md:grid-cols-4" }
                                     } {
                                     div class="contents grid grid-flow-col md:col-span-6" {
@@ -196,7 +196,7 @@ pub fn view_recipe_helper(
                                 div class={
                                     "grid-flow-col border-gray-700 col-span-6 print:border-none"
                                     @if data.is_preview { " flex flex-col" } @else { " grid" }
-                                    @if recipe_details.nutrition.is_none() { " print:hidden" }
+                                    @if recipe_details.nutrition.per_100g.is_none() { " print:hidden" }
                                 } {
                                     div class={
                                         "col-span-3 md:h-full md:border-r md:row-span-1 print:hidden"
@@ -667,46 +667,41 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
         table class="table table-zebra table-xs print:hidden" {
             thead {
                 tr {
-                    th {
-                        "Nutrition (per"
-                        @if let Some(nutrition) = &recipe_details.nutrition {
-                            @if nutrition.serving_size.as_deref() != Some("100g") {
-                                " serving)"
-                            } @else {
-                                " 100g)"
-                            }
-                        } @else {
-                            " 100g)"
+                    select class="select select-sm" onchange="filterNutritionRows(this.value)" {
+                        option value="per-100g" { "Nutrition (per 100g)" }
+                        @if recipe_details.nutrition.per_serving.is_some() {
+                            option value="per-serving" { "Nutrition (per serving)" }
                         }
                     }
-                    th {
-                        "Amount"
-                    }
+                    th { "Amount" }
                 }
             }
             tbody {
-                @if let Some(nutrition) = &recipe_details.nutrition {
-                    @let rows = [
-                        ("Calories:", nutrition.calories_kcal.map(|v| format!("{v} kcal")).unwrap_or("-".into())),
-                        ("Total carbs:", nutrition.total_carbohydrates.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                        ("Sugars:", nutrition.sugars_g.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                        ("Protein:", nutrition.protein_g.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                        ("Total fat:", nutrition.total_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                        ("Saturated fat:", nutrition.saturated_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                        ("Unsaturated fat:", nutrition.unsaturated_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                        ("Trans fat:", nutrition.trans_fat_g.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                        ("Cholesterol:", nutrition.cholesterol_mg.map(|v| format!("{v} mg")).unwrap_or("-".into())),
-                        ("Sodium:", nutrition.sodium_mg.map(|v| format!("{v} mg")).unwrap_or("-".into())),
-                        ("Fiber:", nutrition.fiber_g.map(|v| format!("{v} g")).unwrap_or("-".into())),
-                    ];
-                    @for (name, value) in rows {
-                        tr {
+                @let format_nutrition = |value: Option<i16>, unit: &str| -> String {
+                    value.map_or("-".into(), |v| format!("{v}{unit}"))
+                };
+
+                @if let Some(nutrition) = &recipe_details.nutrition.per_100g {
+                        @for (name, value) in [
+                            ("Calories:", format_nutrition(nutrition.calories_kcal, " kcal")),
+                            ("Total carbs:", format_nutrition(nutrition.total_carbohydrates, " g")),
+                            ("Sugars:", format_nutrition(nutrition.sugars_g, " g")),
+                            ("Protein:", format_nutrition(nutrition.protein_g, " g")),
+                            ("Total fat:", format_nutrition(nutrition.total_fat_g, " g")),
+                            ("Saturated fat:", format_nutrition(nutrition.saturated_fat_g, " g")),
+                            ("Unsaturated fat:", format_nutrition(nutrition.unsaturated_fat_g, " g")),
+                            ("Trans fat:", format_nutrition(nutrition.trans_fat_g, " g")),
+                            ("Cholesterol:", format_nutrition(nutrition.cholesterol_mg, " mg")),
+                            ("Sodium:", format_nutrition(nutrition.sodium_mg, " mg")),
+                            ("Fiber:", format_nutrition(nutrition.fiber_g, " g")),
+                        ] {
+                        tr data-nutrition-type="per-100g" {
                             td { (name) }
                             td { (value) }
                         }
                     }
                 } @else {
-                    @let rows = [
+                    @for name in [
                         "Calories:",
                         "Total carbs:",
                         "Sugars:",
@@ -718,23 +713,44 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
                         "Cholesterol:",
                         "Sodium:",
                         "Fiber:",
-                    ];
-                    @for name in rows {
-                        tr {
+                    ] {
+                        tr data-nutrition-type="per-100g" {
                             td { (name) }
                             td { "-" }
                         }
                     }
                 }
+
+                @if let Some(nutrition) = &recipe_details.nutrition.per_serving {
+                    @for (name, value) in [
+                        ("Serving size:", nutrition.serving_size.clone()),
+                        ("Calories:", format_nutrition(nutrition.nutrition.calories_kcal, " kcal")),
+                        ("Total carbs:", format_nutrition(nutrition.nutrition.total_carbohydrates, " g")),
+                        ("Sugars:", format_nutrition(nutrition.nutrition.sugars_g, " g")),
+                        ("Protein:", format_nutrition(nutrition.nutrition.protein_g, " g")),
+                        ("Total fat:", format_nutrition(nutrition.nutrition.total_fat_g, " g")),
+                        ("Saturated fat:", format_nutrition(nutrition.nutrition.saturated_fat_g, " g")),
+                        ("Unsaturated fat:", format_nutrition(nutrition.nutrition.unsaturated_fat_g, " g")),
+                        ("Trans fat:", format_nutrition(nutrition.nutrition.trans_fat_g, " g")),
+                        ("Cholesterol:", format_nutrition(nutrition.nutrition.cholesterol_mg, " mg")),
+                        ("Sodium:", format_nutrition(nutrition.nutrition.sodium_mg, " mg")),
+                        ("Fiber:", format_nutrition(nutrition.nutrition.fiber_g, " g")),
+                    ] {
+                        tr data-nutrition-type="per-serving" {
+                            td { (name) }
+                            td { (value) }
+                        }
+                    }
+                }
             }
         }
-        @if let Some(nutrition) = &recipe_details.nutrition {
+        @if let (Some(per_100g), Some(_)) = &recipe_details.nutrition.to_line() {
             div class="hidden pt-2 print:block print:mx-2 print:my-1" {
                 h1 class="text-sm print:mb-1" {
                     b { "Nutrition Facts" }
                 }
                 p class="text-xs" {
-                    (nutrition.to_line())
+                    (per_100g)
                 }
             }
         }

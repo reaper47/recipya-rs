@@ -456,3 +456,19 @@ pub(super) fn render_media_editor(image_num: usize, image_src: &str) -> Markup {
         }
     }
 }
+
+pub(super) fn nutrition_table_header() -> Markup {
+    html! {
+        thead {
+            tr {
+                th {
+                    select class="select select-sm" onchange="filterNutritionRows(this.value)" {
+                        option value="per-100g" { "Nutrition (per 100g)" }
+                        option value="per-serving" { "Nutrition (per serving)" }
+                    }
+                }
+                th { "Amount" }
+            }
+        }
+    }
+}

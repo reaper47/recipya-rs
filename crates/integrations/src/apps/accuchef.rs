@@ -143,10 +143,10 @@ where
 }
 
 fn parse_accuchef_recipe(input: &mut &str) -> Result<Vec<AccuChefRecipe>> {
-    Ok(repeat(0.., recipe.map(|r| Some(AccuChefRecipe::from(r))))
+    repeat(0.., recipe.map(|r| Some(AccuChefRecipe::from(r))))
         .parse_next(input)
         .map(|recipes: Vec<_>| recipes.into_iter().flatten().collect())
-        .map_err(|err| Error::Parse(err.to_string()))?)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {

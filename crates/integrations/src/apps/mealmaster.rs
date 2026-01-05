@@ -527,11 +527,11 @@ fn take_until_earliest_of<'a>(
         let mut earliest_pos = original.len();
         let mut found_pattern = None;
         for &pattern in patterns {
-            if let Some(pos) = original.find(pattern) {
-                if pos < earliest_pos {
-                    earliest_pos = pos;
-                    found_pattern = Some(pattern);
-                }
+            if let Some(pos) = original.find(pattern)
+                && pos < earliest_pos
+            {
+                earliest_pos = pos;
+                found_pattern = Some(pattern);
             }
         }
         if found_pattern.is_some() {
