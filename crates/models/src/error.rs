@@ -41,9 +41,13 @@ pub enum Error {
     #[from]
     Fmt(std::fmt::Error),
     #[from]
+    Io(std::io::Error),
+    #[from]
     Math(math::Error),
     #[from]
     HumanTime(humantime::DurationError),
+    #[from]
+    SimdJson(simd_json::Error),
     #[from]
     Run(diesel_async::pooled_connection::bb8::RunError),
     #[from]

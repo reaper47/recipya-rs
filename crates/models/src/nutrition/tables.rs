@@ -96,7 +96,7 @@ pub struct FdcNutrient {
     unit_name: String,
 }
 
-#[derive(Insertable)]
+#[derive(Eq, Hash, PartialEq, Insertable, PartialOrd, Ord)]
 #[diesel(table_name = schema::fdc_nutrients)]
 pub(crate) struct FdcNutrientForInsert<'a> {
     pub name: &'a str,
@@ -108,25 +108,9 @@ pub(crate) struct FdcNutrientForInsert<'a> {
 pub(crate) struct FdcFoodFdcNutrientForInsert {
     pub food_id: i64,
     pub nutrient_id: i64,
-    pub median: f64,
     pub amount: f64,
-}
-
-/// Represents a measure unit.
-#[derive(Queryable, Identifiable, PartialEq, Selectable)]
-#[diesel(table_name = schema::measure_units)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct MeasureUnit {
-    id: i64,
-    name: String,
-    abbreviation: String,
-}
-
-#[derive(Insertable)]
-#[diesel(table_name = schema::measure_units)]
-pub(crate) struct MeasureUnitForInsert {
-    pub name: String,
-    pub abbreviation: String,
+    pub min: f64,
+    pub max: f64,
 }
 
 /// Represents a food portion.
@@ -136,8 +120,7 @@ pub(crate) struct MeasureUnitForInsert {
 pub struct FdcFoodPortion {
     pub id: i64,
     pub value: f64,
-    pub measure_unit_id: i64,
-    pub modifier: Option<String>,
+    pub modifier: String,
     pub gram_weight: f64,
     pub amount: f64,
 }
@@ -146,8 +129,7 @@ pub struct FdcFoodPortion {
 #[diesel(table_name = schema::fdc_food_portions)]
 pub(crate) struct FdcFoodPortionForInsert {
     pub value: f64,
-    pub measure_unit_id: i64,
-    pub modifier: Option<String>,
+    pub modifier: String,
     pub gram_weight: f64,
     pub amount: f64,
 }

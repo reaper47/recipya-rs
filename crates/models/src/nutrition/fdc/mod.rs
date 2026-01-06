@@ -1,3 +1,3 @@
-mod foundation_food;
+mod srlegacy_food;
 
 pub mod parser;

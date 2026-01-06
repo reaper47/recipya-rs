@@ -122,8 +122,7 @@ diesel::table! {
     fdc_food_portions (id) {
         id -> Int8,
         value -> Float8,
-        measure_unit_id -> Int8,
-        modifier -> Nullable<Text>,
+        modifier -> Text,
         gram_weight -> Float8,
         amount -> Float8,
     }
@@ -162,8 +161,9 @@ diesel::table! {
         id -> Int8,
         food_id -> Int8,
         nutrient_id -> Int8,
-        median -> Nullable<Float8>,
         amount -> Float8,
+        min -> Nullable<Float8>,
+        max -> Nullable<Float8>,
     }
 }
 
@@ -242,17 +242,6 @@ diesel::table! {
     keywords_recipes (keyword_id, recipe_id) {
         keyword_id -> Int8,
         recipe_id -> Int8,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    measure_units (id) {
-        id -> Int8,
-        name -> Text,
-        abbreviation -> Text,
     }
 }
 
@@ -596,7 +585,6 @@ diesel::joinable!(cookbooks_recipes -> recipes (recipe_id));
 diesel::joinable!(counts -> users (user_id));
 diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
 diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
-diesel::joinable!(fdc_food_portions -> measure_units (measure_unit_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_food_portions (portion_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_foods (food_id));
 diesel::joinable!(fdc_foods_fdc_nutrients -> fdc_foods (food_id));
@@ -661,7 +649,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     instructions_recipes,
     keywords,
     keywords_recipes,
-    measure_units,
     measurement_systems,
     nutrition,
     nutrition_per_100g,

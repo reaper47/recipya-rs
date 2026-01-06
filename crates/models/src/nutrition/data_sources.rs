@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use ingredient::IngredientParser;
+use ingredient::{Ingredient, IngredientParser};
 use strum::{EnumIter, EnumString, IntoEnumIterator as _};
 use tracing::{error, info, warn};
 
@@ -42,12 +42,34 @@ impl NutritionDataSource {
         //     return Err(Error::UnknownSource);
         // }
 
-        // let ingredients = ingredients
-        //     .iter()
-        //     .map(|ing| IngredientParser::new(false).from_str(ing))
-        //     .collect::<Vec<_>>();
+        // let ingredients = self.normalize_ingredients(
+        //     ingredients
+        //         .iter()
+        //         .map(|ing| IngredientParser::new(false).from_str(ing))
+        //         .collect(),
+        // );
 
-        // Ok(nutrition)
+        // let scaled_weights = self.scale_ingredient_weights(ingredients);
+
+        // match self {
+        //     NutritionDataSource::USDAFoodDataCentral => Ok(nutrition),
+        //     NutritionDataSource::Unknown => unimplemented!("Case covered above"),
+        // }
+    }
+
+    fn normalize_ingredients(&self, ingredients: Vec<Ingredient>) -> Vec<Ingredient> {
+        match self {
+            NutritionDataSource::USDAFoodDataCentral => ingredients
+                .into_iter()
+                .map(|mut ing| {
+                    if ing.name.contains("sugar") {
+                        ing.name = "sugar".into();
+                    }
+                    ing
+                })
+                .collect::<Vec<_>>(),
+            NutritionDataSource::Unknown => ingredients,
+        }
     }
 
     /// Calculate the nutritional information for a recipe based on its ingredients.
@@ -62,6 +84,7 @@ impl NutritionDataSource {
     pub async fn update_all(mm: &ModelManager) {
         info!("Updating nutrition data sources");
         for source in all_nutrition_sources() {
+            info!("Updating data for {source}");
             let _ = source.update_data(mm).await;
         }
     }
@@ -164,17 +187,28 @@ mod tests {
         pretty_assertions::assert_eq!(NutritionDataSource::from(2), NutritionDataSource::Unknown);
     }
 
-    mod tests_calculate_nutrition {
+    mod tests_calculate_nutrition_per_100g {
         use super::*;
 
         #[tokio::test]
-        async fn test_calculate_fdc_nutrition_simple_ok() -> Result<()> {
-            todo!()
-            // let ingredients = vec![];
+        async fn test_nutrition1_ok() -> Result<()> {
+            let ingredients = vec![
+                "1 cup white sugar",
+                "1/2 cup butter, melted",
+                "2 eggs",
+                "1 teaspoon vanilla extract",
+                "1 cups all-purpose flour",
+                "1 teaspoon baking soda",
+                "1/2 teaspoon salt",
+                "1/2 cup sour cream",
+                "1/2 cup chopped walnuts",
+                "2 medium bananas, sliced",
+            ];
+            let source = NutritionDataSource::USDAFoodDataCentral;
 
-            // let got = NutritionDataSource::USDAFoodDataCentral.calculate_nutrition(ingredients)
+            let got = source.calculate_nutrition_per_100g(ingredients.as_slice());
 
-            // Ok(())
+            Ok(())
         }
     }
 }
