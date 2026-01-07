@@ -10,7 +10,7 @@ use diesel::{
     prelude::*,
     sql_types::{BigInt, Float8, Nullable, Text},
 };
-use diesel_async::{AsyncConnection as _, RunQueryDsl};
+use diesel_async::{AsyncConnection as _, AsyncPgConnection, RunQueryDsl};
 use reqwest::Client;
 use scraper::{Html, Selector};
 use tracing::error;
@@ -229,6 +229,7 @@ impl<'a> DataFetched for FdcParser<'a, DataFetchedState> {
                         food.food_nutrients
                             .iter()
                             .map(|nutrient| FdcNutrientForInsert {
+                                fdc_id: nutrient.nutrient.id,
                                 name: &nutrient.nutrient.name,
                                 unit_name: &nutrient.nutrient.unit_name,
                             })
@@ -372,7 +373,7 @@ impl<'a> DataFetched for FdcParser<'a, DataFetchedState> {
 
 /// Contains all the details of a foundation food.
 #[derive(Debug, PartialEq)]
-pub struct FoundationFoodDetails {
+pub struct SRLegacyFoodDetails {
     pub id: i64,
     pub fdc_id: i64,
     pub food_class: String,
@@ -386,6 +387,7 @@ pub struct FoundationFoodDetails {
 #[derive(Debug, PartialEq, Queryable)]
 pub struct NutrientDetails {
     pub id: i64,
+    pub fdc_id: i64,
     pub name: String,
     pub unit_name: String,
     pub min: Option<f64>,
@@ -429,11 +431,12 @@ pub struct FdcFoodResult {
     pub rank: f64,
 }
 
-impl FoundationFoodDetails {
+impl SRLegacyFoodDetails {
     /// Retrieves the most relevant details of a foundation food from the database.
-    pub async fn get_relevant(mm: &ModelManager, food: &str) -> Result<Vec<FoundationFoodDetails>> {
-        let mut conn = mm.pool.get().await?;
-
+    pub async fn get_relevant(
+        conn: &mut AsyncPgConnection,
+        food: &str,
+    ) -> Result<Vec<SRLegacyFoodDetails>> {
         let food_results = diesel::sql_query(
             r#"
                 WITH q AS (
@@ -467,13 +470,13 @@ impl FoundationFoodDetails {
             "#
         )
         .bind::<Text, _>(food)
-        .load::<FdcFoodResult>(&mut conn)
+        .load::<FdcFoodResult>(conn)
         .await?;
 
         let mut foods = Vec::with_capacity(food_results.len());
 
         for food in food_results {
-            foods.push(FoundationFoodDetails {
+            foods.push(SRLegacyFoodDetails {
                 id: food.id,
                 fdc_id: food.fdc_id,
                 food_class: food.food_class,
@@ -483,6 +486,7 @@ impl FoundationFoodDetails {
                     .filter(schema::fdc_foods_fdc_nutrients::food_id.eq(food.id))
                     .select((
                         schema::fdc_nutrients::id,
+                        schema::fdc_nutrients::fdc_id,
                         schema::fdc_nutrients::name,
                         schema::fdc_nutrients::unit_name,
                         diesel::dsl::sql::<Nullable<diesel::sql_types::Double>>(
@@ -497,7 +501,7 @@ impl FoundationFoodDetails {
                         schema::fdc_nutrients::name.asc(),
                         schema::fdc_nutrients::id.asc(),
                     ))
-                    .load::<NutrientDetails>(&mut conn)
+                    .load::<NutrientDetails>(conn)
                     .await?,
                 food_category: food.food_category,
                 food_portions: schema::fdc_food_portions_fdc_foods::table
@@ -510,7 +514,7 @@ impl FoundationFoodDetails {
                         schema::fdc_food_portions::gram_weight,
                         schema::fdc_food_portions::amount,
                     ))
-                    .load::<PortionDetailsRow>(&mut conn)
+                    .load::<PortionDetailsRow>(conn)
                     .await?
                     .into_iter()
                     .map(|row| PortionDetails {
@@ -530,88 +534,37 @@ impl FoundationFoodDetails {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-    use std::io::Write;
-
     use testing::utils::{TestDb, create_app_state};
-    use zip::{ZipWriter, write::FileOptions};
+
+    use crate::nutrition::testdata::nutrition_data::nutrition_data_for_tests::*;
 
     use super::*;
 
     type Result<T> = core::result::Result<T, Error>;
     type Error = Box<dyn std::error::Error>;
 
-    const FDC_FF_DATASET_1: &str = "ff dataset 1";
-    const FDC_FF_DATASET_2: &str = "ff dataset 2";
-
-    struct FdcClientForTests {
-        datasets: HashMap<String, String>,
-        selected_dataset: String,
-    }
-
-    impl FdcClientForTests {
-        fn new(selected_dataset: impl Into<String>) -> Self {
-            Self {
-                selected_dataset: selected_dataset.into(),
-                datasets: HashMap::from([
-                    (
-                        FDC_FF_DATASET_1.to_string(),
-                        r#"{"SRLegacyFoods":[{"foodClass":"FinalFood","description":"Hummus, commercial","foodNutrients":[{"type":"FoodNutrient","id":1846690,"nutrient":{"id":1186,"number":"431","name":"Folic acid","rank":7000,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000},{"type":"FoodNutrient","id":1846691,"nutrient":{"id":1110,"number":"324","name":"Vitamin D (D2 + D3), International Units","rank":8650,"unitName":"IU"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000},{"type":"FoodNutrient","id":1846692,"nutrient":{"id":1114,"number":"328","name":"Vitamin D (D2 + D3)","rank":8700,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000},{"type":"FoodNutrient","id":1846693,"nutrient":{"id":1178,"number":"418","name":"Vitamin B-12","rank":7300,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000},{"type":"FoodNutrient","id":1846694,"nutrient":{"id":1253,"number":"601","name":"Cholesterol","rank":15700,"unitName":"mg"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000},{"type":"FoodNutrient","id":1846720,"nutrient":{"id":1301,"number":"654","name":"SFA 24:0","rank":11300,"unitName":"g"},"dataPoints":6,"foodNutrientDerivation":{"code":"A","description":"Analytical","foodNutrientSource":{"id":1,"code":"1","description":"Analytical or derived from analytical"}},"max":0.044,"min":0.019,"amount":0.028},{"type":"FoodNutrient","id":1846804,"nutrient":{"id":1109,"number":"323","name":"Vitamin E (alpha-tocopherol)","rank":7905,"unitName":"mg"},"dataPoints":6,"foodNutrientDerivation":{"code":"A","description":"Analytical","foodNutrientSource":{"id":1,"code":"1","description":"Analytical or derived from analytical"}},"max":2.89,"min":1.40,"amount":1.54}],"foodAttributes":[],"nutrientConversionFactors":[{"type":".CalorieConversionFactor","proteinValue":3.47,"fatValue":8.37,"carbohydrateValue":4.07},{"type":".ProteinConversionFactor","value":6.25}],"isHistoricalReference":false,"ndbNumber":16158,"fdcId":174289,"dataType":"SR Legacy","foodCategory":{"description":"Legumes and Legume Products"},"foodPortions":[{"id":94086,"value":1.0,"measureUnit":{"id":9999,"name":"undetermined","abbreviation":"undetermined"},"modifier":"tbsp","gramWeight":15.0,"sequenceNumber":1,"amount":1.0},{"id":94087,"value":1.0,"measureUnit":{"id":9999,"name":"undetermined","abbreviation":"undetermined"},"modifier":"cup","gramWeight":246.0,"sequenceNumber":2,"amount":1.0}],"publicationDate":"4/1/2019","inputFoods":[]}]}"#.to_string(),
-                    ),
-                    (
-                        FDC_FF_DATASET_2.into(),
-                        r#"{"SRLegacyFoods":[{"foodClass":"FinalFood","description":"Egg, yolk, raw, frozen, pasteurized","foodNutrients":[{"type":"FoodNutrient","id":1777480,"nutrient":{"id":1186,"number":"431","name":"Folic acid","rank":7000,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000},{"type":"FoodNutrient","id":1777481,"nutrient":{"id":1108,"number":"322","name":"Carotene, alpha","rank":7450,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"BFFN","description":"Based on another form of the food or similar food; Concentration adjustment; Fat; Retention factors not used","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":36.0},{"type":"FoodNutrient","id":1777482,"nutrient":{"id":1120,"number":"334","name":"Cryptoxanthin, beta","rank":7460,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"BFFN","description":"Based on another form of the food or similar food; Concentration adjustment; Fat; Retention factors not used","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":32.0},{"type":"FoodNutrient","id":1777483,"nutrient":{"id":1122,"number":"337","name":"Lycopene","rank":7530,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"BFFN","description":"Based on another form of the food or similar food; Concentration adjustment; Fat; Retention factors not used","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":0.000},{"type":"FoodNutrient","id":1777484,"nutrient":{"id":1185,"number":"430","name":"Vitamin K (phylloquinone)","rank":8800,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"BFFN","description":"Based on another form of the food or similar food; Concentration adjustment; Fat; Retention factors not used","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":0.700},{"type":"FoodNutrient","id":1777596,"nutrient":{"id":1079,"number":"291","name":"Fiber, total dietary","rank":1200,"unitName":"g"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000}],"foodAttributes":[],"nutrientConversionFactors":[{"type":".ProteinConversionFactor","value":6.25}],"isHistoricalReference":false,"ndbNumber":1126,"fdcId":173421,"dataType":"SR Legacy","foodCategory":{"description":"Dairy and Egg Products"},"foodPortions":[{"id":92493,"value":1.0,"measureUnit":{"id":9999,"name":"undetermined","abbreviation":"undetermined"},"modifier":"oz","gramWeight":28.35,"sequenceNumber":1,"amount":1.0},{"id":92494,"value":0.5,"measureUnit":{"id":9999,"name":"undetermined","abbreviation":"undetermined"},"modifier":"lb","gramWeight":227.0,"sequenceNumber":2,"amount":0.5}],"publicationDate":"4/1/2019","inputFoods":[]},{"foodClass":"FinalFood","description":"Egg, yolk, raw, frozen, sugared, pasteurized","foodNutrients":[{"type":"FoodNutrient","id":1777704,"nutrient":{"id":1105,"number":"319","name":"Retinol","rank":7430,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"BFZN","description":"Based on another form of the food or similar food; Concentration adjustment; No adjustment; Retention factors not used","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":313},{"type":"FoodNutrient","id":1777705,"nutrient":{"id":1106,"number":"320","name":"Vitamin A, RAE","rank":7420,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"NC","description":"Calculated","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":316},{"type":"FoodNutrient","id":1777706,"nutrient":{"id":1162,"number":"401","name":"Vitamin C, total ascorbic acid","rank":6300,"unitName":"mg"},"dataPoints":0,"foodNutrientDerivation":{"code":"Z","description":"Assumed zero (Insignificant amount or not naturally occurring in a food, such as fiber in meat)","foodNutrientSource":{"id":5,"code":"7","description":"Assumed zero"}},"amount":0.000}],"foodAttributes":[],"nutrientConversionFactors":[{"type":".CalorieConversionFactor","proteinValue":4.36,"fatValue":9.02,"carbohydrateValue":3.68},{"type":".ProteinConversionFactor","value":6.25}],"isHistoricalReference":false,"ndbNumber":1127,"fdcId":173422,"dataType":"SR Legacy","foodCategory":{"description":"Dairy and Egg Products"},"foodPortions":[{"id":92495,"value":1.0,"measureUnit":{"id":9999,"name":"undetermined","abbreviation":"undetermined"},"modifier":"oz","gramWeight":28.35,"sequenceNumber":1,"amount":1.0},{"id":92496,"value":0.5,"measureUnit":{"id":9999,"name":"undetermined","abbreviation":"undetermined"},"modifier":"lb","gramWeight":227.0,"sequenceNumber":2,"amount":0.5}],"publicationDate":"4/1/2019","inputFoods":[]},{"foodClass":"FinalFood","description":"Egg, whole, cooked, fried","foodNutrients":[{"type":"FoodNutrient","id":1777824,"nutrient":{"id":1008,"number":"208","name":"Energy","rank":300,"unitName":"kcal"},"dataPoints":0,"foodNutrientDerivation":{"code":"NC","description":"Calculated","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":196},{"type":"FoodNutrient","id":1777825,"nutrient":{"id":1110,"number":"324","name":"Vitamin D (D2 + D3), International Units","rank":8650,"unitName":"IU"},"dataPoints":0,"foodNutrientDerivation":{"code":"RA","description":"Recipe; Approximate ingredient proportions (ex. combination of several recipes)","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":88.0},{"type":"FoodNutrient","id":1777826,"nutrient":{"id":1190,"number":"435","name":"Folate, DFE","rank":7200,"unitName":"µg"},"dataPoints":0,"foodNutrientDerivation":{"code":"NC","description":"Calculated","foodNutrientSource":{"id":2,"code":"4","description":"Calculated or imputed"}},"amount":51.0}],"foodAttributes":[],"nutrientConversionFactors":[{"type":".CalorieConversionFactor","proteinValue":4.36,"fatValue":9.02,"carbohydrateValue":3.68},{"type":".ProteinConversionFactor","value":6.25}],"isHistoricalReference":false,"ndbNumber":1128,"fdcId":173423,"dataType":"SR Legacy","foodCategory":{"description":"Dairy and Egg Products"},"foodPortions":[{"id":92497,"value":1.0,"measureUnit":{"id":9999,"name":"undetermined","abbreviation":"undetermined"},"modifier":"large","gramWeight":46.0,"sequenceNumber":1,"amount":1.0}],"publicationDate":"4/1/2019","inputFoods":[]}]}"#.into(),
-                    ),
-                ]),
-            }
-        }
-    }
-
-    #[async_trait]
-    impl FdcFetcher for FdcClientForTests {
-        async fn fetch_foundation_foods(&self) -> super::Result<ZipArchive<Cursor<Vec<u8>>>> {
-            let dataset = self
-                .datasets
-                .get(&self.selected_dataset)
-                .cloned()
-                .unwrap_or_else(|| panic!("dataset {}", self.selected_dataset));
-
-            let mut zip_buffer = Cursor::new(Vec::new());
-            {
-                let mut zip = ZipWriter::new(&mut zip_buffer);
-                zip.start_file(
-                    "FoodData_Central_foundation_food_csv_2024-10.csv",
-                    FileOptions::<()>::default(),
-                )
-                .unwrap();
-                zip.write_all(dataset.as_bytes()).unwrap();
-            }
-
-            let bytes = zip_buffer.into_inner();
-            Ok(ZipArchive::new(Cursor::new(bytes)).unwrap())
-        }
-    }
-
     #[tokio::test]
     async fn test_parses_correctly_simple_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config).await;
+        let mut conn = state.mm.pool.get().await?;
         let client = FdcClientForTests::new(FDC_FF_DATASET_1);
         let parser: FdcParser<DataFetchedState> = FdcParser::new().fetch(&client).await?;
         parser.push_into_database(&state.mm).await?;
 
-        let foods = FoundationFoodDetails::get_relevant(&state.mm, "hummus").await?;
+        let foods = SRLegacyFoodDetails::get_relevant(&mut conn, "hummus").await?;
 
         pretty_assertions::assert_eq!(
             foods,
-            vec![FoundationFoodDetails {
+            vec![SRLegacyFoodDetails {
                 id: 1,
                 fdc_id: 174289,
                 food_class: "FinalFood".into(),
                 description: "Hummus, commercial".into(),
                 food_nutrients: vec![
                     NutrientDetails {
-                        id: 1,
+                        id: 6,
+                        fdc_id: 1253,
                         name: "Cholesterol".into(),
                         unit_name: "mg".into(),
                         min: None,
@@ -619,7 +572,8 @@ mod tests {
                         amount: 0.0,
                     },
                     NutrientDetails {
-                        id: 2,
+                        id: 5,
+                        fdc_id: 1186,
                         name: "Folic acid".into(),
                         unit_name: "µg".into(),
                         min: None,
@@ -627,7 +581,8 @@ mod tests {
                         amount: 0.0,
                     },
                     NutrientDetails {
-                        id: 3,
+                        id: 7,
+                        fdc_id: 1301,
                         name: "SFA 24:0".into(),
                         unit_name: "g".into(),
                         min: Some(0.019,),
@@ -636,6 +591,7 @@ mod tests {
                     },
                     NutrientDetails {
                         id: 4,
+                        fdc_id: 1178,
                         name: "Vitamin B-12".into(),
                         unit_name: "µg".into(),
                         min: None,
@@ -643,7 +599,8 @@ mod tests {
                         amount: 0.0,
                     },
                     NutrientDetails {
-                        id: 5,
+                        id: 3,
+                        fdc_id: 1114,
                         name: "Vitamin D (D2 + D3)".into(),
                         unit_name: "µg".into(),
                         min: None,
@@ -651,7 +608,8 @@ mod tests {
                         amount: 0.0,
                     },
                     NutrientDetails {
-                        id: 6,
+                        id: 2,
+                        fdc_id: 1110,
                         name: "Vitamin D (D2 + D3), International Units".into(),
                         unit_name: "IU".into(),
                         min: None,
@@ -659,7 +617,8 @@ mod tests {
                         amount: 0.0,
                     },
                     NutrientDetails {
-                        id: 7,
+                        id: 1,
+                        fdc_id: 1109,
                         name: "Vitamin E (alpha-tocopherol)".into(),
                         unit_name: "mg".into(),
                         min: Some(1.4,),
@@ -693,24 +652,26 @@ mod tests {
     async fn test_parses_correctly_complex_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config).await;
+        let mut conn = state.mm.pool.get().await?;
         let client = FdcClientForTests::new(FDC_FF_DATASET_2);
         let parser: FdcParser<DataFetchedState> = FdcParser::new().fetch(&client).await?;
         parser.push_into_database(&state.mm).await?;
 
-        let foods = FoundationFoodDetails::get_relevant(&state.mm, "egg frozen").await?;
+        let foods = SRLegacyFoodDetails::get_relevant(&mut conn, "egg frozen").await?;
 
         pretty_assertions::assert_eq!(foods.len(), 2);
         pretty_assertions::assert_eq!(
             foods,
             vec![
-                FoundationFoodDetails {
+                SRLegacyFoodDetails {
                     id: 1,
                     fdc_id: 173421,
                     food_class: "FinalFood".into(),
                     description: "Egg, yolk, raw, frozen, pasteurized".into(),
                     food_nutrients: vec![
                         NutrientDetails {
-                            id: 1,
+                            id: 5,
+                            fdc_id: 1108,
                             name: "Carotene, alpha".into(),
                             unit_name: "µg".into(),
                             min: None,
@@ -718,7 +679,8 @@ mod tests {
                             amount: 36.0,
                         },
                         NutrientDetails {
-                            id: 2,
+                            id: 7,
+                            fdc_id: 1120,
                             name: "Cryptoxanthin, beta".into(),
                             unit_name: "µg".into(),
                             min: None,
@@ -726,7 +688,8 @@ mod tests {
                             amount: 32.0,
                         },
                         NutrientDetails {
-                            id: 4,
+                            id: 2,
+                            fdc_id: 1079,
                             name: "Fiber, total dietary".into(),
                             unit_name: "g".into(),
                             min: None,
@@ -734,7 +697,8 @@ mod tests {
                             amount: 0.0,
                         },
                         NutrientDetails {
-                            id: 6,
+                            id: 11,
+                            fdc_id: 1186,
                             name: "Folic acid".into(),
                             unit_name: "µg".into(),
                             min: None,
@@ -742,7 +706,8 @@ mod tests {
                             amount: 0.0,
                         },
                         NutrientDetails {
-                            id: 7,
+                            id: 8,
+                            fdc_id: 1122,
                             name: "Lycopene".into(),
                             unit_name: "µg".into(),
                             min: None,
@@ -750,7 +715,8 @@ mod tests {
                             amount: 0.0,
                         },
                         NutrientDetails {
-                            id: 12,
+                            id: 10,
+                            fdc_id: 1185,
                             name: "Vitamin K (phylloquinone)".into(),
                             unit_name: "µg".into(),
                             min: None,
@@ -776,14 +742,15 @@ mod tests {
                         },
                     ],
                 },
-                FoundationFoodDetails {
+                SRLegacyFoodDetails {
                     id: 2,
                     fdc_id: 173422,
                     food_class: "FinalFood".into(),
                     description: "Egg, yolk, raw, frozen, sugared, pasteurized".into(),
                     food_nutrients: vec![
                         NutrientDetails {
-                            id: 8,
+                            id: 3,
+                            fdc_id: 1105,
                             name: "Retinol".into(),
                             unit_name: "µg".into(),
                             min: None,
@@ -791,7 +758,8 @@ mod tests {
                             amount: 313.0,
                         },
                         NutrientDetails {
-                            id: 9,
+                            id: 4,
+                            fdc_id: 1106,
                             name: "Vitamin A, RAE".into(),
                             unit_name: "µg".into(),
                             min: None,
@@ -799,7 +767,8 @@ mod tests {
                             amount: 316.0,
                         },
                         NutrientDetails {
-                            id: 10,
+                            id: 9,
+                            fdc_id: 1162,
                             name: "Vitamin C, total ascorbic acid".into(),
                             unit_name: "mg".into(),
                             min: None,

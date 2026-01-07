@@ -1255,7 +1255,7 @@ Nutr. Assoc. : 0 0 0
                 },
                 Recipe {
                     r#type: AtType::Recipe.to_opt(),
-                    author: vec![RecipeAuthorFieldEnum::new_person("Macpoule".into())],
+                    author: vec![RecipeAuthorFieldEnum::new_person("Macpoule")],
                     description: vec![RecipeDescriptionFieldEnum::Text(
                         "Ramen has never been soooo delicious".into(),
                     )],

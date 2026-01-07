@@ -275,17 +275,17 @@ mod tests {
                     recipe_category: vec!["Fruit".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::new_section("Dressing:", vec![
-                            "3 Egg Yolks".into(),
-                            "2 Tbls Sugar".into(),
-                            "1 Tbls Butter".into(),
-                            "1 Tbls Lemon Juice".into(),
-                            "1 Cup Cool Whip".into(),
+                            "3 Egg Yolks",
+                            "2 Tbls Sugar",
+                            "1 Tbls Butter",
+                            "1 Tbls Lemon Juice",
+                            "1 Cup Cool Whip",
                         ]),
                         RecipeRecipeIngredientFieldEnum::new_section("Fruit:", vec![
-                            "1 Can Pineapple Chunks (20 Oz)".into(),
-                            "2 Cans Mandarin Oranges".into(),
-                            "1 Can Royal Ann Cherries".into(),
-                            "1 Package Small Colored Marshmellows".into(),
+                            "1 Can Pineapple Chunks (20 Oz)",
+                            "2 Cans Mandarin Oranges",
+                            "1 Can Royal Ann Cherries",
+                            "1 Package Small Colored Marshmellows",
                         ]),
                     ],
                     recipe_instructions: vec![

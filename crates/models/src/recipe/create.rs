@@ -141,6 +141,7 @@ impl Recipe {
                         &recipe_c.nutrition,
                         recipe_c.ingredients.items_as_text().as_slice(),
                         user_settings.nutrition_source,
+                        recipe_c.r#yield.unwrap_or(1),
                     )
                     .await?;
 
@@ -304,16 +305,16 @@ mod tests {
         let times = recipe.times.unwrap_or_default();
 
         let mut nutrition = NutritionDetails::from(&recipe.nutrition);
-        nutrition.per_100g.as_mut().map(|n| {
+        if let Some(n) = nutrition.per_100g.as_mut() {
             let other_n = got.nutrition.per_100g.as_ref().unwrap();
             n.id = other_n.id;
             n.is_precalculated_by_source = other_n.is_precalculated_by_source;
-        });
-        nutrition.per_serving.as_mut().map(|n| {
+        }
+        if let Some(n) = nutrition.per_serving.as_mut() {
             let other_n = got.nutrition.per_serving.as_ref().unwrap();
             n.nutrition.id = other_n.nutrition.id;
             n.nutrition.is_precalculated_by_source = other_n.nutrition.is_precalculated_by_source;
-        });
+        }
 
         RecipeDetails {
             recipe: Recipe {

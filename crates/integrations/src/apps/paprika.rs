@@ -194,7 +194,7 @@ mod tests {
             vec![schema_org::Recipe {
                 cook_time: seconds_to_duration(3900),
                 date_created: vec!["2025-04-15".into()],
-                is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]".into()),
+                is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]"),
                 url: vec!["https://www.allrecipes.com/recipe/259353/black-eyed-pea-cornbread/".into()],
                 name: vec!["Black-Eyed Pea Cornbread".into()],
                 prep_time: seconds_to_duration(900),
@@ -230,7 +230,7 @@ mod tests {
                 cook_time: seconds_to_duration(2700),
                 date_created: vec!["2025-04-15".into()],
                 description: vec![RecipeDescriptionFieldEnum::Text("A great recipe!".into())],
-                is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]".into()),
+                is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]"),
                 keywords: vec![
                     RecipeKeywordsFieldEnum::TextOrURL("Dinner".into()),
                     RecipeKeywordsFieldEnum::TextOrURL("Japanese".into()),

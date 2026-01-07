@@ -120,7 +120,7 @@ impl From<MealMasterRecipe> for Recipe {
                     vec![RecipeAuthorFieldEnum::new_person(&s)]
                 }
             },
-            is_based_on: to_is_based_on(r.source.trim()),
+            is_based_on: to_is_based_on(&r.source),
             keywords: r
                 .keywords
                 .into_iter()
@@ -1553,7 +1553,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_unspecified_version() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) Database".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) Database"),
                 name: vec!["West Haven Chocolate Cake".into()],
                 recipe_category: vec!["Chocolate Cakes Fruits Desserts".into()],
                 recipe_ingredient: vec![
@@ -1581,7 +1581,7 @@ Typed for you by Karen Mintzias
         pub fn recipes_unspecified_version() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    is_based_on: to_is_based_on("Meal-Master"),
                     name: vec!["Apfelkuchen".into()],
                     recipe_category: vec!["dessert".into()],
                     recipe_ingredient: vec![
@@ -1616,7 +1616,7 @@ Typed for you by Karen Mintzias
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    is_based_on: to_is_based_on("Meal-Master"),
                     name: vec!["Apple & Mango Curried Chicken Salad".into()],
                     recipe_category: vec!["salad".into()],
                     recipe_ingredient: vec![
@@ -1646,7 +1646,7 @@ Typed for you by Karen Mintzias
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    is_based_on: to_is_based_on("Meal-Master"),
                     name: vec!["Apple And Sausage Stuffing".into()],
                     recipe_category: vec!["casserole".into()],
                     recipe_ingredient: vec![
@@ -1672,7 +1672,7 @@ Typed for you by Karen Mintzias
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    is_based_on: to_is_based_on("Meal-Master"),
                     keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Dip".into())],
                     name: vec!["Artichoke And Basil Dip".into()],
                     recipe_category: vec!["appetizers".into()],
@@ -1708,7 +1708,7 @@ Typed for you by Karen Mintzias
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    is_based_on: to_is_based_on("Meal-Master"),
                     name: vec!["Apple Crisp".into()],
                     recipe_category: vec!["dessert".into()],
                     recipe_ingredient: vec![
@@ -1748,7 +1748,7 @@ Typed for you by Karen Mintzias
                 },
                 Recipe {
                     author: vec![RecipeAuthorFieldEnum::new_person("Leah Koenig")],
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    is_based_on: to_is_based_on("Meal-Master"),
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Chicken".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("holiday".into()),
@@ -1784,8 +1784,8 @@ Typed for you by Karen Mintzias
                     ..Default::default()
                 },
                 Recipe {
-                    author: vec![RecipeAuthorFieldEnum::new_person("Nina MacDowall".into())],
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Nina MacDowall")],
+                    is_based_on: to_is_based_on("Meal-Master"),
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("culinaria".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Jewish".into()),
@@ -1842,8 +1842,8 @@ Typed for you by Karen Mintzias
                     ..Default::default()
                 },
                 Recipe {
-                    author: vec![RecipeAuthorFieldEnum::new_person("Nina MacDowall".into())],
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    author: vec![RecipeAuthorFieldEnum::new_person("Nina MacDowall")],
+                    is_based_on: to_is_based_on("Meal-Master"),
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("nina original".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("pastry".into()),
@@ -1870,7 +1870,7 @@ Typed for you by Karen Mintzias
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Meal-Master".into()),
+                    is_based_on: to_is_based_on("Meal-Master"),
                     name: vec!["3-minute Italian Dressing".into()],
                     recipe_category: vec!["dressing".into()],
                     recipe_ingredient: vec![
@@ -1898,7 +1898,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v6_14() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v6.14".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v6.14"),
                 name: vec!["Poppin' Fresh Barbe Cups".into()],
                 recipe_category: vec!["Breads Cheese Main dish Meats Sandwiches".into()],
                 recipe_ingredient: vec![
@@ -1929,7 +1929,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v6_20() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master v6.2 Importable Format".into()),
+                is_based_on: to_is_based_on("Meal-Master v6.2 Importable Format"),
                 name: vec!["Magic Pan Orange Almond Salad".into()],
                 recipe_category: vec!["Salads".into()],
                 recipe_ingredient: vec![
@@ -1958,7 +1958,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v7_01() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v7.01".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v7.01"),
                 name: vec!["Old Style Enchiladas".into()],
                 recipe_category: vec!["Chili".into()],
                 recipe_ingredient: vec![
@@ -1982,7 +1982,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v7_04() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v7.04".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v7.04"),
                 keywords: ["French can", "Benoit"]
                     .into_iter()
                     .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into()))
@@ -2013,7 +2013,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v7_07() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v7.07".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v7.07"),
                 name: vec!["Zucchini Date Cake".into()],
                 recipe_category: vec!["Cakes".into()],
                 recipe_ingredient: vec![
@@ -2061,7 +2061,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v8_00() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v8.00".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.00"),
                 keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Main dish".into())],
                 name: vec!["Chicken Avocado Melt".into()],
                 recipe_category: vec!["Poultry".into()],
@@ -2093,7 +2093,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v8_01() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v8.01".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.01"),
                 keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Desserts".into())],
                 name: vec!["Cannoli".into()],
                 recipe_category: vec!["Italian".into()],
@@ -2143,7 +2143,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v8_02() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v8.02".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.02"),
                 name: vec!["Ziti with Asparagus Peas & Lemon Cream".into()],
                 recipe_category: vec!["Vegetables".into()],
                 recipe_ingredient: vec![
@@ -2195,7 +2195,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v8_05() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v8.05".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.05"),
                 keywords: ["Stew", "Beef"]
                     .into_iter()
                     .map(|s|RecipeKeywordsFieldEnum::TextOrURL(s.into()))
@@ -2225,7 +2225,7 @@ Typed for you by Karen Mintzias
 
         pub fn recipe_v8_06() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Meal-Master (tm) v8.06".into()),
+                is_based_on: to_is_based_on("Meal-Master (tm) v8.06"),
                 keywords: ["Casseroles", "Ethnic", "Vegetables"].into_iter().map(|s|RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                 name: vec!["Yellow Rice & Shrimp Casserole".into()],
                 recipe_category: vec!["Seafood".into()],
@@ -2325,7 +2325,7 @@ SOURCE: Gourmet, December 1992
         pub fn now_youre_cooking_v4_72() -> Recipe {
             Recipe {
                 is_based_on: to_is_based_on(
-                    "Now You're Cooking! v4.72 [Meal-Master Export Format]".into(),
+                    "Now You're Cooking! v4.72 [Meal-Master Export Format]",
                 ),
                 keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("italian".into())],
                 name: vec!["Biscotti Di Greve ( Orange Almond Biscotti)".into()],
@@ -2361,7 +2361,7 @@ SOURCE: Gourmet, December 1992
 
         pub fn recipe_cookmate() -> Recipe {
             Recipe {
-                is_based_on: to_is_based_on("Cookmate [Meal-Master Export Format]".into()),
+                is_based_on: to_is_based_on("Cookmate [Meal-Master Export Format]"),
                 keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Desserts".into())],
                 name: vec!["Baklava with Cooky Filling".into()],
                 recipe_category: vec!["Greek".into()],

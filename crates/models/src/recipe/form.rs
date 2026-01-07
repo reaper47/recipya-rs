@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use std::iter::Sum;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use axum::extract::multipart::{Field, InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
@@ -229,8 +231,11 @@ async fn push_non_empty(field: Field<'_>, vec: &mut Vec<String>) {
     }
 }
 
-async fn parse_i16(field: Field<'_>) -> Option<i16> {
-    text_trim(field).await.and_then(|s| s.parse::<i16>().ok())
+async fn parse_i16<T>(field: Field<'_>) -> Option<T>
+where
+    T: FromStr + Default + Sum,
+{
+    text_trim(field).await.and_then(|s| s.parse::<T>().ok())
 }
 
 async fn calc_time_from_field(field: Field<'_>) -> i32 {

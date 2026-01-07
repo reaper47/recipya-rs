@@ -173,6 +173,7 @@ diesel::table! {
 
     fdc_nutrients (id) {
         id -> Int8,
+        fdc_id -> Int8,
         name -> Text,
         unit_name -> Text,
     }
@@ -263,16 +264,16 @@ diesel::table! {
         id -> Int8,
         is_precalculated_by_source -> Bool,
         calories_kcal -> Nullable<Int2>,
-        total_carbohydrates -> Nullable<Int2>,
-        sugars_g -> Nullable<Int2>,
-        protein_g -> Nullable<Int2>,
-        total_fat_g -> Nullable<Int2>,
-        saturated_fat_g -> Nullable<Int2>,
-        unsaturated_fat_g -> Nullable<Int2>,
-        cholesterol_mg -> Nullable<Int2>,
-        sodium_mg -> Nullable<Int2>,
-        fiber_g -> Nullable<Int2>,
-        trans_fat_g -> Nullable<Int2>,
+        total_carbohydrates -> Nullable<Float8>,
+        sugars_g -> Nullable<Float8>,
+        protein_g -> Nullable<Float8>,
+        total_fat_g -> Nullable<Float8>,
+        saturated_fat_g -> Nullable<Float8>,
+        unsaturated_fat_g -> Nullable<Float8>,
+        cholesterol_mg -> Nullable<Float8>,
+        sodium_mg -> Nullable<Float8>,
+        fiber_g -> Nullable<Float8>,
+        trans_fat_g -> Nullable<Float8>,
     }
 }
 

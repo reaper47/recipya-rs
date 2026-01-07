@@ -85,8 +85,7 @@ impl NutritionInformation {
             Some(serving_size) => {
                 let normalized = serving_size.to_lowercase();
 
-                normalized.contains("per 100")
-                    || normalized.contains("100 g")
+                normalized.contains("100 g")
                     || normalized.contains("100g")
                     || normalized.contains("100 gram")
             }

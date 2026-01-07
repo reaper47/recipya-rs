@@ -443,9 +443,7 @@ mod tests {
 
         for volume in volumes {
             match volume.unit_type() {
-                UnitType::Volume(_) => {
-                    assert!(true);
-                }
+                UnitType::Volume(_) => {}
                 _ => {
                     panic!("Volume should always return UnitType::Volume");
                 }

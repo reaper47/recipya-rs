@@ -510,7 +510,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Petra Holzapfel")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
-                        "Kalorio! V4.04".into(),
+                        "Kalorio! V4.04",
                     )],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Käse".into()),
@@ -552,7 +552,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
-                        "Kalorio! V4.04".into(),
+                        "Kalorio! V4.04",
                     )],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Raclette".into()),
@@ -591,7 +591,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
-                        "Kalorio! V4.04".into(),
+                        "Kalorio! V4.04",
                     )],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Zwiebeln".into()),

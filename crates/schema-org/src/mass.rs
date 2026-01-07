@@ -1,3 +1,5 @@
+use std::{iter::Sum, str::FromStr};
+
 use serde::{Deserialize, Serialize};
 
 ///<https://schema.org/Mass>
@@ -12,11 +14,14 @@ impl Mass {
     }
 
     /// Converts the mass to a number.
-    pub fn to_number(&self) -> i16 {
+    pub fn to_number<T>(&self) -> T
+    where
+        T: FromStr + Default + Sum,
+    {
         Some(self.as_ref())
             .map(|s| {
                 s.split(' ')
-                    .map(|s| s.parse::<i16>().unwrap_or_default())
+                    .map(|s| s.parse::<T>().unwrap_or_default())
                     .sum()
             })
             .unwrap_or_default()
@@ -37,6 +42,6 @@ mod tests {
     fn test_to_number() {
         let mass = Mass::new("100 grams");
 
-        assert_eq!(mass.to_number(), 100);
+        assert_eq!(mass.to_number::<i16>(), 100);
     }
 }

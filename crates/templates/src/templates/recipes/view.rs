@@ -677,23 +677,27 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
                 }
             }
             tbody {
-                @let format_nutrition = |value: Option<i16>, unit: &str| -> String {
-                    value.map_or("-".into(), |v| format!("{v}{unit}"))
+                @let format_nutrition = |value: Option<f64>, unit: &str| -> String {
+                    value.map_or("-".into(), |v| if v < 1.0 {
+                        format!("{:.2}{unit}", v)
+                    } else {
+                        format!("{:.0}{unit}", v)
+                    })
                 };
 
                 @if let Some(nutrition) = &recipe_details.nutrition.per_100g {
                         @for (name, value) in [
-                            ("Calories:", format_nutrition(nutrition.calories_kcal, " kcal")),
-                            ("Total carbs:", format_nutrition(nutrition.total_carbohydrates, " g")),
-                            ("Sugars:", format_nutrition(nutrition.sugars_g, " g")),
-                            ("Protein:", format_nutrition(nutrition.protein_g, " g")),
-                            ("Total fat:", format_nutrition(nutrition.total_fat_g, " g")),
-                            ("Saturated fat:", format_nutrition(nutrition.saturated_fat_g, " g")),
-                            ("Unsaturated fat:", format_nutrition(nutrition.unsaturated_fat_g, " g")),
-                            ("Trans fat:", format_nutrition(nutrition.trans_fat_g, " g")),
-                            ("Cholesterol:", format_nutrition(nutrition.cholesterol_mg, " mg")),
-                            ("Sodium:", format_nutrition(nutrition.sodium_mg, " mg")),
-                            ("Fiber:", format_nutrition(nutrition.fiber_g, " g")),
+                            ("Calories:", format_nutrition(nutrition.calories_kcal.map(|n| n.into()), " kcal")),
+                            ("Total carbs:", format_nutrition(nutrition.total_carbohydrates, "g")),
+                            ("Sugars:", format_nutrition(nutrition.sugars_g, "g")),
+                            ("Protein:", format_nutrition(nutrition.protein_g, "g")),
+                            ("Total fat:", format_nutrition(nutrition.total_fat_g, "g")),
+                            ("Saturated fat:", format_nutrition(nutrition.saturated_fat_g, "g")),
+                            ("Unsaturated fat:", format_nutrition(nutrition.unsaturated_fat_g, "g")),
+                            ("Trans fat:", format_nutrition(nutrition.trans_fat_g, "g")),
+                            ("Cholesterol:", format_nutrition(nutrition.cholesterol_mg, "mg")),
+                            ("Sodium:", format_nutrition(nutrition.sodium_mg, "mg")),
+                            ("Fiber:", format_nutrition(nutrition.fiber_g, "g")),
                         ] {
                         tr data-nutrition-type="per-100g" {
                             td { (name) }
@@ -723,20 +727,20 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
 
                 @if let Some(nutrition) = &recipe_details.nutrition.per_serving {
                     @for (name, value) in [
-                        ("Serving size:", nutrition.serving_size.clone()),
-                        ("Calories:", format_nutrition(nutrition.nutrition.calories_kcal, " kcal")),
-                        ("Total carbs:", format_nutrition(nutrition.nutrition.total_carbohydrates, " g")),
-                        ("Sugars:", format_nutrition(nutrition.nutrition.sugars_g, " g")),
-                        ("Protein:", format_nutrition(nutrition.nutrition.protein_g, " g")),
-                        ("Total fat:", format_nutrition(nutrition.nutrition.total_fat_g, " g")),
-                        ("Saturated fat:", format_nutrition(nutrition.nutrition.saturated_fat_g, " g")),
-                        ("Unsaturated fat:", format_nutrition(nutrition.nutrition.unsaturated_fat_g, " g")),
-                        ("Trans fat:", format_nutrition(nutrition.nutrition.trans_fat_g, " g")),
-                        ("Cholesterol:", format_nutrition(nutrition.nutrition.cholesterol_mg, " mg")),
-                        ("Sodium:", format_nutrition(nutrition.nutrition.sodium_mg, " mg")),
-                        ("Fiber:", format_nutrition(nutrition.nutrition.fiber_g, " g")),
+                        ("Serving size:", nutrition.serving_size.is_empty().then_some("1").unwrap_or_default().to_string()),
+                        ("Calories:", format_nutrition(nutrition.nutrition.calories_kcal.map(|n| n.into()), " kcal")),
+                        ("Total carbs:", format_nutrition(nutrition.nutrition.total_carbohydrates, "g")),
+                        ("Sugars:", format_nutrition(nutrition.nutrition.sugars_g, "g")),
+                        ("Protein:", format_nutrition(nutrition.nutrition.protein_g, "g")),
+                        ("Total fat:", format_nutrition(nutrition.nutrition.total_fat_g, "g")),
+                        ("Saturated fat:", format_nutrition(nutrition.nutrition.saturated_fat_g, "g")),
+                        ("Unsaturated fat:", format_nutrition(nutrition.nutrition.unsaturated_fat_g, "g")),
+                        ("Trans fat:", format_nutrition(nutrition.nutrition.trans_fat_g, "g")),
+                        ("Cholesterol:", format_nutrition(nutrition.nutrition.cholesterol_mg, "mg")),
+                        ("Sodium:", format_nutrition(nutrition.nutrition.sodium_mg, "mg")),
+                        ("Fiber:", format_nutrition(nutrition.nutrition.fiber_g, "g")),
                     ] {
-                        tr data-nutrition-type="per-serving" {
+                        tr data-nutrition-type="per-serving" .hidden {
                             td { (name) }
                             td { (value) }
                         }

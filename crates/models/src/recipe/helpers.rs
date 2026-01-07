@@ -6,7 +6,7 @@ use axum::extract::multipart::{Field, InvalidBoundary};
 use diesel::data_types::PgInterval;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
-use diesel_async::{AsyncConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 use repository::schema;
 use support::regexp::time::TimeParser;
@@ -334,17 +334,27 @@ where
     Ok(())
 }
 
-pub(crate) async fn insert_nutrition<C>(
-    mut conn: &mut C,
+pub(crate) async fn insert_nutrition(
+    conn: &mut AsyncPgConnection,
     recipe_id: i64,
     nutrition: &NutritionDetailsForCreate,
     ingredients: &[&str],
     nutrition_source: NutritionDataSource,
-) -> Result<()>
-where
-    C: AsyncConnection<Backend = diesel::pg::Pg>,
-{
-    let nutrition_per_100g = match &nutrition.per_100g {
+    num_servings: i16,
+) -> Result<()> {
+    let per_100g = &nutrition.per_100g;
+    let per_serving = &nutrition.per_serving;
+
+    let calculated_nutrition = if per_100g.is_some() || per_serving.is_some() {
+        None
+    } else {
+        nutrition_source
+            .calculate_nutrition(conn, ingredients, num_servings)
+            .await
+            .ok()
+    };
+
+    let nutrition_per_100g = match per_100g {
         Some(n) if !n.is_empty() => Some(NutritionForInsert {
             is_precalculated_by_source: true,
             calories_kcal: n.calories_kcal,
@@ -359,13 +369,12 @@ where
             fiber_g: n.fiber_g,
             trans_fat_g: n.trans_fat_g,
         }),
-        Some(_) | None => nutrition_source
-            .calculate_nutrition_per_100g(ingredients)
-            .ok()
-            .map(From::from),
+        Some(_) | None => calculated_nutrition
+            .as_ref()
+            .map(|n| NutritionForInsert::from(&n.per_100g)),
     };
 
-    let nutrition_per_serving = match &nutrition.per_serving {
+    let nutrition_per_serving = match per_serving {
         Some(n) if !n.nutrition.is_empty() => Some(NutritionForInsert {
             is_precalculated_by_source: true,
             calories_kcal: n.nutrition.calories_kcal,
@@ -380,10 +389,9 @@ where
             fiber_g: n.nutrition.fiber_g,
             trans_fat_g: n.nutrition.trans_fat_g,
         }),
-        Some(_) | None => nutrition_source
-            .calculate_nutrition_per_serving(ingredients)
-            .ok()
-            .map(From::from),
+        Some(_) | None => calculated_nutrition
+            .as_ref()
+            .map(|n| NutritionForInsert::from(&n.per_serving)),
     };
 
     diesel::delete(schema::nutrition_per_100g::table)
@@ -403,7 +411,7 @@ where
                 nutrition_id: diesel::insert_into(schema::nutrition::table)
                     .values(&n)
                     .returning(schema::nutrition::id)
-                    .get_result::<i64>(&mut conn)
+                    .get_result::<i64>(conn)
                     .await?,
             })
             .execute(conn)
@@ -417,7 +425,7 @@ where
                 nutrition_id: diesel::insert_into(schema::nutrition::table)
                     .values(&n)
                     .returning(schema::nutrition::id)
-                    .get_result::<i64>(&mut conn)
+                    .get_result::<i64>(conn)
                     .await?,
                 serving_size: nutrition
                     .per_serving

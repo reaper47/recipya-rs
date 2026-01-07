@@ -182,7 +182,7 @@ mod tests {
             let state = create_app_state(config).await;
 
             let res = server
-                .post(&BASE_URI)
+                .post(BASE_URI)
                 .form(&NutritionSourcePayload {
                     nutrition_source: NutritionDataSource::USDAFoodDataCentral.to_string(),
                 })

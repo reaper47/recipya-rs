@@ -71,19 +71,31 @@ impl From<&NutritionInformation> for NutritionDetailsForCreate {
     fn from(schema: &NutritionInformation) -> Self {
         let nutrition_c = NutritionForCreate {
             calories_kcal: schema.calories.first().map(|v| v.to_number()),
-            total_carbohydrates: schema.carbohydrate_content.first().map(|v| v.to_number()),
-            sugars_g: schema.sugar_content.first().map(|v| v.to_number()),
-            protein_g: schema.protein_content.first().map(|v| v.to_number()),
-            total_fat_g: schema.fat_content.first().map(|v| v.to_number()),
-            saturated_fat_g: schema.saturated_fat_content.first().map(|v| v.to_number()),
+            total_carbohydrates: schema
+                .carbohydrate_content
+                .first()
+                .map(|v| v.to_number::<f64>()),
+            sugars_g: schema.sugar_content.first().map(|v| v.to_number::<f64>()),
+            protein_g: schema.protein_content.first().map(|v| v.to_number::<f64>()),
+            total_fat_g: schema.fat_content.first().map(|v| v.to_number::<f64>()),
+            saturated_fat_g: schema
+                .saturated_fat_content
+                .first()
+                .map(|v| v.to_number::<f64>()),
             unsaturated_fat_g: schema
                 .unsaturated_fat_content
                 .first()
-                .map(|v| v.to_number()),
-            cholesterol_mg: schema.cholesterol_content.first().map(|v| v.to_number()),
-            sodium_mg: schema.sodium_content.first().map(|v| v.to_number()),
-            fiber_g: schema.fiber_content.first().map(|v| v.to_number()),
-            trans_fat_g: schema.trans_fat_content.first().map(|v| v.to_number()),
+                .map(|v| v.to_number::<f64>()),
+            cholesterol_mg: schema
+                .cholesterol_content
+                .first()
+                .map(|v| v.to_number::<f64>()),
+            sodium_mg: schema.sodium_content.first().map(|v| v.to_number::<f64>()),
+            fiber_g: schema.fiber_content.first().map(|v| v.to_number::<f64>()),
+            trans_fat_g: schema
+                .trans_fat_content
+                .first()
+                .map(|v| v.to_number::<f64>()),
         };
 
         if schema.is_per_100g() {
@@ -166,16 +178,16 @@ pub struct NutritionPerServingDetailsForCreate {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct NutritionForCreate {
     pub calories_kcal: Option<i16>,
-    pub total_carbohydrates: Option<i16>,
-    pub sugars_g: Option<i16>,
-    pub protein_g: Option<i16>,
-    pub total_fat_g: Option<i16>,
-    pub saturated_fat_g: Option<i16>,
-    pub unsaturated_fat_g: Option<i16>,
-    pub cholesterol_mg: Option<i16>,
-    pub sodium_mg: Option<i16>,
-    pub fiber_g: Option<i16>,
-    pub trans_fat_g: Option<i16>,
+    pub total_carbohydrates: Option<f64>,
+    pub sugars_g: Option<f64>,
+    pub protein_g: Option<f64>,
+    pub total_fat_g: Option<f64>,
+    pub saturated_fat_g: Option<f64>,
+    pub unsaturated_fat_g: Option<f64>,
+    pub cholesterol_mg: Option<f64>,
+    pub sodium_mg: Option<f64>,
+    pub fiber_g: Option<f64>,
+    pub trans_fat_g: Option<f64>,
 }
 
 impl NutritionForCreate {
@@ -208,25 +220,25 @@ pub struct Nutrition {
     /// Total calories in kilocalories (kcal) per serving.
     pub calories_kcal: Option<i16>,
     /// Total carbohydrates in grams (g) per serving.
-    pub total_carbohydrates: Option<i16>,
+    pub total_carbohydrates: Option<f64>,
     /// Total sugar content in grams (g) per serving.
-    pub sugars_g: Option<i16>,
+    pub sugars_g: Option<f64>,
     /// Total protein content in grams (g) per serving.
-    pub protein_g: Option<i16>,
+    pub protein_g: Option<f64>,
     /// Total fat content in grams (g) per serving.
-    pub total_fat_g: Option<i16>,
+    pub total_fat_g: Option<f64>,
     /// Saturated fat content in grams (g) per serving.
-    pub saturated_fat_g: Option<i16>,
+    pub saturated_fat_g: Option<f64>,
     /// Unsaturated fat content in grams (g) per serving.
-    pub unsaturated_fat_g: Option<i16>,
+    pub unsaturated_fat_g: Option<f64>,
     /// Cholesterol content in milligrams (mg) per serving.
-    pub cholesterol_mg: Option<i16>,
+    pub cholesterol_mg: Option<f64>,
     /// Sodium content in milligrams (mg) per serving.
-    pub sodium_mg: Option<i16>,
+    pub sodium_mg: Option<f64>,
     /// Dietary fiber content in grams (g) per serving.
-    pub fiber_g: Option<i16>,
+    pub fiber_g: Option<f64>,
     /// Trans fat content in grams (g) per serving.
-    pub trans_fat_g: Option<i16>,
+    pub trans_fat_g: Option<f64>,
 }
 
 impl Nutrition {
@@ -295,20 +307,20 @@ impl From<&NutritionForCreate> for Nutrition {
 pub(crate) struct NutritionForInsert {
     pub is_precalculated_by_source: bool,
     pub calories_kcal: Option<i16>,
-    pub total_carbohydrates: Option<i16>,
-    pub sugars_g: Option<i16>,
-    pub protein_g: Option<i16>,
-    pub total_fat_g: Option<i16>,
-    pub saturated_fat_g: Option<i16>,
-    pub unsaturated_fat_g: Option<i16>,
-    pub cholesterol_mg: Option<i16>,
-    pub sodium_mg: Option<i16>,
-    pub fiber_g: Option<i16>,
-    pub trans_fat_g: Option<i16>,
+    pub total_carbohydrates: Option<f64>,
+    pub sugars_g: Option<f64>,
+    pub protein_g: Option<f64>,
+    pub total_fat_g: Option<f64>,
+    pub saturated_fat_g: Option<f64>,
+    pub unsaturated_fat_g: Option<f64>,
+    pub cholesterol_mg: Option<f64>,
+    pub sodium_mg: Option<f64>,
+    pub fiber_g: Option<f64>,
+    pub trans_fat_g: Option<f64>,
 }
 
-impl From<NutritionComponents> for NutritionForInsert {
-    fn from(n: NutritionComponents) -> Self {
+impl From<&NutritionComponents> for NutritionForInsert {
+    fn from(n: &NutritionComponents) -> Self {
         Self {
             is_precalculated_by_source: false,
             calories_kcal: n.calories_kcal.into(),
@@ -323,6 +335,12 @@ impl From<NutritionComponents> for NutritionForInsert {
             fiber_g: n.fiber_g.into(),
             trans_fat_g: n.trans_fat_g.into(),
         }
+    }
+}
+
+impl From<NutritionComponents> for NutritionForInsert {
+    fn from(n: NutritionComponents) -> Self {
+        Self::from(&n)
     }
 }
 
@@ -382,32 +400,32 @@ mod tests {
                 id: 0,
                 is_precalculated_by_source: false,
                 calories_kcal: Some(1),
-                total_carbohydrates: Some(2),
-                sugars_g: Some(3),
-                protein_g: Some(4),
-                total_fat_g: Some(5),
-                saturated_fat_g: Some(6),
-                unsaturated_fat_g: Some(7),
-                cholesterol_mg: Some(8),
-                sodium_mg: Some(9),
-                fiber_g: Some(10),
-                trans_fat_g: Some(11),
+                total_carbohydrates: Some(2.),
+                sugars_g: Some(3.),
+                protein_g: Some(4.),
+                total_fat_g: Some(5.),
+                saturated_fat_g: Some(6.),
+                unsaturated_fat_g: Some(7.),
+                cholesterol_mg: Some(8.),
+                sodium_mg: Some(9.),
+                fiber_g: Some(10.),
+                trans_fat_g: Some(11.),
             }),
             per_serving: Some(NutritionPerServingDetails {
                 nutrition: Nutrition {
                     id: 0,
                     is_precalculated_by_source: false,
                     calories_kcal: Some(12),
-                    total_carbohydrates: Some(13),
-                    sugars_g: Some(14),
-                    protein_g: Some(15),
-                    total_fat_g: Some(16),
-                    saturated_fat_g: Some(17),
-                    unsaturated_fat_g: Some(18),
-                    cholesterol_mg: Some(19),
-                    sodium_mg: Some(20),
-                    fiber_g: Some(21),
-                    trans_fat_g: Some(22),
+                    total_carbohydrates: Some(13.),
+                    sugars_g: Some(14.),
+                    protein_g: Some(15.),
+                    total_fat_g: Some(16.),
+                    saturated_fat_g: Some(17.),
+                    unsaturated_fat_g: Some(18.),
+                    cholesterol_mg: Some(19.),
+                    sodium_mg: Some(20.),
+                    fiber_g: Some(21.),
+                    trans_fat_g: Some(22.),
                 },
                 serving_size: "2 meatballs".into(),
             }),
@@ -418,16 +436,16 @@ mod tests {
     fn test_nutrition_components_to_nutrition_for_insert() {
         let components = NutritionComponents {
             calories_kcal: 1,
-            total_carbohydrates: 2,
-            sugars_g: 3,
-            protein_g: 4,
-            total_fat_g: 5,
-            saturated_fat_g: 6,
-            unsaturated_fat_g: 7,
-            cholesterol_mg: 8,
-            sodium_mg: 9,
-            fiber_g: 10,
-            trans_fat_g: 11,
+            total_carbohydrates: 2.,
+            sugars_g: 3.,
+            protein_g: 4.,
+            total_fat_g: 5.,
+            saturated_fat_g: 6.,
+            unsaturated_fat_g: 7.,
+            cholesterol_mg: 8.,
+            sodium_mg: 9.,
+            fiber_g: 10.,
+            trans_fat_g: 11.,
         };
 
         let got = NutritionForInsert::from(components);
@@ -437,16 +455,16 @@ mod tests {
             NutritionForInsert {
                 is_precalculated_by_source: false,
                 calories_kcal: Some(1),
-                total_carbohydrates: Some(2),
-                sugars_g: Some(3),
-                protein_g: Some(4),
-                total_fat_g: Some(5),
-                saturated_fat_g: Some(6),
-                unsaturated_fat_g: Some(7),
-                cholesterol_mg: Some(8),
-                sodium_mg: Some(9),
-                fiber_g: Some(10),
-                trans_fat_g: Some(11),
+                total_carbohydrates: Some(2.),
+                sugars_g: Some(3.),
+                protein_g: Some(4.),
+                total_fat_g: Some(5.),
+                saturated_fat_g: Some(6.),
+                unsaturated_fat_g: Some(7.),
+                cholesterol_mg: Some(8.),
+                sodium_mg: Some(9.),
+                fiber_g: Some(10.),
+                trans_fat_g: Some(11.),
             }
         )
     }
@@ -456,30 +474,30 @@ mod tests {
         let details = NutritionDetailsForCreate {
             per_100g: Some(NutritionForCreate {
                 calories_kcal: Some(1),
-                total_carbohydrates: Some(2),
-                sugars_g: Some(3),
-                protein_g: Some(4),
-                total_fat_g: Some(5),
-                saturated_fat_g: Some(6),
-                unsaturated_fat_g: Some(7),
-                cholesterol_mg: Some(8),
-                sodium_mg: Some(9),
-                fiber_g: Some(10),
-                trans_fat_g: Some(11),
+                total_carbohydrates: Some(2.),
+                sugars_g: Some(3.),
+                protein_g: Some(4.),
+                total_fat_g: Some(5.),
+                saturated_fat_g: Some(6.),
+                unsaturated_fat_g: Some(7.),
+                cholesterol_mg: Some(8.),
+                sodium_mg: Some(9.),
+                fiber_g: Some(10.),
+                trans_fat_g: Some(11.),
             }),
             per_serving: Some(NutritionPerServingDetailsForCreate {
                 nutrition: NutritionForCreate {
                     calories_kcal: Some(12),
-                    total_carbohydrates: Some(13),
-                    sugars_g: Some(14),
-                    protein_g: Some(15),
-                    total_fat_g: Some(16),
-                    saturated_fat_g: Some(17),
-                    unsaturated_fat_g: Some(18),
-                    cholesterol_mg: Some(19),
-                    sodium_mg: Some(20),
-                    fiber_g: Some(21),
-                    trans_fat_g: Some(22),
+                    total_carbohydrates: Some(13.),
+                    sugars_g: Some(14.),
+                    protein_g: Some(15.),
+                    total_fat_g: Some(16.),
+                    saturated_fat_g: Some(17.),
+                    unsaturated_fat_g: Some(18.),
+                    cholesterol_mg: Some(19.),
+                    sodium_mg: Some(20.),
+                    fiber_g: Some(21.),
+                    trans_fat_g: Some(22.),
                 },
                 serving_size: "2 meatballs".into(),
             }),
@@ -513,16 +531,16 @@ mod tests {
     fn test_nutrition_for_create_is_empty_no_missing_fields() {
         let nutrition_c = NutritionForCreate {
             calories_kcal: Some(100),
-            total_carbohydrates: Some(20),
-            sugars_g: Some(5),
-            protein_g: Some(10),
-            total_fat_g: Some(5),
-            saturated_fat_g: Some(2),
-            unsaturated_fat_g: Some(3),
-            cholesterol_mg: Some(100),
-            sodium_mg: Some(500),
-            fiber_g: Some(2),
-            trans_fat_g: Some(1),
+            total_carbohydrates: Some(20.),
+            sugars_g: Some(5.),
+            protein_g: Some(10.),
+            total_fat_g: Some(5.),
+            saturated_fat_g: Some(2.),
+            unsaturated_fat_g: Some(3.),
+            cholesterol_mg: Some(100.),
+            sodium_mg: Some(500.),
+            fiber_g: Some(2.),
+            trans_fat_g: Some(1.),
         };
 
         assert!(!nutrition_c.is_empty());
@@ -591,16 +609,16 @@ mod tests {
         fn non_empty_nutrition() -> NutritionForCreate {
             NutritionForCreate {
                 calories_kcal: Some(100),
-                total_carbohydrates: Some(10),
-                sugars_g: Some(5),
-                protein_g: Some(20),
-                total_fat_g: Some(8),
-                saturated_fat_g: Some(2),
-                unsaturated_fat_g: Some(6),
-                cholesterol_mg: Some(50),
-                sodium_mg: Some(200),
-                fiber_g: Some(3),
-                trans_fat_g: Some(0),
+                total_carbohydrates: Some(10.),
+                sugars_g: Some(5.),
+                protein_g: Some(20.),
+                total_fat_g: Some(8.),
+                saturated_fat_g: Some(2.),
+                unsaturated_fat_g: Some(6.),
+                cholesterol_mg: Some(50.),
+                sodium_mg: Some(200.),
+                fiber_g: Some(3.),
+                trans_fat_g: Some(0.),
             }
         }
 

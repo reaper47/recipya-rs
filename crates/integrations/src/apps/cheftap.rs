@@ -169,7 +169,7 @@ mod tests {
             vec![Recipe {
                 r#type: AtType::Recipe.to_opt(),
                 is_based_on: to_is_based_on(
-                    "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()
+                    "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/"
                 ),
                 name: vec!["Deviled Eggs".into()],
                 recipe_ingredient: vec![

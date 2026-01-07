@@ -177,6 +177,7 @@ impl Recipe {
                             &new_recipe.nutrition,
                             new_ingredients_slice,
                             user_settings.nutrition_source,
+                            new_recipe.r#yield.unwrap_or(1),
                         )
                         .await?;
                     }

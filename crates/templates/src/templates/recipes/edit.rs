@@ -349,13 +349,17 @@ fn render_nutrition(view: &ViewRecipe) -> Markup {
         table class="table table-zebra table-xs" {
             (nutrition_table_header())
             tbody {
-                @let format_nutrition = |value: Option<i16>, unit: &str| -> String {
-                    value.map_or("-".into(), |v| format!("{v}{unit}"))
+                @let format_nutrition = |value: Option<f64>, unit: &str| -> String {
+                    value.map_or("-".into(), |v| if v < 1.0 {
+                        format!("{:.2}{unit}", v)
+                    } else {
+                        format!("{:.0}{unit}", v)
+                    })
                 };
 
                 @let nutrition = view.recipe_details.nutrition.per_100g.as_ref();
                 @for (name, name_attr, placeholder, value) in [
-                    ("Calories", "calories-per-100g", "368kcal", format_nutrition(nutrition.and_then(|n| n.calories_kcal), " kcal")),
+                    ("Calories", "calories-per-100g", "368kcal", format_nutrition(nutrition.and_then(|n| n.calories_kcal.map(|v| v.into())), " kcal")),
                     ("Total carbs", "total-carbohydrates-per-100g", "35g", format_nutrition(nutrition.and_then(|n| n.total_carbohydrates), "g")),
                     ("Sugars", "sugars-per-100g", "3g", format_nutrition(nutrition.and_then(|n| n.sugars_g), "g")),
                     ("Protein", "protein-per-100g", "21g", format_nutrition(nutrition.and_then(|n| n.protein_g), "g")),
@@ -380,7 +384,7 @@ fn render_nutrition(view: &ViewRecipe) -> Markup {
                 @let nutrition = view.recipe_details.nutrition.per_serving.as_ref();
                 @for (name, name_attr, placeholder, value) in [
                     ("Serving size", "serving-size", "1/4 cup (45g)", nutrition.map(|nutrition| nutrition.serving_size.clone()).unwrap_or("-".into())),
-                    ("Calories", "calories-per-serving", "368kcal", format_nutrition(nutrition.and_then(|n| n.nutrition.calories_kcal), " kcal")),
+                    ("Calories", "calories-per-serving", "368kcal", format_nutrition(nutrition.and_then(|n| n.nutrition.calories_kcal.map(|v| v.into())), " kcal")),
                     ("Total carbs", "total-carbohydrates-per-serving", "35g", format_nutrition(nutrition.and_then(|n| n.nutrition.total_carbohydrates), "g")),
                     ("Sugars", "sugars-per-serving", "3g", format_nutrition(nutrition.and_then(|n| n.nutrition.sugars_g), "g")),
                     ("Protein", "protein-per-serving", "21g", format_nutrition(nutrition.and_then(|n| n.nutrition.protein_g), "g")),

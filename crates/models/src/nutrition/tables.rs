@@ -92,6 +92,7 @@ pub(crate) struct FoundationFoodForInsert<'a> {
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct FdcNutrient {
     id: i64,
+    fdc_id: i64,
     name: String,
     unit_name: String,
 }
@@ -99,6 +100,7 @@ pub struct FdcNutrient {
 #[derive(Eq, Hash, PartialEq, Insertable, PartialOrd, Ord)]
 #[diesel(table_name = schema::fdc_nutrients)]
 pub(crate) struct FdcNutrientForInsert<'a> {
+    pub fdc_id: i64,
     pub name: &'a str,
     pub unit_name: &'a str,
 }

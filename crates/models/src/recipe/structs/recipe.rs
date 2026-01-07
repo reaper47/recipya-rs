@@ -552,10 +552,10 @@ mod tests {
         fn test_multiple_nutrition_values() {
             let nutrition = Nutrition {
                 calories_kcal: Some(200),
-                total_carbohydrates: Some(50),
-                sugars_g: Some(20),
-                protein_g: Some(10),
-                total_fat_g: Some(5),
+                total_carbohydrates: Some(50.),
+                sugars_g: Some(20.),
+                protein_g: Some(10.),
+                total_fat_g: Some(5.),
                 ..Default::default()
             };
 
@@ -571,7 +571,7 @@ mod tests {
         fn test_nutrition_with_some_empty_values() {
             let nutrition = Nutrition {
                 calories_kcal: Some(250),
-                sodium_mg: Some(300),
+                sodium_mg: Some(300.),
                 ..Default::default()
             };
 
@@ -584,16 +584,16 @@ mod tests {
         fn test_nutrition_with_all_values() {
             let nutrition = Nutrition {
                 calories_kcal: Some(200),
-                total_carbohydrates: Some(50),
-                sugars_g: Some(20),
-                protein_g: Some(10),
-                total_fat_g: Some(5),
-                saturated_fat_g: Some(2),
-                unsaturated_fat_g: Some(1),
-                trans_fat_g: Some(0),
-                cholesterol_mg: Some(30),
-                sodium_mg: Some(300),
-                fiber_g: Some(5),
+                total_carbohydrates: Some(50.),
+                sugars_g: Some(20.),
+                protein_g: Some(10.),
+                total_fat_g: Some(5.),
+                saturated_fat_g: Some(2.),
+                unsaturated_fat_g: Some(1.),
+                trans_fat_g: Some(0.),
+                cholesterol_mg: Some(30.),
+                sodium_mg: Some(300.),
+                fiber_g: Some(5.),
                 ..Default::default()
             };
 

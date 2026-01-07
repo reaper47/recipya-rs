@@ -252,7 +252,7 @@ mod tests {
             cook_time: seconds_to_duration(1800),
             description: vec![RecipeDescriptionFieldEnum::Text("Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.".into())],
             headline: vec!["First Cookbook".into()],
-            is_based_on: to_is_based_on("KMKIDMAN5".into()),
+            is_based_on: to_is_based_on("KMKIDMAN5"),
             name: vec!["Apple Puff Pancake".into()],
             prep_time: seconds_to_duration(900),
             recipe_ingredient: vec![
@@ -292,7 +292,7 @@ mod tests {
             vec![Recipe {
                 cook_time: seconds_to_duration(0),
                 headline: vec!["First Cookbook".into()],
-                is_based_on: to_is_based_on("Mom".into()),
+                is_based_on: to_is_based_on("Mom"),
                 name: vec!["Yay".into()],
                 prep_time: seconds_to_duration(4500),
                 recipe_ingredient: vec![

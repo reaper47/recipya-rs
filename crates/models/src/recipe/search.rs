@@ -491,16 +491,16 @@ mod tests {
         }
 
         fn adjust_recipe(mut recipe: RecipeDetails, other_recipe: RecipeDetails) -> RecipeDetails {
-            recipe.nutrition.per_100g.as_mut().map(|n| {
+            if let Some(n) = recipe.nutrition.per_100g.as_mut() {
                 let other_n = other_recipe.nutrition.per_100g.unwrap();
                 n.id = other_n.id;
                 n.is_precalculated_by_source = other_n.is_precalculated_by_source;
-            });
-            recipe.nutrition.per_serving.as_mut().map(|n| {
+            };
+            if let Some(n) = recipe.nutrition.per_serving.as_mut() {
                 let other_n = other_recipe.nutrition.per_serving.unwrap().nutrition;
                 n.nutrition.id = other_n.id;
                 n.nutrition.is_precalculated_by_source = other_n.is_precalculated_by_source;
-            });
+            }
             recipe.recipe.created_at = other_recipe.recipe.created_at;
             recipe.recipe.updated_at = other_recipe.recipe.updated_at;
             recipe.videos = other_recipe.videos.clone();

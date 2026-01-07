@@ -72,42 +72,78 @@ pub(super) fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         form = form.add_part("source", Part::text(&recipe.source))
     }
 
-    if let Some(n) = &recipe.nutrition {
+    if let Some(n) = &recipe.nutrition.per_100g {
         if let Some(v) = n.calories_kcal {
-            form = form.add_part("calories", Part::text(v.to_string()))
+            form = form.add_part("calories-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.total_carbohydrates {
-            form = form.add_part("total-carbohydrates", Part::text(v.to_string()))
+            form = form.add_part("total-carbohydrates-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.sugars_g {
-            form = form.add_part("sugars", Part::text(v.to_string()))
+            form = form.add_part("sugars-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.protein_g {
-            form = form.add_part("protein", Part::text(v.to_string()))
+            form = form.add_part("protein-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.total_fat_g {
-            form = form.add_part("total-fat", Part::text(v.to_string()))
+            form = form.add_part("total-fat-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.saturated_fat_g {
-            form = form.add_part("saturated-fat", Part::text(v.to_string()))
+            form = form.add_part("saturated-fat-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.unsaturated_fat_g {
-            form = form.add_part("unsaturated-fat", Part::text(v.to_string()))
+            form = form.add_part("unsaturated-fat-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.cholesterol_mg {
-            form = form.add_part("cholesterol", Part::text(v.to_string()))
+            form = form.add_part("cholesterol-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.sodium_mg {
-            form = form.add_part("sodium", Part::text(v.to_string()))
+            form = form.add_part("sodium-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.fiber_g {
-            form = form.add_part("fiber", Part::text(v.to_string()))
+            form = form.add_part("fiber-per-100g", Part::text(v.to_string()))
         }
         if let Some(v) = n.trans_fat_g {
-            form = form.add_part("trans-fat", Part::text(v.to_string()))
+            form = form.add_part("trans-fat-per-100g", Part::text(v.to_string()))
         }
-        if let Some(v) = &n.serving_size {
-            form = form.add_part("serving-size", Part::text(v))
+    }
+
+    if let Some(n) = &recipe.nutrition.per_serving {
+        if let Some(v) = n.nutrition.calories_kcal {
+            form = form.add_part("calories-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.total_carbohydrates {
+            form = form.add_part("total-carbohydrates-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.sugars_g {
+            form = form.add_part("sugars-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.protein_g {
+            form = form.add_part("protein-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.total_fat_g {
+            form = form.add_part("total-fat-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.saturated_fat_g {
+            form = form.add_part("saturated-fat-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.unsaturated_fat_g {
+            form = form.add_part("unsaturated-fat-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.cholesterol_mg {
+            form = form.add_part("cholesterol-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.sodium_mg {
+            form = form.add_part("sodium-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.fiber_g {
+            form = form.add_part("fiber-per-serving", Part::text(v.to_string()))
+        }
+        if let Some(v) = n.nutrition.trans_fat_g {
+            form = form.add_part("trans-fat-per-serving", Part::text(v.to_string()))
+        }
+        if !n.serving_size.is_empty() {
+            form = form.add_part("serving-size", Part::text(n.serving_size.clone()))
         }
     }
 
