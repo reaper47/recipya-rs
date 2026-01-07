@@ -52,7 +52,7 @@ infer = "0.19.0"
 integrations = { path = "./crates/integrations" }
 iso8601 = { version = "0.6.3", features = ["serde"] }
 itertools = "0.14.0"
-lru = "0.16.2"
+lru = "0.16.3"
 math = { path = "./crates/math" }
 models = { path = "./crates/models" }
 pretty_assertions = "1.4.1"
