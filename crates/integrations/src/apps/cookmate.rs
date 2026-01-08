@@ -153,7 +153,7 @@ impl From<CookmateRecipe> for Recipe {
                 .into_iter()
                 .map(RecipeRecipeInstructionsFieldEnum::Text)
                 .collect(),
-            recipe_yield: to_yield(extract_number(r.quantity).unwrap_or_default()),
+            recipe_yield: to_yield(extract_number(&r.quantity).unwrap_or_default()),
             url: url.map(|u| vec![u.to_string()]).unwrap_or_default(),
             video: Some(
                 vec![r.video]

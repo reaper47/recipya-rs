@@ -24,7 +24,7 @@ pub fn auto_convert_to_utf8(buffer: &[u8]) -> String {
 }
 
 /// Extracts a number from a string, if it exists.
-pub fn extract_number<T>(s: String) -> Result<T>
+pub fn extract_number<T>(s: &str) -> Result<T>
 where
     T: FromStr + std::fmt::Debug,
 {
@@ -209,7 +209,7 @@ mod tests {
 
         #[test]
         fn test_no_number_err() -> Result<()> {
-            let res = extract_number::<i16>("".to_string());
+            let res = extract_number::<i16>("");
 
             assert!(res.is_err());
             Ok(())
@@ -217,7 +217,7 @@ mod tests {
 
         #[test]
         fn test_number_in_front_ok() -> Result<()> {
-            let res = extract_number::<i16>("420 years of love".to_string())?;
+            let res = extract_number::<i16>("420 years of love")?;
 
             pretty_assertions::assert_eq!(res, 420);
             Ok(())
@@ -225,7 +225,7 @@ mod tests {
 
         #[test]
         fn test_number_middle_ok() -> Result<()> {
-            let res = extract_number::<i16>("years of 420 love".to_string())?;
+            let res = extract_number::<i16>("years of 420 love")?;
 
             pretty_assertions::assert_eq!(res, 420);
             Ok(())
@@ -233,7 +233,7 @@ mod tests {
 
         #[test]
         fn test_number_end_ok() -> Result<()> {
-            let res = extract_number::<i16>("years of love 420".to_string())?;
+            let res = extract_number::<i16>("years of love 420")?;
 
             pretty_assertions::assert_eq!(res, 420);
             Ok(())

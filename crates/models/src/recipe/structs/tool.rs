@@ -27,7 +27,7 @@ impl From<HowToTool> for ToolForCreate {
     fn from(value: HowToTool) -> Self {
         let s = value.name.first().cloned().unwrap_or_default();
 
-        let quantity = extract_number(s.clone()).unwrap_or(1);
+        let quantity = extract_number(&s).unwrap_or(1);
 
         Self {
             name: s.replace(&quantity.to_string(), "").trim().to_string(),
@@ -87,7 +87,7 @@ impl From<&RecipeToolFieldEnum> for ToolForCreate {
                     .map(|q| q.quantity())
                     .unwrap_or_default(),
             },
-            RecipeToolFieldEnum::Text(s) => match extract_number::<i16>(s.clone()) {
+            RecipeToolFieldEnum::Text(s) => match extract_number::<i16>(s) {
                 Ok(n) => Self {
                     name: s.replace(&n.to_string(), "").trim().to_string(),
                     quantity: n,
