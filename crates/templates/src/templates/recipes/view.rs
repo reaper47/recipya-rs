@@ -727,7 +727,7 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
 
                 @if let Some(nutrition) = &recipe_details.nutrition.per_serving {
                     @for (name, value) in [
-                        ("Serving size:", nutrition.serving_size.is_empty().then_some("1").unwrap_or_default().to_string()),
+                        ("Serving size:", if nutrition.serving_size.is_empty() { "1" } else { Default::default() }.to_string()),
                         ("Calories:", format_nutrition(nutrition.nutrition.calories_kcal.map(|n| n.into()), " kcal")),
                         ("Total carbs:", format_nutrition(nutrition.nutrition.total_carbohydrates, "g")),
                         ("Sugars:", format_nutrition(nutrition.nutrition.sugars_g, "g")),
