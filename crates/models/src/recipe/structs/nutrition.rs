@@ -280,6 +280,40 @@ impl Nutrition {
         result.push_str(&parts.join("; "));
         Some(result)
     }
+
+    pub fn sanitize(mut self) -> Option<Self> {
+        self.total_carbohydrates = Self::clean_float(self.total_carbohydrates);
+        self.sugars_g = Self::clean_float(self.sugars_g);
+        self.protein_g = Self::clean_float(self.protein_g);
+        self.total_fat_g = Self::clean_float(self.total_fat_g);
+        self.saturated_fat_g = Self::clean_float(self.saturated_fat_g);
+        self.unsaturated_fat_g = Self::clean_float(self.unsaturated_fat_g);
+        self.cholesterol_mg = Self::clean_float(self.cholesterol_mg);
+        self.sodium_mg = Self::clean_float(self.sodium_mg);
+        self.fiber_g = Self::clean_float(self.fiber_g);
+        self.trans_fat_g = Self::clean_float(self.trans_fat_g);
+
+        // Check if all values are None/zero
+        if self.has_no_data() { None } else { Some(self) }
+    }
+
+    fn clean_float(value: Option<f64>) -> Option<f64> {
+        value.filter(|&v| !v.is_nan() && v != 0.0)
+    }
+
+    fn has_no_data(&self) -> bool {
+        self.calories_kcal.unwrap_or(0) == 0
+            && self.total_carbohydrates.is_none()
+            && self.sugars_g.is_none()
+            && self.protein_g.is_none()
+            && self.total_fat_g.is_none()
+            && self.saturated_fat_g.is_none()
+            && self.unsaturated_fat_g.is_none()
+            && self.cholesterol_mg.is_none()
+            && self.sodium_mg.is_none()
+            && self.fiber_g.is_none()
+            && self.trans_fat_g.is_none()
+    }
 }
 
 impl From<&NutritionForCreate> for Nutrition {

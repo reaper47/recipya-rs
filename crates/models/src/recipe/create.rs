@@ -304,6 +304,7 @@ mod tests {
 
         let times = recipe.times.unwrap_or_default();
 
+        println!("Nutrition details: {:?}", recipe.nutrition.per_100g);
         let mut nutrition = NutritionDetails::from(&recipe.nutrition);
         if let Some(n) = nutrition.per_100g.as_mut() {
             let other_n = got.nutrition.per_100g.as_ref().unwrap();

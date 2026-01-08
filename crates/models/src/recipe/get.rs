@@ -277,7 +277,8 @@ pub async fn fetch_recipe_details(
         .select(schema::nutrition::all_columns)
         .first::<Nutrition>(conn)
         .await
-        .optional()?;
+        .optional()?
+        .and_then(|n| n.sanitize());
 
     let nutrition_per_serving: Option<(Nutrition, String)> = schema::nutrition_per_serving::table
         .inner_join(
@@ -291,7 +292,8 @@ pub async fn fetch_recipe_details(
         ))
         .first::<(Nutrition, String)>(conn)
         .await
-        .optional()?;
+        .optional()?
+        .and_then(|(n, serving_size)| n.sanitize().map(|nutrition| (nutrition, serving_size)));
 
     Ok(RecipeDetails {
         recipe,

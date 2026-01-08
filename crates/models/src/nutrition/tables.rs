@@ -168,7 +168,7 @@ impl NutritionSource {
 
 #[cfg(test)]
 mod tests {
-    use chrono::Local;
+    use chrono::Utc;
     use testing::utils::{TestDb, create_app_state};
 
     use super::*;
@@ -188,7 +188,7 @@ mod tests {
     async fn test_all_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
-        let now = Local::now().date_naive();
+        let now = Utc::now().date_naive();
 
         let got = NutritionSource::all(&state.mm).await?;
 
