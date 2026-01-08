@@ -127,7 +127,7 @@ where
     crouton.nutrition.lines().for_each(|line| {
         if let Some(idx) = line.find(':') {
             let (before, _after) = line.split_at(idx);
-            let v: Option<i16> = extract_number(line.into()).ok();
+            let v: Option<i16> = extract_number(line).ok();
 
             match before.to_lowercase().as_str() {
                 "carbohydrates" => nutrition.total_carbohydrates = v,

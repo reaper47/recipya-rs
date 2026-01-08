@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use schema_org::ToIso8601;
+use support::strings::extract_number;
 use uuid::Uuid;
 use whatlang::Lang;
 
@@ -264,6 +265,11 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
         let ingredients = SectionComponents::from(original_ingredients);
         let measurement_system_id =
             system::MeasurementSystem::from(ingredients.items_as_text()).id();
+        let nutrition = schema
+            .nutrition
+            .first()
+            .map(NutritionDetailsForCreate::from)
+            .unwrap_or_default();
 
         Self {
             name: schema.name.first().cloned().unwrap_or_default(),
@@ -278,7 +284,13 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
                 .recipe_yield
                 .first()
                 .map(|v| v.to_i16())
-                .unwrap_or_default(),
+                .unwrap_or_else(|| {
+                    nutrition
+                        .per_serving
+                        .as_ref()
+                        .map(|v| extract_number(v.serving_size.as_ref()).ok())
+                        .unwrap_or_default()
+                }),
             source: schema.url.first().cloned().unwrap_or_default(),
             is_favourite: false,
             rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
@@ -302,11 +314,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
                 .collect(),
             measurement_system_id,
             notes: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
-            nutrition: schema
-                .nutrition
-                .first()
-                .map(NutritionDetailsForCreate::from)
-                .unwrap_or_default(),
+            nutrition,
             times: Some(TimesForCreate::from_components(
                 schema.prep_time.to_is8601_duration(),
                 schema.cook_time.to_is8601_duration(),
@@ -607,6 +615,11 @@ mod tests {
     }
 
     mod tests_recipe_for_create {
+        use schema_org::field::{
+            RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+            RecipeRecipeYieldFieldEnum,
+        };
+
         use crate::recipe::structs::section::Item;
 
         use super::*;
@@ -686,6 +699,78 @@ mod tests {
             let got = recipe_c.detect_language();
 
             pretty_assertions::assert_eq!(got, Lang::Eng);
+        }
+
+        mod tests_from_recipe_schema {
+            use super::*;
+
+            #[test]
+            fn test_no_yield_specified() {
+                let mut schema = a_minimal_schema_recipe();
+                schema.recipe_yield = Vec::new();
+                schema.nutrition = Vec::new();
+
+                let recipe = RecipeForCreate::from(&schema);
+
+                assert!(recipe.r#yield.is_none())
+            }
+
+            #[test]
+            fn test_nutrition_yield_specified() {
+                let mut schema = a_minimal_schema_recipe();
+                schema.recipe_yield = Vec::new();
+                schema.nutrition = vec![schema_org::NutritionInformation {
+                    serving_size: vec!["4 bunches".into()],
+                    ..Default::default()
+                }];
+
+                let recipe = RecipeForCreate::from(&schema);
+
+                assert_eq!(recipe.r#yield, Some(4))
+            }
+
+            #[test]
+            fn test_recipe_yield_specified() {
+                let mut schema = a_minimal_schema_recipe();
+                schema.recipe_yield = vec![RecipeRecipeYieldFieldEnum::Text("8 cup cakes".into())];
+                schema.nutrition = Vec::new();
+
+                let recipe = RecipeForCreate::from(&schema);
+
+                assert_eq!(recipe.r#yield, Some(8))
+            }
+
+            #[test]
+            fn test_recipe_yield_and_nutrition_specified() {
+                let mut schema = a_minimal_schema_recipe();
+                schema.recipe_yield = vec![RecipeRecipeYieldFieldEnum::Text("12 cup cakes".into())];
+                schema.nutrition = vec![schema_org::NutritionInformation {
+                    serving_size: vec!["24 bunches".into()],
+                    ..Default::default()
+                }];
+
+                let recipe = RecipeForCreate::from(&schema);
+
+                assert_eq!(recipe.r#yield, Some(12))
+            }
+        }
+
+        fn a_minimal_schema_recipe() -> schema_org::Recipe {
+            schema_org::Recipe {
+                name: vec!["The best hamburger ever".into()],
+                description: vec![RecipeDescriptionFieldEnum::Text(
+                    "This is the best hamburger ever".into(),
+                )],
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("1 cup of flour".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1 cup of water".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text("Mix all ingredients".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Bake for 30 minutes".into()),
+                ],
+                ..Default::default()
+            }
         }
     }
 }

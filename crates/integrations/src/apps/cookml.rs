@@ -250,7 +250,7 @@ impl From<CookmlRecipe> for Recipe {
         let changed_date = DateTime::from_str(&r.head.changedate.unwrap_or_default()).ok();
         let prep_time = Duration::from_str(&r.head.timeprepqty.unwrap_or_default()).ok();
         let cook_time = Duration::from_str(&r.head.timecookqty.unwrap_or_default()).ok();
-        let quality = extract_number(r.head.quality.unwrap_or_default()).ok();
+        let quality = extract_number(&r.head.quality.unwrap_or_default()).ok();
         let (category, keywords) = match r.head.hint.unwrap_or_default().as_slice() {
             [first, rest @ ..] => (Some(first.clone()), Some(rest.to_vec())),
             [] => (None, None),

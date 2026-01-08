@@ -151,7 +151,7 @@ impl From<RecipeSageXMLRecipe> for RecipeSage {
             },
             notes: Some(r.notes).filter(|s| !s.is_empty()),
             title: r.title,
-            r#yield: extract_number(r.r#yield).unwrap_or_default(),
+            r#yield: extract_number(&r.r#yield).unwrap_or_default(),
         }
     }
 }
@@ -350,7 +350,7 @@ impl From<RecipeSageXMLRecipe> for Recipe {
                 .split_terminator("\n\n")
                 .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().replace("\n", " ")))
                 .collect(),
-            recipe_yield: to_yield(extract_number(r.r#yield).unwrap_or_default()),
+            recipe_yield: to_yield(extract_number(&r.r#yield).unwrap_or_default()),
             url: url.map(|u| vec![u.to_string()]).unwrap_or_default(),
             ..Default::default()
         }
@@ -452,7 +452,7 @@ fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
                     description: description.filter(|s| !s.is_empty()),
                     servings: servings
                         .filter(|s| !s.is_empty())
-                        .map(|s| extract_number(s.to_string()).unwrap_or_default()),
+                        .map(|s| extract_number(s).unwrap_or_default()),
                     source: source
                         .filter(|s| !s.is_empty())
                         .or(url.filter(|s| !s.is_empty())),
