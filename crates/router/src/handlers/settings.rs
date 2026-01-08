@@ -2,6 +2,7 @@ use axum::Form;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
+use models::nutrition::NutritionDataSource;
 use tracing::error;
 
 use app::state::AppState;
@@ -16,7 +17,7 @@ use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::broadcast_error;
 use crate::handlers::recipes::fetch_categories_keywords;
 use crate::middleware::mw_auth::CtxW;
-use crate::settings_router::ThemePayload;
+use crate::settings_router::{NutritionSourcePayload, ThemePayload};
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
@@ -26,7 +27,7 @@ pub async fn settings_handler(
 ) -> impl IntoResponse {
     let user_id = ctx.0.user_id();
 
-    let settings = match UserSettingDetails::get_settings(&state.mm, user_id).await {
+    let settings = match UserSettingDetails::get(&state.mm, user_id).await {
         Ok(settings) => settings,
         Err(err) => {
             error!("Error fetching user settings for user {user_id}: {err}");
@@ -103,6 +104,40 @@ pub async fn settings_handler(
         },
     )
     .into_response()
+}
+
+/// Handles setting the nutrition source for the target user.
+pub async fn set_nutrition_source_handler(
+    ctx: CtxW,
+    State(state): State<AppState>,
+    Form(payload): Form<NutritionSourcePayload>,
+) -> impl IntoResponse {
+    let user_id = ctx.0.user_id();
+
+    let source = match payload.nutrition_source.parse::<NutritionDataSource>() {
+        Ok(s) => s,
+        Err(_) => {
+            error!("Invalid nutrition source: {}", payload.nutrition_source);
+            broadcast_error(
+                &state,
+                user_id,
+                &format!(
+                    "Nutrition source '{}' is invalid.",
+                    payload.nutrition_source
+                ),
+            )
+            .await;
+            return Error::InvalidPayload.into_response();
+        }
+    };
+
+    if let Err(err) = source.save(&state.mm, user_id).await {
+        error!("Error saving selected nutrition source for user {user_id}: {err}");
+        broadcast_error(&state, user_id, "Error saving selected nutrition source.").await;
+        return Error::Database.into_response();
+    }
+
+    (StatusCode::NO_CONTENT, "").into_response()
 }
 
 /// Handles setting the default theme for the target user.

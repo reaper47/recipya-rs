@@ -129,7 +129,7 @@ pub struct Action {
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum ActionOrText {
-    Action(Action),
+    Action(Box<Action>),
     Text(String),
 }
 impl Default for ActionOrText {

@@ -75,10 +75,10 @@ where
 }
 
 fn parse_cheftap_recipe(input: &mut &str) -> Result<ChefTapRecipe> {
-    Ok(parse_recipe
+    parse_recipe
         .map(ChefTapRecipe::from)
         .parse_next(input)
-        .map_err(|err| Error::Parse(err.to_string()))?)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
@@ -169,7 +169,7 @@ mod tests {
             vec![Recipe {
                 r#type: AtType::Recipe.to_opt(),
                 is_based_on: to_is_based_on(
-                    "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/".into()
+                    "https://www.allrecipes.com/recipe/22390/special-deviled-eggs/"
                 ),
                 name: vec!["Deviled Eggs".into()],
                 recipe_ingredient: vec![

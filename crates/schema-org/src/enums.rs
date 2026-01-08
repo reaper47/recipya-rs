@@ -1,5 +1,3 @@
-use std::convert::Infallible;
-
 use serde::{Deserialize, Serialize};
 
 ///<https://schema.org/MusicAlbumProductionType>
@@ -109,40 +107,38 @@ pub enum RestrictedDietEnum {
     UnspecifiedDiet,
 }
 
-impl TryFrom<String> for RestrictedDietEnum {
-    type Error = Infallible;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
+impl From<String> for RestrictedDietEnum {
+    fn from(value: String) -> Self {
         let value = value.to_lowercase();
 
         if value.contains("diabetic") {
-            Ok(RestrictedDietEnum::DiabeticDiet)
+            RestrictedDietEnum::DiabeticDiet
         } else if value.contains("gluten") {
-            Ok(RestrictedDietEnum::GlutenFreeDiet)
+            RestrictedDietEnum::GlutenFreeDiet
         } else if value.contains("halal") {
-            Ok(RestrictedDietEnum::HalalDiet)
+            RestrictedDietEnum::HalalDiet
         } else if value.contains("hindu") {
-            Ok(RestrictedDietEnum::HinduDiet)
+            RestrictedDietEnum::HinduDiet
         } else if value.contains("kosher") {
-            Ok(RestrictedDietEnum::KosherDiet)
+            RestrictedDietEnum::KosherDiet
         } else if value.contains("low") {
             if value.contains("calorie") {
-                Ok(RestrictedDietEnum::LowCalorieDiet)
+                RestrictedDietEnum::LowCalorieDiet
             } else if value.contains("fat") {
-                Ok(RestrictedDietEnum::LowFatDiet)
+                RestrictedDietEnum::LowFatDiet
             } else if value.contains("lactose") {
-                Ok(RestrictedDietEnum::LowLactoseDiet)
+                RestrictedDietEnum::LowLactoseDiet
             } else if value.contains("salt") {
-                Ok(RestrictedDietEnum::LowSaltDiet)
+                RestrictedDietEnum::LowSaltDiet
             } else {
-                Ok(RestrictedDietEnum::UnspecifiedDiet)
+                RestrictedDietEnum::UnspecifiedDiet
             }
         } else if value.contains("vegan") {
-            Ok(RestrictedDietEnum::VeganDiet)
+            RestrictedDietEnum::VeganDiet
         } else if value.contains("vegetarian") {
-            Ok(RestrictedDietEnum::VegetarianDiet)
+            RestrictedDietEnum::VegetarianDiet
         } else {
-            Ok(RestrictedDietEnum::UnspecifiedDiet)
+            RestrictedDietEnum::UnspecifiedDiet
         }
     }
 }

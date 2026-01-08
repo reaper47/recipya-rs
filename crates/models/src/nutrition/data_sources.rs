@@ -1,0 +1,500 @@
+use std::{borrow::Cow, str::FromStr};
+
+use diesel_async::AsyncPgConnection;
+use ingredient::{Ingredient, IngredientParser};
+use math::cooking::units::{traits::UnitOperations, unit::Unit, unitless::units::Unitless};
+use strum::{EnumIter, EnumString, IntoEnumIterator as _};
+use tracing::{error, info, warn};
+
+use repository::{ModelManager, schema};
+
+use crate::{
+    Error, Result,
+    nutrition::{
+        CalculatedNutrition, NutritionComponents,
+        fdc::parser::{
+            DataFetched as _, DataNotFetched as _, FdcClient, FdcParser, SRLegacyFoodDetails,
+        },
+    },
+};
+
+/// Nutrition data sources supported by the application.
+#[derive(Debug, Default, PartialEq, strum_macros::Display, EnumIter, EnumString)]
+#[strum(serialize_all = "lowercase")]
+pub enum NutritionDataSource {
+    #[strum(serialize = "USDA FoodData Central")]
+    USDAFoodDataCentral,
+    #[default]
+    Unknown,
+}
+
+/// Returns a list of all nutrition data sources Recipya supports.
+pub fn all_nutrition_sources() -> Vec<NutritionDataSource> {
+    NutritionDataSource::iter()
+        .filter(|a| !matches!(a, NutritionDataSource::Unknown))
+        .collect()
+}
+
+struct IngredientForCalculation<'a> {
+    original: Cow<'a, str>,
+    parsed: Ingredient,
+    unit: Unit,
+}
+
+#[derive(Debug, Clone)]
+struct PortionUnit {
+    amount: f64,
+    gram_weight: f64,
+    modifier: String,
+    unit: Unit,
+}
+
+impl NutritionDataSource {
+    /// Calculate the nutritional information for a recipe based on its ingredients.
+    pub async fn calculate_nutrition(
+        &self,
+        conn: &mut AsyncPgConnection,
+        ingredients: &[&str],
+        num_servings: i16,
+    ) -> Result<CalculatedNutrition> {
+        if self == &NutritionDataSource::Unknown {
+            return Err(Error::UnknownSource);
+        }
+
+        let ingredients = self
+            .normalize_ingredients(ingredients)
+            .into_iter()
+            .map(|ing| IngredientForCalculation {
+                original: ing.clone(),
+                parsed: IngredientParser::new(false).from_str(&ing),
+                unit: Unit::from_str(&ing).unwrap_or(Unit::Unitless(Unitless { value: 1.0 })),
+            })
+            .collect::<Vec<_>>();
+
+        self.calculate_nutrition_facts(conn, ingredients, num_servings)
+            .await
+    }
+
+    fn normalize_ingredients<'a>(&self, ingredients: &[&'a str]) -> Vec<Cow<'a, str>> {
+        match self {
+            NutritionDataSource::USDAFoodDataCentral => ingredients
+                .iter()
+                .map(|&ing| self.normalize_ingredient(ing))
+                .collect(),
+            NutritionDataSource::Unknown => ingredients.iter().map(|&s| Cow::Borrowed(s)).collect(),
+        }
+    }
+
+    fn normalize_ingredient<'a>(&self, ing: &'a str) -> Cow<'a, str> {
+        if ing.contains("egg") {
+            Cow::Owned(
+                ing.replace("eggs", "egg")
+                    .replace("egg", "eggs whole fresh"),
+            )
+        } else if ing.contains("white sugar") {
+            Cow::Owned(ing.replace("white sugar", "sugar"))
+        } else if ing.contains("walnuts") {
+            Cow::Owned(ing.replace("walnuts", "walnuts english"))
+        } else {
+            Cow::Borrowed(ing)
+        }
+    }
+
+    async fn calculate_nutrition_facts<'a>(
+        &self,
+        conn: &mut AsyncPgConnection,
+        ingredients: Vec<IngredientForCalculation<'a>>,
+        num_servings: i16,
+    ) -> Result<CalculatedNutrition> {
+        match self {
+            NutritionDataSource::USDAFoodDataCentral => {
+                let mut nutrition_data = Vec::with_capacity(ingredients.len());
+
+                for ing in ingredients {
+                    if let Some(calc) = self.calculate_ingredient_nutrition(conn, &ing).await? {
+                        nutrition_data.push(calc);
+                    }
+                }
+
+                self.aggregate_nutrition(nutrition_data, num_servings)
+            }
+            NutritionDataSource::Unknown => Err(Error::UnknownSource),
+        }
+    }
+
+    async fn calculate_ingredient_nutrition(
+        &self,
+        conn: &mut AsyncPgConnection,
+        ing: &IngredientForCalculation<'_>,
+    ) -> Result<Option<(f64, CalculatedNutrition)>> {
+        let foods = SRLegacyFoodDetails::get_relevant(conn, &ing.parsed.name).await?;
+
+        let most_relevant_food = match foods.first() {
+            Some(food) => food,
+            None => {
+                warn!("No food found for ingredient: {}", ing.parsed.name);
+                return Ok(None);
+            }
+        };
+
+        let nutrition = self.extract_nutrition_from_food(most_relevant_food);
+        let weight = self.calculate_ingredient_weight(most_relevant_food, ing);
+        let scaled_nutrition = self.scale_nutrition_to_weight(nutrition, weight);
+
+        Ok(Some((weight, scaled_nutrition)))
+    }
+
+    fn extract_nutrition_from_food(&self, food: &SRLegacyFoodDetails) -> NutritionComponents {
+        food.food_nutrients.iter().fold(
+            NutritionComponents::default(),
+            |mut nutrition, nutrient| {
+                let v = nutrient.amount;
+                match nutrient.fdc_id {
+                    1003 => nutrition.protein_g = v,
+                    1004 => nutrition.total_fat_g = v,
+                    1005 => nutrition.total_carbohydrates = v,
+                    1008 => nutrition.calories_kcal = v as i16,
+                    1079 => nutrition.fiber_g = v,
+                    1093 => nutrition.sodium_mg = v,
+                    1253 => nutrition.cholesterol_mg = v,
+                    1257 => nutrition.trans_fat_g = v,
+                    1258 => nutrition.saturated_fat_g = v,
+                    1292 | 1293 => nutrition.unsaturated_fat_g += v,
+                    2000 => nutrition.sugars_g = v,
+                    _ => {}
+                }
+                nutrition
+            },
+        )
+    }
+
+    fn parse_portion_units(&self, food: &SRLegacyFoodDetails) -> Vec<PortionUnit> {
+        food.food_portions
+            .iter()
+            .filter_map(|portion| {
+                Unit::from_str(&format!("1 {}", portion.modifier))
+                    .ok()
+                    .map(|unit| PortionUnit {
+                        amount: portion.amount,
+                        gram_weight: portion.gram_weight,
+                        modifier: portion.modifier.clone(),
+                        unit,
+                    })
+            })
+            .collect()
+    }
+
+    fn calculate_ingredient_weight(
+        &self,
+        food: &SRLegacyFoodDetails,
+        ing: &IngredientForCalculation<'_>,
+    ) -> f64 {
+        let portion_units = self.parse_portion_units(food);
+
+        match &ing.unit {
+            Unit::Unitless(u) => self.calculate_unitless_weight(&portion_units, ing, u.value),
+            _ => self.calculate_unit_weight(&portion_units, ing),
+        }
+    }
+
+    fn calculate_unitless_weight(
+        &self,
+        portion_units: &[PortionUnit],
+        ing: &IngredientForCalculation<'_>,
+        value: f64,
+    ) -> f64 {
+        if let Some(portion) = portion_units.iter().find(|p| {
+            ing.original
+                .contains(p.modifier.split_ascii_whitespace().next().unwrap_or(""))
+        }) {
+            return self.scale_by_amount(value, portion.amount, portion.gram_weight);
+        }
+
+        if let Some(portion) = portion_units.iter().find(|p| p.modifier == "medium") {
+            return self.scale_by_amount(value, portion.amount, portion.gram_weight);
+        }
+
+        1.0
+    }
+
+    fn calculate_unit_weight(
+        &self,
+        portion_units: &[PortionUnit],
+        ing: &IngredientForCalculation<'_>,
+    ) -> f64 {
+        let ing_amount = ing.unit.value();
+        let ing_unit_type = ing.unit.unit_type();
+
+        if let Some(portion) = portion_units.iter().find(|p| {
+            ing_unit_type == p.unit.unit_type()
+                && ing
+                    .original
+                    .contains(p.modifier.rsplit(", ").next().unwrap_or_default())
+        }) {
+            return self.scale_by_amount(ing_amount, portion.amount, portion.gram_weight);
+        }
+
+        if let Some(portion) = portion_units
+            .iter()
+            .find(|p| ing_unit_type == p.unit.unit_type())
+        {
+            return self.scale_by_amount(ing_amount, portion.amount, portion.gram_weight);
+        }
+
+        2.0
+    }
+
+    fn scale_by_amount(&self, ing_amount: f64, portion_amount: f64, gram_weight: f64) -> f64 {
+        if (ing_amount - portion_amount).abs() < f64::EPSILON {
+            gram_weight
+        } else {
+            (ing_amount / portion_amount) * gram_weight
+        }
+    }
+
+    fn scale_nutrition_to_weight(
+        &self,
+        nutrition: NutritionComponents,
+        weight: f64,
+    ) -> CalculatedNutrition {
+        let scale = weight / 100.0;
+
+        CalculatedNutrition {
+            per_100g: nutrition * scale,
+            per_serving: NutritionComponents::default(),
+        }
+    }
+
+    fn aggregate_nutrition(
+        &self,
+        nutrition_data: Vec<(f64, CalculatedNutrition)>,
+        num_servings: i16,
+    ) -> Result<CalculatedNutrition> {
+        let total_weight: f64 = nutrition_data.iter().map(|(w, _)| w).sum();
+        let scale_per_100g = 100.0 / total_weight;
+
+        let per_100g =
+            nutrition_data
+                .iter()
+                .fold(NutritionComponents::default(), |mut acc, (_, n)| {
+                    acc += n.per_100g;
+                    acc
+                })
+                * scale_per_100g;
+
+        let per_serving =
+            nutrition_data
+                .iter()
+                .fold(NutritionComponents::default(), |mut acc, (_, n)| {
+                    acc += n.per_100g;
+                    acc
+                })
+                / num_servings;
+
+        Ok(CalculatedNutrition {
+            per_100g,
+            per_serving,
+        })
+    }
+
+    /// Updates the nutrition data for all sources.
+    pub async fn update_all(mm: &ModelManager) {
+        info!("Updating nutrition data sources");
+        for source in all_nutrition_sources() {
+            info!("Updating data for {source}");
+            let _ = source.update_data(mm).await;
+        }
+    }
+
+    /// Updates the user's preferred nutrition data source.
+    pub async fn save(&self, mm: &ModelManager, user_id: i64) -> Result<()> {
+        use diesel::prelude::*;
+        use diesel_async::RunQueryDsl;
+
+        let mut conn = mm.pool.get().await?;
+
+        let _ = diesel::update(
+            schema::user_settings::table.filter(schema::user_settings::user_id.eq(user_id)),
+        )
+        .set(schema::user_settings::nutrition_source_id.eq(self.id()))
+        .execute(&mut conn)
+        .await?;
+
+        Ok(())
+    }
+
+    fn id(&self) -> i16 {
+        match self {
+            NutritionDataSource::USDAFoodDataCentral => 1,
+            NutritionDataSource::Unknown => 0,
+        }
+    }
+
+    /// Updates the nutrition source's data. If the data is already up to date, it will not be updated.
+    pub async fn update_data(&self, mm: &ModelManager) -> Result<()> {
+        match self {
+            NutritionDataSource::USDAFoodDataCentral => {
+                match FdcParser::new().fetch(&FdcClient::new(mm)).await {
+                    Ok(f) => {
+                        f.push_into_database(mm).await?;
+                        info!("Updated nutrition data for '{self}'");
+                        Ok(())
+                    }
+                    Err(Error::NoNeedToUpdateNutrition) => {
+                        warn!("Nutrition data '{self}' already up to date.");
+                        Ok(())
+                    }
+                    Err(err) => {
+                        error!("Failed to update nutrition data '{self}': {err}");
+                        Err(err)
+                    }
+                }
+            }
+            NutritionDataSource::Unknown => Err(Error::NoNeedToUpdateNutrition),
+        }
+    }
+}
+
+impl From<i16> for NutritionDataSource {
+    fn from(id: i16) -> Self {
+        match id {
+            1 => NutritionDataSource::USDAFoodDataCentral,
+            _ => NutritionDataSource::Unknown,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use testing::utils::{TestDb, create_app_state};
+
+    use crate::nutrition::{NutritionDataSource, all_nutrition_sources};
+
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    #[test]
+    fn test_all_nutrition_sources() {
+        let got = all_nutrition_sources();
+
+        pretty_assertions::assert_eq!(got, vec![NutritionDataSource::USDAFoodDataCentral])
+    }
+
+    #[test]
+    fn test_nutrition_source_parse() {
+        pretty_assertions::assert_eq!(
+            "USDA FoodData Central"
+                .parse::<NutritionDataSource>()
+                .unwrap(),
+            NutritionDataSource::USDAFoodDataCentral
+        );
+        pretty_assertions::assert_eq!(
+            "unknown".parse::<NutritionDataSource>().unwrap(),
+            NutritionDataSource::Unknown
+        );
+    }
+
+    #[test]
+    fn to_string() {
+        assert_eq!(
+            NutritionDataSource::USDAFoodDataCentral.to_string(),
+            "USDA FoodData Central"
+        );
+        assert_eq!(NutritionDataSource::Unknown.to_string(), "unknown");
+    }
+
+    #[test]
+    fn from_id() {
+        pretty_assertions::assert_eq!(
+            NutritionDataSource::from(1),
+            NutritionDataSource::USDAFoodDataCentral
+        );
+        pretty_assertions::assert_eq!(NutritionDataSource::from(2), NutritionDataSource::Unknown);
+    }
+
+    mod tests_calculate_nutrition_per_100g {
+        use crate::nutrition::{
+            CalculatedNutrition, NutritionComponents,
+            fdc::parser::{DataFetched as _, DataNotFetched as _, FdcParser},
+            states::DataFetchedState,
+            testdata::nutrition_data::nutrition_data_for_tests::*,
+        };
+
+        use super::*;
+
+        #[tokio::test]
+        async fn test_no_calculation_when_unknown_source_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let mut conn = state.mm.pool.get().await?;
+            let source = NutritionDataSource::Unknown;
+
+            let res = source
+                .calculate_nutrition(&mut conn, Vec::new().as_slice(), 1)
+                .await;
+
+            assert!(res.is_err());
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_nutrition1_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config).await;
+            let mut conn = state.mm.pool.get().await?;
+            let client = FdcClientForTests::new(FDC_FF_DATASET_3);
+            let parser: FdcParser<DataFetchedState> = FdcParser::new().fetch(&client).await?;
+            parser.push_into_database(&state.mm).await?;
+            let ingredients = vec![
+                "1 cup white sugar",
+                "1/2 cup butter, melted",
+                "2 eggs",
+                "1 teaspoon vanilla extract",
+                "1 cups all-purpose flour",
+                "1 teaspoon baking soda",
+                "1/2 teaspoon salt",
+                "1/2 cup sour cream",
+                "1/2 cup chopped walnuts",
+                "2 medium bananas, sliced",
+            ];
+            let source = NutritionDataSource::USDAFoodDataCentral;
+            let num_servings = 4;
+
+            let got = source
+                .calculate_nutrition(&mut conn, ingredients.as_slice(), num_servings)
+                .await?;
+
+            pretty_assertions::assert_eq!(
+                got,
+                CalculatedNutrition {
+                    per_100g: NutritionComponents {
+                        calories_kcal: 312,
+                        total_carbohydrates: 38.764939987365764,
+                        sugars_g: 24.448962939566222,
+                        protein_g: 4.255598020635922,
+                        total_fat_g: 16.08292482627921,
+                        saturated_fat_g: 7.657184670456936,
+                        unsaturated_fat_g: 7.361701200252684,
+                        cholesterol_mg: 64.39618867129921,
+                        sodium_mg: 356.6101284480943,
+                        fiber_g: 1.4140345335860178,
+                        trans_fat_g: 0.3954769425142135,
+                    },
+                    per_serving: NutritionComponents {
+                        calories_kcal: 740,
+                        total_carbohydrates: 92.04735000000001,
+                        sugars_g: 58.0540625,
+                        protein_g: 10.104917499999999,
+                        total_fat_g: 38.18890499999999,
+                        saturated_fat_g: 18.181984999999997,
+                        unsaturated_fat_g: 17.4803595,
+                        cholesterol_mg: 152.90875,
+                        sodium_mg: 846.77075,
+                        fiber_g: 3.3576249999999996,
+                        trans_fat_g: 0.93906,
+                    },
+                }
+            );
+            Ok(())
+        }
+    }
+}

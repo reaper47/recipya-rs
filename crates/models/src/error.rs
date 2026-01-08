@@ -13,17 +13,26 @@ pub enum Error {
         entity: &'static str,
         id: i64,
     },
+    InvalidCssSelector,
+    InvalidZipArchive,
+    NoFileInZip,
+    NoNeedToUpdateNutrition,
     NoSearch,
     Time,
     ThemeNotFound,
+    UnknownSource,
 
     // Modules
+    #[from]
+    Chrono(chrono::ParseError),
     #[from]
     Config(config::Error),
     #[from]
     Scraper(recipya_scraper::Error),
     #[from]
     Repository(repository::Error),
+    #[from]
+    Reqwest(reqwest::Error),
     #[from]
     Pwd(auth::pwd::Error),
 
@@ -32,11 +41,17 @@ pub enum Error {
     #[from]
     Fmt(std::fmt::Error),
     #[from]
+    Io(std::io::Error),
+    #[from]
     Math(math::Error),
     #[from]
     HumanTime(humantime::DurationError),
     #[from]
+    SimdJson(simd_json::Error),
+    #[from]
     Run(diesel_async::pooled_connection::bb8::RunError),
+    #[from]
+    SerdeJson(serde_json::Error),
 }
 
 impl From<diesel::result::Error> for Error {

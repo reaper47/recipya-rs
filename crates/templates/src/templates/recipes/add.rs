@@ -6,8 +6,8 @@ use models::recipe::structs::section::SectionComponents;
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, init_recipe_form_js, recipe_keyword_empty,
-    render_media_editor, render_rating,
+    add_ingredient, add_instruction, add_tool, init_recipe_form_js, nutrition_table_header,
+    recipe_keyword_empty, render_media_editor, render_rating,
 };
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
@@ -262,28 +262,46 @@ fn render_keywords(view: Option<&ViewRecipe>, keywords: Vec<Keyword>) -> Markup 
 fn render_nutrition_table() -> Markup {
     html! {
         table class="table table-zebra table-xs" {
-            thead {
-                tr {
-                    th { "Nutrition (per 100g)" }
-                    th { "Amount" }
-                }
-            }
+            (nutrition_table_header())
             tbody {
-                @let rows = [
-                    ("Calories", "calories", "368kcal"),
-                    ("Total carbs", "total-carbohydrates", "35g"),
-                    ("Sugars", "sugars", "3g"),
-                    ("Protein", "protein", "21g"),
-                    ("Total fat", "total-fat", "15g"),
-                    ("Saturated fat", "saturated-fat", "1.8g"),
-                    ("Unsaturated fat", "unsaturated-fat", "1.8g"),
-                    ("Trans fat", "trans-fat", "1.8g"),
-                    ("Cholesterol", "cholesterol", "1.1mg"),
-                    ("Sodium", "sodium", "100mg"),
-                    ("Fiber", "fiber", "8g"),
-                ];
-                @for (name, name_attr, placeholder) in rows {
-                    tr {
+                @for (name, name_attr, placeholder) in [
+                    ("Calories", "calories-per-100g", "368kcal"),
+                    ("Total carbs", "total-carbohydrates-per-100g", "35g"),
+                    ("Sugars", "sugars-per-100g", "3g"),
+                    ("Protein", "protein-per-100g", "21g"),
+                    ("Total fat", "total-fat-per-100g", "15g"),
+                    ("Saturated fat", "saturated-fat-per-100g", "1.8g"),
+                    ("Unsaturated fat", "unsaturated-fat-per-100g", "1.8g"),
+                    ("Trans fat", "trans-fat-per-100g", "1.8g"),
+                    ("Cholesterol", "cholesterol-per-100g", "1.1mg"),
+                    ("Sodium", "sodium-per-100g", "100mg"),
+                    ("Fiber", "fiber-per-100g", "8g"),
+                ] {
+                    tr data-nutrition-type="per-100g" {
+                        td { (name) }
+                        td {
+                            label {
+                                input type="text" name=(name_attr) autocomplete="off" placeholder=(placeholder) class="input input-xs max-w-24";
+                            }
+                        }
+                    }
+                }
+
+                @for (name, name_attr, placeholder) in [
+                    ("Serving size", "serving-size", "1/4 cup (45g)"),
+                    ("Calories", "calories-per-serving", "128kcal"),
+                    ("Total carbs", "total-carbohydrates-per-serving", "12g"),
+                    ("Sugars", "sugars-per-serving", "2g"),
+                    ("Protein", "protein-per-serving", "5g"),
+                    ("Total fat", "total-fat-per-serving", "15g"),
+                    ("Saturated fat", "saturated-fat-per-serving", "3.8g"),
+                    ("Unsaturated fat", "unsaturated-fat-per-serving", "3.2g"),
+                    ("Trans fat", "trans-fat-per-serving", "0g"),
+                    ("Cholesterol", "cholesterol-per-serving", "100mg"),
+                    ("Sodium", "sodium-per-serving", "25mg"),
+                    ("Fiber", "fiber-per-serving", "6g"),
+                ] {
+                    tr data-nutrition-type="per-serving" .hidden {
                         td { (name) }
                         td {
                             label {

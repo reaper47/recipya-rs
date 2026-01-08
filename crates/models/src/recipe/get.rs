@@ -9,7 +9,7 @@ use uuid::Uuid;
 use crate::params::SearchParams;
 use crate::recipe::RecipeSearch;
 use crate::recipe::structs::media::{Video, VideoRecipe};
-use crate::recipe::structs::nutrition::Nutrition;
+use crate::recipe::structs::nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails};
 use crate::recipe::structs::recipe::RecipeDetails;
 use crate::recipe::structs::section::{Item, SectionComponents, SectionItem};
 use crate::recipe::structs::time::Times;
@@ -34,7 +34,7 @@ impl Recipe {
     pub async fn get(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<RecipeDetails> {
         let mut conn = mm.pool.get().await?;
 
-        let (recipe, category, cuisine, keywords, nutrition, times) = schema::recipes::table
+        let (recipe, category, cuisine, keywords, times) = schema::recipes::table
             .inner_join(
                 schema::users_recipes::table
                     .on(schema::users_recipes::recipe_id.eq(schema::recipes::id)),
@@ -47,9 +47,6 @@ impl Recipe {
             .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
             .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
             .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
-            .left_join(
-                schema::nutrition::table.on(schema::nutrition::recipe_id.eq(schema::recipes::id)),
-            )
             .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
             .select((
                 (
@@ -71,17 +68,9 @@ impl Recipe {
                 schema::categories::name,
                 schema::cuisines::name.nullable(),
                 schema::keywords::name.nullable(),
-                schema::nutrition::all_columns.nullable(),
                 schema::times::all_columns,
             ))
-            .first::<(
-                Recipe,
-                String,
-                Option<String>,
-                Option<String>,
-                Option<Nutrition>,
-                Times,
-            )>(&mut conn)
+            .first::<(Recipe, String, Option<String>, Option<String>, Times)>(&mut conn)
             .await
             .optional()?
             .ok_or_else(|| Error::EntityNotFound {
@@ -89,10 +78,7 @@ impl Recipe {
                 id: recipe_id,
             })?;
 
-        fetch_recipe_details(
-            &mut conn, recipe, category, cuisine, keywords, nutrition, times,
-        )
-        .await
+        fetch_recipe_details(&mut conn, recipe, category, cuisine, keywords, times).await
     }
 
     /// Gets the recipe only.
@@ -137,7 +123,6 @@ pub async fn fetch_recipe_details(
     category: String,
     cuisine: Option<String>,
     keywords: Option<String>,
-    nutrition: Option<Nutrition>,
     times: Times,
 ) -> Result<RecipeDetails> {
     let recipe_id = recipe.id;
@@ -283,6 +268,33 @@ pub async fn fetch_recipe_details(
         })
         .collect::<Vec<_>>();
 
+    let nutrition_per_100g: Option<Nutrition> = schema::nutrition_per_100g::table
+        .inner_join(
+            schema::nutrition::table
+                .on(schema::nutrition_per_100g::nutrition_id.eq(schema::nutrition::id)),
+        )
+        .filter(schema::nutrition_per_100g::recipe_id.eq(recipe_id))
+        .select(schema::nutrition::all_columns)
+        .first::<Nutrition>(conn)
+        .await
+        .optional()?
+        .and_then(|n| n.sanitize());
+
+    let nutrition_per_serving: Option<(Nutrition, String)> = schema::nutrition_per_serving::table
+        .inner_join(
+            schema::nutrition::table
+                .on(schema::nutrition_per_serving::nutrition_id.eq(schema::nutrition::id)),
+        )
+        .filter(schema::nutrition_per_serving::recipe_id.eq(recipe_id))
+        .select((
+            schema::nutrition::all_columns,
+            schema::nutrition_per_serving::serving_size,
+        ))
+        .first::<(Nutrition, String)>(conn)
+        .await
+        .optional()?
+        .and_then(|(n, serving_size)| n.sanitize().map(|nutrition| (nutrition, serving_size)));
+
     Ok(RecipeDetails {
         recipe,
         additional_images,
@@ -291,7 +303,15 @@ pub async fn fetch_recipe_details(
         ingredients,
         instructions,
         keywords,
-        nutrition,
+        nutrition: NutritionDetails {
+            per_100g: nutrition_per_100g,
+            per_serving: nutrition_per_serving.map(|(nutrition, serving_size)| {
+                NutritionPerServingDetails {
+                    nutrition,
+                    serving_size,
+                }
+            }),
+        },
         times,
         tools,
         videos,

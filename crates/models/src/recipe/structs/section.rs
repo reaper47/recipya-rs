@@ -1,6 +1,6 @@
 use std::{iter::FlatMap, slice::IterMut, vec};
 
-use diesel::{Identifiable, Insertable, Queryable, Selectable};
+use diesel::prelude::*;
 
 use itertools::Either;
 use repository::schema;
@@ -118,8 +118,8 @@ impl SectionComponents {
     }
 
     /// Assembles a vector of the items as text.
-    pub fn items_as_text(&self) -> Vec<String> {
-        self.iter().map(|item| item.text.clone()).collect()
+    pub fn items_as_text(&self) -> Vec<&str> {
+        self.iter().map(|item| item.text.as_str()).collect()
     }
 
     /// Iterates over the items

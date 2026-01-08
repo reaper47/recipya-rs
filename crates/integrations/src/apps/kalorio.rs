@@ -138,7 +138,7 @@ where
 }
 
 fn parse_txt(input: &mut &str) -> Result<Vec<KalorioTextRecipe>> {
-    Ok(repeat(
+    repeat(
         0..,
         alt((
             preceded(take_while(1..=10, is_vchar_or_space), line_ending).map(|_| None),
@@ -147,7 +147,7 @@ fn parse_txt(input: &mut &str) -> Result<Vec<KalorioTextRecipe>> {
     )
     .parse_next(input)
     .map(|recipes: Vec<_>| recipes.into_iter().flatten().collect())
-    .map_err(|err| Error::Parse(err.to_string()))?)
+    .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
@@ -510,7 +510,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Petra Holzapfel")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
-                        "Kalorio! V4.04".into(),
+                        "Kalorio! V4.04",
                     )],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Käse".into()),
@@ -552,7 +552,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
-                        "Kalorio! V4.04".into(),
+                        "Kalorio! V4.04",
                     )],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Raclette".into()),
@@ -591,7 +591,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     r#type: AtType::Recipe.to_opt(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
-                        "Kalorio! V4.04".into(),
+                        "Kalorio! V4.04",
                     )],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Zwiebeln".into()),

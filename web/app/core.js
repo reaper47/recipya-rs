@@ -234,14 +234,16 @@ function secureUuidV4() {
   // Per RFC4122 v4 UUID variant and version bits
   bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
   bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
-  const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(
+    "",
+  );
   return [
     hex.substring(0, 8),
     hex.substring(8, 12),
     hex.substring(12, 16),
     hex.substring(16, 20),
-    hex.substring(20, 32)
-  ].join('-');
+    hex.substring(20, 32),
+  ].join("-");
 }
 
 async function pasteImage(event) {
@@ -563,4 +565,14 @@ async function loadURLToInputField(url, containerId) {
   input.files = transfer.files;
 
   return file;
+}
+
+function filterNutritionRows(type) {
+  document.querySelectorAll("[data-nutrition-type]").forEach((row) => {
+    if (row.dataset.nutritionType === type) {
+      row.classList.remove("hidden");
+    } else {
+      row.classList.add("hidden");
+    }
+  });
 }

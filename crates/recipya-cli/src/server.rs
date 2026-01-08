@@ -12,7 +12,10 @@ use tracing::{error, info};
 use app::jobs::clean_media;
 use app::state::AppState;
 use config::{Config, DataDir};
-use models::user::{User, UserForCreate};
+use models::{
+    nutrition::NutritionDataSource,
+    user::{User, UserForCreate},
+};
 use recipya_scraper::AppHttpClient;
 use repository::ModelManager;
 use router::middleware::mw_auth::mw_ctx_resolver;
@@ -45,6 +48,8 @@ pub async fn server() -> Result<()> {
         Arc::clone(&state.fs_support),
     )
     .await?;
+
+    NutritionDataSource::update_all(&state.mm).await;
 
     let router = router(state.clone())
         .await?
@@ -109,6 +114,8 @@ async fn start_cron_jobs(
 ) -> Result<()> {
     let sched = JobScheduler::new().await?;
 
+    let mm_clean = Arc::clone(&mm);
+
     info!(
         "Scheduled cron job 'CleanMedia' every Sunday at midnight to clean dangling media resources"
     );
@@ -116,7 +123,7 @@ async fn start_cron_jobs(
         .add(Job::new_async("0 0 0 * * 7", move |_uuid, _l| {
             info!("Running CleanMedia job");
 
-            let mm = Arc::clone(&mm);
+            let mm = Arc::clone(&mm_clean);
             let data_dir = Arc::clone(&data_dir);
             let fs_support = Arc::clone(&fs_support);
 
@@ -125,6 +132,19 @@ async fn start_cron_jobs(
                     error!("CleanMedia: Failed to run job: {err}");
                 }
             })
+        })?)
+        .await?;
+
+    info!(
+        "Scheduled cron job 'UpdateNutritionDataSources' on the first day of every month to update the nutrition data sources."
+    );
+    sched
+        .add(Job::new_async("0 0 0 1 * *", move |_uuid, _l| {
+            info!("Running UpdateNutritionDataSources job");
+
+            let mm = Arc::clone(&mm);
+
+            Box::pin(async move { NutritionDataSource::update_all(&mm).await })
         })?)
         .await?;
 

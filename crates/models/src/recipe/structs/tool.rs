@@ -1,4 +1,4 @@
-use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
+use diesel::prelude::*;
 
 use repository::schema;
 use schema_org::HowToTool;

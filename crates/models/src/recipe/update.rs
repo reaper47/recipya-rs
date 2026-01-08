@@ -11,9 +11,9 @@ use crate::recipe::helpers::{
     insert_keywords, insert_nutrition, insert_sections, insert_tools, insert_videos,
     update_category,
 };
-use crate::recipe::structs::nutrition::Nutrition;
 use crate::recipe::structs::recipe::RecipeForCreate;
 use crate::recipe::structs::time::TimesForInsert;
+use crate::settings::UserSettingDetails;
 use crate::{Error, Result};
 
 impl Recipe {
@@ -52,6 +52,8 @@ impl Recipe {
         if recipe.rating != new_recipe.rating {
             recipe.rating = new_recipe.rating;
         }
+
+        let user_settings = UserSettingDetails::get(mm, user_id).await?;
 
         mm.pool
             .get()
@@ -116,7 +118,8 @@ impl Recipe {
                     // Ingredients
                     let old_ingredients = old_recipe.ingredients.items_as_text();
                     let new_ingredients = new_recipe.ingredients.items_as_text();
-                    if old_ingredients != new_ingredients {
+                    let is_ingredients_changed = old_ingredients != new_ingredients;
+                    if is_ingredients_changed {
                         diesel::delete(
                             schema::ingredients_recipes::table
                                 .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id)),
@@ -165,45 +168,18 @@ impl Recipe {
                     }
 
                     // Nutrition
-                    match &new_recipe.nutrition {
-                        None => {
-                            diesel::delete(
-                                schema::nutrition::table
-                                    .filter(schema::nutrition::recipe_id.eq(recipe_id)),
-                            )
-                            .execute(conn)
-                            .await?;
-                        }
-                        Some(new_nutrition_c) => match old_recipe.nutrition {
-                            None => insert_nutrition(conn, new_nutrition_c, recipe_id).await?,
-                            Some(old_nutrition) => {
-                                let new_nutrition = Nutrition {
-                                    id: old_nutrition.id,
-                                    recipe_id,
-                                    calories_kcal: new_nutrition_c.calories_kcal,
-                                    total_carbohydrates: new_nutrition_c.total_carbohydrates,
-                                    sugars_g: new_nutrition_c.sugars_g,
-                                    protein_g: new_nutrition_c.protein_g,
-                                    total_fat_g: new_nutrition_c.total_fat_g,
-                                    saturated_fat_g: new_nutrition_c.saturated_fat_g,
-                                    unsaturated_fat_g: new_nutrition_c.unsaturated_fat_g,
-                                    cholesterol_mg: new_nutrition_c.cholesterol_mg,
-                                    sodium_mg: new_nutrition_c.sodium_mg,
-                                    fiber_g: new_nutrition_c.fiber_g,
-                                    trans_fat_g: new_nutrition_c.trans_fat_g,
-                                    serving_size: new_nutrition_c.serving_size.clone(),
-                                };
-                                if new_nutrition != old_nutrition {
-                                    diesel::update(
-                                        schema::nutrition::table
-                                            .filter(schema::nutrition::recipe_id.eq(recipe_id)),
-                                    )
-                                    .set(&new_nutrition)
-                                    .execute(conn)
-                                    .await?;
-                                }
-                            }
-                        },
+                    let new_ingredients_slice = new_ingredients.as_slice();
+
+                    if is_ingredients_changed {
+                        insert_nutrition(
+                            conn,
+                            recipe_id,
+                            &new_recipe.nutrition,
+                            new_ingredients_slice,
+                            user_settings.nutrition_source,
+                            new_recipe.r#yield.unwrap_or(1),
+                        )
+                        .await?;
                     }
 
                     // Times

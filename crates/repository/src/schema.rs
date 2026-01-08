@@ -119,6 +119,70 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    fdc_food_portions (id) {
+        id -> Int8,
+        value -> Float8,
+        modifier -> Text,
+        gram_weight -> Float8,
+        amount -> Float8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    fdc_food_portions_fdc_foods (id) {
+        id -> Int8,
+        food_id -> Int8,
+        portion_id -> Int8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    fdc_foods (id) {
+        id -> Int8,
+        food_class -> Text,
+        description -> Text,
+        food_category -> Text,
+        fdc_id -> Int8,
+        description_tsv -> Nullable<Tsvector>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    fdc_foods_fdc_nutrients (id) {
+        id -> Int8,
+        food_id -> Int8,
+        nutrient_id -> Int8,
+        amount -> Float8,
+        min -> Nullable<Float8>,
+        max -> Nullable<Float8>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    fdc_nutrients (id) {
+        id -> Int8,
+        fdc_id -> Int8,
+        name -> Text,
+        unit_name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     ingredients (id) {
         id -> Int8,
         name -> Text,
@@ -198,19 +262,56 @@ diesel::table! {
 
     nutrition (id) {
         id -> Int8,
-        recipe_id -> Int8,
+        is_precalculated_by_source -> Bool,
         calories_kcal -> Nullable<Int2>,
-        total_carbohydrates -> Nullable<Int2>,
-        sugars_g -> Nullable<Int2>,
-        protein_g -> Nullable<Int2>,
-        total_fat_g -> Nullable<Int2>,
-        saturated_fat_g -> Nullable<Int2>,
-        unsaturated_fat_g -> Nullable<Int2>,
-        cholesterol_mg -> Nullable<Int2>,
-        sodium_mg -> Nullable<Int2>,
-        fiber_g -> Nullable<Int2>,
-        trans_fat_g -> Nullable<Int2>,
-        serving_size -> Nullable<Text>,
+        total_carbohydrates -> Nullable<Float8>,
+        sugars_g -> Nullable<Float8>,
+        protein_g -> Nullable<Float8>,
+        total_fat_g -> Nullable<Float8>,
+        saturated_fat_g -> Nullable<Float8>,
+        unsaturated_fat_g -> Nullable<Float8>,
+        cholesterol_mg -> Nullable<Float8>,
+        sodium_mg -> Nullable<Float8>,
+        fiber_g -> Nullable<Float8>,
+        trans_fat_g -> Nullable<Float8>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    nutrition_per_100g (id) {
+        id -> Int8,
+        recipe_id -> Int8,
+        nutrition_id -> Int8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    nutrition_per_serving (id) {
+        id -> Int8,
+        recipe_id -> Int8,
+        nutrition_id -> Int8,
+        serving_size -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    nutrition_sources (id) {
+        id -> Int2,
+        name -> Text,
+        description -> Text,
+        url -> Text,
+        country -> Text,
+        created_on -> Date,
+        updated_on -> Nullable<Date>,
     }
 }
 
@@ -392,7 +493,7 @@ diesel::table! {
         id -> Int8,
         user_id -> Int8,
         measurement_system_id -> Int2,
-        calculate_nutrition -> Bool,
+        nutrition_source_id -> Int2,
         convert_automatically -> Bool,
         cookbooks_view -> Int4,
         default_theme -> Int4,
@@ -485,6 +586,10 @@ diesel::joinable!(cookbooks_recipes -> recipes (recipe_id));
 diesel::joinable!(counts -> users (user_id));
 diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
 diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
+diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_food_portions (portion_id));
+diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_foods (food_id));
+diesel::joinable!(fdc_foods_fdc_nutrients -> fdc_foods (food_id));
+diesel::joinable!(fdc_foods_fdc_nutrients -> fdc_nutrients (nutrient_id));
 diesel::joinable!(ingredients_recipes -> ingredients (ingredient_id));
 diesel::joinable!(ingredients_recipes -> recipes (recipe_id));
 diesel::joinable!(ingredients_recipes -> sections (section_id));
@@ -493,7 +598,10 @@ diesel::joinable!(instructions_recipes -> recipes (recipe_id));
 diesel::joinable!(instructions_recipes -> sections (section_id));
 diesel::joinable!(keywords_recipes -> keywords (keyword_id));
 diesel::joinable!(keywords_recipes -> recipes (recipe_id));
-diesel::joinable!(nutrition -> recipes (recipe_id));
+diesel::joinable!(nutrition_per_100g -> nutrition (nutrition_id));
+diesel::joinable!(nutrition_per_100g -> recipes (recipe_id));
+diesel::joinable!(nutrition_per_serving -> nutrition (nutrition_id));
+diesel::joinable!(nutrition_per_serving -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> users (user_id));
 diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
@@ -509,6 +617,7 @@ diesel::joinable!(times -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> tools (tool_id));
 diesel::joinable!(user_settings -> measurement_systems (measurement_system_id));
+diesel::joinable!(user_settings -> nutrition_sources (nutrition_source_id));
 diesel::joinable!(user_settings -> themes (selected_theme));
 diesel::joinable!(user_settings -> users (user_id));
 diesel::joinable!(users_categories -> categories (category_id));
@@ -530,6 +639,11 @@ diesel::allow_tables_to_appear_in_same_query!(
     counts,
     cuisines,
     cuisines_recipes,
+    fdc_food_portions,
+    fdc_food_portions_fdc_foods,
+    fdc_foods,
+    fdc_foods_fdc_nutrients,
+    fdc_nutrients,
     ingredients,
     ingredients_recipes,
     instructions,
@@ -538,6 +652,9 @@ diesel::allow_tables_to_appear_in_same_query!(
     keywords_recipes,
     measurement_systems,
     nutrition,
+    nutrition_per_100g,
+    nutrition_per_serving,
+    nutrition_sources,
     recipe_timelines,
     recipes,
     report_types,

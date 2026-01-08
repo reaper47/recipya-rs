@@ -242,11 +242,11 @@ where
 }
 
 fn parse_text_file(input: &mut &str) -> Result<Recipe> {
-    Ok(parse_recipe
+    parse_recipe
         .map(BigOvenRecipe::from)
         .parse_next(input)
         .map(|r: BigOvenRecipe| r.into())
-        .map_err(|err| Error::Parse(err.to_string()))?)
+        .map_err(|err| Error::Parse(err.to_string()))
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {

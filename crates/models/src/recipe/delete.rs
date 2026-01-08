@@ -114,8 +114,9 @@ mod tests {
             Recipe::delete(&state.mm, recipe_id, user.id).await?;
 
             let res = Recipe::get(&state.mm, recipe_id, user.id).await;
-            pretty_assertions::assert_eq!(res.is_err(), true);
+            assert!(res.is_err());
             let mut conn = state.mm.pool.get().await?;
+
             // categories_recipes
             let result: bool = diesel::select(exists(
                 schema::categories_recipes::table
@@ -123,14 +124,16 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("category"));
+            assert!(!result, "{}", fail_message("category"));
+
             let result: bool = diesel::select(exists(
                 schema::cookbooks_recipes::table
                     .filter(schema::cookbooks_recipes::recipe_id.eq(recipe_id)),
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("cookbook"));
+            assert!(!result, "{}", fail_message("cookbook"));
+
             // cuisines_recipes
             let result: bool = diesel::select(exists(
                 schema::cuisines_recipes::table
@@ -138,7 +141,8 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("cuisine"));
+            assert!(!result, "{}", fail_message("cuisine"));
+
             // ingredients_recipes
             let result: bool = diesel::select(exists(
                 schema::ingredients_recipes::table
@@ -146,7 +150,8 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("ingredient"));
+            assert!(!result, "{}", fail_message("ingredient"));
+
             // instructions_recipes
             let result: bool = diesel::select(exists(
                 schema::instructions_recipes::table
@@ -154,7 +159,8 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("instruction"));
+            assert!(!result, "{}", fail_message("instruction"));
+
             // keywords_recipes
             let result: bool = diesel::select(exists(
                 schema::keywords_recipes::table
@@ -162,14 +168,29 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("keyword"));
+            assert!(!result, "{}", fail_message("keyword"));
+
             // nutrition
-            let result: bool = diesel::select(exists(
-                schema::nutrition::table.filter(schema::nutrition::recipe_id.eq(recipe_id)),
+            let result_per_100g: bool = diesel::select(exists(
+                schema::nutrition_per_100g::table
+                    .filter(schema::nutrition_per_100g::recipe_id.eq(recipe_id)),
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("nutrition"));
+            assert!(!result, "{}", fail_message("nutrition_per_100g"));
+            let result_per_serving: bool = diesel::select(exists(
+                schema::nutrition_per_serving::table
+                    .filter(schema::nutrition_per_serving::recipe_id.eq(recipe_id)),
+            ))
+            .get_result(&mut conn)
+            .await?;
+            assert!(!result_per_100g, "{}", fail_message("nutrition_per_100g"));
+            assert!(
+                !result_per_serving,
+                "{}",
+                fail_message("nutrition_per_serving")
+            );
+
             // shares_recipes
             let result: bool = diesel::select(exists(
                 schema::shares_recipes::table
@@ -177,21 +198,24 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("shared recipes"));
+            assert!(!result, "{}", fail_message("shared recipes"));
+
             // times
             let result: bool = diesel::select(exists(
                 schema::times::table.filter(schema::times::recipe_id.eq(recipe_id)),
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("times"));
+            assert!(!result, "{}", fail_message("times"));
+
             // tools_recipes
             let result: bool = diesel::select(exists(
                 schema::tools_recipes::table.filter(schema::tools_recipes::recipe_id.eq(recipe_id)),
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("tool"));
+            assert!(!result, "{}", fail_message("tool"));
+
             // videos_recipes
             let result: bool = diesel::select(exists(
                 schema::videos_recipes::table
@@ -199,7 +223,8 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("video"));
+            assert!(!result, "{}", fail_message("video"));
+
             // additional_images_recipes
             let result: bool = diesel::select(exists(
                 schema::additional_images_recipe::table
@@ -207,7 +232,7 @@ mod tests {
             ))
             .get_result(&mut conn)
             .await?;
-            pretty_assertions::assert_eq!(result, false, "{}", fail_message("additional image"));
+            assert!(!result, "{}", fail_message("additional image"));
             Ok(())
         }
 

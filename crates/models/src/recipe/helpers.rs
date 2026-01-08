@@ -6,7 +6,7 @@ use axum::extract::multipart::{Field, InvalidBoundary};
 use diesel::data_types::PgInterval;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
-use diesel_async::{AsyncConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 use repository::schema;
 use support::regexp::time::TimeParser;
@@ -14,8 +14,12 @@ use support::strings::normalise_vulgar_fractions;
 use uuid::Uuid;
 
 use crate::Result;
+use crate::nutrition::NutritionDataSource;
 use crate::recipe::structs::media::{AdditionalImageForInsert, VideoForCreate, VideoForInsert};
-use crate::recipe::structs::nutrition::{NutritionForCreate, NutritionForInsert};
+use crate::recipe::structs::nutrition::{
+    NutritionDetailsForCreate, NutritionForInsert, NutritionPer100gForInsert,
+    NutritionPerServingForInsert,
+};
 use crate::recipe::structs::recipe::{
     CategoryForInsert, CuisineForInsert, IngredientForInsert, IngredientRecipeForInsert,
     InstructionForInsert, InstructionRecipeForInsert, KeywordForInsert, KeywordRecipe,
@@ -330,32 +334,108 @@ where
     Ok(())
 }
 
-pub(crate) async fn insert_nutrition<C>(
-    mut conn: &mut C,
-    nutrition: &NutritionForCreate,
+pub(crate) async fn insert_nutrition(
+    conn: &mut AsyncPgConnection,
     recipe_id: i64,
-) -> Result<()>
-where
-    C: AsyncConnection<Backend = diesel::pg::Pg>,
-{
-    diesel::insert_into(schema::nutrition::table)
-        .values(&NutritionForInsert {
-            recipe_id,
-            calories_kcal: nutrition.calories_kcal,
-            total_carbohydrates: nutrition.total_carbohydrates,
-            sugars_g: nutrition.sugars_g,
-            protein_g: nutrition.protein_g,
-            total_fat_g: nutrition.total_fat_g,
-            saturated_fat_g: nutrition.saturated_fat_g,
-            unsaturated_fat_g: nutrition.unsaturated_fat_g,
-            cholesterol_mg: nutrition.cholesterol_mg,
-            sodium_mg: nutrition.sodium_mg,
-            fiber_g: nutrition.fiber_g,
-            trans_fat_g: nutrition.trans_fat_g,
-            serving_size: nutrition.serving_size.clone(),
-        })
-        .execute(&mut conn)
+    nutrition: &NutritionDetailsForCreate,
+    ingredients: &[&str],
+    nutrition_source: NutritionDataSource,
+    num_servings: i16,
+) -> Result<()> {
+    let per_100g = &nutrition.per_100g;
+    let per_serving = &nutrition.per_serving;
+
+    let calculated_nutrition = if per_100g.is_some() || per_serving.is_some() {
+        None
+    } else {
+        nutrition_source
+            .calculate_nutrition(conn, ingredients, num_servings)
+            .await
+            .ok()
+    };
+
+    let nutrition_per_100g = match per_100g {
+        Some(n) if !n.is_empty() => Some(NutritionForInsert {
+            is_precalculated_by_source: true,
+            calories_kcal: n.calories_kcal,
+            total_carbohydrates: n.total_carbohydrates,
+            sugars_g: n.sugars_g,
+            protein_g: n.protein_g,
+            total_fat_g: n.total_fat_g,
+            saturated_fat_g: n.saturated_fat_g,
+            unsaturated_fat_g: n.unsaturated_fat_g,
+            cholesterol_mg: n.cholesterol_mg,
+            sodium_mg: n.sodium_mg,
+            fiber_g: n.fiber_g,
+            trans_fat_g: n.trans_fat_g,
+        }),
+        Some(_) | None => calculated_nutrition
+            .as_ref()
+            .map(|n| NutritionForInsert::from(&n.per_100g)),
+    };
+
+    let nutrition_per_serving = match per_serving {
+        Some(n) if !n.nutrition.is_empty() => Some(NutritionForInsert {
+            is_precalculated_by_source: true,
+            calories_kcal: n.nutrition.calories_kcal,
+            total_carbohydrates: n.nutrition.total_carbohydrates,
+            sugars_g: n.nutrition.sugars_g,
+            protein_g: n.nutrition.protein_g,
+            total_fat_g: n.nutrition.total_fat_g,
+            saturated_fat_g: n.nutrition.saturated_fat_g,
+            unsaturated_fat_g: n.nutrition.unsaturated_fat_g,
+            cholesterol_mg: n.nutrition.cholesterol_mg,
+            sodium_mg: n.nutrition.sodium_mg,
+            fiber_g: n.nutrition.fiber_g,
+            trans_fat_g: n.nutrition.trans_fat_g,
+        }),
+        Some(_) | None => calculated_nutrition
+            .as_ref()
+            .map(|n| NutritionForInsert::from(&n.per_serving)),
+    };
+
+    diesel::delete(schema::nutrition_per_100g::table)
+        .filter(schema::nutrition_per_100g::recipe_id.eq(recipe_id))
+        .execute(conn)
         .await?;
+
+    diesel::delete(schema::nutrition_per_serving::table)
+        .filter(schema::nutrition_per_serving::recipe_id.eq(recipe_id))
+        .execute(conn)
+        .await?;
+
+    if let Some(n) = nutrition_per_100g {
+        diesel::insert_into(schema::nutrition_per_100g::table)
+            .values(&NutritionPer100gForInsert {
+                recipe_id,
+                nutrition_id: diesel::insert_into(schema::nutrition::table)
+                    .values(&n)
+                    .returning(schema::nutrition::id)
+                    .get_result::<i64>(conn)
+                    .await?,
+            })
+            .execute(conn)
+            .await?;
+    }
+
+    if let Some(n) = nutrition_per_serving {
+        diesel::insert_into(schema::nutrition_per_serving::table)
+            .values(&NutritionPerServingForInsert {
+                recipe_id,
+                nutrition_id: diesel::insert_into(schema::nutrition::table)
+                    .values(&n)
+                    .returning(schema::nutrition::id)
+                    .get_result::<i64>(conn)
+                    .await?,
+                serving_size: nutrition
+                    .per_serving
+                    .as_ref()
+                    .map(|n| n.serving_size.clone())
+                    .unwrap_or_default(),
+            })
+            .execute(conn)
+            .await?;
+    }
 
     Ok(())
 }

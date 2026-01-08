@@ -1,17 +1,16 @@
 use std::str::FromStr;
 
 use diesel::prelude::*;
-use diesel::{JoinOnDsl, NullableExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use diesel_full_text_search::{TsVectorExtensions, to_tsquery, ts_rank};
-use repository::extensions::pagination::Paginate;
-use repository::{ModelManager, schema};
 use winnow::Parser;
 use winnow::combinator::alt;
 use winnow::token::literal;
 
+use repository::extensions::pagination::Paginate;
+use repository::{ModelManager, schema};
+
 use crate::recipe::get::fetch_recipe_details;
-use crate::recipe::structs::nutrition::Nutrition;
 use crate::recipe::structs::time::Times;
 use crate::{Error, Recipe, RecipeDetails, Result};
 
@@ -43,7 +42,6 @@ impl RecipeSearch {
             .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
             .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
             .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
-            .left_join(schema::nutrition::table.on(schema::nutrition::recipe_id.eq(id)))
             .inner_join(schema::times::table.on(schema::times::recipe_id.eq(id)))
             .select((
                 (
@@ -65,7 +63,6 @@ impl RecipeSearch {
                 schema::categories::name,
                 schema::cuisines::name.nullable(),
                 schema::keywords::name.nullable(),
-                schema::nutrition::all_columns.nullable(),
                 schema::times::all_columns,
             ))
             .distinct_on(id)
@@ -120,23 +117,13 @@ impl RecipeSearch {
 
         let fetched_recipes = query
             .paginate(page)
-            .load::<(
-                Recipe,
-                String,
-                Option<String>,
-                Option<String>,
-                Option<Nutrition>,
-                Times,
-            )>(&mut conn)
+            .load::<(Recipe, String, Option<String>, Option<String>, Times)>(&mut conn)
             .await?;
 
         let mut all_recipes = Vec::with_capacity(fetched_recipes.len());
-        for (recipe, category, cuisine, keywords, nutrition, times) in fetched_recipes {
+        for (recipe, category, cuisine, keywords, times) in fetched_recipes {
             all_recipes.push(
-                fetch_recipe_details(
-                    &mut conn, recipe, category, cuisine, keywords, nutrition, times,
-                )
-                .await?,
+                fetch_recipe_details(&mut conn, recipe, category, cuisine, keywords, times).await?,
             );
         }
 
@@ -424,6 +411,7 @@ mod tests {
     mod tests_search {
         use crate::recipe::structs::{
             media::Video,
+            nutrition::NutritionDetails,
             recipe::RecipeForCreate,
             section::{Item, SectionComponents},
             tool::{ToolForCreate, ToolRecipe},
@@ -470,26 +458,7 @@ mod tests {
                 ingredients: recipe_c.ingredients,
                 instructions: recipe_c.instructions,
                 keywords,
-                nutrition: if let Some(n) = recipe_c.nutrition {
-                    Some(Nutrition {
-                        id,
-                        recipe_id: id,
-                        calories_kcal: n.calories_kcal,
-                        total_carbohydrates: n.total_carbohydrates,
-                        sugars_g: n.sugars_g,
-                        protein_g: n.protein_g,
-                        total_fat_g: n.total_fat_g,
-                        saturated_fat_g: n.saturated_fat_g,
-                        unsaturated_fat_g: n.unsaturated_fat_g,
-                        cholesterol_mg: n.cholesterol_mg,
-                        sodium_mg: n.sodium_mg,
-                        fiber_g: n.fiber_g,
-                        trans_fat_g: n.trans_fat_g,
-                        serving_size: n.serving_size,
-                    })
-                } else {
-                    None
-                },
+                nutrition: NutritionDetails::from(&recipe_c.nutrition),
                 times: Times {
                     id,
                     recipe_id: id,
@@ -522,6 +491,16 @@ mod tests {
         }
 
         fn adjust_recipe(mut recipe: RecipeDetails, other_recipe: RecipeDetails) -> RecipeDetails {
+            if let Some(n) = recipe.nutrition.per_100g.as_mut() {
+                let other_n = other_recipe.nutrition.per_100g.unwrap();
+                n.id = other_n.id;
+                n.is_precalculated_by_source = other_n.is_precalculated_by_source;
+            };
+            if let Some(n) = recipe.nutrition.per_serving.as_mut() {
+                let other_n = other_recipe.nutrition.per_serving.unwrap().nutrition;
+                n.nutrition.id = other_n.id;
+                n.nutrition.is_precalculated_by_source = other_n.is_precalculated_by_source;
+            }
             recipe.recipe.created_at = other_recipe.recipe.created_at;
             recipe.recipe.updated_at = other_recipe.recipe.updated_at;
             recipe.videos = other_recipe.videos.clone();

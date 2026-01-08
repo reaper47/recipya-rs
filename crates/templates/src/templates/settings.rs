@@ -3,6 +3,7 @@ use strum::IntoEnumIterator;
 
 use math::cooking::units::system::MeasurementSystem;
 use models::data::Data;
+use models::nutrition::NutritionDataSource;
 use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
@@ -130,6 +131,7 @@ pub fn settings(
                 (settings_about(data))
             }
         }
+        (supported_nutrition_sources_dialog(&user_setting))
     }
 }
 
@@ -197,21 +199,25 @@ fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) ->
                   hx-trigger="click";
             }
             div class="divider m-0" {}
-            label class="flex justify-between items-center text-sm mt-2" for="settings-recipes-calc-nutrition" {
+            div class="flex justify-between items-center text-sm" {
                 div {
-                    span class="font-semibold" {
-                        "Calculate nutrition facts"
+                    p class="font-semibold" {
+                        "Nutrition data source"
                     }
-                    br;
-                    span class="text-xs block max-w-[45ch]" {
-                        "Calculate the nutrition facts automatically when adding a recipe. The processing will be done in the background."
+                    p class="text-xs" {
+                        "Choose the nutrition database used to calculate nutrition facts."
+                    }
+                    button class="btn btn-xs mt-2" onclick="document.querySelector('#supported-nutrition-sources-dialog').showModal()"  {
+                        "View sources"
                     }
                 }
-                input #settings-recipes-calc-nutrition type="checkbox" name="calculate-nutrition"
-                      checked[settings.is_calculate_nutrition]
-                      class="checkbox"
-                      hx-post="/settings/calculate-nutrition"
-                      hx-trigger="click";
+                select #settings-recipes-nutrition-source name="nutrition-source" class="w-fit select select-bordered select-sm" hx-post="/settings/nutrition/source" hx-swap="none" {
+                    optgroup label="United States of America" {
+                        option value=(NutritionDataSource::USDAFoodDataCentral) selected[NutritionDataSource::USDAFoodDataCentral == settings.nutrition_source] {
+                            (NutritionDataSource::USDAFoodDataCentral)
+                        }
+                    }
+                }
             }
             div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {
@@ -264,6 +270,59 @@ fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) ->
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
+    html! {
+        dialog #supported-nutrition-sources-dialog class="justify-self-center self-center" {
+            div class="card bg-base-100 shadow-sm" {
+                div class="card-body" {
+                    h3 class="mb-1" {
+                        label class="input input-sm" {
+                            svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
+                                g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor" {
+                                    circle cx="11" cy="11" r="8" {}
+                                    path d="m21 21-4.3-4.3" {}
+                                 }
+                            }
+                            input type="search" placeholder="Search a source"
+                                  _=(PreEscaped("on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"));
+                        }
+                    }
+                    div class="overflow-auto h-96" {
+                        table class="table table-zebra table-sm" {
+                            thead {
+                                tr class="text-center" {
+                                    th class="py-1" { "Number" }
+                                    th class="py-1" { "Name" }
+                                    th class="py-1" { "Description" }
+                                    th class="py-1" { "Country" }
+                                    th class="py-1" { "Last updated" }
+                                    th class="py-1" { "Website" }
+                                }
+                            }
+                            tbody #search-results {
+                                @for (idx, source) in settings.nutrition_sources.iter().enumerate() {
+                                    tr {
+                                        td class="py-1" { (idx + 1) }
+                                        td class="py-1" { (source.name) }
+                                        td class="py-1" { (source.description) }
+                                        td class="py-1" { (source.country) }
+                                        td class="py-1" { (source.updated_on.map(|date| date.format("%Y-%m-%d").to_string()).unwrap_or("Unknown".to_string())) }
+                                        td class="py-1" { a class="link" href=(source.url) target="_blank" { "Visit" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                div class="card-actions justify-end" {
+                    button class="btn btn-sm" onclick="this.closest('dialog').close()" { "Close" }
+                }
+              }
             }
         }
     }
@@ -738,7 +797,7 @@ fn themes_palette(is_set_default: bool, default_theme: &Theme, selected_theme: &
 
     html! {
         div id=(palette_id) class="dropdown dropdown-end hidden z-30 [@supports(color:oklch(0%_0_0))]:block" _=(PreEscaped(init)) {
-            div tabindex="0" role="button" class="btn btn-outline w-40" {
+            div tabindex="0" role="button" class="btn btn-sm btn-outline w-40" {
                 svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-5 w-5 stroke-current md:hidden" {
                     path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" {}
                 }

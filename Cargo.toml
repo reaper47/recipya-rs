@@ -41,8 +41,8 @@ base64 = "0.22.1"
 chrono = "0.4.42"
 config = { path = "./crates/config" }
 derive_more = { version = "2.0.1", features = ["from", "display"] }
-diesel = { version = "2.3.2", features = ["postgres", "chrono", "serde_json", "uuid"] }
-diesel-async = { version = "0.7.3", features = ["postgres", "bb8", "async-connection-wrapper"] }
+diesel = { version = "2.3.5", features = ["postgres", "chrono", "serde_json", "uuid"] }
+diesel-async = { version = "0.7.4", features = ["postgres", "bb8", "async-connection-wrapper"] }
 diesel_full_text_search = "2.3.0"
 email = { path = "./crates/email" }
 futures-core = "0.3.31"
@@ -59,10 +59,11 @@ pretty_assertions = "1.4.1"
 recipya-scraper = { path = "crates/recipya-scraper" }
 regex = "1.12.2"
 repository = { path = "./crates/repository" }
-reqwest = { version = "0.12.24", default-features = false, features = ["blocking", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
+reqwest = { version = "0.13.1", features = ["blocking", "form", "json"] }
 router = { path = "./crates/router" }
-rustls = { version = "0.23.32", default-features = false, features = ["ring"] }
+rustls = { version = "0.23.35", default-features = false, features = ["ring"] }
 schema-org = { path = "./crates/schema-org", default-features = false }
+scraper = "0.25.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 strum = { version = "0.27.2", features = ["derive"] }
@@ -79,6 +80,7 @@ uuid = { version = "1.18.1", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 whatlang = "0.16.4"
 winnow = "0.7.13"
+zip = "6.0.0"
 
 [workspace.metadata.tasks]
 web-install-deps = "npm --prefix ./web/app install"

@@ -6,6 +6,8 @@ use strum::{Display, EnumIter, EnumString};
 use math::cooking::units::system::MeasurementSystem;
 use repository::{ModelManager, schema};
 
+use crate::nutrition::NutritionDataSource;
+use crate::nutrition::tables::NutritionSource;
 use crate::{Error, Result};
 
 #[derive(Debug, Default, PartialEq, Display, EnumString, EnumIter)]
@@ -128,7 +130,7 @@ struct UserSetting {
     id: i64,
     user_id: i64,
     measurement_system_id: i16,
-    calculate_nutrition: bool,
+    nutrition_source_id: i16,
     convert_automatically: bool,
     cookbooks_view: i32,
     default_theme: i32,
@@ -139,7 +141,8 @@ struct UserSetting {
 pub struct UserSettingDetails {
     pub user_id: i64,
     pub measurement_system: MeasurementSystem,
-    pub is_calculate_nutrition: bool,
+    pub nutrition_source: NutritionDataSource,
+    pub nutrition_sources: Vec<NutritionSource>,
     pub is_convert_automatically: bool,
     pub cookbooks_view: i32,
     pub default_theme: Theme,
@@ -147,7 +150,7 @@ pub struct UserSettingDetails {
 }
 
 impl UserSettingDetails {
-    pub async fn get_settings(mm: &ModelManager, user_id: i64) -> Result<Self> {
+    pub async fn get(mm: &ModelManager, user_id: i64) -> Result<Self> {
         use schema::{themes, user_settings};
 
         let mut conn = mm.pool.get().await?;
@@ -177,7 +180,8 @@ impl UserSettingDetails {
         Ok(Self {
             user_id,
             measurement_system: MeasurementSystem::from_id(settings.measurement_system_id)?,
-            is_calculate_nutrition: settings.calculate_nutrition,
+            nutrition_source: NutritionDataSource::from(settings.nutrition_source_id),
+            nutrition_sources: NutritionSource::all(mm).await?,
             is_convert_automatically: settings.convert_automatically,
             cookbooks_view: settings.cookbooks_view,
             default_theme: default_theme_name,
@@ -200,14 +204,15 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
 
-        let got = UserSettingDetails::get_settings(&state.mm, user.id).await?;
+        let got = UserSettingDetails::get(&state.mm, user.id).await?;
 
         pretty_assertions::assert_eq!(
             got,
             UserSettingDetails {
                 user_id: 1,
                 measurement_system: MeasurementSystem::ImperialUK,
-                is_calculate_nutrition: false,
+                nutrition_source: NutritionDataSource::USDAFoodDataCentral,
+                nutrition_sources: NutritionSource::all(&state.mm).await?,
                 is_convert_automatically: false,
                 cookbooks_view: 0,
                 default_theme: Theme::default(),
@@ -251,7 +256,7 @@ mod tests {
         theme1.save_default(&state.mm, 1).await?;
         theme2.save_selected(&state.mm, 1).await?;
 
-        let settings = UserSettingDetails::get_settings(&state.mm, 1).await?;
+        let settings = UserSettingDetails::get(&state.mm, 1).await?;
         pretty_assertions::assert_eq!(settings.default_theme, theme1);
         pretty_assertions::assert_eq!(settings.selected_theme, theme2);
         Ok(())

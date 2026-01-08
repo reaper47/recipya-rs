@@ -1,4 +1,4 @@
-use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
+use diesel::prelude::*;
 use schema_org::ToIso8601;
 use uuid::Uuid;
 use whatlang::Lang;
@@ -10,7 +10,7 @@ use support::name_entity_with_relations;
 
 use crate::recipe::RecipeForm;
 use crate::recipe::structs::media::{Video, VideoForCreate};
-use crate::recipe::structs::nutrition::{Nutrition, NutritionForCreate};
+use crate::recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCreate};
 use crate::recipe::structs::section::{Section, SectionComponents};
 use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
@@ -83,7 +83,7 @@ pub struct RecipeDetails {
     pub ingredients: SectionComponents,
     pub instructions: SectionComponents,
     pub keywords: Vec<String>,
-    pub nutrition: Option<Nutrition>,
+    pub nutrition: NutritionDetails,
     pub times: Times,
     pub tools: Vec<ToolRecipe>,
     pub videos: Vec<Video>,
@@ -120,10 +120,10 @@ impl RecipeDetails {
 
     /// Returns whether the recipe is right-to-left.
     pub fn is_rtl(&self) -> bool {
-        match Lang::from_code(&self.recipe.language).unwrap_or(Lang::Eng) {
-            Lang::Ara | Lang::Heb | Lang::Yid | Lang::Urd | Lang::Pes => true,
-            _ => false,
-        }
+        matches!(
+            Lang::from_code(&self.recipe.language).unwrap_or(Lang::Eng),
+            Lang::Ara | Lang::Heb | Lang::Yid | Lang::Urd | Lang::Pes
+        )
     }
 }
 
@@ -144,7 +144,7 @@ impl From<RecipeForCreate> for RecipeDetails {
             ingredients: recipe_c.ingredients,
             instructions: recipe_c.instructions,
             keywords: recipe_c.keywords,
-            nutrition: recipe_c.nutrition.map(|n| Nutrition::from(&n)),
+            nutrition: NutritionDetails::from(&recipe_c.nutrition),
             times: Times::from(recipe_c.times.unwrap_or_default()),
             tools: recipe_c
                 .tools
@@ -182,7 +182,7 @@ pub struct RecipeForCreate {
     pub ingredients: SectionComponents,
     pub instructions: SectionComponents,
     pub keywords: Vec<String>,
-    pub nutrition: Option<NutritionForCreate>,
+    pub nutrition: NutritionDetailsForCreate,
     pub times: Option<TimesForCreate>,
     pub tools: Vec<ToolForCreate>,
 }
@@ -221,18 +221,24 @@ impl RecipeForCreate {
 impl From<&RecipeForm> for RecipeForCreate {
     fn from(form: &RecipeForm) -> Self {
         let ingredients = &form.ingredients;
-        let measurement_system_id = system::MeasurementSystem::from(ingredients.clone()).id();
+        let measurement_system_id = system::MeasurementSystem::from(
+            ingredients.iter().map(String::as_str).collect::<Vec<_>>(),
+        )
+        .id();
 
         Self {
             name: form.title.clone(),
             description: form.description.clone(),
-            images: vec![],
+            images: Vec::new(),
             r#yield: form.yield_,
             source: form.source.clone().unwrap_or_default(),
             is_favourite: false,
             rating: form.rating,
-            videos: vec![],
-            category: form.category.clone().or(Some("uncategorized".into())),
+            videos: Vec::new(),
+            category: form
+                .category
+                .clone()
+                .or_else(|| Some("uncategorized".into())),
             cuisine: form.cuisine.clone(),
             ingredients: SectionComponents::new(ingredients.clone()),
             instructions: SectionComponents::new(form.instructions.clone()),
@@ -248,29 +254,7 @@ impl From<&RecipeForm> for RecipeForCreate {
 
 impl From<RecipeForm> for RecipeForCreate {
     fn from(form: RecipeForm) -> Self {
-        let ingredients = form.ingredients;
-        let measurement_system_id = system::MeasurementSystem::from(ingredients.clone()).id();
-
-        Self {
-            name: form.title,
-            description: form.description,
-            images: vec![],
-            r#yield: form.yield_,
-            source: form.source.unwrap_or_default(),
-            is_favourite: false,
-            rating: form.rating,
-            videos: vec![],
-            category: form.category.or(Some("uncategorized".into())),
-            cuisine: form.cuisine,
-            ingredients: SectionComponents::new(ingredients),
-            instructions: SectionComponents::new(form.instructions),
-            keywords: form.keywords,
-            measurement_system_id,
-            nutrition: form.nutrition,
-            times: form.times,
-            tools: form.tools,
-            notes: form.notes,
-        }
+        Self::from(&form)
     }
 }
 
@@ -318,7 +302,11 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
                 .collect(),
             measurement_system_id,
             notes: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
-            nutrition: schema.nutrition.first().map(NutritionForCreate::from),
+            nutrition: schema
+                .nutrition
+                .first()
+                .map(NutritionDetailsForCreate::from)
+                .unwrap_or_default(),
             times: Some(TimesForCreate::from_components(
                 schema.prep_time.to_is8601_duration(),
                 schema.cook_time.to_is8601_duration(),
@@ -537,7 +525,7 @@ mod tests {
     }
 
     mod tests_nutrition {
-        use super::*;
+        use crate::recipe::structs::nutrition::Nutrition;
 
         #[test]
         fn test_empty_nutrition() {
@@ -545,7 +533,7 @@ mod tests {
 
             let got = nutrition.to_line();
 
-            assert_eq!(got, "No nutrition available.");
+            assert!(got.is_none());
         }
 
         #[test]
@@ -555,28 +543,27 @@ mod tests {
                 ..Default::default()
             };
 
-            let got = nutrition.to_line();
+            let got = nutrition.to_line().unwrap();
 
-            assert_eq!(got, "Per serving: calories 200 kcal");
+            assert_eq!(got, "calories 200 kcal");
         }
 
         #[test]
         fn test_multiple_nutrition_values() {
             let nutrition = Nutrition {
                 calories_kcal: Some(200),
-                total_carbohydrates: Some(50),
-                sugars_g: Some(20),
-                protein_g: Some(10),
-                total_fat_g: Some(5),
-                serving_size: Some("100g".into()),
+                total_carbohydrates: Some(50.),
+                sugars_g: Some(20.),
+                protein_g: Some(10.),
+                total_fat_g: Some(5.),
                 ..Default::default()
             };
 
-            let got = nutrition.to_line();
+            let got = nutrition.to_line().unwrap();
 
             assert_eq!(
                 got,
-                "Per 100g: calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g"
+                "calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g"
             );
         }
 
@@ -584,38 +571,37 @@ mod tests {
         fn test_nutrition_with_some_empty_values() {
             let nutrition = Nutrition {
                 calories_kcal: Some(250),
-                sodium_mg: Some(300),
+                sodium_mg: Some(300.),
                 ..Default::default()
             };
 
-            let got = nutrition.to_line();
+            let got = nutrition.to_line().unwrap();
 
-            assert_eq!(got, "Per serving: calories 250 kcal; sodium 300mg");
+            assert_eq!(got, "calories 250 kcal; sodium 300mg");
         }
 
         #[test]
         fn test_nutrition_with_all_values() {
             let nutrition = Nutrition {
                 calories_kcal: Some(200),
-                total_carbohydrates: Some(50),
-                sugars_g: Some(20),
-                protein_g: Some(10),
-                total_fat_g: Some(5),
-                saturated_fat_g: Some(2),
-                unsaturated_fat_g: Some(1),
-                trans_fat_g: Some(0),
-                cholesterol_mg: Some(30),
-                sodium_mg: Some(300),
-                fiber_g: Some(5),
-                serving_size: Some("100g".into()),
+                total_carbohydrates: Some(50.),
+                sugars_g: Some(20.),
+                protein_g: Some(10.),
+                total_fat_g: Some(5.),
+                saturated_fat_g: Some(2.),
+                unsaturated_fat_g: Some(1.),
+                trans_fat_g: Some(0.),
+                cholesterol_mg: Some(30.),
+                sodium_mg: Some(300.),
+                fiber_g: Some(5.),
                 ..Default::default()
             };
 
-            let got = nutrition.to_line();
+            let got = nutrition.to_line().unwrap();
 
             assert_eq!(
                 got,
-                "Per 100g: calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g; saturated fat 2g; unsaturated fat 1g; trans fat 0g; cholesterol 30mg; sodium 300mg; fiber 5g"
+                "calories 200 kcal; total carbohydrates 50g; sugar 20g; protein 10g; total fat 5g; saturated fat 2g; unsaturated fat 1g; trans fat 0g; cholesterol 30mg; sodium 300mg; fiber 5g"
             );
         }
     }

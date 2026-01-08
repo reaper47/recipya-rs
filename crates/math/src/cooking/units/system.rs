@@ -190,8 +190,8 @@ impl MeasurementSystem {
     }
 }
 
-impl From<Vec<String>> for MeasurementSystem {
-    fn from(elements: Vec<String>) -> Self {
+impl From<Vec<&str>> for MeasurementSystem {
+    fn from(elements: Vec<&str>) -> Self {
         let mut counter = HashMap::new();
 
         for element in &elements {
@@ -238,17 +238,17 @@ mod tests {
         fn test_imperial_uk() {
             assert_eq!(
                 MeasurementSystem::from(vec![
-                    "2 lb beef chuck roast".to_string(),
-                    "4 lb beef chuck roast".to_string(),
-                    "1 stone potatoes".to_string(),
-                    "8 fl oz beef stock".to_string(),
-                    "4 oz carrots".to_string(),
-                    "2 oz butter".to_string(),
-                    "1 pint milk".to_string(),
-                    "6 oz plain flour".to_string(),
-                    "3 tbsp olive oil".to_string(),
-                    "1 tsp salt".to_string(),
-                    "½ tsp black pepper".to_string(),
+                    "2 lb beef chuck roast",
+                    "4 lb beef chuck roast",
+                    "1 stone potatoes",
+                    "8 fl oz beef stock",
+                    "4 oz carrots",
+                    "2 oz butter",
+                    "1 pint milk",
+                    "6 oz plain flour",
+                    "3 tbsp olive oil",
+                    "1 tsp salt",
+                    "½ tsp black pepper",
                 ]),
                 MeasurementSystem::UsCustomary
             );
@@ -258,16 +258,16 @@ mod tests {
         fn test_metric() {
             assert_eq!(
                 MeasurementSystem::from(vec![
-                    "1 kg chicken breast".to_string(),
-                    "500 g pasta".to_string(),
-                    "250 ml cream".to_string(),
-                    "200 g mushrooms".to_string(),
-                    "100 g parmesan cheese".to_string(),
-                    "2 l vegetable broth".to_string(),
-                    "30 ml olive oil".to_string(),
-                    "15 g fresh basil".to_string(),
-                    "5 g salt".to_string(),
-                    "2 g black pepper".to_string(),
+                    "1 kg chicken breast",
+                    "500 g pasta",
+                    "250 ml cream",
+                    "200 g mushrooms",
+                    "100 g parmesan cheese",
+                    "2 l vegetable broth",
+                    "30 ml olive oil",
+                    "15 g fresh basil",
+                    "5 g salt",
+                    "2 g black pepper",
                 ]),
                 MeasurementSystem::Metric
             );
@@ -277,16 +277,16 @@ mod tests {
         fn test_metric_australia() {
             assert_eq!(
                 MeasurementSystem::from(vec![
-                    "800 g lamb leg".to_string(),
-                    "400 g sweet potato".to_string(),
-                    "375 ml coconut milk".to_string(),
-                    "250 g green beans".to_string(),
-                    "125 ml fish sauce".to_string(),
-                    "60 ml lime juice".to_string(),
-                    "20 ml sesame oil".to_string(),
-                    "1 tbsp brown sugar".to_string(),
-                    "1 tsp ground coriander".to_string(),
-                    "½ tsp chili flakes".to_string(),
+                    "800 g lamb leg",
+                    "400 g sweet potato",
+                    "375 ml coconut milk",
+                    "250 g green beans",
+                    "125 ml fish sauce",
+                    "60 ml lime juice",
+                    "20 ml sesame oil",
+                    "1 tbsp brown sugar",
+                    "1 tsp ground coriander",
+                    "½ tsp chili flakes",
                 ]),
                 MeasurementSystem::Metric
             );
@@ -296,18 +296,18 @@ mod tests {
         fn test_us_customary() {
             assert_eq!(
                 MeasurementSystem::from(vec![
-                    "2 lbs ground turkey".to_string(),
-                    "1 lb spaghetti".to_string(),
-                    "8 oz cream cheese".to_string(),
-                    "6 pt blue cheese".to_string(),
-                    "6 floz water".to_string(),
-                    "6gallons of gas".to_string(),
-                    "1 foot bread".to_string(),
-                    "½ cup grated cheddar".to_string(),
-                    "¼ cup olive oil".to_string(),
-                    "2 tbsp garlic powder".to_string(),
-                    "1 tsp dried oregano".to_string(),
-                    "½ tsp paprika".to_string(),
+                    "2 lbs ground turkey",
+                    "1 lb spaghetti",
+                    "8 oz cream cheese",
+                    "6 pt blue cheese",
+                    "6 floz water",
+                    "6gallons of gas",
+                    "1 foot bread",
+                    "½ cup grated cheddar",
+                    "¼ cup olive oil",
+                    "2 tbsp garlic powder",
+                    "1 tsp dried oregano",
+                    "½ tsp paprika",
                 ]),
                 MeasurementSystem::UsCustomary
             );

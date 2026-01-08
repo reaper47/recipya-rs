@@ -812,7 +812,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
         pub fn cookmate() -> Vec<Recipe> {
             vec![
                 Recipe {
-                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]"),
                     keywords: ["Poultry", "Fish/sea", "Spanish"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     name: vec!["Aunt Julia's Paella".into()],
                     recipe_category: vec!["Pork/ham".into()],
@@ -838,7 +838,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]"),
                     name: vec!["Ausgezogenes Mehlmus".into()],
                     recipe_category: vec!["German".into()],
                     recipe_ingredient: vec![
@@ -855,7 +855,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]"),
                     keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Breads".into())],
                     name: vec!["Austrian Bread Dumplings".into()],
                     recipe_category: vec!["Ethnic".into()],
@@ -873,7 +873,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     ..Default::default()
                 },
                 Recipe {
-                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]".into()),
+                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]"),
                     keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Breads".into())],
                     name: vec!["Authentic Italian Bread".into()],
                     recipe_category: vec!["Italian".into()],
@@ -895,7 +895,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
             vec![
                 Recipe {
                     author: vec![RecipeAuthorFieldEnum::new_person("Petra Holzapfel")],
-                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
+                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV"),
                     keywords: ["Käse", "Kuchen"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     name: vec!["Ananas-Käsekuchen".into()],
                     recipe_category: vec!["Ananas".into()],
@@ -934,7 +934,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 },
                 Recipe {
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen Herz")],
-                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
+                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV"),
                     keywords: ["Elsass", "Hefe"].into_iter().map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into())).collect(),
                     name: vec!["Flammenkuchen von Marc".into()],
                     recipe_category: vec!["Frankreich".into()],
@@ -979,7 +979,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 },
                 Recipe {
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
-                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
+                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV"),
                     keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Karotten".into())],
                     name: vec!["Möhren-Mandel-Muffins".into()],
                     recipe_category: vec!["Muffins".into()],
@@ -1009,7 +1009,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                 },
                 Recipe {
                     author: vec![RecipeAuthorFieldEnum::new_person("Jochen 'Nunz' Herz")],
-                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV".into()),
+                    is_based_on: to_is_based_on("'Kalorio V4.03' nach REZKONV"),
                     keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Zwiebeln".into())],
                     name: vec!["Zwiebelkuchen".into()],
                     recipe_category: vec!["Backen".into()],

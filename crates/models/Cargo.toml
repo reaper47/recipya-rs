@@ -18,6 +18,7 @@ rust-version.workspace = true
 test-utils = []
 
 [dependencies]
+async-trait.workspace = true
 auth.workspace = true
 axum.workspace = true
 chrono.workspace = true
@@ -28,6 +29,7 @@ diesel-async.workspace = true
 diesel_full_text_search.workspace = true
 humantime.workspace = true
 infer.workspace = true
+ingredient = "0.3.0"
 iso8601.workspace = true
 itertools.workspace = true
 lru.workspace = true
@@ -35,15 +37,21 @@ math.workspace = true
 paste = "1.0.15"
 recipya-scraper.workspace = true
 repository.workspace = true
+reqwest.workspace = true
 schema-org.workspace = true
+scraper.workspace = true
 serde.workspace = true
+serde_json.workspace = true
+simd-json = "0.17.0"
 strum.workspace = true
+strum_macros.workspace = true
 support.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 uuid.workspace = true
 whatlang.workspace = true
 winnow.workspace = true
+zip.workspace = true
 
 [dev-dependencies]
 app.workspace = true

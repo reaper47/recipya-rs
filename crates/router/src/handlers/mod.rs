@@ -23,7 +23,7 @@ pub(crate) async fn get_settings(
     state: &AppState,
     user_id: i64,
 ) -> crate::Result<UserSettingDetails> {
-    match UserSettingDetails::get_settings(&state.mm, user_id).await {
+    match UserSettingDetails::get(&state.mm, user_id).await {
         Ok(settings) => Ok(settings),
         Err(err) => {
             error!("Error fetching user settings for user {user_id}: {err}");
