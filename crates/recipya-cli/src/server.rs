@@ -18,9 +18,9 @@ use models::{
 };
 use recipya_scraper::AppHttpClient;
 use repository::ModelManager;
-use router::middleware::mw_auth::mw_ctx_resolver;
 use router::router;
-use support::fs::{AppFs, FsSupport};
+use router::{copy_to_fs, middleware::mw_auth::mw_ctx_resolver};
+use support::fs::{AppFs, FsSupport, get_base_dir};
 
 use crate::error::{Error, Result};
 
@@ -35,6 +35,8 @@ pub async fn server() -> Result<()> {
     )
     .await
     .map_err(|err| Error::Server(err.to_string()))?;
+
+    copy_assets_to_fs()?;
 
     if config.is_autologin
         && let Err(err) = init_autologin_user(&state.mm).await
@@ -62,6 +64,49 @@ pub async fn server() -> Result<()> {
     axum::serve(listener, router)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
+
+    Ok(())
+}
+
+fn copy_assets_to_fs() -> Result<()> {
+    let placeholders = get_base_dir()?.join("Media/Images/Placeholders");
+    let placeholder_recipe = "img/recipes/placeholder.webp";
+    for (src, dest) in [
+        (placeholder_recipe, "placeholder.recipe.webp"),
+        (placeholder_recipe, "placeholder.recipe.original.webp"),
+    ] {
+        let dest = placeholders.join(dest);
+        if let Err(err) = copy_to_fs(src, dest)
+            && !matches!(err, router::Error::FileExists)
+        {
+            return Err(Error::Server(err.to_string()));
+        }
+    }
+
+    let icon = get_base_dir()?.join("Media/Images/Icon");
+    for (src, dest) in [
+        (
+            "img/icon/android-chrome-192x192.png",
+            "android-chrome-192x192.png",
+        ),
+        (
+            "img/icon/android-chrome-512x512.png",
+            "android-chrome-512x512.png",
+        ),
+        ("img/icon/apple-touch-icon.png", "apple-touch-icon.png"),
+        ("img/icon/favicon.ico", "favicon.ico"),
+        ("img/icon/favicon-16x16.png", "favicon-16x16.png"),
+        ("img/icon/favicon-32x32.png", "favicon-32x32.png"),
+        ("img/icon/mstile-150x150.png", "mstile-150x150.png"),
+        ("img/icon/safari-pinned-tab.svg", "safari-pinned-tab.svg"),
+    ] {
+        let dest = icon.join(dest);
+        if let Err(err) = copy_to_fs(src, dest)
+            && !matches!(err, router::Error::FileExists)
+        {
+            return Err(Error::Server(err.to_string()));
+        }
+    }
 
     Ok(())
 }

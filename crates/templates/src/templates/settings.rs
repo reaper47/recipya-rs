@@ -137,7 +137,7 @@ pub fn settings(
 
 fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) -> Markup {
     html! {
-        div #settings-recipes class="p-3 md:max-h-96 overflow-y-auto" {
+        div #settings-recipes class="p-3 md:h-[50vh] overflow-y-auto" {
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
                     summary class="font-semibold cursor-default select-none" {

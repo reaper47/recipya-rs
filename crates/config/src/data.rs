@@ -21,6 +21,7 @@ pub struct DataDir {
 #[derive(Clone)]
 pub struct ImagesDir {
     pub root: PathBuf,
+    pub icon: PathBuf,
     // TODO: Clean notes directory
     pub notes: PathBuf,
     pub placeholders: PathBuf,
@@ -37,6 +38,7 @@ impl DataDir {
         let media_dir = base_dir.join("Media");
         let images_dir = media_dir.join("Images");
 
+        let images_icon = images_dir.join("Icon");
         let images_notes = images_dir.join("Notes");
         let images_placeholders = images_dir.join("Placeholders");
         let images_timelines = images_dir.join("Timelines");
@@ -51,6 +53,7 @@ impl DataDir {
             &backup,
             &debug,
             &logs,
+            &images_icon,
             &images_notes,
             &images_placeholders,
             &images_timelines,
@@ -66,6 +69,7 @@ impl DataDir {
             debug,
             images: ImagesDir {
                 root: images_dir,
+                icon: images_icon,
                 notes: images_notes,
                 placeholders: images_placeholders,
                 timeline: images_timelines,
@@ -97,44 +101,36 @@ mod tests {
 
     #[test]
     fn test_new_ok() -> Result<()> {
-        let binding = BaseDirs::new().expect("valid home dir");
-        let base_dir = binding.data_dir();
+        let base_dirs = BaseDirs::new().expect("failed to get base directories");
+        let expected_base = base_dirs.data_dir();
+        let data_dir = DataDir::new()?;
 
-        let got = DataDir::new()?;
+        for (actual, relative_path) in [
+            (&data_dir.backup, "Recipya/Backup"),
+            (&data_dir.logs, "Recipya/Logs"),
+            (&data_dir.videos, "Recipya/Media/Videos"),
+            (&data_dir.images.root, "Recipya/Media/Images"),
+            (&data_dir.images.icon, "Recipya/Media/Images/Icon"),
+            (&data_dir.images.notes, "Recipya/Media/Images/Notes"),
+            (
+                &data_dir.images.placeholders,
+                "Recipya/Media/Images/Placeholders",
+            ),
+            (&data_dir.images.timeline, "Recipya/Media/Images/Timelines"),
+            (
+                &data_dir.images.thumbnails,
+                "Recipya/Media/Images/Thumbnails",
+            ),
+        ] {
+            let got = expected_base.join(relative_path);
 
-        let base_dir_str = base_dir.to_str().expect("a path");
-        pretty_assertions::assert_eq!(
-            got.backup.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Backup")
-        );
-        pretty_assertions::assert_eq!(
-            got.images.root.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Media/Images")
-        );
-        pretty_assertions::assert_eq!(
-            got.logs.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Logs")
-        );
-        pretty_assertions::assert_eq!(
-            got.images.notes.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Media/Images/Notes")
-        );
-        pretty_assertions::assert_eq!(
-            got.images.placeholders.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Media/Images/Placeholders")
-        );
-        pretty_assertions::assert_eq!(
-            got.images.timeline.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Media/Images/Timelines")
-        );
-        pretty_assertions::assert_eq!(
-            got.images.thumbnails.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Media/Images/Thumbnails")
-        );
-        pretty_assertions::assert_eq!(
-            got.videos.to_str().expect("a path"),
-            format!("{base_dir_str}/Recipya/Media/Videos")
-        );
+            pretty_assertions::assert_eq!(
+                actual,
+                got.as_path(),
+                "Path mismatch for {relative_path}"
+            );
+        }
+
         Ok(())
     }
 }

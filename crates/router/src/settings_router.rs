@@ -150,7 +150,7 @@ mod tests {
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-account">"#,
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-about">"#,
                     r#"<div id="settings-blocks" class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem">"#,
-                    r#"<div id="settings-recipes" class="p-3 md:max-h-96 overflow-y-auto">"#,
+                    r#"<div id="settings-recipes" class="p-3 md:h-[50vh] overflow-y-auto">"#,
                     r#"<div id="settings-connections" class="p-3 overflow-y-auto max-h-96 hidden">"#,
                     r#"<div id="settings-server" class="hidden p-3 md:max-h-96">"#,
                     r#"<div id="settings-data" class="hidden p-3">"#,

@@ -9,10 +9,9 @@ use tracing::log::warn;
 use tracing_subscriber::EnvFilter;
 
 use repository::create_database_if_not_exists;
-use router::copy_to_fs;
-use support::{fs::get_base_dir, software};
+use support::software;
 
-use error::{Error, Result};
+use error::Result;
 use server::server;
 use sponsors::generate_sponsors_image;
 
@@ -49,7 +48,6 @@ async fn main() -> Result<()> {
             );
 
             create_database_if_not_exists("recipya")?;
-            copy_assets_to_fs()?;
 
             if software::is_ffmpeg_installed() {
                 info!("FFmpeg is installed");
@@ -94,25 +92,6 @@ fn init_tracing() -> Result<()> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
-
-    Ok(())
-}
-
-fn copy_assets_to_fs() -> Result<()> {
-    let placeholders = get_base_dir()?.join("Media/Images/Placeholders");
-
-    let placeholder_recipe = "img/recipes/placeholder.webp";
-    for (src, dest) in [
-        (placeholder_recipe, "placeholder.recipe.webp"),
-        (placeholder_recipe, "placeholder.recipe.original.webp"),
-    ] {
-        let dest = placeholders.join(dest);
-        if let Err(err) = copy_to_fs(src, dest)
-            && !matches!(err, router::Error::FileExists)
-        {
-            return Err(Error::Server(err.to_string()));
-        }
-    }
 
     Ok(())
 }
