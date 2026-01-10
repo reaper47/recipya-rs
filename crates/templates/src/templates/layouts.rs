@@ -52,7 +52,7 @@ pub fn main(
                           hx-push-url=@if data.is_authenticated { "true" }
                           hx-target=@if data.is_authenticated { "#content" }
                           href=@if !data.is_authenticated { "/" } {
-                            img src="/public/android-chrome-192x192.png" alt="Logo" style="width: 2rem";
+                            img src="/data/images/Icon/android-chrome-192x192.png" alt="Logo" style="width: 2rem";
                             "Recipya"
                         }
                     }

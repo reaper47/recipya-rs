@@ -47,20 +47,27 @@ mod tests {
         };
         let state = create_app_state(config).await;
         let app = static_files_routes(state.clone()).with_state(state);
-        let test_cases = vec![
-            ("/android-chrome-192x192.png", StatusCode::OK),
-            ("/android-chrome-512x512.png", StatusCode::OK),
-            ("/apple-touch-icon.png", StatusCode::OK),
-            ("/browserconfig.xml", StatusCode::OK),
-            ("/favicon.ico", StatusCode::OK),
-            ("/favicon-16x16.png", StatusCode::OK),
-            ("/favicon-32x32.png", StatusCode::OK),
-            ("/mstile-150x150.png", StatusCode::OK),
-            ("/safari-pinned-tab.svg", StatusCode::OK),
-            ("/site.webmanifest", StatusCode::OK),
+
+        for (path, want_status) in [
+            (
+                "/public/img/icon/android-chrome-192x192.png",
+                StatusCode::OK,
+            ),
+            (
+                "/public/img/icon/android-chrome-512x512.png",
+                StatusCode::OK,
+            ),
+            ("/public/img/icon/apple-touch-icon.png", StatusCode::OK),
+            ("/public/img/icon/favicon.ico", StatusCode::OK),
+            ("/public/img/icon/favicon-16x16.png", StatusCode::OK),
+            ("/public/img/icon/favicon-32x32.png", StatusCode::OK),
+            ("/public/img/icon/mstile-150x150.png", StatusCode::OK),
+            ("/public/img/icon/safari-pinned-tab.svg", StatusCode::OK),
+            ("/public/robots.txt", StatusCode::OK),
+            ("/public/site.webmanifest", StatusCode::OK),
+            ("/public/browserconfig.xml", StatusCode::OK),
             ("/public/chicken-meat-pie.png", StatusCode::NOT_FOUND),
-        ];
-        for (path, want_status) in test_cases {
+        ] {
             let res = app
                 .clone()
                 .oneshot(Request::builder().uri(path).body(Body::empty())?)
