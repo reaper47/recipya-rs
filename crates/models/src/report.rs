@@ -3,6 +3,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
 use repository::{ModelManager, schema};
+use uuid::Uuid;
 
 use super::Result;
 use crate::user::User;
@@ -23,7 +24,7 @@ impl ReportTypes {
 /// Represents a collection of reports.
 pub struct ReportForCreate {
     report_type_id: i16,
-    user_id: i64,
+    user_id: Uuid,
 
     pub report_logs: Vec<ReportLogForCreate>,
     pub exec_time_ms: i64,
@@ -31,7 +32,7 @@ pub struct ReportForCreate {
 
 impl ReportForCreate {
     /// Creates a new report with all the data required to insert into the database later on.
-    pub fn new(report_type: ReportTypes, user_id: i64) -> Self {
+    pub fn new(report_type: ReportTypes, user_id: Uuid) -> Self {
         Self {
             report_type_id: report_type.to_id(),
             user_id,
@@ -101,7 +102,7 @@ struct ReportType {
 struct Report {
     pub id: i64,
     pub report_type_id: i16,
-    pub user_id: i64,
+    pub user_id: Uuid,
     pub exec_time_ms: i64,
     pub created_at: chrono::NaiveDateTime,
 }
@@ -111,7 +112,7 @@ struct Report {
 #[diesel(table_name = schema::reports)]
 struct ReportForInsert {
     report_type_id: i16,
-    user_id: i64,
+    user_id: Uuid,
     exec_time_ms: i64,
 }
 

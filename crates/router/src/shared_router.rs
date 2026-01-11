@@ -12,6 +12,7 @@ pub(super) fn shared_routes() -> Router<AppState> {
 #[cfg(test)]
 mod tests {
     use models::recipe::structs::recipe::RecipeForCreate;
+    use models::user::User;
     use uuid::Uuid;
 
     use axum_test::TestResponse;
@@ -44,8 +45,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
-        let share = ShareRecipe::new(&state.mm, recipe_id, 1, None).await?;
+        let users = User::all(&state.mm).await?;
+        let recipe_id =
+            Recipe::create(&state.mm, users[0].id, &a_complete_recipe_for_create()).await?;
+        let share = ShareRecipe::new(&state.mm, recipe_id, users[0].id, None).await?;
 
         let res = server.get(&base_uri(share.link)).await;
 
@@ -97,8 +100,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_anonymous(config.clone()).await?;
         let state = create_app_state(config).await;
-        let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
-        let share = ShareRecipe::new(&state.mm, recipe_id, 1, None).await?;
+        let users = User::all(&state.mm).await?;
+        let recipe_id =
+            Recipe::create(&state.mm, users[0].id, &a_complete_recipe_for_create()).await?;
+        let share = ShareRecipe::new(&state.mm, recipe_id, users[0].id, None).await?;
 
         let res = server.get(&base_uri(share.link)).await;
 

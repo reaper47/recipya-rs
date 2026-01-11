@@ -137,7 +137,7 @@ pub async fn recipes_handler(
         state.fs_support,
         uri.path(),
         Data {
-            is_admin: user_id == 1,
+            is_admin: user_id == Uuid::nil(),
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
@@ -188,7 +188,7 @@ pub async fn duplicate_recipe_handler(
                 error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
                 broadcast_error(&state, user_id, "Recipe not found.").await;
                 return Err(Error::Model(EntityNotFound {
-                    id: recipe_id,
+                    id: recipe_id.to_string(),
                     entity: "recipe",
                 }));
             }
@@ -198,7 +198,7 @@ pub async fn duplicate_recipe_handler(
 
     Ok(templates::recipes::add_recipe_manual(
         Data {
-            is_admin: user_id == 1,
+            is_admin: user_id == Uuid::nil(),
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -229,7 +229,7 @@ pub async fn edit_recipe_handler(
             error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
             broadcast_error(&state, user_id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
-                id: recipe_id,
+                id: recipe_id.to_string(),
                 entity: "recipe",
             }));
         }
@@ -240,7 +240,7 @@ pub async fn edit_recipe_handler(
     match templates::recipes::edit_recipe(
         state.fs_support,
         Data {
-            is_admin: user_id == 1,
+            is_admin: user_id == Uuid::nil(),
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -264,7 +264,7 @@ pub async fn edit_recipe_handler(
 
 async fn fetch_view_recipe(
     state: &AppState,
-    user_id: i64,
+    user_id: Uuid,
     recipe_id: i64,
 ) -> Result<(ViewRecipe, Vec<Category>, Vec<Keyword>)> {
     let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
@@ -273,7 +273,7 @@ async fn fetch_view_recipe(
             error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
             broadcast_error(state, user_id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
-                id: recipe_id,
+                id: recipe_id.to_string(),
                 entity: "recipe",
             }));
         }
@@ -442,7 +442,7 @@ pub async fn scale_recipe_handler(
             error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
             broadcast_error(&state, user_id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
-                id: recipe_id,
+                id: recipe_id.to_string(),
                 entity: "recipe",
             })
             .into_response();
@@ -471,7 +471,7 @@ pub async fn share_recipe_post_handler(
         }
     });
 
-    match ShareRecipe::new(&state.mm, user_id, recipe_id, expires_at).await {
+    match ShareRecipe::new(&state.mm, recipe_id, user_id, expires_at).await {
         Ok(share) => {
             let url = format!(
                 "{}/shared/r/{}",
@@ -504,7 +504,7 @@ pub async fn timeline_get_handler(
             error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
             broadcast_error(&state, user_id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
-                id: recipe_id,
+                id: recipe_id.to_string(),
                 entity: "recipe",
             })
             .into_response();
@@ -519,7 +519,7 @@ pub async fn timeline_get_handler(
             );
             broadcast_error(&state, user_id, "Failed to fetch timeline components.").await;
             return Error::Model(EntityNotFound {
-                id: recipe_id,
+                id: recipe_id.to_string(),
                 entity: "timeline",
             })
             .into_response();
@@ -782,7 +782,7 @@ pub async fn add_recipes_handler(
     Ok(templates::recipes::add_page(
         uri.path(),
         Data {
-            is_admin: ctx.0.user_id() == 1,
+            is_admin: ctx.0.user_id() == Uuid::nil(),
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -805,7 +805,7 @@ pub async fn add_recipe_import_app_handler(
     (StatusCode::ACCEPTED, "").into_response()
 }
 
-fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
+fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
     tokio::spawn(async move {
         let app = form.app.to_string();
         let state = state.clone();
@@ -842,7 +842,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: i64) {
 async fn parse_recipes(
     state: &AppState,
     mut form: ImportFromAppForm,
-    user_id: i64,
+    user_id: Uuid,
 ) -> Result<Vec<schema_org::Recipe>> {
     state
         .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
@@ -876,7 +876,7 @@ async fn parse_recipes(
 async fn push_recipes_to_db(
     state: &AppState,
     recipes: Vec<schema_org::Recipe>,
-    user_id: i64,
+    user_id: Uuid,
 ) -> (ReportForCreate, Vec<i64>) {
     let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
     let mut curr = 0;
@@ -929,7 +929,7 @@ pub async fn add_recipe_import_api_handler(
     (StatusCode::ACCEPTED, "").into_response()
 }
 
-fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64) {
+fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uuid) {
     tokio::spawn(async move {
         let api = form.api.to_string();
         let state = state.clone();
@@ -1051,7 +1051,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: i64
 async fn push_recipe_in_db(
     state: &AppState,
     recipe: schema_org::Recipe,
-    user_id: i64,
+    user_id: Uuid,
 ) -> std::result::Result<i64, (String, Error)> {
     let recipe = schema_to_recipe_for_create(state, recipe).await;
 
@@ -1074,7 +1074,7 @@ async fn broadcast_import_done_toast(
     num_recipes: i64,
     report: ReportForCreate,
     import_source: String,
-    user_id: i64,
+    user_id: Uuid,
 ) {
     state.hide_broadcast(user_id).await;
 
@@ -1133,7 +1133,7 @@ pub async fn add_recipe_import_preview_handler(
                 fs_support,
                 data_dir,
                 &Data {
-                    is_admin: user_id == 1,
+                    is_admin: user_id == Uuid::nil(),
                     is_authenticated: true,
                     is_autologin: state.config.read().await.is_autologin,
                     is_hx_request: true,
@@ -1239,7 +1239,7 @@ pub async fn add_manual_recipe_handler(
 
     Ok(templates::recipes::add_recipe_manual(
         Data {
-            is_admin: user_id == 1,
+            is_admin: user_id == Uuid::nil(),
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -1353,7 +1353,7 @@ pub async fn add_manual_recipe_post_handler(
 /// Fetches the user's categories and keywords from the database.
 pub async fn fetch_categories_keywords(
     state: &AppState,
-    user_id: i64,
+    user_id: Uuid,
 ) -> Result<(Vec<Category>, Vec<Keyword>)> {
     let categories = match User::categories(&state.mm, user_id).await {
         Ok(categories) => categories,
@@ -1389,7 +1389,7 @@ struct FetchWebsiteContext {
 }
 
 impl FetchWebsiteContext {
-    fn new(num_websites: usize, user_id: i64) -> Self {
+    fn new(num_websites: usize, user_id: Uuid) -> Self {
         Self {
             count_success: Arc::new(Default::default()),
             count_warning: Arc::new(Default::default()),
@@ -1404,7 +1404,7 @@ impl FetchWebsiteContext {
         }
     }
 
-    async fn send_toast_after_processing(&self, state: &AppState, user_id: i64) {
+    async fn send_toast_after_processing(&self, state: &AppState, user_id: Uuid) {
         let count_success = self.count_success.load(Ordering::SeqCst);
         let count_error = self.count_error.load(Ordering::SeqCst);
         let count_warning = self.count_warning.load(Ordering::SeqCst);
@@ -1484,7 +1484,7 @@ pub async fn add_website_post_handler(
     (StatusCode::ACCEPTED, "").into_response()
 }
 
-fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: i64) {
+fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
     tokio::spawn(async move {
         let num_websites = urls.len();
         let (tx, mut rx) = mpsc::channel::<()>(num_websites);
@@ -1801,7 +1801,7 @@ pub async fn view_recipe_handler(
         uri.path(),
         state.data_dir,
         Data {
-            is_admin: user_id == 1,
+            is_admin: user_id == Uuid::nil(),
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -1892,7 +1892,7 @@ pub async fn search_recipes_handler(
         state.fs_support,
         uri.path(),
         Data {
-            is_admin: user_id == 1,
+            is_admin: user_id == Uuid::nil(),
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),

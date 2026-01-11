@@ -526,12 +526,12 @@ pub fn user_row(idx: usize, user: &User) -> Markup {
     let user_id = user.id;
 
     html! {
-        tr id=(format!("user-row-{user_id}")) {
+        tr id=(format!("user-row-{idx}")) {
             th { (idx) }
             td { (user.email) }
             td { "" }
             td class="grid grid-flow-col gap-2" {
-                button type="button" class="btn btn-ghost btn-square btn-xs" hx-get=(format!("/admin/user/{user_id}")) hx-target=(format!("#user-row-{user_id}")) hx-swap="outerHTML" hx-vals=(format!(r#"{{"row-index": "{idx}"}}"#)) {
+                button type="button" class="btn btn-ghost btn-square btn-xs" hx-get=(format!("/admin/user/{user_id}")) hx-target=(format!("#user-row-{idx}")) hx-swap="outerHTML" hx-vals=(format!(r#"{{"row-index": "{idx}"}}"#)) {
                     (icon_pencil(true))
                 }
                 button type="submit" class="btn btn-ghost btn-square btn-xs" hx-delete=(format!("/admin/user/{user_id}")) hx-confirm="Are you sure you want to delete this user? This action is irreversible." {
@@ -544,10 +544,10 @@ pub fn user_row(idx: usize, user: &User) -> Markup {
 
 pub fn edit_user_row(curr_idx: usize, user: &User) -> Markup {
     let user_id = user.id;
-    let hx_target = format!("#user-row-{user_id}");
+    let hx_target = format!("#user-row-{curr_idx}");
 
     html! {
-        tr id=(format!("user-row-{user_id}")) {
+        tr id=(format!("user-row-{curr_idx}")) {
             th { (curr_idx + 1) }
             td { (user.email) }
             td {

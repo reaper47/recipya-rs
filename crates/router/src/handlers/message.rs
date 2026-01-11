@@ -1,9 +1,11 @@
-use app::state::AppState;
 use axum::body::Body;
 use axum::extract::ws::Message;
 use axum::http::HeaderValue;
 use axum::response::Response;
 use serde::Serialize;
+use uuid::Uuid;
+
+use app::state::AppState;
 
 /// A trait defining message creation methods for structured responses.
 pub trait IMessage {
@@ -216,7 +218,7 @@ pub fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
 }
 
 /// Broadcasts a success toast to all active WebSocket subscribers of a given user.
-pub async fn broadcast_success(state: &AppState, user_id: i64, message: &str) {
+pub async fn broadcast_success(state: &AppState, user_id: Uuid, message: &str) {
     let toast = MessageHtmx::success(message);
     if let Ok(json) = serde_json::to_string(&toast) {
         state.broadcast(user_id, Message::Text(json.into())).await;
@@ -224,7 +226,7 @@ pub async fn broadcast_success(state: &AppState, user_id: i64, message: &str) {
 }
 
 /// Broadcasts an error toast to all active WebSocket subscribers of a given user.
-pub async fn broadcast_error(state: &AppState, user_id: i64, message: &str) {
+pub async fn broadcast_error(state: &AppState, user_id: Uuid, message: &str) {
     let toast = MessageHtmx::error(message);
     if let Ok(json) = serde_json::to_string(&toast) {
         state.broadcast(user_id, Message::Text(json.into())).await;
@@ -232,7 +234,7 @@ pub async fn broadcast_error(state: &AppState, user_id: i64, message: &str) {
 }
 
 /// Broadcasts a warning toast to all active WebSocket subscribers of a given user.
-pub async fn broadcast_warning(state: &AppState, user_id: i64, message: &str) {
+pub async fn broadcast_warning(state: &AppState, user_id: Uuid, message: &str) {
     let toast = MessageHtmx::warning(message);
     if let Ok(json) = serde_json::to_string(&toast) {
         state.broadcast(user_id, Message::Text(json.into())).await;

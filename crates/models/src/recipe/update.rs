@@ -2,6 +2,7 @@ use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
+use uuid::Uuid;
 
 use repository::{ModelManager, schema};
 
@@ -20,7 +21,7 @@ impl Recipe {
     /// Updates a recipe from the updated fields.
     pub async fn update(
         mm: &ModelManager,
-        user_id: i64,
+        user_id: Uuid,
         recipe_id: i64,
         new_recipe: &mut RecipeForCreate,
     ) -> Result<()> {
@@ -237,7 +238,11 @@ impl Recipe {
     }
 
     /// Toggles whether the recipe is a favourite.
-    pub async fn toggle_favourite(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<bool> {
+    pub async fn toggle_favourite(
+        mm: &ModelManager,
+        user_id: Uuid,
+        recipe_id: i64,
+    ) -> Result<bool> {
         use schema::recipes;
 
         let mut conn = mm.pool.get().await?;
@@ -275,7 +280,10 @@ mod tests {
             let recipe = a_complete_recipe_for_create();
             let id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
-            if Recipe::toggle_favourite(&state.mm, 1000, id).await.is_ok() {
+            if Recipe::toggle_favourite(&state.mm, Uuid::new_v4(), id)
+                .await
+                .is_ok()
+            {
                 panic!("Expected error");
             }
             Ok(())

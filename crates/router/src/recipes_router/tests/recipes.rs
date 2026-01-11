@@ -2,7 +2,7 @@
 mod tests {
     use axum::http::Method;
 
-    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
+    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create, user::User};
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, build_server_logged_in,
         create_app_state,
@@ -39,10 +39,12 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         for i in 0..3 {
             let mut recipe = a_complete_recipe_for_create();
             recipe.name.push_str(i.to_string().as_str());
-            let _ = Recipe::create(&state.mm, 1, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         }
 
         let res = server.get(BASE_URI).await;
@@ -69,9 +71,11 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let mut recipe = a_complete_recipe_for_create();
         recipe.rating = None;
-        let _ = Recipe::create(&state.mm, 1, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
         let res = server.get(BASE_URI).await;
 

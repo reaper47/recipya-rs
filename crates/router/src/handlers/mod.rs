@@ -12,6 +12,7 @@ pub(crate) mod shared;
 pub mod static_files;
 
 use tracing::error;
+use uuid::Uuid;
 
 use app::state::AppState;
 use models::settings::UserSettingDetails;
@@ -21,7 +22,7 @@ use crate::handlers::message::broadcast_error;
 
 pub(crate) async fn get_settings(
     state: &AppState,
-    user_id: i64,
+    user_id: Uuid,
 ) -> crate::Result<UserSettingDetails> {
     match UserSettingDetails::get(&state.mm, user_id).await {
         Ok(settings) => Ok(settings),

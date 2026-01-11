@@ -7,6 +7,7 @@ use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
 use tower_cookies::Cookies;
 use tracing::{debug, error};
+use uuid::Uuid;
 use validator::Validate;
 
 use auth::pwd::scheme::SchemeStatus;
@@ -88,7 +89,7 @@ pub async fn confirm_handler(
             None => {
                 return Error::Model(EntityNotFound {
                     entity: "user",
-                    id: -1,
+                    id: "-1".into(),
                 })
                 .into_response();
             }
@@ -212,10 +213,12 @@ pub async fn forgot_password_reset_post_handler(
         &mut res,
         MessageHtmx::success("Your password has been updated."),
     );
+
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
         res.headers_mut()
             .insert(axum_htmx::headers::HX_REDIRECT, value);
     }
+
     res
 }
 
@@ -256,7 +259,7 @@ pub async fn login_post_handler(
             salt: user.password_salt,
             content: String::from(&form.password),
         },
-        &user.password,
+        &user.password_hash,
     )
     .await
     {
@@ -350,7 +353,10 @@ pub async fn register_post_handler(
     }
 
     if form.validate().is_err() {
-        let mut res = Error::PwdNotMatching { user_id: -1 }.into_response();
+        let mut res = Error::PwdNotMatching {
+            user_id: Uuid::nil(),
+        }
+        .into_response();
         add_hx_message(&mut res, MessageHtmx::error("Passwords do not match."));
         return res;
     }
@@ -438,7 +444,7 @@ pub async fn user_delete_handler(
     }
 }
 
-async fn is_demo_user(state: &AppState, user_id: i64) -> bool {
+async fn is_demo_user(state: &AppState, user_id: Uuid) -> bool {
     match User::get_user_by_email(&state.mm, "demo@demo.com").await {
         Ok(Some(user)) => user.id == user_id,
         _ => false,

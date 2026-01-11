@@ -11,7 +11,7 @@ pub enum Error {
     DuplicateEntity,
     EntityNotFound {
         entity: &'static str,
-        id: i64,
+        id: String,
     },
     InvalidCssSelector,
     InvalidZipArchive,

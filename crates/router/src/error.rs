@@ -4,6 +4,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use derive_more::derive::From;
 use serde::Serialize;
+use uuid::Uuid;
+
 use support::impl_display_as_debug;
 
 /// Result type for errors related to the server.
@@ -23,7 +25,7 @@ pub enum Error {
     LogoutForbidden,
     NoToken,
     PwdNotMatching {
-        user_id: i64,
+        user_id: Uuid,
     },
     UpdatePassword,
     UserNotAdmin,
@@ -96,16 +98,25 @@ impl Error {
             DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DELETE_FORBIDDEN),
             EntityExists { entity } => (
                 StatusCode::CONFLICT,
-                ClientError::ENTITY_NOT_FOUND { entity, id: -1 },
+                ClientError::ENTITY_NOT_FOUND {
+                    entity,
+                    id: "-1".into(),
+                },
             ),
             EntityNotFound { entity } => (
                 StatusCode::NOT_FOUND,
-                ClientError::ENTITY_NOT_FOUND { entity, id: -1 },
+                ClientError::ENTITY_NOT_FOUND {
+                    entity,
+                    id: "-1".into(),
+                },
             ),
             FailParse => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
             FileExists => (
                 StatusCode::CONFLICT,
-                ClientError::ENTITY_NOT_FOUND { entity: "", id: -1 },
+                ClientError::ENTITY_NOT_FOUND {
+                    entity: "",
+                    id: "-1".into(),
+                },
             ),
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
             InvalidPayload => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
@@ -114,7 +125,7 @@ impl Error {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ClientError::ENTITY_NOT_FOUND {
                     entity: "user",
-                    id: -1,
+                    id: "-1".into(),
                 },
             ),
             UserNotAdmin => (StatusCode::FORBIDDEN, ClientError::FORBIDDEN_REQUEST),
@@ -122,7 +133,10 @@ impl Error {
             // Modules
             Model(models::Error::EntityNotFound { entity, id }) => (
                 StatusCode::NOT_FOUND,
-                ClientError::ENTITY_NOT_FOUND { entity, id: *id },
+                ClientError::ENTITY_NOT_FOUND {
+                    entity,
+                    id: id.to_string(),
+                },
             ),
 
             _ => (
@@ -153,7 +167,7 @@ impl std::error::Error for Error {}
 pub enum ClientError {
     CONFIRM_FAIL,
     DELETE_FORBIDDEN,
-    ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
+    ENTITY_NOT_FOUND { entity: &'static str, id: String },
     BAD_TIME_FORMAT,
     FORBIDDEN_REQUEST,
     FORM_ERROR,

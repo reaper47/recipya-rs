@@ -1,4 +1,5 @@
 use maud::{Markup, html};
+use uuid::Uuid;
 
 use crate::templates::layouts;
 
@@ -34,7 +35,7 @@ pub fn forgot_password() -> Markup {
     )
 }
 
-pub fn forgot_password_reset(user_id: i64) -> Markup {
+pub fn forgot_password_reset(user_id: Uuid) -> Markup {
     layouts::auth(
         "Reset Password",
         html! {

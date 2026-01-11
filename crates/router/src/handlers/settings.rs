@@ -11,6 +11,7 @@ use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
 use repository::ModelManager;
 use templates::settings::{EmailSettingsForView, SettingsForView};
+use uuid::Uuid;
 
 use crate::Error;
 use crate::handlers::helpers::is_hx_request;
@@ -25,32 +26,34 @@ pub async fn settings_handler(
     header_map: HeaderMap,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
+    let caller_user = ctx.0;
+    let caller_user_id = caller_user.user_id();
 
-    let settings = match UserSettingDetails::get(&state.mm, user_id).await {
+    let settings = match UserSettingDetails::get(&state.mm, caller_user_id).await {
         Ok(settings) => settings,
         Err(err) => {
-            error!("Error fetching user settings for user {user_id}: {err}");
-            broadcast_error(&state, user_id, "Error fetching user settings.").await;
+            error!("Error fetching user settings for user {caller_user_id}: {err}");
+            broadcast_error(&state, caller_user_id, "Error fetching user settings.").await;
             return Error::Database.into_response();
         }
     };
 
-    let categories = match fetch_categories_keywords(&state, user_id).await {
+    let categories = match fetch_categories_keywords(&state, caller_user_id).await {
         Ok((categories, _)) => categories
             .into_iter()
             .filter(|c| c.name != "uncategorized")
             .collect::<Vec<_>>(),
         Err(err) => {
-            error!("Error fetching categories for user {user_id}: {err}");
-            broadcast_error(&state, user_id, "Error fetching categories.").await;
+            error!("Error fetching categories for user {caller_user_id}: {err}");
+            broadcast_error(&state, caller_user_id, "Error fetching categories.").await;
             return Error::Database.into_response();
         }
     };
 
     let config = state.config.read().await;
+    let is_admin = caller_user.is_admin();
 
-    let users = if user_id == 1 {
+    let users = if is_admin {
         User::all(&state.mm).await.ok()
     } else {
         None
@@ -69,7 +72,7 @@ pub async fn settings_handler(
 
     templates::settings::settings(
         Data {
-            is_admin: user_id == 1,
+            is_admin,
             is_authenticated: true,
             is_autologin: config.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -171,7 +174,7 @@ async fn handle_theme_request<F, Fut>(
     save_operation: F,
 ) -> impl IntoResponse
 where
-    F: FnOnce(Theme, ModelManager, i64) -> Fut,
+    F: FnOnce(Theme, ModelManager, Uuid) -> Fut,
     Fut: Future<Output = Result<(), models::Error>> + Send,
 {
     let user_id = ctx.0.user_id();

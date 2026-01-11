@@ -7,12 +7,12 @@ use axum::response::{IntoResponse, Redirect, Response};
 use serde::Serialize;
 use tower_cookies::{Cookie, Cookies};
 
+use app::state::AppState;
 use auth::token::{AUTH_TOKEN, Token, set_token_cookie, validate_web_token};
 use models::user::{User, UserForAuth};
 
 use crate::handlers::context::Ctx;
 use crate::{Error, Result};
-use app::state::AppState;
 
 /// A wrapper around the `Ctx` type for use in request extraction.
 #[derive(Debug, Clone)]
@@ -86,7 +86,12 @@ pub async fn mw_ctx_resolver(
 /// Resolves the context (user authentication) from cookies and the application state.
 async fn ctx_resolve(state: State<AppState>, cookies: &Cookies) -> CtxExtResult {
     if state.config.read().await.is_autologin {
-        return Ctx::new(1)
+        let admin_user = User::get_first_admin(&state.mm)
+            .await
+            .map_err(|ex| CtxExtError::ModelAccessError(ex.to_string()))?
+            .ok_or(CtxExtError::UserNotFound)?;
+
+        return Ctx::new(admin_user.id, true)
             .map(CtxW)
             .map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()));
     }
@@ -115,7 +120,7 @@ async fn ctx_resolve(state: State<AppState>, cookies: &Cookies) -> CtxExtResult 
     set_token_cookie(cookies, &user.email, user.token_salt, user.is_remember_me)
         .map_err(|_| CtxExtError::CannotSetTokenCookie)?;
 
-    Ctx::new(user.id)
+    Ctx::new(user.id, user.is_admin)
         .map(CtxW)
         .map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()))
 }
@@ -148,9 +153,7 @@ fn is_path_to_redirect(path: &str) -> bool {
 pub async fn mw_only_admin(ctx: Result<CtxW>, req: Request<Body>, next: Next) -> Result<Response> {
     match ctx {
         Ok(ctx) => {
-            let user_id = ctx.0.user_id();
-
-            if user_id == 1 {
+            if ctx.0.is_admin() {
                 Ok(next.run(req).await)
             } else {
                 Err(Error::UserNotAdmin)

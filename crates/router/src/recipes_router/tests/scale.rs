@@ -11,6 +11,7 @@ mod tests {
     use models::recipe::structs::section::SectionComponents;
     use models::recipe::structs::section::SectionItem;
     use models::recipe::structs::test_utils::a_complete_recipe_for_create;
+    use models::user::User;
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_ws,
         create_app_state,
@@ -25,7 +26,9 @@ mod tests {
     async fn setup(config: Config) -> Result<(TestServer, TestWebSocket)> {
         let (server, ws_server) = build_server_ws(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         Ok((server, ws_server))
     }
 
@@ -87,9 +90,11 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, _ws_server) = setup(config.clone()).await?;
         let state = create_app_state(config).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let recipe_id = Recipe::create(
             &state.mm,
-            1,
+            user_id,
             &RecipeForCreate {
                 name: "Best Chinese Kale".into(),
                 r#yield: Some(4),

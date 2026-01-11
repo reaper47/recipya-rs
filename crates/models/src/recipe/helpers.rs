@@ -274,7 +274,7 @@ where
 pub(crate) async fn insert_keywords<C>(
     mut conn: &mut C,
     keywords: &[String],
-    user_id: i64,
+    user_id: Uuid,
     recipe_id: i64,
 ) -> Result<()>
 where
@@ -602,7 +602,7 @@ pub async fn text_trim(field: Field<'_>) -> Option<String> {
 
 pub(crate) async fn update_category<C>(
     mut conn: &mut C,
-    user_id: i64,
+    user_id: Uuid,
     recipe_id: i64,
     category: &Option<String>,
 ) -> Result<()>

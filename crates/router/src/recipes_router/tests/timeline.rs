@@ -4,6 +4,7 @@ mod tests {
     use axum_test::multipart::MultipartForm;
     use chrono::{DateTime, Utc};
     use models::recipe::structs::test_utils::a_complete_recipe_for_create;
+    use models::user::User;
     use uuid::Uuid;
 
     use models::Recipe;
@@ -58,7 +59,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let recipe_id = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         let an_image = Uuid::new_v4();
         let now = DateTime::from_timestamp(1643609600, 0)
             .expect("Invalid timestamp")
@@ -67,7 +70,7 @@ mod tests {
         let _ = RecipeTimeline::create(
             &state.mm,
             recipe_id,
-            1,
+            user_id,
             &RecipeTimelineForCreate {
                 title: "Recipe made".into(),
                 comment: Some("comment 1".into()),
@@ -77,9 +80,13 @@ mod tests {
             },
         )
         .await?;
-        let _ =
-            RecipeTimeline::create(&state.mm, recipe_id, 1, &RecipeTimelineForCreate::default())
-                .await?;
+        let _ = RecipeTimeline::create(
+            &state.mm,
+            recipe_id,
+            user_id,
+            &RecipeTimelineForCreate::default(),
+        )
+        .await?;
 
         let res = server.get(&base_uri(1)).await;
 
@@ -124,7 +131,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
 
         let res = server
             .post(&base_uri(1))
@@ -156,11 +165,13 @@ mod tests {
             .expect("Invalid timestamp")
             .naive_utc();
         let state = create_app_state(config).await;
-        let recipe_id = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let recipe_id = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         let event_id = RecipeTimeline::create(
             &state.mm,
             recipe_id,
-            1,
+            user_id,
             &RecipeTimelineForCreate {
                 title: "a title".to_string(),
                 comment: Some("a comment".to_string()),
@@ -206,7 +217,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         let _ = server
             .post(&base_uri(1))
             .multipart(create_timeline_event_form())
@@ -251,7 +264,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         let _ = server
             .post(&base_uri(1))
             .multipart(create_timeline_event_form())

@@ -2,6 +2,7 @@ use axum::routing::{delete, get, post};
 use axum::{Router, middleware};
 use models::user::UserForCreate;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use validator::Validate;
 
 use crate::handlers::auth::{
@@ -31,7 +32,7 @@ pub struct ForgotPasswordForm {
 
 #[derive(Validate, Deserialize, Serialize)]
 pub struct ForgotPasswordResetForm {
-    pub user_id: i64,
+    pub user_id: Uuid,
     #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
     pub password: String,
     #[validate(must_match(other = "password"))]
@@ -370,6 +371,8 @@ mod tests {
     mod tests_forgot_password {
         use super::*;
 
+        use auth::token::Token;
+        use models::user::User;
         use support::time::now_utc_plus_sec_str;
         use testing::utils::{
             TestDb, assert_html, build_server_anonymous, build_server_logged_in, create_app_state,
@@ -484,7 +487,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let token = get_token(state.mm).await?;
+            let token: Token = get_token(state.mm.clone()).await?;
+            let user = User::get_user_by_email(&state.mm, &token.ident)
+                .await?
+                .unwrap();
 
             let res = server.get(&format!("{URI_RESET}?token={token}")).await;
 
@@ -493,7 +499,10 @@ mod tests {
                 res,
                 vec![
                     r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
-                    r#"<input name="user-id" type="hidden" value="3">"#,
+                    &format!(
+                        r#"<input name="user-id" type="hidden" value="{}">"#,
+                        user.id
+                    ),
                     r#"<fieldset class="fieldset"><label class="label" for="password">New password</label><input id="password" type="password" required placeholder="Enter your new password" class="input" name="password"></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label" for="confirm-password">Confirm password</label><input id="confirm-password" type="password" required placeholder="Retype your password" class="input" name="password-confirm"></fieldset>"#,
                     r#"<button class="btn btn-primary btn-block btn-sm">Change</button>"#,
@@ -510,7 +519,7 @@ mod tests {
             let res = server
                 .post(URI_RESET)
                 .form(&ForgotPasswordResetForm {
-                    user_id: 1,
+                    user_id: Uuid::new_v4(),
                     password: "12345678".to_string(),
                     confirm_password: "123456789".to_string(),
                 })
@@ -527,12 +536,13 @@ mod tests {
         #[tokio::test]
         async fn test_post_forgot_password_reset_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
             let server = build_server_anonymous(config).await?;
 
             let res = server
                 .post(URI_RESET)
                 .form(&ForgotPasswordResetForm {
-                    user_id: 1,
+                    user_id: User::all(&state.mm).await?[0].id,
                     password: "12345678".to_string(),
                     confirm_password: "12345678".to_string(),
                 })

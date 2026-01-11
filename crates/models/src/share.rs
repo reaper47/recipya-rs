@@ -21,7 +21,7 @@ pub struct ShareRecipe {
     /// The URI of shared recipe to be appended to the server's base URL.
     pub link: Uuid,
     /// The foreign key linking the shared recipe to its creator.
-    pub user_id: i64,
+    pub user_id: Uuid,
     /// The foreign key linking the shared recipe to its content.
     pub recipe_id: i64,
     /// The timestamp when the shared recipe link was generated.
@@ -38,7 +38,7 @@ pub struct ShareRecipe {
 #[derive(Insertable)]
 #[diesel(table_name = schema::shares_recipes)]
 pub(crate) struct SharedRecipeForInsert {
-    pub user_id: i64,
+    pub user_id: Uuid,
     pub recipe_id: i64,
     pub expires_at: Option<NaiveDateTime>,
 }
@@ -49,7 +49,7 @@ impl ShareRecipe {
     pub async fn new(
         mm: &ModelManager,
         recipe_id: i64,
-        user_id: i64,
+        user_id: Uuid,
         expires_at: Option<NaiveDateTime>,
     ) -> Result<ShareRecipe> {
         let mut conn = mm.pool.get().await?;
@@ -98,24 +98,39 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod test_new {
-        use super::*;
         use diesel::internal::derives::multiconnection::chrono;
+
         use testing::utils::{TestDb, create_app_state};
+
+        use super::*;
+        use crate::user::{User, UserForCreate};
+
+        async fn add_user(mm: &ModelManager) -> Result<User> {
+            Ok(User::new(
+                mm,
+                UserForCreate {
+                    email: "another@gmail.com".into(),
+                    password_clear: "12345677".into(),
+                },
+            )
+            .await?)
+        }
 
         #[tokio::test]
         async fn test_generate_shared_default_expiration_recipe_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
-            insert_recipe(&config, &state).await?;
+            let user_id = add_user(&state.mm).await?.id;
+            insert_recipe(&config, &state, user_id).await?;
 
-            let got = ShareRecipe::new(&state.mm, 1, 1, None).await?;
+            let got = ShareRecipe::new(&state.mm, 1, user_id, None).await?;
 
             assert_share_recipe(
                 &got,
                 &ShareRecipe {
                     id: 1,
                     link: got.link,
-                    user_id: 1,
+                    user_id,
                     recipe_id: 1,
                     created_at: got.created_at,
                     expires_at: got.expires_at,
@@ -130,17 +145,19 @@ mod tests {
         async fn test_generate_shared_recipe_custom_expiration_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
-            insert_recipe(&config, &state).await?;
+            let user_id = add_user(&state.mm).await?.id;
+            insert_recipe(&config, &state, user_id).await?;
             let expires_at = chrono::Utc::now() + chrono::Duration::days(14);
 
-            let got = ShareRecipe::new(&state.mm, 1, 1, Some(expires_at.naive_local())).await?;
+            let got =
+                ShareRecipe::new(&state.mm, 1, user_id, Some(expires_at.naive_local())).await?;
 
             assert_share_recipe(
                 &got,
                 &ShareRecipe {
                     id: 1,
                     link: got.link,
-                    user_id: 1,
+                    user_id: user_id,
                     recipe_id: 1,
                     created_at: got.created_at,
                     expires_at: expires_at.naive_local(),
@@ -155,10 +172,11 @@ mod tests {
         async fn test_shared_recipe_already_generated_err() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
-            insert_recipe(&config, &state).await?;
-            let _ = ShareRecipe::new(&state.mm, 1, 1, None).await?;
+            let user_id = add_user(&state.mm).await?.id;
+            insert_recipe(&config, &state, user_id).await?;
+            let _ = ShareRecipe::new(&state.mm, 1, user_id, None).await?;
 
-            let res = ShareRecipe::new(&state.mm, 1, 1, None).await;
+            let res = ShareRecipe::new(&state.mm, 1, user_id, None).await;
 
             match res {
                 Ok(_) => panic!("Should not have inserted an entry in the database"),
@@ -191,15 +209,29 @@ mod tests {
     }
 
     mod tests_fetch_by_link {
-        use super::*;
         use testing::utils::{TestDb, create_app_state};
+
+        use super::*;
+        use crate::user::{User, UserForCreate};
+
+        async fn add_user(mm: &ModelManager) -> Result<User> {
+            Ok(User::new(
+                mm,
+                UserForCreate {
+                    email: "thisisit@gmail.com".into(),
+                    password_clear: "12345677".into(),
+                },
+            )
+            .await?)
+        }
 
         #[tokio::test]
         async fn test_exists_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
-            insert_recipe(&config, &state).await?;
-            let shared = ShareRecipe::new(&state.mm, 1, 1, None).await?;
+            let user = add_user(&state.mm).await?;
+            insert_recipe(&config, &state, user.id).await?;
+            let shared = ShareRecipe::new(&state.mm, 1, user.id, None).await?;
 
             let (got, _) = ShareRecipe::get_by_link(&state.mm, shared.link).await?;
 
@@ -211,9 +243,10 @@ mod tests {
         async fn test_exists_err() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
-            insert_recipe(&config, &state).await?;
+            let user = add_user(&state.mm).await?;
+            insert_recipe(&config, &state, user.id).await?;
 
-            let res = ShareRecipe::get_by_link(&state.mm, Uuid::new_v4()).await;
+            let res = ShareRecipe::get_by_link(&state.mm, user.id).await;
 
             match res {
                 Ok(_) => panic!("Entry should not have been found"),
@@ -222,9 +255,9 @@ mod tests {
         }
     }
 
-    async fn insert_recipe(config: &Config, state: &AppState) -> Result<()> {
+    async fn insert_recipe(config: &Config, state: &AppState, user_id: Uuid) -> Result<()> {
         let _ = build_server_logged_in(config.clone()).await?;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         Ok(())
     }
 }

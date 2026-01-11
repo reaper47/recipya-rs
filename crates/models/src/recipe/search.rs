@@ -3,6 +3,7 @@ use std::str::FromStr;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use diesel_full_text_search::{TsVectorExtensions, to_tsquery, ts_rank};
+use uuid::Uuid;
 use winnow::Parser;
 use winnow::combinator::alt;
 use winnow::token::literal;
@@ -18,11 +19,11 @@ pub struct RecipeSearch {
     filters: SearchFilters,
     page: i64,
     is_favourites: bool,
-    user_id: i64,
+    user_id: Uuid,
 }
 
 impl RecipeSearch {
-    pub fn new(query: &str, page: i64, is_favourites: bool, user_id: i64) -> Result<Self> {
+    pub fn new(query: &str, page: i64, is_favourites: bool, user_id: Uuid) -> Result<Self> {
         Ok(Self {
             filters: SearchFilters::from_str(query)?,
             page,
@@ -419,7 +420,7 @@ mod tests {
 
         use super::*;
 
-        fn to_recipe_details(id: i64, recipe_c: RecipeForCreate) -> RecipeDetails {
+        fn to_recipe_details(id: i64, recipe_c: RecipeForCreate, user_id: Uuid) -> RecipeDetails {
             let mut keywords = recipe_c.keywords;
             keywords.sort();
 
@@ -446,7 +447,7 @@ mod tests {
                     rating: recipe_c.rating,
                     created_at: Default::default(),
                     updated_at: Default::default(),
-                    user_id: 1,
+                    user_id,
                 },
                 additional_images: if recipe_c.images.len() > 1 {
                     recipe_c.images[1..].to_vec()
@@ -523,7 +524,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(1, a_complete_recipe_for_create()),
+                    to_recipe_details(1, a_complete_recipe_for_create(), user.id),
                     results[0].clone()
                 ),]
             );
@@ -550,8 +551,8 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![
-                    adjust_recipe(to_recipe_details(1, recipe1), results[0].clone()),
-                    adjust_recipe(to_recipe_details(2, recipe2), results[1].clone()),
+                    adjust_recipe(to_recipe_details(1, recipe1, user.id), results[0].clone()),
+                    adjust_recipe(to_recipe_details(2, recipe2, user.id), results[1].clone()),
                 ]
             );
             Ok(())
@@ -577,7 +578,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(3, recipe3),
+                    to_recipe_details(3, recipe3, user.id),
                     results[0].clone()
                 ),]
             );
@@ -604,7 +605,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(2, recipe2),
+                    to_recipe_details(2, recipe2, user.id),
                     results[0].clone()
                 ),]
             );
@@ -631,8 +632,8 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![
-                    adjust_recipe(to_recipe_details(1, recipe1), results[0].clone()),
-                    adjust_recipe(to_recipe_details(2, recipe2), results[1].clone()),
+                    adjust_recipe(to_recipe_details(1, recipe1, user.id), results[0].clone()),
+                    adjust_recipe(to_recipe_details(2, recipe2, user.id), results[1].clone()),
                 ]
             );
             Ok(())
@@ -664,7 +665,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(3, recipe3),
+                    to_recipe_details(3, recipe3, user.id),
                     results[0].clone()
                 )]
             );
@@ -698,7 +699,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(2, recipe2),
+                    to_recipe_details(2, recipe2, user.id),
                     results[0].clone()
                 )]
             );
@@ -725,7 +726,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(3, recipe3),
+                    to_recipe_details(3, recipe3, user.id),
                     results[0].clone()
                 )]
             );
@@ -752,7 +753,7 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
-                    to_recipe_details(2, recipe2),
+                    to_recipe_details(2, recipe2, user.id),
                     results[0].clone()
                 ),]
             );
@@ -785,8 +786,8 @@ mod tests {
             pretty_assertions::assert_eq!(
                 results,
                 vec![
-                    adjust_recipe(to_recipe_details(1, recipe1), results[0].clone()),
-                    adjust_recipe(to_recipe_details(2, recipe2), results[1].clone()),
+                    adjust_recipe(to_recipe_details(1, recipe1, user.id), results[0].clone()),
+                    adjust_recipe(to_recipe_details(2, recipe2, user.id), results[1].clone()),
                 ]
             );
             Ok(())
@@ -794,7 +795,7 @@ mod tests {
 
         async fn insert_recipes(
             mm: &ModelManager,
-            user_id: i64,
+            user_id: Uuid,
             recipes: Vec<&RecipeForCreate>,
         ) -> Result<()> {
             for recipe in recipes {

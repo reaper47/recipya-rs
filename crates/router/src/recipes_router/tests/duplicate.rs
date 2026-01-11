@@ -3,7 +3,7 @@ mod tests {
     use axum::http::Method;
     use axum_test::TestResponse;
 
-    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
+    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create, user::User};
     use testing::utils::{
         TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
         build_server_ws, create_app_state,
@@ -37,7 +37,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
 
         let res = server.get(&base_uri(1)).await;
 

@@ -18,8 +18,8 @@ diesel::table! {
     app (id) {
         id -> Int8,
         is_update_available -> Nullable<Bool>,
-        updated_at -> Nullable<Timestamp>,
-        update_last_checked_at -> Nullable<Timestamp>,
+        updated_at -> Timestamptz,
+        update_last_checked_at -> Timestamptz,
     }
 }
 
@@ -33,8 +33,8 @@ diesel::table! {
         selector -> Nullable<Bpchar>,
         #[max_length = 64]
         hash_validator -> Nullable<Bpchar>,
-        expires -> Nullable<Timestamp>,
-        user_id -> Int8,
+        expires -> Nullable<Timestamptz>,
+        user_id -> Uuid,
     }
 }
 
@@ -67,7 +67,7 @@ diesel::table! {
         title -> Text,
         image -> Nullable<Uuid>,
         count -> Nullable<Int4>,
-        user_id -> Nullable<Int8>,
+        user_id -> Nullable<Uuid>,
     }
 }
 
@@ -89,7 +89,7 @@ diesel::table! {
 
     counts (id) {
         id -> Int8,
-        user_id -> Nullable<Int8>,
+        user_id -> Nullable<Uuid>,
         recipes -> Nullable<Int4>,
         cookbooks -> Nullable<Int4>,
     }
@@ -322,12 +322,12 @@ diesel::table! {
     recipe_timelines (id) {
         id -> Int8,
         recipe_id -> Int8,
-        user_id -> Int8,
+        user_id -> Uuid,
         title -> Text,
         comment -> Nullable<Text>,
         rating -> Nullable<Int2>,
         image -> Nullable<Uuid>,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
     }
 }
 
@@ -349,9 +349,9 @@ diesel::table! {
         source -> Text,
         is_favourite -> Bool,
         rating -> Nullable<Int2>,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-        user_id -> Int8,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        user_id -> Uuid,
         fts_combined -> Tsvector,
         fts_category -> Tsvector,
         fts_cuisine -> Tsvector,
@@ -379,9 +379,9 @@ diesel::table! {
     reports (id) {
         id -> Int8,
         report_type_id -> Int2,
-        user_id -> Int8,
+        user_id -> Uuid,
         exec_time_ms -> Int8,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
     }
 }
 
@@ -417,9 +417,9 @@ diesel::table! {
     shares_cookbooks (id) {
         id -> Int8,
         link -> Text,
-        user_id -> Nullable<Int8>,
+        user_id -> Nullable<Uuid>,
         cookbook_id -> Nullable<Int8>,
-        created_at -> Nullable<Timestamp>,
+        created_at -> Timestamptz,
     }
 }
 
@@ -430,11 +430,11 @@ diesel::table! {
     shares_recipes (id) {
         id -> Int8,
         link -> Uuid,
-        user_id -> Int8,
+        user_id -> Uuid,
         recipe_id -> Int8,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
         expires_at -> Timestamp,
-        last_accessed -> Timestamp,
+        last_accessed -> Timestamptz,
         click_count -> Int4,
     }
 }
@@ -491,7 +491,7 @@ diesel::table! {
 
     user_settings (id) {
         id -> Int8,
-        user_id -> Int8,
+        user_id -> Uuid,
         measurement_system_id -> Int2,
         nutrition_source_id -> Int2,
         convert_automatically -> Bool,
@@ -506,16 +506,17 @@ diesel::table! {
     use diesel_full_text_search::TsVector as Tsvector;
 
     users (id) {
-        id -> Int8,
+        id -> Uuid,
         email -> Text,
-        #[max_length = 256]
-        password -> Varchar,
+        #[max_length = 255]
+        password_hash -> Varchar,
         password_salt -> Uuid,
         token_salt -> Uuid,
         is_remember_me -> Bool,
         is_confirmed -> Bool,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
+        is_admin -> Bool,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
     }
 }
 
@@ -524,7 +525,7 @@ diesel::table! {
     use diesel_full_text_search::TsVector as Tsvector;
 
     users_categories (user_id, category_id) {
-        user_id -> Int8,
+        user_id -> Uuid,
         category_id -> Int8,
     }
 }
@@ -534,7 +535,7 @@ diesel::table! {
     use diesel_full_text_search::TsVector as Tsvector;
 
     users_keywords (user_id, keyword_id) {
-        user_id -> Int8,
+        user_id -> Uuid,
         keyword_id -> Int8,
     }
 }
@@ -545,7 +546,7 @@ diesel::table! {
 
     users_recipes (id) {
         id -> Int8,
-        user_id -> Int8,
+        user_id -> Uuid,
         recipe_id -> Int8,
     }
 }
@@ -561,7 +562,7 @@ diesel::table! {
         duration -> Nullable<Interval>,
         content_url -> Nullable<Text>,
         embed_url -> Nullable<Text>,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
     }
 }
 
@@ -573,6 +574,7 @@ diesel::table! {
         id -> Int8,
         host -> Text,
         url -> Text,
+        updated_at -> Timestamptz,
     }
 }
 

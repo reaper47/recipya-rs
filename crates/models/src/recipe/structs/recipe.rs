@@ -54,7 +54,7 @@ pub struct Recipe {
     /// The timestamp when the nutrition entry was last updated.
     pub updated_at: chrono::NaiveDateTime,
     /// The foreign key linking the recipe to its creator.
-    pub user_id: i64,
+    pub user_id: Uuid,
 }
 
 /// Represents the data required to insert a new recipe into the database.
@@ -71,7 +71,7 @@ pub(crate) struct RecipeForInsert {
     pub source: String,
     pub is_favourite: bool,
     pub rating: Option<i16>,
-    pub user_id: i64,
+    pub user_id: Uuid,
 }
 
 /// Represents the full details of a recipe, including its metadata and related entities.
