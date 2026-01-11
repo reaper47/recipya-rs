@@ -633,11 +633,13 @@ mod tests {
 
         let got = User::favourite_recipes(&state.mm, user_id).await?;
 
-        let got = got.into_iter().map(|r| r.name).collect::<Vec<_>>();
-        let expected = vec![recipe2, recipe3]
+        let mut got = got.into_iter().map(|r| r.name).collect::<Vec<_>>();
+        let mut expected = vec![recipe2, recipe3]
             .into_iter()
             .map(|r| r.name)
             .collect::<Vec<_>>();
+        got.sort();
+        expected.sort();
         pretty_assertions::assert_eq!(got, expected);
         Ok(())
     }
