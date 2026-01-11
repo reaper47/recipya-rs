@@ -13,13 +13,20 @@ pub trait ToHtmlTable {
 }
 
 /// Holds some components of a website.
-#[derive(Clone, Debug, PartialEq, Queryable, Selectable)]
+#[derive(Clone, Debug, Queryable, Selectable)]
 #[diesel(table_name = websites)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Website {
     pub id: i64,
     pub host: String,
     pub url: String,
+    pub updated_at: chrono::NaiveDateTime,
+}
+
+impl PartialEq for Website {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id && self.url == other.url && self.host == other.host
+    }
 }
 
 impl Website {
@@ -60,6 +67,7 @@ impl ToHtmlTable for Vec<Website> {
 
 #[cfg(test)]
 mod tests {
+    use chrono::DateTime;
     use testing::utils::{TestDb, create_app_state};
 
     use crate::website::{ToHtmlTable, Website};
@@ -95,16 +103,19 @@ mod tests {
                 id: 1,
                 url: "https://15gram.be/recepten".into(),
                 host: "15gram.be".into(),
+                updated_at: DateTime::from_timestamp(0, 0).unwrap().naive_utc(),
             },
             Website {
                 id: 2,
                 url: "https://www.750g.com".into(),
                 host: "750g.com".into(),
+                updated_at: DateTime::from_timestamp(0, 0).unwrap().naive_utc(),
             },
             Website {
                 id: 3,
                 url: "https://101cookbooks.com".into(),
                 host: "101cookbooks.com".into(),
+                updated_at: DateTime::from_timestamp(0, 0).unwrap().naive_utc(),
             },
         ]
     }

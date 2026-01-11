@@ -20,6 +20,7 @@ mod tests {
             time::{Times, TimesForCreate},
             tool::{ToolForCreate, ToolRecipe},
         },
+        user::User,
     };
     use testing::utils::{
         TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
@@ -57,7 +58,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
 
         let res = server.get(&base_uri(1)).await;
 
@@ -74,7 +77,9 @@ mod tests {
             HeaderValue::from_static("true"),
         );
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
 
         let res = server.get(&base_uri(1)).await;
 
@@ -144,8 +149,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let mut recipe = a_complete_recipe_for_create();
-        let recipe_id = Recipe::create(&state.mm, 1, &recipe).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
         recipe.images = Vec::new();
         recipe.videos = Vec::new();
 
@@ -155,8 +162,8 @@ mod tests {
             .await;
 
         res.assert_status_see_other();
-        let got = Recipe::get(&state.mm, 1, recipe_id).await?;
-        let mut expected = recipe_for_create_to_details(recipe, &got);
+        let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+        let mut expected = recipe_for_create_to_details(recipe, &got, user_id);
         expected.ingredients = got.ingredients.clone();
         expected.instructions = got.instructions.clone();
         pretty_assertions::assert_eq!(got, expected);
@@ -170,8 +177,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, 1, &recipe).await?;
+        Recipe::create(&state.mm, user_id, &recipe).await?;
         recipe.name = "Maple Syrup Korean Chicken".into();
         recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
         recipe.instructions = SectionComponents::Flat(vec![Item::new("Drink juice")]);
@@ -183,8 +192,8 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
-        let expected = recipe_for_create_to_details(recipe, &got);
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
+        let expected = recipe_for_create_to_details(recipe, &got, user_id);
         pretty_assertions::assert_eq!(got, expected);
         assert!(got.recipe.image.is_some());
         pretty_assertions::assert_eq!(
@@ -199,8 +208,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, 1, &recipe).await?;
+        Recipe::create(&state.mm, user_id, &recipe).await?;
         recipe.category = Some("breakfast,dinner".into());
 
         let res = server
@@ -210,7 +221,7 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(got.category, "breakfast");
         Ok(())
     }
@@ -220,13 +231,15 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let mut recipe = RecipeForCreate {
             name: "Best Chinese Kale".to_string(),
             instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
             ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
             ..Default::default()
         };
-        Recipe::create(&state.mm, 1, &recipe).await?;
+        Recipe::create(&state.mm, user_id, &recipe).await?;
         recipe.category = Some("drinks:vodka".into());
 
         let res = server
@@ -236,7 +249,7 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(got.category, "drinks:vodka");
         Ok(())
     }
@@ -246,8 +259,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, 1, &recipe).await?;
+        Recipe::create(&state.mm, user_id, &recipe).await?;
         recipe = RecipeForCreate {
             name: "Crepes".into(),
             description: Some("Trust me. They're delicious.".into()),
@@ -328,8 +343,8 @@ mod tests {
             .await;
 
         res.assert_status_see_other();
-        let got = Recipe::get(&state.mm, 1, 1).await?;
-        let mut expected = recipe_for_create_to_details(recipe, &got);
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
+        let mut expected = recipe_for_create_to_details(recipe, &got, user_id);
         expected.ingredients = got.ingredients.clone();
         expected.instructions = got.instructions.clone();
         pretty_assertions::assert_eq!(got, expected);
@@ -341,8 +356,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, 1, &recipe).await?;
+        Recipe::create(&state.mm, user_id, &recipe).await?;
         recipe.instructions = SectionComponents::Flat(vec![
             Item::new("Mix the apples"),
             Item::new("Eat"),
@@ -372,7 +389,7 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(
             got.keywords,
             vec!["drinks".to_string(), "vodka".to_string()]
@@ -434,6 +451,7 @@ mod tests {
     fn recipe_for_create_to_details(
         recipe_c: RecipeForCreate,
         reference: &RecipeDetails,
+        user_id: Uuid,
     ) -> RecipeDetails {
         let mut keywords = recipe_c.keywords;
         keywords.sort();
@@ -456,7 +474,7 @@ mod tests {
                 rating: Some(4),
                 created_at: reference.recipe.created_at,
                 updated_at: reference.recipe.updated_at,
-                user_id: 1,
+                user_id,
             },
             additional_images: reference.additional_images.clone(),
             category: recipe_c.category.unwrap_or("uncategorized".into()),

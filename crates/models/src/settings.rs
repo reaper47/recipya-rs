@@ -5,6 +5,7 @@ use strum::{Display, EnumIter, EnumString};
 
 use math::cooking::units::system::MeasurementSystem;
 use repository::{ModelManager, schema};
+use uuid::Uuid;
 
 use crate::nutrition::NutritionDataSource;
 use crate::nutrition::tables::NutritionSource;
@@ -66,15 +67,15 @@ impl Theme {
             .await?)
     }
 
-    pub async fn save_default(&self, mm: &ModelManager, user_id: i64) -> Result<()> {
+    pub async fn save_default(&self, mm: &ModelManager, user_id: Uuid) -> Result<()> {
         self.update_theme(mm, user_id, true).await
     }
 
-    pub async fn save_selected(&self, mm: &ModelManager, user_id: i64) -> Result<()> {
+    pub async fn save_selected(&self, mm: &ModelManager, user_id: Uuid) -> Result<()> {
         self.update_theme(mm, user_id, false).await
     }
 
-    async fn update_theme(&self, mm: &ModelManager, user_id: i64, is_default: bool) -> Result<()> {
+    async fn update_theme(&self, mm: &ModelManager, user_id: Uuid, is_default: bool) -> Result<()> {
         use schema::user_settings;
 
         let theme_id = self.get_id(mm).await?;
@@ -128,7 +129,7 @@ impl ThemeModel {
 #[diesel(check_for_backend(diesel::pg::Pg))]
 struct UserSetting {
     id: i64,
-    user_id: i64,
+    user_id: Uuid,
     measurement_system_id: i16,
     nutrition_source_id: i16,
     convert_automatically: bool,
@@ -139,7 +140,7 @@ struct UserSetting {
 
 #[derive(Debug, Default, PartialEq)]
 pub struct UserSettingDetails {
-    pub user_id: i64,
+    pub user_id: Uuid,
     pub measurement_system: MeasurementSystem,
     pub nutrition_source: NutritionDataSource,
     pub nutrition_sources: Vec<NutritionSource>,
@@ -150,7 +151,7 @@ pub struct UserSettingDetails {
 }
 
 impl UserSettingDetails {
-    pub async fn get(mm: &ModelManager, user_id: i64) -> Result<Self> {
+    pub async fn get(mm: &ModelManager, user_id: Uuid) -> Result<Self> {
         use schema::{themes, user_settings};
 
         let mut conn = mm.pool.get().await?;
@@ -192,9 +193,11 @@ impl UserSettingDetails {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use strum::IntoEnumIterator;
+
     use testing::utils::{TestDb, create_app_state, insert_user};
+
+    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -209,7 +212,7 @@ mod tests {
         pretty_assertions::assert_eq!(
             got,
             UserSettingDetails {
-                user_id: 1,
+                user_id: user.id,
                 measurement_system: MeasurementSystem::ImperialUK,
                 nutrition_source: NutritionDataSource::USDAFoodDataCentral,
                 nutrition_sources: NutritionSource::all(&state.mm).await?,
@@ -249,14 +252,14 @@ mod tests {
     async fn test_update_theme_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
-        let _ = insert_user(config.clone()).await?;
+        let user = insert_user(config.clone()).await?;
         let theme1 = Theme::Halloween;
         let theme2 = Theme::Autumn;
 
-        theme1.save_default(&state.mm, 1).await?;
-        theme2.save_selected(&state.mm, 1).await?;
+        theme1.save_default(&state.mm, user.id).await?;
+        theme2.save_selected(&state.mm, user.id).await?;
 
-        let settings = UserSettingDetails::get(&state.mm, 1).await?;
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         pretty_assertions::assert_eq!(settings.default_theme, theme1);
         pretty_assertions::assert_eq!(settings.selected_theme, theme2);
         Ok(())

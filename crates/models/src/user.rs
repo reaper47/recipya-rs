@@ -17,21 +17,22 @@ use crate::{
 #[diesel(table_name = schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
-    pub id: i64,
+    pub id: Uuid,
     pub email: String,
     pub is_remember_me: bool,
     pub is_confirmed: bool,
+    pub is_admin: bool,
 
-    pub password: String,
+    pub password_hash: String,
     pub password_salt: Uuid,
     pub token_salt: Uuid,
 }
 
 /// A struct representing a user for login purposes.
 pub struct UserForLogin<'a> {
-    pub id: i64,
+    pub id: Uuid,
     pub email: &'a str,
-    pub password: &'a str,
+    pub password_hash: &'a str,
     pub password_salt: Uuid,
     pub token_salt: Uuid,
 }
@@ -48,8 +49,9 @@ pub struct UserForCreate {
 #[diesel(table_name = schema::users)]
 pub(crate) struct UserForInsert {
     pub email: String,
-    pub password: String,
+    pub password_hash: String,
     pub password_salt: Uuid,
+    pub is_admin: bool,
 }
 
 /// Represents an entry in the user categories table.
@@ -60,7 +62,7 @@ pub(crate) struct UserForInsert {
 #[diesel(primary_key(user_id, category_id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub(crate) struct UserCategory {
-    pub user_id: i64,
+    pub user_id: Uuid,
     pub category_id: i64,
 }
 
@@ -72,16 +74,17 @@ pub(crate) struct UserCategory {
 #[diesel(primary_key(user_id, keyword_id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub(crate) struct UserKeyword {
-    pub user_id: i64,
+    pub user_id: Uuid,
     pub keyword_id: i64,
 }
 
 /// A struct representing a user with authentication-related data.
 pub struct UserForAuth {
-    pub id: i64,
+    pub id: Uuid,
     pub email: String,
     pub token_salt: Uuid,
     pub is_remember_me: bool,
+    pub is_admin: bool,
 }
 
 impl User {
@@ -93,11 +96,12 @@ impl User {
             .select(User::as_select())
             .load::<User>(&mut conn)
             .await?;
+
         Ok(all_users)
     }
 
     /// Retrieves all of a user's recipe categories.
-    pub async fn categories(mm: &ModelManager, user_id: i64) -> Result<Vec<Category>> {
+    pub async fn categories(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Category>> {
         let mut conn = mm.pool.get().await?;
 
         let user = schema::users::table
@@ -116,7 +120,7 @@ impl User {
     }
 
     /// Deletes a user from the database.
-    pub async fn delete(mm: &ModelManager, user_id: i64) -> Result<()> {
+    pub async fn delete(mm: &ModelManager, user_id: Uuid) -> Result<()> {
         use repository::schema::users::dsl::*;
 
         let mut conn = mm.pool.get().await?;
@@ -128,7 +132,7 @@ impl User {
         match num_deleted {
             0 => Err(Error::EntityNotFound {
                 entity: "user",
-                id: user_id,
+                id: user_id.to_string(),
             }),
             _ => Ok(()),
         }
@@ -154,7 +158,7 @@ impl User {
     }
 
     /// Finds a user by their user ID.
-    pub async fn get_user_by_id(mm: &ModelManager, user_id: i64) -> Result<Option<User>> {
+    pub async fn get_user_by_id(mm: &ModelManager, user_id: Uuid) -> Result<Option<User>> {
         use repository::schema::users::dsl::*;
 
         let mut conn = mm.pool.get().await?;
@@ -180,16 +184,32 @@ impl User {
                 email: user.email,
                 token_salt: user.token_salt,
                 is_remember_me: user.is_remember_me,
+                is_admin: user.is_admin,
             })),
             None => Err(Error::EntityNotFound {
-                id: -1,
+                id: "-1".into(),
                 entity: "user for auth",
             }),
         }
     }
 
+    /// Finds the first user authentication data by email.
+    pub async fn get_first_admin(mm: &ModelManager) -> Result<Option<User>> {
+        let mut conn = mm.pool.get().await?;
+
+        let user = schema::users::table
+            .filter(schema::users::is_admin.eq(true))
+            .select(User::as_select())
+            .order(schema::users::id.asc())
+            .first::<User>(&mut conn)
+            .await
+            .optional()?;
+
+        Ok(user)
+    }
+
     /// Fetches all of the user's favourite recipes.
-    pub async fn favourite_recipes(mm: &ModelManager, user_id: i64) -> Result<Vec<Recipe>> {
+    pub async fn favourite_recipes(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Recipe>> {
         let mut conn = mm.pool.get().await?;
 
         let recipes = schema::recipes::table
@@ -203,7 +223,7 @@ impl User {
     }
 
     /// Retrieves all of a user's recipe keywords.
-    pub async fn keywords(mm: &ModelManager, user_id: i64) -> Result<Vec<Keyword>> {
+    pub async fn keywords(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Keyword>> {
         let mut conn = mm.pool.get().await?;
 
         let user = schema::users::table
@@ -232,13 +252,16 @@ impl User {
         })
         .await?;
 
+        let all_users = User::all(mm).await?;
+
         let mut conn = mm.pool.get().await?;
 
         let user = diesel::insert_into(users)
             .values(&UserForInsert {
                 email: user_c.email.to_string(),
-                password: new_password,
+                password_hash: new_password,
                 password_salt: new_password_salt,
+                is_admin: all_users.is_empty(),
             })
             .returning(User::as_returning())
             .get_result(&mut conn)
@@ -284,7 +307,7 @@ impl User {
         let user = UserForLogin {
             id: self.id,
             email: &self.email,
-            password: &self.password,
+            password_hash: &self.password_hash,
             password_salt: self.password_salt,
             token_salt: self.token_salt,
         };
@@ -298,7 +321,7 @@ impl User {
         let mut conn = mm.pool.get().await?;
 
         diesel::update(users.find(id))
-            .set(password.eq(hashed_password))
+            .set(password_hash.eq(hashed_password))
             .execute(&mut conn)
             .await?;
 
@@ -308,13 +331,13 @@ impl User {
     /// Updates the user password for the specified user ID.
     pub async fn update_password_by_user_id(
         mm: &ModelManager,
-        id: i64,
+        id: Uuid,
         new_password: &str,
     ) -> Result<()> {
         match User::get_user_by_id(mm, id).await? {
             Some(user) => user.update_password(mm, new_password).await,
             None => Err(Error::EntityNotFound {
-                id: -1,
+                id: "-1".into(),
                 entity: "user for auth",
             }),
         }
@@ -323,7 +346,7 @@ impl User {
     /// Updates the "remember me" flag for the user.
     pub async fn update_remember_me(
         mm: &ModelManager,
-        user_id: i64,
+        user_id: Uuid,
         new_value: bool,
     ) -> Result<()> {
         use repository::schema::users::dsl::*;
@@ -383,7 +406,7 @@ mod tests {
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_categories)]
         struct NewUserCategory {
-            user_id: i64,
+            user_id: Uuid,
             category_id: i64,
         }
 
@@ -392,6 +415,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut conn = state.mm.pool.get().await?;
             let (id, _name) = diesel::insert_into(schema::categories::table)
                 .values(schema::categories::name.eq("date"))
@@ -400,12 +424,12 @@ mod tests {
             diesel::insert_into(schema::users_categories::table)
                 .values(&NewUserCategory {
                     category_id: id,
-                    user_id: 1,
+                    user_id,
                 })
                 .execute(&mut conn)
                 .await?;
 
-            let categories = User::categories(&state.mm, 1).await?;
+            let categories = User::categories(&state.mm, user_id).await?;
 
             let want = vec![
                 Category {
@@ -498,7 +522,7 @@ mod tests {
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_keywords)]
         struct NewUserKeyword {
-            user_id: i64,
+            user_id: Uuid,
             keyword_id: i64,
         }
 
@@ -507,6 +531,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut conn = state.mm.pool.get().await?;
             let want_keywords = ["main:cheeses", "main:meat"];
             for kw in want_keywords {
@@ -517,13 +542,13 @@ mod tests {
                 diesel::insert_into(schema::users_keywords::table)
                     .values(&NewUserKeyword {
                         keyword_id: id,
-                        user_id: 1,
+                        user_id,
                     })
                     .execute(&mut conn)
                     .await?;
             }
 
-            let keywords = User::keywords(&state.mm, 1).await?;
+            let keywords = User::keywords(&state.mm, user_id).await?;
 
             let want = want_keywords
                 .into_iter()
@@ -567,8 +592,9 @@ mod tests {
     async fn test_delete_user_not_exist_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
+        let user_id = Uuid::new_v4();
 
-        match User::delete(&state.mm, 999).await {
+        match User::delete(&state.mm, user_id).await {
             Ok(_) => Err("An error was supposed to be thrown".into()),
             Err(_) => Ok(()),
         }
@@ -593,6 +619,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let _ = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
+        let user_id = User::all(&state.mm).await?[0].id;
         let recipe1 = a_complete_recipe_for_create();
         let mut recipe2 = a_complete_recipe_for_create();
         recipe2.name = "recipe 2".into();
@@ -600,17 +627,19 @@ mod tests {
         let mut recipe3 = a_complete_recipe_for_create();
         recipe3.name = "recipe 3".into();
         recipe3.is_favourite = true;
-        let _ = Recipe::create(&state.mm, 1, &recipe1).await?;
-        let _ = Recipe::create(&state.mm, 1, &recipe2).await?;
-        let _ = Recipe::create(&state.mm, 1, &recipe3).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe1).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe2).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe3).await?;
 
-        let got = User::favourite_recipes(&state.mm, 1).await?;
+        let got = User::favourite_recipes(&state.mm, user_id).await?;
 
-        let got = got.into_iter().map(|r| r.name).collect::<Vec<_>>();
-        let expected = vec![recipe2, recipe3]
+        let mut got = got.into_iter().map(|r| r.name).collect::<Vec<_>>();
+        let mut expected = vec![recipe2, recipe3]
             .into_iter()
             .map(|r| r.name)
             .collect::<Vec<_>>();
+        got.sort();
+        expected.sort();
         pretty_assertions::assert_eq!(got, expected);
         Ok(())
     }
@@ -663,14 +692,14 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let password_before = String::from(&user.password);
+        let password_before = String::from(&user.password_hash);
 
         user.update_password(&state.mm, "new password").await?;
 
         let password_after = User::get_user_by_id(&state.mm, user.id)
             .await?
             .expect("User should have been present")
-            .password;
+            .password_hash;
         pretty_assertions::assert_ne!(password_before, password_after);
         Ok(())
     }
@@ -680,14 +709,14 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let password_before = user.password;
+        let password_before = user.password_hash;
 
         User::update_password_by_user_id(&state.mm, user.id, "new password").await?;
 
         let user = User::get_user_by_id(&state.mm, user.id)
             .await?
             .expect("User should have been present");
-        let password_after = user.password;
+        let password_after = user.password_hash;
         pretty_assertions::assert_ne!(password_before, password_after);
         Ok(())
     }

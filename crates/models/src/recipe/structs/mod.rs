@@ -51,7 +51,7 @@ pub mod test_utils {
                 rating: None,
                 created_at: NaiveDateTime::new(created_date, time),
                 updated_at: NaiveDateTime::new(updated_date, time),
-                user_id: 1,
+                user_id: Uuid::new_v4(),
             },
             additional_images,
             category: recipe_c.category.expect("a category"),

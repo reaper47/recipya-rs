@@ -5,6 +5,7 @@ use std::sync::Arc;
 use axum::extract::ws::{Message, WebSocket};
 use tokio::sync::{Mutex, RwLock};
 use url::Url;
+use uuid::Uuid;
 
 use config::{Config, DataDir};
 use email::EmailClient;
@@ -26,7 +27,7 @@ pub struct AppState {
     pub fs_support: Arc<dyn FsSupport + Send + Sync>,
     pub mm: ModelManager,
     pub scraper: Scraper,
-    pub subscribers: Arc<Mutex<HashMap<i64, Vec<WebSocket>>>>,
+    pub subscribers: Arc<Mutex<HashMap<Uuid, Vec<WebSocket>>>>,
 
     recipe_cache: Arc<Mutex<RecipeCache>>,
 }
@@ -59,7 +60,7 @@ impl AppState {
     }
 
     /// Hides the websocket's frontend notification.
-    pub async fn hide_broadcast(&self, user_id: i64) {
+    pub async fn hide_broadcast(&self, user_id: Uuid) {
         self.broadcast_progress("", -1, -1, false, user_id).await;
     }
 
@@ -70,7 +71,7 @@ impl AppState {
         current_value: i64,
         total: i64,
         is_notification_visible: bool,
-        user_id: i64,
+        user_id: Uuid,
     ) {
         let percentage = if total.gt(&0) {
             (current_value as f64 / total as f64) * 100.0
@@ -101,7 +102,7 @@ impl AppState {
     }
 
     /// Broadcasts a message to all active WebSocket subscribers of a given user.
-    pub async fn broadcast(&self, user_id: i64, message: Message) {
+    pub async fn broadcast(&self, user_id: Uuid, message: Message) {
         use std::time::Duration;
         use tokio::time::timeout;
 

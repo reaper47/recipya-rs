@@ -101,7 +101,6 @@ fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
 }
 
 fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
-    println!("parse_source: {:?}", input);
     opt(terminated(
         till_line_ending,
         repeat::<_, _, Vec<_>, _, _>(1.., line_ending),

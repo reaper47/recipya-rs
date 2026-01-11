@@ -97,6 +97,7 @@ mod tests {
             let (_test_db, mut config) = TestDb::new(None).await?;
             config.is_demo = true;
             let server = build_server_logged_in(config.clone()).await?;
+
             let res = server.get(BASE_URI).await;
 
             res.assert_status_ok();
@@ -164,7 +165,7 @@ mod tests {
     }
 
     mod tests_nutrition {
-        use models::{nutrition::NutritionDataSource, settings::UserSettingDetails};
+        use models::{nutrition::NutritionDataSource, settings::UserSettingDetails, user::User};
 
         use super::*;
 
@@ -180,6 +181,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
+            let users = User::all(&state.mm).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -189,7 +191,7 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            let got = UserSettingDetails::get(&state.mm, 1).await?;
+            let got = UserSettingDetails::get(&state.mm, users[0].id).await?;
             pretty_assertions::assert_eq!(
                 got.nutrition_source,
                 NutritionDataSource::USDAFoodDataCentral
@@ -199,7 +201,10 @@ mod tests {
     }
 
     mod tests_themes {
-        use models::settings::{Theme, UserSettingDetails};
+        use models::{
+            settings::{Theme, UserSettingDetails},
+            user::User,
+        };
 
         use super::*;
 
@@ -234,6 +239,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
             let other_user = insert_other_user(config, "slava@ukraini.ua").await?;
+            let users = User::all(&state.mm).await?;
 
             let res = server
                 .post(&format!("{BASE_URI}-default"))
@@ -243,7 +249,7 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            let got1 = UserSettingDetails::get(&state.mm, 1).await?;
+            let got1 = UserSettingDetails::get(&state.mm, users[0].id).await?;
             let got2 = UserSettingDetails::get(&state.mm, other_user.id).await?;
             pretty_assertions::assert_eq!(got1.default_theme, Theme::Aqua);
             pretty_assertions::assert_eq!(got2.default_theme, Theme::Aqua);
@@ -255,6 +261,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
+            let users = User::all(&state.mm).await?;
 
             let res = server
                 .post(&format!("{BASE_URI}-selected"))
@@ -264,7 +271,7 @@ mod tests {
                 .await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            let got = UserSettingDetails::get(&state.mm, 1).await?;
+            let got = UserSettingDetails::get(&state.mm, users[0].id).await?;
             pretty_assertions::assert_eq!(got.selected_theme, Theme::Winter);
             Ok(())
         }

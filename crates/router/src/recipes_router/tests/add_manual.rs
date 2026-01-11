@@ -14,6 +14,7 @@ mod tests {
     use models::recipe::structs::section::SectionComponents;
     use models::recipe::structs::section::SectionItem;
     use models::recipe::structs::time::TimesForCreate;
+    use models::user::User;
     use uuid::Uuid;
 
     use models::recipe::structs::nutrition::Nutrition;
@@ -133,7 +134,9 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(got.category, "uncategorized");
         pretty_assertions::assert_eq!(got.recipe.yield_, 1);
         Ok(())
@@ -156,7 +159,9 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(got.category, "breakfast");
         Ok(())
     }
@@ -196,7 +201,9 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(
             got.keywords,
             vec!["drinks".to_string(), "vodka".to_string()]
@@ -237,7 +244,9 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(got.category, "drinks:vodka");
         Ok(())
     }
@@ -339,7 +348,9 @@ mod tests {
 
         res.assert_status_see_other();
         let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, 1, 1).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let got = Recipe::get(&state.mm, user_id, 1).await?;
         let times = recipe.times.expect("Should have times");
         pretty_assertions::assert_eq!(
             got,
@@ -358,7 +369,7 @@ mod tests {
                     rating: Some(4),
                     created_at: got.recipe.created_at,
                     updated_at: got.recipe.updated_at,
-                    user_id: 1,
+                    user_id,
                 },
                 additional_images: got.additional_images.clone(),
                 category: recipe.category.expect("Should have category"),

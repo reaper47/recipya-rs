@@ -7,11 +7,13 @@ mod tests {
 
     use app::state::AppState;
     use models::share::ShareRecipe;
+    use models::user::User;
     use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
     use repository::schema;
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, build_server_logged_in, create_app_state,
     };
+    use uuid::Uuid;
 
     use crate::recipes_router::params::ShareRecipeForm;
 
@@ -31,14 +33,16 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
 
         let res = server
             .post(&base_uri(1))
             .form(&ShareRecipeForm { datetime: None })
             .await;
 
-        let share = get_first_shared_recipe(state).await;
+        let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         assert_html(
             res,
@@ -61,7 +65,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
 
         let res = server
@@ -71,7 +77,7 @@ mod tests {
             })
             .await;
 
-        let share = get_first_shared_recipe(state).await;
+        let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         assert_html(
             res,
@@ -94,7 +100,9 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
         let now = chrono::Utc::now().naive_utc();
 
         let res = server
@@ -104,13 +112,13 @@ mod tests {
             })
             .await;
 
-        let share = get_first_shared_recipe(state).await;
+        let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         pretty_assertions::assert_eq!(share.expires_at.signed_duration_since(now).num_days(), 7);
         Ok(())
     }
 
-    async fn get_first_shared_recipe(state: AppState) -> ShareRecipe {
+    async fn get_first_shared_recipe(state: AppState, user_id: Uuid) -> ShareRecipe {
         let mut conn = state
             .mm
             .pool
@@ -122,7 +130,7 @@ mod tests {
             .filter(
                 schema::shares_recipes::recipe_id
                     .eq(1)
-                    .and(schema::shares_recipes::user_id.eq(1)),
+                    .and(schema::shares_recipes::user_id.eq(user_id)),
             )
             .first::<ShareRecipe>(&mut conn)
             .await

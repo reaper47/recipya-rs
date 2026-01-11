@@ -4717,6 +4717,7 @@ dependencies = [
  "strum 0.27.2",
  "support",
  "url",
+ "uuid",
 ]
 
 [[package]]

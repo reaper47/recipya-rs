@@ -5,6 +5,7 @@ use ingredient::{Ingredient, IngredientParser};
 use math::cooking::units::{traits::UnitOperations, unit::Unit, unitless::units::Unitless};
 use strum::{EnumIter, EnumString, IntoEnumIterator as _};
 use tracing::{error, info, warn};
+use uuid::Uuid;
 
 use repository::{ModelManager, schema};
 
@@ -307,7 +308,7 @@ impl NutritionDataSource {
     }
 
     /// Updates the user's preferred nutrition data source.
-    pub async fn save(&self, mm: &ModelManager, user_id: i64) -> Result<()> {
+    pub async fn save(&self, mm: &ModelManager, user_id: Uuid) -> Result<()> {
         use diesel::prelude::*;
         use diesel_async::RunQueryDsl;
 

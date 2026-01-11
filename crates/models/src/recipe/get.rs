@@ -18,7 +18,7 @@ use crate::{Error, Recipe, Result};
 
 impl Recipe {
     /// Retrieves the total number of recipes that belong to a given user.
-    pub async fn count(mm: &ModelManager, user_id: i64) -> Result<i64> {
+    pub async fn count(mm: &ModelManager, user_id: Uuid) -> Result<i64> {
         let mut conn = mm.pool.get().await?;
 
         let count = schema::recipes::table
@@ -31,7 +31,7 @@ impl Recipe {
     }
 
     /// Retrieves the details of a specific recipe for a given user.
-    pub async fn get(mm: &ModelManager, user_id: i64, recipe_id: i64) -> Result<RecipeDetails> {
+    pub async fn get(mm: &ModelManager, user_id: Uuid, recipe_id: i64) -> Result<RecipeDetails> {
         let mut conn = mm.pool.get().await?;
 
         let (recipe, category, cuisine, keywords, times) = schema::recipes::table
@@ -75,7 +75,7 @@ impl Recipe {
             .optional()?
             .ok_or_else(|| Error::EntityNotFound {
                 entity: "recipe",
-                id: recipe_id,
+                id: recipe_id.to_string(),
             })?;
 
         fetch_recipe_details(&mut conn, recipe, category, cuisine, keywords, times).await
@@ -84,7 +84,7 @@ impl Recipe {
     /// Gets the recipe only.
     pub async fn get_recipe_only(
         mm: &ModelManager,
-        user_id: i64,
+        user_id: Uuid,
         recipe_id: i64,
     ) -> Result<Recipe> {
         let mut conn = mm.pool.get().await?;
@@ -102,7 +102,7 @@ impl Recipe {
     /// Gets a page of recipes belonging to the user.
     pub async fn get_page(
         mm: &ModelManager,
-        user_id: i64,
+        user_id: Uuid,
         search_params: &SearchParams,
     ) -> Result<Vec<RecipeDetails>> {
         let query = search_params.q.as_deref().unwrap_or_default();
@@ -336,12 +336,9 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
-            let user = User::get_user_by_id(&state.mm, 1)
-                .await?
-                .expect("no such user");
-            let user2 = User::get_user_by_id(&state.mm, 2)
-                .await?
-                .expect("no such user");
+            let users = User::all(&state.mm).await?;
+            let user = users[0].clone();
+            let user2 = users[1].clone();
             for i in 0..5 {
                 let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
@@ -372,7 +369,7 @@ mod tests {
 
             let recipes = Recipe::get_page(
                 &state.mm,
-                1,
+                Uuid::new_v4(),
                 &SearchParams {
                     page: Some(1),
                     ..Default::default()
@@ -389,17 +386,18 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
+            let user = User::all(&state.mm).await?[0].clone();
             let mut expected = Vec::with_capacity(15);
             for i in 0..15 {
                 let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
-                let _ = Recipe::create(&state.mm, 1, &recipe).await?;
+                let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
                 expected.push(recipe.name);
             }
 
             let recipes = Recipe::get_page(
                 &state.mm,
-                1,
+                user.id,
                 &SearchParams {
                     page: Some(1),
                     ..Default::default()

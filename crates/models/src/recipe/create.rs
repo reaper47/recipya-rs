@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, RunQueryDsl};
+use uuid::Uuid;
 
 use repository::{ModelManager, schema};
 
@@ -19,7 +20,7 @@ use crate::{Error, Result};
 
 impl Recipe {
     /// Adds a recipe category into the database.
-    pub async fn add_category(mm: &ModelManager, category: &str, user_id: i64) -> Result<()> {
+    pub async fn add_category(mm: &ModelManager, category: &str, user_id: Uuid) -> Result<()> {
         let mut conn = mm.pool.get().await?;
 
         let category_id = diesel::insert_into(schema::categories::table)
@@ -53,7 +54,7 @@ impl Recipe {
     /// - The detected language of the recipe is used for further processing and localization.
     pub async fn create(
         mm: &ModelManager,
-        user_id: i64,
+        user_id: Uuid,
         recipe_c: &RecipeForCreate,
     ) -> Result<i64> {
         let mut conn = mm.pool.get().await?;
@@ -203,14 +204,17 @@ mod tests {
     mod tests_add_category {
         use super::*;
 
+        use crate::user::User;
+
         #[tokio::test]
         async fn test_create_new_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
+            let user = User::all(&state.mm).await?[0].clone();
             let category = "fish";
 
-            Recipe::add_category(&state.mm, category, 1).await?;
+            Recipe::add_category(&state.mm, category, user.id).await?;
 
             assert_category(state, category).await?;
             Ok(())
@@ -221,10 +225,11 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let _ = build_server_logged_in(config.clone()).await?;
+            let user = User::all(&state.mm).await?[0].clone();
             let category = "fish";
-            Recipe::add_category(&state.mm, category, 1).await?;
+            Recipe::add_category(&state.mm, category, user.id).await?;
 
-            let res = Recipe::add_category(&state.mm, category, 1).await;
+            let res = Recipe::add_category(&state.mm, category, user.id).await;
 
             match res {
                 Ok(_) => panic!("Should not succeed"),
@@ -294,6 +299,7 @@ mod tests {
 
     fn recipe_for_create_to_recipe_with_data(
         recipe_id: i64,
+        user_id: Uuid,
         recipe: RecipeForCreate,
         got: &RecipeDetails,
     ) -> RecipeDetails {
@@ -304,7 +310,6 @@ mod tests {
 
         let times = recipe.times.unwrap_or_default();
 
-        println!("Nutrition details: {:?}", recipe.nutrition.per_100g);
         let mut nutrition = NutritionDetails::from(&recipe.nutrition);
         if let Some(n) = nutrition.per_100g.as_mut() {
             let other_n = got.nutrition.per_100g.as_ref().unwrap();
@@ -328,7 +333,7 @@ mod tests {
                 source: recipe.source,
                 measurement_system_id: 2,
                 notes: recipe.notes,
-                user_id: 1,
+                user_id,
                 created_at: got.recipe.created_at,
                 updated_at: got.recipe.updated_at,
                 is_favourite: false,
@@ -393,7 +398,7 @@ mod tests {
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
-        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, recipe, &got);
+        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
         pretty_assertions::assert_eq!(got, want);
         Ok(())
     }
@@ -410,7 +415,7 @@ mod tests {
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
-        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, recipe, &got);
+        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
         pretty_assertions::assert_eq!(got, want);
         Ok(())
     }
@@ -442,7 +447,7 @@ mod tests {
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
-        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, recipe, &got);
+        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
         pretty_assertions::assert_eq!(got, want);
         Ok(())
     }

@@ -2,6 +2,7 @@ use axum::Form;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
 use tracing::error;
+use uuid::Uuid;
 use validator::Validate;
 
 use app::state::AppState;
@@ -63,12 +64,25 @@ pub async fn add_user_handler(
 /// Handles deleting a user.
 pub async fn delete_user_handler(
     ctx: CtxW,
-    Path(user_id): Path<i64>,
+    Path(user_id): Path<Uuid>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let caller_user_id = ctx.0.user_id();
 
-    if user_id == 1 {
+    let user = match User::get_user_by_id(&state.mm, user_id).await {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            broadcast_error(&state, caller_user_id, "User not found.").await;
+            return Error::EntityNotFound { entity: "user" }.into_response();
+        }
+        Err(err) => {
+            error!("Error fetching user with id {user_id}: {err}");
+            broadcast_error(&state, caller_user_id, "Failed to fetch user.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    if user.is_admin {
         broadcast_error(&state, caller_user_id, "Cannot delete an admin.").await;
         return Error::DeleteForbidden.into_response();
     }
@@ -95,7 +109,7 @@ pub async fn delete_user_handler(
 /// Renders the form to update the user form from the admin table.
 pub async fn update_user_form_handler(
     ctx: CtxW,
-    Path(user_id): Path<i64>,
+    Path(user_id): Path<Uuid>,
     Query(params): Query<UserRowParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
@@ -124,7 +138,7 @@ pub async fn update_user_form_handler(
 pub async fn update_user_handler(
     ctx: CtxW,
     state: State<AppState>,
-    Path(user_id): Path<i64>,
+    Path(user_id): Path<Uuid>,
     Form(form): Form<UpdatePasswordForm>,
 ) -> impl IntoResponse {
     let caller_user_id = ctx.0.user_id();
@@ -167,7 +181,7 @@ pub async fn update_user_handler(
 /// Renders a user row in the administrator's users panel.
 pub async fn user_row_handler(
     ctx: CtxW,
-    Path(user_id): Path<i64>,
+    Path(user_id): Path<Uuid>,
     Query(params): Query<UserRowParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {

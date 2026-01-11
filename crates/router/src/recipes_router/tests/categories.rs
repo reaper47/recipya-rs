@@ -3,7 +3,7 @@ mod tests {
     use axum::http::Method;
     use axum_test::http::StatusCode;
 
-    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
+    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create, user::User};
     use testing::utils::{
         TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
         build_server_ws, create_app_state,
@@ -104,8 +104,10 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let category = String::from("midnight dinner");
         let state = create_app_state(config.clone()).await;
-        let _ = Recipe::create(&state.mm, 1, &a_complete_recipe_for_create()).await?;
-        Recipe::add_category(&state.mm, &category, 1).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
+        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        Recipe::add_category(&state.mm, &category, user_id).await?;
 
         let res = server
             .delete(BASE_URI)

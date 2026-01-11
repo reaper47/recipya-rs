@@ -100,6 +100,8 @@ mod tests {
     }
 
     mod tests_import_app {
+        use models::user::User;
+
         use super::*;
 
         const BASE_URI: &str = "/recipes/add/import/app";
@@ -134,7 +136,9 @@ mod tests {
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred while parsing the recipes. Please check the logs.","status":"alert-error","title":"Operation Failed"}}"#).await;
             let state = create_app_state(config).await;
-            pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 0);
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            pretty_assertions::assert_eq!(Recipe::count(&state.mm, user_id).await?, 0);
             Ok(())
         }
 
@@ -166,7 +170,9 @@ mod tests {
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Imported 3 recipes. Skipped 0.","status":"alert-info","title":"Operation Successful"}}"#).await;
             let state = create_app_state(config).await;
-            pretty_assertions::assert_eq!(Recipe::count(&state.mm, 1).await?, 3);
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            pretty_assertions::assert_eq!(Recipe::count(&state.mm, user_id).await?, 3);
             Ok(())
         }
 

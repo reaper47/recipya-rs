@@ -37,7 +37,7 @@ pub async fn share_recipe_handler(
         Err(err) => {
             error!("Error fetching shared recipe '{link}': {err}");
             return Error::Model(EntityNotFound {
-                id: -1,
+                id: "-1".into(),
                 entity: "shared recipe",
             })
             .into_response();
@@ -59,8 +59,8 @@ pub async fn share_recipe_handler(
         uri.path(),
         state.data_dir,
         Data {
-            is_admin: user_id == 1,
-            is_authenticated: user_id > 0,
+            is_admin: user_id == Uuid::nil(),
+            is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             // TODO: Populate AboutData with good values.

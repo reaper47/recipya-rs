@@ -117,7 +117,7 @@ pub async fn ws_handler(
     ws.on_upgrade(move |socket| handle_socket(ctx.0.user_id(), socket, state))
 }
 
-async fn handle_socket(user_id: i64, socket: WebSocket, state: AppState) {
+async fn handle_socket(user_id: Uuid, socket: WebSocket, state: AppState) {
     state
         .subscribers
         .lock()

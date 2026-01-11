@@ -1,6 +1,7 @@
 use diesel::dsl::exists;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use uuid::Uuid;
 
 use repository::{ModelManager, schema};
 
@@ -8,7 +9,7 @@ use crate::{Error, Result, recipe::structs::recipe::Recipe};
 
 impl Recipe {
     /// Deletes a user's recipe from the database.
-    pub async fn delete(mm: &ModelManager, recipe_id: i64, user_id: i64) -> Result<()> {
+    pub async fn delete(mm: &ModelManager, recipe_id: i64, user_id: Uuid) -> Result<()> {
         let mut conn = mm.pool.get().await?;
 
         let num_deleted = diesel::delete(
@@ -25,7 +26,7 @@ impl Recipe {
         match num_deleted {
             0 => Err(Error::EntityNotFound {
                 entity: "recipe",
-                id: recipe_id,
+                id: recipe_id.to_string(),
             }),
             _ => Ok(()),
         }
@@ -34,7 +35,7 @@ impl Recipe {
     pub async fn delete_recipe_category(
         mm: &ModelManager,
         category: &str,
-        user_id: i64,
+        user_id: Uuid,
     ) -> Result<()> {
         let mut conn = mm.pool.get().await?;
 
@@ -113,7 +114,7 @@ mod tests {
 
             Recipe::delete(&state.mm, recipe_id, user.id).await?;
 
-            let res = Recipe::get(&state.mm, recipe_id, user.id).await;
+            let res = Recipe::get(&state.mm, user.id, recipe_id).await;
             assert!(res.is_err());
             let mut conn = state.mm.pool.get().await?;
 
@@ -289,7 +290,7 @@ mod tests {
             Recipe::add_category(&state.mm, A_CATEGORY, user.id).await?;
             let mut a_recipe = a_complete_recipe_for_create();
             a_recipe.category = Some(A_CATEGORY.to_string());
-            let recipe_id = Recipe::create(&state.mm, 1, &a_recipe).await?;
+            let recipe_id = Recipe::create(&state.mm, user.id, &a_recipe).await?;
 
             Recipe::delete_recipe_category(&state.mm, A_CATEGORY, user.id).await?;
 

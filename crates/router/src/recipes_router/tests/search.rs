@@ -5,11 +5,13 @@ mod tests {
 
     use config::Config;
     use models::params::SearchParams;
+    use models::user::User;
     use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
     use repository::ModelManager;
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, build_server_logged_in, create_app_state,
     };
+    use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -18,12 +20,14 @@ mod tests {
     async fn prepare_server_with_recipes(config: Config) -> Result<TestServer> {
         let state = create_app_state(config.clone()).await;
         let mut server = build_server_logged_in(config).await?;
+        let users = User::all(&state.mm).await?;
+        let user_id = users[0].id;
         server.add_header(axum_htmx::HX_REQUEST, "true");
-        insert_recipes(&state.mm, 1).await?;
+        insert_recipes(&state.mm, user_id).await?;
         Ok(server)
     }
 
-    async fn insert_recipes(mm: &ModelManager, user_id: i64) -> Result<()> {
+    async fn insert_recipes(mm: &ModelManager, user_id: Uuid) -> Result<()> {
         let mut recipe1 = a_complete_recipe_for_create();
         recipe1.name = "Chinese Firmware".to_string();
         let mut recipe2 = a_complete_recipe_for_create();
