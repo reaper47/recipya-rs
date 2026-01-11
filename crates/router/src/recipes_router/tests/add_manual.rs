@@ -369,7 +369,7 @@ mod tests {
                     rating: Some(4),
                     created_at: got.recipe.created_at,
                     updated_at: got.recipe.updated_at,
-                    user_id: user_id,
+                    user_id,
                 },
                 additional_images: got.additional_images.clone(),
                 category: recipe.category.expect("Should have category"),
