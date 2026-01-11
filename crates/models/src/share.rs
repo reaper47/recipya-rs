@@ -157,7 +157,7 @@ mod tests {
                 &ShareRecipe {
                     id: 1,
                     link: got.link,
-                    user_id: user_id,
+                    user_id,
                     recipe_id: 1,
                     created_at: got.created_at,
                     expires_at: expires_at.naive_local(),
