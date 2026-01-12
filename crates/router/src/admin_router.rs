@@ -1,7 +1,5 @@
 use axum::routing::{delete, get, post};
 use axum::{Router, middleware};
-use serde::{Deserialize, Serialize};
-use validator::Validate;
 
 use app::state::AppState;
 
@@ -9,25 +7,7 @@ use crate::handlers::admin::{
     add_user_handler, delete_user_handler, update_user_form_handler, update_user_handler,
     user_row_handler,
 };
-use crate::middleware::mw_auth::{mw_ctx_require, mw_only_admin};
-
-#[derive(Deserialize)]
-pub struct UserRowParams {
-    #[serde(rename = "row-index")]
-    pub row_index: usize,
-}
-
-#[derive(Default, Validate, Deserialize, Serialize)]
-pub struct UpdatePasswordForm {
-    #[serde(rename = "new-password")]
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub new_password: String,
-    #[serde(rename = "new-password-confirm")]
-    #[validate(must_match(other = "new_password"))]
-    pub new_password_confirm: String,
-    #[serde(rename = "row-index")]
-    pub row_index: usize,
-}
+use crate::middleware::mw_auth::mw_only_admin;
 
 /// Defines the routes for endpoints related to the administrator module.
 pub(super) fn admin_routes(state: AppState) -> Router<AppState> {
@@ -40,16 +20,11 @@ pub(super) fn admin_routes(state: AppState) -> Router<AppState> {
                 .get(update_user_form_handler),
         )
         .route("/user/{:id}/row", get(user_row_handler))
-        .layer(middleware::from_fn(mw_only_admin))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            mw_ctx_require,
-        ))
+        .layer(middleware::from_fn_with_state(state.clone(), mw_only_admin))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use axum::http::Method;
     use models::user::User;
     use reqwest::StatusCode;
@@ -62,8 +37,9 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_user {
+        use crate::schemas::auth::RegisterForm;
+
         use super::*;
-        use crate::auth_router::RegisterForm;
 
         const BASE_URI: &str = "/admin/user";
 
@@ -239,6 +215,8 @@ mod tests {
         }
 
         mod tests_patch {
+            use crate::schemas::admin::UpdatePasswordForm;
+
             use super::*;
 
             #[tokio::test]

@@ -62,7 +62,7 @@ jobs:
       - name: Test
         run: cargo nextest run
         env:
-          RECIPYA_DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
           RECIPYA_IS_AUTOLOGIN: "false"
           RECIPYA_IS_DEMO: "false"

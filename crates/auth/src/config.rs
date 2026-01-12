@@ -12,14 +12,20 @@ use crate::{Error, Result};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AuthConfig {
+    #[serde(rename = "jwtSecret")]
+    pub jwt_secret: String,
+
     #[serde(skip)]
     pub decoded_password_key: Vec<u8>,
+    #[serde(rename = "passwordKey")]
     pub password_key: String,
 
     #[serde(skip)]
     pub decoded_token_key: Vec<u8>,
+    #[serde(rename = "tokenKey")]
     pub token_key: String,
 
+    #[serde(rename = "tokenDurationSec")]
     pub token_duration_sec: f64,
 }
 
@@ -65,6 +71,7 @@ impl AuthConfig {
                 let token_key = URL_SAFE_NO_PAD.encode(generate_key());
 
                 let config = AuthConfig {
+                    jwt_secret: URL_SAFE_NO_PAD.encode(generate_key()),
                     password_key: password_key.clone(),
                     token_key: token_key.clone(),
                     token_duration_sec: 1800.0,

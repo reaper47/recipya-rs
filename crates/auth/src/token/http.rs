@@ -1,7 +1,7 @@
 use tower_cookies::{Cookie, Cookies};
 use uuid::Uuid;
 
-use super::{generate_long_lasting_web_token, generate_web_token};
+use crate::token::{generate_long_lasting_web_token, generate_web_token};
 
 pub use super::Result;
 
@@ -12,16 +12,11 @@ pub use super::Result;
 pub const AUTH_TOKEN: &str = "auth-token";
 
 /// Sets an authentication token cookie for the user.
-pub fn set_token_cookie(
-    cookies: &Cookies,
-    user: &str,
-    salt: Uuid,
-    is_lasts_long: bool,
-) -> Result<()> {
+pub fn set_token_cookie(cookies: &Cookies, user: &Uuid, is_lasts_long: bool) -> Result<()> {
     let token = if is_lasts_long {
-        generate_long_lasting_web_token(user, salt)?
+        generate_web_token(user)?
     } else {
-        generate_web_token(user, salt)?
+        generate_long_lasting_web_token(user)?
     };
 
     let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());

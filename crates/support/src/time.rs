@@ -15,9 +15,8 @@ pub fn format_time(time: OffsetDateTime) -> String {
 }
 
 /// Returns the current UTC time plus the given number of seconds as a formatted string.
-pub fn now_utc_plus_sec_str(sec: f64) -> String {
-    let new_time = OffsetDateTime::now_utc() + Duration::seconds_f64(sec);
-    format_time(new_time)
+pub fn now_utc_plus_sec_str(sec: f64) -> usize {
+    (OffsetDateTime::now_utc() + Duration::seconds_f64(sec)).unix_timestamp() as usize
 }
 
 /// Parses a string into an `OffsetDateTime` in UTC.

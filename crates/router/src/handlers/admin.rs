@@ -9,18 +9,18 @@ use app::state::AppState;
 use models::user::{User, UserForCreate};
 
 use crate::Error;
-use crate::admin_router::{UpdatePasswordForm, UserRowParams};
-use crate::auth_router::RegisterForm;
 use crate::handlers::message::{broadcast_error, broadcast_success};
-use crate::middleware::mw_auth::CtxW;
+use crate::middleware::mw_auth::RequireAuth;
+use crate::schemas::admin::{UpdatePasswordForm, UserRowParams};
+use crate::schemas::auth::RegisterForm;
 
 /// Handles adding a user in the application.
 pub async fn add_user_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
+    let user_id = user.id;
 
     if form.validate().is_err() {
         broadcast_error(
@@ -63,11 +63,11 @@ pub async fn add_user_handler(
 
 /// Handles deleting a user.
 pub async fn delete_user_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(user_id): Path<Uuid>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let caller_user_id = ctx.0.user_id();
+    let caller_user_id = user.id;
 
     let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(Some(user)) => user,
@@ -108,12 +108,12 @@ pub async fn delete_user_handler(
 
 /// Renders the form to update the user form from the admin table.
 pub async fn update_user_form_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(user_id): Path<Uuid>,
     Query(params): Query<UserRowParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let caller_user_id = ctx.0.user_id();
+    let caller_user_id = user.id;
 
     let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(user) => match user {
@@ -136,12 +136,12 @@ pub async fn update_user_form_handler(
 
 /// Handles updating a user.
 pub async fn update_user_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     state: State<AppState>,
     Path(user_id): Path<Uuid>,
     Form(form): Form<UpdatePasswordForm>,
 ) -> impl IntoResponse {
-    let caller_user_id = ctx.0.user_id();
+    let caller_user_id = user.id;
 
     if let Err(err) = form.validate() {
         error!("Error validating update user form: {err}");
@@ -180,12 +180,12 @@ pub async fn update_user_handler(
 
 /// Renders a user row in the administrator's users panel.
 pub async fn user_row_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(user_id): Path<Uuid>,
     Query(params): Query<UserRowParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let caller_user_id = ctx.0.user_id();
+    let caller_user_id = user.id;
 
     let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(user) => match user {

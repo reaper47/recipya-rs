@@ -1,9 +1,7 @@
+use axum::Router;
 use axum::routing::{delete, get, post};
-use axum::{Router, middleware};
-use models::user::UserForCreate;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-use validator::Validate;
+
+use app::state::AppState;
 
 use crate::handlers::auth::{
     change_password_post_handler, confirm_handler, forgot_password_handler,
@@ -11,130 +9,39 @@ use crate::handlers::auth::{
     forgot_password_reset_post_handler, login_handler, login_post_handler, logout_post_handler,
     register_handler, register_post_handler, user_delete_handler,
 };
-use crate::middleware::mw_auth;
-use app::state::AppState;
-
-#[derive(Default, Validate, Deserialize, Serialize)]
-pub struct ChangePasswordForm {
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub new_password: String,
-    #[validate(must_match(other = "new_password"))]
-    pub new_password_confirm: String,
-}
-
-#[derive(Validate, Deserialize, Serialize)]
-pub struct ForgotPasswordForm {
-    #[validate(email(message = "Invalid email address"))]
-    pub email: String,
-}
-
-#[derive(Validate, Deserialize, Serialize)]
-pub struct ForgotPasswordResetForm {
-    pub user_id: Uuid,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
-    #[validate(must_match(other = "password"))]
-    pub confirm_password: String,
-}
-
-/// A form structure used for logging in a user.
-#[derive(Default, Validate, Deserialize, Serialize)]
-pub struct LoginForm {
-    #[validate(email(message = "Invalid email address"))]
-    pub email: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
-    pub remember_me: Option<bool>,
-}
-
-impl LoginForm {
-    /// Returns whether the user has opted to be remembered across sessions.
-    pub fn is_remember_me(&self) -> bool {
-        self.remember_me.unwrap_or(false)
-    }
-}
-
-#[derive(Default, Validate, Deserialize, Serialize)]
-pub struct RegisterForm {
-    #[validate(email(message = "Invalid email address"))]
-    pub email: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
-    #[serde(rename = "password-confirm")]
-    #[validate(must_match(other = "password"))]
-    pub password_confirm: String,
-}
-
-impl RegisterForm {
-    /// Converts the form to a UserForCreate.
-    pub fn to_user(&self) -> UserForCreate {
-        UserForCreate {
-            email: self.email.clone(),
-            password_clear: self.password.clone(),
-        }
-    }
-}
 
 /// Defines the authentication-related routes for the web application.
-pub(super) fn auth_routes(state: AppState) -> Router<AppState> {
+pub(super) fn auth_routes() -> Router<AppState> {
     Router::new()
-        .route(
-            "/change-password",
-            post(change_password_post_handler).layer(middleware::from_fn(mw_auth::mw_ctx_require)),
-        )
+        .route("/change-password", post(change_password_post_handler))
         .route("/confirm", get(confirm_handler))
         .route(
             "/forgot-password",
-            get(forgot_password_handler)
-                .post(forgot_password_post_handler)
-                .layer(middleware::from_fn_with_state(
-                    state.clone(),
-                    mw_auth::mw_redirect_if_authenticated,
-                )),
+            get(forgot_password_handler).post(forgot_password_post_handler),
         )
         .route(
             "/forgot-password/reset",
             get(forgot_password_reset_handler).post(forgot_password_reset_post_handler),
         )
-        .route(
-            "/login",
-            get(login_handler)
-                .post(login_post_handler)
-                .layer(middleware::from_fn_with_state(
-                    state.clone(),
-                    mw_auth::mw_redirect_if_authenticated,
-                )),
-        )
+        .route("/login", get(login_handler).post(login_post_handler))
         .route("/logout", post(logout_post_handler))
         .route(
             "/register",
-            get(register_handler).post(register_post_handler).layer(
-                middleware::from_fn_with_state(
-                    state.clone(),
-                    mw_auth::mw_redirect_if_authenticated,
-                ),
-            ),
+            get(register_handler).post(register_post_handler),
         )
-        .route(
-            "/user",
-            delete(user_delete_handler).layer(middleware::from_fn(mw_auth::mw_ctx_require)),
-        )
+        .route("/user", delete(user_delete_handler))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use axum::http::Method;
+    use axum::http::{Method, StatusCode};
     use config::Config;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_change_password {
         use super::*;
-        use axum::http::StatusCode;
+        use crate::schemas::auth::ChangePasswordForm;
 
         use testing::utils::{
             TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
@@ -224,6 +131,8 @@ mod tests {
 
     mod tests_confirm {
         use super::*;
+        use auth::token::{jwt::validate_token, jwt_test_helpers::encode_claims_for_test};
+
         use support::time::now_utc_plus_sec_str;
         use testing::utils::{
             TestDb, assert_html, build_server_anonymous, create_app_state, get_token,
@@ -247,14 +156,16 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let mut token = get_token(state.mm).await?;
-            token.exp = now_utc_plus_sec_str(-100.);
+            let token = get_token(state.mm).await?;
+            let mut claims = validate_token(&token)?;
+            claims.exp = now_utc_plus_sec_str(-100.);
+            let token = encode_claims_for_test(claims)?;
 
             let res = server
-                .get(format!("{BASE_URI}?token={}", &token).as_str())
+                .get(format!("{BASE_URI}?token={token}").as_str())
                 .await;
 
-            res.assert_status_bad_request();
+            res.assert_status_unauthorized();
             Ok(())
         }
 
@@ -263,14 +174,16 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let mut token = get_token(state.mm).await?;
-            token.ident = "dont@exist.com".to_string();
+            let token = get_token(state.mm).await?;
+            let mut claims = validate_token(&token)?;
+            claims.sub = "dont@exist.com".to_string();
+            let token = encode_claims_for_test(claims)?;
 
             let res = server
-                .get(format!("{BASE_URI}?token={}", &token).as_str())
+                .get(format!("{BASE_URI}?token={token}").as_str())
                 .await;
 
-            res.assert_status_not_found();
+            res.assert_status_unauthorized();
             Ok(())
         }
 
@@ -369,15 +282,18 @@ mod tests {
     }
 
     mod tests_forgot_password {
+        use crate::schemas::auth::{ForgotPasswordForm, ForgotPasswordResetForm};
+
         use super::*;
 
-        use auth::token::Token;
+        use auth::token::{jwt::validate_token, jwt_test_helpers::encode_claims_for_test};
         use models::user::User;
         use support::time::now_utc_plus_sec_str;
         use testing::utils::{
             TestDb, assert_html, build_server_anonymous, build_server_logged_in, create_app_state,
             get_token,
         };
+        use uuid::Uuid;
 
         const BASE_URI: &str = "/auth/forgot-password";
         const URI_RESET: &str = "/auth/forgot-password/reset";
@@ -418,7 +334,12 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config).await?;
 
-            let res = server.post(BASE_URI).await;
+            let res = server
+                .post(BASE_URI)
+                .form(&ForgotPasswordForm {
+                    email: "not@exist.com".to_string(),
+                })
+                .await;
 
             res.assert_status_see_other();
             res.assert_header("Location", "/recipes");
@@ -466,8 +387,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let mut token = get_token(state.mm).await?;
-            token.exp = now_utc_plus_sec_str(-100.);
+            let token = get_token(state.mm).await?;
+            let mut claims = validate_token(&token)?;
+            claims.exp = now_utc_plus_sec_str(-100.);
+            let token = encode_claims_for_test(claims)?;
 
             let res = server.get(&format!("{URI_RESET}?token={token}")).await;
 
@@ -487,10 +410,8 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let token: Token = get_token(state.mm.clone()).await?;
-            let user = User::get_user_by_email(&state.mm, &token.ident)
-                .await?
-                .unwrap();
+            let token = get_token(state.mm.clone()).await?;
+            let claims = validate_token(&token)?;
 
             let res = server.get(&format!("{URI_RESET}?token={token}")).await;
 
@@ -501,7 +422,7 @@ mod tests {
                     r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
                     &format!(
                         r#"<input name="user-id" type="hidden" value="{}">"#,
-                        user.id
+                        claims.sub
                     ),
                     r#"<fieldset class="fieldset"><label class="label" for="password">New password</label><input id="password" type="password" required placeholder="Enter your new password" class="input" name="password"></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label" for="confirm-password">Confirm password</label><input id="confirm-password" type="password" required placeholder="Retype your password" class="input" name="password-confirm"></fieldset>"#,
@@ -559,13 +480,14 @@ mod tests {
     }
 
     mod tests_login {
+        use crate::schemas::auth::LoginForm;
+
         use super::*;
 
         use std::default::Default;
         use time::OffsetDateTime;
-        use time::format_description::well_known::Rfc3339;
 
-        use auth::token::{AUTH_TOKEN, Token};
+        use auth::token::{AUTH_TOKEN, jwt::validate_token};
         use testing::utils::{
             TEST_USER_EMAIL, TEST_USER_PASSWORD, TestDb, assert_html, assert_not_in_html,
             build_server_anonymous, build_server_logged_in,
@@ -691,11 +613,11 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header("Location", "/");
-            let token: Token = res.cookie(AUTH_TOKEN).value().to_string().parse()?;
-            let token_expire = OffsetDateTime::parse(&token.exp, &Rfc3339)?;
-            let now = OffsetDateTime::now_utc();
+            let token = res.cookie(AUTH_TOKEN).value().to_string();
+            let claims = validate_token(&token)?;
+            let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
             assert!(
-                (token_expire - now).whole_days() >= 30,
+                (claims.exp - now) >= 30 * 24 * 60 * 60,
                 "expiration time should be a month"
             );
             Ok(())
@@ -772,11 +694,11 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header("Location", "/");
-            let token: Token = res.cookie(AUTH_TOKEN).value().to_string().parse()?;
-            let token_expire = OffsetDateTime::parse(&token.exp, &Rfc3339)?;
-            let now = OffsetDateTime::now_utc();
+            let token = res.cookie(AUTH_TOKEN).value().to_string();
+            let claims = validate_token(&token)?;
+            let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
             assert!(
-                (token_expire - now).whole_days() >= 30,
+                (claims.exp - now) >= 30 * 24 * 60 * 60,
                 "expiration time should be a month"
             );
             Ok(())
@@ -787,7 +709,6 @@ mod tests {
         use super::*;
 
         use auth::token::AUTH_TOKEN;
-        use auth::token::Token;
         use models::user::User;
         use testing::utils::{TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state};
 
@@ -821,12 +742,8 @@ mod tests {
 
             res_post.assert_status_see_other();
             res_get.assert_status_ok();
-            let token: std::result::Result<Token, _> = res_post
-                .maybe_cookie(AUTH_TOKEN)
-                .unwrap()
-                .to_string()
-                .parse();
-            assert!(token.is_err(), "auth token should be deleted");
+            let token = res_post.maybe_cookie(AUTH_TOKEN);
+            assert!(token.is_some(), "auth token should be deleted");
             Ok(())
         }
 
@@ -847,6 +764,8 @@ mod tests {
     }
 
     mod tests_register {
+        use crate::schemas::auth::{LoginForm, RegisterForm};
+
         use super::*;
         use models::user::User;
 

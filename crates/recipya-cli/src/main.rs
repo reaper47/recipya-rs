@@ -3,6 +3,7 @@ mod server;
 mod sponsors;
 
 use clap::{Parser, Subcommand};
+use dotenvy::dotenv;
 use rustls::crypto::ring;
 use tracing::info;
 use tracing::log::warn;
@@ -32,6 +33,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    dotenv().ok();
     init_crypto();
     init_tracing()?;
 

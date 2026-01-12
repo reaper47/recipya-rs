@@ -11,17 +11,21 @@ use uuid::Uuid;
 use app::state::AppState;
 use models::user::User;
 
-use crate::middleware::mw_auth::CtxW;
+use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 
 const MAX_IMAGE_SIZE: usize = 10 * 1024 * 1024;
 
 /// Handles the index page.
-pub async fn index_handler() -> Redirect {
-    Redirect::to("/auth/login")
+pub async fn index_handler(OptionalAuth(user): OptionalAuth) -> Redirect {
+    match user {
+        Some(_) => Redirect::to("/recipes"),
+        None => Redirect::to("/auth/login"),
+    }
 }
 
 /// Handles uploading a note's image to the appropriate data directory.
 pub async fn upload_note_image(
+    RequireAuth(_): RequireAuth,
     State(state): State<AppState>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
@@ -87,9 +91,11 @@ fn is_image_allowed(mime: &str) -> bool {
 }
 
 /// Handles retrieving the user's initials.
-pub async fn user_initials_handler(ctx: CtxW, State(state): State<AppState>) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-    match User::get_user_by_id(&state.mm, user_id).await {
+pub async fn user_initials_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match User::get_user_by_id(&state.mm, user.id).await {
         Ok(Some(user)) => {
             if let Some(first) = user.email.to_uppercase().chars().next() {
                 first.to_string()
@@ -98,7 +104,7 @@ pub async fn user_initials_handler(ctx: CtxW, State(state): State<AppState>) -> 
             }
         }
         Ok(None) => {
-            error!("User {user_id} does not exist");
+            error!("User {} does not exist", user.id);
             "A".into()
         }
         Err(err) => {
@@ -110,11 +116,11 @@ pub async fn user_initials_handler(ctx: CtxW, State(state): State<AppState>) -> 
 
 /// WebSocket connection handler.
 pub async fn ws_handler(
-    ctx: CtxW,
     ws: WebSocketUpgrade,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(ctx.0.user_id(), socket, state))
+    ws.on_upgrade(move |socket| handle_socket(user.id, socket, state))
 }
 
 async fn handle_socket(user_id: Uuid, socket: WebSocket, state: AppState) {

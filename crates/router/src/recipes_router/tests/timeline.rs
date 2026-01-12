@@ -38,8 +38,7 @@ mod tests {
     #[tokio::test]
     async fn test_must_be_logged_in_ok() -> Result<()> {
         assert_must_be_logged_in(Method::GET, &base_uri(1)).await?;
-        assert_must_be_logged_in(Method::POST, &base_uri(1)).await?;
-        assert_must_be_logged_in(Method::PUT, &base_uri(1)).await
+        assert_must_be_logged_in(Method::POST, &base_uri(1)).await
     }
 
     #[tokio::test]

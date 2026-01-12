@@ -11,13 +11,12 @@ use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
-use auth::token::{AUTH_TOKEN, Token, generate_web_token};
+use auth::token::{AUTH_TOKEN, generate_web_token};
 use config::Config;
 use models::user::{User, UserForCreate};
 use recipya_scraper::tests::MockHttpClient;
 use repository::ModelManager;
 use repository::make_db_pool;
-use router::middleware::mw_auth::mw_ctx_resolver;
 use router::router;
 use support::fs::MockFs;
 
@@ -36,23 +35,24 @@ pub const HIDDEN_WS_NOTIFICATION: &str = r#"<div id="ws-notification-container" 
 pub fn test_database_url() -> String {
     setup_env();
 
-    let base = env::var("RECIPYA_DATABASE_URL")
-        .expect("Environment variable 'RECIPYA_DATABASE_URL' to be set")
+    let base = env::var("DATABASE_URL")
+        .expect("Environment variable 'DATABASE_URL' to be set")
         .trim_end_matches('/')
+        .trim_end_matches("/recipya")
         .to_string();
 
     if base.ends_with("/recipya_test") {
         base
     } else {
-        format!("{base}/recipya_test")
+        format!("{base}/recipya_test",)
     }
 }
 
 pub fn setup_env() {
     let _ = dotenvy::dotenv();
 
-    if std::env::var("RECIPYA_DATABASE_URL").is_err() {
-        panic!("Environment variable 'RECIPYA_DATABASE_URL' to be set: NotPresent");
+    if std::env::var("DATABASE_URL").is_err() {
+        panic!("Environment variable 'DATABASE_URL' to be set: NotPresent");
     }
 }
 
@@ -132,6 +132,7 @@ pub async fn create_app_state(config: Config) -> AppState {
 }
 
 /// Builds a test server with anonymous access (no user logged in).
+#[cfg(feature = "test-utils")]
 pub async fn build_server_anonymous(app_config: Config) -> Result<TestServer> {
     let routes = prepare_router(app_config).await?;
     let config = TestServerConfig {
@@ -143,6 +144,7 @@ pub async fn build_server_anonymous(app_config: Config) -> Result<TestServer> {
 }
 
 /// Builds a test server with a logged-in user.
+#[cfg(feature = "test-utils")]
 pub async fn build_server_logged_in(app_config: Config) -> Result<TestServer> {
     let routes = prepare_router(app_config.clone()).await?;
     let config = TestServerConfig {
@@ -156,7 +158,7 @@ pub async fn build_server_logged_in(app_config: Config) -> Result<TestServer> {
         .await?
         .expect("User should be in database");
 
-    let token = generate_web_token(TEST_USER_EMAIL, user.token_salt)?;
+    let token = generate_web_token(&user.id)?;
 
     let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());
     cookie.set_http_only(true);
@@ -199,7 +201,7 @@ async fn build_server_ws_helper(
 
     let mut server = TestServer::new_with_config(routes, config)?;
 
-    let token = generate_web_token(auth_email, user.token_salt)?;
+    let token = generate_web_token(&user.id)?;
     let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());
     cookie.set_http_only(true);
     cookie.set_path("/");
@@ -211,7 +213,7 @@ async fn build_server_ws_helper(
 }
 
 /// Generates a token for a newly created test user.
-pub async fn get_token(mm: ModelManager) -> Result<Token> {
+pub async fn get_token(mm: ModelManager) -> Result<String> {
     let email = "confirm@test.com".to_string();
 
     User::new(
@@ -227,7 +229,7 @@ pub async fn get_token(mm: ModelManager) -> Result<Token> {
         .await?
         .expect("User not found");
 
-    Ok(generate_web_token(&user.email, user.token_salt)?)
+    Ok(generate_web_token(&user.id)?)
 }
 
 /// Generates a unique test database name and URL.
@@ -246,10 +248,6 @@ async fn prepare_router(config: Config) -> Result<Router<()>> {
     let state = create_app_state(config).await;
     let app = router(state.clone())
         .await?
-        .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
-            mw_ctx_resolver,
-        ))
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 

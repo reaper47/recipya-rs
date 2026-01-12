@@ -3,6 +3,7 @@ mod error;
 
 pub use data::DataDir;
 pub use error::{Error, Result};
+use tracing::warn;
 
 use std::env;
 
@@ -32,7 +33,7 @@ impl Config {
     /// Populates the Config's fields from the environment variables.
     pub fn load_from_env() -> Result<Self> {
         let database_url = {
-            let base = get_env_on_load("RECIPYA_DATABASE_URL")?
+            let base = get_env_on_load("DATABASE_URL")?
                 .trim_end_matches('/')
                 .to_string();
 
@@ -63,6 +64,15 @@ fn get_env_on_load(name: &'static str) -> Result<String> {
                 Ok(trimmed.to_string())
             }
         }
-        Err(_) => Err(Error::MissingEnv(name)),
+        Err(_) => {
+            warn!("Missing environment variable (setting default value): {name}");
+            match name {
+                "RECIPYA_IS_ALLOW_SIGNUPS" => Ok("false".into()),
+                "RECIPYA_IS_AUTOLOGIN" => Ok("false".into()),
+                "RECIPYA_IS_DEMO" => Ok("false".into()),
+                "RUST_LOG" => Ok("debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn".into()),
+                _ => Err(Error::MissingEnv(name)),
+            }
+        }
     }
 }
