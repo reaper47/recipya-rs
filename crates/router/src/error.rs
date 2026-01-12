@@ -20,6 +20,7 @@ pub enum Error {
     ConfirmInvalidToken,
     DeleteUser,
     GenerateToken,
+    InvalidClaims,
     LoginFailUsernameNotFound,
     LogoutFail,
     LogoutForbidden,
@@ -119,6 +120,7 @@ impl Error {
                 },
             ),
             Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
+            InvalidClaims => (StatusCode::UNAUTHORIZED, ClientError::UNAUTHORIZED),
             InvalidPayload => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
             InvalidQuery => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
             NoUser => (
@@ -177,4 +179,5 @@ pub enum ClientError {
     LOGOUT_FAIL,
     MISSING_PARAMS,
     SERVICE_ERROR,
+    UNAUTHORIZED,
 }

@@ -13,25 +13,16 @@ use models::time::FormattedTimes;
 
 use crate::Error;
 use crate::handlers::helpers::is_hx_request;
-use crate::middleware::mw_auth::CtxW;
+use crate::middleware::mw_auth::OptionalAuth;
 
 /// Renders the shared recipe.
 pub async fn share_recipe_handler(
-    ctx: CtxW,
     header_map: HeaderMap,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
+    OptionalAuth(user): OptionalAuth,
     Path(link): Path<Uuid>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
-    let settings = UserSettingDetails::get(&state.mm, user_id)
-        .await
-        .unwrap_or_else(|_| UserSettingDetails {
-            user_id,
-            ..Default::default()
-        });
-
     let (share, recipe) = match ShareRecipe::get_by_link(&state.mm, link).await {
         Ok(share) => share,
         Err(err) => {
@@ -52,44 +43,81 @@ pub async fn share_recipe_handler(
         }
     };
 
-    let recipe_id = recipe.recipe.id;
+    let template = match user {
+        Some(user) => {
+            let settings = UserSettingDetails::get(&state.mm, user.id)
+                .await
+                .unwrap_or_default();
 
-    match templates::recipes::view_recipe(
-        state.fs_support,
-        uri.path(),
-        state.data_dir,
-        Data {
-            is_admin: user_id == Uuid::nil(),
-            is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
-            is_hx_request: is_hx_request(&header_map),
-            // TODO: Populate AboutData with good values.
-            is_preview: false,
-            about: AboutData {
-                is_update_available: false,
-                is_check_update: false,
-                last_checked_update_at: Default::default(),
-                last_updated_at: Default::default(),
-                version: "".to_string(),
+            templates::recipes::view_recipe(
+                state.fs_support,
+                uri.path(),
+                state.data_dir,
+                Data {
+                    is_admin: user.is_admin,
+                    is_authenticated: true,
+                    is_autologin: state.config.read().await.is_autologin,
+                    is_hx_request: is_hx_request(&header_map),
+                    // TODO: Populate AboutData with good values.
+                    is_preview: false,
+                    about: AboutData {
+                        is_update_available: false,
+                        is_check_update: false,
+                        last_checked_update_at: Default::default(),
+                        last_updated_at: Default::default(),
+                        version: "".to_string(),
+                    },
+                    pagination: None,
+                    searchbar: None,
+                    share: Some(ShareData {
+                        is_shared: true,
+                        is_from_host: user.id == share.user_id,
+                    }),
+                    recipes: vec![ViewRecipe {
+                        recipe_details: recipe,
+                        formatted_times,
+                    }],
+                },
+                settings,
+            )
+        }
+        None => templates::recipes::view_recipe(
+            state.fs_support,
+            uri.path(),
+            state.data_dir,
+            Data {
+                is_admin: false,
+                is_authenticated: true,
+                is_autologin: state.config.read().await.is_autologin,
+                is_hx_request: is_hx_request(&header_map),
+                // TODO: Populate AboutData with good values.
+                is_preview: false,
+                about: AboutData {
+                    is_update_available: false,
+                    is_check_update: false,
+                    last_checked_update_at: Default::default(),
+                    last_updated_at: Default::default(),
+                    version: "".to_string(),
+                },
+                pagination: None,
+                searchbar: None,
+                share: Some(ShareData {
+                    is_shared: true,
+                    is_from_host: false,
+                }),
+                recipes: vec![ViewRecipe {
+                    recipe_details: recipe,
+                    formatted_times,
+                }],
             },
-            pagination: None,
-            searchbar: None,
-            share: Some(ShareData {
-                is_shared: true,
-                is_from_host: user_id == share.user_id,
-            }),
-            recipes: vec![ViewRecipe {
-                recipe_details: recipe,
-                formatted_times,
-            }],
-        },
-        settings,
-    ) {
+            UserSettingDetails::default(),
+        ),
+    };
+
+    match template {
         Ok(res) => res.into_response(),
         Err(err) => {
-            error!(
-                "Error rendering shared view recipe page for user {user_id} and {recipe_id}: {err}"
-            );
+            error!("Error rendering shared view recipe page '{link}': {err}");
             Error::Templates.into_response()
         }
     }

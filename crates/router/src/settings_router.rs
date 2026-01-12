@@ -1,6 +1,5 @@
 use axum::routing::{get, post};
 use axum::{Router, middleware};
-use serde::{Deserialize, Serialize};
 
 use app::state::AppState;
 
@@ -8,20 +7,7 @@ use crate::handlers::settings::{
     set_default_theme_handler, set_nutrition_source_handler, set_selected_theme_handler,
     settings_handler,
 };
-use crate::middleware::mw_auth::{mw_ctx_require, mw_only_admin};
-
-/// Represents the payload for setting themes.
-#[derive(Deserialize, Serialize)]
-pub struct ThemePayload {
-    pub theme: String,
-}
-
-/// Represents the payload for setting nutrition sources.
-#[derive(Deserialize, Serialize)]
-pub struct NutritionSourcePayload {
-    #[serde(rename = "nutrition-source")]
-    pub nutrition_source: String,
-}
+use crate::middleware::mw_auth::mw_only_admin;
 
 /// Defines the routes for endpoints related to the settings module.
 pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
@@ -30,24 +16,20 @@ pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
         .route("/nutrition/source", post(set_nutrition_source_handler))
         .route(
             "/theme-default",
-            post(set_default_theme_handler).layer(middleware::from_fn(mw_only_admin)),
+            post(set_default_theme_handler)
+                .layer(middleware::from_fn_with_state(state.clone(), mw_only_admin)),
         )
         .route("/theme-selected", post(set_selected_theme_handler))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            mw_ctx_require,
-        ))
 }
 
 #[cfg(test)]
 mod tests {
     use axum::http::{Method, StatusCode};
+
     use testing::utils::{
         TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, build_server_logged_in,
         build_server_ws_other_user, create_app_state, insert_other_user,
     };
-
-    use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -167,6 +149,8 @@ mod tests {
     mod tests_nutrition {
         use models::{nutrition::NutritionDataSource, settings::UserSettingDetails, user::User};
 
+        use crate::schemas::settings::NutritionSourcePayload;
+
         use super::*;
 
         const BASE_URI: &str = "/settings/nutrition/source";
@@ -205,6 +189,8 @@ mod tests {
             settings::{Theme, UserSettingDetails},
             user::User,
         };
+
+        use crate::schemas::settings::ThemePayload;
 
         use super::*;
 

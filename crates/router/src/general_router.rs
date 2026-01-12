@@ -1,39 +1,23 @@
+use axum::Router;
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, post};
-use axum::{Router, middleware};
 
 use app::state::AppState;
 
 use crate::handlers::general::{
     index_handler, upload_note_image, user_initials_handler, ws_handler,
 };
-use crate::middleware::mw_auth;
-use crate::middleware::mw_auth::mw_redirect_if_authenticated;
 
 /// Defines the routes for general endpoints of the web application.
-pub(super) fn general_routes(state: AppState) -> Router<AppState> {
+pub(super) fn general_routes() -> Router<AppState> {
     Router::new()
-        .route(
-            "/",
-            get(index_handler).layer(middleware::from_fn_with_state(
-                state.clone(),
-                mw_redirect_if_authenticated,
-            )),
-        )
+        .route("/", get(index_handler))
         .route(
             "/upload/note-image",
-            post(upload_note_image)
-                .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
-                .layer(middleware::from_fn(mw_auth::mw_ctx_require)),
+            post(upload_note_image).layer(DefaultBodyLimit::max(10 * 1024 * 1024)),
         )
-        .route(
-            "/user-initials",
-            get(user_initials_handler).layer(middleware::from_fn(mw_auth::mw_ctx_require)),
-        )
-        .route(
-            "/ws",
-            get(ws_handler).layer(middleware::from_fn(mw_auth::mw_ctx_require)),
-        )
+        .route("/user-initials", get(user_initials_handler))
+        .route("/ws", get(ws_handler))
 }
 
 #[cfg(test)]
@@ -71,11 +55,13 @@ mod tests {
     }
 
     mod tests_upload_note_image {
-        use super::*;
+        use std::io::Cursor;
+
         use image::{ImageBuffer, Rgb};
         use reqwest::StatusCode;
         use serde_json::Value;
-        use std::io::Cursor;
+
+        use super::*;
 
         const BASE_URI: &str = "/upload/note-image";
 
@@ -164,11 +150,11 @@ mod tests {
     }
 
     mod tests_user_initials {
-        use super::*;
-
         use axum::http::Method;
 
         use testing::utils::{TestDb, assert_must_be_logged_in, build_server_logged_in};
+
+        use super::*;
 
         const BASE_URI: &str = "/user-initials";
 

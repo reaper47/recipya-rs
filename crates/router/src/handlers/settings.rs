@@ -17,17 +17,17 @@ use crate::Error;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::broadcast_error;
 use crate::handlers::recipes::fetch_categories_keywords;
-use crate::middleware::mw_auth::CtxW;
-use crate::settings_router::{NutritionSourcePayload, ThemePayload};
+use crate::middleware::mw_auth::RequireAuth;
+use crate::schemas::settings::{NutritionSourcePayload, ThemePayload};
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
-    ctx: CtxW,
     header_map: HeaderMap,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let caller_user = ctx.0;
-    let caller_user_id = caller_user.user_id();
+    let caller_user = user;
+    let caller_user_id = caller_user.id;
 
     let settings = match UserSettingDetails::get(&state.mm, caller_user_id).await {
         Ok(settings) => settings,
@@ -51,7 +51,7 @@ pub async fn settings_handler(
     };
 
     let config = state.config.read().await;
-    let is_admin = caller_user.is_admin();
+    let is_admin = caller_user.is_admin;
 
     let users = if is_admin {
         User::all(&state.mm).await.ok()
@@ -111,19 +111,17 @@ pub async fn settings_handler(
 
 /// Handles setting the nutrition source for the target user.
 pub async fn set_nutrition_source_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(payload): Form<NutritionSourcePayload>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
     let source = match payload.nutrition_source.parse::<NutritionDataSource>() {
         Ok(s) => s,
         Err(_) => {
             error!("Invalid nutrition source: {}", payload.nutrition_source);
             broadcast_error(
                 &state,
-                user_id,
+                user.id,
                 &format!(
                     "Nutrition source '{}' is invalid.",
                     payload.nutrition_source
@@ -134,9 +132,12 @@ pub async fn set_nutrition_source_handler(
         }
     };
 
-    if let Err(err) = source.save(&state.mm, user_id).await {
-        error!("Error saving selected nutrition source for user {user_id}: {err}");
-        broadcast_error(&state, user_id, "Error saving selected nutrition source.").await;
+    if let Err(err) = source.save(&state.mm, user.id).await {
+        error!(
+            "Error saving selected nutrition source for user {}: {err}",
+            user.id
+        );
+        broadcast_error(&state, user.id, "Error saving selected nutrition source.").await;
         return Error::Database.into_response();
     }
 
@@ -145,30 +146,31 @@ pub async fn set_nutrition_source_handler(
 
 /// Handles setting the default theme for the target user.
 pub async fn set_default_theme_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(payload): Form<ThemePayload>,
 ) -> impl IntoResponse {
-    handle_theme_request(ctx, state, payload, |theme, mm, user_id| async move {
+    handle_theme_request(user, state, payload, |theme, mm, user_id| async move {
         theme.save_default(&mm, user_id).await
     })
     .await
+    .into_response()
 }
 
 /// Handles setting the selected theme for the target user.
 pub async fn set_selected_theme_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(payload): Form<ThemePayload>,
 ) -> impl IntoResponse {
-    handle_theme_request(ctx, state, payload, |theme, mm, user_id| async move {
+    handle_theme_request(user, state, payload, |theme, mm, user_id| async move {
         theme.save_selected(&mm, user_id).await
     })
     .await
 }
 
 async fn handle_theme_request<F, Fut>(
-    ctx: CtxW,
+    user: User,
     state: AppState,
     payload: ThemePayload,
     save_operation: F,
@@ -177,15 +179,13 @@ where
     F: FnOnce(Theme, ModelManager, Uuid) -> Fut,
     Fut: Future<Output = Result<(), models::Error>> + Send,
 {
-    let user_id = ctx.0.user_id();
-
     let theme = match payload.theme.parse::<Theme>() {
         Ok(theme) => theme,
         Err(_) => {
             error!("Invalid theme: {}", payload.theme);
             broadcast_error(
                 &state,
-                user_id,
+                user.id,
                 &format!("Theme '{}' is invalid.", payload.theme),
             )
             .await;
@@ -193,9 +193,9 @@ where
         }
     };
 
-    if let Err(err) = save_operation(theme, state.mm.clone(), user_id).await {
-        error!("Error saving selected theme for user {user_id}: {err}");
-        broadcast_error(&state, user_id, "Error saving selected theme.").await;
+    if let Err(err) = save_operation(theme, state.mm.clone(), user.id).await {
+        error!("Error saving selected theme for user {}: {err}", user.id);
+        broadcast_error(&state, user.id, "Error saving selected theme.").await;
         return Error::Database.into_response();
     }
 

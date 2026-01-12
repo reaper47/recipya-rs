@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use axum::middleware::from_fn_with_state;
 use rand::Rng;
 use rand::distr::Alphanumeric;
 use tokio::net::TcpListener;
@@ -18,8 +17,8 @@ use models::{
 };
 use recipya_scraper::AppHttpClient;
 use repository::ModelManager;
+use router::copy_to_fs;
 use router::router;
-use router::{copy_to_fs, middleware::mw_auth::mw_ctx_resolver};
 use support::fs::{AppFs, FsSupport, get_base_dir};
 
 use crate::error::{Error, Result};
@@ -55,7 +54,6 @@ pub async fn server() -> Result<()> {
 
     let router = router(state.clone())
         .await?
-        .layer(from_fn_with_state(state.clone(), mw_ctx_resolver))
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 

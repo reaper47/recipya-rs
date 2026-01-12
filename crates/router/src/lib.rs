@@ -6,6 +6,7 @@ mod error;
 mod general_router;
 mod handlers;
 mod recipes_router;
+mod schemas;
 mod settings_router;
 mod shared_router;
 mod static_files_router;
@@ -30,11 +31,11 @@ use crate::static_files_router::static_files_routes;
 pub async fn router(state: AppState) -> Result<Router<AppState>> {
     let router = Router::new()
         .nest("/admin", admin_routes(state.clone()))
-        .nest("/auth", auth_routes(state.clone()))
-        .nest("/recipes", recipes_routes(state.clone()))
+        .nest("/auth", auth_routes())
+        .nest("/recipes", recipes_routes())
         .nest("/settings", settings_router::settings_routes(state.clone()))
         .nest("/shared", shared_routes())
-        .merge(general_routes(state.clone()))
+        .merge(general_routes())
         .merge(static_files_routes(state.clone()));
 
     Ok(router)

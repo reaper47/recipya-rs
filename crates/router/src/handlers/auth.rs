@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use auth::token::jwt::validate_token;
 use axum::Form;
 use axum::extract::ws::Message;
 use axum::extract::{Query, State};
@@ -10,26 +11,24 @@ use tracing::{debug, error};
 use uuid::Uuid;
 use validator::Validate;
 
+use app::state::AppState;
 use auth::pwd::scheme::SchemeStatus;
 use auth::pwd::{ContentToHash, validate_pwd};
-use auth::token::{
-    Token, generate_web_token, remove_token_cookie, set_token_cookie, validate_web_token,
-};
+use auth::token::{generate_web_token, remove_token_cookie, set_token_cookie};
 use email::{Data, Email, Template};
 use models::Error::EntityNotFound;
 use models::user::User;
 
-use crate::auth_router::{
+use crate::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message, broadcast_error};
+use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
+use crate::schemas::auth::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
 };
-use crate::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message, broadcast_error};
-use crate::middleware::mw_auth::CtxW;
 use crate::{Error, Result};
-use app::state::AppState;
 
 /// Handles a user's update password request.
 pub async fn change_password_post_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<ChangePasswordForm>,
 ) -> impl IntoResponse {
@@ -37,12 +36,10 @@ pub async fn change_password_post_handler(
         return Error::ConfirmForbidden.into_response();
     }
 
-    let user_id = ctx.0.user_id();
-
     if form.password == form.new_password {
         broadcast_error(
             &state,
-            user_id,
+            user.id,
             "New password cannot be the same as the current.",
         )
         .await;
@@ -50,24 +47,22 @@ pub async fn change_password_post_handler(
     }
 
     if form.validate().is_err() {
-        broadcast_error(&state, user_id, "Passwords do not match.").await;
+        broadcast_error(&state, user.id, "Passwords do not match.").await;
         return Error::Form.into_response();
     }
 
-    let user_id = ctx.0.user_id();
-
-    match User::update_password_by_user_id(&state.mm, user_id, &form.new_password).await {
+    match User::update_password_by_user_id(&state.mm, user.id, &form.new_password).await {
         Ok(_) => {
             let toast = MessageWs::success("Your password has been updated.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user_id, Message::Text(json.into())).await;
+                state.broadcast(user.id, Message::Text(json.into())).await;
             }
 
             (StatusCode::NO_CONTENT, "").into_response()
         }
         Err(err) => {
-            broadcast_error(&state, user_id, "Failed to update password.").await;
+            broadcast_error(&state, user.id, "Failed to update password.").await;
             Error::Model(err).into_response()
         }
     }
@@ -79,11 +74,19 @@ pub async fn confirm_handler(
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let token = match get_token_from_query(query) {
-        Ok(token) => token,
+        Ok(token) => match validate_token(&token) {
+            Ok(token) => token,
+            Err(_) => return Error::InvalidClaims.into_response(),
+        },
         Err(err) => return err.into_response(),
     };
 
-    let user = match User::get_user_by_email(&state.mm, &token.ident).await {
+    let user_id = match Uuid::parse_str(&token.sub) {
+        Ok(id) => id,
+        Err(_) => return Error::InvalidClaims.into_response(),
+    };
+
+    let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(user) => match user {
             Some(user) => user,
             None => {
@@ -97,10 +100,6 @@ pub async fn confirm_handler(
         Err(err) => return Error::Model(err).into_response(),
     };
 
-    if validate_web_token(&token, user.token_salt).is_err() {
-        return Error::ConfirmInvalidToken.into_response();
-    }
-
     if let Err(err) = user.set_is_confirmed(&state.mm).await {
         return Error::Model(err).into_response();
     };
@@ -108,55 +107,63 @@ pub async fn confirm_handler(
     templates::general::simple("Success", "Your account has been confirmed.").into_response()
 }
 
-fn get_token_from_query(query: HashMap<String, String>) -> Result<Token> {
-    let token: Token = match query.get("token") {
-        Some(token) => token.parse()?,
+fn get_token_from_query(query: HashMap<String, String>) -> Result<String> {
+    match query.get("token") {
+        Some(token) => Ok(token.to_string()),
         None => return Err(Error::NoToken),
-    };
-    Ok(token)
+    }
 }
 
 /// Renders the forgot password request page.
-pub async fn forgot_password_handler() -> impl IntoResponse {
-    templates::auth::forgot_password().into_response()
+pub async fn forgot_password_handler(OptionalAuth(user): OptionalAuth) -> impl IntoResponse {
+    match user {
+        Some(_) => Redirect::to("/recipes").into_response(),
+        None => templates::auth::forgot_password().into_response(),
+    }
 }
 
 /// Handles the forgot password request form.
 pub async fn forgot_password_post_handler(
+    OptionalAuth(user): OptionalAuth,
     State(state): State<AppState>,
     Form(form): Form<ForgotPasswordForm>,
 ) -> impl IntoResponse {
-    if form.validate().is_err() {
-        return Error::Form.into_response();
-    }
+    match user {
+        Some(_) => Redirect::to("/recipes").into_response(),
+        None => {
+            if form.validate().is_err() {
+                return Error::Form.into_response();
+            }
 
-    let user_email = form.email;
+            let user_email = form.email;
 
-    if let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await
-        && let Ok(token) = generate_web_token(&user_email, user.token_salt)
-        && let Some(email) = state.email_service
-    {
-        let payload = Email {
-            to: user_email.clone(),
-            subject: "Reset your password".into(),
-            body: "".to_string(),
-            template: Some(Template::ForgotPassword),
-            data: Some(Data {
-                token: token.to_string(),
-                username: user_email,
-                url: state.config.read().await.base_url.clone(),
-            }),
-        };
+            if let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await
+                && let Ok(token) = generate_web_token(&user.id)
+                && let Some(email) = state.email_service
+            {
+                let payload = Email {
+                    to: user_email.clone(),
+                    subject: "Reset your password".into(),
+                    body: "".to_string(),
+                    template: Some(Template::ForgotPassword),
+                    data: Some(Data {
+                        token: token.to_string(),
+                        username: user_email,
+                        url: state.config.read().await.base_url.clone(),
+                    }),
+                };
 
-        if let Err(err) = email.send(&payload) {
-            error!("Could not send email 'Reset your password': {:?}", err);
+                if let Err(err) = email.send(&payload) {
+                    error!("Could not send email 'Reset your password': {:?}", err);
+                }
+            }
+
+            templates::general::simple(
+                "Password Reset Requested",
+                "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
+            ).into_response()
         }
     }
-
-    templates::general::simple(
-        "Password Reset Requested",
-        "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
-    ).into_response()
 }
 
 /// Renders the forgot password reset page.
@@ -165,25 +172,31 @@ pub async fn forgot_password_reset_handler(
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let token = match get_token_from_query(query) {
-        Ok(token) => token,
+        Ok(token) => match validate_token(&token) {
+            Ok(token) => token,
+            Err(_) => {
+                let mut res = templates::general::simple(
+                    "Token Expired", "The token associated with the URL expired. The problem has been forwarded to our team automatically. We will look into it and come back to you. We apologise for this inconvenience.",
+                ).into_response();
+                *res.status_mut() = StatusCode::BAD_REQUEST;
+                return res;
+            }
+        },
         Err(err) => return err.into_response(),
     };
 
-    let user = match User::get_user_by_email(&state.mm, &token.ident).await {
+    let user_id = match Uuid::parse_str(&token.sub) {
+        Ok(id) => id,
+        Err(_) => return Error::InvalidClaims.into_response(),
+    };
+
+    let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(user) => match user {
             Some(user) => user,
             None => return Error::NoUser.into_response(),
         },
         Err(err) => return Error::Model(err).into_response(),
     };
-
-    if validate_web_token(&token, user.token_salt).is_err() {
-        let mut res = templates::general::simple(
-            "Token Expired", "The token associated with the URL expired. The problem has been forwarded to our team automatically. We will look into it and come back to you. We apologise for this inconvenience.",
-        ).into_response();
-        *res.status_mut() = StatusCode::BAD_REQUEST;
-        return res;
-    }
 
     templates::auth::forgot_password_reset(user.id).into_response()
 }
@@ -223,10 +236,18 @@ pub async fn forgot_password_reset_post_handler(
 }
 
 /// Renders the login page.
-pub async fn login_handler(State(state): State<AppState>) -> impl IntoResponse {
-    let config = state.config.read().await;
+pub async fn login_handler(
+    OptionalAuth(user): OptionalAuth,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match user {
+        Some(_) => Redirect::to("/recipes").into_response(),
+        None => {
+            let config = state.config.read().await;
 
-    templates::auth::login(config.is_demo, config.is_no_signups).into_response()
+            templates::auth::login(config.is_demo, config.is_no_signups).into_response()
+        }
+    }
 }
 
 /// Handles user login requests.
@@ -288,12 +309,7 @@ pub async fn login_post_handler(
         };
     }
 
-    match set_token_cookie(
-        &cookies,
-        &user.email,
-        user.token_salt,
-        form.is_remember_me(),
-    ) {
+    match set_token_cookie(&cookies, &user.id, form.is_remember_me()) {
         Ok(_) => Redirect::to("/").into_response(),
         Err(err) => {
             let mut res = (StatusCode::BAD_REQUEST, "Login failed").into_response();
@@ -306,7 +322,7 @@ pub async fn login_post_handler(
 
 /// Handles a user logging out.
 pub async fn logout_post_handler(
-    ctx: CtxW,
+    OptionalAuth(user): OptionalAuth,
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
@@ -314,131 +330,167 @@ pub async fn logout_post_handler(
         return Error::LogoutForbidden.into_response();
     }
 
+    if let Some(user) = user {
+        if let Err(err) = User::update_remember_me(&state.mm, user.id, false).await {
+            error!("Could not update remember_me for user {}: {err}", user.id);
+        }
+    }
+
     match remove_token_cookie(&cookies) {
         Ok(_) => {
-            if let Err(err) = User::update_remember_me(&state.mm, ctx.0.user_id(), false).await {
-                error!("Could not logout user with id {}: {err}", ctx.0.user_id());
-                return Error::LogoutFail.into_response();
-            }
-
             let mut res = Redirect::to("/").into_response();
-            res.headers_mut().insert(
-                axum_htmx::headers::HX_REDIRECT,
-                HeaderValue::from_static("/"),
-            );
+
+            if let Ok(hx_redirect_val) = HeaderValue::from_str("/") {
+                res.headers_mut()
+                    .insert(axum_htmx::headers::HX_REDIRECT, hx_redirect_val);
+            }
             res
         }
-        Err(_) => Error::LogoutFail.into_response(),
+        Err(err) => {
+            error!("Failed to remove token cookie: {err}");
+            Error::LogoutFail.into_response()
+        }
     }
 }
 
 /// Renders the user registration page.
-pub async fn register_handler(State(state): State<AppState>) -> impl IntoResponse {
-    if state.config.read().await.is_no_signups {
-        return Redirect::to("/auth/login").into_response();
-    }
+pub async fn register_handler(
+    OptionalAuth(user): OptionalAuth,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    match user {
+        Some(_) => Redirect::to("/recipes").into_response(),
+        None => {
+            if state.config.read().await.is_no_signups {
+                return Redirect::to("/auth/login").into_response();
+            }
 
-    templates::auth::register().into_response()
+            templates::auth::register().into_response()
+        }
+    }
 }
 
 /// Handles user registration.
 pub async fn register_post_handler(
+    OptionalAuth(user): OptionalAuth,
     State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
-    let config = state.config.read().await;
+    match user {
+        Some(_) => Redirect::to("/recipes").into_response(),
+        None => {
+            let config = state.config.read().await;
 
-    if config.is_no_signups {
-        return Redirect::to("/auth/login").into_response();
-    }
+            if config.is_no_signups {
+                return Redirect::to("/auth/login").into_response();
+            }
 
-    if form.validate().is_err() {
-        let mut res = Error::PwdNotMatching {
-            user_id: Uuid::nil(),
+            if form.validate().is_err() {
+                let mut res = Error::PwdNotMatching {
+                    user_id: Uuid::nil(),
+                }
+                .into_response();
+                add_hx_message(&mut res, MessageHtmx::error("Passwords do not match."));
+                return res;
+            }
+
+            match User::get_user_by_email(&state.mm, form.email.clone()).await {
+                Ok(Some(_)) => Redirect::to("/recipes").into_response(),
+                Ok(_) => {
+                    let user = match User::new(&state.mm, form.to_user()).await {
+                        Ok(id) => id,
+                        Err(err) => {
+                            println!("Error creating user: {}", err);
+                            let mut res = Error::Model(err).into_response();
+                            add_hx_message(
+                                &mut res,
+                                MessageHtmx::error("An error occurred during registration."),
+                            );
+                            return res;
+                        }
+                    };
+
+                    let token = match generate_web_token(&user.id) {
+                        Ok(token) => token,
+                        Err(_) => {
+                            let mut res = Error::GenerateToken.into_response();
+                            add_hx_message(
+                                &mut res,
+                                MessageHtmx::error(
+                                    "Could not generate web token for authentication.",
+                                ),
+                            );
+                            return res;
+                        }
+                    };
+
+                    if let Some(service) = state.email_service {
+                        let base_url = config.base_url.clone();
+
+                        tokio::spawn(async move {
+                            service.send(&Email {
+                                to: user.email,
+                                subject: "Confirm Account".into(),
+                                body: "".into(),
+                                template: Some(Template::Intro),
+                                data: Some(Data {
+                                    token: token.to_string(),
+                                    username: form.email,
+                                    url: base_url,
+                                }),
+                            })
+                        });
+                    }
+
+                    Redirect::to("/auth/login").into_response()
+                }
+                Err(err) => {
+                    error!("Failed to fetch user from database: {err}");
+
+                    let mut res = Error::FailFetch.into_response();
+                    add_hx_message(
+                        &mut res,
+                        MessageHtmx::error("Failed to fetch user from database."),
+                    );
+                    return res;
+                }
+            }
         }
-        .into_response();
-        add_hx_message(&mut res, MessageHtmx::error("Passwords do not match."));
-        return res;
     }
-
-    let user = match User::new(&state.mm, form.to_user()).await {
-        Ok(id) => id,
-        Err(err) => {
-            let mut res = Error::Model(err).into_response();
-            add_hx_message(
-                &mut res,
-                MessageHtmx::error("An error occurred during registration."),
-            );
-            return res;
-        }
-    };
-
-    let token = match generate_web_token(&user.email, user.token_salt) {
-        Ok(token) => token,
-        Err(_) => {
-            let mut res = Error::GenerateToken.into_response();
-            add_hx_message(
-                &mut res,
-                MessageHtmx::error("Could not generate web token for authentication."),
-            );
-            return res;
-        }
-    };
-
-    if let Some(service) = state.email_service {
-        let base_url = config.base_url.clone();
-
-        tokio::spawn(async move {
-            service.send(&Email {
-                to: user.email,
-                subject: "Confirm Account".into(),
-                body: "".into(),
-                template: Some(Template::Intro),
-                data: Some(Data {
-                    token: token.to_string(),
-                    username: form.email,
-                    url: base_url,
-                }),
-            })
-        });
-    }
-
-    Redirect::to("/auth/login").into_response()
 }
 
 /// Handles user deletion.
 pub async fn user_delete_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
     let config = state.config.read().await;
-    let user_id = ctx.0.user_id();
 
     if config.is_autologin {
-        broadcast_error(&state, user_id, "This account cannot be deleted.").await;
+        broadcast_error(&state, user.id, "This account cannot be deleted.").await;
         return Error::DeleteForbidden.into_response();
     }
 
-    if config.is_demo && is_demo_user(&state, user_id).await {
+    if config.is_demo && is_demo_user(&state, user.id).await {
         broadcast_error(
             &state,
-            user_id,
+            user.id,
             "Trump is Putin's lap dog. Remove him from office!",
         )
         .await;
         return Error::DeleteForbidden.into_response();
     }
 
-    match User::delete(&state.mm, user_id).await {
+    match User::delete(&state.mm, user.id).await {
         Ok(_) => {
             drop(config);
-            logout_post_handler(ctx, State(state), cookies)
+            logout_post_handler(OptionalAuth(Some(user)), State(state), cookies)
                 .await
                 .into_response()
         }
         Err(err) => {
-            error!("Could not delete user with id {user_id}: {err}");
+            error!("Could not delete user with id {}: {err}", user.id);
             Error::DeleteUser.into_response()
         }
     }

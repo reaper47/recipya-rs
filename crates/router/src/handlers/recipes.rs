@@ -51,7 +51,7 @@ use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{
     IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success, broadcast_warning,
 };
-use crate::middleware::mw_auth::CtxW;
+use crate::middleware::mw_auth::RequireAuth;
 use crate::recipes_router::params::{
     FavouriteParams, ImportFromApiForm, ImportFromAppForm, OrderParams, PreviewForm,
     RecipeCategoryForm, RecipeScrapeForm, ShareRecipeForm, TimelineEventForm,
@@ -60,20 +60,21 @@ use crate::{Error, Result};
 
 /// Handles deleting a user's recipe.
 pub async fn delete_recipe_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
-    match Recipe::delete(&state.mm, recipe_id, user_id).await {
+    match Recipe::delete(&state.mm, recipe_id, user.id).await {
         Ok(_) => {
-            state.remove_cached_recipe((user_id, recipe_id)).await;
+            state.remove_cached_recipe((user.id, recipe_id)).await;
             (StatusCode::NO_CONTENT, [(HX_REDIRECT, "/")]).into_response()
         }
         Err(err) => {
-            error!("Error deleting recipe {recipe_id} for user {user_id}: {err}");
-            broadcast_error(&state, user_id, "Recipe could not be deleted.").await;
+            error!(
+                "Error deleting recipe {recipe_id} for user {}: {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Recipe could not be deleted.").await;
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
@@ -81,26 +82,24 @@ pub async fn delete_recipe_handler(
 
 /// Handles viewing the recipes.
 pub async fn recipes_handler(
-    ctx: CtxW,
     headers: HeaderMap,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let user_id = ctx.0.user_id();
+    let settings = get_settings(&state, user.id).await?;
 
-    let settings = get_settings(&state, user_id).await?;
-
-    let num_recipes = match Recipe::count(&state.mm, user_id).await {
+    let num_recipes = match Recipe::count(&state.mm, user.id).await {
         Ok(count) => count,
         Err(err) => {
-            error!("Error counting recipes for user {user_id}: {err}");
-            broadcast_error(&state, user_id, "Error fetching number of recipes.").await;
+            error!("Error counting recipes for user {}: {err}", user.id);
+            broadcast_error(&state, user.id, "Error fetching number of recipes.").await;
             return Ok(Error::Database.into_response());
         }
     };
 
-    let recipes = match Recipe::get_page(&state.mm, user_id, &search_params).await {
+    let recipes = match Recipe::get_page(&state.mm, user.id, &search_params).await {
         Ok(recipes) => {
             let mapped_recipes: std::result::Result<Vec<ViewRecipe>, _> = recipes
                 .into_iter()
@@ -112,7 +111,7 @@ pub async fn recipes_handler(
                         })
                         .map_err(async |err| {
                             error!("Error formatting times for recipe: {err}");
-                            broadcast_error(&state, user_id, "Error formatting recipe times.")
+                            broadcast_error(&state, user.id, "Error formatting recipe times.")
                                 .await;
                             Error::Database
                         })
@@ -126,9 +125,10 @@ pub async fn recipes_handler(
         }
         Err(err) => {
             error!(
-                "Error fetching recipes for user '{user_id}' with search params '{search_params:?}': {err}"
+                "Error fetching recipes for user '{:?}' with search params '{search_params:?}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Error fetching recipes.").await;
+            broadcast_error(&state, user.id, "Error fetching recipes.").await;
             return Err(Error::Database);
         }
     };
@@ -137,7 +137,7 @@ pub async fn recipes_handler(
         state.fs_support,
         uri.path(),
         Data {
-            is_admin: user_id == Uuid::nil(),
+            is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
@@ -166,27 +166,28 @@ pub async fn recipes_handler(
 }
 
 /// Handles the recipe schema endpoint.
-pub async fn recipe_schema_handler(_ctx: CtxW) -> Result<impl IntoResponse> {
+pub async fn recipe_schema_handler(RequireAuth(_): RequireAuth) -> Result<impl IntoResponse> {
     Ok(schema_org::Recipe::schema().into_response())
 }
 
 /// Handles the duplicate recipe endpoint.
 pub async fn duplicate_recipe_handler(
-    ctx: CtxW,
     Path(recipe_id): Path<i64>,
     header_map: HeaderMap,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let user_id = ctx.0.user_id();
-
-    let settings = get_settings(&state, user_id).await?;
+    let settings = get_settings(&state, user.id).await?;
 
     let (mut recipe, categories, keywords) =
-        match fetch_view_recipe(&state, user_id, recipe_id).await {
+        match fetch_view_recipe(&state, user.id, recipe_id).await {
             Ok(res) => res,
             Err(err) => {
-                error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
-                broadcast_error(&state, user_id, "Recipe not found.").await;
+                error!(
+                    "Error fetching view recipe '{recipe_id}' for user '{}': {err}",
+                    user.id
+                );
+                broadcast_error(&state, user.id, "Recipe not found.").await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",
@@ -198,7 +199,7 @@ pub async fn duplicate_recipe_handler(
 
     Ok(templates::recipes::add_recipe_manual(
         Data {
-            is_admin: user_id == Uuid::nil(),
+            is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -214,20 +215,21 @@ pub async fn duplicate_recipe_handler(
 
 /// Handles a recipe's edit page.
 pub async fn edit_recipe_handler(
-    ctx: CtxW,
     header_map: HeaderMap,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let user_id = ctx.0.user_id();
+    let settings = get_settings(&state, user.id).await?;
 
-    let settings = get_settings(&state, user_id).await?;
-
-    let (recipe, categories, keywords) = match fetch_view_recipe(&state, user_id, recipe_id).await {
+    let (recipe, categories, keywords) = match fetch_view_recipe(&state, user.id, recipe_id).await {
         Ok(res) => res,
         Err(err) => {
-            error!("Error fetching view recipe '{recipe_id}' for user '{user_id}': {err}");
-            broadcast_error(&state, user_id, "Recipe not found.").await;
+            error!(
+                "Error fetching view recipe '{recipe_id}' for user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -240,7 +242,7 @@ pub async fn edit_recipe_handler(
     match templates::recipes::edit_recipe(
         state.fs_support,
         Data {
-            is_admin: user_id == Uuid::nil(),
+            is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -255,7 +257,8 @@ pub async fn edit_recipe_handler(
         Ok(res) => Ok(res),
         Err(err) => {
             error!(
-                "Error rendering edit recipe page for user {user_id} and recipe {recipe_id}: {err}"
+                "Error rendering edit recipe page for user {} and recipe {recipe_id}: {err}",
+                user.id
             );
             Err(Error::Templates)
         }
@@ -306,12 +309,11 @@ async fn fetch_view_recipe(
 
 /// Handles updating a recipe.
 pub async fn edit_recipe_put_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     form: RecipeForm,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
     let fs_support = Arc::clone(&state.fs_support);
 
     let mut recipe_c = RecipeForCreate::from(&form);
@@ -381,13 +383,16 @@ pub async fn edit_recipe_put_handler(
         videos
     };
 
-    match Recipe::update(&state.mm, user_id, recipe_id, &mut recipe_c).await {
+    match Recipe::update(&state.mm, user.id, recipe_id, &mut recipe_c).await {
         Ok(_) => {
-            state.remove_cached_recipe((user_id, recipe_id)).await;
+            state.remove_cached_recipe((user.id, recipe_id)).await;
         }
         Err(err) => {
-            error!("Failed to update recipe '{recipe_id}' user '{user_id}': {err}");
-            broadcast_error(&state, user_id, "Failed to add recipe to collection.").await;
+            error!(
+                "Failed to update recipe '{recipe_id}' user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }
     };
@@ -407,19 +412,17 @@ pub struct YieldQueryParams {
 
 /// Handles scaling the recipe's yield.
 pub async fn scale_recipe_handler(
-    ctx_w: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     Query(params): Query<YieldQueryParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let user_id = ctx_w.0.user_id();
-
     if params.yield_param == 0 {
-        broadcast_error(&state, user_id, "Yield must be greater than zero.").await;
+        broadcast_error(&state, user.id, "Yield must be greater than zero.").await;
         return Error::InvalidQuery.into_response();
     }
 
-    let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+    let recipe = match Recipe::get(&state.mm, user.id, recipe_id).await {
         Ok(mut recipe) => {
             let measurement_system =
                 system::MeasurementSystem::from_id(recipe.recipe.measurement_system_id)
@@ -439,8 +442,11 @@ pub async fn scale_recipe_handler(
             recipe
         }
         Err(err) => {
-            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
-            broadcast_error(&state, user_id, "Recipe not found.").await;
+            error!(
+                "Error fetching recipe '{recipe_id}' for user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -454,13 +460,11 @@ pub async fn scale_recipe_handler(
 
 /// Handles generating a link for the recipe to share.
 pub async fn share_recipe_post_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     Form(form): Form<ShareRecipeForm>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
     let expires_at: Option<NaiveDateTime> = form.datetime.and_then(|dt| {
         match NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%dT%H:%M") {
             Ok(parsed) => Some(parsed),
@@ -471,7 +475,7 @@ pub async fn share_recipe_post_handler(
         }
     });
 
-    match ShareRecipe::new(&state.mm, recipe_id, user_id, expires_at).await {
+    match ShareRecipe::new(&state.mm, recipe_id, user.id, expires_at).await {
         Ok(share) => {
             let url = format!(
                 "{}/shared/r/{}",
@@ -482,9 +486,10 @@ pub async fn share_recipe_post_handler(
         }
         Err(err) => {
             error!(
-                "Error generating shared recipe link for recipe '{recipe_id}' and user '{user_id}': {err}"
+                "Error generating shared recipe link for recipe '{recipe_id}' and user '{}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Error parsing datetime.").await;
+            broadcast_error(&state, user.id, "Error parsing datetime.").await;
             Error::BadTimeFormat.into_response()
         }
     }
@@ -492,17 +497,18 @@ pub async fn share_recipe_post_handler(
 
 /// Handles getting a recipe's timeline.
 pub async fn timeline_get_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
-    let recipe = match Recipe::get_recipe_only(&state.mm, user_id, recipe_id).await {
+    let recipe = match Recipe::get_recipe_only(&state.mm, user.id, recipe_id).await {
         Ok(recipe) => recipe,
         Err(err) => {
-            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
-            broadcast_error(&state, user_id, "Recipe not found.").await;
+            error!(
+                "Error fetching recipe '{recipe_id}' for user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -511,13 +517,14 @@ pub async fn timeline_get_handler(
         }
     };
 
-    let events = match RecipeTimeline::all(&state.mm, recipe_id, user_id).await {
+    let events = match RecipeTimeline::all(&state.mm, recipe_id, user.id).await {
         Ok(components) => components.into_iter().map(Event::from).collect::<Vec<_>>(),
         Err(err) => {
             error!(
-                "Error fetching timeline components for recipe '{recipe_id}' of user '{user_id}': {err}"
+                "Error fetching timeline components for recipe '{recipe_id}' of user '{}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Failed to fetch timeline components.").await;
+            broadcast_error(&state, user.id, "Failed to fetch timeline components.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "timeline",
@@ -540,17 +547,15 @@ pub async fn timeline_get_handler(
 
 /// Handles adding a timeline component to the recipe.
 pub async fn timeline_post_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     form: TimelineEventForm,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
     if let Err(err) = RecipeTimeline::create(
         &state.mm,
         recipe_id,
-        user_id,
+        user.id,
         &RecipeTimelineForCreate {
             title: form.title,
             comment: form.comment,
@@ -562,13 +567,14 @@ pub async fn timeline_post_handler(
     .await
     {
         error!(
-            "Error creating timeline event for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+            "Error creating timeline event for recipe with id '{recipe_id}' and user '{}': {err}",
+            user.id
         );
-        broadcast_error(&state, user_id, "Could not create timeline event.").await;
+        broadcast_error(&state, user.id, "Could not create timeline event.").await;
         return Error::Database.into_response();
     }
 
-    broadcast_success(&state, user_id, "Timeline event created.").await;
+    broadcast_success(&state, user.id, "Timeline event created.").await;
     (StatusCode::CREATED, "").into_response()
 }
 
@@ -604,24 +610,23 @@ async fn upload_image(
 
 /// Handles getting a timeline event for view.
 pub async fn timeline_event_get_handler(
-    ctx: CtxW,
     Path((recipe_id, timeline_id)): Path<(i64, i64)>,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Query(q): Query<OrderParams>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
-    let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await {
+    let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await {
         Ok(t) => Event::from(t),
         Err(EntityNotFound { entity, .. }) => {
-            broadcast_warning(&state, user_id, "Timeline event does not exist.").await;
+            broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(
-                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Could not fetch timeline event.").await;
+            broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
     };
@@ -632,24 +637,23 @@ pub async fn timeline_event_get_handler(
 
 /// Handles getting a timeline event for edit.
 pub async fn timeline_event_get_edit_handler(
-    ctx: CtxW,
     Path((recipe_id, timeline_id)): Path<(i64, i64)>,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Query(q): Query<OrderParams>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
-    let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await {
+    let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await {
         Ok(t) => t,
         Err(EntityNotFound { entity, .. }) => {
-            broadcast_warning(&state, user_id, "Timeline event does not exist.").await;
+            broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(
-                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Could not fetch timeline event.").await;
+            broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
     };
@@ -660,25 +664,24 @@ pub async fn timeline_event_get_edit_handler(
 
 /// Handles updating a timeline component of the recipe.
 pub async fn timeline_put_handler(
-    ctx: CtxW,
     Path((recipe_id, timeline_id)): Path<(i64, i64)>,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     form: TimelineEventForm,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
-    let original_event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user_id).await
+    let original_event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await
     {
         Ok(t) => t,
         Err(EntityNotFound { entity, .. }) => {
-            broadcast_warning(&state, user_id, "Timeline event does not exist.").await;
+            broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(
-                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{user_id}': {err}"
+                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Could not fetch timeline event.").await;
+            broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
     };
@@ -704,11 +707,11 @@ pub async fn timeline_put_handler(
         created_at: form.date.unwrap_or_default(),
     };
 
-    let new_event = match RecipeTimeline::edit(&state.mm, user_id, &new_event_params).await {
+    let new_event = match RecipeTimeline::edit(&state.mm, user.id, &new_event_params).await {
         Ok(t) => t,
         Err(err) => {
             error!("Failed to edit timeline event '{new_event_params:?}': {err}");
-            broadcast_error(&state, user_id, "Failed to edit timeline event.").await;
+            broadcast_error(&state, user.id, "Failed to edit timeline event.").await;
             return Error::Database.into_response();
         }
     };
@@ -724,29 +727,28 @@ pub async fn timeline_put_handler(
 
 /// Toggles the favourite state of a recipe.
 pub async fn toggle_favourite_handler(
-    ctx: CtxW,
     uri: Uri,
+    RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     Form(params): Form<FavouriteParams>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
-    let is_favourite = match Recipe::toggle_favourite(&state.mm, user_id, recipe_id).await {
+    let is_favourite = match Recipe::toggle_favourite(&state.mm, user.id, recipe_id).await {
         Ok(v) => v,
         Err(err) => {
             error!(
-                "Error toggling the favourite state of recipe '{recipe_id}' for user '{user_id}': {err}"
+                "Error toggling the favourite state of recipe '{recipe_id}' for user '{}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Error toggling favourite.").await;
+            broadcast_error(&state, user.id, "Error toggling favourite.").await;
             return Error::Database.into_response();
         }
     };
 
-    if let Ok(r) = Recipe::get(&state.mm, user_id, recipe_id).await
+    if let Ok(r) = Recipe::get(&state.mm, user.id, recipe_id).await
         && let Ok(times) = FormattedTimes::from_times(&r.times)
     {
-        let cache_key = (user_id, recipe_id);
+        let cache_key = (user.id, recipe_id);
         let view_recipe = ViewRecipe {
             recipe_details: r,
             formatted_times: times,
@@ -770,19 +772,17 @@ pub async fn toggle_favourite_handler(
 
 /// Handles the add recipe page.
 pub async fn add_recipes_handler(
-    ctx: CtxW,
     header_map: HeaderMap,
     OriginalUri(uri): OriginalUri,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let user_id = ctx.0.user_id();
-
-    let settings = get_settings(&state, user_id).await?;
+    let settings = get_settings(&state, user.id).await?;
 
     Ok(templates::recipes::add_page(
         uri.path(),
         Data {
-            is_admin: ctx.0.user_id() == Uuid::nil(),
+            is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -795,12 +795,11 @@ pub async fn add_recipes_handler(
 
 /// Handles the importing recipes from an application endpoint.
 pub async fn add_recipe_import_app_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     form: ImportFromAppForm,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-    save_parsed_recipes(state, form, user_id);
+    save_parsed_recipes(state, form, user.id);
 
     (StatusCode::ACCEPTED, "").into_response()
 }
@@ -919,12 +918,11 @@ async fn push_recipes_to_db(
 
 /// Handles the importing recipes from an API endpoint.
 pub async fn add_recipe_import_api_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<ImportFromApiForm>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-    fetch_recipes_from_api(state, form, user_id);
+    fetch_recipes_from_api(state, form, user.id);
 
     (StatusCode::ACCEPTED, "").into_response()
 }
@@ -1110,14 +1108,12 @@ async fn broadcast_import_done_toast(
 
 /// Handles generating a preview of the recipe based on the input JSON recipe schema.
 pub async fn add_recipe_import_preview_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<PreviewForm>,
 ) -> Result<impl IntoResponse> {
     match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
         Ok(schema) => {
-            let user_id = ctx.0.user_id();
-
             let recipe_c = RecipeForCreate::from(&schema);
             let recipe_details = RecipeDetails::from(recipe_c);
             let formatted_times = FormattedTimes::from_times(&recipe_details.times)?;
@@ -1133,7 +1129,7 @@ pub async fn add_recipe_import_preview_handler(
                 fs_support,
                 data_dir,
                 &Data {
-                    is_admin: user_id == Uuid::nil(),
+                    is_admin: user.is_admin,
                     is_authenticated: true,
                     is_autologin: state.config.read().await.is_autologin,
                     is_hx_request: true,
@@ -1160,8 +1156,11 @@ pub async fn add_recipe_import_preview_handler(
             ) {
                 Ok(res) => Ok(res.into_response()),
                 Err(err) => {
-                    error!("Error rendering view recipe page preview for user {user_id}: {err}");
-                    broadcast_error(&state, user_id, "Error rendering recipe preview.").await;
+                    error!(
+                        "Error rendering view recipe page preview for user {}: {err}",
+                        user.id
+                    );
+                    broadcast_error(&state, user.id, "Error rendering recipe preview.").await;
                     Err(Error::Templates)
                 }
             }
@@ -1181,17 +1180,15 @@ pub async fn add_recipe_import_preview_handler(
 
 /// Handles parsing a recipe from raw JSON.
 pub async fn add_recipe_import_raw_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<PreviewForm>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
     match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
         Ok(schema) => {
             let recipe_c = RecipeForCreate::from(&schema);
 
-            match Recipe::create(&state.mm, user_id, &recipe_c).await {
+            match Recipe::create(&state.mm, user.id, &recipe_c).await {
                 Ok(recipe_id) => {
                     let url = format!("/recipes/{recipe_id}");
 
@@ -1202,19 +1199,19 @@ pub async fn add_recipe_import_raw_handler(
                 }
                 Err(DuplicateEntity) => {
                     warn!("Recipe exists: {}", recipe_c.name);
-                    broadcast_error(&state, user_id, "Recipe exists.").await;
+                    broadcast_error(&state, user.id, "Recipe exists.").await;
                     Error::EntityExists { entity: "recipe" }.into_response()
                 }
                 Err(err) => {
                     error!("Error saving recipe '{}': {err}", recipe_c.name);
-                    broadcast_error(&state, user_id, "Failed to insert recipe.").await;
+                    broadcast_error(&state, user.id, "Failed to insert recipe.").await;
                     Error::Database.into_response()
                 }
             }
         }
         Err(err) => {
             error!("Error parsing recipe schema JSON: {err}");
-            broadcast_error(&state, user_id, "Error parsing recipe schema JSON.").await;
+            broadcast_error(&state, user.id, "Error parsing recipe schema JSON.").await;
             Error::InvalidPayload.into_response()
         }
     }
@@ -1222,15 +1219,13 @@ pub async fn add_recipe_import_raw_handler(
 
 /// Handles rendering the form to add a recipe manually.
 pub async fn add_manual_recipe_handler(
-    ctx: CtxW,
     header_map: HeaderMap,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let user_id = ctx.0.user_id();
+    let settings = get_settings(&state, user.id).await?;
 
-    let settings = get_settings(&state, user_id).await?;
-
-    let (categories, keywords) = match fetch_categories_keywords(&state, user_id).await {
+    let (categories, keywords) = match fetch_categories_keywords(&state, user.id).await {
         Ok(res) => res,
         Err(err) => {
             return Err(err);
@@ -1239,7 +1234,7 @@ pub async fn add_manual_recipe_handler(
 
     Ok(templates::recipes::add_recipe_manual(
         Data {
-            is_admin: user_id == Uuid::nil(),
+            is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -1254,11 +1249,10 @@ pub async fn add_manual_recipe_handler(
 
 /// Handles posting a submitted recipe form.
 pub async fn add_manual_recipe_post_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     form: RecipeForm,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
     let fs_support = Arc::clone(&state.fs_support);
 
     let images = form
@@ -1309,7 +1303,7 @@ pub async fn add_manual_recipe_post_handler(
 
     let recipe_id = match Recipe::create(
         &state.mm,
-        user_id,
+        user.id,
         &RecipeForCreate {
             name: form.title,
             description: form.description,
@@ -1337,8 +1331,11 @@ pub async fn add_manual_recipe_post_handler(
     {
         Ok(id) => id,
         Err(err) => {
-            error!("Failed to add recipe to collection for user '{user_id}': {err}");
-            broadcast_error(&state, user_id, "Failed to add recipe to collection.").await;
+            error!(
+                "Failed to add recipe to collection for user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }
     };
@@ -1460,12 +1457,10 @@ impl FetchWebsiteContext {
 
 /// Handles scraping recipes from websites.
 pub async fn add_website_post_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<RecipeScrapeForm>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
     let mut urls = form
         .urls
         .lines()
@@ -1473,13 +1468,13 @@ pub async fn add_website_post_handler(
         .collect::<Vec<_>>();
 
     if urls.is_empty() {
-        broadcast_error(&state, user_id, "No valid URLs found.").await;
+        broadcast_error(&state, user.id, "No valid URLs found.").await;
         return Error::InvalidPayload.into_response();
     }
     urls.sort();
     urls.dedup();
 
-    scrape_recipes(state, urls, user_id);
+    scrape_recipes(state, urls, user.id);
 
     (StatusCode::ACCEPTED, "").into_response()
 }
@@ -1711,20 +1706,18 @@ async fn extract_videos(
 
 /// Handles adding a recipe category into the database.
 pub async fn post_recipe_categories_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<RecipeCategoryForm>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
     let category = form.category;
     if category.is_empty() {
         return Error::InvalidPayload.into_response();
     }
 
-    if let Err(err) = Recipe::add_category(&state.mm, &category, user_id).await {
+    if let Err(err) = Recipe::add_category(&state.mm, &category, user.id).await {
         error!("Error adding recipe category: {err}");
-        broadcast_error(&state, user_id, "Failed to add recipe category.").await;
+        broadcast_error(&state, user.id, "Failed to add recipe category.").await;
         return Error::Database.into_response();
     }
 
@@ -1733,26 +1726,24 @@ pub async fn post_recipe_categories_handler(
 
 /// Handles deleting a recipe category from the database.
 pub async fn delete_recipe_categories_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Form(form): Form<RecipeCategoryForm>,
 ) -> impl IntoResponse {
-    let user_id = ctx.0.user_id();
-
     let category = form.category;
     if category.is_empty() || category == "uncategorized" {
         broadcast_error(
             &state,
-            user_id,
+            user.id,
             "Category cannot be empty or uncategorized.",
         )
         .await;
         return Error::InvalidPayload.into_response();
     }
 
-    if let Err(err) = Recipe::delete_recipe_category(&state.mm, &category, user_id).await {
+    if let Err(err) = Recipe::delete_recipe_category(&state.mm, &category, user.id).await {
         error!("Error deleting recipe category: {err}");
-        broadcast_error(&state, user_id, "Failed to delete recipe category.").await;
+        broadcast_error(&state, user.id, "Failed to delete recipe category.").await;
         return Error::Database.into_response();
     }
 
@@ -1761,19 +1752,17 @@ pub async fn delete_recipe_categories_handler(
 
 /// Handles viewing a recipe.
 pub async fn view_recipe_handler(
-    ctx: CtxW,
     header_map: HeaderMap,
     Path(recipe_id): Path<i64>,
     OriginalUri(uri): OriginalUri,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let user_id = ctx.0.user_id();
-
-    let cache_key = (user_id, recipe_id);
+    let cache_key = (user.id, recipe_id);
     let view_recipe = match state.get_cached_recipe(cache_key).await {
         Some(recipe) => recipe,
         None => {
-            let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
+            let recipe = match Recipe::get(&state.mm, user.id, recipe_id).await {
                 Ok(recipe) => recipe,
                 Err(_) => {
                     return Ok(templates::general::simple(
@@ -1794,14 +1783,14 @@ pub async fn view_recipe_handler(
         }
     };
 
-    let user_settings = UserSettingDetails::get(&state.mm, user_id).await?;
+    let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
 
     match templates::recipes::view_recipe(
         state.fs_support,
         uri.path(),
         state.data_dir,
         Data {
-            is_admin: user_id == Uuid::nil(),
+            is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
@@ -1830,7 +1819,8 @@ pub async fn view_recipe_handler(
         Ok(res) => Ok(res),
         Err(err) => {
             error!(
-                "Error rendering view recipe page for user {user_id} and recipe {recipe_id}: {err}"
+                "Error rendering view recipe page for user {} and recipe {recipe_id}: {err}",
+                user.id
             );
             Err(Error::Templates)
         }
@@ -1839,15 +1829,13 @@ pub async fn view_recipe_handler(
 
 /// Handles searching recipes.
 pub async fn search_recipes_handler(
-    ctx: CtxW,
     headers: HeaderMap,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let user_id = ctx.0.user_id();
-
-    let recipes = match Recipe::get_page(&state.mm, user_id, &search_params).await {
+    let recipes = match Recipe::get_page(&state.mm, user.id, &search_params).await {
         Ok(recipes) => {
             let mapped_recipes: std::result::Result<Vec<ViewRecipe>, _> = recipes
                 .into_iter()
@@ -1859,7 +1847,7 @@ pub async fn search_recipes_handler(
                         })
                         .map_err(async |err| {
                             error!("Error formatting times for recipe: {err}");
-                            broadcast_error(&state, user_id, "Error formatting recipe times.")
+                            broadcast_error(&state, user.id, "Error formatting recipe times.")
                                 .await;
                             Error::Database
                         })
@@ -1873,9 +1861,10 @@ pub async fn search_recipes_handler(
         }
         Err(err) => {
             error!(
-                "Error fetching recipes for user '{user_id}' with search params '{search_params:?}': {err}"
+                "Error fetching recipes for user '{}' with search params '{search_params:?}': {err}",
+                user.id
             );
-            broadcast_error(&state, user_id, "Error fetching recipes.").await;
+            broadcast_error(&state, user.id, "Error fetching recipes.").await;
             return Err(Error::Database);
         }
     };
@@ -1886,13 +1875,13 @@ pub async fn search_recipes_handler(
         return Ok(templates::search::no_results(is_favourites).into_response());
     }
 
-    let settings = get_settings(&state, user_id).await?;
+    let settings = get_settings(&state, user.id).await?;
 
     Ok(templates::recipes::search_results(
         state.fs_support,
         uri.path(),
         Data {
-            is_admin: user_id == Uuid::nil(),
+            is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
@@ -1921,7 +1910,7 @@ pub async fn search_recipes_handler(
 }
 
 /// Handles the supported applications endpoint.
-pub async fn supported_applications_handler(_ctx: CtxW) -> impl IntoResponse {
+pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
     let applications = [
         ("AccuChef", "https://www.accuchef.com", vec![]),
         ("BigOven", "https://www.bigoven.com", vec![".txt"]),
@@ -1983,15 +1972,14 @@ pub async fn supported_applications_handler(_ctx: CtxW) -> impl IntoResponse {
 
 /// Handles the supported websites endpoint.
 pub async fn supported_websites_handler(
-    ctx: CtxW,
+    RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     match Website::supported_websites(&state.mm).await {
         Ok(websites) => Html(websites.to_html_table_rows()).into_response(),
         Err(err) => {
             error!("Error fetching supported websites: {err}");
-            let user_id = ctx.0.user_id();
-            broadcast_error(&state, user_id, "Error fetching supported websites.").await;
+            broadcast_error(&state, user.id, "Error fetching supported websites.").await;
             Error::Database.into_response()
         }
     }

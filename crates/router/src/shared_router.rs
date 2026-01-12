@@ -1,8 +1,9 @@
 use axum::Router;
 use axum::routing::get;
 
-use crate::handlers::shared::share_recipe_handler;
 use app::state::AppState;
+
+use crate::handlers::shared::share_recipe_handler;
 
 /// Defines the routes for shared resources.
 pub(super) fn shared_routes() -> Router<AppState> {

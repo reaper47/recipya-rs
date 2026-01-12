@@ -51,8 +51,8 @@ struct CountResult {
 
 /// Creates a new database if it doesn't already exist.
 pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result::Error> {
-    let db_url = std::env::var("RECIPYA_DATABASE_URL")
-        .expect("Environment variable 'RECIPYA_DATABASE_URL' not set");
+    let db_url =
+        std::env::var("DATABASE_URL").expect("Environment variable 'DATABASE_URL' not set");
 
     let conn = &mut diesel::PgConnection::establish(&db_url)
         .unwrap_or_else(|_| panic!("Error connecting to {db_url}"));

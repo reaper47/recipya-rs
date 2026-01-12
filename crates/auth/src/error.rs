@@ -30,6 +30,8 @@ pub enum Error {
     #[from]
     Fs(support::fs::Error),
     #[from]
+    Json(jsonwebtoken::errors::Error),
+    #[from]
     Scheme(scheme::Error),
     #[from]
     SerdeJson(serde_json::Error),

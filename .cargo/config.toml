@@ -1,16 +1,16 @@
-[env]
-RUST_LOG = "debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn"
+# [env]
+# RUST_LOG = "debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn"
 
-RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432"
-RECIPYA_BASE_URL = "http://localhost:8078"
-RECIPYA_IS_AUTOLOGIN = "true"
-RECIPYA_IS_DEMO = "false"
-RECIPYA_IS_ALLOW_SIGNUPS = "false"
+# RECIPYA_DATABASE_URL = "postgres://postgres:postgres@localhost:5432"
+# RECIPYA_BASE_URL = "http://localhost:8078"
+# RECIPYA_IS_AUTOLOGIN = "true"
+# RECIPYA_IS_DEMO = "false"
+# RECIPYA_IS_ALLOW_SIGNUPS = "false"
 
-RECIPYA_EMAIL_ADMIN = "example@gmail.com"
-RECIPYA_EMAIL_SMTP_HOST = "smtp.gmail.com"
-RECIPYA_EMAIL_SMTP_USERNAME = "example@gmail.com"
-RECIPYA_EMAIL_SMTP_PASSWORD = "abcd abcd bcd abcd"
+# RECIPYA_EMAIL_ADMIN = "example@gmail.com"
+# RECIPYA_EMAIL_SMTP_HOST = "smtp.gmail.com"
+# RECIPYA_EMAIL_SMTP_USERNAME = "example@gmail.com"
+# RECIPYA_EMAIL_SMTP_PASSWORD = "abcd abcd bcd abcd"
 
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"

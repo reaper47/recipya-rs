@@ -13,6 +13,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [features]
+default = ["test-utils"]
 test-utils = []
 
 [dependencies]
@@ -23,7 +24,7 @@ axum-test.workspace = true
 config.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
-dotenvy = "0.15.7"
+dotenvy.workspace = true
 models.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
