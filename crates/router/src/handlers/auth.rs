@@ -2,8 +2,7 @@ use std::collections::HashMap;
 
 use auth::token::jwt::validate_token;
 use axum::Form;
-use axum::extract::ws::Message;
-use axum::extract::{Query, State};
+use axum::extract::{Query, State, ws::Message};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
 use tower_cookies::Cookies;
@@ -16,7 +15,7 @@ use auth::pwd::scheme::SchemeStatus;
 use auth::pwd::{ContentToHash, validate_pwd};
 use auth::token::{generate_web_token, remove_token_cookie, set_token_cookie};
 use email::{Data, Email, Template};
-use models::Error::EntityNotFound;
+use models::email::{EmailVerificationToken, EmailVerificationTokenForCreate};
 use models::user::User;
 
 use crate::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message, broadcast_error};
@@ -69,42 +68,46 @@ pub async fn change_password_post_handler(
 }
 
 /// Handles account confirmation once the user clicks their confirm button.
-pub async fn confirm_handler(
+pub async fn verify_email_handler(
     State(state): State<AppState>,
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let token = match get_token_from_query(query) {
-        Ok(token) => match validate_token(&token) {
-            Ok(token) => token,
-            Err(_) => return Error::InvalidClaims.into_response(),
-        },
+        Ok(token) => token,
         Err(err) => return err.into_response(),
     };
 
-    let user_id = match Uuid::parse_str(&token.sub) {
-        Ok(id) => id,
-        Err(_) => return Error::InvalidClaims.into_response(),
+    let verification_token = match EmailVerificationToken::find_by_token(&state.mm, &token).await {
+        Ok(Some(token)) => token,
+        Ok(_) | Err(_) => {
+            return Error::Model(models::Error::EntityNotFound {
+                entity: "email token",
+                id: token,
+            })
+            .into_response();
+        }
     };
 
-    let user = match User::get_user_by_id(&state.mm, user_id).await {
-        Ok(user) => match user {
-            Some(user) => user,
-            None => {
-                return Error::Model(EntityNotFound {
-                    entity: "user",
-                    id: "-1".into(),
-                })
-                .into_response();
-            }
-        },
-        Err(err) => return Error::Model(err).into_response(),
-    };
+    if verification_token.is_expired() {
+        if let Err(err) = EmailVerificationToken::delete(&state.mm, &token).await {
+            error!("Failed to delete email verification token '{token}': {err}");
+            return Error::Database.into_response();
+        }
+        return Error::Gone.into_response();
+    }
 
-    if let Err(err) = user.set_is_confirmed(&state.mm).await {
+    if let Err(err) =
+        EmailVerificationToken::verify_user_email(&state.mm, verification_token.user_id).await
+    {
         return Error::Model(err).into_response();
     };
 
-    templates::general::simple("Success", "Your account has been confirmed.").into_response()
+    if let Err(err) = EmailVerificationToken::delete(&state.mm, &token).await {
+        error!("Failed to delete email verification token '{token}': {err}");
+        return Error::Database.into_response();
+    }
+
+    templates::general::simple("Success", "Your account has been verified.").into_response()
 }
 
 fn get_token_from_query(query: HashMap<String, String>) -> Result<String> {
@@ -400,7 +403,7 @@ pub async fn register_post_handler(
                     let user = match User::new(&state.mm, form.to_user()).await {
                         Ok(id) => id,
                         Err(err) => {
-                            println!("Error creating user: {}", err);
+                            error!("Error creating user: {}", err);
                             let mut res = Error::Model(err).into_response();
                             add_hx_message(
                                 &mut res,
@@ -410,31 +413,35 @@ pub async fn register_post_handler(
                         }
                     };
 
-                    let token = match generate_web_token(&user.id) {
-                        Ok(token) => token,
-                        Err(_) => {
-                            let mut res = Error::GenerateToken.into_response();
-                            add_hx_message(
-                                &mut res,
-                                MessageHtmx::error(
-                                    "Could not generate web token for authentication.",
-                                ),
-                            );
-                            return res;
-                        }
-                    };
-
                     if let Some(service) = state.email_service {
+                        let token_entry = match EmailVerificationToken::new(
+                            &state.mm,
+                            EmailVerificationTokenForCreate::new(user.id, 24),
+                        )
+                        .await
+                        {
+                            Ok(entry) => entry,
+                            Err(err) => {
+                                error!("Error creating email verification token: {err}");
+                                let mut res = Error::Model(err).into_response();
+                                add_hx_message(
+                                    &mut res,
+                                    MessageHtmx::error("An error occurred during registration."),
+                                );
+                                return res;
+                            }
+                        };
+
                         let base_url = config.base_url.clone();
 
                         tokio::spawn(async move {
                             service.send(&Email {
                                 to: user.email,
-                                subject: "Confirm Account".into(),
+                                subject: "Verify your email address".into(),
                                 body: "".into(),
                                 template: Some(Template::Intro),
                                 data: Some(Data {
-                                    token: token.to_string(),
+                                    token: token_entry.token,
                                     username: form.email,
                                     url: base_url,
                                 }),

@@ -353,10 +353,10 @@ fn settings_connections(config: &SettingsForView) -> Markup {
                                 }
                                 tbody {
                                     @for (setting, env, value) in [
-                                        ("Host", "RECIPYA_EMAIL_SMTP_HOST", &config.email.host),
-                                        ("From", "RECIPYA_EMAIL_ADMIN", &config.email.email_admin),
-                                        ("Username", "RECIPYA_EMAIL_SMTP_USERNAME", &config.email.username),
-                                        ("Password", "RECIPYA_EMAIL_SMTP_PASSWORD", &"Not displayed".to_string()),
+                                        ("Host", "SMTP_HOST", &config.email.host),
+                                        ("From", "SMTP_FROM_EMAIL", &config.email.email_admin),
+                                        ("Username", "SMTP_USERNAME", &config.email.username),
+                                        ("Password", "SMTP_PASSWORD", &"Not displayed".to_string()),
                                     ] {
                                         tr {
                                             th { }

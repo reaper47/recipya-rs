@@ -25,8 +25,7 @@ impl SmtpEmailSender {
 
 impl EmailSender for SmtpEmailSender {
     fn send_email(&self, email: &Email) -> Result<()> {
-        let from: Mailbox = email_config()
-            .email_admin
+        let from: Mailbox = format!("Recipya <{}>", email_config().smtp_from_email)
             .parse()
             .map_err(|_| Error::MissingConfig)?;
         let to: Mailbox = email.to.parse().map_err(|_| Error::MissingConfig)?;
@@ -36,17 +35,20 @@ impl EmailSender for SmtpEmailSender {
             .reply_to(from)
             .to(to)
             .subject(&email.subject)
-            .header(ContentType::TEXT_PLAIN)
+            .header(ContentType::TEXT_HTML)
             .body(email.body.clone())?;
 
         let username = &email_config().smtp_username;
         let password = &email_config().smtp_password;
 
-        let mailer = match SmtpTransport::relay(&email_config().smtp_host) {
+        let mailer = match SmtpTransport::starttls_relay(&email_config().smtp_host) {
             Ok(transport) => {
                 let creds = Credentials::new(username.clone(), password.clone());
 
-                transport.credentials(creds).build()
+                transport
+                    .port(email_config().smtp_port)
+                    .credentials(creds)
+                    .build()
             }
             Err(err) => {
                 error!(

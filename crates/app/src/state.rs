@@ -40,15 +40,13 @@ impl AppState {
         http_client: Arc<dyn HttpClient + Send + Sync>,
         fs_support: Arc<dyn FsSupport + Send + Sync>,
     ) -> Result<Self> {
-        let email_service = EmailClient::new().ok();
-
         let data_dir = DataDir::new()?;
         data_dir.log();
 
         Ok(Self {
             config: Arc::new(RwLock::new(config.clone())),
             data_dir,
-            email_service,
+            email_service: EmailClient::new().ok(),
             fs_support,
             mm: ModelManager::new(config.database_url).await?,
             recipe_cache: Arc::new(Mutex::new(RecipeCache::new(

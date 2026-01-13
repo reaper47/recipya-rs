@@ -8,7 +8,7 @@ CREATE TABLE users (
     password_salt uuid NOT NULL DEFAULT gen_random_uuid (),
     token_salt uuid NOT NULL DEFAULT gen_random_uuid (),
     is_remember_me bool NOT NULL DEFAULT FALSE,
-    is_confirmed bool NOT NULL DEFAULT FALSE,
+    is_email_verified bool NOT NULL DEFAULT FALSE,
     is_admin bool NOT NULL DEFAULT FALSE,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
@@ -34,12 +34,28 @@ CREATE TABLE themes (
     name text NOT NULL
 );
 
+CREATE TABLE email_verification_tokens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
+    user_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    token text UNIQUE NOT NULL,
+    expires_at timestamptz NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
 ---
 --- Indexes
 ---
 CREATE INDEX idx_users_email ON users (email);
 
+CREATE INDEX idx_users_is_email_verified ON users (is_email_verified);
+
 CREATE INDEX idx_users_created_at ON users (created_at);
+
+CREATE INDEX idx_email_verification_tokens_token ON email_verification_tokens (token);
+
+CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens (user_id);
+
+CREATE INDEX idx_email_verification_tokens_expires_at ON email_verification_tokens (expires_at);
 
 ---
 --- Functions

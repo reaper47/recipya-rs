@@ -4,17 +4,16 @@ use axum::routing::{delete, get, post};
 use app::state::AppState;
 
 use crate::handlers::auth::{
-    change_password_post_handler, confirm_handler, forgot_password_handler,
-    forgot_password_post_handler, forgot_password_reset_handler,
-    forgot_password_reset_post_handler, login_handler, login_post_handler, logout_post_handler,
-    register_handler, register_post_handler, user_delete_handler,
+    change_password_post_handler, forgot_password_handler, forgot_password_post_handler,
+    forgot_password_reset_handler, forgot_password_reset_post_handler, login_handler,
+    login_post_handler, logout_post_handler, register_handler, register_post_handler,
+    user_delete_handler, verify_email_handler,
 };
 
 /// Defines the authentication-related routes for the web application.
 pub(super) fn auth_routes() -> Router<AppState> {
     Router::new()
         .route("/change-password", post(change_password_post_handler))
-        .route("/confirm", get(confirm_handler))
         .route(
             "/forgot-password",
             get(forgot_password_handler).post(forgot_password_post_handler),
@@ -30,6 +29,7 @@ pub(super) fn auth_routes() -> Router<AppState> {
             get(register_handler).post(register_post_handler),
         )
         .route("/user", delete(user_delete_handler))
+        .route("/verify-email", get(verify_email_handler))
 }
 
 #[cfg(test)]
@@ -130,15 +130,15 @@ mod tests {
     }
 
     mod tests_confirm {
-        use super::*;
-        use auth::token::{jwt::validate_token, jwt_test_helpers::encode_claims_for_test};
-
-        use support::time::now_utc_plus_sec_str;
-        use testing::utils::{
-            TestDb, assert_html, build_server_anonymous, create_app_state, get_token,
+        use models::{
+            email::{EmailVerificationToken, EmailVerificationTokenForCreate},
+            user::User,
         };
+        use testing::utils::{TestDb, assert_html, build_server_anonymous, create_app_state};
 
-        const BASE_URI: &str = "/auth/confirm";
+        use super::*;
+
+        const BASE_URI: &str = "/auth/verify-email";
 
         #[tokio::test]
         async fn test_get_confirm_missing_token_ok() -> Result<()> {
@@ -156,34 +156,19 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let token = get_token(state.mm).await?;
-            let mut claims = validate_token(&token)?;
-            claims.exp = now_utc_plus_sec_str(-100.);
-            let token = encode_claims_for_test(claims)?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let entry = EmailVerificationToken::new(
+                &state.mm,
+                EmailVerificationTokenForCreate::new(user_id, 0),
+            )
+            .await?;
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
             let res = server
-                .get(format!("{BASE_URI}?token={token}").as_str())
+                .get(format!("{BASE_URI}?token={}", entry.token).as_str())
                 .await;
 
-            res.assert_status_unauthorized();
-            Ok(())
-        }
-
-        #[tokio::test]
-        async fn test_get_confirm_user_not_exist_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config.clone()).await?;
-            let state = create_app_state(config).await;
-            let token = get_token(state.mm).await?;
-            let mut claims = validate_token(&token)?;
-            claims.sub = "dont@exist.com".to_string();
-            let token = encode_claims_for_test(claims)?;
-
-            let res = server
-                .get(format!("{BASE_URI}?token={token}").as_str())
-                .await;
-
-            res.assert_status_unauthorized();
+            res.assert_status(StatusCode::GONE);
             Ok(())
         }
 
@@ -192,10 +177,15 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let token = get_token(state.mm).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let entry = EmailVerificationToken::new(
+                &state.mm,
+                EmailVerificationTokenForCreate::new(user_id, 24),
+            )
+            .await?;
 
             let res = server
-                .get(format!("{BASE_URI}?token={}", &token).as_str())
+                .get(format!("{BASE_URI}?token={}", entry.token).as_str())
                 .await;
 
             res.assert_status_ok();
@@ -203,7 +193,7 @@ mod tests {
                 res,
                 vec![
                     r#"<title hx-swap-oob="true">Success | Recipya</title>"#,
-                    r#"Your account has been confirmed."#,
+                    r#"Your account has been verified."#,
                 ],
             );
             Ok(())
