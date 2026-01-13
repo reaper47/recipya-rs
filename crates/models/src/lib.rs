@@ -1,6 +1,7 @@
 mod error;
 
 pub mod data;
+pub mod email;
 pub mod nutrition;
 pub mod params;
 pub mod recipe;

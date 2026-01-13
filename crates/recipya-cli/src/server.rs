@@ -12,6 +12,7 @@ use app::jobs::clean_media;
 use app::state::AppState;
 use config::{Config, DataDir};
 use models::{
+    email::EmailVerificationToken,
     nutrition::NutritionDataSource,
     user::{User, UserForCreate},
 };
@@ -137,7 +138,7 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
                     info!(
                         "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
                     );
-                    if let Err(err) = user.set_is_confirmed(mm).await {
+                    if let Err(err) = EmailVerificationToken::verify_user_email(mm, user.id).await {
                         error!("Error confirming autologin user: {err}");
                         return Err(Error::Server(err.to_string()));
                     }

@@ -34,7 +34,7 @@
                         This email proves that your Recipya account has been created.
                     </mj-text>
                     <mj-text color="#637381" font-size="16px">
-                        Please <a href="[[.URL]]/auth/confirm?token=[[.Token]]">confirm</a> your account to ensure it is not bogus.
+                        Please <a href="[[.URL]]/auth/verify-email?token=[[.Token]]">confirm</a> your account to ensure it is not bogus.
                     </mj-text>
                     <mj-text color="#637381" font-size="16px">
                         Sincerely,

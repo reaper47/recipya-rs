@@ -20,7 +20,7 @@ pub struct User {
     pub id: Uuid,
     pub email: String,
     pub is_remember_me: bool,
-    pub is_confirmed: bool,
+    pub is_email_verified: bool,
     pub is_admin: bool,
 
     pub password_hash: String,
@@ -280,20 +280,6 @@ impl User {
             .await?;
 
         Ok(count)
-    }
-
-    /// Marks the user as confirmed in the database.
-    pub async fn set_is_confirmed(&self, mm: &ModelManager) -> Result<()> {
-        use repository::schema::users::dsl::*;
-
-        let mut conn = mm.pool.get().await?;
-
-        diesel::update(users.find(self.id))
-            .set(is_confirmed.eq(true))
-            .execute(&mut conn)
-            .await?;
-
-        Ok(())
     }
 
     /// Updates the user's password.
@@ -669,21 +655,6 @@ mod tests {
             .expect("User should have been present");
 
         pretty_assertions::assert_eq!(user.email, got_user.email);
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_set_is_confirmed_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
-
-        user.set_is_confirmed(&state.mm).await?;
-
-        let user = User::get_user_by_id(&state.mm, user.id)
-            .await?
-            .expect("User should have been present");
-        pretty_assertions::assert_eq!(user.is_confirmed, true);
         Ok(())
     }
 

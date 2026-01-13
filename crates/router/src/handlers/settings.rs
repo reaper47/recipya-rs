@@ -62,9 +62,10 @@ pub async fn settings_handler(
     let email_config = if config.is_demo {
         &email::Config {
             smtp_host: "smtp.gmail.com".into(),
+            smtp_port: 587,
             smtp_username: "demo@demo.com".into(),
             smtp_password: "demo-password".into(),
-            email_admin: "demo@demo.com".into(),
+            smtp_from_email: "demo@demo.com".into(),
         }
     } else {
         email::email_config()
@@ -94,7 +95,7 @@ pub async fn settings_handler(
             is_allow_signups: config.is_no_signups,
             is_demo: config.is_demo,
             email: EmailSettingsForView {
-                email_admin: email_config.email_admin.clone(),
+                email_admin: email_config.smtp_from_email.clone(),
                 host: email_config.smtp_host.clone(),
                 username: email_config.smtp_username.clone(),
                 is_connected: state

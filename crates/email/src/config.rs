@@ -6,9 +6,10 @@ use support::envs::get_env;
 #[derive(Debug, PartialEq)]
 pub struct Config {
     pub smtp_host: String,
+    pub smtp_port: u16,
     pub smtp_username: String,
     pub smtp_password: String,
-    pub email_admin: String,
+    pub smtp_from_email: String,
 }
 
 /// Gets the current email `Config` struct. It will be initialized if not already done.
@@ -22,16 +23,20 @@ impl Config {
     /// Populates the Config's fields from the environment variables.
     fn load_from_env() -> Self {
         Self {
-            smtp_host: get_env("RECIPYA_EMAIL_SMTP_HOST").unwrap_or_default(),
-            smtp_username: get_env("RECIPYA_EMAIL_SMTP_USERNAME").unwrap_or_default(),
-            smtp_password: get_env("RECIPYA_EMAIL_SMTP_PASSWORD").unwrap_or_default(),
-            email_admin: get_env("RECIPYA_EMAIL_ADMIN").unwrap_or_default(),
+            smtp_host: get_env("SMTP_HOST").unwrap_or_default(),
+            smtp_port: get_env("SMTP_PORT")
+                .unwrap_or("587".into())
+                .parse()
+                .unwrap_or_default(),
+            smtp_username: get_env("SMTP_USERNAME").unwrap_or_default(),
+            smtp_password: get_env("SMTP_PASSWORD").unwrap_or_default(),
+            smtp_from_email: get_env("SMTP_FROM_EMAIL").unwrap_or_default(),
         }
     }
 
     /// Returns whether the email is configured for use with SMTP.
     pub fn is_smtp(&self) -> bool {
-        !self.email_admin.is_empty()
+        !self.smtp_from_email.is_empty()
             && !self.smtp_host.is_empty()
             && !self.smtp_username.is_empty()
             && !self.smtp_password.is_empty()
@@ -46,10 +51,11 @@ mod tests {
     fn test_load_from_env() {
         temp_env::with_vars(
             [
-                ("RECIPYA_EMAIL_SMTP_HOST", Some("smtp_host")),
-                ("RECIPYA_EMAIL_SMTP_USERNAME", Some("smtp_username")),
-                ("RECIPYA_EMAIL_SMTP_PASSWORD", Some("smtp_password")),
-                ("RECIPYA_EMAIL_ADMIN", Some("smtp_admin")),
+                ("SMTP_HOST", Some("smtp_host")),
+                ("SMTP_PORT", Some("587")),
+                ("SMTP_USERNAME", Some("smtp_username")),
+                ("SMTP_PASSWORD", Some("smtp_password")),
+                ("SMTP_FROM_EMAIL", Some("smtp_admin")),
             ],
             || {
                 let got = Config::load_from_env();
@@ -58,9 +64,10 @@ mod tests {
                     got,
                     Config {
                         smtp_host: "smtp_host".to_string(),
+                        smtp_port: 587,
                         smtp_username: "smtp_username".to_string(),
                         smtp_password: "smtp_password".to_string(),
-                        email_admin: "smtp_admin".to_string(),
+                        smtp_from_email: "smtp_admin".to_string(),
                     }
                 );
             },
@@ -71,9 +78,10 @@ mod tests {
     fn test_is_smtp_valid() {
         let config = Config {
             smtp_host: "smtp_host".to_string(),
+            smtp_port: 587,
             smtp_username: "smtp_username".to_string(),
             smtp_password: "smtp_password".to_string(),
-            email_admin: "smtp_admin".to_string(),
+            smtp_from_email: "smtp_admin".to_string(),
         };
 
         pretty_assertions::assert_eq!(config.is_smtp(), true);
@@ -83,9 +91,10 @@ mod tests {
     fn test_is_smtp_invalid() {
         let config = Config {
             smtp_host: "smtp_host".to_string(),
+            smtp_port: 587,
             smtp_username: "smtp_username".to_string(),
             smtp_password: "smtp_password".to_string(),
-            email_admin: "".to_string(),
+            smtp_from_email: "".to_string(),
         };
 
         pretty_assertions::assert_eq!(config.is_smtp(), false);

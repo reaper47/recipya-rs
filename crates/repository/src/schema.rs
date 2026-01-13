@@ -119,6 +119,19 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    email_verification_tokens (id) {
+        id -> Uuid,
+        user_id -> Uuid,
+        token -> Text,
+        expires_at -> Timestamptz,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     fdc_food_portions (id) {
         id -> Int8,
         value -> Float8,
@@ -513,7 +526,7 @@ diesel::table! {
         password_salt -> Uuid,
         token_salt -> Uuid,
         is_remember_me -> Bool,
-        is_confirmed -> Bool,
+        is_email_verified -> Bool,
         is_admin -> Bool,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
@@ -588,6 +601,7 @@ diesel::joinable!(cookbooks_recipes -> recipes (recipe_id));
 diesel::joinable!(counts -> users (user_id));
 diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
 diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
+diesel::joinable!(email_verification_tokens -> users (user_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_food_portions (portion_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_foods (food_id));
 diesel::joinable!(fdc_foods_fdc_nutrients -> fdc_foods (food_id));
@@ -641,6 +655,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     counts,
     cuisines,
     cuisines_recipes,
+    email_verification_tokens,
     fdc_food_portions,
     fdc_food_portions_fdc_foods,
     fdc_foods,
