@@ -1,5 +1,4 @@
 use maud::{Markup, html};
-use uuid::Uuid;
 
 use crate::templates::layouts;
 
@@ -35,17 +34,17 @@ pub fn forgot_password() -> Markup {
     )
 }
 
-pub fn forgot_password_reset(user_id: Uuid) -> Markup {
+pub fn forgot_password_reset(token: &str) -> Markup {
     layouts::auth(
         "Reset Password",
         html! {
             div #container {
                 form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-boost="true" hx-target="#container" hx-swap="none" hx-post="/auth/forgot-password/reset" {
                     div class="card-body" {
+                        input type="hidden" name="token" value=(token);
                         h2 class="card-title underline self-center" {
                             "Change Password"
                         }
-                        input name="user-id" type="hidden" value=(user_id);
                         fieldset class="fieldset" {
                             label class="label" for="password" { "New password" }
                             input #password type="password" required placeholder="Enter your new password" class="input" name="password";

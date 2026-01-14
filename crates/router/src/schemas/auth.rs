@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use validator::Validate;
 
 use models::user::UserForCreate;
@@ -22,7 +21,7 @@ pub struct ForgotPasswordForm {
 
 #[derive(Validate, Deserialize, Serialize)]
 pub struct ForgotPasswordResetForm {
-    pub user_id: Uuid,
+    pub token: String,
     #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
     pub password: String,
     #[validate(must_match(other = "password"))]

@@ -272,18 +272,16 @@ mod tests {
     }
 
     mod tests_forgot_password {
-        use crate::schemas::auth::{ForgotPasswordForm, ForgotPasswordResetForm};
-
-        use super::*;
-
-        use auth::token::{jwt::validate_token, jwt_test_helpers::encode_claims_for_test};
-        use models::user::User;
-        use support::time::now_utc_plus_sec_str;
+        use models::{
+            password::{PasswordResetToken, PasswordResetTokenForCreate},
+            user::User,
+        };
         use testing::utils::{
             TestDb, assert_html, build_server_anonymous, build_server_logged_in, create_app_state,
-            get_token,
         };
-        use uuid::Uuid;
+
+        use super::*;
+        use crate::schemas::auth::{ForgotPasswordForm, ForgotPasswordResetForm};
 
         const BASE_URI: &str = "/auth/forgot-password";
         const URI_RESET: &str = "/auth/forgot-password/reset";
@@ -377,12 +375,14 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let token = get_token(state.mm).await?;
-            let mut claims = validate_token(&token)?;
-            claims.exp = now_utc_plus_sec_str(-100.);
-            let token = encode_claims_for_test(claims)?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let entry =
+                PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 0))
+                    .await?;
 
-            let res = server.get(&format!("{URI_RESET}?token={token}")).await;
+            let res = server
+                .get(&format!("{URI_RESET}?token={}", entry.token))
+                .await;
 
             res.assert_status_bad_request();
             assert_html(
@@ -400,10 +400,14 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let token = get_token(state.mm.clone()).await?;
-            let claims = validate_token(&token)?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let entry =
+                PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
+                    .await?;
 
-            let res = server.get(&format!("{URI_RESET}?token={token}")).await;
+            let res = server
+                .get(&format!("{URI_RESET}?token={}", entry.token))
+                .await;
 
             res.assert_status_ok();
             assert_html(
@@ -411,8 +415,8 @@ mod tests {
                 vec![
                     r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
                     &format!(
-                        r#"<input name="user-id" type="hidden" value="{}">"#,
-                        claims.sub
+                        r#"<input type="hidden" name="token" value="{}">"#,
+                        entry.token
                     ),
                     r#"<fieldset class="fieldset"><label class="label" for="password">New password</label><input id="password" type="password" required placeholder="Enter your new password" class="input" name="password"></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label" for="confirm-password">Confirm password</label><input id="confirm-password" type="password" required placeholder="Retype your password" class="input" name="password-confirm"></fieldset>"#,
@@ -425,12 +429,17 @@ mod tests {
         #[tokio::test]
         async fn test_post_forgot_password_reset_err_invalid() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
             let server = build_server_anonymous(config).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let entry =
+                PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
+                    .await?;
 
             let res = server
                 .post(URI_RESET)
                 .form(&ForgotPasswordResetForm {
-                    user_id: Uuid::new_v4(),
+                    token: entry.token,
                     password: "12345678".to_string(),
                     confirm_password: "123456789".to_string(),
                 })
@@ -449,11 +458,15 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let server = build_server_anonymous(config).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let entry =
+                PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
+                    .await?;
 
             let res = server
                 .post(URI_RESET)
                 .form(&ForgotPasswordResetForm {
-                    user_id: User::all(&state.mm).await?[0].id,
+                    token: entry.token.clone(),
                     password: "12345678".to_string(),
                     confirm_password: "12345678".to_string(),
                 })
@@ -465,6 +478,11 @@ mod tests {
                 r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#,
             );
             res.assert_header(axum_htmx::headers::HX_REDIRECT, "/auth/login");
+            assert!(
+                PasswordResetToken::find_by_token(&state.mm, &entry.token)
+                    .await?
+                    .is_none()
+            );
             Ok(())
         }
     }
