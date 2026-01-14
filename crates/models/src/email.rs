@@ -94,7 +94,7 @@ impl EmailVerificationToken {
         Ok(())
     }
 
-    /// Checks if the email verification token has expired.
+    /// Checks whether the token has expired.
     pub fn is_expired(&self) -> bool {
         OffsetDateTime::now_utc() > self.expires_at
     }
@@ -109,12 +109,11 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_email_token {
+        use super::*;
         use crate::user::User;
 
-        use super::*;
-
         #[test]
-        fn test_email_verification_token_is_expired() {
+        fn test_token_is_expired() {
             let token = EmailVerificationToken {
                 id: Uuid::new_v4(),
                 user_id: Uuid::new_v4(),

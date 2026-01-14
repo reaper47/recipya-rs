@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 
-use auth::token::jwt::validate_token;
 use axum::Form;
 use axum::extract::{Query, State, ws::Message};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
+use models::password::{PasswordResetToken, PasswordResetTokenForCreate};
 use tower_cookies::Cookies;
-use tracing::{debug, error};
+use tracing::{debug, error, warn};
 use uuid::Uuid;
 use validator::Validate;
 
 use app::state::AppState;
 use auth::pwd::scheme::SchemeStatus;
 use auth::pwd::{ContentToHash, validate_pwd};
-use auth::token::{generate_web_token, remove_token_cookie, set_token_cookie};
+use auth::token::{remove_token_cookie, set_token_cookie};
 use email::{Data, Email, Template};
 use models::email::{EmailVerificationToken, EmailVerificationTokenForCreate};
 use models::user::User;
@@ -140,25 +140,29 @@ pub async fn forgot_password_post_handler(
 
             let user_email = form.email;
 
-            if let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await
-                && let Ok(token) = generate_web_token(&user.id)
-                && let Some(email) = state.email_service
+            if let Some(email) = state.email_service
+                && let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await
+                && let Ok(password_token) =
+                    PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user.id, 1))
+                        .await
             {
                 let payload = Email {
                     to: user_email.clone(),
-                    subject: "Reset your password".into(),
+                    subject: "Reset password".into(),
                     body: "".to_string(),
                     template: Some(Template::ForgotPassword),
                     data: Some(Data {
-                        token: token.to_string(),
+                        token: password_token.token,
                         username: user_email,
                         url: state.config.read().await.base_url.clone(),
                     }),
                 };
 
-                if let Err(err) = email.send(&payload) {
-                    error!("Could not send email 'Reset your password': {:?}", err);
-                }
+                tokio::spawn(async move {
+                    if let Err(err) = email.send(&payload) {
+                        error!("Could not send email 'Reset password': {:?}", err);
+                    }
+                });
             }
 
             templates::general::simple(
@@ -175,33 +179,38 @@ pub async fn forgot_password_reset_handler(
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let token = match get_token_from_query(query) {
-        Ok(token) => match validate_token(&token) {
-            Ok(token) => token,
-            Err(_) => {
-                let mut res = templates::general::simple(
-                    "Token Expired", "The token associated with the URL expired. The problem has been forwarded to our team automatically. We will look into it and come back to you. We apologise for this inconvenience.",
-                ).into_response();
-                *res.status_mut() = StatusCode::BAD_REQUEST;
-                return res;
-            }
-        },
+        Ok(token) => token,
         Err(err) => return err.into_response(),
     };
 
-    let user_id = match Uuid::parse_str(&token.sub) {
-        Ok(id) => id,
-        Err(_) => return Error::InvalidClaims.into_response(),
-    };
+    match PasswordResetToken::find_by_token(&state.mm, &token).await {
+        Ok(Some(v)) => {
+            if v.is_expired() {
+                if let Err(err) = PasswordResetToken::delete(&state.mm, &v.token).await {
+                    error!("Failed to delete expired token '{token}': {err}");
+                    return Error::Database.into_response();
+                }
 
-    let user = match User::get_user_by_id(&state.mm, user_id).await {
-        Ok(user) => match user {
-            Some(user) => user,
-            None => return Error::NoUser.into_response(),
-        },
-        Err(err) => return Error::Model(err).into_response(),
-    };
+                let mut res = templates::general::simple(
+                    "Token Expired",
+                    "The token associated with the URL expired.",
+                )
+                .into_response();
+                *res.status_mut() = StatusCode::BAD_REQUEST;
+                return res;
+            }
 
-    templates::auth::forgot_password_reset(user.id).into_response()
+            templates::auth::forgot_password_reset(&v.token).into_response()
+        }
+        Ok(_) => {
+            warn!("The token '{token}' was not found in the database.");
+            return Error::Database.into_response();
+        }
+        Err(err) => {
+            error!("Failed to find the token '{token}' in the database: {err}");
+            return Error::Database.into_response();
+        }
+    }
 }
 
 /// Handles the submission of the password reset form.
@@ -215,13 +224,44 @@ pub async fn forgot_password_reset_post_handler(
         return res;
     }
 
-    let user_id = form.user_id;
+    let entry = match PasswordResetToken::find_by_token(&state.mm, &form.token).await {
+        Ok(Some(token)) => {
+            if token.is_expired() {
+                let mut res = templates::general::simple(
+                    "Token Expired",
+                    "The token associated with the URL expired.",
+                )
+                .into_response();
+                *res.status_mut() = StatusCode::BAD_REQUEST;
+                return res;
+            }
+            token
+        }
+        Ok(_) => {
+            warn!("The token '{}' was not found in the database.", form.token);
+            return Error::Database.into_response();
+        }
+        Err(err) => {
+            error!(
+                "Failed to find the token '{}' in the database: {err}",
+                form.token
+            );
+            return Error::Database.into_response();
+        }
+    };
+
+    let user_id = entry.user_id;
 
     if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
-        error!("Failed to update password for user {user_id} - Error: {err}");
+        error!("Failed to update password for user '{user_id}': {err}",);
         let mut res = Error::Form.into_response();
         add_hx_message(&mut res, MessageHtmx::error("Failed to update password."));
         return res;
+    }
+
+    if let Err(err) = PasswordResetToken::delete_all_for_user(&state.mm, user_id).await {
+        error!("Failed to delete expired token '{user_id}': {err}");
+        return Error::Database.into_response();
     }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();

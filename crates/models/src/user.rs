@@ -283,24 +283,12 @@ impl User {
     }
 
     /// Updates the user's password.
-    pub async fn update_password(
-        &self,
-        mm: &ModelManager,
-        password_clear: impl Into<String>,
-    ) -> Result<()> {
+    pub async fn update_password(&self, mm: &ModelManager, password_clear: &str) -> Result<()> {
         use repository::schema::users::dsl::*;
-
-        let user = UserForLogin {
-            id: self.id,
-            email: &self.email,
-            password_hash: &self.password_hash,
-            password_salt: self.password_salt,
-            token_salt: self.token_salt,
-        };
 
         let hashed_password = hash_pwd(ContentToHash {
             content: password_clear.into(),
-            salt: user.password_salt,
+            salt: self.password_salt,
         })
         .await?;
 

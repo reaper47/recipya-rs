@@ -332,6 +332,19 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    password_reset_tokens (id) {
+        id -> Uuid,
+        user_id -> Uuid,
+        token -> Text,
+        expires_at -> Timestamptz,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     recipe_timelines (id) {
         id -> Int8,
         recipe_id -> Int8,
@@ -618,6 +631,7 @@ diesel::joinable!(nutrition_per_100g -> nutrition (nutrition_id));
 diesel::joinable!(nutrition_per_100g -> recipes (recipe_id));
 diesel::joinable!(nutrition_per_serving -> nutrition (nutrition_id));
 diesel::joinable!(nutrition_per_serving -> recipes (recipe_id));
+diesel::joinable!(password_reset_tokens -> users (user_id));
 diesel::joinable!(recipe_timelines -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> users (user_id));
 diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
@@ -672,6 +686,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     nutrition_per_100g,
     nutrition_per_serving,
     nutrition_sources,
+    password_reset_tokens,
     recipe_timelines,
     recipes,
     report_types,
