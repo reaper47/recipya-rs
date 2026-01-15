@@ -12,8 +12,8 @@ use app::jobs::clean_media;
 use app::state::AppState;
 use config::{Config, DataDir};
 use models::{
-    email::EmailVerificationToken,
     nutrition::NutritionDataSource,
+    tokens::EmailVerificationToken,
     user::{User, UserForCreate},
 };
 use recipya_scraper::AppHttpClient;

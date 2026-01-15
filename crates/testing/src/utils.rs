@@ -1,17 +1,17 @@
+use axum::Router;
+use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
+use diesel::{Connection, sql_query};
 use std::env;
 use std::fs::File;
 use std::io::{Cursor, Read};
 use std::sync::Arc;
-
-use axum::Router;
-use axum_test::{TestResponse, TestServer, TestServerConfig, TestWebSocket, Transport};
-use diesel::{Connection, sql_query};
 use tower_cookies::{Cookie, CookieManagerLayer};
 use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
-use auth::token::{AUTH_TOKEN, generate_web_token};
+use auth::token::generate_access_token;
+use auth::token::http::AUTH_TOKEN;
 use config::Config;
 use models::user::{User, UserForCreate};
 use recipya_scraper::tests::MockHttpClient;
@@ -64,6 +64,7 @@ pub fn default_config() -> Config {
         is_autologin: false,
         is_demo: false,
         is_no_signups: false,
+        is_production: false,
     }
 }
 
@@ -146,6 +147,8 @@ pub async fn build_server_anonymous(app_config: Config) -> Result<TestServer> {
 /// Builds a test server with a logged-in user.
 #[cfg(feature = "test-utils")]
 pub async fn build_server_logged_in(app_config: Config) -> Result<TestServer> {
+    use auth::token::{generate_access_token, http::AUTH_TOKEN};
+
     let routes = prepare_router(app_config.clone()).await?;
     let config = TestServerConfig {
         save_cookies: true,
@@ -158,7 +161,7 @@ pub async fn build_server_logged_in(app_config: Config) -> Result<TestServer> {
         .await?
         .expect("User should be in database");
 
-    let token = generate_web_token(&user.id)?;
+    let token = generate_access_token(&user.id)?;
 
     let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());
     cookie.set_http_only(true);
@@ -201,7 +204,7 @@ async fn build_server_ws_helper(
 
     let mut server = TestServer::new_with_config(routes, config)?;
 
-    let token = generate_web_token(&user.id)?;
+    let token = generate_access_token(&user.id)?;
     let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());
     cookie.set_http_only(true);
     cookie.set_path("/");
@@ -229,7 +232,7 @@ pub async fn get_token(mm: ModelManager) -> Result<String> {
         .await?
         .expect("User not found");
 
-    Ok(generate_web_token(&user.id)?)
+    Ok(generate_access_token(&user.id)?)
 }
 
 /// Generates a unique test database name and URL.

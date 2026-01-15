@@ -1,14 +1,15 @@
-use axum::Router;
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, post};
+use axum::{Router, middleware};
 
 use crate::AppState;
 use crate::handlers::recipes::*;
+use crate::middleware::mw_auth::mw_refresh_token;
 
 const FIFTY_MB: usize = 50 * 1024 * 1024;
 
 /// Defines the routes for endpoints related to recipes.
-pub fn recipes_routes() -> Router<AppState> {
+pub fn recipes_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(recipes_handler))
         .route("/schema", get(recipe_schema_handler))
@@ -69,4 +70,5 @@ pub fn recipes_routes() -> Router<AppState> {
             get(supported_applications_handler),
         )
         .route("/supported-websites", get(supported_websites_handler))
+        .layer(middleware::from_fn_with_state(state, mw_refresh_token))
 }

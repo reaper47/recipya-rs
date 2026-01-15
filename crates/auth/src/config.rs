@@ -14,6 +14,8 @@ use crate::{Error, Result};
 pub struct AuthConfig {
     #[serde(rename = "jwtSecret")]
     pub jwt_secret: String,
+    #[serde(rename = "tokenDurationSec")]
+    pub token_duration_sec: f64,
 
     #[serde(skip)]
     pub decoded_password_key: Vec<u8>,
@@ -24,9 +26,6 @@ pub struct AuthConfig {
     pub decoded_token_key: Vec<u8>,
     #[serde(rename = "tokenKey")]
     pub token_key: String,
-
-    #[serde(rename = "tokenDurationSec")]
-    pub token_duration_sec: f64,
 }
 
 /// Returns a reference to the global `AuthConfig` instance.

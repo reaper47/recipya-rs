@@ -7,7 +7,7 @@ use crate::handlers::admin::{
     add_user_handler, delete_user_handler, update_user_form_handler, update_user_handler,
     user_row_handler,
 };
-use crate::middleware::mw_auth::mw_only_admin;
+use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
 /// Defines the routes for endpoints related to the administrator module.
 pub(super) fn admin_routes(state: AppState) -> Router<AppState> {
@@ -21,6 +21,10 @@ pub(super) fn admin_routes(state: AppState) -> Router<AppState> {
         )
         .route("/user/{:id}/row", get(user_row_handler))
         .layer(middleware::from_fn_with_state(state.clone(), mw_only_admin))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            mw_refresh_token,
+        ))
 }
 
 #[cfg(test)]

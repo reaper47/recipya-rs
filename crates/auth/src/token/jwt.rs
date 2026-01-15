@@ -15,14 +15,13 @@ pub struct Claims {
 
 pub(crate) fn generate_token(
     user_id: &Uuid,
-    duration_sec: Option<u64>,
+    duration_sec: u64,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     let now = SystemTime::now();
-    let duration_hours = duration_sec.unwrap_or(2_678_400 / 3600);
 
     let claims = Claims {
         sub: user_id.to_string(),
-        exp: (now + Duration::from_hours(duration_hours))
+        exp: (now + Duration::from_secs(duration_sec))
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs() as usize,
