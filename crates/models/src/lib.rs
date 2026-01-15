@@ -1,15 +1,14 @@
 mod error;
 
 pub mod data;
-pub mod email;
 pub mod nutrition;
 pub mod params;
-pub mod password;
 pub mod recipe;
 pub mod report;
 pub mod settings;
 pub mod share;
 pub mod time;
+pub mod tokens;
 pub mod user;
 pub mod website;
 

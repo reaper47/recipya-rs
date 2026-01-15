@@ -15,6 +15,7 @@ pub struct Config {
     pub is_autologin: bool,
     pub is_demo: bool,
     pub is_no_signups: bool,
+    pub is_production: bool,
 }
 
 impl Default for Config {
@@ -25,6 +26,7 @@ impl Default for Config {
             is_autologin: false,
             is_demo: false,
             is_no_signups: false,
+            is_production: false,
         }
     }
 }
@@ -50,6 +52,7 @@ impl Config {
             is_autologin: get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true",
             is_demo: get_env_on_load("RECIPYA_IS_DEMO")? == "true",
             is_no_signups: get_env_on_load("RECIPYA_IS_ALLOW_SIGNUPS")? == "true",
+            is_production: get_env_on_load("RECIPYA_IS_PRODUCTION")? == "true",
         })
     }
 }
@@ -70,6 +73,7 @@ fn get_env_on_load(name: &'static str) -> Result<String> {
                 "RECIPYA_IS_ALLOW_SIGNUPS" => Ok("false".into()),
                 "RECIPYA_IS_AUTOLOGIN" => Ok("false".into()),
                 "RECIPYA_IS_DEMO" => Ok("false".into()),
+                "RECIPYA_IS_PRODUCTION" => Ok("false".into()),
                 "RUST_LOG" => Ok("debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn".into()),
                 _ => Err(Error::MissingEnv(name)),
             }

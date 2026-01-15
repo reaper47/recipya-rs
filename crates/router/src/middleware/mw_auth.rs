@@ -1,68 +1,37 @@
+use std::ops::Deref;
+
 use axum::Json;
 use axum::body::Body;
-use axum::extract::{FromRef, FromRequestParts};
+use axum::extract::{FromRef, FromRequestParts, Request, State};
+use axum::http::HeaderMap;
 use axum::http::request::Parts;
-use axum::http::{HeaderMap, Request};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
+use models::tokens::RefreshToken;
 use reqwest::{StatusCode, header};
-use serde::Serialize;
 use serde_json::json;
 
 use app::state::AppState;
-use auth::token::{AUTH_TOKEN, jwt::validate_token};
+use auth::token::generate_access_token;
+use auth::token::http::{AUTH_TOKEN, REFRESH_TOKEN, clear_auth_cookies, set_access_token_cookie};
+use auth::token::jwt::validate_token;
 use models::user::User;
+use tower_cookies::Cookies;
+use tracing::error;
 use uuid::Uuid;
 
-use crate::handlers::context::Ctx;
 use crate::{Error, Result};
 
-/// A wrapper around the `Ctx` type for use in request extraction.
-#[derive(Debug, Clone)]
-pub struct CtxW(pub Ctx);
+#[derive(Clone)]
+struct UserId(Uuid);
 
-impl<S: Send + Sync> FromRequestParts<S> for CtxW {
-    type Rejection = Error;
+impl Deref for UserId {
+    type Target = Uuid;
 
-    /// Extracts `CtxW` from the request parts by looking for the `CtxExtResult`
-    /// stored in the request extensions.
-    ///
-    /// If the context is not available in the request extensions, it returns a `CtxExtError::CtxNotInRequestExt` rejection.
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        parts
-            .extensions
-            .get::<CtxExtResult>()
-            .ok_or(Error::CtxExt(CtxExtError::CtxNotInRequestExt))?
-            .clone()
-            .map_err(Error::CtxExt)
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
-}
-
-type CtxExtResult = core::result::Result<CtxW, CtxExtError>;
-
-/// Enumeration of errors related to the authentication middleware.
-#[derive(Clone, Debug, Serialize)]
-pub enum CtxExtError {
-    TokenNotInCookie,
-    TokenWrongFormat,
-
-    CannotSetTokenCookie,
-    FailValidate,
-    ModelAccessError(String),
-    UserNotFound,
-
-    CtxNotInRequestExt,
-    CtxCreateFail(String),
-}
-
-/// Middleware that ensures a valid authentication context.
-pub async fn mw_ctx_require(ctx: Result<CtxW>, req: Request<Body>, next: Next) -> Result<Response> {
-    if ctx.is_err() {
-        return Ok(Redirect::to("/auth/login").into_response());
-    }
-
-    Ok(next.run(req).await)
 }
 
 /// Middleware to redirect authenticated users to the appropriate page.
@@ -133,16 +102,17 @@ where
             return Ok(RequireAuth(admin));
         }
 
-        let token = if is_api {
-            extract_token_from_headers(&parts.headers)
-                .ok_or_else(|| AuthRejection::unauthorized(Error::NoToken))?
-        } else {
-            &extract_token_from_cookie(parts, state)
-                .await?
-                .ok_or_else(|| AuthRejection::redirect_to_login())?
-        };
+        match parts.extensions.get::<UserId>().cloned() {
+            Some(user_id) => {
+                let user = User::get_user_by_id(&app_state.mm, *user_id)
+                    .await
+                    .map_err(|err| rejection_for_error(err, is_api))?
+                    .ok_or_else(|| rejection_for(Error::NoUser, is_api))?;
 
-        authenticate_user(token, &app_state, is_api).await
+                Ok(RequireAuth(user))
+            }
+            None => Err(AuthRejection::unauthorized(Error::NoUser)),
+        }
     }
 }
 
@@ -175,24 +145,6 @@ where
         .map_err(|_| AuthRejection::redirect_to_login())?;
 
     Ok(cookies.get(AUTH_TOKEN).map(|c| c.value().to_string()))
-}
-
-async fn authenticate_user(
-    token: &str,
-    app_state: &AppState,
-    is_api: bool,
-) -> std::result::Result<RequireAuth, AuthRejection> {
-    let claims = validate_token(token).map_err(|_| rejection_for(Error::InvalidClaims, is_api))?;
-
-    let user_id =
-        Uuid::parse_str(&claims.sub).map_err(|_| rejection_for(Error::InvalidClaims, is_api))?;
-
-    let user = User::get_user_by_id(&app_state.mm, user_id)
-        .await
-        .map_err(|e| rejection_for_error(e, is_api))?
-        .ok_or_else(|| rejection_for(Error::NoUser, is_api))?;
-
-    Ok(RequireAuth(user))
 }
 
 fn rejection_for(error: Error, is_api: bool) -> AuthRejection {
@@ -254,4 +206,66 @@ where
     let user_id = Uuid::parse_str(&claims.sub).ok()?;
 
     User::get_user_by_id(&app_state.mm, user_id).await.ok()?
+}
+
+pub async fn mw_refresh_token(
+    State(state): State<AppState>,
+    cookies: Cookies,
+    mut req: Request,
+    next: Next,
+) -> std::result::Result<Response, StatusCode> {
+    if let Some(access_cookie) = cookies.get(AUTH_TOKEN)
+        && let Ok(claims) = validate_token(access_cookie.value())
+    {
+        req.extensions_mut().insert(UserId(
+            claims.sub.parse::<Uuid>().unwrap_or_else(|_| Uuid::nil()),
+        ));
+        return Ok(next.run(req).await);
+    }
+
+    if let Some(refresh_cookie) = cookies.get(REFRESH_TOKEN) {
+        let token = refresh_cookie.value();
+
+        let refresh_token_entry = match RefreshToken::find_by_token(&state.mm, token).await {
+            Ok(Some(refresh_token)) => refresh_token,
+            Ok(_) => {
+                clear_auth_cookies(&cookies);
+                return Ok(Redirect::to("/auth/login").into_response());
+            }
+            Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        };
+
+        if let Err(err) =
+            RefreshToken::update_last_used(&state.mm, &refresh_token_entry.token).await
+        {
+            error!("Failed to update last used time for refresh token: {err}");
+            clear_auth_cookies(&cookies);
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+
+        let access_token = match generate_access_token(&refresh_token_entry.user_id) {
+            Ok(token) => token,
+            Err(err) => {
+                error!("Failed to generate access token: {err}");
+                clear_auth_cookies(&cookies);
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        };
+
+        if let Err(err) = set_access_token_cookie(
+            &cookies,
+            access_token,
+            state.config.read().await.is_production,
+        ) {
+            error!("Failed to set access token cookie: {err}");
+            clear_auth_cookies(&cookies);
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+
+        req.extensions_mut()
+            .insert(UserId(refresh_token_entry.user_id));
+        return Ok(next.run(req).await);
+    }
+
+    Ok(Redirect::to("/auth/login").into_response())
 }

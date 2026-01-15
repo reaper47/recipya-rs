@@ -4,7 +4,6 @@ use axum::Form;
 use axum::extract::{Query, State, ws::Message};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
-use models::password::{PasswordResetToken, PasswordResetTokenForCreate};
 use tower_cookies::Cookies;
 use tracing::{debug, error, warn};
 use uuid::Uuid;
@@ -13,9 +12,13 @@ use validator::Validate;
 use app::state::AppState;
 use auth::pwd::scheme::SchemeStatus;
 use auth::pwd::{ContentToHash, validate_pwd};
-use auth::token::{remove_token_cookie, set_token_cookie};
+use auth::token::generate_access_token;
+use auth::token::http::{remove_token_cookie, set_auth_cookies};
 use email::{Data, Email, Template};
-use models::email::{EmailVerificationToken, EmailVerificationTokenForCreate};
+use models::tokens::{
+    EmailVerificationToken, EmailVerificationTokenForCreate, PasswordResetToken,
+    PasswordResetTokenForCreate, RefreshToken, RefreshTokenForCreate,
+};
 use models::user::User;
 
 use crate::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message, broadcast_error};
@@ -317,7 +320,6 @@ pub async fn login_post_handler(
         Err(error) => return Error::Model(error).into_response(),
     };
 
-    // Validate password
     let scheme_status = match validate_pwd(
         ContentToHash {
             salt: user.password_salt,
@@ -352,15 +354,53 @@ pub async fn login_post_handler(
         };
     }
 
-    match set_token_cookie(&cookies, &user.id, form.is_remember_me()) {
-        Ok(_) => Redirect::to("/").into_response(),
+    let access_token = match generate_access_token(&user.id) {
+        Ok(token) => token,
         Err(err) => {
-            let mut res = (StatusCode::BAD_REQUEST, "Login failed").into_response();
-            add_hx_message(&mut res, MessageHtmx::error("Failed to log you in."));
-            error!("Failed to set cookie for user {} - Error: {err}", user.id);
-            res
+            let mut res = Error::GenerateToken.into_response();
+            add_hx_message(
+                &mut res,
+                MessageHtmx::error("Failed to generate access token."),
+            );
+            error!(
+                "Failed to generate access token for user {}: {err}",
+                user.id
+            );
+            return res;
         }
+    };
+
+    let refresh_token_entry =
+        match RefreshToken::new(&state.mm, RefreshTokenForCreate::new(user.id)).await {
+            Ok(entry) => entry,
+            Err(err) => {
+                let mut res = Error::GenerateToken.into_response();
+                add_hx_message(
+                    &mut res,
+                    MessageHtmx::error("Failed to generate refresh token."),
+                );
+                error!(
+                    "Failed to generate refresh token for user {}: {err}",
+                    user.id
+                );
+                return res;
+            }
+        };
+
+    if let Err(err) = set_auth_cookies(
+        &cookies,
+        access_token,
+        refresh_token_entry.token,
+        form.is_remember_me(),
+        state.config.read().await.is_production,
+    ) {
+        let mut res = Error::GenerateToken.into_response();
+        add_hx_message(&mut res, MessageHtmx::error("Failed to set auth cookies."));
+        error!("Failed to set auth cookies for user {}: {err}", user.id);
+        return res;
     }
+
+    Redirect::to("/").into_response()
 }
 
 /// Handles a user logging out.

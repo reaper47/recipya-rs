@@ -3,7 +3,6 @@ mod message;
 
 pub(crate) mod admin;
 pub(crate) mod auth;
-pub(crate) mod context;
 pub(crate) mod general;
 pub(crate) mod recipes;
 pub(crate) mod settings;

@@ -57,8 +57,6 @@ pub enum Error {
 
     // Modules
     #[from]
-    CtxExt(crate::middleware::mw_auth::CtxExtError),
-    #[from]
     Config(config::Error),
     #[from]
     HumanTime(humantime::DurationError),

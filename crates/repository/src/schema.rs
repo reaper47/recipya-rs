@@ -392,6 +392,19 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    refresh_tokens (id) {
+        id -> Uuid,
+        user_id -> Uuid,
+        token -> Text,
+        created_at -> Timestamptz,
+        last_used_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     report_types (id) {
         id -> Int2,
         name -> Text,
@@ -636,6 +649,7 @@ diesel::joinable!(recipe_timelines -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> users (user_id));
 diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
 diesel::joinable!(recipes -> users (user_id));
+diesel::joinable!(refresh_tokens -> users (user_id));
 diesel::joinable!(reports -> report_types (report_type_id));
 diesel::joinable!(reports -> users (user_id));
 diesel::joinable!(reports_logs -> reports (report_id));
@@ -689,6 +703,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     password_reset_tokens,
     recipe_timelines,
     recipes,
+    refresh_tokens,
     report_types,
     reports,
     reports_logs,

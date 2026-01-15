@@ -7,7 +7,7 @@ use crate::handlers::settings::{
     set_default_theme_handler, set_nutrition_source_handler, set_selected_theme_handler,
     settings_handler,
 };
-use crate::middleware::mw_auth::mw_only_admin;
+use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
 /// Defines the routes for endpoints related to the settings module.
 pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
@@ -20,6 +20,10 @@ pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
                 .layer(middleware::from_fn_with_state(state.clone(), mw_only_admin)),
         )
         .route("/theme-selected", post(set_selected_theme_handler))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            mw_refresh_token,
+        ))
 }
 
 #[cfg(test)]

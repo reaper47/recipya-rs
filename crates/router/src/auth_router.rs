@@ -1,5 +1,5 @@
-use axum::Router;
 use axum::routing::{delete, get, post};
+use axum::{Router, middleware};
 
 use app::state::AppState;
 
@@ -9,11 +9,19 @@ use crate::handlers::auth::{
     login_post_handler, logout_post_handler, register_handler, register_post_handler,
     user_delete_handler, verify_email_handler,
 };
+use crate::middleware::mw_auth::mw_refresh_token;
 
 /// Defines the authentication-related routes for the web application.
-pub(super) fn auth_routes() -> Router<AppState> {
-    Router::new()
+pub(super) fn auth_routes(state: AppState) -> Router<AppState> {
+    let protected = Router::new()
         .route("/change-password", post(change_password_post_handler))
+        .route("/user", delete(user_delete_handler))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            mw_refresh_token,
+        ));
+
+    let public = Router::new()
         .route(
             "/forgot-password",
             get(forgot_password_handler).post(forgot_password_post_handler),
@@ -28,8 +36,9 @@ pub(super) fn auth_routes() -> Router<AppState> {
             "/register",
             get(register_handler).post(register_post_handler),
         )
-        .route("/user", delete(user_delete_handler))
-        .route("/verify-email", get(verify_email_handler))
+        .route("/verify-email", get(verify_email_handler));
+
+    Router::new().merge(public).merge(protected)
 }
 
 #[cfg(test)]
@@ -131,7 +140,7 @@ mod tests {
 
     mod tests_confirm {
         use models::{
-            email::{EmailVerificationToken, EmailVerificationTokenForCreate},
+            tokens::{EmailVerificationToken, EmailVerificationTokenForCreate},
             user::User,
         };
         use testing::utils::{TestDb, assert_html, build_server_anonymous, create_app_state};
@@ -273,7 +282,7 @@ mod tests {
 
     mod tests_forgot_password {
         use models::{
-            password::{PasswordResetToken, PasswordResetTokenForCreate},
+            tokens::{PasswordResetToken, PasswordResetTokenForCreate},
             user::User,
         };
         use testing::utils::{
@@ -495,7 +504,7 @@ mod tests {
         use std::default::Default;
         use time::OffsetDateTime;
 
-        use auth::token::{AUTH_TOKEN, jwt::validate_token};
+        use auth::token::{http::AUTH_TOKEN, jwt::validate_token};
         use testing::utils::{
             TEST_USER_EMAIL, TEST_USER_PASSWORD, TestDb, assert_html, assert_not_in_html,
             build_server_anonymous, build_server_logged_in,
@@ -625,8 +634,8 @@ mod tests {
             let claims = validate_token(&token)?;
             let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
             assert!(
-                (claims.exp - now) >= 30 * 24 * 60 * 60,
-                "expiration time should be a month"
+                (claims.exp - now) >= 15 * 60,
+                "expiration time should be 15 minutes"
             );
             Ok(())
         }
@@ -706,8 +715,8 @@ mod tests {
             let claims = validate_token(&token)?;
             let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
             assert!(
-                (claims.exp - now) >= 30 * 24 * 60 * 60,
-                "expiration time should be a month"
+                (claims.exp - now) >= 15 * 60,
+                "expiration time should be 15 minutes"
             );
             Ok(())
         }
@@ -716,7 +725,7 @@ mod tests {
     mod tests_logout {
         use super::*;
 
-        use auth::token::AUTH_TOKEN;
+        use auth::token::http::AUTH_TOKEN;
         use models::user::User;
         use testing::utils::{TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state};
 
