@@ -195,9 +195,12 @@ impl PasswordResetToken {
 pub struct RefreshToken {
     pub id: Uuid,
     pub user_id: Uuid,
+    pub is_remember_me: bool,
     pub token: String,
+    pub expires_at: OffsetDateTime,
+    pub is_used: bool,
+    pub used_at: Option<OffsetDateTime>,
     pub created_at: OffsetDateTime,
-    pub last_used_at: OffsetDateTime,
 }
 
 /// A struct for creating a new password reset token from client-provided data.
@@ -205,14 +208,16 @@ pub struct RefreshToken {
 #[diesel(table_name = schema::refresh_tokens)]
 pub struct RefreshTokenForCreate {
     pub user_id: Uuid,
+    pub is_remember_me: bool,
     pub token: String,
 }
 
 impl RefreshTokenForCreate {
     /// Creates a refresh token for a user.
-    pub fn new(user_id: Uuid) -> Self {
+    pub fn new(user_id: Uuid, is_remember_me: bool) -> Self {
         Self {
             user_id,
+            is_remember_me,
             token: generate_verification_token(),
         }
     }
@@ -244,19 +249,6 @@ impl RefreshToken {
         Ok(token)
     }
 
-    /// Updates the last used timestamp of the token.
-    pub async fn update_last_used(mm: &ModelManager, token: &str) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
-        diesel::update(schema::refresh_tokens::table)
-            .filter(schema::refresh_tokens::token.eq(token))
-            .set(schema::refresh_tokens::last_used_at.eq(chrono::Utc::now()))
-            .execute(&mut conn)
-            .await?;
-
-        Ok(())
-    }
-
     /// Deletes the token.
     pub async fn delete(mm: &ModelManager, token: &str) -> Result<()> {
         let mut conn = mm.pool.get().await?;
@@ -279,6 +271,32 @@ impl RefreshToken {
             .await?;
 
         Ok(())
+    }
+
+    /// Marks a token as used.
+    pub async fn mark_as_used(mm: &ModelManager, token: &str) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        diesel::update(schema::refresh_tokens::table)
+            .filter(schema::refresh_tokens::token.eq(token))
+            .set((
+                schema::refresh_tokens::is_used.eq(true),
+                schema::refresh_tokens::used_at.eq(OffsetDateTime::now_utc()),
+            ))
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Checks whether the token has expired.
+    pub fn is_expired(&self) -> bool {
+        OffsetDateTime::now_utc() > self.expires_at
+    }
+
+    // Check if token is valid (not expired AND not used)
+    pub fn is_valid(&self) -> bool {
+        !self.is_expired() && !self.is_used
     }
 }
 
@@ -538,6 +556,54 @@ mod tests {
     mod tests_refresh_token {
         use super::*;
 
+        #[test]
+        fn test_is_expired() {
+            let token = RefreshToken {
+                id: Uuid::new_v4(),
+                user_id: Uuid::new_v4(),
+                is_remember_me: false,
+                token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc() - Duration::from_hours(24),
+                is_used: false,
+                used_at: None,
+                created_at: OffsetDateTime::now_utc(),
+            };
+
+            assert!(token.is_expired());
+        }
+
+        #[test]
+        fn test_is_not_expired() {
+            let token = RefreshToken {
+                id: Uuid::new_v4(),
+                user_id: Uuid::new_v4(),
+                is_remember_me: false,
+                token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc() + Duration::from_hours(24),
+                is_used: false,
+                used_at: None,
+                created_at: OffsetDateTime::now_utc(),
+            };
+
+            assert!(!token.is_expired());
+        }
+
+        #[test]
+        fn test_is_valid() {
+            let token = RefreshToken {
+                id: Uuid::new_v4(),
+                user_id: Uuid::new_v4(),
+                is_remember_me: false,
+                token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc() + Duration::from_hours(24),
+                is_used: false,
+                used_at: None,
+                created_at: OffsetDateTime::now_utc(),
+            };
+
+            assert!(token.is_valid());
+        }
+
         #[tokio::test]
         async fn test_delete_all_for_user_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
@@ -547,6 +613,7 @@ mod tests {
                 &state.mm,
                 RefreshTokenForCreate {
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token".to_string(),
                 },
             )
@@ -555,6 +622,7 @@ mod tests {
                 &state.mm,
                 RefreshTokenForCreate {
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token2".to_string(),
                 },
             )
@@ -578,6 +646,7 @@ mod tests {
                 &state.mm,
                 RefreshTokenForCreate {
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token".to_string(),
                 },
             )
@@ -599,6 +668,7 @@ mod tests {
                 &state.mm,
                 RefreshTokenForCreate {
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token".to_string(),
                 },
             )
@@ -611,9 +681,12 @@ mod tests {
                 Some(RefreshToken {
                     id: created.id,
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token".to_string(),
                     created_at: created.created_at,
-                    last_used_at: created.last_used_at,
+                    expires_at: created.expires_at,
+                    is_used: false,
+                    used_at: None
                 })
             );
             Ok(())
@@ -628,6 +701,7 @@ mod tests {
                 &state.mm,
                 RefreshTokenForCreate {
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token".to_string(),
                 },
             )
@@ -640,16 +714,19 @@ mod tests {
                 Some(RefreshToken {
                     id: created.id,
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token".to_string(),
                     created_at: created.created_at,
-                    last_used_at: created.last_used_at,
+                    expires_at: created.expires_at,
+                    is_used: false,
+                    used_at: None
                 })
             );
             Ok(())
         }
 
         #[tokio::test]
-        async fn test_update_last_used_ok() -> Result<()> {
+        async fn test_mark_as_used_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let user = insert_user(config).await?;
@@ -657,15 +734,16 @@ mod tests {
                 &state.mm,
                 RefreshTokenForCreate {
                     user_id: user.id,
+                    is_remember_me: false,
                     token: "test_token".to_string(),
                 },
             )
             .await?;
 
-            RefreshToken::update_last_used(&state.mm, &created.token).await?;
+            RefreshToken::mark_as_used(&state.mm, &created.token).await?;
 
             let got = RefreshToken::find_by_token(&state.mm, &created.token).await?;
-            pretty_assertions::assert_ne!(got.unwrap().last_used_at, created.last_used_at);
+            assert!(got.unwrap().is_used);
             Ok(())
         }
     }

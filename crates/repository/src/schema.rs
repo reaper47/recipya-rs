@@ -395,9 +395,12 @@ diesel::table! {
     refresh_tokens (id) {
         id -> Uuid,
         user_id -> Uuid,
+        is_remember_me -> Bool,
         token -> Text,
+        expires_at -> Timestamptz,
+        is_used -> Bool,
+        used_at -> Nullable<Timestamptz>,
         created_at -> Timestamptz,
-        last_used_at -> Timestamptz,
     }
 }
 

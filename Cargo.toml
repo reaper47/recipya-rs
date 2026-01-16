@@ -28,7 +28,7 @@ keywords = ["food", "recipes", "recipe-manager"]
 license = "AGPL-3.0-or-later"
 readme = "README.md"
 repository = "https://github.com/reaper47/recipya-rs"
-rust-version = "1.90.0"
+rust-version = "1.92.0"
 
 [workspace.dependencies]
 app = { path = "./crates/app" }

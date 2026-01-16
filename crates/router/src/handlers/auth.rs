@@ -13,7 +13,7 @@ use app::state::AppState;
 use auth::pwd::scheme::SchemeStatus;
 use auth::pwd::{ContentToHash, validate_pwd};
 use auth::token::generate_access_token;
-use auth::token::http::{remove_token_cookie, set_auth_cookies};
+use auth::token::http::{clear_auth_cookies, set_auth_cookies};
 use email::{Data, Email, Template};
 use models::tokens::{
     EmailVerificationToken, EmailVerificationTokenForCreate, PasswordResetToken,
@@ -116,7 +116,7 @@ pub async fn verify_email_handler(
 fn get_token_from_query(query: HashMap<String, String>) -> Result<String> {
     match query.get("token") {
         Some(token) => Ok(token.to_string()),
-        None => return Err(Error::NoToken),
+        None => Err(Error::NoToken),
     }
 }
 
@@ -207,11 +207,11 @@ pub async fn forgot_password_reset_handler(
         }
         Ok(_) => {
             warn!("The token '{token}' was not found in the database.");
-            return Error::Database.into_response();
+            Error::Database.into_response()
         }
         Err(err) => {
             error!("Failed to find the token '{token}' in the database: {err}");
-            return Error::Database.into_response();
+            Error::Database.into_response()
         }
     }
 }
@@ -370,22 +370,26 @@ pub async fn login_post_handler(
         }
     };
 
-    let refresh_token_entry =
-        match RefreshToken::new(&state.mm, RefreshTokenForCreate::new(user.id)).await {
-            Ok(entry) => entry,
-            Err(err) => {
-                let mut res = Error::GenerateToken.into_response();
-                add_hx_message(
-                    &mut res,
-                    MessageHtmx::error("Failed to generate refresh token."),
-                );
-                error!(
-                    "Failed to generate refresh token for user {}: {err}",
-                    user.id
-                );
-                return res;
-            }
-        };
+    let refresh_token_entry = match RefreshToken::new(
+        &state.mm,
+        RefreshTokenForCreate::new(user.id, user.is_remember_me),
+    )
+    .await
+    {
+        Ok(entry) => entry,
+        Err(err) => {
+            let mut res = Error::GenerateToken.into_response();
+            add_hx_message(
+                &mut res,
+                MessageHtmx::error("Failed to generate refresh token."),
+            );
+            error!(
+                "Failed to generate refresh token for user {}: {err}",
+                user.id
+            );
+            return res;
+        }
+    };
 
     if let Err(err) = set_auth_cookies(
         &cookies,
@@ -413,27 +417,21 @@ pub async fn logout_post_handler(
         return Error::LogoutForbidden.into_response();
     }
 
-    if let Some(user) = user {
-        if let Err(err) = User::update_remember_me(&state.mm, user.id, false).await {
-            error!("Could not update remember_me for user {}: {err}", user.id);
-        }
+    if let Some(user) = user
+        && let Err(err) = User::update_remember_me(&state.mm, user.id, false).await
+    {
+        error!("Could not update remember_me for user {}: {err}", user.id);
     }
 
-    match remove_token_cookie(&cookies) {
-        Ok(_) => {
-            let mut res = Redirect::to("/").into_response();
+    clear_auth_cookies(&cookies);
 
-            if let Ok(hx_redirect_val) = HeaderValue::from_str("/") {
-                res.headers_mut()
-                    .insert(axum_htmx::headers::HX_REDIRECT, hx_redirect_val);
-            }
-            res
-        }
-        Err(err) => {
-            error!("Failed to remove token cookie: {err}");
-            Error::LogoutFail.into_response()
-        }
+    let mut res = Redirect::to("/").into_response();
+
+    if let Ok(hx_redirect_val) = HeaderValue::from_str("/") {
+        res.headers_mut()
+            .insert(axum_htmx::headers::HX_REDIRECT, hx_redirect_val);
     }
+    res
 }
 
 /// Renders the user registration page.
@@ -539,7 +537,7 @@ pub async fn register_post_handler(
                         &mut res,
                         MessageHtmx::error("Failed to fetch user from database."),
                     );
-                    return res;
+                    res
                 }
             }
         }

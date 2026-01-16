@@ -53,9 +53,12 @@ CREATE TABLE password_reset_tokens (
 CREATE TABLE refresh_tokens (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
     user_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    is_remember_me boolean NOT NULL DEFAULT FALSE,
     token text UNIQUE NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT NOW(),
-    last_used_at timestamptz NOT NULL DEFAULT NOW()
+    expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days'),
+    is_used bool NOT NULL DEFAULT FALSE,
+    used_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
 ---
@@ -82,6 +85,10 @@ CREATE INDEX idx_password_reset_tokens_expires_at ON password_reset_tokens (expi
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens (token);
 
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens (user_id);
+
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);
+
+CREATE INDEX idx_refresh_tokens_is_used ON refresh_tokens (is_used);
 
 ---
 --- Functions
