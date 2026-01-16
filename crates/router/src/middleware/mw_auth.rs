@@ -8,13 +8,14 @@ use axum::http::request::Parts;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
-use models::tokens::RefreshToken;
+use email::{Email, Template};
+use models::tokens::{RefreshToken, RefreshTokenForCreate};
 use reqwest::{StatusCode, header};
 use serde_json::json;
 
 use app::state::AppState;
 use auth::token::generate_access_token;
-use auth::token::http::{AUTH_TOKEN, REFRESH_TOKEN, clear_auth_cookies, set_access_token_cookie};
+use auth::token::http::{AUTH_TOKEN, REFRESH_TOKEN, clear_auth_cookies, set_auth_cookies};
 use auth::token::jwt::validate_token;
 use models::user::User;
 use tower_cookies::Cookies;
@@ -232,16 +233,70 @@ pub async fn mw_refresh_token(
                 clear_auth_cookies(&cookies);
                 return Ok(Redirect::to("/auth/login").into_response());
             }
-            Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+            Err(err) => {
+                error!("Database error finding refresh token: {err}");
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            }
         };
 
-        if let Err(err) =
-            RefreshToken::update_last_used(&state.mm, &refresh_token_entry.token).await
-        {
-            error!("Failed to update last used time for refresh token: {err}");
+        if refresh_token_entry.is_expired() {
+            if let Err(err) = RefreshToken::delete(&state.mm, token).await {
+                error!("Failed to delete expired refresh token: {err}");
+            }
+
+            clear_auth_cookies(&cookies);
+            return Ok(Redirect::to("/auth/login").into_response());
+        }
+
+        let user_id = refresh_token_entry.user_id;
+
+        if refresh_token_entry.is_used {
+            error!("TOKEN REUSE DETECTED!");
+            error!("Token: {token}");
+            error!("User ID: {user_id}");
+            error!("Originally used at: {:?}", refresh_token_entry.used_at);
+
+            if let Err(err) = RefreshToken::delete_all_for_user(&state.mm, user_id).await {
+                error!("Failed to delete all refresh tokens for user: {err}");
+            };
+
+            if let Some(service) = state.email_service
+                && let Ok(Some(user)) = User::get_user_by_id(&state.mm, user_id).await
+            {
+                tokio::spawn(async move {
+                    service.send(&Email {
+                        to: user.email,
+                        subject: "Security Alert: Suspicious Activity Detected".into(),
+                        body: "".into(),
+                        template: Some(Template::SecurityAlert),
+                        data: None,
+                    })
+                });
+            }
+
+            clear_auth_cookies(&cookies);
+            return Ok(Redirect::to("/auth/login").into_response());
+        }
+
+        if let Err(err) = RefreshToken::mark_as_used(&state.mm, token).await {
+            error!("Failed to mark refresh token as used: {err}");
             clear_auth_cookies(&cookies);
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
+
+        let new_refresh_token_entry = match RefreshToken::new(
+            &state.mm,
+            RefreshTokenForCreate::new(user_id, refresh_token_entry.is_remember_me),
+        )
+        .await
+        {
+            Ok(entry) => entry,
+            Err(err) => {
+                error!("Failed to create new refresh token: {err}");
+                clear_auth_cookies(&cookies);
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        };
 
         let access_token = match generate_access_token(&refresh_token_entry.user_id) {
             Ok(token) => token,
@@ -252,9 +307,11 @@ pub async fn mw_refresh_token(
             }
         };
 
-        if let Err(err) = set_access_token_cookie(
+        if let Err(err) = set_auth_cookies(
             &cookies,
             access_token,
+            new_refresh_token_entry.token,
+            refresh_token_entry.is_remember_me,
             state.config.read().await.is_production,
         ) {
             error!("Failed to set access token cookie: {err}");

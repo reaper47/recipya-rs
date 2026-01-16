@@ -725,7 +725,7 @@ mod tests {
     mod tests_logout {
         use super::*;
 
-        use auth::token::http::AUTH_TOKEN;
+        use auth::token::http::REFRESH_TOKEN;
         use models::user::User;
         use testing::utils::{TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state};
 
@@ -740,7 +740,10 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header("Location", "/");
-            pretty_assertions::assert_eq!(res.cookie(AUTH_TOKEN).value(), "");
+            assert!(
+                res.maybe_cookie(REFRESH_TOKEN).is_none(),
+                "refresh token should be deleted"
+            );
             let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
                 .await?
@@ -759,8 +762,10 @@ mod tests {
 
             res_post.assert_status_see_other();
             res_get.assert_status_ok();
-            let token = res_post.maybe_cookie(AUTH_TOKEN);
-            assert!(token.is_some(), "auth token should be deleted");
+            assert!(
+                res_post.maybe_cookie(REFRESH_TOKEN).is_none(),
+                "refresh token should be deleted"
+            );
             Ok(())
         }
 

@@ -23,6 +23,7 @@ pub struct Email {
 pub enum Template {
     ForgotPassword,
     Intro,
+    SecurityAlert,
 }
 
 /// The data to include in the email template.
@@ -90,6 +91,7 @@ impl EmailSender for EmailService {
             let template = match template {
                 Template::ForgotPassword => include_str!("templates/forgot-password.mjml"),
                 Template::Intro => include_str!("templates/intro.mjml"),
+                Template::SecurityAlert => include_str!("templates/security-alert.mjml"),
             };
 
             if let Some(data) = &email.data {

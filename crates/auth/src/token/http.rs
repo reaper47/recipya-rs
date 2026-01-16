@@ -22,8 +22,7 @@ pub fn set_auth_cookies(
     Ok(())
 }
 
-/// Sets the access token cookie.
-pub fn set_access_token_cookie(
+fn set_access_token_cookie(
     cookies: &Cookies,
     token_value: String,
     is_production: bool,
@@ -65,17 +64,14 @@ fn set_refresh_token_cookie(
     Ok(())
 }
 
-/// Removes the authentication token cookie from the user's browser.
-pub fn remove_token_cookie(cookies: &Cookies) -> Result<()> {
-    let mut cookie = Cookie::from(AUTH_TOKEN);
-    cookie.set_path("/");
-
-    cookies.remove(cookie);
-    Ok(())
+/// Removes the auth tokens from the user's browser storage.
+pub fn clear_auth_cookies(cookies: &Cookies) {
+    remove_token_cookie(cookies, AUTH_TOKEN.into());
+    remove_token_cookie(cookies, REFRESH_TOKEN.into());
 }
 
-/// Clears all authentication cookies from the user's browser.
-pub fn clear_auth_cookies(cookies: &Cookies) {
-    cookies.remove(Cookie::from(AUTH_TOKEN));
-    cookies.remove(Cookie::from(REFRESH_TOKEN));
+fn remove_token_cookie(cookies: &Cookies, name: String) {
+    let mut access_cookie = Cookie::from(name);
+    access_cookie.set_path("/");
+    cookies.remove(access_cookie);
 }
