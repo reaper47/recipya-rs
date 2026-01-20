@@ -140,9 +140,11 @@ pub fn main(
                                     @if !data.is_autologin {
                                         div class="divider m-0" {}
                                         li {
-                                            a hx-post="/auth/logout" {
-                                                (icon_arrow_right_start_on_rectangle())
-                                                "Log out"
+                                            form method="post" action="/auth/logout" class="w-full" {
+                                                button type="submit" class="flex cursor-pointer gap-2" {
+                                                    (icon_arrow_right_start_on_rectangle())
+                                                    "Log out"
+                                                }
                                             }
                                         }
                                     }

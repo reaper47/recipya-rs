@@ -70,7 +70,7 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
     layouts::auth(
         "Login",
         html! {
-            form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login" action="/auth/login" method="post" {
+            form class="card w-80 sm:w-96 bg-base-100 shadow-xl" method="post" action="/auth/login" {
                 div class="card-body" {
                     h2 class="card-title underline self-center" {
                         "Log In"
