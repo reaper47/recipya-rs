@@ -15,6 +15,10 @@ document.body.addEventListener("htmx:historyRestore", () => {
   syncLayout();
 });
 
+document.body.addEventListener("showMessageHtmx", (event) => {
+  receiveToastMessage(event);
+});
+
 function initNotes(initialValue) {
   const easyMDE = new EasyMDE({
     autoDownloadFontAwesome: true,
@@ -531,10 +535,13 @@ function initTheme(themeDefault, themeSelected) {
 }
 
 function syncLayout() {
+  const layoutElement = document.querySelector("#data-layout");
+  if (!layoutElement) {
+    return;
+  }
+
   const isAside =
-    document
-      .querySelector("#data-layout")
-      .attributes.getNamedItem("data-layout").value === "with-aside";
+    layoutElement.attributes.getNamedItem("data-layout").value === "with-aside";
 
   ["desktop-nav", "mobile-nav", "add-recipe", "pagination"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("hidden", !isAside);
