@@ -88,12 +88,9 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                         }
                         input #password type="password" required placeholder="Enter your password" class="input" name="password" value=@if is_demo { "demo" };
                     }
-                    fieldset class="fieldset p-4 bg-base-100 border border-base-300 rounded-box w-64 grid self-center mb-2" {
-                      legend class="fieldset-legend" { "Login options" }
-                      label class="fieldset-label" {
-                        input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked";
-                        "Remember me"
-                      }
+                    label class="fieldset-label py-2" {
+                      input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked";
+                      "Remember me"
                     }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {

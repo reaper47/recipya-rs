@@ -91,7 +91,6 @@ pub struct MealieIngredient {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
 pub struct MealieItem {
     pub name: String,
 }
