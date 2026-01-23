@@ -384,6 +384,7 @@ diesel::table! {
         fts_ingredients -> Tsvector,
         fts_instructions -> Tsvector,
         fts_keywords -> Tsvector,
+        fts_name -> Tsvector,
         fts_tools -> Tsvector,
     }
 }

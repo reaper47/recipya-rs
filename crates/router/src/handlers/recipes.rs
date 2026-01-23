@@ -125,7 +125,7 @@ pub async fn recipes_handler(
         }
         Err(err) => {
             error!(
-                "Error fetching recipes for user '{:?}' with search params '{search_params:?}': {err}",
+                "(recipes_handler) Error fetching recipes for user '{:?}' with search params '{search_params:?}': {err}",
                 user.id
             );
             broadcast_error(&state, user.id, "Error fetching recipes.").await;
@@ -1861,7 +1861,7 @@ pub async fn search_recipes_handler(
         }
         Err(err) => {
             error!(
-                "Error fetching recipes for user '{}' with search params '{search_params:?}': {err}",
+                "(search_recipes_handler) Error fetching recipes for user '{}' with search params '{search_params:?}': {err}",
                 user.id
             );
             broadcast_error(&state, user.id, "Error fetching recipes.").await;

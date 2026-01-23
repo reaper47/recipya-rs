@@ -94,6 +94,7 @@ CREATE TABLE recipes (
     fts_ingredients tsvector NOT NULL DEFAULT ''::tsvector,
     fts_instructions tsvector NOT NULL DEFAULT ''::tsvector,
     fts_keywords tsvector NOT NULL DEFAULT ''::tsvector,
+    fts_name tsvector NOT NULL DEFAULT ''::tsvector,
     fts_tools tsvector NOT NULL DEFAULT ''::tsvector,
     UNIQUE (name, source, yield, user_id)
 );
@@ -287,7 +288,19 @@ CREATE INDEX idx_recipes_fts_instructions ON recipes USING gin (fts_instructions
 
 CREATE INDEX idx_recipes_fts_keywords ON recipes USING gin (fts_keywords);
 
+CREATE INDEX idx_recipes_fts_name ON recipes USING gin (fts_name);
+
 CREATE INDEX idx_recipes_fts_tools ON recipes USING gin (fts_tools);
+
+CREATE INDEX idx_recipes_name_trgm ON recipes USING gin (name gin_trgm_ops);
+
+CREATE INDEX idx_recipes_source_trgm ON recipes USING gin (source gin_trgm_ops);
+
+CREATE INDEX idx_categories_name_trgm ON categories USING gin (name gin_trgm_ops);
+
+CREATE INDEX idx_cuisines_name_trgm ON cuisines USING gin (name gin_trgm_ops);
+
+CREATE INDEX idx_keywords_name_trgm ON keywords USING gin (name gin_trgm_ops);
 
 ---
 --- Function
@@ -676,4 +689,3 @@ VALUES
 
 INSERT INTO sections (name)
     VALUES ('');
-

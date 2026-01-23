@@ -13,7 +13,7 @@ pub(super) fn searchbar(data: &SearchbarData) -> Markup {
         div {
             label class="input input-sm flex justify-between px-0 gap-2 z-20" {
                 button #search-shortcut type="button" class="pl-2" popovertarget="search-help" _="on click toggle .hidden on #search-help" {
-                    (icon_information_circle())
+                    (icon_information_circle(true))
                 }
 
                 input #search-recipes class="w-full" type="search" name="q" placeholder="Search for recipes..." value=(data.term)
@@ -110,19 +110,14 @@ pub(super) fn search_help() -> Markup {
             "Any field, name and category",
             "best name:chicken kyiv cat:lunch",
         ),
-        ("By description", "desc:tender savory stacked"),
-        (
-            "Multiple descriptions",
-            "desc:tender savory stacked,juicy crispy pieces chicken",
-        ),
         ("By cuisine", "cuisine:ukrainian"),
         ("Multiple cuisines", "cuisine:ukrainian,japanese"),
         ("By ingredient", "ing:onions"),
         ("Multiple ingredients", "ing:olive oil,thyme,butter"),
         ("By instruction", "ins:preheat oven 350"),
         ("Multiple instructions", "ins:preheat oven 350,melt butter"),
-        ("By keyword", "tag:biscuits"),
-        ("Multiple keywords", "tag:biscuits,mardi gras"),
+        ("By keyword", "kw:biscuits"),
+        ("Multiple keywords", "kw:biscuits,mardi gras"),
         ("By tool", "tool:wok"),
         ("Multiple tools", "tool:wok,blender"),
         ("By source", "src:allrecipes.com"),

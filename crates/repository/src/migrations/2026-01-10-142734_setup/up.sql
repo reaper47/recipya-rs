@@ -10,6 +10,8 @@ EXCEPTION
 END
 $$;
 
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 ---
 --- Main tables
 ---
@@ -46,4 +48,3 @@ CREATE TRIGGER update_app_last_checked_at
 ---
 INSERT INTO app (id)
     VALUES (1);
-
