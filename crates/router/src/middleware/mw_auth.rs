@@ -215,6 +215,10 @@ pub async fn mw_refresh_token(
     mut req: Request,
     next: Next,
 ) -> std::result::Result<Response, StatusCode> {
+    if state.config.read().await.is_autologin {
+        return Ok(next.run(req).await);
+    }
+
     if let Some(access_cookie) = cookies.get(AUTH_TOKEN)
         && let Ok(claims) = validate_token(access_cookie.value())
     {

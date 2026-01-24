@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use diesel_full_text_search::{TsVectorExtensions, to_tsquery, ts_rank};
+use diesel_full_text_search::{TsVectorExtensions, plainto_tsquery, to_tsquery, ts_rank};
 use uuid::Uuid;
 use winnow::Parser;
 use winnow::combinator::alt;
@@ -74,28 +74,28 @@ impl RecipeSearch {
         }
 
         if let Some(text) = &self.filters.category {
-            let ts_query = to_tsquery(text);
-            query = query.filter(fts_category.matches(ts_query));
+            query = query.filter(fts_category.matches(to_tsquery(text)));
         }
 
         if let Some(text) = &self.filters.cuisine {
-            let ts_query = to_tsquery(text);
-            query = query.filter(fts_cuisine.matches(ts_query));
+            query = query.filter(fts_cuisine.matches(to_tsquery(text)));
         }
 
         if let Some(text) = &self.filters.ingredients {
-            let ts_query = to_tsquery(text);
-            query = query.filter(fts_ingredients.matches(ts_query));
+            query = query.filter(fts_ingredients.matches(to_tsquery(text)));
         }
 
         if let Some(text) = &self.filters.instructions {
-            let ts_query = to_tsquery(text);
-            query = query.filter(fts_instructions.matches(ts_query));
+            query = query.filter(fts_instructions.matches(to_tsquery(text)));
         }
 
         if let Some(text) = &self.filters.keywords {
-            let ts_query = to_tsquery(text);
-            query = query.filter(fts_keywords.matches(ts_query));
+            query = query.filter(fts_keywords.matches(to_tsquery(text)));
+        }
+
+        if let Some(text) = &self.filters.name {
+            let sanitized = text.replace("<->", " ");
+            query = query.filter(schema::recipes::name.ilike(format!("%{}%", sanitized.trim())));
         }
 
         if let Some(n) = self.filters.rating {
@@ -103,12 +103,11 @@ impl RecipeSearch {
         }
 
         if let Some(text) = &self.filters.tools {
-            let ts_query = to_tsquery(text);
-            query = query.filter(fts_tools.matches(ts_query));
+            query = query.filter(fts_tools.matches(to_tsquery(text)));
         }
 
         if let Some(text) = &self.filters.unclassified {
-            let ts_query = to_tsquery(text);
+            let ts_query = plainto_tsquery(text);
             query = query
                 .filter(fts_combined.matches(ts_query))
                 .order_by((id, ts_rank(fts_combined, ts_query).desc()));
@@ -140,6 +139,7 @@ struct SearchFilters {
     instructions: Option<String>,
     is_favourites: bool,
     keywords: Option<String>,
+    name: Option<String>,
     rating: Option<i16>,
     tools: Option<String>,
     unclassified: Option<String>,
@@ -150,6 +150,7 @@ const PREFIX_CUISINE: &str = "cui:";
 const PREFIX_INGREDIENTS: &str = "ing:";
 const PREFIX_INSTRUCTIONS: &str = "ins:";
 const PREFIX_KEYWORDS: &str = "kw:";
+const PREFIX_NAME: &str = "name:";
 const PREFIX_RATING: &str = "stars:";
 const PREFIX_TOOLS: &str = "tool:";
 
@@ -170,6 +171,7 @@ impl FromStr for SearchFilters {
             PREFIX_INGREDIENTS,
             PREFIX_INSTRUCTIONS,
             PREFIX_KEYWORDS,
+            PREFIX_NAME,
             PREFIX_RATING,
             PREFIX_TOOLS,
         ];
@@ -193,6 +195,7 @@ impl FromStr for SearchFilters {
         let mut ingredients: Option<String> = None;
         let mut instructions: Option<String> = None;
         let mut keywords: Option<String> = None;
+        let mut name: Option<String> = None;
         let mut rating: Option<i16> = None;
         let mut tools: Option<String> = None;
 
@@ -204,6 +207,7 @@ impl FromStr for SearchFilters {
                     PREFIX_INGREDIENTS => ingredients = Some(text),
                     PREFIX_INSTRUCTIONS => instructions = Some(text),
                     PREFIX_KEYWORDS => keywords = Some(text),
+                    PREFIX_NAME => name = Some(text),
                     PREFIX_RATING => {
                         rating = text
                             .trim()
@@ -225,6 +229,7 @@ impl FromStr for SearchFilters {
             instructions: instructions.map(|s| normalize_to_ts_query(&s, "&", "&")),
             is_favourites: false,
             keywords: keywords.map(|s| normalize_to_ts_query(&s, "&", "<->")),
+            name: name.map(|s| normalize_to_ts_query(&s, "&", "<->")),
             rating,
             tools: tools.map(|s| normalize_to_ts_query(&s, "&", "<->")),
             unclassified: unclassified.map(|s| normalize_to_ts_query(&s, "|", "&")),
@@ -243,6 +248,7 @@ fn parse_any_section<'a>(input: &mut &'a str) -> winnow::Result<(&'a str, String
         parse_section(PREFIX_INGREDIENTS),
         parse_section(PREFIX_INSTRUCTIONS),
         parse_section(PREFIX_KEYWORDS),
+        parse_section(PREFIX_NAME),
         parse_section(PREFIX_RATING),
         parse_section(PREFIX_TOOLS),
     ))
@@ -262,6 +268,7 @@ fn parse_section<'a>(
             PREFIX_INGREDIENTS,
             PREFIX_INSTRUCTIONS,
             PREFIX_KEYWORDS,
+            PREFIX_NAME,
             PREFIX_RATING,
             PREFIX_TOOLS,
         ];
@@ -362,6 +369,19 @@ mod tests {
         }
 
         #[test]
+        fn test_name_only() {
+            let filters = SearchFilters::from_str("name:cute kitty").unwrap();
+
+            pretty_assertions::assert_eq!(
+                filters,
+                SearchFilters {
+                    name: Some("cute<->kitty".to_string()),
+                    ..Default::default()
+                }
+            );
+        }
+
+        #[test]
         fn test_rating_only() {
             let filters = SearchFilters::from_str("stars:4").unwrap();
 
@@ -390,7 +410,7 @@ mod tests {
         #[test]
         fn test_all() {
             let filters =
-                SearchFilters::from_str("rip Alexi Laiho cat:Breakfast,midnight dinner cui:thai ing:blue cheese,paprika ins:sprinkle some salt and pepper stars:2 kw:air fryer,healthy tool:steel pan,wok").unwrap();
+                SearchFilters::from_str("rip Alexi Laiho cat:Breakfast,midnight dinner cui:thai ing:blue cheese,paprika ins:sprinkle some salt and pepper stars:2 kw:air fryer,healthy tool:steel pan,wok name:cute kitty").unwrap();
 
             pretty_assertions::assert_eq!(
                 filters,
@@ -401,6 +421,7 @@ mod tests {
                     instructions: Some("sprinkle&some&salt&and&pepper".to_string()),
                     is_favourites: false,
                     keywords: Some("air<->fryer&healthy".to_string()),
+                    name: Some("cute<->kitty".to_string()),
                     rating: Some(2),
                     tools: Some("steel<->pan&wok".to_string()),
                     unclassified: Some("rip&alexi&laiho".to_string()),

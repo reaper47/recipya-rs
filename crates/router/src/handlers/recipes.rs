@@ -125,7 +125,7 @@ pub async fn recipes_handler(
         }
         Err(err) => {
             error!(
-                "Error fetching recipes for user '{:?}' with search params '{search_params:?}': {err}",
+                "(recipes_handler) Error fetching recipes for user '{:?}' with search params '{search_params:?}': {err}",
                 user.id
             );
             broadcast_error(&state, user.id, "Error fetching recipes.").await;
@@ -153,7 +153,7 @@ pub async fn recipes_handler(
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
                 num_recipes,
-                false,
+                is_hx_request(&headers),
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
             share: None,
@@ -1861,7 +1861,7 @@ pub async fn search_recipes_handler(
         }
         Err(err) => {
             error!(
-                "Error fetching recipes for user '{}' with search params '{search_params:?}': {err}",
+                "(search_recipes_handler) Error fetching recipes for user '{}' with search params '{search_params:?}': {err}",
                 user.id
             );
             broadcast_error(&state, user.id, "Error fetching recipes.").await;

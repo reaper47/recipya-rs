@@ -421,7 +421,7 @@ fn render_source(view: &ViewRecipe) -> Markup {
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"
             data-tip="The source can be a website, name of a cookbook, a relative or friend, a magazine, etc." {
-            (icon_information_circle())
+            (icon_information_circle(false))
         }
     }
 }

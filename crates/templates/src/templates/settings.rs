@@ -114,7 +114,7 @@ pub fn settings(
                 }
                 li {
                     a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-about")) {
-                        (icon_information_circle())
+                        (icon_information_circle(false))
                         "About"
                     }
                 }

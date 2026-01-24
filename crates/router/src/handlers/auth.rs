@@ -424,14 +424,7 @@ pub async fn logout_post_handler(
     }
 
     clear_auth_cookies(&cookies);
-
-    let mut res = Redirect::to("/").into_response();
-
-    if let Ok(hx_redirect_val) = HeaderValue::from_str("/") {
-        res.headers_mut()
-            .insert(axum_htmx::headers::HX_REDIRECT, hx_redirect_val);
-    }
-    res
+    Redirect::to("/").into_response()
 }
 
 /// Renders the user registration page.

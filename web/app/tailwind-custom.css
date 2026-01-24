@@ -46,7 +46,7 @@
 
 @layer components {
     .link {
-        @apply underline text-blue-700 hover:text-blue-700 visited:text-purple-700 dark:hover:text-blue-300 dark:visited:text-purple-300 dark:text-blue-400;
+        @apply underline text-blue-700 hover:text-blue-700 visited:text-purple-700 dark:hover:text-blue-300 dark:visited:text-purple-400 dark:text-blue-400;
     }
 
     .text-input {

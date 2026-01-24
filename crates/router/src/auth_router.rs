@@ -268,7 +268,6 @@ mod tests {
             let res = server.delete(BASE_URI).await;
 
             res.assert_status_see_other();
-            res.assert_header(axum_htmx::headers::HX_REDIRECT, "/");
             pretty_assertions::assert_eq!(
                 User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
                     .await?
@@ -531,11 +530,11 @@ mod tests {
             assert_html(
                 res,
                 vec![
-                    r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login" action="/auth/login" method="post"><div class="card-body">"#,
+                    r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" method="post" action="/auth/login"><div class="card-body">"#,
                     r#"<h2 class="card-title underline self-center">Log In</h2>"#,
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value=""></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value=""></fieldset>"#,
-                    r#"<fieldset class="fieldset p-4 bg-base-100 border border-base-300 rounded-box w-64 grid self-center mb-2"><legend class="fieldset-legend">Login options</legend><label class="fieldset-label"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label></fieldset>"#,
+                    r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
                     r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log In</button></div><div class="grid place-content-center text-center gap-2"><div><p class="text-center">Don't have an account?</p><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a></div></div>"#,
                 ],
             );
@@ -559,7 +558,7 @@ mod tests {
                 vec![
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value="demo@demo.com"></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demo"></fieldset>"#,
-                    r#"<fieldset class="fieldset p-4 bg-base-100 border border-base-300 rounded-box w-64 grid self-center mb-2"><legend class="fieldset-legend">Login options</legend><label class="fieldset-label"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label></fieldset>"#,
+                    r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
                 ],
             );
             Ok(())
