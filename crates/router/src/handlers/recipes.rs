@@ -153,7 +153,7 @@ pub async fn recipes_handler(
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
                 num_recipes,
-                false,
+                is_hx_request(&headers),
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
             share: None,

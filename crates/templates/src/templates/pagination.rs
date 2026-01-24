@@ -41,10 +41,10 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                                 @if p.selected == *page_num {
                                     button class="join-item btn btn-active w-12"
                                         aria-current="page"
-                                        aria-label=(format!("Page {}, current page", page_num)) { (page_num) }
+                                        aria-label=(format!("Page {page_num}, current page")) { (page_num) }
                                 } @else {
                                     @let goto_page = format!("Go to page {page_num}");
-                                    @let get_page = format!("{}?page={}{}", p.url, page_num, p.url_queries);
+                                    @let get_page = format!("{}?page={page_num}{}", p.url, p.url_queries);
 
                                     button class="join-item btn w-12"
                                         title=(goto_page)

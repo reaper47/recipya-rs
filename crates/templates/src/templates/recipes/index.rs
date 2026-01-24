@@ -9,6 +9,7 @@ use support::fs::FsSupport;
 use crate::recipes::common::list_recipes;
 use crate::recipes::search_bar;
 use crate::templates::layouts;
+use crate::templates::pagination::pagination;
 
 /// Renders the index page of recipes.
 pub fn index(
@@ -64,6 +65,9 @@ fn render_index(
             (search_bar(&data))
             div #list-recipes class="min-h-0" {
                 (list_recipes(fs_support, path, &data, &data_dir))
+            }
+            @if data.is_hx_request && let Some(p) = &data.pagination {
+                (pagination(p))
             }
         }
     }
