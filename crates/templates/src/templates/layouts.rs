@@ -4,6 +4,7 @@ use super::core::{head, toast, toast_ws};
 use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag, icon_pencil,
 };
+use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
 use models::data::Data;
 use models::settings::UserSettingDetails;
@@ -231,7 +232,8 @@ pub(super) fn render_nav(path: &str) -> Markup {
                     hx-push-url="true"
                     hx-swap="innerHTML transition:true" {
                     a class="tooltip tooltip-right active" data-tip="Recipes" {
-                        (icon_pencil(false))
+                        (icon_utensils())
+                        "Recipes"
                     }
                 }
                 li #recipes-sidebar-cookbooks
@@ -242,6 +244,7 @@ pub(super) fn render_nav(path: &str) -> Markup {
                    hx-swap="innerHTML transition:true" {
                      a class="tooltip tooltip-right" data-tip="Cookbooks" {
                         (icon_book_open())
+                        "Cookbooks"
                     }
                 }
             }
