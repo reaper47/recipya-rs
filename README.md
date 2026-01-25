@@ -154,7 +154,7 @@ This project was mainly coded to blasting the following albums:
 - [Cattle Decapitation - Terrasite](https://www.youtube.com/watch?v=x6rEDMqM36I)
 - [Ensiferum - From Afar](https://www.youtube.com/watch?v=6r8OPu3SRSM)
 - [Fires in the Distance - Echoes From Deep November](https://www.youtube.com/watch?v=dnOE5nm6rfo)
-- [Kahlmah - Swamplord](https://www.youtube.com/watch?v=FhMsOB88dfo&list=PLkROH3Eqs0T9b5E2WDDOS0JgYLf24_dNs)
+- [Kalmah - Swamplord](https://www.youtube.com/watch?v=FhMsOB88dfo&list=PLkROH3Eqs0T9b5E2WDDOS0JgYLf24_dNs)
 - [Lofi Girl - lofi hip hop radio](https://www.youtube.com/watch?v=jfKfPfyJRdk)
 - [Lofi Girl - synthwave radio](https://www.youtube.com/watch?v=4xDzrJKXOOY)
 - [Mozart - Requiem Dm](https://www.youtube.com/watch?v=pBGVfwOLU1w0)
