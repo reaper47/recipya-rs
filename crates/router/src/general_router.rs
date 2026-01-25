@@ -5,13 +5,14 @@ use axum::{Router, middleware};
 use app::state::AppState;
 
 use crate::handlers::general::{
-    index_handler, upload_note_image, user_initials_handler, ws_handler,
+    index_handler, search_suggestions_handler, upload_note_image, user_initials_handler, ws_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
 
 /// Defines the routes for general endpoints of the web application.
 pub(super) fn general_routes(state: AppState) -> Router<AppState> {
     let protected = Router::new()
+        .route("/search-suggestions", get(search_suggestions_handler))
         .route(
             "/upload/note-image",
             post(upload_note_image).layer(DefaultBodyLimit::max(10 * 1024 * 1024)),

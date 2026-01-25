@@ -2,7 +2,7 @@ use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use super::core::{head, toast, toast_ws};
 use super::icons::{
-    icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag, icon_pencil,
+    icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
 };
 use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
@@ -219,7 +219,7 @@ pub(super) fn render_recipe_button() -> Markup {
 /// Renders the desktop navigation sidebar.
 pub(super) fn render_nav(path: &str) -> Markup {
     html! {
-        aside #desktop-nav {
+        aside #desktop-nav class="hidden md:block" {
             ul class="menu w-full menu-sm bg-base-300 rounded-box h-full gap-1" style="border-radius: 0" {
                 li #recipes-sidebar-recipes
                     class={

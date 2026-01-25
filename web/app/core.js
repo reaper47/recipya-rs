@@ -545,6 +545,7 @@ function syncLayout() {
 
   ["desktop-nav", "mobile-nav", "add-recipe", "pagination"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("hidden", !isAside);
+    document.getElementById(id)?.classList.toggle("md:hidden", !isAside);
   });
 }
 
