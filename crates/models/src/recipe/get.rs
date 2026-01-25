@@ -1,9 +1,10 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use repository::{ModelManager, PgPooledConn, schema};
+use url::Url;
 use uuid::Uuid;
 
 use crate::params::SearchParams;
@@ -113,6 +114,152 @@ impl Recipe {
         let recipes = recipe_search.search(mm).await?;
 
         Ok(recipes)
+    }
+
+    /// Fetches all category names belonging to a user.
+    pub async fn fetch_categories(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
+        let mut conn = mm.pool.get().await?;
+
+        let categories = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .inner_join(
+                schema::categories_recipes::table
+                    .on(schema::categories_recipes::recipe_id.eq(schema::recipes::id)),
+            )
+            .inner_join(
+                schema::categories::table
+                    .on(schema::categories::id.eq(schema::categories_recipes::category_id)),
+            )
+            .select(schema::categories::name)
+            .order(schema::categories::name.asc())
+            .distinct()
+            .load::<String>(&mut conn)
+            .await?;
+
+        Ok(categories)
+    }
+
+    /// Fetches all cuisine names belonging to a user.
+    pub async fn fetch_cuisines(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
+        let mut conn = mm.pool.get().await?;
+
+        let cuisines = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .inner_join(
+                schema::cuisines_recipes::table
+                    .on(schema::cuisines_recipes::recipe_id.eq(schema::recipes::id)),
+            )
+            .inner_join(
+                schema::cuisines::table
+                    .on(schema::cuisines::id.eq(schema::cuisines_recipes::cuisine_id)),
+            )
+            .select(schema::cuisines::name)
+            .order(schema::cuisines::name.asc())
+            .distinct()
+            .load::<String>(&mut conn)
+            .await?;
+
+        Ok(cuisines)
+    }
+
+    /// Fetches all ingredient names belonging to a user.
+    pub async fn fetch_ingredients(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
+        let mut conn = mm.pool.get().await?;
+
+        let ingredients = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .inner_join(
+                schema::ingredients_recipes::table
+                    .on(schema::ingredients_recipes::recipe_id.eq(schema::recipes::id)),
+            )
+            .inner_join(
+                schema::ingredients::table
+                    .on(schema::ingredients::id.eq(schema::ingredients_recipes::ingredient_id)),
+            )
+            .select(schema::ingredients::name)
+            .distinct()
+            .load::<String>(&mut conn)
+            .await?;
+
+        Ok(ingredients
+            .iter()
+            .filter_map(|ing| {
+                let ing = ing.trim();
+                if ing.is_empty() {
+                    None
+                } else {
+                    Some(ingredient::from_str(ing).name.to_lowercase())
+                }
+            })
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect())
+    }
+
+    /// Fetches all keywords belonging to a user.
+    pub async fn fetch_keywords(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
+        let mut conn = mm.pool.get().await?;
+
+        let keywords = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .inner_join(
+                schema::keywords_recipes::table
+                    .on(schema::keywords_recipes::recipe_id.eq(schema::recipes::id)),
+            )
+            .inner_join(
+                schema::keywords::table
+                    .on(schema::keywords::id.eq(schema::keywords_recipes::keyword_id)),
+            )
+            .select(schema::keywords::name)
+            .order(schema::keywords::name.asc())
+            .distinct()
+            .load::<String>(&mut conn)
+            .await?;
+
+        Ok(keywords)
+    }
+
+    /// Fetches all the tools belonging to a user.
+    pub async fn fetch_tools(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
+        let mut conn = mm.pool.get().await?;
+
+        let tools = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .inner_join(
+                schema::tools_recipes::table
+                    .on(schema::tools_recipes::recipe_id.eq(schema::recipes::id)),
+            )
+            .inner_join(
+                schema::tools::table.on(schema::tools::id.eq(schema::tools_recipes::tool_id)),
+            )
+            .select(schema::tools::name)
+            .order(schema::tools::name.asc())
+            .distinct()
+            .load::<String>(&mut conn)
+            .await?;
+
+        Ok(tools)
+    }
+
+    /// Fetches all the sources belonging to a user.
+    pub async fn fetch_sources(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
+        let mut conn = mm.pool.get().await?;
+
+        let sources = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .select(schema::recipes::source)
+            .order(schema::recipes::source.asc())
+            .distinct()
+            .load::<String>(&mut conn)
+            .await?;
+
+        Ok(sources
+            .into_iter()
+            .map(|s| match Url::parse(&s) {
+                Ok(url) => url.host_str().map(|s| s.to_string()).unwrap_or_else(|| s),
+                Err(_) => s,
+            })
+            .collect())
     }
 }
 
@@ -412,5 +559,120 @@ mod tests {
             pretty_assertions::assert_eq!(got, expected);
             Ok(())
         }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_categories_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user = User::all(&state.mm).await?[0].clone();
+        let category1 = String::from("late snack");
+        let category2 = String::from("dinner");
+        let mut recipe = a_complete_recipe_for_create();
+        recipe.category = Some(category1.clone());
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let mut recipe = a_complete_recipe_for_create();
+        recipe.name = "Hello".to_string();
+        recipe.category = Some(category2.clone());
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let categories = Recipe::fetch_categories(&state.mm, user.id).await?;
+
+        pretty_assertions::assert_eq!(categories, vec![category2, category1]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_fetch_cuisines_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user = User::all(&state.mm).await?[0].clone();
+        let cuisine1 = String::from("italian");
+        let cuisine2 = String::from("mexican");
+        let mut recipe = a_complete_recipe_for_create();
+        recipe.cuisine = Some(cuisine1.clone());
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let mut recipe = a_complete_recipe_for_create();
+        recipe.name = "Hello".to_string();
+        recipe.cuisine = Some(cuisine2.clone());
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let cuisines = Recipe::fetch_cuisines(&state.mm, user.id).await?;
+
+        pretty_assertions::assert_eq!(cuisines, vec![cuisine1, cuisine2]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_fetch_ingredients_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user = User::all(&state.mm).await?[0].clone();
+        let recipe = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let ingredients = Recipe::fetch_ingredients(&state.mm, user.id).await?;
+
+        pretty_assertions::assert_eq!(
+            ingredients,
+            vec![
+                "blue spinach".to_string(),
+                "cinnamon".to_string(),
+                "lemon juice".to_string(),
+                "top quality chicken filet".to_string(),
+            ]
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_fetch_keywords_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user = User::all(&state.mm).await?[0].clone();
+        let recipe = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let keywords = Recipe::fetch_keywords(&state.mm, user.id).await?;
+
+        pretty_assertions::assert_eq!(
+            keywords,
+            vec!["tofu".to_string(), "vegetarian".to_string(),]
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_fetch_tools_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user = User::all(&state.mm).await?[0].clone();
+        let recipe = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let tools = Recipe::fetch_tools(&state.mm, user.id).await?;
+
+        pretty_assertions::assert_eq!(tools, vec!["frying pan".to_string(), "wok".to_string(),]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_fetch_sources_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user = User::all(&state.mm).await?[0].clone();
+        let recipe = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+        let sources = Recipe::fetch_sources(&state.mm, user.id).await?;
+
+        pretty_assertions::assert_eq!(sources, vec!["www.allrecipes.com".to_string(),]);
+        Ok(())
     }
 }

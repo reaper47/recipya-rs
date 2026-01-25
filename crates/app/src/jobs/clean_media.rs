@@ -60,7 +60,7 @@ async fn fetch_videos(
             Vec::new()
         })
         .into_iter()
-        .map(|uuid| PathBuf::from(format!("{:?}/{uuid}.webp", &data_dir.videos)))
+        .map(|uuid| data_dir.videos.join(format!("{uuid}.webp")))
         .collect())
 }
 
@@ -87,7 +87,7 @@ async fn fetch_images(
         })
         .into_iter()
         .flatten()
-        .map(|uuid| PathBuf::from(format!("{:?}/{uuid}.webp", &data_dir.images.root)))
+        .map(|uuid| data_dir.images.root.join(format!("{uuid}.webp")))
         .collect())
 }
 

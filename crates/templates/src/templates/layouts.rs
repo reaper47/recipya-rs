@@ -2,7 +2,7 @@ use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use super::core::{head, toast, toast_ws};
 use super::icons::{
-    icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag, icon_pencil,
+    icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
 };
 use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
@@ -185,7 +185,7 @@ pub fn main(
                 div #fullscreen-loader class="htmx-indicator" {}
                 main class="flex w-full flex-1 min-h-0" {
                     @if data.is_authenticated {
-                        (render_nav(path))
+                        (render_nav(path, data_layout))
                     }
                     div #content class="flex-1 min-h-0" {
                         (content)
@@ -217,9 +217,9 @@ pub(super) fn render_recipe_button() -> Markup {
 }
 
 /// Renders the desktop navigation sidebar.
-pub(super) fn render_nav(path: &str) -> Markup {
+pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
     html! {
-        aside #desktop-nav {
+        aside #desktop-nav class="hidden" data-layout=(menu_data_layout) {
             ul class="menu w-full menu-sm bg-base-300 rounded-box h-full gap-1" style="border-radius: 0" {
                 li #recipes-sidebar-recipes
                     class={

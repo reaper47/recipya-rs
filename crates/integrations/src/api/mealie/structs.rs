@@ -75,7 +75,6 @@ pub struct MealieUser {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
 pub struct UserToken {
     pub name: String,
     pub id: u32,
@@ -103,7 +102,6 @@ pub struct MealieInstruction {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
 pub struct MealieNutrition {
     pub calories: Option<String>,
     pub carbohydrate_content: Option<String>,
@@ -171,7 +169,6 @@ impl From<MealieNutrition> for NutritionInformation {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
 pub struct MealieNote {
     pub title: String,
     pub text: String,
@@ -179,7 +176,6 @@ pub struct MealieNote {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
 pub struct MealieComment {
     pub text: String,
     pub created_at: String,

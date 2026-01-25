@@ -49,6 +49,7 @@ support.workspace = true
 time.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+url.workspace = true
 uuid.workspace = true
 whatlang.workspace = true
 winnow.workspace = true

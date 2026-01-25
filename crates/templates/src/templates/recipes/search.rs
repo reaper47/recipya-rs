@@ -47,11 +47,11 @@ pub fn search_results(
 /// Renders the searchbar component.
 pub fn search_bar(data: &Data) -> Markup {
     html! {
-        div class="flex flex-col" {
-            section class="grid justify-center px-4 pt-4" {
+        div class="flex flex-col pb-2" {
+            section class="grid w-full max-w-xl mx-auto px-4 pt-4" {
                 search {
                     form
-                        class="w-72 flex md:w-96"
+                        class="flex w-full"
                         hx-get="/recipes/search"
                         hx-vals=(
                             if let Some(p) = &data.pagination {

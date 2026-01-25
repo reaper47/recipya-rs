@@ -5,13 +5,14 @@ use axum::{Router, middleware};
 use app::state::AppState;
 
 use crate::handlers::general::{
-    index_handler, upload_note_image, user_initials_handler, ws_handler,
+    index_handler, search_suggestions_handler, upload_note_image, user_initials_handler, ws_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
 
 /// Defines the routes for general endpoints of the web application.
 pub(super) fn general_routes(state: AppState) -> Router<AppState> {
     let protected = Router::new()
+        .route("/search-suggestions", get(search_suggestions_handler))
         .route(
             "/upload/note-image",
             post(upload_note_image).layer(DefaultBodyLimit::max(10 * 1024 * 1024)),
@@ -33,7 +34,9 @@ mod tests {
     use axum::http::Method;
     use axum_test::multipart::{MultipartForm, Part};
     use serde_json::json;
-    use testing::utils::{TestDb, assert_must_be_logged_in, build_server_logged_in};
+    use testing::utils::{
+        TestDb, assert_must_be_logged_in, build_server_logged_in, create_app_state,
+    };
     use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -58,6 +61,160 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header("Location", "/recipes");
+            Ok(())
+        }
+    }
+
+    mod tests_search_suggestions {
+        use config::Config;
+        use models::{
+            Recipe, recipe::structs::test_utils::a_complete_recipe_for_create, user::User,
+        };
+
+        use super::*;
+
+        fn url(term: &str) -> String {
+            format!("/search-suggestions?q={term}")
+        }
+
+        #[tokio::test]
+        async fn test_categories_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let _ = insert_basic_recipe(config).await;
+
+            let res = server.get(&url("cat:")).await;
+
+            res.assert_status_ok();
+            pretty_assertions::assert_eq!(
+                res.text()
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                r#"<li><a tabindex="0" _="on click set #search-recipes.value to 'cat:dinner' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">dinner</a></li>"#
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_cuisines_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let _ = insert_basic_recipe(config).await;
+            let mut recipe = a_complete_recipe_for_create();
+            recipe.name = "Test Recipe".into();
+            recipe.cuisine = Some("Italian".into());
+            let user = User::all(&state.mm).await?[0].clone();
+            let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+
+            let res = server.get(&url("cui:")).await;
+
+            res.assert_status_ok();
+            pretty_assertions::assert_eq!(
+                res.text()
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                r#"<li><a tabindex="0" _="on click set #search-recipes.value to 'cui:italian' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">italian</a></li><li><a tabindex="0" _="on click set #search-recipes.value to 'cui:thai' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">thai</a></li>"#
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_ingredients_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let _ = insert_basic_recipe(config).await;
+
+            let res = server.get(&url("ing:")).await;
+
+            res.assert_status_ok();
+            pretty_assertions::assert_eq!(
+                res.text()
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                r#"<li><a tabindex="0" _="on click set #search-recipes.value to 'ing:blue spinach' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">blue spinach</a></li><li><a tabindex="0" _="on click set #search-recipes.value to 'ing:cinnamon' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">cinnamon</a></li><li><a tabindex="0" _="on click set #search-recipes.value to 'ing:lemon juice' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">lemon juice</a></li><li><a tabindex="0" _="on click set #search-recipes.value to 'ing:top quality chicken filet' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">top quality chicken filet</a></li>"#
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_keywords_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let _ = insert_basic_recipe(config).await;
+
+            let res = server.get(&url("kw:")).await;
+
+            res.assert_status_ok();
+            pretty_assertions::assert_eq!(
+                res.text()
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                r#"<li><a tabindex="0" _="on click set #search-recipes.value to 'kw:tofu' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">tofu</a></li><li><a tabindex="0" _="on click set #search-recipes.value to 'kw:vegetarian' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">vegetarian</a></li>"#
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_tools_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let _ = insert_basic_recipe(config).await;
+
+            let res = server.get(&url("tool:")).await;
+
+            res.assert_status_ok();
+            pretty_assertions::assert_eq!(
+                res.text()
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                r#"<li><a tabindex="0" _="on click set #search-recipes.value to 'tool:frying pan' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">frying pan</a></li><li><a tabindex="0" _="on click set #search-recipes.value to 'tool:wok' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">wok</a></li>"#
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_sources_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let _ = insert_basic_recipe(config).await;
+
+            let res = server.get(&url("src:")).await;
+
+            res.assert_status_ok();
+            pretty_assertions::assert_eq!(
+                res.text()
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                r#"<li><a tabindex="0" _="on click set #search-recipes.value to 'src:www.allrecipes.com' then add .hidden to #search-suggestions-menu then call #search-recipes.focus() then set #search-recipes.selectionStart to #search-recipes.value.length then set #search-recipes.selectionEnd to #search-recipes.value.length">www.allrecipes.com</a></li>"#
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_invalid_term_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let _ = insert_basic_recipe(config).await;
+
+            let res = server.get(&url("source:")).await;
+
+            res.assert_status_ok();
+            assert!(res.text().is_empty());
+            Ok(())
+        }
+
+        async fn insert_basic_recipe(config: Config) -> Result<()> {
+            let state = create_app_state(config.clone()).await;
+            let user = User::all(&state.mm).await?[0].clone();
+            let recipe = a_complete_recipe_for_create();
+            let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
             Ok(())
         }
     }

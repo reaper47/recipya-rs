@@ -44,6 +44,7 @@ pub fn view_recipe(
                  (view.recipe_details.recipe.name) " | Recipya"
             }
             span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
+            aside #desktop-nav data-layout="no-aside" hx-swap-oob="true" {}
             (view_recipe_helper(fs_support, data_dir, &data)?)
         } @else {
             (layouts::main(

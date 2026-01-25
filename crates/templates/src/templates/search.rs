@@ -10,28 +10,53 @@ use super::icons::{
 /// Renders the searchbar.
 pub(super) fn searchbar(data: &SearchbarData) -> Markup {
     html! {
-        div {
-            label class="input input-sm flex justify-between px-0 gap-2 z-20" {
+        div class="relative w-full" {
+            label class="input input-sm flex justify-between px-0 gap-2 z-20 w-full" {
                 button #search-shortcut type="button" class="pl-2" popovertarget="search-help" _="on click toggle .hidden on #search-help" {
                     (icon_information_circle(true))
                 }
-
-                input #search-recipes class="w-full" type="search" name="q" placeholder="Search for recipes..." value=(data.term)
-                        _=(PreEscaped("on keyup
-                             if event.target.value !== '' then
-                                 remove .md:block from #search-shortcut
-                             else
-                                 add .md:block to #search-shortcut then
-                                 if (event.key is not 'Delete' and not event.key.startsWith('Arrow')) then
-                                     send submit to closest <form/> then
-                                 end
-                             end"));
+                input #search-recipes
+                    type="search"
+                    name="q"
+                    placeholder="Search for recipes..."
+                    autocomplete="off"
+                    value=(data.term)
+                    list="search-suggestions"
+                    hx-get="/search-suggestions"
+                    hx-trigger="keyup changed delay:200ms"
+                    hx-target="#search-suggestions-menu"
+                    hx-include="this"
+                    hx-swap="innerHTML"
+                    hx-push-url="false"
+                    _=(PreEscaped("
+                        on keyup
+                            if event.target.value !== '' then
+                                remove .md:block from #search-shortcut
+                            else
+                                add .md:block to #search-shortcut then
+                                if (event.key is not 'Delete' and not event.key.startsWith('Arrow')) then
+                                    send submit to closest <form/> then
+                                end
+                            end"));
 
                 button type="submit" class="px-2 btn btn-sm btn-primary" {
                     (icon_magnifying_glass())
                     span class="sr-only" { "Search" }
                 }
             }
+
+            ul #search-suggestions-menu
+                class="hidden grid absolute top-full left-1/2 -translate-x-1/2 mt-1 menu bg-base-300 rounded-box shadow-lg z-50 max-h-60 overflow-y-auto w-full"
+                _=(PreEscaped("
+                    on htmx:afterSwap
+                        if my.children.length > 0 then
+                            remove .hidden from me
+                        else
+                            add .hidden to me
+                        end
+
+                    on click from elsewhere
+                        add .hidden to me")) {}
         }
         div class="dropdown dropdown-left ml-1" {
             div tabindex="0" role="button" class="btn btn-sm p-1" {
@@ -101,27 +126,27 @@ pub(super) fn search_help() -> Markup {
     let data = [
         ("Any field", "big green squash"),
         ("By category", "cat:dinner"),
-        ("Multiple categories", "cat:breakfast,dinner"),
-        ("Subcategory", "cat:beverages:cocktails"),
-        ("Any field of category", "chicken cat:dinner"),
         ("By name", "name:chicken kyiv"),
         ("By name and category", "name:chicken kyiv cat:lunch"),
+        ("By cuisine", "cui:ukrainian"),
+        ("By ingredient", "ing:onions"),
+        ("By instruction", "ins:preheat oven 350"),
+        ("By keyword", "kw:biscuits"),
+        ("By tool", "tool:wok"),
+        ("By source", "src:allrecipes.com"),
         (
             "Any field, name and category",
             "best name:chicken kyiv cat:lunch",
         ),
-        ("By cuisine", "cuisine:ukrainian"),
-        ("Multiple cuisines", "cuisine:ukrainian,japanese"),
-        ("By ingredient", "ing:onions"),
+        ("Subcategory", "cat:beverages:cocktails"),
+        ("Any field of category", "chicken cat:dinner"),
+        ("Multiple categories", "cat:breakfast,dinner"),
+        ("Multiple cuisines", "cui:ukrainian,japanese"),
         ("Multiple ingredients", "ing:olive oil,thyme,butter"),
-        ("By instruction", "ins:preheat oven 350"),
         ("Multiple instructions", "ins:preheat oven 350,melt butter"),
-        ("By keyword", "kw:biscuits"),
         ("Multiple keywords", "kw:biscuits,mardi gras"),
-        ("By tool", "tool:wok"),
-        ("Multiple tools", "tool:wok,blender"),
-        ("By source", "src:allrecipes.com"),
         ("Multiple sources", "src:allrecipes.com,tasteofhome.com"),
+        ("Multiple tools", "tool:wok,blender"),
     ];
 
     html! {
