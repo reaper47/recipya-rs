@@ -1,21 +1,26 @@
 use std::{
     fs,
-    io::Write,
+    io::{Read, Write},
+    path::PathBuf,
     sync::{Arc, OnceLock},
 };
 
 use axum::body::Bytes;
+use flate2::read::GzDecoder;
 use schema_org::Recipe;
-use support::fs::MockFs;
 use tracing::error;
 
+use support::fs::MockFs;
+
 use super::websites::websites_for_tests;
-use crate::client::HttpClient;
 use crate::websites::Website;
 use crate::{Result, Scraper};
+use crate::{client::HttpClient, tests::support::websites::website_urls_for_test};
 
 /// A mock HTTP client for use in tests to avoid sending real HTTP requests.
 pub struct MockHttpClient;
+
+const BASE_HTML_DIR: &str = "crates/recipya-scraper/src/tests/data/html";
 
 #[async_trait::async_trait]
 impl HttpClient for MockHttpClient {
@@ -24,12 +29,18 @@ impl HttpClient for MockHttpClient {
     }
 
     fn get(&self, host: Website, _url: &str) -> Result<String> {
-        // TODO: 'tests/data/html should be a constant.
-        let path = std::env::current_dir()
-            .unwrap()
-            .join(format!("tests/data/html/{host}.html"));
-        let content = fs::read_to_string(path).unwrap();
-        Ok(content)
+        let path = get_html_file_path(&host);
+        let bytes = fs::read(&path).unwrap();
+
+        if bytes.len() >= 2 && bytes[0] == 0x1f && bytes[1] == 0x8b {
+            let mut d = GzDecoder::new(&bytes[..]);
+            let mut s = String::new();
+            d.read_to_string(&mut s).unwrap();
+            Ok(s)
+        } else {
+            let content = String::from_utf8_lossy(&bytes).to_string();
+            Ok(content)
+        }
     }
 
     fn get_bytes(&self, _url: &str) -> Result<Bytes> {
@@ -46,30 +57,39 @@ fn mock_scraper() -> &'static Scraper {
 
 /// Fetches the recipe from a website and stores the content in an HTML file.
 pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
-    let url = match websites_for_tests().get(&website) {
-        Some(urls) => urls.get(number).expect("url to test not in vector of urls"),
-        None => panic!("website '{website}' not found in map"),
-    };
+    let urls = website_urls_for_test(&website);
+    let url = urls.get(number).expect("url to test not in vector of urls");
 
-    let path = std::env::current_dir()
-        .unwrap()
-        .join(format!("tests/data/html/{website}.html"));
+    let path = get_html_file_path(&website);
 
     if !path.exists() {
         let client = reqwest::blocking::Client::new();
-        match client.get(url).send() {
+        match client.get(*url).send() {
             Ok(res) => {
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes()?)
-                    .inspect_err(|err| error!("Could not write {}: {:?}", website, err))
+                    .inspect_err(|err| error!("Could not write {website}: {err}"))
                     .unwrap();
             }
-            Err(err) => error!("Could not fetch {}: {:?}", website, err),
+            Err(err) => error!("Could not fetch {website}: {err}"),
         };
     }
 
     mock_scraper().scrape(url)
+}
+
+fn get_html_file_path(website: &Website) -> PathBuf {
+    let path = std::env::current_dir()
+        .unwrap()
+        .join(format!("{BASE_HTML_DIR}/{website}.html"));
+
+    let path_str = path.to_string_lossy().replace(
+        "/crates/recipya-scraper/crates/recipya-scraper",
+        "/crates/recipya-scraper",
+    );
+
+    PathBuf::from(path_str)
 }
 
 /// Scrapes some test websites for use in tests outside the scraper.
@@ -89,7 +109,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
 
     let path = std::env::current_dir()
         .unwrap()
-        .join(format!("tests/data/html/{website}.html"));
+        .join(format!("{BASE_HTML_DIR}/{website}.html"));
 
     if !path.exists() {
         let client = reqwest::Client::new();

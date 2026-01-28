@@ -686,6 +686,11 @@ VALUES
   ('stews');
 
 INSERT INTO
+  cuisines (name)
+VALUES
+  ('lebanese');
+
+INSERT INTO
   sections (name)
 VALUES
   ('');

@@ -20,6 +20,7 @@ pub struct Website {
     pub id: i64,
     pub host: String,
     pub url: String,
+    pub cuisine: Option<i64>,
     pub updated_at: chrono::NaiveDateTime,
 }
 
@@ -103,18 +104,21 @@ mod tests {
                 id: 1,
                 url: "https://15gram.be/recepten".into(),
                 host: "15gram.be".into(),
+                cuisine: None,
                 updated_at: DateTime::from_timestamp(0, 0).unwrap().naive_utc(),
             },
             Website {
                 id: 2,
                 url: "https://www.750g.com".into(),
                 host: "750g.com".into(),
+                cuisine: None,
                 updated_at: DateTime::from_timestamp(0, 0).unwrap().naive_utc(),
             },
             Website {
                 id: 3,
                 url: "https://101cookbooks.com".into(),
                 host: "101cookbooks.com".into(),
+                cuisine: None,
                 updated_at: DateTime::from_timestamp(0, 0).unwrap().naive_utc(),
             },
         ]

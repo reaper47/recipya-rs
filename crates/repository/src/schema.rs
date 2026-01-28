@@ -617,6 +617,7 @@ diesel::table! {
         id -> Int8,
         host -> Text,
         url -> Text,
+        cuisine -> Nullable<Int8>,
         updated_at -> Timestamptz,
     }
 }
@@ -675,6 +676,7 @@ diesel::joinable!(users_keywords -> users (user_id));
 diesel::joinable!(users_recipes -> recipes (recipe_id));
 diesel::joinable!(users_recipes -> users (user_id));
 diesel::joinable!(videos_recipes -> recipes (recipe_id));
+diesel::joinable!(websites -> cuisines (cuisine));
 
 diesel::allow_tables_to_appear_in_same_query!(
     additional_images_recipe,

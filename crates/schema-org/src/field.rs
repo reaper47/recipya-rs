@@ -325,6 +325,7 @@ pub type RecipeAuthorFieldEnum = FieldEnum6;
 impl RecipeAuthorFieldEnum {
     pub fn new_person(name: &str) -> Self {
         Self::Person(Person {
+            r#type: AtType::Person.to_opt(),
             name: vec![name.to_string()],
             ..Default::default()
         })

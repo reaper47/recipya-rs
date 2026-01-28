@@ -7,13 +7,30 @@ where
     D: Deserializer<'de>,
     T: DeserializeOwned,
 {
-    use serde::de::Error;
     use serde_json::Value;
 
     let value = Value::deserialize(deserializer)?;
+
     match value {
-        Value::Array(arr) => serde_json::from_value(Value::Array(arr)).map_err(Error::custom),
-        other => Ok(vec![serde_json::from_value(other).map_err(Error::custom)?]),
+        Value::Null => Ok(Vec::new()),
+        Value::String(ref s) if s.trim().is_empty() => Ok(Vec::new()),
+        Value::Array(arr) if arr.is_empty() => Ok(Vec::new()),
+        Value::Array(arr) => {
+            let items: Vec<T> = arr
+                .into_iter()
+                .filter_map(|v| match &v {
+                    Value::Null => None,
+                    Value::String(s) if s.trim().is_empty() => None,
+                    _ => serde_json::from_value(v).ok(),
+                })
+                .collect();
+            Ok(items)
+        }
+
+        other => match serde_json::from_value::<T>(other) {
+            Ok(item) => Ok(vec![item]),
+            Err(_) => Ok(Vec::new()),
+        },
     }
 }
 

@@ -3,6 +3,7 @@ mod custom;
 mod error;
 
 pub mod tests;
+
 pub(crate) mod websites;
 
 pub use client::{AppHttpClient, HttpClient};
@@ -11,11 +12,13 @@ pub use error::{Error, Result};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::websites::Website;
 use schema_org::{AtType, GraphObject, Recipe};
+use tracing::error;
+
 use scraper::{Html, Selector};
 use support::fs::FsSupport;
-use tracing::error;
+
+use crate::websites::Website;
 
 /// Represents the object responsible for scraping recipes from websites.
 #[derive(Clone)]
@@ -35,30 +38,53 @@ impl Scraper {
 
     /// Scrapes the given URL and returns a `RecipeSchema`.
     pub fn scrape(&self, url: &str) -> Result<Recipe> {
-        let content = self.client.get(Website::from(url)?, url)?;
+        let website = Website::from(url)?;
+        let content = self.client.get(website, url)?;
         let doc = Html::parse_document(&content);
 
+        match self.parse_ld_json(url, &doc, &website) {
+            Ok(recipe) => Ok(recipe),
+            Err(Error::DomainNotImplemented) => website.parse_manually(&doc, url),
+            Err(err) => Err(err),
+        }
+    }
+
+    fn parse_ld_json(&self, url: &str, doc: &Html, website: &Website) -> Result<Recipe> {
         let sel = Selector::parse(r#"script[type='application/ld+json']"#)?;
+
         doc.select(&sel)
             .filter_map(|el| {
-                let json = el.inner_html();
+                let json = &el
+                    .inner_html()
+                    .trim()
+                    .split_whitespace()
+                    .collect::<Vec<_>>()
+                    .join(" ");
+
                 serde_json::from_str::<Recipe>(&json)
-                    .map_err(|err| {
+                    .inspect_err(|err| {
                         error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
-                        err
                     })
                     .ok()
             })
             .find_map(|recipe| {
-                recipe.graph.and_then(|graph| {
-                    graph.into_iter().find_map(|item| match item {
+                if recipe.r#type != AtType::Recipe.to_opt() {
+                    return None;
+                }
+
+                match recipe.graph {
+                    Some(graph) => graph.into_iter().find_map(|item| match item {
                         GraphObject::Recipe(mut r) => {
                             r.r#type = AtType::Recipe.to_opt();
                             Some(*r)
                         }
                         _ => None,
-                    })
-                })
+                    }),
+                    None => match website {
+                        Website::ZabihaHalal => Some(custom::zabihahalal::add_info(doc, recipe)),
+                        _ => Some(recipe),
+                    },
+                }
             })
             .ok_or(Error::DomainNotImplemented)
     }
@@ -74,34 +100,3 @@ impl Scraper {
         Ok(path)
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     // mod tests_scraper_0_to_9;
-//     // mod tests_scraper_a;
-//     // mod tests_scraper_b;
-//     // mod tests_scraper_d;
-//     // mod tests_scraper_e;
-//     // mod tests_scraper_f;
-//     // mod tests_scraper_g;
-//     // mod tests_scraper_h;
-//     // mod tests_scraper_i;
-//     // mod tests_scraper_j;
-//     // mod tests_scraper_k;
-//     // mod tests_scraper_l;
-//     // mod tests_scraper_m;
-//     // mod tests_scraper_o;
-//     // mod tests_scraper_n;
-//     // mod tests_scraper_p;
-//     // mod tests_scraper_q;
-//     // mod tests_scraper_r;
-//     // mod tests_scraper_s;
-//     // mod tests_scraper_t;
-//     // mod tests_scraper_u;
-//     // mod tests_scraper_v;
-//     // mod tests_scraper_w;
-//     // mod tests_scraper_y;
-//     // mod tests_scraper_z;
-// }

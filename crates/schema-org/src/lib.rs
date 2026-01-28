@@ -132,12 +132,14 @@ pub enum AtType {
     CreativeWork,
     Duration,
     Energy,
+    HowToStep,
     HowToTool,
     ImageObject,
     ItemList,
     ListItem,
     MusicAlbum,
     NutritionInformation,
+    Person,
     QuantitativeValue,
     #[default]
     Recipe,
@@ -157,12 +159,14 @@ impl Display for AtType {
                 AtType::Energy => "Energy".to_string(),
                 AtType::Recipe => "Recipe".to_string(),
                 AtType::AggregateRating => "AggregateRating".to_string(),
+                AtType::HowToStep => "HowToStep".to_string(),
                 AtType::HowToTool => "HowToTool".to_string(),
                 AtType::ImageObject => "ImageObject".to_string(),
                 AtType::ItemList => "ItemList".to_string(),
                 AtType::ListItem => "ListItem".to_string(),
                 AtType::MusicAlbum => "MusicAlbum".to_string(),
                 AtType::NutritionInformation => "NutritionInformation".to_string(),
+                AtType::Person => "Person".to_string(),
                 AtType::QuantitativeValue => "QuantitativeValue".to_string(),
                 AtType::Review => "Review".to_string(),
                 AtType::VideoObject => "VideoObject".to_string(),
@@ -180,12 +184,14 @@ impl AtType {
             AtType::CreativeWork => Some(Self::CreativeWork.to_string()),
             AtType::Duration => Some(Self::Duration.to_string()),
             AtType::Energy => Some(Self::Energy.to_string()),
+            AtType::HowToStep => Some(Self::HowToStep.to_string()),
             AtType::HowToTool => Some(Self::HowToTool.to_string()),
             AtType::ImageObject => Some(Self::ImageObject.to_string()),
             AtType::ItemList => Some(Self::ItemList.to_string()),
             AtType::ListItem => Some(Self::ListItem.to_string()),
             AtType::MusicAlbum => Some(Self::MusicAlbum.to_string()),
             AtType::NutritionInformation => Some(Self::NutritionInformation.to_string()),
+            AtType::Person => Some(Self::Person.to_string()),
             AtType::QuantitativeValue => Some(Self::QuantitativeValue.to_string()),
             AtType::Recipe => Some(Self::Recipe.to_string()),
             AtType::Review => Some(Self::Review.to_string()),
@@ -206,6 +212,7 @@ mod tests {
         assert_eq!(AtType::Energy.to_string(), "Energy");
         assert_eq!(AtType::Recipe.to_string(), "Recipe");
         assert_eq!(AtType::AggregateRating.to_string(), "AggregateRating");
+        assert_eq!(AtType::HowToStep.to_string(), "HowToStep");
         assert_eq!(AtType::HowToTool.to_string(), "HowToTool");
         assert_eq!(AtType::ImageObject.to_string(), "ImageObject");
         assert_eq!(AtType::ItemList.to_string(), "ItemList");
@@ -234,6 +241,7 @@ mod tests {
             AtType::AggregateRating.to_opt(),
             Some("AggregateRating".to_string())
         );
+        assert_eq!(AtType::HowToStep.to_opt(), Some("HowToStep".to_string()));
         assert_eq!(AtType::HowToTool.to_opt(), Some("HowToTool".to_string()));
         assert_eq!(
             AtType::ImageObject.to_opt(),
