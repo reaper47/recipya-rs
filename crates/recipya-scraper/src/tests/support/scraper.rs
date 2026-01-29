@@ -12,7 +12,6 @@ use tracing::error;
 
 use support::fs::MockFs;
 
-use super::websites::websites_for_tests;
 use crate::websites::Website;
 use crate::{Result, Scraper};
 use crate::{client::HttpClient, tests::support::websites::website_urls_for_test};
@@ -102,10 +101,10 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         _ => Website::AddAPinchDotCom,
     };
 
-    let url = match websites_for_tests().get(&website) {
-        Some(urls) => urls.first().expect("url to test not in vector of urls"),
-        None => panic!("website '{website}' not found in map"),
-    };
+    let url = website_urls_for_test(&website)
+        .get(0)
+        .cloned()
+        .expect("url to test not in vector of urls");
 
     let path = std::env::current_dir()
         .unwrap()

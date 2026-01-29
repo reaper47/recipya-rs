@@ -12,7 +12,7 @@ pub use error::{Error, Result};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use schema_org::{AtType, GraphObject, Recipe};
+use schema_org::{AtType, GraphObject, Recipe, at_context};
 use tracing::error;
 
 use scraper::{Html, Selector};
@@ -43,7 +43,13 @@ impl Scraper {
         let doc = Html::parse_document(&content);
 
         match self.parse_ld_json(url, &doc, &website) {
-            Ok(recipe) => Ok(recipe),
+            Ok(recipe) => {
+                if recipe.r#type == AtType::Recipe.to_opt() {
+                    Ok(recipe)
+                } else {
+                    website.parse_manually(&doc, url)
+                }
+            }
             Err(Error::DomainNotImplemented) => website.parse_manually(&doc, url),
             Err(err) => Err(err),
         }
@@ -61,18 +67,28 @@ impl Scraper {
                     .collect::<Vec<_>>()
                     .join(" ");
 
-                serde_json::from_str::<Recipe>(&json)
-                    .inspect_err(|err| {
-                        error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
-                    })
-                    .ok()
+                let value: serde_json::Value = serde_json::from_str(&json).ok()?;
+
+                match value.get("@type").and_then(|v| v.as_str()) {
+                    Some(_) => serde_json::from_str::<Recipe>(&json)
+                        .inspect_err(|err| {
+                            error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
+                        })
+                        .ok(),
+                    None => {
+                        if let Some(graph) = value.get("@graph").and_then(|g| g.as_array()) {
+                            for item in graph {
+                                if item.get("@type").and_then(|t| t.as_str()) == Some("Recipe") {
+                                    return serde_json::from_value::<Recipe>(item.clone()).ok();
+                                }
+                            }
+                        }
+                        return None;
+                    }
+                }
             })
             .find_map(|recipe| {
-                if recipe.r#type != AtType::Recipe.to_opt() {
-                    return None;
-                }
-
-                match recipe.graph {
+                let mut recipe = match recipe.graph {
                     Some(graph) => graph.into_iter().find_map(|item| match item {
                         GraphObject::Recipe(mut r) => {
                             r.r#type = AtType::Recipe.to_opt();
@@ -81,10 +97,21 @@ impl Scraper {
                         _ => None,
                     }),
                     None => match website {
+                        Website::ZaatarAndZaytoun => {
+                            Some(custom::zaatarandzaytoun::add_info(doc, recipe))
+                        }
                         Website::ZabihaHalal => Some(custom::zabihahalal::add_info(doc, recipe)),
+                        Website::ZagLeft => Some(custom::zagleft::add_info(doc, recipe)),
                         _ => Some(recipe),
                     },
-                }
+                };
+
+                recipe.as_mut().map(|r| {
+                    r.context = at_context();
+                    r.is_part_of = vec![]; // Note: It would be nice if the serde deserialization skips deserialization if default.
+                    r.url = vec![url.into()]
+                });
+                recipe
             })
             .ok_or(Error::DomainNotImplemented)
     }

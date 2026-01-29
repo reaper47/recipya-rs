@@ -43,13 +43,18 @@ pub type RecipeSchemaVersionFieldEnum = String;
 
 /// Enumeration of possible values for the @graph field in JSON-LD used to group
 /// multiple related entities in a single document.
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum GraphObject {
     Recipe(Box<Recipe>),
-    #[default]
-    Unknown,
+    Unknown(serde_json::Value),
+}
+
+impl Default for GraphObject {
+    fn default() -> Self {
+        GraphObject::Unknown(serde_json::Value::Null)
+    }
 }
 
 ///<https://schema.org/Recipe>

@@ -688,7 +688,8 @@ VALUES
 INSERT INTO
   cuisines (name)
 VALUES
-  ('lebanese');
+  ('lebanese'),
+  ('vegetarian');
 
 INSERT INTO
   sections (name)

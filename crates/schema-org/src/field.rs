@@ -323,8 +323,18 @@ pub type RecipeProducerFieldEnum = FieldEnum6;
 pub type RecipeAuthorFieldEnum = FieldEnum6;
 
 impl RecipeAuthorFieldEnum {
+    /// Creates a new person.
     pub fn new_person(name: &str) -> Self {
         Self::Person(Person {
+            r#type: AtType::Person.to_opt(),
+            name: vec![name.to_string()],
+            ..Default::default()
+        })
+    }
+
+    /// Creates a new organization.
+    pub fn new_org(name: &str) -> Self {
+        Self::Organization(Organization {
             r#type: AtType::Person.to_opt(),
             name: vec![name.to_string()],
             ..Default::default()

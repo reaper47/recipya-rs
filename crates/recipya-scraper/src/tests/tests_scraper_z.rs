@@ -1,12 +1,13 @@
 #[cfg(test)]
 use schema_org::{
-    AggregateRating, AtType, CreativeWork, DurationOrText, NutritionInformation, Organization,
-    Recipe, at_context,
+    AggregateRating, AtType, CreativeWork, DurationOrText, Energy, Mass, NutritionInformation,
+    Organization, Rating, Recipe, Review, at_context,
     enums::RestrictedDietEnum,
     field::{
-        RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
-        RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
-        RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum,
+        AggregateRatingRatingValueFieldEnum, RatingRatingValueFieldEnum, RecipeAuthorFieldEnum,
+        RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeKeywordsFieldEnum,
+        RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+        RecipeRecipeYieldFieldEnum, ReviewAuthorFieldEnum,
     },
 };
 
@@ -19,15 +20,15 @@ type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 #[test]
 #[tracing_test::traced_test]
 #[ignore = "Needs manual testing"]
-fn test_zaatar_and_zaytoun_dot_com() -> Result<()> {
-    let got = scrape(Website::ZaatarAndZaytounDotCom, 0)?;
+fn test_zaatar_and_zaytoun_ok() -> Result<()> {
+    let got = scrape(Website::ZaatarAndZaytoun, 0)?;
 
     let want = Recipe {
         context: at_context(),
         r#type: AtType::Recipe.to_opt(),
         aggregate_rating: vec![AggregateRating::new(5.0, 1)],
-        author: vec![RecipeAuthorFieldEnum::new_person("Zaatar and Zaytoun")],
-        cook_time: vec![DurationOrText::Text("30 minutes".into())],
+        author: vec![RecipeAuthorFieldEnum::new_org("Zaatar and Zaytoun")],
+        cook_time: vec![DurationOrText::Text("PT30M".into())],
         date_modified: vec!["2023-08-16T09:55:44+00:00".into()],
         date_published: vec!["2023-08-05T19:42:35+00:00".into()],
         description: vec![RecipeDescriptionFieldEnum::Text(
@@ -40,13 +41,16 @@ fn test_zaatar_and_zaytoun_dot_com() -> Result<()> {
         ],
         image: vec![
             RecipeImageFieldEnum::URL(
-                "https://zaatarandzaytoun.com/wp-content/uploads/2023/06/sardines-pasta-44-scaled.jpg".into(),
+                "https://zaatarandzaytoun.com/wp-content/uploads/2023/08/sardines.jpg".into(),
             ),
             RecipeImageFieldEnum::URL(
-                "https://zaatarandzaytoun.com/wp-content/uploads/2018/09/mama-e1537703662257.jpg".into(),
+                "https://zaatarandzaytoun.com/wp-content/uploads/2023/08/sardines-500x500.jpg".into(),
             ),
             RecipeImageFieldEnum::URL(
-                "https://zaatarandzaytoun.com/wp-content/uploads/2018/09/mama-e1537703662257.jpg".into(),
+                "https://zaatarandzaytoun.com/wp-content/uploads/2023/08/sardines-500x375.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zaatarandzaytoun.com/wp-content/uploads/2023/08/sardines-480x270.jpg".into(),
             ),
         ],
         name: vec!["Pasta with Sardines and Olives".into()],
@@ -76,26 +80,50 @@ fn test_zaatar_and_zaytoun_dot_com() -> Result<()> {
             ),
         ],
         recipe_instructions: vec![
-               RecipeRecipeInstructionsFieldEnum::Text(
-                   "In a medium pot, add the roughly chopped tomatoes, a drizzle of mild olive oil, tomato concentrate and a sprinkle of salt along with the clove of garlic. Bring to the boil on medium high heat for around 20 minutes".into(),
-               ),
-               RecipeRecipeInstructionsFieldEnum::Text(
-                   "Take out the garlic clove and blitz using a hand blender. Set aside".into(),
-               ),
-               RecipeRecipeInstructionsFieldEnum::Text(
-                   "Cook the spaghetti as per packet instructions using well salted boiling water".into(),
-               ),
-               RecipeRecipeInstructionsFieldEnum::Text(
-                   "As the spaghetti is cooking, pit the olives and drain the sardines. Transfer ½ cup of tomato sauce to a deep pan and heat on low. 2 minutes before the pasta is done, transfer to the tomato sauce".into(),
-               ),
-               RecipeRecipeInstructionsFieldEnum::Text(
-                   "Add the sardines, olives, squeeze of lemon and tiny sprinkle of salt. Warm through for a few minutes, turning gently so as not to break up the sardines too much.".into(),
-               ),
-               RecipeRecipeInstructionsFieldEnum::Text(
-                   "Taste to adjust any seasoning as necessary and transfer to a pasta bowl. Drizzle on optional extra virgin olive oil or a sprinkle of cayenne pepper".into(),
-               ),
-    ],
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "In a medium pot, add the roughly chopped tomatoes, a drizzle of mild olive oil, tomato concentrate and a sprinkle of salt along with the clove of garlic. Bring to the boil on medium high heat for around 20 minutes".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Take out the garlic clove and blitz using a hand blender. Set aside".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Cook the spaghetti as per packet instructions using well salted boiling water".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "As the spaghetti is cooking, pit the olives and drain the sardines. Transfer ½ cup of tomato sauce to a deep pan and heat on low. 2 minutes before the pasta is done, transfer to the tomato sauce".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Add the sardines, olives, squeeze of lemon and tiny sprinkle of salt. Warm through for a few minutes, turning gently so as not to break up the sardines too much.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Taste to adjust any seasoning as necessary and transfer to a pasta bowl. Drizzle on optional extra virgin olive oil or a sprinkle of cayenne pepper".into(),
+            ),
+        ],
         recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("2".into())],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec!["I find your tips very useful thank you".into()],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2023-08-05".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Sarina".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+        ],
         url: vec!["https://zaatarandzaytoun.com/sardines/".into()],
         ..Default::default()
     };
@@ -106,11 +134,11 @@ fn test_zaatar_and_zaytoun_dot_com() -> Result<()> {
 #[test]
 #[tracing_test::traced_test]
 #[ignore = "Needs manual testing"]
-fn test_zabihahalal_dot_com() -> Result<()> {
+fn test_zabihahalal_ok() -> Result<()> {
     let got = scrape(Website::ZabihaHalal, 0)?;
 
     let want = Recipe {
-        context: Some(String::from("https://schema.org/")),
+        context: at_context(),
         r#type: AtType::Recipe.to_opt(),
         author: vec![RecipeAuthorFieldEnum::Organization(Organization {
             r#type: AtType::Person.to_opt(),
@@ -159,6 +187,703 @@ fn test_zabihahalal_dot_com() -> Result<()> {
             RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "10.Bake in the preheated oven for 10 minutes or until cheese looks well melted."))),
         ],
         suitable_for_diet: vec![RestrictedDietEnum::HalalDiet],
+        url: vec!["https://zabihahalal.com/recipes/bbq-chicken-pizza/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zagleft_ok() -> Result<()> {
+    let got = scrape(Website::ZagLeft, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        author: vec![RecipeAuthorFieldEnum::new_person("Joanie Zisk")],
+        cook_time: vec![DurationOrText::Text("PT18M".into())],
+        date_modified: vec!["2025-12-17T18:49:44+00:00".into()],
+        date_published: vec!["2019-12-05T15:18:00+00:00".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text("Banana Oat Pecan Muffins , a muffin recipe I guarantee your whole family will love!&amp;nbsp;".into())],
+        image: vec![
+            RecipeImageFieldEnum::URL("https://zagleft.com/wp-content/uploads/2019/12/banana-oat-pecan-muffins-zagleft-1-1-scaled.jpg".into()),
+            RecipeImageFieldEnum::URL("https://zagleft.com/wp-content/uploads/2019/12/banana-oat-pecan-muffins-zagleft-1-1-500x500.jpg".into()),
+            RecipeImageFieldEnum::URL("https://zagleft.com/wp-content/uploads/2019/12/banana-oat-pecan-muffins-zagleft-1-1-500x375.jpg".into()),
+            RecipeImageFieldEnum::URL("https://zagleft.com/wp-content/uploads/2019/12/banana-oat-pecan-muffins-zagleft-1-1-480x270.jpg".into()),
+        ],
+        name: vec!["Banana Oat Pecan Muffins".into()],
+        prep_time: vec![DurationOrText::Text("PT10M".into())],
+        recipe_category: vec!["Breakfast".into()],
+        recipe_cuisine: vec!["Muffins".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text("1 egg, (beaten)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("3/4 cup milk".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1/3 cup butter, (melted)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1/2 teaspoon vanilla".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 1/2 cup all-purpose flour".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 cup old-fashioned oats".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1/2 cup sugar".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2 teaspoons baking powder".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 teaspoon baking soda".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1/2 teaspoon salt".into()),
+            RecipeRecipeIngredientFieldEnum::Text("4 cup medium bananas ((about 1 mashed))".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1/2 cup pecans, (chopped)".into()),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text("Heat oven to 350 degrees F.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Combine the egg, milk, butter and vanilla in a large bowl. Set aside.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("In a small bowl, whisk together the flour, oats, sugar, baking powder, baking soda and salt.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Stir the dry ingredients into the wet ingredients and combine thoroughly.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Gently fold in the mashed bananas and the chopped pecans.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Lightly grease a 12-cup standard muffin tin or line with paper liners.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Divide the batter between the prepared muffin cups.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Bake for 15-18 minutes, until the tops of the muffins are golden and a toothpick inserted in the center comes out clean.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Place the pan on a wire rack and let the muffins cool in the pan for 10 minutes.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Remove from the pan and enjoy!".into()),
+        ],
+        recipe_yield: vec![
+            RecipeRecipeYieldFieldEnum::Text("12".into()),
+            RecipeRecipeYieldFieldEnum::Text("12 muffins".into()),
+        ],
+        total_time: vec![DurationOrText::Text("PT28M".into())],
+        url: vec!["https://zagleft.com/banana-oat-pecan-muffins/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zardyplants_ok() -> Result<()> {
+    let got = scrape(Website::ZardyPlants, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![
+            AggregateRating {
+                r#type: AtType::AggregateRating.to_opt(),
+                rating_value: vec![
+                    AggregateRatingRatingValueFieldEnum::Text("4.9".into()),
+                ],
+                ..Default::default()
+            },
+        ],
+        author: vec![RecipeAuthorFieldEnum::Organization(Organization {
+            r#type: AtType::Person.to_opt(),
+            name: vec!["Liz Madsen".into()],
+            url: vec!["https://zardyplants.com/about/".into()],
+            ..Default::default()
+        })],
+        cooking_method: vec!["Stove top".into()],
+        cook_time: vec![DurationOrText::Text("PT20M".into())],
+        date_published: vec!["2021-02-11".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text(
+            "Rich, cozy and PACKED with flavor, this easy Vegan Tom Kha Soup is a Thai-inspired recipe that is simple and quick to make.".into(),
+        )],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://zardyplants.com/wp-content/uploads/2021/02/Vegan-Tom-Kha-05-rotated-225x225.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zardyplants.com/wp-content/uploads/2021/02/Vegan-Tom-Kha-05-rotated-260x195.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zardyplants.com/wp-content/uploads/2021/02/Vegan-Tom-Kha-05-rotated-320x180.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zardyplants.com/wp-content/uploads/2021/02/Vegan-Tom-Kha-05-rotated.jpg".into(),
+            ),
+        ],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL("Vegan, Gluten-Free, Oil-Free, Nut-Free, Can Be Sugar-Free, Vegan Tom Kha".into()),
+        ],
+        name: vec!["Vegan Tom Kha Soup (Thai Inspired)".into()],
+        nutrition: vec![NutritionInformation {
+            calories: vec![Energy::new("409 calories")],
+            carbohydrate_content: vec![Mass::new("33.4 g")],
+            cholesterol_content: vec![Mass::new("0 mg")],
+            context: None,
+            fat_content: vec![Mass::new("23.8 g")],
+            fiber_content: vec![Mass::new("5.7 g")],
+            protein_content: vec![Mass::new("18 g")],
+            saturated_fat_content: vec![Mass::new("15.2 g")],
+            serving_size: vec!["2 cups".into()],
+            sodium_content: vec![Mass::new("227.9 mg")],
+            sugar_content: vec![Mass::new("13.1 g")],
+            r#type: Some("nutritionInformation".into()),
+            trans_fat_content: vec![Mass::new("0 g")],
+            unsaturated_fat_content: vec![],
+        }],
+        prep_time: vec![DurationOrText::Text("PT10M".into())],
+        recipe_category: vec!["Entree".into()],
+        recipe_cuisine: vec!["Thai".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text("1 small white onion, sliced or diced".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2 inches (to taste) galangal or ginger, grated".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Thai chilies to taste, minced (see note 2) (I used 3)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 stalk fresh lemongrass if you can find it or 1-2 tbsp lemongrass paste".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2-3 tsp Thai red curry paste (to taste)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 pound shiitake mushrooms, chopped".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 large red bell pepper, halved and thinly sliced".into()),
+            RecipeRecipeIngredientFieldEnum::Text("4 cups vegan chicken broth (see note 3), recommend Better Than Bouillon".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2 cans coconut milk".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2 16-oz blocks extra firm tofu, cut in ½” dice (see note 4)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Juice of 2-ish limes".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2-3 tbsp coconut sugar, to taste".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Green onions and cilantro to garnish".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Kaffir lime leaves if you can find them".into()),
+            RecipeRecipeIngredientFieldEnum::Text("3 cloves garlic".into()),
+            RecipeRecipeIngredientFieldEnum::Text("8 oz rice vermicelli noodles, optional".into()),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "When making a soup, I like to pre-chop all my vegetables for less stress during cooking time, but that’s just a tip.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-1".into(),
+                    ],
+                    name: vec!["Prep".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Add the white onion, grated ginger, minced garlic, fresh lemongrass if you have it, and minced Thai chilies to a large nonstick pot. If you cook with oil you could certainly use that. I just add a little water from a small cup any time something starts to stick. Saute over medium high heat, stirring constantly, for 1-2 minutes until fragrant. Add the Thai red curry paste&nbsp;and, if you couldn’t find fresh lemongrass, the lemongrass paste. Stir constantly for another 1-2 minutes.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-2".into(),
+                    ],
+                    name: vec!["Saute aromatics".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Now add the chopped mushrooms and red bell pepper, and saute for 5 minutes, stirring frequently and adding a splash of water when needed.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-3".into(),
+                    ],
+                    name: vec!["Add mushrooms and bell pepper".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Add the vegan chicken broth or vegetable broth and coconut milk, turn the heat down to medium, and bring to a high simmer. Add the cubed tofu and let cook for about 6-8 minutes.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-4".into(),
+                    ],
+                    name: vec!["Add broth".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Meanwhile, if using, soak or cook your rice vermicelli noodles&nbsp;in a different pot.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-5".into(),
+                    ],
+                    name: vec!["Make the noodles".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Add the coconut sugar (if using), and juice of 2ish limes (to taste). Let warm for a minute or two, then remove from heat.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-6".into(),
+                    ],
+                    name: vec!["Finish up".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Ladle the soup into bowls and add noodles to each bowl (if using). Garnish with thinly sliced green onions and lots of cilantro (if you like) and a few lime wedges.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-7".into(),
+                    ],
+                    name: vec!["Serve".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Store leftover soup separately from the noodles. They’ll each keep in the fridge for up to 5 days in airtight containers. The noodles tend to soak up the broth, so I recommend storing separately when you can. This is a GREAT dish to take to work or school though. I often will make it the night before I go to work and take it for lunch the next day. I pack a lime wedge and some cilantro in a reusable stasher bag&nbsp;to add at work.".into(),
+                    ],
+                    url: vec![
+                        "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-8".into(),
+                    ],
+                    name: vec!["Store".into()],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        recipe_yield: vec![
+            RecipeRecipeYieldFieldEnum::Text("12".into()),
+            RecipeRecipeYieldFieldEnum::Text("12 cups".into()),
+        ],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec!["Delicious! Full of flavor and perfect for this chilly weather!".into()],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2021-02-14".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Mary".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec!["Just had this tonight. Saw fresh lemongrass at the supermarket and thought, game on. Super yummy. I love the pairing of the sweet of the coconut milk and the spicy of the hot pepper— though I ended up using a jalapeño but it worked out pretty well. I ended up adding the rice noodles and it made quite a filling meal. Excited that there is plenty leftover for tomorrow’s lunch!".into()],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2021-02-17".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Stephanie".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Really delicious! This was so easy to make and packed with flavor!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2021-02-21".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Erin".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "So delicious! Easy to make and lasted us several meals. Will definitely be repeating this recipe on the regular throughout the colder months.".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2021-03-02".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Christina".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Wow. So great! I was able to buy Kaffir lime leaves and lemon grass on line and it was so worth it. Better than the Tom Kha at my favorite veggie Thai place. My whole family loved it and was amazed.".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2021-08-06".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Carol Booth".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Looove this!!!! Also, love the way you write these recipe posts! And pictures are terrific! You are my new favorite vegan chef!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2022-01-30".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Karen Flynn".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Hey what stage do you add the kaffir leaves?".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2022-06-17".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Neo".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "When do you add the lime leaves???".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("4".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2025-01-24".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Cat".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "This is a really great recipe. So yummy! Thanks!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2023-02-25".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["Andrea".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Well, I made this even less authentic due to having to sub a few key ingredients... (stores are closed today and really wanted to make this)\r\nOnly had dried mushrooms and soy milk, but figured it's worth a try and am so glad that we did. This soup, even with above modifications, is outstanding. \r\nEasy to make, smells divine and tastes even better.\r\n(Make it without the noddles)\r\nYummy!\r\n\r\nThank you for sharing".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2023-12-26".into()],
+                author: vec![
+                    ReviewAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec!["in2insight".into()],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+        ],
+        suitable_for_diet: vec![RestrictedDietEnum::VeganDiet],
+        total_time: vec![DurationOrText::Text("PT30M".into())],
+        url: vec!["https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zarskitchen_ok() -> Result<()> {
+    let got = scrape(Website::Zarskitchen, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5.0".into())],
+            ..Default::default()
+        }],
+        author: vec![RecipeAuthorFieldEnum::new_org("Zarina")],
+        cook_time: vec![DurationOrText::Text("PT".into())],
+        date_published: vec!["2021-04-13".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text("Wild Garlic Pesto".into())],
+        image: vec![RecipeImageFieldEnum::URL(
+            "https://zarskitchen.com/wp-content/uploads/2021/04/Zars-Kitchen-Recipe-10.jpg".into(),
+        )],
+        keywords: vec![RecipeKeywordsFieldEnum::TextOrURL(
+            "Wild Garlic Pesto".into(),
+        )],
+        name: vec!["Wild Garlic Pesto".into()],
+        nutrition: vec![
+            NutritionInformation {
+                calories: vec![Energy::new("200")],
+                fat_content: vec![Mass::new("20 grams"),
+                ],
+                r#type: AtType::NutritionInformation.to_opt(),
+                ..Default::default()
+            },
+        ],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "75g wild garlic".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "150g parmesan, grated".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "100g rocket".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "100g toasted pine nuts".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 lemon juiced ".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "150ml olive oil".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Salt, Pepper &amp; chilli flakes to taste.".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Place all your ingredients in a food processor until you get your desired consistency, add more olive oil if needed.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Any leftovers can be kept in the fridge for up to a week in a clean jar, just top with a little oil to create a seal.".into(),
+            ),
+        ],
+        recipe_category: vec!["Pasta".into()],
+        recipe_cuisine: vec!["European".into()],
+        recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("4".into())],
+        prep_time: vec![DurationOrText::Text("PT10M".into())],
+        total_time: vec![DurationOrText::Text("PT".into())],
+        url: vec!["https://zarskitchen.com/wild-garlic-pesto/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zeezest_ok() -> Result<()> {
+    let got = scrape(Website::Zeezest, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        author: vec![RecipeAuthorFieldEnum::new_person("Team ZZ")],
+        cook_time: vec![DurationOrText::Text("12-15 Min".into())],
+        description: vec![
+            RecipeDescriptionFieldEnum::Text("Multigrain Onion Dosa is a type of thin and crispy crepe that is made with a fermented batter of rice and lentils.".into()),
+        ],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://assets.zeezest.com/recipes/PROD_Multigrain Onion Dosa with Chutney_SEO_1682270069564_thumb_500.jpeg".into(),
+            ),
+        ],
+        name: vec!["Multigrain Onion Dosa with Chutney" .into()],
+        prep_time: vec![DurationOrText::Text("18-20 Min".into())],
+        recipe_category: vec!["breakfast".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::new_section("For soaking", vec![
+                "¾ cup par boiled rice (Ukhad)",
+                "2 tbsp chana dal",
+                "2 tbsp urad dal",
+                "2 tbsp yellow moong dal",
+                "2 tbsp tur dal",
+                "2 tbsp split green moong dal",
+                "2 tbsp rajgira",
+            ]),
+            RecipeRecipeIngredientFieldEnum::new_section("For cooking", vec![
+                "2 tbsp butter",
+                "gun powder",
+                "2 tbsp chopped onion",
+                "½ tsp chopped green chilli",
+                "1 tsp chopped coriander leaves",
+            ]),
+            RecipeRecipeIngredientFieldEnum::new_section("For Onion tomato chutney", vec![
+                "1 tbsp oil",
+                "1 tsp urad dal",
+                "1 cup diced onion",
+                "1 cup diced tomato",
+                "1 tbsp Kashmiri red powder",
+                "½ inch ginger",
+                "2-3 garlic cloves",
+                "1 tsp tamarind pulp",
+                "salt to taste",
+            ]),
+            RecipeRecipeIngredientFieldEnum::new_section("For tadka", vec![
+                "2 tsp oil",
+                "1 tsp mustard seeds",
+                "few curry leaves",
+            ]),
+        ],
+        recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Take a bowl and add rice, chana dal, urad dal, yellow moong dal, green moong dal, tur dal, masoor dal, rajgira. Wash it with water and soak it for 4-5 hours.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "In a blender jar, add soaked lentils and rice and grind it into fine paste.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Add water in it and let it rest for 2-3 hours.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Heat oil in a pan, add urad dal, onion, ginger, garlic, tomato and saute it for 1 minute.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Add red chilli, tamarind paste, salt and mix well.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Grind it into a fine paste.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Add salt in the batter before spreading over the pan.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Heat oil in a griddle pan, pour the batter.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Spread the ladleful of batter into a circle.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Add butter and spread it, add onion, green chilli, gunpowder and spread it . Sprinkle coriander leaves fold and serve hot.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Heat oil in a small non-stick pan, add mustard seeds, curry leaves and sauté.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Pour the tadka over the chutney.".into(),
+                ),
+        ],
+        url: vec!["https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302".into()],
         ..Default::default()
     };
     pretty_assertions::assert_eq!(got, want);

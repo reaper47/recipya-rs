@@ -139,8 +139,10 @@ pub enum AtType {
     ListItem,
     MusicAlbum,
     NutritionInformation,
+    Organization,
     Person,
     QuantitativeValue,
+    Rating,
     #[default]
     Recipe,
     Review,
@@ -166,8 +168,10 @@ impl Display for AtType {
                 AtType::ListItem => "ListItem".to_string(),
                 AtType::MusicAlbum => "MusicAlbum".to_string(),
                 AtType::NutritionInformation => "NutritionInformation".to_string(),
+                AtType::Organization => "Organization".to_string(),
                 AtType::Person => "Person".to_string(),
                 AtType::QuantitativeValue => "QuantitativeValue".to_string(),
+                AtType::Rating => "Rating".to_string(),
                 AtType::Review => "Review".to_string(),
                 AtType::VideoObject => "VideoObject".to_string(),
             }
@@ -191,8 +195,10 @@ impl AtType {
             AtType::ListItem => Some(Self::ListItem.to_string()),
             AtType::MusicAlbum => Some(Self::MusicAlbum.to_string()),
             AtType::NutritionInformation => Some(Self::NutritionInformation.to_string()),
+            AtType::Organization => Some(Self::Organization.to_string()),
             AtType::Person => Some(Self::Person.to_string()),
             AtType::QuantitativeValue => Some(Self::QuantitativeValue.to_string()),
+            AtType::Rating => Some(Self::Rating.to_string()),
             AtType::Recipe => Some(Self::Recipe.to_string()),
             AtType::Review => Some(Self::Review.to_string()),
             AtType::VideoObject => Some(Self::VideoObject.to_string()),
@@ -222,7 +228,9 @@ mod tests {
             AtType::NutritionInformation.to_string(),
             "NutritionInformation"
         );
+        assert_eq!(AtType::Organization.to_string(), "Organization");
         assert_eq!(AtType::QuantitativeValue.to_string(), "QuantitativeValue");
+        assert_eq!(AtType::Rating.to_string(), "Rating");
         assert_eq!(AtType::Review.to_string(), "Review");
         assert_eq!(AtType::VideoObject.to_string(), "VideoObject");
     }
@@ -253,6 +261,10 @@ mod tests {
         assert_eq!(
             AtType::NutritionInformation.to_opt(),
             Some("NutritionInformation".to_string())
+        );
+        assert_eq!(
+            AtType::Organization.to_opt(),
+            Some("Organization".to_string())
         );
         assert_eq!(
             AtType::QuantitativeValue.to_opt(),

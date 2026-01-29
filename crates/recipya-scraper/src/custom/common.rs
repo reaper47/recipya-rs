@@ -3,7 +3,7 @@ use schema_org::{
     AtType, DurationOrText,
     field::{
         RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
-        RecipeKeywordsFieldEnum, RecipeRecipeYieldFieldEnum,
+        RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeYieldFieldEnum,
     },
 };
 use scraper::{ElementRef, Html, Selector};
@@ -53,7 +53,7 @@ pub(crate) fn extract_description(
     css_selector: &str,
 ) -> Result<Vec<RecipeDescriptionFieldEnum>> {
     match optional_text(fragment, css_selector)? {
-        Some(text) => Ok(vec![RecipeDescriptionFieldEnum::Text(text)]),
+        Some(s) => Ok(vec![RecipeDescriptionFieldEnum::Text(s.trim().into())]),
         None => Ok(vec![]),
     }
 }
@@ -79,6 +79,65 @@ pub(crate) fn extract_image_urls(
             matches!(url.scheme(), "http" | "https").then(|| RecipeImageFieldEnum::URL(url.into()))
         })
         .collect())
+}
+
+pub(crate) fn extract_ingredients(
+    content: &ElementRef,
+) -> Result<Vec<RecipeRecipeIngredientFieldEnum>> {
+    let h4_sel = Selector::parse("h4")?;
+    let ingredients_container_sel = Selector::parse(".wprm-recipe-ingredients-container")?;
+    let ingredient_group_sel = Selector::parse(".wprm-recipe-ingredient-group")?;
+    let ingredients_li_sel = Selector::parse(".wprm-recipe-ingredients li")?;
+
+    Ok(content
+        .select(&ingredients_container_sel)
+        .next()
+        .map(|container| {
+            let groups = container.select(&ingredient_group_sel).collect::<Vec<_>>();
+
+            if groups.is_empty() {
+                container
+                    .select(&ingredients_li_sel)
+                    .map(|li| normalize_text(&li))
+                    .map(RecipeRecipeIngredientFieldEnum::Text)
+                    .collect::<Vec<_>>()
+            } else {
+                groups
+                    .iter()
+                    .flat_map(|group| parse_ingredient_group(group, &h4_sel, &ingredients_li_sel))
+                    .collect()
+            }
+        })
+        .unwrap_or_default())
+}
+
+fn parse_ingredient_group(
+    group: &ElementRef,
+    h4_sel: &Selector,
+    li_sel: &Selector,
+) -> Vec<RecipeRecipeIngredientFieldEnum> {
+    let group_name = group
+        .select(h4_sel)
+        .next()
+        .map(|el| el.text().collect::<String>().trim().to_string());
+
+    let ingredients = group
+        .select(li_sel)
+        .map(|s| normalize_text(&s))
+        .collect::<Vec<_>>();
+
+    match group_name {
+        Some(name) => {
+            vec![RecipeRecipeIngredientFieldEnum::new_section(
+                &name,
+                ingredients.iter().map(|s| s.as_str()).collect(),
+            )]
+        }
+        None => ingredients
+            .into_iter()
+            .map(RecipeRecipeIngredientFieldEnum::Text)
+            .collect(),
+    }
 }
 
 pub(crate) fn extract_keywords(
@@ -181,8 +240,8 @@ pub(crate) fn text_list(
 
 pub(crate) fn normalize_text(li: &ElementRef) -> String {
     li.text()
-        .collect::<String>()
-        .split_whitespace()
+        .flat_map(str::split_whitespace)
+        .filter(|s| *s != "▢")
         .collect::<Vec<_>>()
         .join(" ")
 }
