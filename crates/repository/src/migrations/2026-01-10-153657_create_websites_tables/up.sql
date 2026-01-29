@@ -1131,7 +1131,6 @@ VALUES
   -- ),
   -- ('woop.co.nz', 'https://woop.co.nz', NULL),
   -- ('ye-mek.net', 'https://ye-mek.net', NULL),
-  -- ('zeit.de', 'https://www.zeit.de', NULL),
   -- ('zenbelly.com', 'https://www.zenbelly.com', NULL),
   -- (
   --   'puurgezond.nl',

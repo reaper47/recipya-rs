@@ -416,8 +416,7 @@ pub enum Website {
     ZardyPlants,
     Zarskitchen,
     Zeezest,
-    // ZeitDotDe,
-    // ZenbellyDotCom,
+    Zenbelly,
 }
 
 impl Website {
@@ -829,8 +828,7 @@ impl Website {
             Website::ZardyPlants => "zardyplants.com",
             Website::Zarskitchen => "zarskitchen.com",
             Website::Zeezest => "zeezest.com",
-            // Website::ZeitDotDe => todo!(),
-            // Website::ZenbellyDotCom => todo!(),
+            Website::Zenbelly => "zenbelly.com",
         }
     }
 
@@ -842,13 +840,14 @@ impl Website {
     }
 
     fn from_domain(domain: &str) -> Option<Self> {
-        match domain {
+        match domain.trim_start_matches("www.") {
             "zaatarandzaytoun.com" => Some(Website::ZaatarAndZaytoun),
             "zabihahalal.com" => Some(Website::ZabihaHalal),
             "zagleft.com" => Some(Website::ZagLeft),
             "zardyplants.com" => Some(Website::ZardyPlants),
             "zarskitchen.com" => Some(Website::Zarskitchen),
             "zeezest.com" => Some(Website::Zeezest),
+            "zenbelly.com" => Some(Website::Zenbelly),
             _ => None,
         }
     }
@@ -1261,8 +1260,7 @@ impl Website {
             Website::ZardyPlants => unimplemented!(),
             Website::Zarskitchen => unimplemented!(),
             Website::Zeezest => parse_zeezest(doc, url),
-            // Website::ZeitDotDe => todo!(),
-            // Website::ZenbellyDotCom => todo!(),
+            Website::Zenbelly => unimplemented!(),
         }
     }
 }

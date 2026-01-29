@@ -1,13 +1,13 @@
 #[cfg(test)]
 use schema_org::{
-    AggregateRating, AtType, CreativeWork, DurationOrText, Energy, Mass, NutritionInformation,
-    Organization, Rating, Recipe, Review, at_context,
+    AggregateRating, AtType, Clip, CreativeWork, DurationOrText, Energy, Mass,
+    NutritionInformation, Organization, Rating, Recipe, Review, at_context,
     enums::RestrictedDietEnum,
     field::{
         AggregateRatingRatingValueFieldEnum, RatingRatingValueFieldEnum, RecipeAuthorFieldEnum,
         RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeKeywordsFieldEnum,
         RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
-        RecipeRecipeYieldFieldEnum, ReviewAuthorFieldEnum,
+        RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum, ReviewAuthorFieldEnum,
     },
 };
 
@@ -891,11 +891,154 @@ fn test_zeezest_ok() -> Result<()> {
 }
 
 #[test]
-fn test_zeit_dot_de() {
-    todo!();
-}
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zenbelly_ok() -> Result<()> {
+    let got = scrape(Website::Zenbelly, 0)?;
 
-#[test]
-fn test_zenbelly_dot_com() {
-    todo!();
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
+            ..Default::default()
+        }],
+        author: vec![RecipeAuthorFieldEnum::new_org("zenbelly")],
+        cooking_method: vec!["roast".into()],
+        cook_time: vec![DurationOrText::Text("PT30M".into())],
+        date_published: vec!["2023-02-04".into()],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL("crispy chickpeas".into()),
+        ],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://www.zenbelly.com/wp-content/uploads/2023/02/crispy-chickpeas--225x225.png".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://www.zenbelly.com/wp-content/uploads/2023/02/crispy-chickpeas--260x195.png".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://www.zenbelly.com/wp-content/uploads/2023/02/crispy-chickpeas--320x180.png".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://www.zenbelly.com/wp-content/uploads/2023/02/crispy-chickpeas-.png".into(),
+            ),
+        ],
+        name: vec!["Easy Crispy Chickpeas".into()],
+        prep_time: vec![DurationOrText::Text("PT5M".into())],
+        recipe_category: vec!["snacks".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 14-oz can chickpeas".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "extra virgin olive oil".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "salt".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "seasoning of choice &amp;#8211; anything works here, and you can also just salt them. I especially love them with chili powder or ras el hanout.".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Heat the oven to 425ºF and line a rimmed baking sheet with parchment paper.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-1".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Drain the chickpeas, reserving the liquid from the jar and 10-12 chickpeas if you’d like to use it for vegan mayo. Shake off as much water from the chickpeas as you can, and then transfer to a clean kitchen towel. Roll them around to loosen the skins, and discard any that come off. You can peel each chickpea if you’d like, but you don’t have to. (I started doing it and couldn’t stop and found it to be somewhat cathartic) Get the chickpeas as dry as possible, using paper towels or another kitchen towel.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-2".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Transfer the chickpeas to the parchment lined baking sheet and drizzle with enough oil to coat. Sprinkle with salt and toss to coat. Roast for 15 minutes, shaking the pan about halfway through. Turn the heat down to 400 and roast another 10 minutes, or until they’re golden brown and crisp. If they are as brown as you want but could use some mire drying out, turn off the oven and leave them in there with a wooden spoon propping the door ajar.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-3".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Allow to cool completely and store in an airtight jar. If you get them completely dried out during the cooking process, they should stay crispy, but if they lose their crunch &amp;#8211; pop them in a 350 oven for 5 minutes.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-4".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        recipe_yield: vec![
+            RecipeRecipeYieldFieldEnum::Text("1".into()),
+            RecipeRecipeYieldFieldEnum::Text("1 cup".into()),
+        ],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "It’s perfect for a quick and healthy snack that still packs a punch".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2025-09-28".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("blocky blast")],
+                ..Default::default()
+            },
+        ],
+        total_time: vec![DurationOrText::Text("PT35M".into())],
+        url: vec!["https://www.zenbelly.com/crispy-chickpeas/".into()],
+        video: vec![
+            RecipeVideoFieldEnum::Clip(
+                Clip {
+                    r#type:AtType::VideoObject.to_opt(),
+                    context: at_context(),
+                    thumbnail_url: vec![
+                        "https://mediavine-res.cloudinary.com/image/upload/s--kypZQCXB--/c_limit,f_auto,fl_lossy,h_1080,q_auto,w_1920/v1675556534/ihysxtd1aghzz78cv8s7.jpg".into(),
+                    ],
+                    description: vec![
+                        RecipeDescriptionFieldEnum::Text(
+                            "Easy Crispy Chickpeas".into(),
+                        ),
+                    ],
+                    name: vec![
+                        "Easy Crispy Chickpeas".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
 }

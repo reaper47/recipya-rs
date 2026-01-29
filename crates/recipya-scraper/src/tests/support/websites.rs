@@ -413,7 +413,6 @@ pub fn website_urls_for_test<'a>(website: &Website) -> Vec<&'a str> {
         Website::Zeezest => vec![
             "https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302",
         ],
-        // Website::ZeitDotDe => todo!(),
-        // Website::ZenbellyDotCom => todo!(),
+        Website::Zenbelly => vec!["https://www.zenbelly.com/crispy-chickpeas/"],
     }
 }
