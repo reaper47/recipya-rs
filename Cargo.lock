@@ -4020,8 +4020,10 @@ dependencies = [
  "reqwest",
  "schema-org",
  "scraper",
+ "serde",
  "serde_json",
  "support",
+ "toml 0.8.23",
  "tracing",
  "tracing-test",
 ]

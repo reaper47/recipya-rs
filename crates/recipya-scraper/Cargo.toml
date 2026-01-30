@@ -1,8 +1,8 @@
 [package]
 name = "recipya-scraper"
 version = "0.1.0"
+build = "build.rs"
 publish = true
-
 authors.workspace = true
 categories.workspace = true
 description.workspace = true
@@ -29,3 +29,7 @@ tracing.workspace = true
 [dev-dependencies]
 pretty_assertions.workspace = true
 tracing-test = "0.2.5"
+
+[build-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"

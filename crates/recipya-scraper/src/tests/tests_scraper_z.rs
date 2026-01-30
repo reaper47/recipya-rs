@@ -904,7 +904,14 @@ fn test_zenbelly_ok() -> Result<()> {
             rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
             ..Default::default()
         }],
-        author: vec![RecipeAuthorFieldEnum::new_org("zenbelly")],
+        author: vec![
+            RecipeAuthorFieldEnum::Organization(Organization {
+                r#type: AtType::Person.to_opt(),
+                name: vec!["zenbelly".into()],
+                url: vec!["http://Simone%20Miller".into()],
+                ..Default::default()
+            }),
+        ],
         cooking_method: vec!["roast".into()],
         cook_time: vec![DurationOrText::Text("PT30M".into())],
         date_published: vec!["2023-02-04".into()],
@@ -1021,7 +1028,7 @@ fn test_zenbelly_ok() -> Result<()> {
             RecipeVideoFieldEnum::Clip(
                 Clip {
                     r#type:AtType::VideoObject.to_opt(),
-                    context: at_context(),
+                    context: Some("http://schema.org".into()),
                     thumbnail_url: vec![
                         "https://mediavine-res.cloudinary.com/image/upload/s--kypZQCXB--/c_limit,f_auto,fl_lossy,h_1080,q_auto,w_1920/v1675556534/ihysxtd1aghzz78cv8s7.jpg".into(),
                     ],

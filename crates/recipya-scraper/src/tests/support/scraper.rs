@@ -12,9 +12,9 @@ use tracing::error;
 
 use support::fs::MockFs;
 
+use crate::client::HttpClient;
 use crate::websites::Website;
 use crate::{Result, Scraper};
-use crate::{client::HttpClient, tests::support::websites::website_urls_for_test};
 
 /// A mock HTTP client for use in tests to avoid sending real HTTP requests.
 pub struct MockHttpClient;
@@ -56,7 +56,7 @@ fn mock_scraper() -> &'static Scraper {
 
 /// Fetches the recipe from a website and stores the content in an HTML file.
 pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
-    let urls = website_urls_for_test(&website);
+    let urls = website.test_urls();
     let url = urls.get(number).expect("url to test not in vector of urls");
 
     let path = get_html_file_path(&website);
@@ -83,10 +83,16 @@ fn get_html_file_path(website: &Website) -> PathBuf {
         .unwrap()
         .join(format!("{BASE_HTML_DIR}/{website}.html"));
 
-    let path_str = path.to_string_lossy().replace(
-        "/crates/recipya-scraper/crates/recipya-scraper",
-        "/crates/recipya-scraper",
-    );
+    let path_str = path
+        .to_string_lossy()
+        .replace(
+            "/crates/recipya-scraper/crates/recipya-scraper",
+            "/crates/recipya-scraper",
+        )
+        .replace(
+            "/crates/router/crates/recipya-scraper",
+            "/crates/recipya-scraper",
+        );
 
     PathBuf::from(path_str)
 }
@@ -95,20 +101,19 @@ fn get_html_file_path(website: &Website) -> PathBuf {
 #[allow(unused)]
 pub async fn scrape_test_websites(number: usize) -> Result<()> {
     let website = match number {
-        1 => Website::AllRecipesDotCom,
-        2 => Website::ACoupleCooksDotCom,
-        3 => Website::AddAPinchDotCom,
-        _ => Website::AddAPinchDotCom,
+        1 => Website::AllRecipes,
+        2 => Website::Zeezest,
+        3 => Website::Zenbelly,
+        _ => Website::Zenbelly,
     };
 
-    let url = website_urls_for_test(&website)
+    let url = website
+        .test_urls()
         .get(0)
         .cloned()
         .expect("url to test not in vector of urls");
 
-    let path = std::env::current_dir()
-        .unwrap()
-        .join(format!("{BASE_HTML_DIR}/{website}.html"));
+    let path = get_html_file_path(&website);
 
     if !path.exists() {
         let client = reqwest::Client::new();

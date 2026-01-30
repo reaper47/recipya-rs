@@ -609,19 +609,6 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    websites (id) {
-        id -> Int8,
-        host -> Text,
-        url -> Text,
-        cuisine -> Nullable<Int8>,
-        updated_at -> Timestamptz,
-    }
-}
-
 diesel::joinable!(additional_images_recipe -> recipes (recipe_id));
 diesel::joinable!(auth_tokens -> users (user_id));
 diesel::joinable!(categories_recipes -> categories (category_id));
@@ -676,7 +663,6 @@ diesel::joinable!(users_keywords -> users (user_id));
 diesel::joinable!(users_recipes -> recipes (recipe_id));
 diesel::joinable!(users_recipes -> users (user_id));
 diesel::joinable!(videos_recipes -> recipes (recipe_id));
-diesel::joinable!(websites -> cuisines (cuisine));
 
 diesel::allow_tables_to_appear_in_same_query!(
     additional_images_recipe,
@@ -726,5 +712,4 @@ diesel::allow_tables_to_appear_in_same_query!(
     users_keywords,
     users_recipes,
     videos_recipes,
-    websites,
 );

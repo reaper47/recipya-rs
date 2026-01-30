@@ -1,0 +1,70 @@
+# Recipe Website Registry
+# This file defines all supported recipe websites for scraping.
+#
+# Fields:
+#   name    = Name of the website
+#   domain  = Website domain (without www.)
+#   variant = Rust enum variant name
+#   url     = Recipe index/listing page
+#   test    = Sample recipe URLs for testing
+#
+# Optional fields (add when needed):
+#   cuisine = "..."   # Any special notes
+
+[[website]]
+name = "Allrecipes"
+domain = "allrecipes.com"
+variant = "AllRecipes"
+url = "https://www.allrecipes.com/"
+test = "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"
+
+[[website]]
+name = "Zaatar & Zaytoun"
+domain = "zaatarandzaytoun.com"
+variant = "ZaatarAndZaytoun"
+url = "https://zaatarandzaytoun.com/recipe-index/"
+test = "https://zaatarandzaytoun.com/sardines/"
+cuisine = "lebanese"
+
+[[website]]
+name = "Zabiha Halal"
+domain = "zabihahalal.com"
+variant = "ZabihaHalal"
+url = "https://zabihahalal.com/recipes/"
+test = "https://zabihahalal.com/recipes/bbq-chicken-pizza/"
+
+[[website]]
+name = "Zagleft"
+domain = "zagleft.com"
+variant = "ZagLeft"
+url = "https://zagleft.com/recipe-list/"
+test = "https://zagleft.com/banana-oat-pecan-muffins/"
+
+[[website]]
+name = "ZardyPlants"
+domain = "zardyplants.com"
+variant = "ZardyPlants"
+url = "https://zardyplants.com"
+test = "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/"
+cuisine = "vegetarian"
+
+[[website]]
+name = "Zars Kitchen"
+domain = "zarskitchen.com"
+variant = "Zarskitchen"
+url = "https://zarskitchen.com"
+test = "https://zarskitchen.com/wild-garlic-pesto/"
+
+[[website]]
+name = "ZZest"
+domain = "zeezest.com"
+variant = "Zeezest"
+url = "https://zeezest.com/recipes/"
+test = "https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302"
+
+[[website]]
+name = "Zen Belly"
+domain = "zenbelly.com"
+variant = "Zenbelly"
+url = "https://www.zenbelly.com/recipes/"
+test = "https://www.zenbelly.com/crispy-chickpeas/"

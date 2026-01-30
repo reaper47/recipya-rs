@@ -1,10 +1,11 @@
 mod client;
 mod custom;
 mod error;
+mod websites;
 
 pub mod tests;
 
-pub(crate) mod websites;
+pub use websites::*;
 
 pub use client::{AppHttpClient, HttpClient};
 pub use error::{Error, Result};
@@ -17,8 +18,6 @@ use tracing::error;
 
 use scraper::{Html, Selector};
 use support::fs::FsSupport;
-
-use crate::websites::Website;
 
 /// Represents the object responsible for scraping recipes from websites.
 #[derive(Clone)]
@@ -96,14 +95,7 @@ impl Scraper {
                         }
                         _ => None,
                     }),
-                    None => match website {
-                        Website::ZaatarAndZaytoun => {
-                            Some(custom::zaatarandzaytoun::add_info(doc, recipe))
-                        }
-                        Website::ZabihaHalal => Some(custom::zabihahalal::add_info(doc, recipe)),
-                        Website::ZagLeft => Some(custom::zagleft::add_info(doc, recipe)),
-                        _ => Some(recipe),
-                    },
+                    None => Some(website.augment_ld_json(doc, recipe)),
                 };
 
                 recipe.as_mut().map(|r| {

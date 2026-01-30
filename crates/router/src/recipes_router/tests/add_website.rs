@@ -243,7 +243,7 @@ mod tests {
             is_success: false,
             is_warning: false,
             is_error: true,
-            error_reason: "Scraper(UnknownWebsite)".to_string(),
+            error_reason: "Scraper(DomainNotImplemented)".to_string(),
         }
     }
 }

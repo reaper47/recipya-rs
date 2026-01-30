@@ -16,6 +16,7 @@ use futures_util::pin_mut;
 use futures_util::stream::{self, StreamExt};
 use integrations::api::Credentials;
 use itertools::izip;
+use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
 use serde::Deserialize;
 use tokio::fs;
@@ -41,7 +42,6 @@ use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;
 use models::user::User;
-use models::website::{ToHtmlTable, Website};
 use models::{Recipe, RecipeDetails};
 use support::fs::FsSupport;
 use templates::recipes::timeline::Event;
@@ -1971,16 +1971,6 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
 }
 
 /// Handles the supported websites endpoint.
-pub async fn supported_websites_handler(
-    RequireAuth(user): RequireAuth,
-    State(state): State<AppState>,
-) -> impl IntoResponse {
-    match Website::supported_websites(&state.mm).await {
-        Ok(websites) => Html(websites.to_html_table_rows()).into_response(),
-        Err(err) => {
-            error!("Error fetching supported websites: {err}");
-            broadcast_error(&state, user.id, "Error fetching supported websites.").await;
-            Error::Database.into_response()
-        }
-    }
+pub async fn supported_websites_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
+    Html(Website::all().to_html_table_rows()).into_response()
 }
