@@ -4,10 +4,11 @@ use schema_org::{
     NutritionInformation, Organization, Rating, Recipe, Review, at_context,
     enums::RestrictedDietEnum,
     field::{
-        AggregateRatingRatingValueFieldEnum, RatingRatingValueFieldEnum, RecipeAuthorFieldEnum,
-        RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeKeywordsFieldEnum,
-        RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
-        RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum, ReviewAuthorFieldEnum,
+        AggregateRatingRatingValueFieldEnum, ClipDescriptionFieldEnum, CreativeWorkImageFieldEnum,
+        RatingRatingValueFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
+        RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
+        RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum,
+        ReviewAuthorFieldEnum,
     },
 };
 
@@ -883,7 +884,7 @@ fn test_zeezest_ok() -> Result<()> {
                     "Pour the tadka over the chutney.".into(),
                 ),
         ],
-        url: vec!["https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302".into()],
+        url: vec!["https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302<number>0".into()],
         ..Default::default()
     };
     pretty_assertions::assert_eq!(got, want);
@@ -1040,6 +1041,633 @@ fn test_zenbelly_ok() -> Result<()> {
                     name: vec![
                         "Easy Crispy Chickpeas".into(),
                     ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zenhealth_ok() -> Result<()> {
+    let got = scrape(Website::ZenHealth, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
+            ..Default::default()
+        }],
+        author: vec![RecipeAuthorFieldEnum::new_org("Ros")],
+        cook_time: vec![DurationOrText::Text("PT15M".into())],
+        description: vec![RecipeDescriptionFieldEnum::Text("Lemongrass tea has a wonderful, lemony, delicious taste. This recipe is so quick and easy. Just add the grass to boiling water and then leave to steep. Serve hot for a soothing drink or cold for a refreshing summer cool down.".into())],
+        date_published: vec!["2025-10-22T09:00:00+00:00".into()],
+        keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("lemongrass tea".into())],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://zenhealth.net/wp-content/uploads/lemongrass-tea-with-stalk.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zenhealth.net/wp-content/uploads/lemongrass-tea-with-stalk-500x500.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zenhealth.net/wp-content/uploads/lemongrass-tea-with-stalk-500x375.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zenhealth.net/wp-content/uploads/lemongrass-tea-with-stalk-480x270.jpg".into(),
+            ),
+        ],
+        prep_time: vec![DurationOrText::Text("PT2M".into())],
+        name: vec!["Lemongrass tea".into()],
+        recipe_category: vec!["Drinks".into()],
+        recipe_cuisine: vec!["Asian".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 stalk lemongrass ((1 tbsp dried lemongrass))".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text("3 cups water".into()),
+            RecipeRecipeIngredientFieldEnum::Text("piece of ginger ((optional))".into()),
+            RecipeRecipeIngredientFieldEnum::Text("sweetener of choice ((optional))".into()),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
+                r#type: AtType::HowToStep.to_opt(),
+                text: vec![
+                    "Remove the outermost skin of the stalk. Wash the lemongrass. Fold the grass onto itself.".into(),
+                ],
+                url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-0".into()],
+                name: vec![
+                    "Remove the outermost skin of the stalk. Wash the lemongrass. Fold the grass onto itself.".into(),
+                ],
+                ..Default::default()
+            }.into()),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
+                r#type: AtType::HowToStep.to_opt(),
+                text: vec!["Place a small pot on medium heat. Add water and bring to a boil.".into()],
+                url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-1".into()],
+                name: vec!["Place a small pot on medium heat. Add water and bring to a boil.".into()],
+                ..Default::default()
+            }.into()),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
+                r#type: AtType::HowToStep.to_opt(),
+                text: vec!["Add folded lemongrass stalk. Boil for 15 minutes.".into()],
+                image: vec![CreativeWorkImageFieldEnum::URL(
+                    "https://zenhealth.net/wp-content/uploads/lemongrass-tea-ingredients.jpg".into(),
+                )],
+                url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-2".into()],
+                name: vec!["Add folded lemongrass stalk. Boil for 15 minutes.".into()],
+                ..Default::default()
+            }.into()),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
+                r#type: AtType::HowToStep.to_opt(),
+                text: vec!["Turn off heat. Steep for 10 minutes.".into()],
+                image: vec![CreativeWorkImageFieldEnum::URL(
+                    "https://zenhealth.net/wp-content/uploads/lemongrass-tea-after-boiling.jpg".into(),
+                )],
+                url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-3".into()],
+                name: vec!["Turn off heat. Steep for 10 minutes.".into()],
+                ..Default::default()
+            }.into()),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
+                r#type: AtType::HowToStep.to_opt(),
+                text: vec!["Add your favorite sweetener (optional) and serve hot or chilled.".into()],
+                url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-4".into()],
+                name: vec!["Add your favorite sweetener (optional) and serve hot or chilled.".into()],
+                ..Default::default()
+            }.into()),
+        ],
+        recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("2".into())],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "just started on this tea. am looking forward to the benefits. thanks for sharing".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2022-12-21".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Julie Mduduz")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "I heard I should not boil the fresh leaves but soak, stew in a certain boiling temperature. Is this true to reap benefits? And at what temp for how long?".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2021-07-11".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Linda")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "I have some in my backyard garden and I drink it just about any day and any time! Gosh, that \"lemony\" aroma that fills the entire house from the kitchen to the parlour and rooms is so, so sensational every time I brew a flask of the drink. I usually take mine without sweeteners, or with an occasional dash of ginger and honey.".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2021-03-28".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Auwal Gene")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "It's really delicious in uganda we enjoy it too".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2020-12-23".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Ayo Michael Denish")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "We also do not add any sugar to tea; as less as possible is the best for both of us ! Besides, it overpower the beauty of flavors, right ?".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2020-10-07".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("2pots2cook")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Am so glad I read on the lemon grass health benefits, this is awesome".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![
+                            RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2020-08-29".into()],
+                author: vec![
+                    RecipeAuthorFieldEnum::Organization(
+                        Organization {
+                            r#type: AtType::Person.to_opt(),
+                            name: vec![
+                                "LASISI MOSHOOD O".into(),
+                            ],
+                            ..Default::default()
+                        },
+                    ),
+                ],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "I'm from the Caribbean we call lemongrass \"fever grass\" , it's really delicious with some sugar or honey or even if you add some milk to it .".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2020-08-23".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Shelisia")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Made some lemongrass tea this morning. Was delicious, sat on the patio, drank it warm and watched the rain come down.".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2020-07-27".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Carrie Vigil")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec!["Wow this is awesome reading!".into()],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2020-05-11".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Amanda")],
+                ..Default::default()
+            },
+        ],
+        total_time: vec![DurationOrText::Text("PT27M".into())],
+        url: vec!["https://zenhealth.net/lemongrass-tea-recipe/".into()],
+        video: vec![
+            RecipeVideoFieldEnum::Clip(
+                Clip {
+                    r#type: AtType::VideoObject.to_opt(),
+                    thumbnail_url: vec![
+                        "https://i.ytimg.com/vi/fva7uRGNzj4/hqdefault.jpg".into(),
+                    ],
+                    description: vec![
+                        ClipDescriptionFieldEnum::Text(
+                            "Lemongrass tea (also called fevergrass tea) has a wonderful, lemony, delicious taste. This recipe is so quick and easy. Just add the lemongrass to boiling water and 10 to 15 minutes later you are done! Serve hot for a soothing drink or cold for a refreshing summer cool down.\n\nThat's exactly how to make lemongrass tea from fresh leaves.\n\nBenefits of lemongrass tea:\n• It improves blood parameters (like red and white blood cell counts, hemoglobin levels)\n• It is antimicrobial\n\nFind more on my blogs: \n- https://wetrinifood.com/lemongrass-tea-recipe/\n- https://zenhealth.net/lemongrass-tea-recipe/\n\nFor more tea recipes, check out: https://wetrinifood.com/tea-recipes/\n\nMusic: www.bensound.com\n\n#lemongrasstea #lemongrass".into(),
+                        ),
+                    ],
+                    name: vec![
+                        "How to Make Lemongrass Tea from Fresh Leaves".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zenkimchi_ok() -> Result<()> {
+    let got = scrape(Website::ZenKimchi, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        author: vec![RecipeAuthorFieldEnum::new_org("Stewart Ho")],
+        cook_time: vec![DurationOrText::Text("PT0H0M".into())],
+        description: vec![RecipeDescriptionFieldEnum::Text("Korean Style Arrabbiata Sauce".into())],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL("arrabbiata,Kimchi,Pasta,penne,perilla leaves,red pepper paste,samgyubsal".into()),
+        ],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://zenkimchi.com/wp-content/uploads/2014/02/DSC065614-250x250.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zenkimchi.com/wp-content/uploads/2014/02/DSC065614-198x164.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zenkimchi.com/wp-content/uploads/2014/02/DSC065614-320x200.jpg".into(),
+            ),
+        ],
+        name: vec!["Korean Style Arrabbiata Sauce".into()],
+        prep_time: vec![DurationOrText::Text("PT0H0M".into())],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text("1 1/2 cup of Penne pasta \r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 cup of ripened Kimchi (chopped)\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2 Garlic cloves (minced or sliced)\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("6 Perilla leaves (sliced into strips)\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 stalk of Green Onion \r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 tbsp of Red Pepper Paste (Gochujang or ???)\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("150g of Pork Belly or Bacon \r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 28 oz can (about 3.5 cups) of Crushed Tomato or Tomato Sauce (You can just use your favorite pre-made Pasta Sauce as well)\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("2 tbsp of Olive Oil\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1/2 a medium sized Onion, sliced (optional)\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 cup of sliced mushrooms, sliced (optional) \r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Parmesan Cheese for sprinkling (optional)\r".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Red Chili Flakes for sprinkling (optional)".into()),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text("Cook your pasta in salted boiling water until al dante. Drain and set aside when done. \r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Meanwhile, wash your veggies and cut them as needed. Perilla leaves should be cut into strips, green onion stalk chopped, garlics minced or sliced (depending on your preference). I chose to slice and add some mushroom and onions for added nutrients.\r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Chop your ripened kimchi, and slice your pork belly (or bacon) into thin slices. If you like bigger, chewier cuts of meat in your pasta, cut accordingly. \r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Add just a tad bit of olive oil to your pan on medium high heat. The bacon or pork belly will release a lot of fat on its own. Stir for a minute or two before adding the garlic. Stir for another minute. If the pan is too hot make sure to lower your heat temporarily as you don't want to burn your garlic. \r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Add your chopped kimchi to the pan, stir and cook for a minute.\r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Add your onions and mushroom (or other vegetables) if you choose to add them. Cook until the onions begin looking translucent.\r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Add in your green onions and perilla leaves, stir and cook for a minute and then add your tomato paste/sauce. Give it a mix, add the red pepper paste and then mix and cook on medium heat (uncovered) for approximately 6-10 minutes so all the flavors from the pork, garlic, perilla, etc, all incorporate together.\r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("When the sauce has slightly thickened and finished cooking, turn off the heat. Add in your cooked penne and gently stir so all the sauce thoroughly coats the pasta.\r".into()),
+            RecipeRecipeInstructionsFieldEnum::Text("Serve the pasta immediately and add Parmesan cheese, chili powder flakes to your liking.".into()),
+        ],
+        recipe_category: vec!["Modern Korean".into()],
+        url: vec!["https://zenkimchi.com/recipes/modern-korean/korean-style-arrabbiata-sauce/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zestfulkitchen_ok() -> Result<()> {
+    let got = scrape(Website::ZestfulKitchen, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
+            ..Default::default()
+        }],
+        cook_time: vec![DurationOrText::Text("PT5M".into())],
+        date_published: vec!["2022-09-08T06:00:00+00:00".into()],
+        description: vec![
+            RecipeDescriptionFieldEnum::Text("A foolproof smash burger recipe! Quick, easy and loaded with flavor—this is the only burger recipe you&amp;#039;ll need.".into()),
+        ],
+        image: vec![
+            RecipeImageFieldEnum::URL("https://zestfulkitchen.com/wp-content/uploads/2022/08/Smash-Burgers_-2.jpg".into()),
+            RecipeImageFieldEnum::URL("https://zestfulkitchen.com/wp-content/uploads/2022/08/Smash-Burgers_-2-500x500.jpg".into()),
+            RecipeImageFieldEnum::URL("https://zestfulkitchen.com/wp-content/uploads/2022/08/Smash-Burgers_-2-500x375.jpg".into()),
+            RecipeImageFieldEnum::URL("https://zestfulkitchen.com/wp-content/uploads/2022/08/Smash-Burgers_-2-480x270.jpg".into()),
+        ],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL("smash burger recipe".into()),
+        ],
+        name: vec!["Smash Burger Patty".into()],
+        nutrition: vec![
+            NutritionInformation {
+                calories: vec![Energy::new("565 kcal")],
+                carbohydrate_content: vec![Mass::new("32 g")],
+                cholesterol_content: vec![Mass::new("119 mg")],
+                context: None,
+                fat_content: vec![Mass::new("30 g")],
+                fiber_content: vec![Mass::new("3 g")],
+                protein_content: vec![Mass::new("40 g")],
+                saturated_fat_content: vec![Mass::new("10 g")],
+                serving_size: vec!["1 burger".into()],
+                sodium_content: vec![Mass::new("1625 mg")],
+                sugar_content: vec![Mass::new("7 g")],
+                r#type: AtType::NutritionInformation.to_opt(),
+                ..Default::default()
+            },
+        ],
+        prep_time: vec![DurationOrText::Text("PT10M".into())],
+        recipe_category: vec!["Dinner".into()],
+        recipe_cuisine: vec!["American".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text("¼ cup whole-grain mustard".into()),
+            RecipeRecipeIngredientFieldEnum::Text("¼ cup prepared yellow mustard".into()),
+            RecipeRecipeIngredientFieldEnum::Text("¼ cup olive oil mayonnaise".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 pound (80/20) ground beef".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Morton kosher salt".into()),
+            RecipeRecipeIngredientFieldEnum::Text("4 brioche buns, (split)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("1 medium yellow onion, (very thinly sliced)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("½ head iceberg lettuce, (leaves separated)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("3 large kosher dill pickles, (thinly sliced + more for serving)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("4 slices American cheese, (such as Kraft Singles)".into()),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "For burger sauce, mix together mustards and mayonnaise; set aside.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-0".into(),
+                    ],
+                    name: vec![
+                        "For burger sauce, mix together mustards and mayonnaise; set aside.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Divide meat into quarters (about 4 ounces each) and roll into balls. Transfer to a plate or small baking sheet.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-1".into(),
+                    ],
+                    name: vec![
+                        "Divide meat into quarters (about 4 ounces each) and roll into balls. Transfer to a plate or small baking sheet.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Heat a large (12-inch) cast-iron, stainless steel, or carbon steel skillet over medium-high heat until ripping hot and smoking, about 5 minutes.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-2".into(),
+                    ],
+                    name: vec![
+                        "Heat a large (12-inch) cast-iron, stainless steel, or carbon steel skillet over medium-high heat until ripping hot and smoking, about 5 minutes.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Toast half of the buns, cut side down, in skillet until lightly golden, about 1 minute. Repeat with remaining buns.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-3".into(),
+                    ],
+                    name: vec![
+                        "Toast half of the buns, cut side down, in skillet until lightly golden, about 1 minute. Repeat with remaining buns.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Increase heat to high.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-4".into(),
+                    ],
+                    name: vec![
+                        "Increase heat to high.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Add two beef balls to skillet; season generously with kosher salt. Smash beef balls down with a heavy duty spatula, using a potato masher to press down on top of the spatula for extra leverage, until very thin, about ½-inch thick. Cook, without moving, until bottom sides are crisp and browned, about 1 ½ minutes.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-5".into(),
+                    ],
+                    name: vec![
+                        "Add two beef balls to skillet; season generously with kosher salt. Smash beef balls down with a heavy duty spatula, using a potato masher to press down on top of the spatula for extra leverage, until very thin, about ½-inch thick. Cook, without moving, until bottom sides are crisp and browned, about 1 ½ minutes.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Press a few onion slices into burger patties with spatula. Scrape up and flip patty.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-6".into(),
+                    ],
+                    name: vec![
+                        "Press a few onion slices into burger patties with spatula. Scrape up and flip patty.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Place a slice of cheese over burger and continue to cook until cheese is melted and onions on bottom are griddled and golden, 30–60 seconds. Remove from griddle.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-7".into(),
+                    ],
+                    name: vec![
+                        "Place a slice of cheese over burger and continue to cook until cheese is melted and onions on bottom are griddled and golden, 30–60 seconds. Remove from griddle.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "To assemble, spread 1 tablespoon burger sauce on cuts sides of buns (tops and bottoms). Cover bottom buns with pickle slices then top with burger patty. Add a few slices of raw onion, a couple of folded sheets of iceberg lettuce followed by the top bun.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-8".into(),
+                    ],
+                    name: vec![
+                        "To assemble, spread 1 tablespoon burger sauce on cuts sides of buns (tops and bottoms). Cover bottom buns with pickle slices then top with burger patty. Add a few slices of raw onion, a couple of folded sheets of iceberg lettuce followed by the top bun.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Wipe out skillet with paper towels before repeating smashing and cooking process with remaining beef balls, onions and cheese.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-9".into(),
+                    ],
+                    name: vec![
+                        "Wipe out skillet with paper towels before repeating smashing and cooking process with remaining beef balls, onions and cheese.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Serve burgers with pickle spears.".into(),
+                    ],
+                    url: vec![
+                        "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-10".into(),
+                    ],
+                    name: vec![
+                        "Serve burgers with pickle spears.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        recipe_yield: vec![
+            RecipeRecipeYieldFieldEnum::Text("4".into()),
+            RecipeRecipeYieldFieldEnum::Text("4 burgers".into()),
+        ],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "These are to die for!!! We cook them on our Blackstone griddle outside, so no mess on the stove. Love the crunchy edges, and do NOT skip the sauce, that’s the best part!!!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2023-05-25".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Dee")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Got damn these burgers are good. Love the technique of pressing the onion into the patty. Keeping the lettuce intact with all the layers as you did gave the burger a nice crunch. The Kraft cheese put them over the top. Thank you!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into()),
+                        ],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2023-05-23".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("kt")],
+                ..Default::default()
+            },
+        ],
+        total_time: vec![DurationOrText::Text("PT15M".into())],
+        url: vec!["https://zestfulkitchen.com/smash-burger-recipe/".into()],
+        video: vec![
+            RecipeVideoFieldEnum::Clip(
+                Clip {
+                    r#type: AtType::VideoObject.to_opt(),
+                    thumbnail_url: vec!["https://content.jwplatform.com/thumbs/HNPx6AFO-720.jpg".into()],
+                    description: vec![ClipDescriptionFieldEnum::Text("beef, ground beef, burgers, sandwiches".into())],
+                    name: vec!["Smashburgers".into()],
                     ..Default::default()
                 }.into(),
             ),

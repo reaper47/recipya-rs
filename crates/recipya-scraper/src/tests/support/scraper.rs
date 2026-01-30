@@ -27,8 +27,15 @@ impl HttpClient for MockHttpClient {
         Ok("".to_string())
     }
 
-    fn get(&self, host: Website, _url: &str) -> Result<String> {
-        let path = get_html_file_path(&host);
+    fn get(&self, host: Website, url: &str) -> Result<String> {
+        let path = get_html_file_path(
+            &host,
+            url.rsplit_once("<Number>")
+                .unwrap_or(("0", "0"))
+                .1
+                .parse()
+                .unwrap_or(0),
+        );
         let bytes = fs::read(&path).unwrap();
 
         if bytes.len() >= 2 && bytes[0] == 0x1f && bytes[1] == 0x8b {
@@ -59,7 +66,7 @@ pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
     let urls = website.test_urls();
     let url = urls.get(number).expect("url to test not in vector of urls");
 
-    let path = get_html_file_path(&website);
+    let path = get_html_file_path(&website, number);
 
     if !path.exists() {
         let client = reqwest::blocking::Client::new();
@@ -75,13 +82,14 @@ pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
         };
     }
 
-    mock_scraper().scrape(url)
+    let url = format!("{url}<number>{number}");
+    mock_scraper().scrape(&url)
 }
 
-fn get_html_file_path(website: &Website) -> PathBuf {
+fn get_html_file_path(website: &Website, number: usize) -> PathBuf {
     let path = std::env::current_dir()
         .unwrap()
-        .join(format!("{BASE_HTML_DIR}/{website}.html"));
+        .join(format!("{BASE_HTML_DIR}/{website}_{number}.html"));
 
     let path_str = path
         .to_string_lossy()
@@ -113,7 +121,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         .cloned()
         .expect("url to test not in vector of urls");
 
-    let path = get_html_file_path(&website);
+    let path = get_html_file_path(&website, number);
 
     if !path.exists() {
         let client = reqwest::Client::new();

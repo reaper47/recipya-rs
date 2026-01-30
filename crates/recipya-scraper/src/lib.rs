@@ -100,8 +100,13 @@ impl Scraper {
 
                 recipe.as_mut().map(|r| {
                     r.context = at_context();
+                    if let Some(author) = r.author.first()
+                        && author.is_default()
+                    {
+                        r.author = vec![]
+                    }
                     r.is_part_of = vec![]; // Note: It would be nice if the serde deserialization skips deserialization if default.
-                    r.url = vec![url.into()]
+                    r.url = vec![url.rsplit_once("<number>").unwrap_or((url, "")).0.into()]
                 });
                 recipe
             })

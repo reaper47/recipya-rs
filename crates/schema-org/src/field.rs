@@ -185,6 +185,16 @@ impl Default for FieldEnum6 {
         Self::Person(Person::default())
     }
 }
+impl FieldEnum6 {
+    pub fn is_default(&self) -> bool {
+        match self {
+            FieldEnum6::Organization(org) => org == &Organization::default(),
+            FieldEnum6::Person(person) => person == &Person::default(),
+            FieldEnum6::Text(text) => text.is_empty(),
+        }
+    }
+}
+
 ///<https://schema.org/creator>
 pub type ClipCreatorFieldEnum = FieldEnum6;
 ///<https://schema.org/author>

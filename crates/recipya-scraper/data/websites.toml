@@ -68,3 +68,25 @@ domain = "zenbelly.com"
 variant = "Zenbelly"
 url = "https://www.zenbelly.com/recipes/"
 test = "https://www.zenbelly.com/crispy-chickpeas/"
+
+[[website]]
+name = "Zenhealth"
+domain = "zenhealth.net"
+variant = "ZenHealth"
+url = "https://zenhealth.net/recipe-index/"
+test = "https://zenhealth.net/lemongrass-tea-recipe/"
+
+[[website]]
+name = "Zen Kimchi"
+domain = "zenkimchi.com"
+variant = "ZenKimchi"
+url = "https://zenkimchi.com"
+test = "https://zenkimchi.com/recipes/modern-korean/korean-style-arrabbiata-sauce/"
+cuisine = "korean"
+
+[[website]]
+name = "Zestful Kitchen"
+domain = "zestfulkitchen.com"
+variant = "ZestfulKitchen"
+url = "https://zestfulkitchen.com/category/all-recipes-from-zestful-kitchen/"
+test = "https://zestfulkitchen.com/smash-burger-recipe/"

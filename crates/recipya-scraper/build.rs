@@ -8,8 +8,24 @@ struct WebsiteConfig {
     domain: String,
     variant: String,
     url: String,
-    test: String,
+    test: TestUrls,
     cuisine: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum TestUrls {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
+impl TestUrls {
+    fn to_vec(&self) -> Vec<String> {
+        match self {
+            TestUrls::Single(s) => vec![s.clone()],
+            TestUrls::Multiple(v) => v.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -60,8 +76,15 @@ fn main() {
             website.variant, website.domain
         ));
         test_urls_arms.push_str(&format!(
-            "            Self::{} => vec![\"{}\"],\n",
-            website.variant, website.test
+            "            Self::{} => vec![{}],\n",
+            website.variant,
+            website
+                .test
+                .to_vec()
+                .iter()
+                .map(|url| format!("\"{}\"", url))
+                .collect::<Vec<_>>()
+                .join(", ")
         ));
 
         count += 1;
