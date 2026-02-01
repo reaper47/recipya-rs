@@ -50,7 +50,7 @@ pub fn parse_zeezest(doc: &Html, url: &str) -> Result<Recipe> {
         recipe_ingredient: root
             .select(&ingredients_container_sel)
             .next()
-            .ok_or_else(|| Error::MissingElement("ingredients"))?
+            .ok_or_else(|| Error::MissingElement("ingredients".into()))?
             .select(&ingredient_groups_sel)
             .map(|group: ElementRef<'_>| {
                 (
@@ -74,7 +74,7 @@ pub fn parse_zeezest(doc: &Html, url: &str) -> Result<Recipe> {
         recipe_instructions: root
             .select(&instructions_sel)
             .next()
-            .ok_or_else(|| Error::MissingElement("instructions"))?
+            .ok_or_else(|| Error::MissingElement("instructions".into()))?
             .select(&Selector::parse("li")?)
             .map(|li| RecipeRecipeInstructionsFieldEnum::Text(normalize_text(&li)))
             .collect::<Vec<_>>(),

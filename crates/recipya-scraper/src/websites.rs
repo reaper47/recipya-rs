@@ -4,7 +4,7 @@ use reqwest::Url;
 use schema_org::Recipe;
 use scraper::Html;
 
-use crate::custom::{self, parse_zeezest};
+use crate::custom;
 
 use super::{Error, Result};
 
@@ -21,7 +21,8 @@ impl Website {
     /// Parses the given HTML document manually.
     pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe> {
         match self {
-            Website::Zeezest => parse_zeezest(doc, url),
+            Website::Zeezest => custom::parse_zeezest(doc, url),
+            Website::ZiaHatchChileCompany => custom::parse_ziahatchchilecompany(doc, url),
             _ => Err(Error::DomainNotImplemented),
         }
     }

@@ -10,7 +10,7 @@ pub enum Error {
     DomainNotImplemented,
     LdJsonNotFound,
     Filesystem,
-    MissingElement(&'static str),
+    MissingElement(String),
     NoHost,
     UnknownWebsite,
 

@@ -9,7 +9,7 @@
 #   test    = Sample recipe URLs for testing
 #
 # Optional fields (add when needed):
-#   cuisine = "..."   # Any special notes
+#   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
 
 [[website]]
 name = "Allrecipes"
@@ -90,3 +90,25 @@ domain = "zestfulkitchen.com"
 variant = "ZestfulKitchen"
 url = "https://zestfulkitchen.com/category/all-recipes-from-zestful-kitchen/"
 test = "https://zestfulkitchen.com/smash-burger-recipe/"
+
+[[website]]
+name = "Zesty South Indian Kitchen"
+domain = "zestysouthindiankitchen.com"
+variant = "ZestSouthIndianKitchen"
+url = "https://zestysouthindiankitchen.com"
+test = "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/"
+cuisine = "indian"
+
+[[website]]
+name = "Catherine Desserts"
+domain = "zhangcatherine.com"
+variant = "ZhangCatherine"
+url = "https://zhangcatherine.com"
+test = "https://zhangcatherine.com/pistachio-macarons/"
+
+[[website]]
+name = "Zia Hatch Chile Company"
+domain = "ziahatchchileco.com"
+variant = "ZiaHatchChileCompany"
+url = "https://ziahatchchileco.com"
+test = "https://ziahatchchileco.com/blogs/recipes/hatch-green-chile-baked-spaghetti"

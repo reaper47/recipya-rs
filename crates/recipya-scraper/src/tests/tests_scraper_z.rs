@@ -1,14 +1,14 @@
 #[cfg(test)]
 use schema_org::{
-    AggregateRating, AtType, Clip, CreativeWork, DurationOrText, Energy, Mass,
+    AggregateRating, AtType, Clip, CreativeWork, DurationOrText, Energy, ImageObject, Mass,
     NutritionInformation, Organization, Rating, Recipe, Review, at_context,
     enums::RestrictedDietEnum,
     field::{
         AggregateRatingRatingValueFieldEnum, ClipDescriptionFieldEnum, CreativeWorkImageFieldEnum,
-        RatingRatingValueFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
-        RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
-        RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum,
-        ReviewAuthorFieldEnum,
+        ImageObjectCaptionFieldEnum, RatingRatingValueFieldEnum, RecipeAuthorFieldEnum,
+        RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeKeywordsFieldEnum,
+        RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+        RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum, ReviewAuthorFieldEnum,
     },
 };
 
@@ -1671,6 +1671,709 @@ fn test_zestfulkitchen_ok() -> Result<()> {
                     ..Default::default()
                 }.into(),
             ),
+        ],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zestysouthindiankitchen_ok() -> Result<()> {
+    let got = scrape(Website::ZestSouthIndianKitchen, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
+            ..Default::default()
+        }],
+        author: vec![RecipeAuthorFieldEnum::new_org("Swathi (Ambujom Saraswathy)")],
+        cook_time: vec![DurationOrText::Text("PT45M".into())],
+        date_published: vec!["2020-08-25T16:45:30+00:00".into()],
+        description: vec![
+            RecipeDescriptionFieldEnum::Text(
+                "Spicy Baked zucchini chips are&nbsp; healthy snack recipe that is loaded with flavor and crunch, yet light in calories! Just 5 ingredients and you can create amazing appetizer.".into(),
+            ),
+        ],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://zestysouthindiankitchen.com/wp-content/uploads/2020/08/Spicy-Baked-Zucchini-chips.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zestysouthindiankitchen.com/wp-content/uploads/2020/08/Spicy-Baked-Zucchini-chips-500x500.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zestysouthindiankitchen.com/wp-content/uploads/2020/08/Spicy-Baked-Zucchini-chips-500x375.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zestysouthindiankitchen.com/wp-content/uploads/2020/08/Spicy-Baked-Zucchini-chips-480x270.jpg".into(),
+            ),
+        ],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL(
+                "baked zucchini chips, Spicy baked zucchini chips".into(),
+            ),
+        ],
+        name: vec!["Spicy Baked Zucchini chips".into()],
+        nutrition: vec![
+            NutritionInformation {
+                calories: vec![
+                    Energy::new("76 kcal"),
+                ],
+                carbohydrate_content: vec![
+                    Mass::new("2 g"),
+                ],
+                fat_content: vec![
+                    Mass::new("8 g"),
+                ],
+                fiber_content: vec![
+                    Mass::new("1 g"),
+                ],
+                protein_content: vec![
+                    Mass::new("1 g"),
+                ],
+                saturated_fat_content: vec![
+                    Mass::new("1 g"),
+                ],
+                serving_size: vec![
+                    "1 serving".into(),
+                ],
+                sodium_content: vec![
+                    Mass::new("4 mg"),
+                ],
+                sugar_content: vec![
+                    Mass::new("1 g"),
+                ],
+                r#type: AtType::NutritionInformation.to_opt(),
+                ..Default::default()
+            },
+        ],
+        prep_time: vec![DurationOrText::Text("PT5M".into())],
+        recipe_category: vec!["Appetizer".into()],
+        recipe_cuisine: vec!["American".into()],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Preheat the oven to 425 F . Line two baking sheets with parchment paper.".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-0".into(),
+                    ],
+                    name: vec![
+                        "Preheat the oven to 425 F . Line two baking sheets with parchment paper.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Thinly slice the zucchini with a knife or mandolin.".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-1".into(),
+                    ],
+                    name: vec![
+                        "Thinly slice the zucchini with a knife or mandolin.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "In a large bowl add zucchini, combine the oil, salt, pepper, cumin powder, and cayenne pepper. Stir to combine.".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-2".into(),
+                    ],
+                    name: vec![
+                        "In a large bowl add zucchini, combine the oil, salt, pepper, cumin powder, and cayenne pepper. Stir to combine.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Toss well so that each slice is coated with the seasoned oil.".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-3".into(),
+                    ],
+                    name: vec![
+                        "Toss well so that each slice is coated with the seasoned oil.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Place the zucchini slices on the prepared baking sheets.".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-4".into(),
+                    ],
+                    name: vec![
+                        "Place the zucchini slices on the prepared baking sheets.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Bake for 20 minutes watching very closely. When the zucchini starts to show some brown spots remove from the oven and set aside.".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-5".into(),
+                    ],
+                    name: vec![
+                        "Bake for 20 minutes watching very closely. When the zucchini starts to show some brown spots remove from the oven and set aside.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Reduce the oven temperature to 180-200 degrees. Return the zucchini to the oven and cook for an additional 20 minutes or until the slices are crispy.".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-6".into(),
+                    ],
+                    name: vec![
+                        "Reduce the oven temperature to 180-200 degrees. Return the zucchini to the oven and cook for an additional 20 minutes or until the slices are crispy.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Remove from the oven and cool and enjoy".into(),
+                    ],
+                    url: vec![
+                        "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-7".into(),
+                    ],
+                    name: vec![
+                        "Remove from the oven and cool and enjoy".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 zucchini washed and dried".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 tbsp. olive oil".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Scant 1/2 tsp salt".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 tsp. black pepper".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/4 tsp cumin powder".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "¼ tsp cayenne pepper".into(),
+            ),
+        ],
+        recipe_yield: vec![
+            RecipeRecipeYieldFieldEnum::Text("4".into()),
+        ],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Tried these and they were so crispy and flavorful! Loved the cayenne kick!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published:vec!["2025-02-14".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Juyali")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "These are insane. I'm obsessed. I love zucchini chips!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published:vec!["2020-09-06".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Maren")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "I love the level of spice on these zucchini chips! So good".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published:vec!["2020-09-06".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Capri")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "These are great, a nice change from the cheese crusted version I usually do. Love the cumin.".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published:vec!["2020-09-06".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Amanda Marie Boyle")],
+                ..Default::default()
+            },
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "Perfect, healthy chip recipe!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published:vec!["2020-09-05".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Leslie")],
+               ..Default::default()
+            },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "These chips are amazing!! Love the spices!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-04".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Emily")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "I love these guilt free chips!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-04".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Sue")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "My friends raved about the apricot.".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-04".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Laura")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "Spicy and addictive!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-04".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Debra")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "These make for such a delicious snack - we love zucchini!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-04".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Alexandra")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "What a great and healthy snack idea! Pinning for sure!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-03".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Taleen | Just As Tasty")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "These are so delicious and a perfect recipe for using up a glut of zucchini!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-03".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Robyn")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "These are one of our favorite snacks! They don't last long in our house!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-09-03".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("kerri")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "I wish I had everything on hand to make this right now. This looks really yummy.".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-08-26".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Tasheena")],
+               ..Default::default()
+           },
+           Review {
+               r#type: AtType::Review.to_opt(),
+               review_body: vec![
+                   "The best healthy snack! Love how easy are to make them!".into(),
+               ],
+               review_rating: vec![
+                   Rating {
+                       r#type: AtType::Rating.to_opt(),
+                       rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                       ..Default::default()
+                   },
+               ],
+               date_published: vec!["2020-08-26".into()],
+               author: vec![RecipeAuthorFieldEnum::new_org("Catalina")],
+               ..Default::default()
+           },
+        ],
+        total_time: vec![DurationOrText::Text("PT50M".into())],
+        url: vec!["https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/".into()],
+        video: vec![
+            RecipeVideoFieldEnum::Clip(
+                Clip {
+                    r#type:AtType::VideoObject.to_opt(),
+                    thumbnail_url: vec![
+                        "https://i.ytimg.com/vi/Zu-g6I_OQVk/hqdefault.jpg".into(),
+                    ],
+                    description: vec![
+                        RecipeDescriptionFieldEnum::Text(
+                            "Delicious simple, spicy baked zucchini chips, wtih just 5 ingredents you can make delicious sidedish . That too in oven without much cleaning dishes. For full recipes with instructions , https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/\n\n#zucchinirecipes #bakedchips #zucchinichips".into(),
+                        ),
+                    ],
+                    name: vec![
+                        "Spicy Zucchini Chips".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zhangcatherine_ok() -> Result<()> {
+    let got = scrape(Website::ZhangCatherine, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            best_rating: vec![AggregateRatingRatingValueFieldEnum::Number(5.0)],
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(5.0)],
+            review_count: vec![1],
+            worst_rating: vec![AggregateRatingRatingValueFieldEnum::Number(4.9)],
+            url: vec!["https://zhangcatherine.com/pistachio-macarons/#aggregateRating".into()],
+            ..Default::default()
+        }],
+        author: vec![RecipeAuthorFieldEnum::new_org("Zhang Catherine")],
+        cook_time: vec![DurationOrText::Text("PT15M".into())],
+        description: vec![RecipeDescriptionFieldEnum::Text("Crisp and chewy French macaron shells filled with a sweet and nutty pistachio cream, the only pistachio macarons you'll need".into())],
+        image: vec![
+            RecipeImageFieldEnum::ImageObject(
+                ImageObject {
+                    r#type: AtType::ImageObject.to_opt(),
+                    caption: vec![
+                        ImageObjectCaptionFieldEnum::Text(
+                            "French pistachio Macarons with pistachio cream cheese buttercream filling".into(),
+                        ),
+                    ],
+                    url: vec![
+                        "https://zhangcatherine.com/wp-content/uploads/2022/06/15001500.jpg".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Pistachio Macaron Recipe".into())],
+        name: vec!["Pistachio Macarons - Catherine Zhang".into()],
+        nutrition: vec![NutritionInformation {
+            calories: vec![Energy::new("283 Calories")],
+            r#type: AtType::NutritionInformation.to_opt(),
+            ..Default::default()
+        }],
+        prep_time: vec![DurationOrText::Text("PT15M".into())],
+        recipe_category: vec!["Cookie".into()],
+        recipe_cuisine: vec!["French".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text("Macaron Shells: almond meal".into()),
+            RecipeRecipeIngredientFieldEnum::Text("icing sugar".into()),
+            RecipeRecipeIngredientFieldEnum::Text("egg whites".into()),
+            RecipeRecipeIngredientFieldEnum::Text("white sugar".into()),
+            RecipeRecipeIngredientFieldEnum::Text("green food coloring".into()),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Filling (Pistachio Buttercream): unsalted butter".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text("cream cheese".into()),
+            RecipeRecipeIngredientFieldEnum::Text("ground pistachios".into()),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Macaron Shells In a medium sized bowl sieve the almond meal and powdered sugar together If there are large chunks of almond meal remaining in the sieve dispose of them In a large clean bowl add the egg whites, and using an electric mixer beat until foamy Slowly add the sugar and beat until stiff peaks Fold the sieved almond meal and powdered sugar into the meringue in 2 additions, scraping around the bowl and down the centre Continue until you notice that the lines that form when the batter falls back into the bowl slowly start to disappear Transfer to a piping bag fitted with a round tip and pipe out 1.5inch circles Allow to dry for 1-2 hours, or until the surface is matte and dry Bake in a preheated oven at 140°C for 13-15 minutes (I find that it’s usually done at 13, but it depends on your oven so make sure to check! If you give your macarons a wiggle they shouldn’t be moving, that’s when they’re ready) Remove from oven and let cool Pistachio Buttercream Combine pistachios and sugar in a food processor and blitz until a smooth paste (this will take some time) Beat the butter and cream cheese together with an electric mixer or stand mixer, until light and fluffy Add the pistachio paste and whisk until smooth Transfer to a piping bag fitted with a round tip Match similar sized macaron shells with each other On the flat side of one shell pipe a large dollop of buttercream Top with a matching shell Place in airtight container in the fridge for a day to mature (gives deeper flavour and chewy texture!)".into(),
+                    ],
+                    image: vec![
+                        RecipeImageFieldEnum::URL(
+                            "https://zhangcatherine.com/wp-content/uploads/2022/06/P5230461.jpg".into(),
+                        ),
+                    ],
+                    name: vec![
+                        "How to make Pistachio Macaron Recipe?".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("12".into())],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "The crisp shells with the smooth pistachio cream create a refined dessert where the sweetness and nuttiness are in perfect harmony.".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        best_rating: vec![RatingRatingValueFieldEnum::Number(5.0)],
+                        rating_value: vec![RatingRatingValueFieldEnum::Number(5.0)],
+                        worst_rating: vec![RatingRatingValueFieldEnum::Number(4.9)],
+                        ..Default::default()
+                    },
+                ],
+                headline: vec![
+                    "Nutty and perfectly balanced".into(),
+                ],
+                author: vec![RecipeAuthorFieldEnum::new_org("Zhang Catherine")],
+                ..Default::default()
+            }.into(),
+        ],
+        total_time: vec![DurationOrText::Text("PT30M".into())],
+        url: vec!["https://zhangcatherine.com/pistachio-macarons/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_ziahatchchilecompany_ok() -> Result<()> {
+    let got = scrape(Website::ZiaHatchChileCompany, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        name: vec!["Hatch Green Chile Baked Spaghetti".into()],
+        date_published: vec!["2025-12-22T17:41:39Z".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text("Looking for an easy way to feed a crowd? Our recipe for Hatch Green Chile Baked Spaghetti is a great way to upgrade the everyday pasta dish.".into())],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://ziahatchchileco.com/cdn/shop/articles/DSC03444_E_1200x1200.jpg?v=1766425320".into(),
+            ),
+        ],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 - full jar Zia Hatch Green Chile, strained".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 lb Spaghetti pasta".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 32oz jar Marinara Sauce of choice".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 large Yellow Onion, diced".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 lb Ground Beef (we recommend no more than 15% fat)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 cup Ricotta Cheese".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 cups Mozzarella Cheese, shredded".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 large Egg".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 cup Parmesan Cheese, grated".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "4-5 cloves Garlic, finely diced".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 cup Basil Leaves, chopped".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 1/2 tsp dried Oregano".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 tsp dried Thyme or Rosemary".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 tsp Red Pepper Flakes".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Butter for greasing the pan".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Olive oil for cooking the meat".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Salt and pepper".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "In a large pot or dutch oven, heat oil over medium heat. Add onion and cook for 5-6 minutes until translucent. Add garlic, oregano, thyme, red pepper flakes, a couple teaspoons of salt and a few shakes / grinds of black pepper and cook 1-2 minutes until fragrant but make sure the garlic does not burn.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Add the beef and break up / stir constantly until browned, about 5 more minutes. Once cooked, turn off the heat, add the marinara sauce and Zia Hatch Green Chile and stir until combined.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Set aside and boil a pot of salted water and pre heat the oven to 350 degrees Fahrenheit. Once boiling, cook pasta until 1 minute less than al dente. Drain and add to the marinara / meat sauce and mix. Toss well.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "While water is boiling, crack an egg into a bowl and add ricotta, 1/2 of the parmesan cheese and mix / whisk until smooth.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Grease a 9 x 13 inch baking dish with butter. Transfer about half of the pasta into the baking dish and smooth into an even layer. Use a large spoon to drip the ricotta cheese mixture evenly over the layer, and then sprinkle 1 cup of the mozzarella as well. Add the rest of the pasta and smooth out again.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Cover baking dish with tin foil and cook in the oven for about 40 minutes. After 40 minutes, remove the tin foil, evenly sprinkle the remaining mozzarella and parmesan cheese and bake for another 5-10 minutes or so until the cheese has melted. If you want to brown the mozzarella cheese a bit, turn on the broiler for a minute or two toward the end, watching closely to make sure it does not burn.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Top with basil, cut into squares and serve warm.".into(),
+            ),
+        ],
+        url: vec![
+            "https://ziahatchchileco.com/blogs/recipes/hatch-green-chile-baked-spaghetti<number>0".into(),
         ],
         ..Default::default()
     };

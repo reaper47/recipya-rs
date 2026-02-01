@@ -167,7 +167,7 @@ pub(crate) fn extract_metadata_property(fragment: &Html, property: &str) -> Resu
     if value.is_empty() {
         Ok(vec![])
     } else {
-        Ok(vec![value.into()])
+        Ok(vec![value.trim().into()])
     }
 }
 
@@ -191,7 +191,7 @@ pub(crate) fn required_text(fragment: &ElementRef, css_selector: &str) -> Result
         .ok_or(Error::DomainNotImplemented)?
         .text()
         .next()
-        .ok_or(Error::DomainNotImplemented)?
+        .ok_or(Error::MissingElement(css_selector.into()))?
         .to_string())
 }
 
