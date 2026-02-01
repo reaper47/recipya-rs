@@ -155,6 +155,19 @@ pub(crate) fn extract_keywords(
     }
 }
 
+pub(crate) fn extract_attr<'a>(
+    fragment: &'a ElementRef,
+    css_selector: &'a str,
+    attr: &'a str,
+) -> Result<Option<&'a str>> {
+    Ok(fragment
+        .select(&Selector::parse(css_selector)?)
+        .next()
+        .ok_or(Error::MissingElement(css_selector.into()))?
+        .value()
+        .attr(attr))
+}
+
 pub(crate) fn extract_metadata_property(fragment: &Html, property: &str) -> Result<Vec<String>> {
     let value = fragment
         .select(&Selector::parse(&format!("meta[property='{property}']"))?)

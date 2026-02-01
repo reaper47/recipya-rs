@@ -35,15 +35,19 @@ struct Config {
 }
 
 fn main() {
-    println!("cargo::rerun-if-changed=data/websites.toml");
+    println!("cargo::rerun-if-changed=data/");
 
-    let toml_path = "data/websites.toml";
-    if !Path::new(toml_path).exists() {
-        panic!("Missing {toml_path}");
+    let mut content = String::with_capacity(32 * 1024);
+    for entry in fs::read_dir("data/").expect("Failed to read data/ directory") {
+        let entry = entry.expect("Failed to read entry");
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) == Some("toml") {
+            content
+                .push_str(&fs::read_to_string(&path).expect(&format!("Failed to read {path:?}")));
+        }
     }
 
-    let toml_content = fs::read_to_string(toml_path).expect("Failed to read data/websites.toml");
-    let config: Config = toml::from_str(&toml_content).expect("Failed to parse data/websites.toml");
+    let config: Config = toml::from_str(&content).expect("Failed to parse data/websites.toml");
 
     let mut metadata = Vec::new();
     let mut enum_variants = Vec::new();

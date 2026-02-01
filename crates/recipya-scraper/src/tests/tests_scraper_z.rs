@@ -2380,3 +2380,128 @@ fn test_ziahatchchilecompany_ok() -> Result<()> {
     pretty_assertions::assert_eq!(got, want);
     Ok(())
 }
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zibakitchen_ok() -> Result<()> {
+    let got = scrape(Website::ZibaKitchen, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        author: vec![RecipeAuthorFieldEnum::new_person("adeel")],
+        cook_time: vec![DurationOrText::Text("PT30H".into())],
+        date_published: vec!["2017-11-27".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text("Bolani Gandana, is a delicious dish! Gandana (Nira Herb or Chinese Leek) is the key to this dish.Bolani is a traditional dish from Afghanistan and people make it in gatherings with family. They make fire and around the fire, they cook Bolani together and serve it while hot.\n\nHere is how to make Bolani Gandana, The recipe, and youtube Video.\n\nPlease click on the youtube icon in the top right corner of our page to subscribe and watch more videos.".into())],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://zibakitchen.com/wp-content/uploads/2017/11/bolani-750x500.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zibakitchen.com/wp-content/uploads/2017/11/bolani-150x150.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zibakitchen.com/wp-content/uploads/2017/11/bolani-340x191.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zibakitchen.com/wp-content/uploads/2014/06/DSC03970-340x191.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zibakitchen.com/wp-content/uploads/2014/05/DSC03904-340x191.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zibakitchen.com/wp-content/uploads/2014/04/DSC00198-340x191.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zibakitchen.com/wp-content/uploads/2014/03/DSC00036-340x191.jpg".into(),
+            ),
+        ],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL(
+                "Black Pepper".into(),
+            ),
+            RecipeKeywordsFieldEnum::TextOrURL(
+                "bolani".into(),
+            ),
+            RecipeKeywordsFieldEnum::TextOrURL(
+                "Coriander".into(),
+            ),
+            RecipeKeywordsFieldEnum::TextOrURL(
+                "gandana".into(),
+            ),
+        ],
+        name: vec!["Bolani Gandana".into()],
+        prep_time: vec![DurationOrText::Text("PT30M".into())],
+        recipe_category: vec!["Breads".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                " Dough For Bolani ".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Check zibakitchen.com".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                " Nira Herb (Chinese Leek) Gandana".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 a Bunch".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                " Sea Salt".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 Teaspoon".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                " Black Pepper".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 Teaspoon".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                " Coriander Powder ".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 Teaspoon".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                " Extra Virgin Olive Oil".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1-2 Tablespoons".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                " Sesame Oil For cooking".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 Cup".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Cut the Nira Herb (Chinese Leek)into small pieces and wash well. Add pepper, salt, and oil and combine them well. Set aside.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Check for the Dough for Bolani At zibakitchen.com".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Now, make small balls from the dough. Take one ball of dough and roll it out using a rolling pin flat and round. ".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Take a little amount of leek mixture and place it on half side of the rolled dough, and fold another half to close and seal the leek mixture to make a half moon.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Transfer the Bolani to a hot pan and add some Sesame oil to the pan. ".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Cook the Bolani until lightly brown then flip it to cook the other side.".into(),
+            ),
+        ],
+        recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("6".into())],
+        url: vec!["https://zibakitchen.com/bolani-gandana/<number>0".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}

@@ -21,8 +21,9 @@ impl Website {
     /// Parses the given HTML document manually.
     pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe> {
         match self {
-            Website::Zeezest => custom::parse_zeezest(doc, url),
-            Website::ZiaHatchChileCompany => custom::parse_ziahatchchilecompany(doc, url),
+            Website::Zeezest => custom::z::zeezest::parse(doc, url),
+            Website::ZiaHatchChileCompany => custom::z::ziahatchchilecompany::parse(doc, url),
+            Website::ZibaKitchen => custom::z::zibakitchen::parse(doc, url),
             _ => Err(Error::DomainNotImplemented),
         }
     }
@@ -31,9 +32,9 @@ impl Website {
     /// Some sites have incomplete or incorrect LD+JSON that needs fixing.
     pub(crate) fn augment_ld_json(&self, doc: &Html, recipe: Recipe) -> Recipe {
         match self {
-            Website::ZaatarAndZaytoun => custom::zaatarandzaytoun::add_info(doc, recipe),
-            Website::ZabihaHalal => custom::zabihahalal::add_info(doc, recipe),
-            Website::ZagLeft => custom::zagleft::add_info(doc, recipe),
+            Website::ZaatarAndZaytoun => custom::z::zaatarandzaytoun::add_info(doc, recipe),
+            Website::ZabihaHalal => custom::z::zabihahalal::add_info(doc, recipe),
+            Website::ZagLeft => custom::z::zagleft::add_info(doc, recipe),
             _ => recipe,
         }
     }

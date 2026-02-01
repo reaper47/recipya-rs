@@ -1,4 +1,4 @@
-# Recipe Website Registry
+# Recipe Website Registry - Z
 # This file defines all supported recipe websites for scraping.
 #
 # Fields:
@@ -10,13 +10,6 @@
 #
 # Optional fields (add when needed):
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
-
-[[website]]
-name = "Allrecipes"
-domain = "allrecipes.com"
-variant = "AllRecipes"
-url = "https://www.allrecipes.com/"
-test = "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"
 
 [[website]]
 name = "Zaatar & Zaytoun"
@@ -112,3 +105,10 @@ domain = "ziahatchchileco.com"
 variant = "ZiaHatchChileCompany"
 url = "https://ziahatchchileco.com"
 test = "https://ziahatchchileco.com/blogs/recipes/hatch-green-chile-baked-spaghetti"
+
+[[website]]
+name = "Ziba Kitchen"
+domain = "zibakitchen.com"
+variant = "ZibaKitchen"
+url = "https://zibakitchen.com"
+test = "https://zibakitchen.com/bolani-gandana/"

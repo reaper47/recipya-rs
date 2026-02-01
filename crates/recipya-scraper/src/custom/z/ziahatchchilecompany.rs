@@ -9,7 +9,7 @@ use scraper::{Html, Selector};
 
 use crate::{Error, Result, custom::common::extract_metadata_property};
 
-pub fn parse_ziahatchchilecompany(doc: &Html, url: &str) -> Result<Recipe> {
+pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
     let root = &doc.root_element();
     let article_body = doc
         .select(&Selector::parse("div[itemprop='articleBody']")?)

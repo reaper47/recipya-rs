@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-pub fn parse_zeezest(doc: &Html, url: &str) -> Result<Recipe> {
+pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
     let root = &doc.root_element();
 
     let ingredients_container_sel = Selector::parse(".recipes-module__gO5IBa__ingredientsList")?;

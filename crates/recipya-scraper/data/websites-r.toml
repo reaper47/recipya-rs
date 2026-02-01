@@ -1,0 +1,12 @@
+# Recipe Website Registry - R
+# This file defines all supported recipe websites for scraping.
+#
+# Fields:
+#   name    = Name of the website
+#   domain  = Website domain (without www.)
+#   variant = Rust enum variant name
+#   url     = Recipe index/listing page
+#   test    = Sample recipe URLs for testing
+#
+# Optional fields (add when needed):
+#   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
