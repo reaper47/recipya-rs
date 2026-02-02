@@ -126,3 +126,11 @@ domain = "zonacooks.com"
 variant = "ZonaCooks"
 url = "https://zonacooks.com"
 test = "https://zonacooks.com/jumbo-blueberry-muffins/"
+
+[[website]]
+name = "Zsuzsa is in the kitchen"
+domain = "zsuzsaisinthekitchen.blogspot.com"
+variant = "ZsuzsaIsInTheKitchen"
+url = "https://zsuzsaisinthekitchen.blogspot.com/"
+test = "https://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html"
+cuisine = "hungarian"

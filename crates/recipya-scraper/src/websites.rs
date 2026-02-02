@@ -24,6 +24,7 @@ impl Website {
             Website::Zeezest => custom::z::zeezest::parse(doc, url),
             Website::ZiaHatchChileCompany => custom::z::ziahatchchilecompany::parse(doc, url),
             Website::ZibaKitchen => custom::z::zibakitchen::parse(doc, url),
+            Website::ZsuzsaIsInTheKitchen => custom::z::zsuzsaisinthekitchen::parse(doc, url),
             _ => Err(Error::DomainNotImplemented),
         }
     }

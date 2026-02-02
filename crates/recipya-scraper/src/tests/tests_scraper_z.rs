@@ -2975,3 +2975,105 @@ fn test_zonacooks_ok() -> Result<()> {
     pretty_assertions::assert_eq!(got, want);
     Ok(())
 }
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zsuzsaisinthekitchen_ok() -> Result<()> {
+    let got = scrape(Website::ZsuzsaIsInTheKitchen, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        author: vec![RecipeAuthorFieldEnum::new_person("Zsuzsa")],
+        date_published: vec!["2014-06-04T09:39:00-07:00".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text("My cherries are still green, but it won’t take long before we can enjoy this year’s produce if the birds would leave us some. With a large\ngarden and mature fruit trees we are keenly aware that changes are taking\nplace. The last couple of years brought in some never seen species of bugs and\nbirds. Some of the familiar wildlife that used to pass through from spring to\nlate fall disappeared and we have been getting new ones; large flocks are\ncoming through and sometimes eating up everything in sight. We had to replant\nseveral times. Ferocious birds would ransack our birdhouses and beat up on\nlocal species that have been nesting in the backyard for decades. The\nmosquitoes are deadly. There are too many storms and the breeze is a constant\nand we are getting brutal winds even on hot days. Climate change, it’s\nhappening.".into())],
+        image: vec![RecipeImageFieldEnum::URL("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiU9JY6HBrPtcAUnFUNUbHUrQXzn6510J32gYBDr5J_zyPFQ_Xfz8LOAZVxPQeOHF3k-4M_g3V3SrUSz5yWTg0x8NL9QpQLUubazsSlHwQfKjBK9-7qYJSFIwJMPBDAvFIxAA7Bx6pfQxQ/s1600/cherry+chutney2.JPG".into())],
+        name: vec!["CHERRY CHUTNEY".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "5 cups ripe, coarsely chopped cherries".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 apple cored, peeled and chopped".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 tsp whole allspice".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 cinnamon sticks".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 cup\u{a0}red wine vinegar".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 cup red onion, chopped".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "4 garlic clove, diced".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 tsp salt".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 cup honey".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 cups raisins".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Prepare canning jars and lids.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "You will be reducing vinegar, open up the windows and make sure you have good ventilation.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Add the chopped cherries and apples to a stainless steel or enameled stockpot.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Tie the allspice and the cinnamon sticks into a cheesecloth bundle.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Add the spice bundle, vinegar, onions, garlic and salt to the stockpot.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "On medium heat cook for about 20 minutes or until the mixture thickens.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Stir the chutney occasionally.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Just as the chutney begins to spit add the honey and stir to combine.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Lower the heat and continue cooking at a simmer for 20 more minutes. Stir often.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Do not let it boil hard and certainly don’t leave it. At this stage the chutney scorches easily.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Add the raisins and bring back to simmer.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Remove from heat.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Remove the spice bag and fill the chutney into sterilized jars leaving 1/2-inch head space.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Process or pour into sterilized jars and place in the fridge for up to 6 weeks.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "► 2023 (52) ► December (3) ► November (10) ► October (2) ► September (21) ► August (3) ► January (13)".into(),
+            ),
+        ],
+        url: vec![
+            "https://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html<number>0".into(),
+        ],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}

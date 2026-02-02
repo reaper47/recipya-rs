@@ -688,6 +688,7 @@ VALUES
 INSERT INTO
   cuisines (name)
 VALUES
+  ('hungarian'),
   ('lebanese'),
   ('korean'),
   ('vegetarian');
