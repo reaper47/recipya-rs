@@ -72,8 +72,7 @@ mod tests {
             .await;
 
         res.assert_status(StatusCode::ACCEPTED);
-        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">1 of 1</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
-        assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
+        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
         assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
         tokio::time::sleep(Duration::from_millis(500)).await;
         let got_logs = fetch_logs(config.clone()).await?;
@@ -91,17 +90,16 @@ mod tests {
         let res = server
             .post(BASE_URI)
             .form(&RecipeScrapeForm {
-                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
+                urls: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/".into(),
             })
             .await;
 
         res.assert_status(StatusCode::ACCEPTED);
-        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">1 of 1</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
-        assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
+        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
+        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#).await;
         tokio::time::sleep(Duration::from_millis(50)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        pretty_assertions::assert_eq!(got_logs, vec![all_recipes_report_log(1)]);
+        pretty_assertions::assert_eq!(got_logs, vec![zweigles_report_log(1)]);
         Ok(())
     }
 
@@ -115,17 +113,16 @@ mod tests {
         let res = server
             .post(BASE_URI)
             .form(&RecipeScrapeForm {
-                urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies".into(),
+                urls: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/\nhttps://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/".into(),
             })
             .await;
 
         res.assert_status(StatusCode::ACCEPTED);
-        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">1 of 1</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
-        assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
+        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
+        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#).await;
         tokio::time::sleep(Duration::from_millis(50)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        pretty_assertions::assert_eq!(got_logs, vec![all_recipes_report_log(1)]);
+        pretty_assertions::assert_eq!(got_logs, vec![zweigles_report_log(1)]);
         Ok(())
     }
 
@@ -135,7 +132,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
         let form = RecipeScrapeForm {
-            urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies".into(),
+            urls: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/\nhttps://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes".into(),
         };
         scrape_test_websites(1).await?;
         let _ = server.post(BASE_URI).form(&form).await;
@@ -143,15 +140,38 @@ mod tests {
         let res = server.post(BASE_URI).form(&form).await;
 
         res.assert_status(StatusCode::ACCEPTED);
-        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 1/1</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">1 of 1</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
         assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
         assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
         tokio::time::sleep(Duration::from_millis(100)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        pretty_assertions::assert_eq!(
-            got_logs,
-            vec![all_recipes_report_log(1), all_recipes_report_log(2)]
-        );
+        let want_logs = vec![
+            zweigles_report_log(1),
+            ReportLog {
+                id: 2,
+                report_id: 2,
+                title: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes"
+                    .to_string(),
+                is_success: false,
+                is_warning: true,
+                is_error: false,
+                error_reason: "Recipe exists".into(),
+            },
+        ];
+        let normalize = |log: &ReportLog| {
+            (
+                log.title.clone(),
+                log.is_success,
+                log.is_warning,
+                log.is_error,
+                log.error_reason.clone(),
+            )
+        };
+        let mut got_normalized: Vec<_> = got_logs.iter().map(normalize).collect();
+        let mut want_normalized: Vec<_> = want_logs.iter().map(normalize).collect();
+        got_normalized.sort();
+        want_normalized.sort();
+        pretty_assertions::assert_eq!(got_normalized, want_normalized);
         Ok(())
     }
 
@@ -165,7 +185,7 @@ mod tests {
         scrape_test_websites(3).await?;
 
         let res = server.post(BASE_URI).form(&RecipeScrapeForm {
-            urls: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/\nhttps://www.acouplecooks.com/chicken-meatballs-baked\nhttps://addapinch.com/easy-grape-jelly-meatballs-recipe/".into(),
+            urls: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/\nhttps://zumavalley.com/blogs/smoothies-bowls/coconut-mango-smoothie-bowl\nhttps://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html".into(),
         }).await;
 
         res.assert_status(StatusCode::ACCEPTED);
@@ -173,42 +193,46 @@ mod tests {
         assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 2/3</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">2 of 3</span><span class="font-semibold">66.7%</span></div><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
         assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetched 3/3</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">3 of 3</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
         assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 0. Skipped: 3","status":"alert-info","title":"Operation Successful"}}"#).await;
+        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 3. Skipped: 0","status":"alert-info","title":"Operation Successful"}}"#).await;
         tokio::time::sleep(Duration::from_millis(50)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        pretty_assertions::assert_eq!(
-            got_logs,
-            vec![
-                ReportLog {
-                    id: 1,
-                    report_id: 1,
-                    title: "https://addapinch.com/easy-grape-jelly-meatballs-recipe".to_owned(),
-                    is_success: false,
-                    is_warning: false,
-                    is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
-                },
-                ReportLog {
-                    id: 2,
-                    report_id: 1,
-                    title: "https://www.acouplecooks.com/chicken-meatballs-baked".to_owned(),
-                    is_success: false,
-                    is_warning: false,
-                    is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
-                },
-                ReportLog {
-                    id: 3,
-                    report_id: 1,
-                    title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies"
-                        .to_owned(),
-                    is_success: false,
-                    is_warning: false,
-                    is_error: true,
-                    error_reason: "Scraper(DomainNotImplemented)".to_owned(),
-                },
-            ]
-        );
+        let want_logs = vec![
+            zweigles_report_log(1),
+            ReportLog {
+                id: 2,
+                report_id: 1,
+                title: "https://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html"
+                    .to_owned(),
+                is_success: true,
+                is_warning: false,
+                is_error: false,
+                error_reason: "".to_owned(),
+            },
+            ReportLog {
+                id: 3,
+                report_id: 1,
+                title: "https://zumavalley.com/blogs/smoothies-bowls/coconut-mango-smoothie-bowl"
+                    .to_owned(),
+                is_success: true,
+                is_warning: false,
+                is_error: false,
+                error_reason: "".to_owned(),
+            },
+        ];
+        let normalize = |log: &ReportLog| {
+            (
+                log.title.clone(),
+                log.is_success,
+                log.is_warning,
+                log.is_error,
+                log.error_reason.clone(),
+            )
+        };
+        let mut got_normalized: Vec<_> = got_logs.iter().map(normalize).collect();
+        let mut want_normalized: Vec<_> = want_logs.iter().map(normalize).collect();
+        got_normalized.sort();
+        want_normalized.sort();
+        pretty_assertions::assert_eq!(got_normalized, want_normalized);
         Ok(())
     }
 
@@ -222,16 +246,16 @@ mod tests {
         Ok(logs)
     }
 
-    fn all_recipes_report_log(id: i64) -> ReportLog {
+    fn zweigles_report_log(id: i64) -> ReportLog {
         ReportLog {
             id,
             report_id: id,
-            title: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies"
+            title: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes"
                 .to_string(),
-            is_success: false,
+            is_success: true,
             is_warning: false,
-            is_error: true,
-            error_reason: "Scraper(DomainNotImplemented)".to_string(),
+            is_error: false,
+            error_reason: "".into(),
         }
     }
 

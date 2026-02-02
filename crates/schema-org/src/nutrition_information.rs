@@ -64,7 +64,7 @@ pub struct NutritionInformation {
 
 impl NutritionInformation {
     /// Checks whether all fields of the schema are `None`.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.calories.is_empty()
             && self.carbohydrate_content.is_empty()
             && self.cholesterol_content.is_empty()

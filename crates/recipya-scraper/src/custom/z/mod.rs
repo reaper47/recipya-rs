@@ -5,3 +5,5 @@ pub mod zeezest;
 pub mod ziahatchchilecompany;
 pub mod zibakitchen;
 pub mod zsuzsaisinthekitchen;
+pub mod zumavalley;
+pub mod zuranazrecipe;

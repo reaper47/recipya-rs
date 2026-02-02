@@ -134,3 +134,24 @@ variant = "ZsuzsaIsInTheKitchen"
 url = "https://zsuzsaisinthekitchen.blogspot.com/"
 test = "https://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html"
 cuisine = "hungarian"
+
+[[website]]
+name = "Zuma Valley"
+domain = "zumavalley.com"
+variant = "ZumaValley"
+url = "https://zumavalley.com/blogs/smoothies-bowls"
+test = "https://zumavalley.com/blogs/smoothies-bowls/coconut-mango-smoothie-bowl"
+
+[[website]]
+name = "Zuranaz"
+domain = "zuranazrecipe.com"
+variant = "Zuranaz"
+url = "https://zuranazrecipe.com/"
+test = "https://zuranazrecipe.com/?p=7861"
+
+[[website]]
+name = "Zweigles"
+domain = "zweigles.com"
+variant = "Zweigles"
+url = "https://zweigles.com/recipes/"
+test = "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/"

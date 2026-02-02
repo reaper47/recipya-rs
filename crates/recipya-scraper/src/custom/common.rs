@@ -20,7 +20,7 @@ pub(crate) fn extract_author(
     css_selector: &str,
 ) -> Result<Vec<RecipeAuthorFieldEnum>> {
     match optional_text(fragment, css_selector)? {
-        Some(author) => Ok(vec![RecipeAuthorFieldEnum::new_person(&author)]),
+        Some(author) => Ok(vec![RecipeAuthorFieldEnum::new_person(author.trim())]),
         None => Ok(vec![]),
     }
 }
@@ -257,4 +257,21 @@ pub(crate) fn normalize_text(li: &ElementRef) -> String {
         .filter(|s| *s != "▢")
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+pub(crate) fn extract_text_from_elements(
+    fragment: &ElementRef,
+    css_selector: &str,
+) -> Result<Vec<String>> {
+    Ok(fragment
+        .select(&Selector::parse(css_selector)?)
+        .filter_map(|el| {
+            let text = el.text().collect::<String>().trim().to_string();
+            if text.is_empty() {
+                None
+            } else {
+                Some(text.trim_end_matches(',').trim().to_string())
+            }
+        })
+        .collect::<Vec<_>>())
 }

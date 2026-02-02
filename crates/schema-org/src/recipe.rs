@@ -53,7 +53,7 @@ pub enum GraphObject {
 
 impl Default for GraphObject {
     fn default() -> Self {
-        GraphObject::Unknown(serde_json::Value::Null)
+        Self::Unknown(serde_json::Value::Null)
     }
 }
 
@@ -394,7 +394,7 @@ pub struct Recipe {
 }
 
 impl Recipe {
-    /// Generates the schema definition of RecipeSchema.
+    /// Generates the schema definition of `RecipeSchema`.
     #[cfg(feature = "json-schema")]
     pub fn schema() -> String {
         let schema = schemars::schema_for!(Recipe);

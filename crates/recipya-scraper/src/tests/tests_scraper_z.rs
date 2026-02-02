@@ -3077,3 +3077,201 @@ fn test_zsuzsaisinthekitchen_ok() -> Result<()> {
     pretty_assertions::assert_eq!(got, want);
     Ok(())
 }
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zumavalley_ok() -> Result<()> {
+    let got = scrape(Website::ZumaValley, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        description: vec![RecipeDescriptionFieldEnum::Text(
+            "Enjoy this flavorful coconut fruit smoothie anytime of day!".into(),
+        )],
+        image: vec![RecipeImageFieldEnum::URL(
+            "https://zumavalley.com/cdn/shop/articles/RecipeImages_Smoothie_Berry.png?v=1588746443"
+                .into(),
+        )],
+        name: vec!["Delicious Coconut Berries Smoothie".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text("½ cup (1 pack) Zuma Valley Coconut Meat".into()),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "⅜ cup (1 pack) Zuma Valley Cold-Pressed Coconut Cream".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text("⅜ cup coconut water".into()),
+            RecipeRecipeIngredientFieldEnum::Text("⅝ cup frozen raspberries".into()),
+            RecipeRecipeIngredientFieldEnum::Text("¼ cup frozen blueberries".into()),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text("Blend it all ingredients.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "Top with extra berries, Zuma Valley Coconut Meat, and a drizzle of Zuma Valley Coconut Cream on top!".into(),
+            ),
+        ],
+        url: vec![
+            "https://zumavalley.com/blogs/smoothies-bowls/coconut-mango-smoothie-bowl<number>0"
+                .into(),
+        ],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zuranaz_ok() -> Result<()> {
+    let got = scrape(Website::Zuranaz, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        author: vec![RecipeAuthorFieldEnum::new_person("Zurana Masud")],
+        date_published: vec!["2021-02-17".into()],
+        image: vec![RecipeImageFieldEnum::URL(
+            "https://zuranazrecipe.com/wp-content/uploads/2021/02/nutella-donut-3-575x262.png"
+                .into(),
+        )],
+        name: vec!["Nutella Donut l Stuffed Nutella Doughnut Melt In Mouth".into()],
+        recipe_category: vec![
+            "Appetizers & Snacks".into(),
+            "Desserts, Mishty/Sweets".into(),
+            "World Recipes".into(),
+        ],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL("nutella donut".into()),
+            RecipeKeywordsFieldEnum::TextOrURL("stuffed nutella doughnut".into()),
+        ],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "flour/all Purpose Flour/Maida  - 3 cups (360 gram)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text("sugar  - 1/4 cup (50 gram)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("salt  - 1/2 tsp".into()),
+            RecipeRecipeIngredientFieldEnum::Text("Instant Yeast/dry yeast  - 1 tbs".into()),
+            RecipeRecipeIngredientFieldEnum::Text("one egg  - (substitute: 1/4 cup milk)".into()),
+            RecipeRecipeIngredientFieldEnum::Text("butter  - 2 tbs".into()),
+            RecipeRecipeIngredientFieldEnum::Text("vanilla   - 1/2 tsp".into()),
+            RecipeRecipeIngredientFieldEnum::Text("milk  - 1 cup".into()),
+            RecipeRecipeIngredientFieldEnum::Text("nutella  - 250 gram".into()),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "powder sugar/icing sugar  - as needed for coating".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "in a bowl sieve flour , then mix sugar, salt and yeast.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "whisk together egg, milk, butter and vanilla essence.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text("mix and knead to a soft dough.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "knead the dough for 6 to 8 minutes, until it's smooth & soft.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "place the dough in a greased bowl, cover and let it rise for one hour , until doubled in bulk.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "divide the dough into 16 individual parts. make smooth round shape 16 balls .(weight: 42 gram per ball)".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "place the ball on a parchment paper and lightly press the every ball.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "cover and rest them for 30 minutes to an hour, until doubled.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text("heat the oil in a heavy frying pan.".into()),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "carefully placed the doughnuts in the oil 2 or 3 at a time and fry until golden brown.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "turn over and cook the second side; each side should take no more than a minute.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "remove from the oil with a slotted spoon and drain on absorbent paper.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "fill the doughnuts with nutella, using your choice of sugar topping or glaze.".into(),
+            ),
+        ],
+        url: vec!["https://zuranazrecipe.com/?p=7861<number>0".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zweigles_ok() -> Result<()> {
+    let got = scrape(Website::Zweigles, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        author: vec![RecipeAuthorFieldEnum::Text("Zweigles".into())],
+        cook_time: vec![DurationOrText::Text("PT20M".into())],
+        date_published: vec!["2023-08-11".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text("Want a hearty and comforting meal you can make in 35 minutes? This Polish Kielbasa Sheet Pan and Potatoes is your answer. Heat up some sauerkraut or throw together a salad to go with your sausage and potatoes and enjoy!".into())],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://zweigles.com/wp-content/uploads/2023/08/20230802_151648-scaled.jpg".into(),
+            ),
+        ],
+        name: vec!["Polish Kielbasa Sheet Pan and Potatoes".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 lb Zweigle’s Smoked Polish Kielbasa".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1.5 lb potatoes (Yukon gold tastes best)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 large white onion".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Seasoning (paprika, garlic powder, kosher salt, black pepper)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 tbsp olive oil".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 tbsp fresh Italian parsley".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "1. Preheat oven to 400° and line a baking sheet with parchment paper.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "2. Chop potatoes into uniform small pieces, place in a bowl and cover with water. Microwave until potatoes are soft enough to pierce with a fork. Drain and rinse.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "3. Roughly chop onion and add to large bowl.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "4. Cut Polish Kielbasa into 1 inch diagonal pieces and add to bowl.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "5. Add potatoes to the bowl and add seasoning and olive oil. Stir to coat and spread out an even layer on the baking sheet.".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "6. Bake until sausage and potatoes are browned (around 20 mins).".into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::Text(
+                "7. Garnish with sour cream and chopped Italian parsley.".into(),
+            ),
+        ],
+        recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("4 Servings".into())],
+        total_time: vec![DurationOrText::Text("PT35M".into())],
+        url: vec!["https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}

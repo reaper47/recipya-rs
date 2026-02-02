@@ -9,7 +9,7 @@ use scraper::{Html, Selector};
 
 use crate::{
     Result,
-    custom::common::{extract_attr, extract_ingredients, extract_metadata_property, optional_text},
+    custom::common::{extract_attr, extract_metadata_property, optional_text},
 };
 
 pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
@@ -52,7 +52,6 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                         None => true,
                     })
                     .filter_map(|node| {
-                        println!("{}", node.children().collect::<Vec<_>>().len());
                         node.value().as_element().and_then(|_| {
                             let text = scraper::ElementRef::wrap(node)?
                                 .text()

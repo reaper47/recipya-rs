@@ -23,64 +23,64 @@ impl UnitConverter for Volume {
 
                     match unit {
                         Millilitre => Ok(Unit::Volume(self.with_value(*original_value))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -90,65 +90,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_centilitres(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
                         Centilitre => Ok(Unit::Volume(self.with_value(*original_value))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -158,65 +158,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_decilitres(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
                         Decilitre => Ok(Unit::Volume(self.with_value(*original_value))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -226,65 +226,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_litres(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
                         Litre => Ok(Unit::Volume(self.with_value(*original_value))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -294,63 +294,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_teaspoons_metric(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
                         MetricTeaspoon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -360,63 +360,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_tablespoons_metric(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
                         MetricTablespoon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -426,63 +426,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_dessertspoons_metric(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
                         MetricDessertSpoon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -492,65 +492,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_cups_metric(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
                         MetricCup => Ok(Unit::Volume(self.with_value(*original_value))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -560,63 +560,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_teaspoons_metric(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
                         AustralianTeaspoon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -626,65 +626,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_dessertspoons_metric(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
                         AustralianDessertspoon => {
                             Ok(Unit::Volume(self.with_value(*original_value)))
                         }
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -694,63 +694,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_tablespoons_aus(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
                         AustralianTablespoon => Ok(Unit::Volume(self.with_value(*original_value))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -760,63 +760,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_cups_metric(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => Ok(Unit::Volume(self.with_value(*original_value))),
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -826,63 +826,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_teaspoons_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
                         ImperialTeaspoon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -892,63 +892,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_dessertspoons_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
                         ImperialDessertspoon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -958,63 +958,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_tablespoons_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
                         ImperialTablespoon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1024,63 +1024,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_fluid_ounces_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
                         ImperialFluidOunce => Ok(Unit::Volume(self.with_value(*original_value))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1090,65 +1090,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_gills_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
                         ImperialGill => Ok(Unit::Volume(self.with_value(*original_value))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1158,65 +1158,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_cups_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
                         ImperialCup => Ok(Unit::Volume(self.with_value(*original_value))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1226,65 +1226,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_pints_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
                         ImperialPint => Ok(Unit::Volume(self.with_value(*original_value))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1294,63 +1294,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_quarts_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => Ok(Unit::Volume(self.with_value(*original_value))),
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1360,63 +1360,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_gallons_uk(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1426,65 +1426,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_teaspoons(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
                         USTeaspoon => Ok(Unit::Volume(self.with_value(*original_value))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1494,63 +1494,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_tablespoons(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => Ok(Unit::Volume(self.with_value(*original_value))),
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1560,63 +1560,63 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_fluid_ounces(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => Ok(Unit::Volume(self.with_value(*original_value))),
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1626,65 +1626,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_cups(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
                         ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
                         USCup => Ok(Unit::Volume(self.with_value(*original_value))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1694,65 +1694,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_pints(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
                         USPint => Ok(Unit::Volume(self.with_value(*original_value))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1762,65 +1762,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_quarts(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
                         USQuart => Ok(Unit::Volume(self.with_value(*original_value))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1830,65 +1830,65 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_gallons(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
                         USGallon => Ok(Unit::Volume(self.with_value(*original_value))),
-                        Jigger => Ok(Unit::Volume(Volume::Jigger(value.as_jiggers()))),
+                        Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
@@ -1898,64 +1898,64 @@ impl UnitConverter for Volume {
                     let value = measurements::Volume::from_jiggers(*original_value);
 
                     match unit {
-                        Millilitre => Ok(Unit::Volume(Volume::Millilitre(value.as_millilitres()))),
-                        Centilitre => Ok(Unit::Volume(Volume::Centilitre(value.as_centilitres()))),
-                        Decilitre => Ok(Unit::Volume(Volume::Decilitre(value.as_decilitres()))),
-                        Litre => Ok(Unit::Volume(Volume::Litre(value.as_litres()))),
-                        MetricTeaspoon => Ok(Unit::Volume(Volume::MetricTeaspoon(
+                        Millilitre => Ok(Unit::Volume(Self::Millilitre(value.as_millilitres()))),
+                        Centilitre => Ok(Unit::Volume(Self::Centilitre(value.as_centilitres()))),
+                        Decilitre => Ok(Unit::Volume(Self::Decilitre(value.as_decilitres()))),
+                        Litre => Ok(Unit::Volume(Self::Litre(value.as_litres()))),
+                        MetricTeaspoon => Ok(Unit::Volume(Self::MetricTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        MetricTablespoon => Ok(Unit::Volume(Volume::MetricTablespoon(
+                        MetricTablespoon => Ok(Unit::Volume(Self::MetricTablespoon(
                             value.as_tablespoons_metric(),
                         ))),
-                        MetricDessertSpoon => Ok(Unit::Volume(Volume::MetricDessertspoon(
+                        MetricDessertSpoon => Ok(Unit::Volume(Self::MetricDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        MetricCup => Ok(Unit::Volume(Volume::MetricCup(value.as_cups_metric()))),
-                        AustralianTeaspoon => Ok(Unit::Volume(Volume::AustralianTeaspoon(
+                        MetricCup => Ok(Unit::Volume(Self::MetricCup(value.as_cups_metric()))),
+                        AustralianTeaspoon => Ok(Unit::Volume(Self::AustralianTeaspoon(
                             value.as_teaspoons_metric(),
                         ))),
-                        AustralianDessertspoon => Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                        AustralianDessertspoon => Ok(Unit::Volume(Self::AustralianDessertspoon(
                             value.as_dessertspoons_metric(),
                         ))),
-                        AustralianTablespoon => Ok(Unit::Volume(Volume::AustralianTablespoon(
+                        AustralianTablespoon => Ok(Unit::Volume(Self::AustralianTablespoon(
                             value.as_tablespoons_aus(),
                         ))),
                         AustralianCup => {
-                            Ok(Unit::Volume(Volume::AustralianCup(value.as_cups_metric())))
+                            Ok(Unit::Volume(Self::AustralianCup(value.as_cups_metric())))
                         }
-                        ImperialTeaspoon => Ok(Unit::Volume(Volume::ImperialTeaspoon(
+                        ImperialTeaspoon => Ok(Unit::Volume(Self::ImperialTeaspoon(
                             value.as_teaspoons_uk(),
                         ))),
-                        ImperialDessertspoon => Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                        ImperialDessertspoon => Ok(Unit::Volume(Self::ImperialDessertspoon(
                             value.as_dessertspoons_uk(),
                         ))),
-                        ImperialTablespoon => Ok(Unit::Volume(Volume::ImperialTablespoon(
+                        ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
-                        ImperialGill => Ok(Unit::Volume(Volume::ImperialGill(value.as_gills_uk()))),
-                        ImperialCup => Ok(Unit::Volume(Volume::ImperialCup(value.as_cups_uk()))),
-                        ImperialPint => Ok(Unit::Volume(Volume::ImperialPint(value.as_pints_uk()))),
+                        ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
+                        ImperialCup => Ok(Unit::Volume(Self::ImperialCup(value.as_cups_uk()))),
+                        ImperialPint => Ok(Unit::Volume(Self::ImperialPint(value.as_pints_uk()))),
                         ImperialQuart => {
-                            Ok(Unit::Volume(Volume::ImperialQuart(value.as_quarts_uk())))
+                            Ok(Unit::Volume(Self::ImperialQuart(value.as_quarts_uk())))
                         }
                         ImperialGallon => {
-                            Ok(Unit::Volume(Volume::ImperialGallon(value.as_gallons_uk())))
+                            Ok(Unit::Volume(Self::ImperialGallon(value.as_gallons_uk())))
                         }
-                        USTeaspoon => Ok(Unit::Volume(Volume::USTeaspoon(value.as_teaspoons()))),
+                        USTeaspoon => Ok(Unit::Volume(Self::USTeaspoon(value.as_teaspoons()))),
                         USTablespoon => {
-                            Ok(Unit::Volume(Volume::USTablespoon(value.as_tablespoons())))
+                            Ok(Unit::Volume(Self::USTablespoon(value.as_tablespoons())))
                         }
                         USFluidOunce => {
-                            Ok(Unit::Volume(Volume::USFluidOunce(value.as_fluid_ounces())))
+                            Ok(Unit::Volume(Self::USFluidOunce(value.as_fluid_ounces())))
                         }
-                        USCup => Ok(Unit::Volume(Volume::USCup(value.as_cups()))),
-                        USPint => Ok(Unit::Volume(Volume::USPint(value.as_pints()))),
-                        USQuart => Ok(Unit::Volume(Volume::USQuart(value.as_quarts()))),
-                        USGallon => Ok(Unit::Volume(Volume::USGallon(value.as_gallons()))),
+                        USCup => Ok(Unit::Volume(Self::USCup(value.as_cups()))),
+                        USPint => Ok(Unit::Volume(Self::USPint(value.as_pints()))),
+                        USQuart => Ok(Unit::Volume(Self::USQuart(value.as_quarts()))),
+                        USGallon => Ok(Unit::Volume(Self::USGallon(value.as_gallons()))),
                         Jigger => Ok(Unit::Volume(self.with_value(*original_value))),
                     }
                 }

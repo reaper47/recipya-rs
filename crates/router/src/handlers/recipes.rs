@@ -1545,11 +1545,14 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let mut processed = 0;
         while rx.recv().await.is_some() {
             processed += 1;
-            let title = format!("Fetched {processed}/{}", fetch_ctx.total);
-            state
-                .broadcast_progress(&title, processed, fetch_ctx.total, true, user_id)
-                .await;
+            if fetch_ctx.total > 1 {
+                let title = format!("Fetched {processed}/{}", fetch_ctx.total);
+                state
+                    .broadcast_progress(&title, processed, fetch_ctx.total, true, user_id)
+                    .await;
+            }
         }
+
         state.hide_broadcast(user_id).await;
 
         fetch_ctx.report.lock().await.exec_time_ms = start_time.elapsed().as_millis() as i64;

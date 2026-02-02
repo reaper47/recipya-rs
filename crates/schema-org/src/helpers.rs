@@ -7,6 +7,7 @@ where
     D: Deserializer<'de>,
     T: DeserializeOwned,
 {
+    use serde::de::Error;
     use serde_json::Value;
 
     let value = Value::deserialize(deserializer)?;
@@ -14,26 +15,18 @@ where
     match value {
         Value::Null => Ok(Vec::new()),
         Value::String(ref s) if s.trim().is_empty() => Ok(Vec::new()),
-        Value::Array(arr) if arr.is_empty() => Ok(Vec::new()),
         Value::Array(arr) => {
-            let items: Vec<T> = arr
-                .into_iter()
-                .filter_map(|v| match &v {
-                    Value::Null => None,
-                    Value::String(s) if s.trim().is_empty() => None,
-                    _ => serde_json::from_value(v).ok(),
-                })
-                .collect();
-            Ok(items)
+            arr.into_iter()
+                .filter(|v| !v.is_null()) // Basic cleanup
+                .map(|v| serde_json::from_value(v).map_err(D::Error::custom))
+                .collect()
         }
-
-        other => match serde_json::from_value::<T>(other) {
-            Ok(item) => Ok(vec![item]),
-            Err(_) => Ok(Vec::new()),
-        },
+        other => {
+            let item = serde_json::from_value::<T>(other).map_err(D::Error::custom)?;
+            Ok(vec![item])
+        }
     }
 }
-
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
