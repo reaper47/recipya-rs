@@ -112,3 +112,17 @@ domain = "zibakitchen.com"
 variant = "ZibaKitchen"
 url = "https://zibakitchen.com"
 test = "https://zibakitchen.com/bolani-gandana/"
+
+[[website]]
+name = "Zoë Bakes"
+domain = "zoebakes.com"
+variant = "ZoeBakes"
+url = "https://www.zoebakes.com"
+test = "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/"
+
+[[website]]
+name = "Zona Cooks"
+domain = "zonacooks.com"
+variant = "ZonaCooks"
+url = "https://zonacooks.com"
+test = "https://zonacooks.com/jumbo-blueberry-muffins/"

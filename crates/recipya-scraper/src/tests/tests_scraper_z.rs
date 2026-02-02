@@ -2505,3 +2505,473 @@ fn test_zibakitchen_ok() -> Result<()> {
     pretty_assertions::assert_eq!(got, want);
     Ok(())
 }
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zoebakes_ok() -> Result<()> {
+    let got = scrape(Website::ZoeBakes, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
+            ..Default::default()
+        }],
+        date_published: vec!["2019-02-13T12:51:17+00:00".into()],
+        description: vec![
+            RecipeDescriptionFieldEnum::Text("Cinnamon rolls are a classic breakfast treat for any special occasion. You&amp;#39;ll be surprised how easy this recipe is to make, and the resulting cinnamon rolls are pillowy and delicious, with the perfect amount of cinnamon and sweetness.".into())
+        ],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://www.zoebakes.com/wp-content/uploads/2019/02/valentine-cinnamon-rolls-ZoeBakes-9-of-8.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://www.zoebakes.com/wp-content/uploads/2019/02/valentine-cinnamon-rolls-ZoeBakes-9-of-8-500x500.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://www.zoebakes.com/wp-content/uploads/2019/02/valentine-cinnamon-rolls-ZoeBakes-9-of-8-500x375.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://www.zoebakes.com/wp-content/uploads/2019/02/valentine-cinnamon-rolls-ZoeBakes-9-of-8-480x270.jpg".into(),
+            ),
+        ],
+        name: vec!["Cinnamon Rolls".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 1/2 lbs Brioche Dough".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 cup sugar".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 cup brown sugar".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 tbsp cinnamon".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 tsp orange zest".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "6 tbsp butter, melted".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "8 oz cream cheese, room temp".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "6 tbsp confectioners&amp;#39; sugar".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "4 tbsp heavy cream".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 tsp vanilla extract".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 tsp orange zest".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Give the dough 3 or 4 turns to help bind the gluten and give the rolls great texture. Rest the dough for 15-20 minutes.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-0".into(),
+                    ],
+                    name: vec![
+                        "Give the dough 3 or 4 turns to help bind the gluten and give the rolls great texture. Rest the dough for 15-20 minutes.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Once the dough is ready, roll it to 1/4-inch thick rectangle. Brush the entire surface with the melted butter. In a small bowl mix together the sugars, cinnamon and zest.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-1".into(),
+                    ],
+                    name: vec![
+                        "Once the dough is ready, roll it to 1/4-inch thick rectangle. Brush the entire surface with the melted butter. In a small bowl mix together the sugars, cinnamon and zest.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Spread the mixture over the butter topped dough. Use your hands to make sure you have an even coat of the sugar. Then roll the dough up, starting at the short end.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-2".into(),
+                    ],
+                    name: vec![
+                        "Spread the mixture over the butter topped dough. Use your hands to make sure you have an even coat of the sugar. Then roll the dough up, starting at the short end.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Use a&nbsp;Bread Knife,&nbsp;Kitchen Scissors&nbsp;or floss to cut the log into 8,10, or 12 equal pieces.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-3".into(),
+                    ],
+                    name: vec![
+                        "Use a&nbsp;Bread Knife,&nbsp;Kitchen Scissors&nbsp;or floss to cut the log into 8,10, or 12 equal pieces.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Set the buns on a parchment lined&nbsp;Sheet Pan&nbsp;or in a buttered baking dish. Give them about 1 1/2 to 2-inches between them. It is okay if they rise together in the oven.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-4".into(),
+                    ],
+                    name: vec![
+                        "Set the buns on a parchment lined&nbsp;Sheet Pan&nbsp;or in a buttered baking dish. Give them about 1 1/2 to 2-inches between them. It is okay if they rise together in the oven.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Loosely cover the buns and let them rest between 1 1/2 to 2 hours. The long rest will insure that you have a fluffy bun. (You can set these up the night before&nbsp;and let them rest overnight in the refrigerator. In the morning take them out and let them sit on the counter for about 45 minutes to an hour.)&nbsp;You may get away with slightly shorter rise, but the buns will not be quite as soft.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-5".into(),
+                    ],
+                    name: vec![
+                        "Loosely cover the buns and let them rest between 1 1/2 to 2 hours. The long rest will insure that you have a fluffy bun. (You can set these up the night before&nbsp;and let them rest overnight in the refrigerator. In the morning take them out and let them sit on the counter for about 45 minutes to an hour.)&nbsp;You may get away with slightly shorter rise, but the buns will not be quite as soft.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Preheat the oven to 350°F and place the rack in the middle of the oven.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-6".into(),
+                    ],
+                    name: vec![
+                        "Preheat the oven to 350°F and place the rack in the middle of the oven.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Bake for about 25 to 30 minutes, just until the centers are set when poked with your finger (they should be caramel colored). Let them cool for about 10 minutes.".into(),
+                    ],
+                    url: vec![
+                        "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-7".into(),
+                    ],
+                    name: vec![
+                        "Bake for about 25 to 30 minutes, just until the centers are set when poked with your finger (they should be caramel colored). Let them cool for about 10 minutes.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        url: vec!["https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
+
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_zonacooks_ok() -> Result<()> {
+    let got = scrape(Website::ZonaCooks, 0)?;
+
+    let want = Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        aggregate_rating: vec![AggregateRating {
+            r#type: AtType::AggregateRating.to_opt(),
+            rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
+            ..Default::default()
+        }],
+        cook_time: vec![DurationOrText::Text("PT30M".into())],
+        date_published: vec!["2025-12-15T11:24:13+00:00".into()],
+        description: vec![RecipeDescriptionFieldEnum::Text("These jumbo blueberry muffins with sour cream are absolutely the best! They’re super quick to whip up—ready in just 40 minutes! Each bite is filled with juicy blueberries, and the soft, moist center makes them totally irresistible. Here’s a little tip: don’t skip the turbinado sugar on top! It adds such a delightful texture and flavor that really takes the muffins to the next level. Trust me, it’s a total game-changer!".into())],
+        image: vec![
+            RecipeImageFieldEnum::URL(
+                "https://zonacooks.com/wp-content/uploads/2025/12/Jumbo-Blueberry-Muffins-5.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zonacooks.com/wp-content/uploads/2025/12/Jumbo-Blueberry-Muffins-5-500x500.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zonacooks.com/wp-content/uploads/2025/12/Jumbo-Blueberry-Muffins-5-500x375.jpg".into(),
+            ),
+            RecipeImageFieldEnum::URL(
+                "https://zonacooks.com/wp-content/uploads/2025/12/Jumbo-Blueberry-Muffins-5-480x270.jpg".into(),
+            ),
+        ],
+        keywords: vec![
+            RecipeKeywordsFieldEnum::TextOrURL(
+                "Best Blueberry Muffins with Sour Cream, Easy Blueberry Muffins, Jumbo Blueberry Muffin, Jumbo Blueberry Muffin Recipe, Jumbo Blueberry Muffins".into(),
+            ),
+        ],
+        prep_time: vec![DurationOrText::Text("PT10M".into())],
+        name: vec!["Jumbo Blueberry Muffin Recipe".into()],
+        nutrition: vec![
+            NutritionInformation {
+                calories: vec![
+                    Energy::new("552 kcal"),
+                ],
+                carbohydrate_content: vec![
+                    Mass::new("79 g"),
+                ],
+                cholesterol_content: vec![
+                    Mass::new("96 mg"),
+                ],
+                context: None,
+                fat_content: vec![
+                    Mass::new("24 g"),
+                ],
+                fiber_content: vec![
+                    Mass::new("3 g"),
+                ],
+                protein_content: vec![
+                    Mass::new("8 g"),
+                ],
+                saturated_fat_content: vec![
+                    Mass::new("8 g"),
+                ],
+                serving_size: vec!["1".into()],
+                sodium_content: vec![
+                    Mass::new("138 mg"),
+                ],
+                sugar_content: vec![
+                    Mass::new("44 g"),
+                ],
+                r#type: AtType::NutritionInformation.to_opt(),
+                trans_fat_content: vec![
+                    Mass::new("0.4 g"),
+                ],
+                unsaturated_fat_content: vec![
+                    Mass::new("14 g"),
+                ],
+            },
+        ],
+        recipe_category: vec!["Side Dish".into()],
+        recipe_cuisine: vec!["American".into()],
+        recipe_ingredient: vec![
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 cup all-purpose flour".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/8 teaspoon kosher salt".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 teaspoon baking powder".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 teaspoon ground cinnamon".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 cup granulated sugar".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 large egg (room temperature)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/8 cup cooking oil (like vegetable or canola oil)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "2 Tablespoons unsalted butter (melted and slightly cooled)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/4 cup sour cream (room temperature)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/4 cup whole milk (room temperature)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1/2 teaspoon vanilla extract (or almond extract)".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "1 cup fresh blueberries".into(),
+            ),
+            RecipeRecipeIngredientFieldEnum::Text(
+                "Turbinado sugar (for crunchy tops)".into(),
+            ),
+        ],
+        recipe_instructions: vec![
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Preheat the oven to 425℉ and prepare either a jumbo or standard muffin tin with liners. If not using liners, lightly grease each well.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-0".into(),
+                    ],
+                    name: vec![
+                        "Preheat the oven to 425℉ and prepare either a jumbo or standard muffin tin with liners. If not using liners, lightly grease each well.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "In a large bowl, whisk together the flour, salt, baking powder and cinnamon.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-1".into(),
+                    ],
+                    name: vec![
+                        "In a large bowl, whisk together the flour, salt, baking powder and cinnamon.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Add the blueberries to another bowl and toss with 1/2 tablespoon of the flour mixture and set aside.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-2".into(),
+                    ],
+                    name: vec![
+                        "Add the blueberries to another bowl and toss with 1/2 tablespoon of the flour mixture and set aside.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "In a third bowl, whisk together the sugar, egg, oil, melted butter, sour cream, whole milk, and vanilla.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-3".into(),
+                    ],
+                    name: vec![
+                        "In a third bowl, whisk together the sugar, egg, oil, melted butter, sour cream, whole milk, and vanilla.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Add the wet mixture to the dry mixture and use a rubber spatula to gently combine.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-4".into(),
+                    ],
+                    name: vec![
+                        "Add the wet mixture to the dry mixture and use a rubber spatula to gently combine.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Once combined, fold in the blueberries. Then, fill each well or liner with batter, mostly to the top, and sprinkle generously with the coarse turbinado sugar.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-5".into(),
+                    ],
+                    name: vec![
+                        "Once combined, fold in the blueberries. Then, fill each well or liner with batter, mostly to the top, and sprinkle generously with the coarse turbinado sugar.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Bake the muffins for 5 minutes at 425℉, then reduce the temperature to 400℉. Bake jumbo muffins for an additional 25 minutes, and regular muffins for an additional 20 minutes. For either, a toothpick inserted into the center should come out with moist crumbs and no wet batter.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-6".into(),
+                    ],
+                    name: vec![
+                        "Bake the muffins for 5 minutes at 425℉, then reduce the temperature to 400℉. Bake jumbo muffins for an additional 25 minutes, and regular muffins for an additional 20 minutes. For either, a toothpick inserted into the center should come out with moist crumbs and no wet batter.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+            RecipeRecipeInstructionsFieldEnum::CreativeWork(
+                CreativeWork {
+                    r#type: AtType::HowToStep.to_opt(),
+                    text: vec![
+                        "Remove the pan to a wire rack to cool for 5 minutes, then remove each muffin from the well to continue cooling.".into(),
+                    ],
+                    url: vec![
+                        "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-7".into(),
+                    ],
+                    name: vec![
+                        "Remove the pan to a wire rack to cool for 5 minutes, then remove each muffin from the well to continue cooling.".into(),
+                    ],
+                    ..Default::default()
+                }.into(),
+            ),
+        ],
+        recipe_yield: vec![
+            RecipeRecipeYieldFieldEnum::Text("3".into()),
+            RecipeRecipeYieldFieldEnum::Text("3 Jumbo or 6 Regular".into()),
+        ],
+        review: vec![
+            Review {
+                r#type: AtType::Review.to_opt(),
+                review_body: vec![
+                    "I absolutely love the easy huge muffins. so good!".into(),
+                ],
+                review_rating: vec![
+                    Rating {
+                        r#type: AtType::Rating.to_opt(),
+                        rating_value: vec![RatingRatingValueFieldEnum::Text("5".into())],
+                        ..Default::default()
+                    },
+                ],
+                date_published: vec!["2025-12-15".into()],
+                author: vec![RecipeAuthorFieldEnum::new_org("Zona House")],
+                ..Default::default()
+            },
+        ],
+        total_time: vec![DurationOrText::Text("PT40M".into())],
+        url: vec!["https://zonacooks.com/jumbo-blueberry-muffins/".into()],
+        ..Default::default()
+    };
+    pretty_assertions::assert_eq!(got, want);
+    Ok(())
+}
