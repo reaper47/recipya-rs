@@ -109,9 +109,9 @@ fn get_html_file_path(website: &Website, number: usize) -> PathBuf {
 #[allow(unused)]
 pub async fn scrape_test_websites(number: usize) -> Result<()> {
     let website = match number {
-        1 => Website::AllRecipes,
-        2 => Website::Zeezest,
-        3 => Website::Zenbelly,
+        1 => Website::Zweigles,
+        2 => Website::ZumaValley,
+        3 => Website::ZsuzsaIsInTheKitchen,
         _ => Website::Zenbelly,
     };
 
@@ -121,7 +121,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         .cloned()
         .expect("url to test not in vector of urls");
 
-    let path = get_html_file_path(&website, number);
+    let path = get_html_file_path(&website, 0);
 
     if !path.exists() {
         let client = reqwest::Client::new();
