@@ -8,7 +8,7 @@ use crate::field::{
     CreativeWorkTranslatorFieldEnum, CreativeWorkVideoFieldEnum,
 };
 use crate::helpers::one_or_many;
-use crate::{AggregateRating, Comment, Duration, ImageObject, InteractionCounter, Review};
+use crate::{AggregateRating, AtType, Comment, Duration, ImageObject, InteractionCounter, Review};
 
 ///<https://schema.org/dateCreated>
 ///<https://schema.org/Date>
@@ -176,4 +176,15 @@ pub struct CreativeWork {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
+}
+
+impl CreativeWork {
+    /// Creates a new CreativeWork from the value only.
+    pub fn new(r#type: AtType, text: &str) -> Self {
+        Self {
+            r#type: Some(r#type.to_string()),
+            text: vec![text.into()],
+            ..Default::default()
+        }
+    }
 }

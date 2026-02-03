@@ -16,6 +16,7 @@ use futures_util::pin_mut;
 use futures_util::stream::{self, StreamExt};
 use integrations::api::Credentials;
 use itertools::izip;
+use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
 use serde::Deserialize;
 use tokio::fs;
@@ -41,7 +42,6 @@ use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;
 use models::user::User;
-use models::website::{ToHtmlTable, Website};
 use models::{Recipe, RecipeDetails};
 use support::fs::FsSupport;
 use templates::recipes::timeline::Event;
@@ -1545,11 +1545,14 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let mut processed = 0;
         while rx.recv().await.is_some() {
             processed += 1;
-            let title = format!("Fetched {processed}/{}", fetch_ctx.total);
-            state
-                .broadcast_progress(&title, processed, fetch_ctx.total, true, user_id)
-                .await;
+            if fetch_ctx.total > 1 {
+                let title = format!("Fetched {processed}/{}", fetch_ctx.total);
+                state
+                    .broadcast_progress(&title, processed, fetch_ctx.total, true, user_id)
+                    .await;
+            }
         }
+
         state.hide_broadcast(user_id).await;
 
         fetch_ctx.report.lock().await.exec_time_ms = start_time.elapsed().as_millis() as i64;
@@ -1971,16 +1974,6 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
 }
 
 /// Handles the supported websites endpoint.
-pub async fn supported_websites_handler(
-    RequireAuth(user): RequireAuth,
-    State(state): State<AppState>,
-) -> impl IntoResponse {
-    match Website::supported_websites(&state.mm).await {
-        Ok(websites) => Html(websites.to_html_table_rows()).into_response(),
-        Err(err) => {
-            error!("Error fetching supported websites: {err}");
-            broadcast_error(&state, user.id, "Error fetching supported websites.").await;
-            Error::Database.into_response()
-        }
-    }
+pub async fn supported_websites_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
+    Html(Website::all().to_html_table_rows()).into_response()
 }

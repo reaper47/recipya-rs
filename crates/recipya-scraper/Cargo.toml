@@ -1,8 +1,8 @@
 [package]
 name = "recipya-scraper"
 version = "0.1.0"
+build = "build.rs"
 publish = true
-
 authors.workspace = true
 categories.workspace = true
 description.workspace = true
@@ -18,9 +18,18 @@ rust-version.workspace = true
 async-trait.workspace = true
 axum.workspace = true
 derive_more.workspace = true
+flate2 = "1.1.8"
 reqwest.workspace = true
 schema-org.workspace = true
 scraper.workspace = true
 serde_json.workspace = true
 support.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+tracing-test = "0.2.5"
+
+[build-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"

@@ -9,7 +9,7 @@ use crate::field::{
 };
 use crate::helpers::one_or_many;
 use crate::{
-    Action, Comment, CreativeWork, ImageObject, InteractionCounter, ListItem, Review, Thing,
+    Action, AtType, Comment, CreativeWork, ImageObject, InteractionCounter, ListItem, Review, Thing,
 };
 
 ///<https://schema.org/dateCreated>
@@ -210,4 +210,15 @@ pub struct HowToStep {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub item_list_order: Vec<HowToStepItemListOrderFieldEnum>,
+}
+
+impl HowToStep {
+    /// Creates a new HowToStep from the value only.
+    pub fn new(text: &str) -> Self {
+        Self {
+            r#type: Some(AtType::HowToStep.to_string()),
+            text: vec![text.into()],
+            ..Default::default()
+        }
+    }
 }

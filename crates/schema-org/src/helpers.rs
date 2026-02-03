@@ -11,12 +11,22 @@ where
     use serde_json::Value;
 
     let value = Value::deserialize(deserializer)?;
+
     match value {
-        Value::Array(arr) => serde_json::from_value(Value::Array(arr)).map_err(Error::custom),
-        other => Ok(vec![serde_json::from_value(other).map_err(Error::custom)?]),
+        Value::Null => Ok(Vec::new()),
+        Value::String(ref s) if s.trim().is_empty() => Ok(Vec::new()),
+        Value::Array(arr) => {
+            arr.into_iter()
+                .filter(|v| !v.is_null()) // Basic cleanup
+                .map(|v| serde_json::from_value(v).map_err(D::Error::custom))
+                .collect()
+        }
+        other => {
+            let item = serde_json::from_value::<T>(other).map_err(D::Error::custom)?;
+            Ok(vec![item])
+        }
     }
 }
-
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;

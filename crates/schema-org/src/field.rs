@@ -185,6 +185,16 @@ impl Default for FieldEnum6 {
         Self::Person(Person::default())
     }
 }
+impl FieldEnum6 {
+    pub fn is_default(&self) -> bool {
+        match self {
+            FieldEnum6::Organization(org) => org == &Organization::default(),
+            FieldEnum6::Person(person) => person == &Person::default(),
+            FieldEnum6::Text(text) => text.is_empty(),
+        }
+    }
+}
+
 ///<https://schema.org/creator>
 pub type ClipCreatorFieldEnum = FieldEnum6;
 ///<https://schema.org/author>
@@ -323,8 +333,19 @@ pub type RecipeProducerFieldEnum = FieldEnum6;
 pub type RecipeAuthorFieldEnum = FieldEnum6;
 
 impl RecipeAuthorFieldEnum {
+    /// Creates a new person.
     pub fn new_person(name: &str) -> Self {
         Self::Person(Person {
+            r#type: AtType::Person.to_opt(),
+            name: vec![name.to_string()],
+            ..Default::default()
+        })
+    }
+
+    /// Creates a new organization.
+    pub fn new_org(name: &str) -> Self {
+        Self::Organization(Organization {
+            r#type: AtType::Person.to_opt(),
             name: vec![name.to_string()],
             ..Default::default()
         })

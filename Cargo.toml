@@ -1,21 +1,5 @@
 [workspace]
-members = [
-    "crates/app",
-    "crates/auth",
-    "crates/config",
-    "crates/email",
-    "crates/integrations",
-    "crates/math",
-    "crates/models",
-    "crates/recipya-cli",
-    "crates/recipya-scraper",
-    "crates/repository",
-    "crates/router",
-    "crates/schema-org",
-    "crates/support",
-    "crates/templates",
-    "crates/testing",
-]
+members = ["crates/*"]
 resolver = "3"
 
 [workspace.package]
@@ -35,10 +19,10 @@ app = { path = "./crates/app" }
 async-stream = "0.3.6"
 async-trait = "0.1.89"
 auth = { path = "./crates/auth", default-features = false }
-axum = { version = "0.8.6", features = ["multipart", "ws"] }
+axum = { version = "0.8.8", features = ["multipart", "ws"] }
 axum-test = { version = "18.1.0", features = ["ws"] }
 base64 = "0.22.1"
-chrono = "0.4.42"
+chrono = "0.4.43"
 config = { path = "./crates/config" }
 derive_more = { version = "2.0.1", features = ["from", "display"] }
 diesel = { version = "2.3.5", features = ["postgres", "chrono", "serde_json", "time", "uuid"] }
@@ -62,27 +46,27 @@ regex = "1.12.2"
 repository = { path = "./crates/repository" }
 reqwest = { version = "0.13.1", features = ["blocking", "form", "json"] }
 router = { path = "./crates/router" }
-rustls = { version = "0.23.35", default-features = false, features = ["ring"] }
+rustls = { version = "0.23.36", default-features = false, features = ["ring"] }
 schema-org = { path = "./crates/schema-org", default-features = false }
 scraper = "0.25.0"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde_json = "1.0.149"
 strum = { version = "0.27.2", features = ["derive"] }
 strum_macros = "0.27.2"
 support = { path = "./crates/support" }
 templates = { path = "./crates/templates" }
 testing = { path = "./crates/testing" }
 time = { version = "0.3.44", features = ["serde"] }
-tokio = { version = "1.48.0", features = ["full"] }
+tokio = { version = "1.49.0", features = ["full"] }
 tower-cookies = "0.11.0"
-tower-http = { version = "0.6.6", features = ["fs"] }
-tracing = "0.1.41"
-url = { version = "2.5.7", features = ["serde"] }
-uuid = { version = "1.18.1", features = ["fast-rng", "serde", "v4"] }
+tower-http = { version = "0.6.8", features = ["fs"] }
+tracing = "0.1.44"
+url = { version = "2.5.8", features = ["serde"] }
+uuid = { version = "1.20.0", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 whatlang = "0.16.4"
-winnow = "0.7.13"
-zip = "6.0.0"
+winnow = "0.7.14"
+zip = "7.2.0"
 
 [workspace.metadata.tasks]
 web-install-deps = "npm --prefix ./web/app install"

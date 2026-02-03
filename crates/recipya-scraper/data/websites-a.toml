@@ -1,0 +1,19 @@
+# Recipe Website Registry - A
+# This file defines all supported recipe websites for scraping.
+#
+# Fields:
+#   name    = Name of the website
+#   domain  = Website domain (without www.)
+#   variant = Rust enum variant name
+#   url     = Recipe index/listing page
+#   test    = Sample recipe URLs for testing
+#
+# Optional fields (add when needed):
+#   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
+
+[[website]]
+name = "Allrecipes"
+domain = "allrecipes.com"
+variant = "AllRecipes"
+url = "https://www.allrecipes.com/"
+test = "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"

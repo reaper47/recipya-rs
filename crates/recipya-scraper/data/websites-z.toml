@@ -1,0 +1,157 @@
+# Recipe Website Registry - Z
+# This file defines all supported recipe websites for scraping.
+#
+# Fields:
+#   name    = Name of the website
+#   domain  = Website domain (without www.)
+#   variant = Rust enum variant name
+#   url     = Recipe index/listing page
+#   test    = Sample recipe URLs for testing
+#
+# Optional fields (add when needed):
+#   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
+
+[[website]]
+name = "Zaatar & Zaytoun"
+domain = "zaatarandzaytoun.com"
+variant = "ZaatarAndZaytoun"
+url = "https://zaatarandzaytoun.com/recipe-index/"
+test = "https://zaatarandzaytoun.com/sardines/"
+cuisine = "lebanese"
+
+[[website]]
+name = "Zabiha Halal"
+domain = "zabihahalal.com"
+variant = "ZabihaHalal"
+url = "https://zabihahalal.com/recipes/"
+test = "https://zabihahalal.com/recipes/bbq-chicken-pizza/"
+
+[[website]]
+name = "Zagleft"
+domain = "zagleft.com"
+variant = "ZagLeft"
+url = "https://zagleft.com/recipe-list/"
+test = "https://zagleft.com/banana-oat-pecan-muffins/"
+
+[[website]]
+name = "ZardyPlants"
+domain = "zardyplants.com"
+variant = "ZardyPlants"
+url = "https://zardyplants.com"
+test = "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/"
+cuisine = "vegetarian"
+
+[[website]]
+name = "Zars Kitchen"
+domain = "zarskitchen.com"
+variant = "Zarskitchen"
+url = "https://zarskitchen.com"
+test = "https://zarskitchen.com/wild-garlic-pesto/"
+
+[[website]]
+name = "ZZest"
+domain = "zeezest.com"
+variant = "Zeezest"
+url = "https://zeezest.com/recipes/"
+test = "https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302"
+
+[[website]]
+name = "Zen Belly"
+domain = "zenbelly.com"
+variant = "Zenbelly"
+url = "https://www.zenbelly.com/recipes/"
+test = "https://www.zenbelly.com/crispy-chickpeas/"
+
+[[website]]
+name = "Zenhealth"
+domain = "zenhealth.net"
+variant = "ZenHealth"
+url = "https://zenhealth.net/recipe-index/"
+test = "https://zenhealth.net/lemongrass-tea-recipe/"
+
+[[website]]
+name = "Zen Kimchi"
+domain = "zenkimchi.com"
+variant = "ZenKimchi"
+url = "https://zenkimchi.com"
+test = "https://zenkimchi.com/recipes/modern-korean/korean-style-arrabbiata-sauce/"
+cuisine = "korean"
+
+[[website]]
+name = "Zestful Kitchen"
+domain = "zestfulkitchen.com"
+variant = "ZestfulKitchen"
+url = "https://zestfulkitchen.com/category/all-recipes-from-zestful-kitchen/"
+test = "https://zestfulkitchen.com/smash-burger-recipe/"
+
+[[website]]
+name = "Zesty South Indian Kitchen"
+domain = "zestysouthindiankitchen.com"
+variant = "ZestSouthIndianKitchen"
+url = "https://zestysouthindiankitchen.com"
+test = "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/"
+cuisine = "indian"
+
+[[website]]
+name = "Catherine Desserts"
+domain = "zhangcatherine.com"
+variant = "ZhangCatherine"
+url = "https://zhangcatherine.com"
+test = "https://zhangcatherine.com/pistachio-macarons/"
+
+[[website]]
+name = "Zia Hatch Chile Company"
+domain = "ziahatchchileco.com"
+variant = "ZiaHatchChileCompany"
+url = "https://ziahatchchileco.com"
+test = "https://ziahatchchileco.com/blogs/recipes/hatch-green-chile-baked-spaghetti"
+
+[[website]]
+name = "Ziba Kitchen"
+domain = "zibakitchen.com"
+variant = "ZibaKitchen"
+url = "https://zibakitchen.com"
+test = "https://zibakitchen.com/bolani-gandana/"
+
+[[website]]
+name = "Zoë Bakes"
+domain = "zoebakes.com"
+variant = "ZoeBakes"
+url = "https://www.zoebakes.com"
+test = "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/"
+
+[[website]]
+name = "Zona Cooks"
+domain = "zonacooks.com"
+variant = "ZonaCooks"
+url = "https://zonacooks.com"
+test = "https://zonacooks.com/jumbo-blueberry-muffins/"
+
+[[website]]
+name = "Zsuzsa is in the kitchen"
+domain = "zsuzsaisinthekitchen.blogspot.com"
+variant = "ZsuzsaIsInTheKitchen"
+url = "https://zsuzsaisinthekitchen.blogspot.com/"
+test = "https://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html"
+cuisine = "hungarian"
+
+[[website]]
+name = "Zuma Valley"
+domain = "zumavalley.com"
+variant = "ZumaValley"
+url = "https://zumavalley.com/blogs/smoothies-bowls"
+test = "https://zumavalley.com/blogs/smoothies-bowls/coconut-mango-smoothie-bowl"
+
+[[website]]
+name = "Zuranaz"
+domain = "zuranazrecipe.com"
+variant = "Zuranaz"
+url = "https://zuranazrecipe.com/"
+test = "https://zuranazrecipe.com/?p=7861"
+
+[[website]]
+name = "Zweigles"
+domain = "zweigles.com"
+variant = "Zweigles"
+url = "https://zweigles.com/recipes/"
+test = "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/"

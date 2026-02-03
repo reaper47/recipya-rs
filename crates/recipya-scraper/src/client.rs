@@ -1,5 +1,8 @@
+use std::io::Read;
+
 use async_trait::async_trait;
 use axum::body::Bytes;
+use flate2::read::GzDecoder;
 
 use crate::Result;
 use crate::websites::Website;
@@ -28,7 +31,16 @@ impl HttpClient for AppHttpClient {
     async fn get_async<'a>(&'a self, _host: Website, url: &str) -> Result<String> {
         let res = self.client.get(url).send().await?;
         let body = res.text().await?;
-        Ok(body)
+
+        let bytes = body.as_bytes();
+        if bytes.len() >= 2 && bytes[0] == 0x1f && bytes[1] == 0x8b {
+            let mut d = GzDecoder::new(&bytes[..]);
+            let mut s = String::new();
+            d.read_to_string(&mut s).unwrap();
+            Ok(s)
+        } else {
+            Ok(body)
+        }
     }
 
     fn get(&self, _host: Website, url: &str) -> Result<String> {

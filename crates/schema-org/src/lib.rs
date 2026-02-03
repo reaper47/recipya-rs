@@ -132,13 +132,17 @@ pub enum AtType {
     CreativeWork,
     Duration,
     Energy,
+    HowToStep,
     HowToTool,
     ImageObject,
     ItemList,
     ListItem,
     MusicAlbum,
     NutritionInformation,
+    Organization,
+    Person,
     QuantitativeValue,
+    Rating,
     #[default]
     Recipe,
     Review,
@@ -151,21 +155,25 @@ impl Display for AtType {
             f,
             "{}",
             match self {
-                AtType::Comment => "Comment".to_string(),
-                AtType::CreativeWork => "CreativeWork".to_string(),
-                AtType::Duration => "Duration".to_string(),
-                AtType::Energy => "Energy".to_string(),
-                AtType::Recipe => "Recipe".to_string(),
-                AtType::AggregateRating => "AggregateRating".to_string(),
-                AtType::HowToTool => "HowToTool".to_string(),
-                AtType::ImageObject => "ImageObject".to_string(),
-                AtType::ItemList => "ItemList".to_string(),
-                AtType::ListItem => "ListItem".to_string(),
-                AtType::MusicAlbum => "MusicAlbum".to_string(),
-                AtType::NutritionInformation => "NutritionInformation".to_string(),
-                AtType::QuantitativeValue => "QuantitativeValue".to_string(),
-                AtType::Review => "Review".to_string(),
-                AtType::VideoObject => "VideoObject".to_string(),
+                Self::Comment => "Comment".to_string(),
+                Self::CreativeWork => "CreativeWork".to_string(),
+                Self::Duration => "Duration".to_string(),
+                Self::Energy => "Energy".to_string(),
+                Self::Recipe => "Recipe".to_string(),
+                Self::AggregateRating => "AggregateRating".to_string(),
+                Self::HowToStep => "HowToStep".to_string(),
+                Self::HowToTool => "HowToTool".to_string(),
+                Self::ImageObject => "ImageObject".to_string(),
+                Self::ItemList => "ItemList".to_string(),
+                Self::ListItem => "ListItem".to_string(),
+                Self::MusicAlbum => "MusicAlbum".to_string(),
+                Self::NutritionInformation => "NutritionInformation".to_string(),
+                Self::Organization => "Organization".to_string(),
+                Self::Person => "Person".to_string(),
+                Self::QuantitativeValue => "QuantitativeValue".to_string(),
+                Self::Rating => "Rating".to_string(),
+                Self::Review => "Review".to_string(),
+                Self::VideoObject => "VideoObject".to_string(),
             }
         )
     }
@@ -175,21 +183,25 @@ impl AtType {
     /// Sets the value of the `@type` attribute.
     pub fn to_opt(&self) -> Option<String> {
         match self {
-            AtType::AggregateRating => Some(Self::AggregateRating.to_string()),
-            AtType::Comment => Some(Self::Comment.to_string()),
-            AtType::CreativeWork => Some(Self::CreativeWork.to_string()),
-            AtType::Duration => Some(Self::Duration.to_string()),
-            AtType::Energy => Some(Self::Energy.to_string()),
-            AtType::HowToTool => Some(Self::HowToTool.to_string()),
-            AtType::ImageObject => Some(Self::ImageObject.to_string()),
-            AtType::ItemList => Some(Self::ItemList.to_string()),
-            AtType::ListItem => Some(Self::ListItem.to_string()),
-            AtType::MusicAlbum => Some(Self::MusicAlbum.to_string()),
-            AtType::NutritionInformation => Some(Self::NutritionInformation.to_string()),
-            AtType::QuantitativeValue => Some(Self::QuantitativeValue.to_string()),
-            AtType::Recipe => Some(Self::Recipe.to_string()),
-            AtType::Review => Some(Self::Review.to_string()),
-            AtType::VideoObject => Some(Self::VideoObject.to_string()),
+            Self::AggregateRating => Some(Self::AggregateRating.to_string()),
+            Self::Comment => Some(Self::Comment.to_string()),
+            Self::CreativeWork => Some(Self::CreativeWork.to_string()),
+            Self::Duration => Some(Self::Duration.to_string()),
+            Self::Energy => Some(Self::Energy.to_string()),
+            Self::HowToStep => Some(Self::HowToStep.to_string()),
+            Self::HowToTool => Some(Self::HowToTool.to_string()),
+            Self::ImageObject => Some(Self::ImageObject.to_string()),
+            Self::ItemList => Some(Self::ItemList.to_string()),
+            Self::ListItem => Some(Self::ListItem.to_string()),
+            Self::MusicAlbum => Some(Self::MusicAlbum.to_string()),
+            Self::NutritionInformation => Some(Self::NutritionInformation.to_string()),
+            Self::Organization => Some(Self::Organization.to_string()),
+            Self::Person => Some(Self::Person.to_string()),
+            Self::QuantitativeValue => Some(Self::QuantitativeValue.to_string()),
+            Self::Rating => Some(Self::Rating.to_string()),
+            Self::Recipe => Some(Self::Recipe.to_string()),
+            Self::Review => Some(Self::Review.to_string()),
+            Self::VideoObject => Some(Self::VideoObject.to_string()),
         }
     }
 }
@@ -206,6 +218,7 @@ mod tests {
         assert_eq!(AtType::Energy.to_string(), "Energy");
         assert_eq!(AtType::Recipe.to_string(), "Recipe");
         assert_eq!(AtType::AggregateRating.to_string(), "AggregateRating");
+        assert_eq!(AtType::HowToStep.to_string(), "HowToStep");
         assert_eq!(AtType::HowToTool.to_string(), "HowToTool");
         assert_eq!(AtType::ImageObject.to_string(), "ImageObject");
         assert_eq!(AtType::ItemList.to_string(), "ItemList");
@@ -215,7 +228,9 @@ mod tests {
             AtType::NutritionInformation.to_string(),
             "NutritionInformation"
         );
+        assert_eq!(AtType::Organization.to_string(), "Organization");
         assert_eq!(AtType::QuantitativeValue.to_string(), "QuantitativeValue");
+        assert_eq!(AtType::Rating.to_string(), "Rating");
         assert_eq!(AtType::Review.to_string(), "Review");
         assert_eq!(AtType::VideoObject.to_string(), "VideoObject");
     }
@@ -234,6 +249,7 @@ mod tests {
             AtType::AggregateRating.to_opt(),
             Some("AggregateRating".to_string())
         );
+        assert_eq!(AtType::HowToStep.to_opt(), Some("HowToStep".to_string()));
         assert_eq!(AtType::HowToTool.to_opt(), Some("HowToTool".to_string()));
         assert_eq!(
             AtType::ImageObject.to_opt(),
@@ -245,6 +261,10 @@ mod tests {
         assert_eq!(
             AtType::NutritionInformation.to_opt(),
             Some("NutritionInformation".to_string())
+        );
+        assert_eq!(
+            AtType::Organization.to_opt(),
+            Some("Organization".to_string())
         );
         assert_eq!(
             AtType::QuantitativeValue.to_opt(),

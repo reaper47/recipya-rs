@@ -10,7 +10,6 @@ pub mod share;
 pub mod time;
 pub mod tokens;
 pub mod user;
-pub mod website;
 
 pub use error::{Error, Result};
 pub use recipe::structs::recipe::Recipe;
