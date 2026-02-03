@@ -36,9 +36,9 @@ impl Scraper {
     }
 
     /// Scrapes the given URL and returns a `RecipeSchema`.
-    pub fn scrape(&self, url: &str) -> Result<Recipe> {
+    pub async fn scrape(&self, url: &str) -> Result<Recipe> {
         let website = Website::from(url)?;
-        let content = self.client.get(website, url)?;
+        let content = self.client.get_async(website, url).await?;
         let doc = Html::parse_document(&content);
 
         match self.parse_ld_json(url, &doc, &website) {
@@ -78,7 +78,13 @@ impl Scraper {
                         if let Some(graph) = value.get("@graph").and_then(|g| g.as_array()) {
                             for item in graph {
                                 if item.get("@type").and_then(|t| t.as_str()) == Some("Recipe") {
-                                    return serde_json::from_value::<Recipe>(item.clone()).ok();
+                                    return serde_json::from_value::<Recipe>(item.clone())
+                                        .inspect_err(|err| {
+                                            error!(
+                                                "Failed to deserialize recipe json for url '{url}' and JSON '{item}': {err}"
+                                            )
+                                        })
+                                        .ok();
                                 }
                             }
                         }
@@ -115,7 +121,7 @@ impl Scraper {
 
     /// Fetches the content of a URL and uploads it the temporary directory.
     pub async fn fetch_and_upload_to_temp(&self, url: &str) -> Result<PathBuf> {
-        let content = self.client.get_bytes(url)?;
+        let content = self.client.get_bytes(url).await?;
         let path = self
             .fs_support
             .upload_to_temp(content)

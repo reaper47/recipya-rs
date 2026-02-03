@@ -153,8 +153,8 @@ impl AppState {
     }
 
     /// Scrapes a recipe from the specified website.
-    pub fn scrape(&self, url: Url) -> Result<Recipe> {
+    pub async fn scrape(&self, url: Url) -> Result<Recipe> {
         let url = url.as_str();
-        Ok(self.scraper.scrape(url)?)
+        Ok(self.scraper.scrape(url).await?)
     }
 }

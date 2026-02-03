@@ -9,6 +9,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     DuplicateEntity,
+    DuplicateEntityWithID(i64),
     EntityNotFound {
         entity: &'static str,
         id: String,

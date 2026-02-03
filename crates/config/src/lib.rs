@@ -68,7 +68,7 @@ fn get_env_on_load(name: &'static str) -> Result<String> {
             }
         }
         Err(_) => {
-            warn!("Missing environment variable (setting default value): {name}");
+            warn!("Missing environment variable: {name} (default set)");
             match name {
                 "RECIPYA_IS_ALLOW_SIGNUPS" => Ok("false".into()),
                 "RECIPYA_IS_AUTOLOGIN" => Ok("false".into()),

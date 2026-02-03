@@ -49,7 +49,8 @@ use templates::recipes::timeline::Event;
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{
-    IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success, broadcast_warning,
+    IMessage, MessageHtmx, MessageStatus, MessageType, broadcast_error, broadcast_success,
+    broadcast_warning,
 };
 use crate::middleware::mw_auth::RequireAuth;
 use crate::recipes_router::params::{
@@ -1197,12 +1198,13 @@ pub async fn add_recipe_import_raw_handler(
                         Err(_) => (StatusCode::BAD_REQUEST, "invalid redirect url").into_response(),
                     }
                 }
-                Err(DuplicateEntity) => {
+                Err(models::Error::DuplicateEntityWithID(_)) => {
                     warn!("Recipe exists: {}", recipe_c.name);
                     broadcast_error(&state, user.id, "Recipe exists.").await;
                     Error::EntityExists { entity: "recipe" }.into_response()
                 }
                 Err(err) => {
+                    println!("Error saving recipe '{}': {err}", recipe_c.name);
                     error!("Error saving recipe '{}': {err}", recipe_c.name);
                     broadcast_error(&state, user.id, "Failed to insert recipe.").await;
                     Error::Database.into_response()
@@ -1416,6 +1418,7 @@ impl FetchWebsiteContext {
                     "Operation Warning",
                     "The recipe exists.",
                 )
+                .status(MessageStatus::Warning)
                 .action(Some(&view_recipe_link))
                 .build()
             } else if count_error == 1 {
@@ -1485,6 +1488,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let (tx, mut rx) = mpsc::channel::<()>(num_websites);
         let fetch_ctx = FetchWebsiteContext::new(num_websites, user_id);
         let start_time = Instant::now();
+        let num_recipes = urls.len();
 
         for url in urls {
             let tx = tx.clone();
@@ -1492,7 +1496,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             let state = state.clone();
 
             tokio::spawn(async move {
-                match state.scrape(url.clone()) {
+                match state.scrape(url.clone()).await {
                     Ok(schema) => {
                         let recipe_c = schema_to_recipe_for_create(&state, schema).await;
 
@@ -1508,19 +1512,26 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
                                     .push(ReportLogForCreate::new_success(url.into()));
                             }
                             Err(err) => {
-                                fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
+                                fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
                                 error!("Error inserting recipe into database '{url}': {err}");
-                                if matches!(err, DuplicateEntity) {
-                                    fetch_ctx.report.lock().await.report_logs.push(
-                                        ReportLogForCreate::new_warning(
-                                            url.into(),
-                                            "Recipe exists".into(),
-                                        ),
-                                    );
-                                } else {
-                                    fetch_ctx.report.lock().await.report_logs.push(
-                                        ReportLogForCreate::new_error(url.into(), err.to_string()),
-                                    );
+                                match err {
+                                    models::Error::DuplicateEntityWithID(id) => {
+                                        fetch_ctx.recipe_ids.lock().await.push(id);
+                                        fetch_ctx.report.lock().await.report_logs.push(
+                                            ReportLogForCreate::new_warning(
+                                                url.into(),
+                                                "Recipe exists".into(),
+                                            ),
+                                        );
+                                    }
+                                    _ => {
+                                        fetch_ctx.report.lock().await.report_logs.push(
+                                            ReportLogForCreate::new_error(
+                                                url.into(),
+                                                err.to_string(),
+                                            ),
+                                        );
+                                    }
                                 }
                             }
                         }
@@ -1541,6 +1552,16 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             });
         }
         drop(tx);
+
+        state
+            .broadcast_progress(
+                &format!("Fetching recipes"),
+                0,
+                num_recipes as i64,
+                true,
+                user_id,
+            )
+            .await;
 
         let mut processed = 0;
         while rx.recv().await.is_some() {
@@ -1584,61 +1605,52 @@ async fn extract_images(
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<Uuid> {
-    let fetches: Vec<_> = schema
+    let urls = schema
         .image
         .iter()
-        .filter_map(|img| {
-            let state = state.clone();
+        .filter_map(|img| match img {
+            schema_org::field::FieldEnum22::ImageObject(image_object) => {
+                image_object.url.first().cloned()
+            }
+            schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
+        })
+        .collect::<Vec<_>>();
+
+    let futures = urls
+        .iter()
+        .map(|url| state.scraper.fetch_and_upload_to_temp(url.as_str()));
+
+    let results = join_all(futures).await;
+
+    stream::iter(urls.into_iter().zip(results.into_iter()))
+        .filter_map(|(_, res)| {
             let fs_support = fs_support.clone();
 
-            let url_opt = match img {
-                schema_org::field::FieldEnum22::ImageObject(image_object) => {
-                    image_object.url.first().cloned()
-                }
-                schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
-            };
+            async move {
+                let path = res.ok()?;
+                let file_name = Uuid::new_v4();
 
-            url_opt.map(|url| async move { fetch_image_async(&state, fs_support, &url).await })
+                fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
+
+                let thumbnails_dir = state.data_dir.images.thumbnails.clone();
+
+                let res =
+                    if fs_support.is_file_exists(file_name, &state.data_dir.images.root, ".webp") {
+                        Some(file_name)
+                    } else {
+                        None
+                    };
+
+                let fs_support = Arc::clone(&state.fs_support);
+                tokio::spawn(async move {
+                    fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                });
+
+                res
+            }
         })
-        .collect();
-
-    join_all(fetches).await.into_iter().flatten().collect()
-}
-
-async fn fetch_image_async(
-    state: &AppState,
-    fs_support: Arc<dyn FsSupport>,
-    file_path: &str,
-) -> Option<Uuid> {
-    let file_path = file_path.to_string();
-    let state = state.clone();
-
-    tokio::task::spawn_blocking(move || fetch_image(&state, fs_support, &file_path))
+        .collect::<Vec<_>>()
         .await
-        .ok()
-        .flatten()
-}
-
-fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, file_path: &str) -> Option<Uuid> {
-    let path = if file_path.starts_with("/tmp") {
-        PathBuf::from(file_path)
-    } else {
-        PathBuf::new()
-    };
-
-    let file_name = Uuid::new_v4();
-    fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
-
-    let thumbnails_dir = state.data_dir.images.thumbnails.clone();
-    let fs_support = Arc::clone(&state.fs_support);
-    tokio::spawn(async move {
-        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
-    });
-
-    state
-        .fs_support
-        .is_file_exists(file_name, &state.data_dir.images.root, ".webp")
-        .then_some(file_name)
 }
 
 async fn extract_videos(
@@ -1684,7 +1696,7 @@ async fn extract_videos(
 
                 fs_support
                     .clone()
-                    .upload_videos(vec![path.clone()], &state.data_dir.images.root);
+                    .upload_videos(vec![path.clone()], &state.data_dir.videos);
 
                 if fs_support.is_file_exists(file_name, &state.data_dir.videos, ".webp") {
                     let duration = fs_support

@@ -23,11 +23,7 @@ const BASE_HTML_DIR: &str = "crates/recipya-scraper/src/tests/data/html";
 
 #[async_trait::async_trait]
 impl HttpClient for MockHttpClient {
-    async fn get_async<'a>(&'a self, _host: Website, _url: &str) -> Result<String> {
-        Ok("".to_string())
-    }
-
-    fn get(&self, host: Website, url: &str) -> Result<String> {
+    async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String> {
         let path = get_html_file_path(
             &host,
             url.rsplit_once("<Number>")
@@ -49,7 +45,11 @@ impl HttpClient for MockHttpClient {
         }
     }
 
-    fn get_bytes(&self, _url: &str) -> Result<Bytes> {
+    fn get(&self, _host: Website, _url: &str) -> Result<String> {
+        unimplemented!()
+    }
+
+    async fn get_bytes(&self, _url: &str) -> Result<Bytes> {
         Ok(Bytes::new())
     }
 }
@@ -62,19 +62,19 @@ fn mock_scraper() -> &'static Scraper {
 }
 
 /// Fetches the recipe from a website and stores the content in an HTML file.
-pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
+pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
     let urls = website.test_urls();
     let url = urls.get(number).expect("url to test not in vector of urls");
 
     let path = get_html_file_path(&website, number);
 
     if !path.exists() {
-        let client = reqwest::blocking::Client::new();
-        match client.get(*url).send() {
+        let client = reqwest::Client::new();
+        match client.get(*url).send().await {
             Ok(res) => {
                 fs::File::create(path)
                     .unwrap()
-                    .write(&res.bytes()?)
+                    .write(&res.bytes().await?)
                     .inspect_err(|err| error!("Could not write {website}: {err}"))
                     .unwrap();
             }
@@ -83,7 +83,7 @@ pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
     }
 
     let url = format!("{url}<number>{number}");
-    mock_scraper().scrape(&url)
+    mock_scraper().scrape(&url).await
 }
 
 fn get_html_file_path(website: &Website, number: usize) -> PathBuf {

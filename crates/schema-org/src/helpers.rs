@@ -1,5 +1,6 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer};
+use serde_json::Value;
 
 /// Deserialize a value as either a single value or an array of values.
 pub fn one_or_many<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
@@ -8,11 +9,8 @@ where
     T: DeserializeOwned,
 {
     use serde::de::Error;
-    use serde_json::Value;
 
-    let value = Value::deserialize(deserializer)?;
-
-    match value {
+    match Value::deserialize(deserializer)? {
         Value::Null => Ok(Vec::new()),
         Value::String(ref s) if s.trim().is_empty() => Ok(Vec::new()),
         Value::Array(arr) => {
@@ -27,6 +25,46 @@ where
         }
     }
 }
+
+/// Deserializes one or many items, coercing JSON strings to numbers if possible.
+pub fn one_or_many_string_or_num<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: DeserializeOwned,
+{
+    use serde::de::Error;
+
+    fn clean_value(v: Value) -> Value {
+        match v {
+            Value::String(s) => {
+                if let Ok(num) = s.parse::<serde_json::Number>() {
+                    Value::Number(num)
+                } else {
+                    Value::String(s)
+                }
+            }
+            Value::Array(arr) => Value::Array(arr.into_iter().map(clean_value).collect()),
+            _ => v,
+        }
+    }
+
+    match Value::deserialize(deserializer)? {
+        Value::Null => Ok(Vec::new()),
+        Value::String(ref s) if s.trim().is_empty() => Ok(Vec::new()),
+        Value::Array(arr) => arr
+            .into_iter()
+            .filter(|v| !v.is_null())
+            .map(clean_value)
+            .map(|v| serde_json::from_value(v).map_err(D::Error::custom))
+            .collect(),
+        other => {
+            let cleaned = clean_value(other);
+            let item = serde_json::from_value::<T>(cleaned).map_err(D::Error::custom)?;
+            Ok(vec![item])
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;

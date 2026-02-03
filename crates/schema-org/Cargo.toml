@@ -19,6 +19,6 @@ default = []
 
 [dependencies]
 iso8601.workspace = true
-schemars = { version = "1.1.0", optional = true }
+schemars = { version = "1.2.1", optional = true }
 serde.workspace = true
 serde_json.workspace = true

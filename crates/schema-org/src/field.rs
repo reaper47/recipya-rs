@@ -1303,6 +1303,7 @@ pub enum FieldEnum48 {
     Distance(Distance),
     ///<https://schema.org/QuantitativeValue>
     QuantitativeValue(QuantitativeValue),
+    Integer(i32),
 }
 impl Default for FieldEnum48 {
     fn default() -> Self {

@@ -67,7 +67,7 @@ impl Recipe {
                     // Images
                     let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
-                    let recipe_id = diesel::insert_into(schema::recipes::table)
+                    let insert_result = diesel::insert_into(schema::recipes::table)
                         .values(&RecipeForInsert {
                             name: recipe_c.name.to_string(),
                             description: recipe_c.description.clone(),
@@ -80,10 +80,29 @@ impl Recipe {
                             rating: recipe_c.rating,
                             user_id,
                         })
+                        .on_conflict((
+                            schema::recipes::name,
+                            schema::recipes::source,
+                            schema::recipes::yield_,
+                            schema::recipes::user_id,
+                        ))
+                        .do_nothing()
                         .returning(schema::recipes::id)
                         .get_result::<i64>(&mut conn)
                         .await
-                        .map_err(|_| Error::DuplicateEntity)?;
+                        .optional()?;
+
+                    let recipe_id = match insert_result {
+                        Some(id) => id,
+                        None => {
+                            let recipe_id = schema::recipes::table
+                                .filter(schema::recipes::name.eq(&recipe_c.name))
+                                .select(schema::recipes::id)
+                                .get_result::<i64>(&mut conn)
+                                .await?;
+                            return Err(Error::DuplicateEntityWithID(recipe_id));
+                        }
+                    };
 
                     // Additional Images
                     insert_additional_images(&mut conn, recipe_id, additional_images).await?;
@@ -164,17 +183,17 @@ impl Recipe {
                     // Videos
                     insert_videos(conn, &recipe_c.videos, recipe_id).await?;
 
+                    diesel::insert_into(schema::users_recipes::table)
+                        .values((
+                            schema::users_recipes::user_id.eq(user_id),
+                            schema::users_recipes::recipe_id.eq(recipe_id),
+                        ))
+                        .execute(&mut conn)
+                        .await?;
+
                     Ok(recipe_id)
                 })
             })
-            .await?;
-
-        diesel::insert_into(schema::users_recipes::table)
-            .values((
-                schema::users_recipes::user_id.eq(user_id),
-                schema::users_recipes::recipe_id.eq(recipe_id),
-            ))
-            .execute(&mut conn)
             .await?;
 
         Ok(recipe_id)
@@ -432,7 +451,7 @@ mod tests {
 
         match got {
             Ok(_) => Err("Should have returned an error".into()),
-            Err(Error::DuplicateEntity) => Ok(()),
+            Err(Error::DuplicateEntityWithID(_)) => Ok(()),
             Err(err) => Err(format!("Wrong error occurred: {err}").into()),
         }
     }

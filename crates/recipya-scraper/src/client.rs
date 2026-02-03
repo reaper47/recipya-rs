@@ -17,7 +17,7 @@ pub trait HttpClient {
     fn get(&self, host: Website, url: &str) -> Result<String>;
 
     /// Fetches the content from a URL and uploads it to the temporary directory.
-    fn get_bytes(&self, url: &str) -> Result<Bytes>;
+    async fn get_bytes(&self, url: &str) -> Result<Bytes>;
 }
 
 /// A wrapper around `reqwest::Client` for making HTTP requests.
@@ -50,10 +50,9 @@ impl HttpClient for AppHttpClient {
         Ok(body)
     }
 
-    fn get_bytes(&self, url: &str) -> Result<Bytes> {
-        let client = reqwest::blocking::Client::new();
-        let res = client.get(url).send()?;
-        let body = res.bytes()?;
+    async fn get_bytes(&self, url: &str) -> Result<Bytes> {
+        let res = self.client.get(url).send().await?;
+        let body = res.bytes().await?;
         Ok(body)
     }
 }
