@@ -213,7 +213,7 @@ pub struct HowToStep {
 }
 
 impl HowToStep {
-    /// Creates a new HowToStep from the value only.
+    /// Creates a new `HowToStep` from the value only.
     pub fn new(text: &str) -> Self {
         Self {
             r#type: Some(AtType::HowToStep.to_string()),

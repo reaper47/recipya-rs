@@ -18,7 +18,7 @@ pub(crate) fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
     recipe.recipe_instructions = required_text_list(&content, ".wprm-recipe-instructions li")
         .unwrap_or_default()
         .into_iter()
-        .map(|ins| RecipeRecipeInstructionsFieldEnum::Text(ins.into()))
+        .map(RecipeRecipeInstructionsFieldEnum::Text)
         .collect();
 
     recipe

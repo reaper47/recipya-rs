@@ -1,6 +1,6 @@
 use measurements::{Measurement, Volume};
 
-const JIGGER_IN_MILLILITRES: f64 = 44.3602943;
+const JIGGER_IN_MILLILITRES: f64 = 44.360_294_3;
 
 /// A jigger, alcohol jigger or bar jigger is an hourglass-shaped bartender
 /// measuring tool used to ensure that they pour accurate amounts of alcohol

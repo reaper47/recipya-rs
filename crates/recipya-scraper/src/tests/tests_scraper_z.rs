@@ -60,7 +60,7 @@ mod tests {
             recipe_ingredient: vec![
                 RecipeRecipeIngredientFieldEnum::new_section(
                     "To make the tomato sauce",
-                    vec![
+                    &[
                         "4-6 tomatoes",
                         "½ teaspoon tomato concentrate",
                         "1 clove garlic whole",
@@ -71,7 +71,7 @@ mod tests {
                 ),
                 RecipeRecipeIngredientFieldEnum::new_section(
                     "Other",
-                    vec![
+                    &[
                         "Spaghetti for 2 people approx 100g",
                         "1 tin sardines approx 75g",
                         "handful black olives",
@@ -176,16 +176,16 @@ mod tests {
                     RecipeRecipeIngredientFieldEnum::Text("2 cups shredded Colby-Monterey Jack cheese".into()),
                 ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "1. Grilled Chicken"))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "2. Mix together all seasonings in mixing bowl."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "3. Add seasonings to both sides of the raw Zabiha Halal Boneless, Skinless Chicken Breasts"))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "4. Spray grill pan with cooking spray, and preheat on the stovetop over medium high heat for about one minute."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "5.Place the chicken breasts on the hot grill pan."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "6. Cook 6 minutes on each side or until done."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "7. Pizza- Preheat oven to 350 degrees F"))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "8. Cut pre cooked chicken, red bell peppers and onions. Grate cheese."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "9.Place pizza crust on a medium baking sheet. Spread barbecue sauce over the crust and top with cheese, chicken, onion and red bell peppers."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(AtType::HowToStep, "10.Bake in the preheated oven for 10 minutes or until cheese looks well melted."))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "1. Grilled Chicken"))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "2. Mix together all seasonings in mixing bowl."))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "3. Add seasonings to both sides of the raw Zabiha Halal Boneless, Skinless Chicken Breasts"))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "4. Spray grill pan with cooking spray, and preheat on the stovetop over medium high heat for about one minute."))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "5.Place the chicken breasts on the hot grill pan."))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "6. Cook 6 minutes on each side or until done."))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "7. Pizza- Preheat oven to 350 degrees F"))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "8. Cut pre cooked chicken, red bell peppers and onions. Grate cheese."))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "9.Place pizza crust on a medium baking sheet. Spread barbecue sauce over the crust and top with cheese, chicken, onion and red bell peppers."))),
+                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "10.Bake in the preheated oven for 10 minutes or until cheese looks well melted."))),
             ],
             suitable_for_diet: vec![RestrictedDietEnum::HalalDiet],
             url: vec!["https://zabihahalal.com/recipes/bbq-chicken-pizza/".into()],
@@ -815,7 +815,7 @@ mod tests {
             prep_time: vec![DurationOrText::Text("18-20 Min".into())],
             recipe_category: vec!["breakfast".into()],
             recipe_ingredient: vec![
-                RecipeRecipeIngredientFieldEnum::new_section("For soaking", vec![
+                RecipeRecipeIngredientFieldEnum::new_section("For soaking", &[
                     "¾ cup par boiled rice (Ukhad)",
                     "2 tbsp chana dal",
                     "2 tbsp urad dal",
@@ -824,14 +824,14 @@ mod tests {
                     "2 tbsp split green moong dal",
                     "2 tbsp rajgira",
                 ]),
-                RecipeRecipeIngredientFieldEnum::new_section("For cooking", vec![
+                RecipeRecipeIngredientFieldEnum::new_section("For cooking", &[
                     "2 tbsp butter",
                     "gun powder",
                     "2 tbsp chopped onion",
                     "½ tsp chopped green chilli",
                     "1 tsp chopped coriander leaves",
                 ]),
-                RecipeRecipeIngredientFieldEnum::new_section("For Onion tomato chutney", vec![
+                RecipeRecipeIngredientFieldEnum::new_section("For Onion tomato chutney", &[
                     "1 tbsp oil",
                     "1 tsp urad dal",
                     "1 cup diced onion",
@@ -842,7 +842,7 @@ mod tests {
                     "1 tsp tamarind pulp",
                     "salt to taste",
                 ]),
-                RecipeRecipeIngredientFieldEnum::new_section("For tadka", vec![
+                RecipeRecipeIngredientFieldEnum::new_section("For tadka", &[
                     "2 tsp oil",
                     "1 tsp mustard seeds",
                     "few curry leaves",

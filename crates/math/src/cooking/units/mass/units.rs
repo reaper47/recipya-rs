@@ -75,15 +75,15 @@ impl FromStr for Mass {
                 let unit = caps.get(2)?.as_str().to_lowercase();
 
                 match unit.trim_end_matches('s') {
-                    "g" | "gram" | "gramme" => Some(Mass::Gram(value)),
-                    "mg" | "milligram" | "milligramme" => Some(Mass::Milligram(value)),
-                    "kg" | "kilogram" | "kilogramme" => Some(Mass::Kilogram(value)),
-                    "oz" | "ounce" => Some(Mass::Ounce(value)),
-                    "lb" | "pound" => Some(Mass::Pound(value)),
+                    "g" | "gram" | "gramme" => Some(Self::Gram(value)),
+                    "mg" | "milligram" | "milligramme" => Some(Self::Milligram(value)),
+                    "kg" | "kilogram" | "kilogramme" => Some(Self::Kilogram(value)),
+                    "oz" | "ounce" => Some(Self::Ounce(value)),
+                    "lb" | "pound" => Some(Self::Pound(value)),
                     "dag" | "dekagram" | "dekagramme" | "decagram" | "decagramme" => {
-                        Some(Mass::Dekagram(value))
+                        Some(Self::Dekagram(value))
                     }
-                    "hg" | "hectogram" | "hectogramme" => Some(Mass::Hectogram(value)),
+                    "hg" | "hectogram" | "hectogramme" => Some(Self::Hectogram(value)),
                     _ => None,
                 }
             })

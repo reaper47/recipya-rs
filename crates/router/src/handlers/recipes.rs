@@ -1554,13 +1554,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         drop(tx);
 
         state
-            .broadcast_progress(
-                &format!("Fetching recipes"),
-                0,
-                num_recipes as i64,
-                true,
-                user_id,
-            )
+            .broadcast_progress("Fetching recipes", 0, num_recipes as i64, true, user_id)
             .await;
 
         let mut processed = 0;

@@ -26,7 +26,7 @@ pub(crate) fn extract_author(
 }
 
 pub(crate) fn extract_category(fragment: &ElementRef, css_selector: &str) -> Result<Vec<String>> {
-    match text_list(fragment, css_selector, ",")?.get(0) {
+    match text_list(fragment, css_selector, ",")?.first() {
         Some(category) => Ok(vec![category.clone()]),
         None => Ok(vec![]),
     }
@@ -130,7 +130,11 @@ fn parse_ingredient_group(
         Some(name) => {
             vec![RecipeRecipeIngredientFieldEnum::new_section(
                 &name,
-                ingredients.iter().map(|s| s.as_str()).collect(),
+                ingredients
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .as_slice(),
             )]
         }
         None => ingredients
@@ -208,10 +212,7 @@ pub(crate) fn required_text(fragment: &ElementRef, css_selector: &str) -> Result
         .to_string())
 }
 
-pub(crate) fn required_text_list<'a>(
-    fragment: &ElementRef,
-    css_selector: &str,
-) -> Result<Vec<String>> {
+pub(crate) fn required_text_list(fragment: &ElementRef, css_selector: &str) -> Result<Vec<String>> {
     let text = fragment
         .select(&Selector::parse(css_selector)?)
         .map(|s| normalize_text(&s))

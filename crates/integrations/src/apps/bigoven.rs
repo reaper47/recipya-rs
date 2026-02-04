@@ -833,14 +833,14 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
                 name: vec!["Applebee's Oriental Chicken Salad".into()],
                 recipe_category: vec!["Low Carb".into()],
                 recipe_ingredient: vec![
-                    RecipeRecipeIngredientFieldEnum::new_section("Salad Dressing", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Salad Dressing", &[
                         "6 tablespoon Honey",
                         "3 tablespoon Rice wine vinegar",
                         "1/2 cup Mayonnaise",
                         "2 teaspoon Grey Poupon Dijon Mustard",
                         "1/4 teaspoon Sesame Oil",
                     ]),
-                    RecipeRecipeIngredientFieldEnum::new_section("Salad", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Salad", &[
                         "1 package Breaded Chicken Tenders",
                         "6 cups Romaine lettuce",
                         "2 cup Red cabbage",

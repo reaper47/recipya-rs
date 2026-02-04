@@ -8,7 +8,7 @@ pub(crate) fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
         .unwrap()
         .into_iter()
         .skip(1)
-        .map(|s| RecipeRecipeIngredientFieldEnum::Text(s))
+        .map(RecipeRecipeIngredientFieldEnum::Text)
         .collect();
     recipe.suitable_for_diet = vec![RestrictedDietEnum::HalalDiet];
     recipe

@@ -36,13 +36,9 @@ where
 
     fn clean_value(v: Value) -> Value {
         match v {
-            Value::String(s) => {
-                if let Ok(num) = s.parse::<serde_json::Number>() {
-                    Value::Number(num)
-                } else {
-                    Value::String(s)
-                }
-            }
+            Value::String(s) => s
+                .parse::<serde_json::Number>()
+                .map_or(Value::String(s), Value::Number),
             Value::Array(arr) => Value::Array(arr.into_iter().map(clean_value).collect()),
             _ => v,
         }

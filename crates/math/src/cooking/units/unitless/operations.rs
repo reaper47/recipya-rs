@@ -3,7 +3,7 @@ use crate::cooking::units::traits::UnitOperations;
 use crate::cooking::units::unitless::units::Unitless;
 
 impl UnitOperations for Unitless {
-    fn abbrev(&self) -> &str {
+    fn abbrev(&self) -> &'static str {
         ""
     }
 
@@ -16,7 +16,7 @@ impl UnitOperations for Unitless {
     }
 
     fn with_value(&self, value: f64) -> Self {
-        Unitless::new(value)
+        Self::new(value)
     }
 }
 

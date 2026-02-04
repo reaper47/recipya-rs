@@ -117,7 +117,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
 
     let url = website
         .test_urls()
-        .get(0)
+        .first()
         .cloned()
         .expect("url to test not in vector of urls");
 

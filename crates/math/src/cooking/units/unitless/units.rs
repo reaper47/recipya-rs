@@ -11,7 +11,7 @@ pub struct Unitless {
 }
 
 impl Unitless {
-    pub fn new(value: f64) -> Self {
+    pub const fn new(value: f64) -> Self {
         Self { value }
     }
 }
@@ -62,7 +62,7 @@ impl FromStr for Unitless {
                     })
                     .ok()?;
 
-                Some(Unitless::new(value))
+                Some(Self::new(value))
             })
             .ok_or(Error::NotDetected)
     }

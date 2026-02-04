@@ -31,7 +31,8 @@ where
                 ingredients_to_string(group.ingredients)
                     .iter()
                     .map(|s| s.as_str())
-                    .collect(),
+                    .collect::<Vec<_>>()
+                    .as_slice(),
             )
         })
         .collect::<Vec<_>>();

@@ -46,7 +46,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                 .join("\n\n");
 
             (!s.is_empty())
-                .then(|| RecipeDescriptionFieldEnum::Text(s))
+                .then_some(RecipeDescriptionFieldEnum::Text(s))
                 .into_iter()
                 .collect()
         },

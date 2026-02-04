@@ -939,21 +939,21 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     name: vec!["Flammenkuchen von Marc".into()],
                     recipe_category: vec!["Frankreich".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", &[
                             "6 Essl. Mehl",
                             "1/2 Teel. ; Salz",
                             "1 Prise ; Pfeffer",
                             "1/2 Würfel Hefe",
                             "1/4 Litr. ; Wasser - (lauwarm)",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", &[
                             "250 Gramm Quark - 40% Fett",
                             "1 Be Saure Sahne",
                             "1/2 Teel. ; Salz",
                             "1 Prise ; Pfeffer",
                             "1 Zitrone",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", &[
                             "5 groß. Zwiebel",
                             "125 Gramm Durchwachsener Speck",
                             "125 Gramm Reibkäse - (optional)",
@@ -1014,13 +1014,13 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     name: vec!["Zwiebelkuchen".into()],
                     recipe_category: vec!["Backen".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::new_section("Teig", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Teig", &[
                             "250 Gramm Mehl",
                             "125 Gramm Margarine",
                             "1 Prise Salz",
                             "1 Eier",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Füllung", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Füllung", &[
                             "6 groß. Zwiebeln",
                             "75 Gramm Butter",
                             "1 Be Joghurt",

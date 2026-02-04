@@ -79,7 +79,7 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                 if ing.name.is_empty() && ing.quantity.ends_with(':') {
                     acc.push(RecipeRecipeIngredientFieldEnum::new_section(
                         ing.quantity,
-                        vec![],
+                        &[],
                     ));
                 } else {
                     let text = format!("{} {}", ing.quantity, ing.name).trim().to_string();
@@ -274,14 +274,14 @@ mod tests {
                     prep_time: seconds_to_duration(900),
                     recipe_category: vec!["Fruit".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::new_section("Dressing:", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Dressing:", &[
                             "3 Egg Yolks",
                             "2 Tbls Sugar",
                             "1 Tbls Butter",
                             "1 Tbls Lemon Juice",
                             "1 Cup Cool Whip",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Fruit:", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Fruit:", &[
                             "1 Can Pineapple Chunks (20 Oz)",
                             "2 Cans Mandarin Oranges",
                             "1 Can Royal Ann Cherries",

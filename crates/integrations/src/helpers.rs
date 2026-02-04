@@ -41,7 +41,7 @@ pub(super) fn to_yield(value: i64) -> Vec<RecipeRecipeYieldFieldEnum> {
             QuantitativeValue {
                 r#type: AtType::QuantitativeValue.to_string(),
                 context: at_context(),
-                value: vec![QuantitativeValueValueFieldEnum::Number(value as f32)],
+                value: vec![QuantitativeValueValueFieldEnum::Number(value as f64)],
                 ..Default::default()
             },
         ))]

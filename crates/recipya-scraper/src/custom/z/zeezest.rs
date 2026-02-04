@@ -35,11 +35,11 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         image: extract_metadata_property(doc, "og:image")
             .unwrap_or_default()
             .into_iter()
-            .map(|s| RecipeImageFieldEnum::URL(s))
+            .map(RecipeImageFieldEnum::URL)
             .collect(),
         name: required_text(root, ".recepiescovercard-module__V__cIq__title")
             .ok()
-            .map(|s| vec![s.into()])
+            .map(|s| vec![s])
             .unwrap_or_default(),
         prep_time: get_metadata_box(root, "img[alt='Preparation Time']")
             .map(|s| vec![DurationOrText::Text(s)])
@@ -67,7 +67,10 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .map(|(name, ings)| {
                 RecipeRecipeIngredientFieldEnum::new_section(
                     &name.unwrap_or_default(),
-                    ings.iter().map(String::as_str).collect(),
+                    ings.iter()
+                        .map(String::as_str)
+                        .collect::<Vec<_>>()
+                        .as_slice(),
                 )
             })
             .collect::<Vec<_>>(),

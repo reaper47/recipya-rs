@@ -20,7 +20,7 @@ pub struct Organization {
     ///<https://schema.org/department>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub department: Vec<Organization>,
+    pub department: Vec<Self>,
     ///<https://schema.org/employees>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

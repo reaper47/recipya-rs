@@ -63,7 +63,7 @@ pub struct Product {
     ///<https://schema.org/isConsumableFor>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub is_consumable_for: Vec<Product>,
+    pub is_consumable_for: Vec<Self>,
     ///<https://schema.org/hasAdultConsideration>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -132,7 +132,7 @@ pub struct Product {
     ///<https://schema.org/isAccessoryOrSparePartFor>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub is_accessory_or_spare_part_for: Vec<Product>,
+    pub is_accessory_or_spare_part_for: Vec<Self>,
     ///<https://schema.org/color>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

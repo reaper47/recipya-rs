@@ -98,7 +98,7 @@ pub fn view_recipe_helper(
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none"
                     dir=(if recipe_details.is_rtl() { "rtl" } else { "ltr" }) {
                     div class="card-body contents" style="padding: 0" {
-                        (render_header(recipe_id, &data, recipe_details, recipe.is_favourite))
+                        (render_header(recipe_id, data, recipe_details, recipe.is_favourite))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
                             (render_media(fs_support, &view.recipe_details, &data_dir))
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
@@ -212,14 +212,14 @@ pub fn view_recipe_helper(
                                         }
                                     }
                                     div class="col-span-3" {
-                                        (render_nutrition(&recipe_details))
+                                        (render_nutrition(recipe_details))
                                     }
                                 }
                             }
                         }
-                        (print_description(&recipe))
+                        (print_description(recipe))
                         div class="border-gray-700 md:border-t" {
-                            (render_ingredients_instructions(&recipe_details))
+                            (render_ingredients_instructions(recipe_details))
                             div class="hidden print:grid col-span-6 ml-2 my-1" {
                                 (render_tools(recipe_details))
                                 (render_ingredients(recipe_details))

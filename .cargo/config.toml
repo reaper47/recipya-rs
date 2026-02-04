@@ -6,3 +6,11 @@ rustflags = ["-C", "link-arg=-lm"]
 
 [target.x86_64-apple-darwin]
 rustflags = ["-C", "link-arg=-mmacosx-version-min=11.0"]
+
+[target.'cfg(all())']
+rustflags = [
+    "-D", "clippy::pedantic",
+    "-D", "clippy::nursery",
+    "-A", "clippy::must_use_candidate",
+    "-A", "clippy::missing_errors_doc"
+]

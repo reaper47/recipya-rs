@@ -34,7 +34,7 @@ impl HttpClient for AppHttpClient {
 
         let bytes = body.as_bytes();
         if bytes.len() >= 2 && bytes[0] == 0x1f && bytes[1] == 0x8b {
-            let mut d = GzDecoder::new(&bytes[..]);
+            let mut d = GzDecoder::new(bytes);
             let mut s = String::new();
             d.read_to_string(&mut s).unwrap();
             Ok(s)

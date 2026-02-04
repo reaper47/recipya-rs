@@ -101,11 +101,11 @@ pub struct Person {
     ///<https://schema.org/follows>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub follows: Vec<Person>,
+    pub follows: Vec<Self>,
     ///<https://schema.org/relatedTo>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub related_to: Vec<Person>,
+    pub related_to: Vec<Self>,
     ///<https://schema.org/honorificPrefix>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

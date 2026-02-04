@@ -62,9 +62,9 @@ fn render_index(
         html! {
             span #data-layout data-layout="with-aside" hx-swap-oob="true" {}
 
-            (search_bar(&data))
+            (search_bar(data))
             div #list-recipes class="min-h-0" {
-                (list_recipes(fs_support, path, &data, &data_dir))
+                (list_recipes(fs_support, path, data, data_dir))
             }
             @if data.is_hx_request && let Some(p) = &data.pagination {
                 (pagination(p))

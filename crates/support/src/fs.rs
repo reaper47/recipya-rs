@@ -34,7 +34,7 @@ pub trait FsSupport: Send + Sync {
     /// Calculates the duration of video in seconds.
     async fn calc_video_duration(&self, input_file: &str) -> Result<Duration>;
 
-    /// Converts a video to WebM using ffmpeg.
+    /// Converts a video to `WebM` using ffmpeg.
     async fn convert_videos(&self, input_paths: Vec<PathBuf>, output_dir: &Path) -> Result<()>;
 
     /// Checks whether the media file exists in the file system.
@@ -57,7 +57,7 @@ pub trait FsSupport: Send + Sync {
     fn upload_videos(self: Arc<Self>, videos: Vec<PathBuf>, output_path: &Path);
 }
 
-/// Creates a struct that implements the FsSupport trait based on the environment.
+/// Creates a struct that implements the `FsSupport` trait based on the environment.
 pub fn new_fs_support() -> Arc<dyn FsSupport> {
     if cfg!(test) {
         Arc::new(MockFs)
@@ -120,9 +120,9 @@ impl FsSupport for AppFs {
             let minutes: u32 = caps[2].parse().map_err(|_| Error::Calculate)?;
             let seconds: u32 = caps[3].parse().map_err(|_| Error::Calculate)?;
 
-            Ok(Duration::seconds(
-                (hours * 3600 + minutes * 60 + seconds) as i64,
-            ))
+            Ok(Duration::seconds(i64::from(
+                hours * 3600 + minutes * 60 + seconds,
+            )))
         } else {
             Err(Error::Calculate)
         }
@@ -142,23 +142,14 @@ impl FsSupport for AppFs {
                 info!("Converting video '{:?}' to WebM", temp_path);
                 let start = Instant::now();
 
-                let input_path = match temp_path.to_str() {
-                    Some(path) => path,
-                    None => {
-                        error!("Failed to convert input path '{:?}' to string", temp_path);
-                        return;
-                    }
+                let Some(input_path) = temp_path.to_str() else {
+                    error!("Failed to convert input path '{:?}' to string", temp_path);
+                    return;
                 };
 
-                let output_path = match output_path.to_str() {
-                    Some(path) => path,
-                    None => {
-                        error!(
-                            "Failed to convert output path '{:?}' to string",
-                            output_path
-                        );
-                        return;
-                    }
+                let Some(output_path) = output_path.to_str() else {
+                    error!("Failed to convert output path '{output_path:?}' to string");
+                    return;
                 };
 
                 let status = Command::new("ffmpeg")
@@ -272,7 +263,7 @@ impl FsSupport for AppFs {
                 out
             };
 
-            let tmp_out: PathBuf = temp_dir().join(format!("{}-thumb.webp", file_name));
+            let tmp_out: PathBuf = temp_dir().join(format!("{file_name}-thumb.webp"));
             fs::write(&tmp_out, &buf)?;
             if let Err(err) = self.convert_image(&tmp_out, file_name.to_string(), output_path) {
                 error!("Error generating thumbnail image '{file_name}' to WebP: {err}");
@@ -291,7 +282,6 @@ impl FsSupport for AppFs {
 
     fn upload_videos(self: Arc<Self>, videos: Vec<PathBuf>, output_path: &Path) {
         let output = output_path.to_path_buf();
-        let videos = videos.clone();
         let this = Arc::clone(&self);
 
         task::spawn(async move {

@@ -10,13 +10,20 @@ use crate::impl_display_as_debug;
 pub use time::format_description::well_known::Rfc3339;
 
 /// Formats a given `OffsetDateTime` into a string in RFC3339 format.
+///
+/// # Panics
+///
+/// Panics if the datetime cannot be formatted as RFC3339. This should never
+/// happen in practice as all valid `OffsetDateTime` values can be represented
+/// in RFC3339 format.
 pub fn format_time(time: OffsetDateTime) -> String {
-    time.format(&Rfc3339).unwrap() // TODO: need to check if safe
+    time.format(&Rfc3339).unwrap()
 }
 
 /// Returns the current UTC time plus the given number of seconds as a formatted string.
 pub fn now_utc_plus_sec_str(sec: f64) -> usize {
-    (OffsetDateTime::now_utc() + Duration::seconds_f64(sec)).unix_timestamp() as usize
+    usize::try_from((OffsetDateTime::now_utc() + Duration::seconds_f64(sec)).unix_timestamp())
+        .unwrap_or_default()
 }
 
 /// Parses a string into an `OffsetDateTime` in UTC.

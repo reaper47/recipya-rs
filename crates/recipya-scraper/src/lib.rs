@@ -61,15 +61,14 @@ impl Scraper {
             .filter_map(|el| {
                 let json = &el
                     .inner_html()
-                    .trim()
                     .split_whitespace()
                     .collect::<Vec<_>>()
                     .join(" ");
 
-                let value: serde_json::Value = serde_json::from_str(&json).ok()?;
+                let value: serde_json::Value = serde_json::from_str(json).ok()?;
 
                 match value.get("@type").and_then(|v| v.as_str()) {
-                    Some(_) => serde_json::from_str::<Recipe>(&json)
+                    Some(_) => serde_json::from_str::<Recipe>(json)
                         .inspect_err(|err| {
                             error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
                         })
@@ -88,7 +87,7 @@ impl Scraper {
                                 }
                             }
                         }
-                        return None;
+                        None
                     }
                 }
             })
@@ -104,7 +103,7 @@ impl Scraper {
                     None => Some(website.augment_ld_json(doc, recipe)),
                 };
 
-                recipe.as_mut().map(|r| {
+                if let Some(r) = recipe.as_mut() {
                     r.context = at_context();
                     if let Some(author) = r.author.first()
                         && author.is_default()
@@ -113,7 +112,8 @@ impl Scraper {
                     }
                     r.is_part_of = vec![]; // Note: It would be nice if the serde deserialization skips deserialization if default.
                     r.url = vec![url.rsplit_once("<number>").unwrap_or((url, "")).0.into()]
-                });
+                }
+
                 recipe
             })
             .ok_or(Error::DomainNotImplemented)

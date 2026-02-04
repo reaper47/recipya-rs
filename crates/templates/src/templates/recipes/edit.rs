@@ -44,7 +44,7 @@ pub fn edit_recipe(
                 (page_title) " | Recipya"
             }
             span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
-            (render_edit_recipe(fs_support, view, &data_dir, categories, keywords))
+            (render_edit_recipe(fs_support, view, data_dir, categories, keywords))
         } @else {
             (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords), user_setting, true))
         }
@@ -434,7 +434,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             }
             label {
                 input type="text" name="time-prep"
-                    value=(view.formatted_times.prep_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.prep_edit.clone()))
+                    value=(if view.formatted_times.prep_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.prep_edit.clone() })
                     class="input input-xs max-w-24 html-duration-picker";
             }
         }
@@ -444,7 +444,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             }
             label {
                 input type="text" name="time-cook"
-                    value=(view.formatted_times.cook_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.cook_edit.clone()))
+                    value=(if view.formatted_times.cook_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.cook_edit.clone() })
                     class="input input-xs max-w-24 html-duration-picker";
             }
         }

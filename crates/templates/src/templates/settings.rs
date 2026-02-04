@@ -122,8 +122,8 @@ pub fn settings(
             div #settings-blocks class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem" {
                 (settings_recipes(categories, &user_setting))
                 @if data.is_admin {
-                    (settings_connections(&config))
-                    (settings_server(&data, &config))
+                    (settings_connections(config))
+                    (settings_server(&data, config))
                     (settings_admin(users.unwrap_or_default(), &user_setting))
                 }
                 (settings_data(&data))

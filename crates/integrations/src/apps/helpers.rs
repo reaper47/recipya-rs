@@ -66,7 +66,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         if name.starts_with("           ") && name.ends_with("--") {
                             acc.push(RecipeRecipeIngredientFieldEnum::new_section(
                                 &name_trimmed,
-                                vec![],
+                                &[],
                             ));
                             return acc;
                         }
@@ -82,10 +82,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         }
                     }
                     Ingredient::Section(section) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
-                            section,
-                            vec![],
-                        ));
+                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(section, &[]));
                     }
                 }
                 acc
@@ -122,7 +119,11 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
 
                     RecipeRecipeIngredientFieldEnum::new_section(
                         &list.name[0],
-                        merged.iter().map(|s| s.as_str()).collect(),
+                        merged
+                            .iter()
+                            .map(|s| s.as_str())
+                            .collect::<Vec<_>>()
+                            .as_slice(),
                     )
                 }
                 RecipeRecipeIngredientFieldEnum::PropertyValue(v) => {

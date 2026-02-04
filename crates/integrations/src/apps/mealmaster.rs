@@ -1712,14 +1712,14 @@ Typed for you by Karen Mintzias
                     name: vec!["Apple Crisp".into()],
                     recipe_category: vec!["dessert".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::new_section("APPLE MIXTURE", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("APPLE MIXTURE", &[
                             "10 c apples;peeled and sliced",
                             "1/4 c lemon juice",
                             "1 tb lemon zest",
                             "3/4 c sugar",
                             "1/2 c Golden raisins",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("MIXTURE", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("MIXTURE", &[
                             "1 1/2 st butter",
                             "1 1/4 c all-purpose flour",
                             "1 1/2 c light brown sugar",
@@ -2098,14 +2098,14 @@ Typed for you by Karen Mintzias
                 name: vec!["Cannoli".into()],
                 recipe_category: vec!["Italian".into()],
                 recipe_ingredient: vec![
-                    RecipeRecipeIngredientFieldEnum::new_section("FILLING", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("FILLING", &[
                         "1 1/2 c Whole-milk ricotta cheese; - well drained",
                         "1 1/2 c Milk chocolate; - coarsely chopped",
                         "3 tb Sugar",
                         "1/4 c Pistachio nuts; - coarsely chopped",
                         "1 1/2 ts Cinnamon",
                     ]),
-                    RecipeRecipeIngredientFieldEnum::new_section("DOUGH", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("DOUGH", &[
                         "1 c All-purpose flour",
                         "- or dry white wine",
                         "1 tb Sugar",
@@ -2344,7 +2344,7 @@ SOURCE: Gourmet, December 1992
                     RecipeRecipeIngredientFieldEnum::Text("-lightly & chopped".into()),
                     RecipeRecipeIngredientFieldEnum::new_section(
                         "EGG WASH",
-                        vec!["1 egg, large; beaten with", "-water"],
+                        &["1 egg, large; beaten with", "-water"],
                     ),
                 ],
                 recipe_instructions: vec![

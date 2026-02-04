@@ -168,7 +168,7 @@ impl VolumeImperialCupExt for Volume {
     }
 }
 
-const IMPERIAL_GILL_IN_MILLILITERS: f64 = 142.0653125;
+const IMPERIAL_GILL_IN_MILLILITERS: f64 = 142.065_312_5;
 
 pub struct ImperialGill {
     pub value: f64,
@@ -209,7 +209,7 @@ impl VolumeImperialGillExt for Volume {
     }
 }
 
-const IMPERIAL_QUART_IN_LITERS: f64 = 1.136522;
+const IMPERIAL_QUART_IN_LITERS: f64 = 1.136_522;
 
 pub struct ImperialQuart {
     pub value: f64,

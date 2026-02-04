@@ -736,21 +736,21 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 name: vec!["Flammenkuchen von Marc".into()],
                 recipe_category: vec!["Frankreich".into()],
                 recipe_ingredient: vec![
-                    RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", &[
                         "6 tb Mehl C200011 gram=24",
                         "0.5 ts Salz R111011",
                         "1 pn Pfeffer R258011",
                         "0.5  Würfel Hefe J731000 gram=10",
                         "0.25 l Wasser N110000 [(lauwarm)]",
                     ]),
-                    RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", &[
                         "250 g Quark M713200 [40% Fett]",
                         "1 ct Saure Sahne M172500 gram=40",
                         "0.5 ts Salz R111011",
                         "1 pn Pfeffer R258011",
                         "1  Zitrone F601600 gram=30",
                     ]),
-                    RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", &[
                         "5 lg Zwiebel G480111 gram=150",
                         "125 g Durchwachsener Speck W411011",
                         "125 g Reibkäse M600300 [(optional)]",
