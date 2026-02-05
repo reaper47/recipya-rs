@@ -18,6 +18,11 @@ impl Unitless {
 
 static UNITLESS_REGEX: OnceLock<Regex> = OnceLock::new();
 
+/// Returns the compiled unitless regex.
+///
+/// # Panics
+///
+/// Panics if the hard-coded regex literal is invalid.
 pub fn get_regex<'a>() -> &'a Regex {
     UNITLESS_REGEX.get_or_init(|| Regex::new(r"(?i)(\d(?:.?\s?/?\d+)*)").unwrap())
 }

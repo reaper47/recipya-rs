@@ -6,117 +6,118 @@ use crate::cooking::units::unit::Unit;
 use crate::{Error, Result};
 
 impl UnitConverter for Mass {
+    #[allow(clippy::too_many_lines)]
     fn convert(&self, to: UnitType) -> Result<Unit> {
-        use MassUnit::*;
+        use MassUnit::{Dekagram, Gram, Hectogram, Kilogram, Milligram, Ounce, Pound};
 
         match self {
-            Mass::Milligram(original_value) => match to {
+            Self::Milligram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_milligrams(*original_value);
 
                     match unit {
                         Milligram => Ok(Unit::Mass(self.with_value(*original_value))),
-                        Gram => Ok(Unit::Mass(Mass::Gram(value.as_grams()))),
-                        Dekagram => Ok(Unit::Mass(Mass::Dekagram(value.as_dekagrams()))),
-                        Hectogram => Ok(Unit::Mass(Mass::Hectogram(value.as_hectograms()))),
-                        Kilogram => Ok(Unit::Mass(Mass::Kilogram(value.as_kilograms()))),
-                        Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
-                        Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
+                        Gram => Ok(Unit::Mass(Self::Gram(value.as_grams()))),
+                        Dekagram => Ok(Unit::Mass(Self::Dekagram(value.as_dekagrams()))),
+                        Hectogram => Ok(Unit::Mass(Self::Hectogram(value.as_hectograms()))),
+                        Kilogram => Ok(Unit::Mass(Self::Kilogram(value.as_kilograms()))),
+                        Ounce => Ok(Unit::Mass(Self::Ounce(value.as_ounces()))),
+                        Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
             },
-            Mass::Gram(original_value) => match to {
+            Self::Gram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_grams(*original_value);
 
                     match unit {
-                        Milligram => Ok(Unit::Mass(Mass::Milligram(value.as_milligrams()))),
+                        Milligram => Ok(Unit::Mass(Self::Milligram(value.as_milligrams()))),
                         Gram => Ok(Unit::Mass(self.with_value(*original_value))),
-                        Dekagram => Ok(Unit::Mass(Mass::Dekagram(value.as_dekagrams()))),
-                        Hectogram => Ok(Unit::Mass(Mass::Hectogram(value.as_hectograms()))),
-                        Kilogram => Ok(Unit::Mass(Mass::Kilogram(value.as_kilograms()))),
-                        Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
-                        Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
+                        Dekagram => Ok(Unit::Mass(Self::Dekagram(value.as_dekagrams()))),
+                        Hectogram => Ok(Unit::Mass(Self::Hectogram(value.as_hectograms()))),
+                        Kilogram => Ok(Unit::Mass(Self::Kilogram(value.as_kilograms()))),
+                        Ounce => Ok(Unit::Mass(Self::Ounce(value.as_ounces()))),
+                        Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
             },
-            Mass::Dekagram(original_value) => match to {
+            Self::Dekagram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_dekagrams(*original_value);
 
                     match unit {
-                        Milligram => Ok(Unit::Mass(Mass::Milligram(value.as_milligrams()))),
-                        Gram => Ok(Unit::Mass(Mass::Gram(value.as_grams()))),
+                        Milligram => Ok(Unit::Mass(Self::Milligram(value.as_milligrams()))),
+                        Gram => Ok(Unit::Mass(Self::Gram(value.as_grams()))),
                         Dekagram => Ok(Unit::Mass(self.with_value(*original_value))),
-                        Hectogram => Ok(Unit::Mass(Mass::Hectogram(value.as_hectograms()))),
-                        Kilogram => Ok(Unit::Mass(Mass::Kilogram(value.as_kilograms()))),
-                        Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
-                        Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
+                        Hectogram => Ok(Unit::Mass(Self::Hectogram(value.as_hectograms()))),
+                        Kilogram => Ok(Unit::Mass(Self::Kilogram(value.as_kilograms()))),
+                        Ounce => Ok(Unit::Mass(Self::Ounce(value.as_ounces()))),
+                        Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
             },
-            Mass::Hectogram(original_value) => match to {
+            Self::Hectogram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_hectograms(*original_value);
 
                     match unit {
-                        Milligram => Ok(Unit::Mass(Mass::Milligram(value.as_milligrams()))),
-                        Gram => Ok(Unit::Mass(Mass::Gram(value.as_grams()))),
-                        Dekagram => Ok(Unit::Mass(Mass::Dekagram(value.as_dekagrams()))),
+                        Milligram => Ok(Unit::Mass(Self::Milligram(value.as_milligrams()))),
+                        Gram => Ok(Unit::Mass(Self::Gram(value.as_grams()))),
+                        Dekagram => Ok(Unit::Mass(Self::Dekagram(value.as_dekagrams()))),
                         Hectogram => Ok(Unit::Mass(self.with_value(*original_value))),
-                        Kilogram => Ok(Unit::Mass(Mass::Kilogram(value.as_kilograms()))),
-                        Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
-                        Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
+                        Kilogram => Ok(Unit::Mass(Self::Kilogram(value.as_kilograms()))),
+                        Ounce => Ok(Unit::Mass(Self::Ounce(value.as_ounces()))),
+                        Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
             },
-            Mass::Kilogram(original_value) => match to {
+            Self::Kilogram(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_kilograms(*original_value);
 
                     match unit {
-                        Milligram => Ok(Unit::Mass(Mass::Milligram(value.as_milligrams()))),
-                        Gram => Ok(Unit::Mass(Mass::Gram(value.as_grams()))),
-                        Dekagram => Ok(Unit::Mass(Mass::Dekagram(value.as_dekagrams()))),
-                        Hectogram => Ok(Unit::Mass(Mass::Hectogram(value.as_hectograms()))),
+                        Milligram => Ok(Unit::Mass(Self::Milligram(value.as_milligrams()))),
+                        Gram => Ok(Unit::Mass(Self::Gram(value.as_grams()))),
+                        Dekagram => Ok(Unit::Mass(Self::Dekagram(value.as_dekagrams()))),
+                        Hectogram => Ok(Unit::Mass(Self::Hectogram(value.as_hectograms()))),
                         Kilogram => Ok(Unit::Mass(self.with_value(*original_value))),
-                        Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
-                        Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
+                        Ounce => Ok(Unit::Mass(Self::Ounce(value.as_ounces()))),
+                        Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
             },
-            Mass::Ounce(original_value) => match to {
+            Self::Ounce(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_ounces(*original_value);
 
                     match unit {
-                        Milligram => Ok(Unit::Mass(Mass::Milligram(value.as_milligrams()))),
-                        Gram => Ok(Unit::Mass(Mass::Gram(value.as_grams()))),
-                        Dekagram => Ok(Unit::Mass(Mass::Dekagram(value.as_dekagrams()))),
-                        Hectogram => Ok(Unit::Mass(Mass::Hectogram(value.as_hectograms()))),
-                        Kilogram => Ok(Unit::Mass(Mass::Kilogram(value.as_kilograms()))),
+                        Milligram => Ok(Unit::Mass(Self::Milligram(value.as_milligrams()))),
+                        Gram => Ok(Unit::Mass(Self::Gram(value.as_grams()))),
+                        Dekagram => Ok(Unit::Mass(Self::Dekagram(value.as_dekagrams()))),
+                        Hectogram => Ok(Unit::Mass(Self::Hectogram(value.as_hectograms()))),
+                        Kilogram => Ok(Unit::Mass(Self::Kilogram(value.as_kilograms()))),
                         Ounce => Ok(Unit::Mass(self.with_value(*original_value))),
-                        Pound => Ok(Unit::Mass(Mass::Pound(value.as_pounds()))),
+                        Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
             },
-            Mass::Pound(original_value) => match to {
+            Self::Pound(original_value) => match to {
                 UnitType::Mass(unit) => {
                     let value = measurements::Mass::from_pounds(*original_value);
 
                     match unit {
-                        Milligram => Ok(Unit::Mass(Mass::Milligram(value.as_milligrams()))),
-                        Gram => Ok(Unit::Mass(Mass::Gram(value.as_grams()))),
-                        Dekagram => Ok(Unit::Mass(Mass::Dekagram(value.as_dekagrams()))),
-                        Hectogram => Ok(Unit::Mass(Mass::Hectogram(value.as_hectograms()))),
-                        Kilogram => Ok(Unit::Mass(Mass::Kilogram(value.as_kilograms()))),
-                        Ounce => Ok(Unit::Mass(Mass::Ounce(value.as_ounces()))),
+                        Milligram => Ok(Unit::Mass(Self::Milligram(value.as_milligrams()))),
+                        Gram => Ok(Unit::Mass(Self::Gram(value.as_grams()))),
+                        Dekagram => Ok(Unit::Mass(Self::Dekagram(value.as_dekagrams()))),
+                        Hectogram => Ok(Unit::Mass(Self::Hectogram(value.as_hectograms()))),
+                        Kilogram => Ok(Unit::Mass(Self::Kilogram(value.as_kilograms()))),
+                        Ounce => Ok(Unit::Mass(Self::Ounce(value.as_ounces()))),
                         Pound => Ok(Unit::Mass(self.with_value(*original_value))),
                     }
                 }

@@ -228,6 +228,8 @@ impl FsSupport for AppFs {
         }
     }
 
+    #[allow(clippy::cast_sign_loss)]
+    #[allow(clippy::cast_possible_truncation)]
     fn generate_thumbnail(&self, path: &Path, file_name: Uuid, output_path: &Path) {
         let res: Result<()> = (|| {
             let buf: Vec<u8> = {
@@ -235,9 +237,9 @@ impl FsSupport for AppFs {
 
                 let thumb = {
                     let (w, h) = img.dimensions();
-                    let scale = (480f32 / w as f32).min(480f32 / h as f32).min(1.0);
-                    let new_w = (w as f32 * scale).round().max(1.0) as u32;
-                    let new_h = (h as f32 * scale).round().max(1.0) as u32;
+                    let scale = (480f64 / f64::from(w)).min(480f64 / f64::from(h)).min(1.0);
+                    let new_w = (f64::from(w) * scale).round().max(1.0) as u32;
+                    let new_h = (f64::from(h) * scale).round().max(1.0) as u32;
                     if new_w == w && new_h == h {
                         img
                     } else {

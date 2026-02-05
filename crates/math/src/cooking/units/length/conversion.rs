@@ -6,94 +6,94 @@ use crate::{Error, Result};
 
 impl UnitConverter for Length {
     fn convert(&self, to: UnitType) -> Result<Unit> {
-        use LengthUnit::*;
+        use LengthUnit::{Centimetre, Foot, Inch, Kilometre, Metre, Millimetre};
 
         match self {
-            Length::Millimetre(original_value) => match to {
+            Self::Millimetre(original_value) => match to {
                 UnitType::Length(unit) => {
                     let value = measurements::Length::from_millimetres(*original_value);
 
                     match unit {
                         Millimetre => Ok(Unit::Length(self.with_value(*original_value))),
-                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Centimetre => Ok(Unit::Length(Self::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Self::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Self::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Self::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
             },
-            Length::Centimetre(original_value) => match to {
+            Self::Centimetre(original_value) => match to {
                 UnitType::Length(unit) => {
                     let value = measurements::Length::from_centimetres(*original_value);
 
                     match unit {
-                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
+                        Millimetre => Ok(Unit::Length(Self::Millimetre(value.as_millimetres()))),
                         Centimetre => Ok(Unit::Length(self.with_value(*original_value))),
-                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Metre => Ok(Unit::Length(Self::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Self::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Self::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
             },
-            Length::Metre(original_value) => {
+            Self::Metre(original_value) => {
                 let value = measurements::Length::from_metres(*original_value);
 
                 match to {
                     UnitType::Length(unit) => match unit {
-                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
+                        Millimetre => Ok(Unit::Length(Self::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Self::Centimetre(value.as_centimetres()))),
                         Metre => Ok(Unit::Length(self.with_value(*original_value))),
-                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Kilometre => Ok(Unit::Length(Self::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Self::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     },
                     _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
                 }
             }
-            Length::Kilometre(original_value) => match to {
+            Self::Kilometre(original_value) => match to {
                 UnitType::Length(unit) => {
                     let value = measurements::Length::from_kilometres(*original_value);
 
                     match unit {
-                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
+                        Millimetre => Ok(Unit::Length(Self::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Self::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Self::Metre(value.as_metres()))),
                         Kilometre => Ok(Unit::Length(self.with_value(*original_value))),
-                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
-                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Inch => Ok(Unit::Length(Self::Inch(value.as_inches()))),
+                        Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
             },
-            Length::Inch(original_value) => match to {
+            Self::Inch(original_value) => match to {
                 UnitType::Length(unit) => {
                     let value = measurements::Length::from_inches(*original_value);
 
                     match unit {
-                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
+                        Millimetre => Ok(Unit::Length(Self::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Self::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Self::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Self::Kilometre(value.as_kilometres()))),
                         Inch => Ok(Unit::Length(self.with_value(*original_value))),
-                        Foot => Ok(Unit::Length(Length::Foot(value.as_feet()))),
+                        Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
             },
-            Length::Foot(original_value) => match to {
+            Self::Foot(original_value) => match to {
                 UnitType::Length(unit) => {
                     let value = measurements::Length::from_feet(*original_value);
 
                     match unit {
-                        Millimetre => Ok(Unit::Length(Length::Millimetre(value.as_millimetres()))),
-                        Centimetre => Ok(Unit::Length(Length::Centimetre(value.as_centimetres()))),
-                        Metre => Ok(Unit::Length(Length::Metre(value.as_metres()))),
-                        Kilometre => Ok(Unit::Length(Length::Kilometre(value.as_kilometres()))),
-                        Inch => Ok(Unit::Length(Length::Inch(value.as_inches()))),
+                        Millimetre => Ok(Unit::Length(Self::Millimetre(value.as_millimetres()))),
+                        Centimetre => Ok(Unit::Length(Self::Centimetre(value.as_centimetres()))),
+                        Metre => Ok(Unit::Length(Self::Metre(value.as_metres()))),
+                        Kilometre => Ok(Unit::Length(Self::Kilometre(value.as_kilometres()))),
+                        Inch => Ok(Unit::Length(Self::Inch(value.as_inches()))),
                         Foot => Ok(Unit::Length(self.with_value(*original_value))),
                     }
                 }

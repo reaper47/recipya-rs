@@ -42,7 +42,7 @@ impl MassDekagramExt for Mass {
     }
 
     fn from_dekagrams(dekagrams: f64) -> Mass {
-        Mass::from_kilograms(dekagrams * DEKAGRAM_IN_KG)
+        Self::from_kilograms(dekagrams * DEKAGRAM_IN_KG)
     }
 }
 
@@ -84,7 +84,7 @@ impl MassHectogramExt for Mass {
     }
 
     fn from_hectograms(hectograms: f64) -> Mass {
-        Mass::from_kilograms(hectograms * HECTOGRAM_IN_KG)
+        Self::from_kilograms(hectograms * HECTOGRAM_IN_KG)
     }
 }
 
@@ -124,7 +124,7 @@ impl VolumeCentilitreExt for Volume {
     }
 
     fn from_centilitres(centilitres: f64) -> Volume {
-        Volume::from_litres(centilitres / LITRE_CENTILITRE_FACTOR)
+        Self::from_litres(centilitres / LITRE_CENTILITRE_FACTOR)
     }
 }
 
@@ -164,7 +164,7 @@ impl VolumeDecilitreExt for Volume {
     }
 
     fn from_decilitres(decilitres: f64) -> Volume {
-        Volume::from_litres(decilitres / LITRE_DECILITRE_FACTOR)
+        Self::from_litres(decilitres / LITRE_DECILITRE_FACTOR)
     }
 }
 
@@ -206,7 +206,7 @@ impl VolumeMetricTeaspoonExt for Volume {
     }
 
     fn from_teaspoons_metric(teaspoons: f64) -> Volume {
-        Volume::from_millilitres(teaspoons * METRIC_TEASPOON_IN_MILLIMETERS)
+        Self::from_millilitres(teaspoons * METRIC_TEASPOON_IN_MILLIMETERS)
     }
 }
 
@@ -248,7 +248,7 @@ impl VolumeMetricTablespoonExt for Volume {
     }
 
     fn from_tablespoons_metric(teaspoons: f64) -> Volume {
-        Volume::from_millilitres(teaspoons * METRIC_TABLESPOON_IN_MILLIMETERS)
+        Self::from_millilitres(teaspoons * METRIC_TABLESPOON_IN_MILLIMETERS)
     }
 }
 
@@ -290,7 +290,7 @@ impl VolumeMetricDessertSpoonExt for Volume {
     }
 
     fn from_dessertspoons_metric(spoons: f64) -> Volume {
-        Volume::from_millilitres(spoons * METRIC_DESSERTSPOON_IN_MILLILITERS)
+        Self::from_millilitres(spoons * METRIC_DESSERTSPOON_IN_MILLILITERS)
     }
 }
 
@@ -332,6 +332,6 @@ impl VolumeMetricCupExt for Volume {
     }
 
     fn from_cups_metric(cups: f64) -> Volume {
-        Volume::from_millilitres(cups * METRIC_CUP_IN_MILLILITRES)
+        Self::from_millilitres(cups * METRIC_CUP_IN_MILLILITRES)
     }
 }

@@ -7,7 +7,7 @@ impl UnitScaler for Unitless {
     fn scale(&self, factor: f64) -> Result<Unit> {
         let scaled_value = self.value * factor;
 
-        Ok(Unit::Unitless(Unitless::new(scaled_value)))
+        Ok(Unit::Unitless(Self::new(scaled_value)))
     }
 }
 

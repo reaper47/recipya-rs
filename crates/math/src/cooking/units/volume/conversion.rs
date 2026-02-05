@@ -13,6 +13,7 @@ use crate::cooking::units::volume::units::Volume;
 use crate::cooking::units::volume::units::VolumeUnit;
 
 impl UnitConverter for Volume {
+    #[allow(clippy::too_many_lines)]
     fn convert(&self, to: UnitType) -> Result<Unit> {
         use VolumeUnit::{
             AustralianCup, AustralianDessertspoon, AustralianTablespoon, AustralianTeaspoon,

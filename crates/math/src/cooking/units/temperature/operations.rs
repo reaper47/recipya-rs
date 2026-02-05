@@ -4,7 +4,7 @@ use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Temperature {
     fn abbrev(&self) -> &str {
-        use Temperature::*;
+        use Temperature::{Celsius, Fahrenheit};
 
         match self {
             Celsius(_) => "°C",
@@ -13,25 +13,24 @@ impl UnitOperations for Temperature {
     }
 
     fn unit_type(&self) -> UnitType {
-        use TemperatureUnit::*;
+        use TemperatureUnit::{Celsius, Fahrenheit};
 
         match self {
-            Temperature::Celsius(_) => UnitType::Temperature(Celsius),
-            Temperature::Fahrenheit(_) => UnitType::Temperature(Fahrenheit),
+            Self::Celsius(_) => UnitType::Temperature(Celsius),
+            Self::Fahrenheit(_) => UnitType::Temperature(Fahrenheit),
         }
     }
 
     fn value(&self) -> f64 {
         match self {
-            Temperature::Celsius(v) => *v,
-            Temperature::Fahrenheit(v) => *v,
+            Self::Celsius(v) | Self::Fahrenheit(v) => *v,
         }
     }
 
     fn with_value(&self, value: f64) -> Self {
         match self {
-            Temperature::Celsius(_) => Temperature::Celsius(value),
-            Temperature::Fahrenheit(_) => Temperature::Fahrenheit(value),
+            Self::Celsius(_) => Self::Celsius(value),
+            Self::Fahrenheit(_) => Self::Fahrenheit(value),
         }
     }
 }

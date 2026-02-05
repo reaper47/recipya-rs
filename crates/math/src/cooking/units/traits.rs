@@ -7,6 +7,7 @@ pub trait UnitOperations {
     fn abbrev(&self) -> &str;
     fn unit_type(&self) -> UnitType;
     fn value(&self) -> f64;
+    #[must_use]
     fn with_value(&self, value: f64) -> Self;
 }
 

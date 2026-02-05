@@ -126,6 +126,7 @@ impl fmt::Display for Unit {
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
 fn format_fractional(value: f64) -> String {
     let whole = value.trunc();
     let frac = value.fract();
@@ -135,8 +136,8 @@ fn format_fractional(value: f64) -> String {
     let mut best_error = f64::MAX;
 
     for &den in &denominators {
-        let num = (frac * den as f64).round();
-        let approx = num / den as f64;
+        let num = (frac * f64::from(den)).round();
+        let approx = num / f64::from(den);
         let error = (frac - approx).abs();
 
         if error < best_error {

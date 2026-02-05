@@ -10,8 +10,8 @@ use crate::cooking::units::traits::{UnitOperations, UnitScaler};
 use crate::cooking::units::unit::Unit;
 use crate::cooking::units::volume::units::Volume;
 
-#[allow(clippy::unused_self)]
 impl UnitScaler for Volume {
+    #[allow(clippy::too_many_lines)]
     fn scale(&self, factor: f64) -> Result<Unit> {
         let scaled_value = self.value() * factor;
 

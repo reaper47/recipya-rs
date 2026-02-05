@@ -16,7 +16,7 @@ pub enum Mass {
     Pound(f64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum MassUnit {
     Milligram,
     Gram,
@@ -29,6 +29,11 @@ pub enum MassUnit {
 
 static MASS_REGEX: OnceLock<Regex> = OnceLock::new();
 
+/// Returns the compiled mass regex.
+///
+/// # Panics
+///
+/// Panics if the hard-coded regex literal is invalid.
 pub fn get_regex<'a>() -> &'a Regex {
     MASS_REGEX.get_or_init(|| Regex::new(r"(?i)(\d(?:\s?[\d.]/?\d+)?)\s?([a-zμ]+)\b").unwrap())
 }
