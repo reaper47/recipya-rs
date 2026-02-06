@@ -41,7 +41,7 @@ impl Scraper {
         let content = self.client.get_async(website, url).await?;
         let doc = Html::parse_document(&content);
 
-        match self.parse_ld_json(url, &doc, &website) {
+        match Self::parse_ld_json(url, &doc, website) {
             Ok(recipe) => {
                 if recipe.r#type == AtType::Recipe.to_opt() {
                     Ok(recipe)
@@ -54,8 +54,8 @@ impl Scraper {
         }
     }
 
-    fn parse_ld_json(&self, url: &str, doc: &Html, website: &Website) -> Result<Recipe> {
-        let sel = Selector::parse(r#"script[type='application/ld+json']"#)?;
+    fn parse_ld_json(url: &str, doc: &Html, website: Website) -> Result<Recipe> {
+        let sel = Selector::parse("script[type='application/ld+json']")?;
 
         doc.select(&sel)
             .filter_map(|el| {
@@ -67,28 +67,25 @@ impl Scraper {
 
                 let value: serde_json::Value = serde_json::from_str(json).ok()?;
 
-                match value.get("@type").and_then(|v| v.as_str()) {
-                    Some(_) => serde_json::from_str::<Recipe>(json)
-                        .inspect_err(|err| {
-                            error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
-                        })
-                        .ok(),
-                    None => {
-                        if let Some(graph) = value.get("@graph").and_then(|g| g.as_array()) {
-                            for item in graph {
-                                if item.get("@type").and_then(|t| t.as_str()) == Some("Recipe") {
-                                    return serde_json::from_value::<Recipe>(item.clone())
-                                        .inspect_err(|err| {
-                                            error!(
-                                                "Failed to deserialize recipe json for url '{url}' and JSON '{item}': {err}"
-                                            )
-                                        })
-                                        .ok();
-                                }
+                if value.get("@type").and_then(|v| v.as_str()).is_some() { serde_json::from_str::<Recipe>(json)
+                .inspect_err(|err| {
+                    error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
+                })
+                .ok() } else {
+                    if let Some(graph) = value.get("@graph").and_then(|g| g.as_array()) {
+                        for item in graph {
+                            if item.get("@type").and_then(|t| t.as_str()) == Some("Recipe") {
+                                return serde_json::from_value::<Recipe>(item.clone())
+                                    .inspect_err(|err| {
+                                        error!(
+                                            "Failed to deserialize recipe json for url '{url}' and JSON '{item}': {err}"
+                                        );
+                                    })
+                                    .ok();
                             }
                         }
-                        None
                     }
+                    None
                 }
             })
             .find_map(|recipe| {
@@ -98,7 +95,7 @@ impl Scraper {
                             r.r#type = AtType::Recipe.to_opt();
                             Some(*r)
                         }
-                        _ => None,
+                        GraphObject::Unknown(_) => None,
                     }),
                     None => Some(website.augment_ld_json(doc, recipe)),
                 };
@@ -108,10 +105,10 @@ impl Scraper {
                     if let Some(author) = r.author.first()
                         && author.is_default()
                     {
-                        r.author = vec![]
+                        r.author = vec![];
                     }
                     r.is_part_of = vec![]; // Note: It would be nice if the serde deserialization skips deserialization if default.
-                    r.url = vec![url.rsplit_once("<number>").unwrap_or((url, "")).0.into()]
+                    r.url = vec![url.rsplit_once("<number>").unwrap_or((url, "")).0.into()];
                 }
 
                 recipe

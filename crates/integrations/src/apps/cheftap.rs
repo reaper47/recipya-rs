@@ -31,13 +31,13 @@ struct RecipeComponents<'a> {
 
 impl From<ChefTapRecipe> for Recipe {
     fn from(r: ChefTapRecipe) -> Self {
-        Recipe {
+        Self {
             r#type: AtType::Recipe.to_opt(),
             is_based_on: to_is_based_on(&r.source.clone().unwrap_or_default()),
             name: vec![r.title],
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
-            recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
+            recipe_yield: to_yield(i64::from(r.yield_.unwrap_or_default())),
             url: r.source.into_iter().collect(),
             ..Default::default()
         }
@@ -64,7 +64,7 @@ impl From<RecipeComponents<'_>> for ChefTapRecipe {
     }
 }
 
-/// Parses a ChefTap recipe from the file's content.
+/// Parses a `ChefTap` recipe from the file's content.
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
@@ -125,7 +125,7 @@ fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
         (
             line_ending,
             literal("Directions"),
-            repeat(1.., line_ending).fold(|| (), |_, _| ()),
+            repeat(1.., line_ending).fold(|| (), |(), _| ()),
         ),
     )
     .map(|(v, _)| v)

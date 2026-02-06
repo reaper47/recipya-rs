@@ -89,12 +89,12 @@ pub struct UserForAuth {
 
 impl User {
     /// Retrieves all of the users in the database.
-    pub async fn all(mm: &ModelManager) -> Result<Vec<User>> {
+    pub async fn all(mm: &ModelManager) -> Result<Vec<Self>> {
         let mut conn = mm.pool.get().await?;
 
         let all_users = schema::users::table
-            .select(User::as_select())
-            .load::<User>(&mut conn)
+            .select(Self::as_select())
+            .load::<Self>(&mut conn)
             .await?;
 
         Ok(all_users)
@@ -106,7 +106,7 @@ impl User {
 
         let user = schema::users::table
             .filter(schema::users::id.eq(user_id))
-            .select(User::as_select())
+            .select(Self::as_select())
             .get_result(&mut conn)
             .await?;
 
@@ -121,7 +121,7 @@ impl User {
 
     /// Deletes a user from the database.
     pub async fn delete(mm: &ModelManager, user_id: Uuid) -> Result<()> {
-        use repository::schema::users::dsl::*;
+        use repository::schema::users::dsl::{id, users};
 
         let mut conn = mm.pool.get().await?;
 
@@ -142,15 +142,15 @@ impl User {
     pub async fn get_user_by_email(
         mm: &ModelManager,
         user_email: impl Into<String>,
-    ) -> Result<Option<User>> {
-        use repository::schema::users::dsl::*;
+    ) -> Result<Option<Self>> {
+        use repository::schema::users::dsl::{email, users};
 
         let mut conn = mm.pool.get().await?;
 
         let user = users
             .filter(email.eq(user_email.into()))
-            .select(User::as_select())
-            .first::<User>(&mut conn)
+            .select(Self::as_select())
+            .first::<Self>(&mut conn)
             .await
             .optional()?;
 
@@ -158,15 +158,15 @@ impl User {
     }
 
     /// Finds a user by their user ID.
-    pub async fn get_user_by_id(mm: &ModelManager, user_id: Uuid) -> Result<Option<User>> {
-        use repository::schema::users::dsl::*;
+    pub async fn get_user_by_id(mm: &ModelManager, user_id: Uuid) -> Result<Option<Self>> {
+        use repository::schema::users::dsl::{id, users};
 
         let mut conn = mm.pool.get().await?;
 
         let user = users
             .filter(id.eq(user_id))
-            .select(User::as_select())
-            .first::<User>(&mut conn)
+            .select(Self::as_select())
+            .first::<Self>(&mut conn)
             .await
             .optional()?;
 
@@ -194,14 +194,14 @@ impl User {
     }
 
     /// Finds the first user authentication data by email.
-    pub async fn get_first_admin(mm: &ModelManager) -> Result<Option<User>> {
+    pub async fn get_first_admin(mm: &ModelManager) -> Result<Option<Self>> {
         let mut conn = mm.pool.get().await?;
 
         let user = schema::users::table
             .filter(schema::users::is_admin.eq(true))
-            .select(User::as_select())
+            .select(Self::as_select())
             .order(schema::users::id.asc())
-            .first::<User>(&mut conn)
+            .first::<Self>(&mut conn)
             .await
             .optional()?;
 
@@ -228,7 +228,7 @@ impl User {
 
         let user = schema::users::table
             .filter(schema::users::id.eq(user_id))
-            .select(User::as_select())
+            .select(Self::as_select())
             .get_result(&mut conn)
             .await?;
 
@@ -242,8 +242,8 @@ impl User {
     }
 
     /// Creates a new user from the provided user creation data.
-    pub async fn new(mm: &ModelManager, user_c: UserForCreate) -> Result<User> {
-        use repository::schema::users::dsl::*;
+    pub async fn new(mm: &ModelManager, user_c: UserForCreate) -> Result<Self> {
+        use repository::schema::users::dsl::users;
 
         let new_password_salt = Uuid::new_v4();
         let new_password = hash_pwd(ContentToHash {
@@ -252,18 +252,18 @@ impl User {
         })
         .await?;
 
-        let all_users = User::all(mm).await?;
+        let all_users = Self::all(mm).await?;
 
         let mut conn = mm.pool.get().await?;
 
         let user = diesel::insert_into(users)
             .values(&UserForInsert {
-                email: user_c.email.to_string(),
+                email: user_c.email.clone(),
                 password_hash: new_password,
                 password_salt: new_password_salt,
                 is_admin: all_users.is_empty(),
             })
-            .returning(User::as_returning())
+            .returning(Self::as_returning())
             .get_result(&mut conn)
             .await?;
 
@@ -284,7 +284,7 @@ impl User {
 
     /// Updates the user's password.
     pub async fn update_password(&self, mm: &ModelManager, password_clear: &str) -> Result<()> {
-        use repository::schema::users::dsl::*;
+        use repository::schema::users::dsl::{id, password_hash, users};
 
         let hashed_password = hash_pwd(ContentToHash {
             content: password_clear.into(),
@@ -308,7 +308,7 @@ impl User {
         id: Uuid,
         new_password: &str,
     ) -> Result<()> {
-        match User::get_user_by_id(mm, id).await? {
+        match Self::get_user_by_id(mm, id).await? {
             Some(user) => user.update_password(mm, new_password).await,
             None => Err(Error::EntityNotFound {
                 id: "-1".into(),
@@ -323,7 +323,7 @@ impl User {
         user_id: Uuid,
         new_value: bool,
     ) -> Result<()> {
-        use repository::schema::users::dsl::*;
+        use repository::schema::users::dsl::{is_remember_me, users};
 
         let mut conn = mm.pool.get().await?;
 

@@ -33,7 +33,7 @@ pub struct ImagesDir {
 impl DataDir {
     /// Creates a new `Dir` instance with predefined subdirectories inside the
     /// user's data directory.
-    pub fn new() -> Result<DataDir> {
+    pub fn new() -> Result<Self> {
         let base_dir = get_base_dir().map_err(|_| Error::NoValidHomeDir)?;
         let media_dir = base_dir.join("Media");
         let images_dir = media_dir.join("Images");

@@ -34,15 +34,16 @@ where
         .recipes
         .values()
         .filter(|r| !r.name.is_empty() && !r.ingredients.is_empty() && !r.directions.is_empty())
-        .map(|r| r.to_recipe_schema())
+        .map(ToRecipeSchema::to_recipe_schema)
         .collect();
     Ok(recipes)
 }
 
 impl ToRecipeSchema for Recipe {
+    #[allow(clippy::too_many_lines)]
     fn to_recipe_schema(&self) -> schema_org::Recipe {
         let (category, keywords) = match self.categories.as_slice() {
-            [first, rest @ ..] => (Some(first.to_string()), rest.to_vec()),
+            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
             [] => (None, Vec::new()),
         };
 
@@ -64,7 +65,6 @@ impl ToRecipeSchema for Recipe {
         let cook = humantime::parse_duration(&self.cook_time).unwrap_or_default();
         let prep = humantime::parse_duration(&self.prep_time).unwrap_or_default();
 
-        let ingredients = self.ingredients.lines().collect::<Vec<_>>();
         let url = Url::parse(&self.source_url)
             .ok()
             .map(String::from)
@@ -101,10 +101,10 @@ impl ToRecipeSchema for Recipe {
             .map(RecipeImageFieldEnum::URL)
             .collect::<Vec<_>>();
 
-        let src = if !self.source.is_empty() {
-            format!("{} [Imported from Paprika]", self.source)
-        } else {
+        let src = if self.source.is_empty() {
             "Imported from Paprika".to_string()
+        } else {
+            format!("{} [Imported from Paprika]", self.source)
         };
 
         schema_org::Recipe {
@@ -112,19 +112,17 @@ impl ToRecipeSchema for Recipe {
                 vec![]
             } else {
                 vec![AggregateRating {
-                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(
-                        self.rating as f32,
-                    )],
+                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(f32::from(
+                        self.rating,
+                    ))],
                     ..Default::default()
                 }]
             },
-            cook_time: seconds_to_duration(cook.as_secs() as i32),
-            date_created: match iso8601::Date::from_str(
+            cook_time: seconds_to_duration(i32::try_from(cook.as_secs()).unwrap_or_default()),
+            date_created: iso8601::Date::from_str(
                 self.created.split_whitespace().next().unwrap_or_default(),
-            ) {
-                Ok(d) => vec![d.to_string()],
-                Err(_) => vec![],
-            },
+            )
+            .map_or_else(|_| vec![], |d| vec![d.to_string()]),
             description: if self.description.is_empty() {
                 vec![]
             } else {
@@ -137,15 +135,18 @@ impl ToRecipeSchema for Recipe {
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
             name: vec![self.name.clone()],
-            prep_time: seconds_to_duration(prep.as_secs() as i32),
+            prep_time: seconds_to_duration(i32::try_from(prep.as_secs()).unwrap_or_default()),
             recipe_category: vec![category.unwrap_or_default()],
-            recipe_ingredient: ingredients
-                .into_iter()
+            recipe_ingredient: self
+                .ingredients
+                .lines()
                 .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.into()))
                 .collect(),
             recipe_instructions: instructions,
             recipe_yield: to_yield(self.servings.parse().unwrap_or(1)),
-            total_time: seconds_to_duration((prep.as_secs() + cook.as_secs()) as i32),
+            total_time: seconds_to_duration(
+                i32::try_from(prep.as_secs() + cook.as_secs()).unwrap_or_default(),
+            ),
             url: vec![url],
             ..Default::default()
         }

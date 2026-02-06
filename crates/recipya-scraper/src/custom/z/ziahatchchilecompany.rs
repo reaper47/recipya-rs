@@ -14,7 +14,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
     let article_body = doc
         .select(&Selector::parse("div[itemprop='articleBody']")?)
         .next()
-        .ok_or(Error::MissingElement("div[itemprop='articleBody']".into()))?;
+        .ok_or_else(|| Error::MissingElement("div[itemprop='articleBody']".into()))?;
 
     Ok(Recipe {
         r#type: AtType::Recipe.to_opt(),

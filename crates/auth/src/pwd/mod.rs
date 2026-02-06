@@ -25,12 +25,12 @@ pub struct ContentToHash {
 
 /// Hash the password with the default scheme.
 pub async fn hash_pwd(to_hash: ContentToHash) -> Result<String> {
-    tokio::task::spawn_blocking(move || hash_for_scheme(DEFAULT_SCHEME, to_hash))
+    tokio::task::spawn_blocking(move || hash_for_scheme(DEFAULT_SCHEME, &to_hash))
         .await
         .map_err(|_| Error::FailSpawnBlockForHash)?
 }
 
-/// Validate whether a ContentToHash matches.
+/// Validate whether a `ContentToHash` matches.
 pub async fn validate_pwd(to_hash: ContentToHash, pwd_ref: &str) -> Result<SchemeStatus> {
     let PwdParts {
         scheme_name,
@@ -51,8 +51,8 @@ pub async fn validate_pwd(to_hash: ContentToHash, pwd_ref: &str) -> Result<Schem
     Ok(scheme_status)
 }
 
-fn hash_for_scheme(scheme_name: &str, to_hash: ContentToHash) -> Result<String> {
-    let pwd_hashed = get_scheme(scheme_name)?.hash(&to_hash)?;
+fn hash_for_scheme(scheme_name: &str, to_hash: &ContentToHash) -> Result<String> {
+    let pwd_hashed = get_scheme(scheme_name)?.hash(to_hash)?;
 
     Ok(format!("#{scheme_name}#{pwd_hashed}"))
 }
@@ -97,7 +97,7 @@ mod tests {
             salt: fx_salt,
         };
 
-        let pwd_hashed = hash_for_scheme("01", fx_to_hash.clone())?;
+        let pwd_hashed = hash_for_scheme("01", &fx_to_hash)?;
         let pwd_validate = validate_pwd(fx_to_hash.clone(), &pwd_hashed).await?;
 
         assert!(

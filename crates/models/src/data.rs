@@ -8,6 +8,7 @@ use crate::time::FormattedTimes;
 
 /// Data holds data to pass on to the templates.
 #[derive(Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Data {
     pub is_admin: bool,
     pub is_authenticated: bool,
@@ -22,7 +23,7 @@ pub struct Data {
     pub recipes: Vec<ViewRecipe>,
 }
 
-/// NewAboutData creates a new instance of AboutData.
+/// Creates a new instance of `AboutData`.
 #[derive(Default)]
 pub struct AboutData {
     pub is_update_available: bool,
@@ -32,13 +33,13 @@ pub struct AboutData {
     pub version: String,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum PageSlot {
     Page(u64),
     Ellipsis,
 }
 
-/// PaginationData holds data related to pagination.
+/// Holds pagination data.
 #[derive(Debug, Default, PartialEq)]
 pub struct PaginationData {
     pub prev: u64,
@@ -71,14 +72,14 @@ impl PaginationData {
     }
 }
 
-/// PaginationHtmxData holds data related to htmx for pagination.
-#[derive(Debug, Default, PartialEq)]
+/// Holds data related to htmx for pagination.
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct PaginationHtmxData {
     pub is_swap: bool,
     pub target: String,
 }
 
-/// PaginationSearchData holds search data for the pagination.
+/// olds search data for the pagination.
 #[derive(Debug, Default, PartialEq)]
 pub struct PaginationSearchData {
     pub current_page: u64,

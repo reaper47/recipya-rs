@@ -87,8 +87,8 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
 }
 
 fn get_metadata_box(root: &ElementRef, css_selector: &str) -> Option<String> {
-    match Selector::parse(css_selector) {
-        Ok(sel) => root.select(&sel).next().and_then(|img| {
+    Selector::parse(css_selector).map_or(None, |sel| {
+        root.select(&sel).next().and_then(|img| {
             let parent = img.parent()?.next_sibling()?.last_child()?;
             let parent_el = scraper::ElementRef::wrap(parent)?;
 
@@ -104,7 +104,6 @@ fn get_metadata_box(root: &ElementRef, css_selector: &str) -> Option<String> {
             } else {
                 Some(cleaned)
             }
-        }),
-        Err(_) => None,
-    }
+        })
+    })
 }

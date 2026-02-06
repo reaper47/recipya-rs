@@ -12,7 +12,7 @@ use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
     RecipeRecipeInstructionsFieldEnum,
 };
-use schema_org::{AtType, Recipe};
+use schema_org::{AtType, Recipe, at_context};
 
 use super::helpers::read_file;
 use crate::common::Times;
@@ -49,7 +49,7 @@ impl From<AccuChefRecipe> for Recipe {
     fn from(r: AccuChefRecipe) -> Self {
         Self {
             r#type: AtType::Recipe.to_opt(),
-            context: Default::default(),
+            context: at_context(),
             cook_time: seconds_to_duration(r.times.cook_seconds),
             is_based_on: to_is_based_on(&r.source),
             keywords: r
@@ -62,7 +62,7 @@ impl From<AccuChefRecipe> for Recipe {
             recipe_category: vec![r.category.unwrap_or_default()],
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
-            recipe_yield: to_yield(r.yield_.unwrap_or_default() as i64),
+            recipe_yield: to_yield(i64::from(r.yield_.unwrap_or_default())),
             ..Default::default()
         }
     }
@@ -88,7 +88,7 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                     {
                         section
                             .item_list_element
-                            .push(ItemListItemListElementFieldEnum::Text(text.clone()));
+                            .push(ItemListItemListElementFieldEnum::Text(text));
 
                         if let Some(i) = section.number_of_items.first_mut() {
                             *i += 1;
@@ -101,24 +101,27 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                 acc
             }),
             times: Times {
-                prep_seconds: r
-                    .prep_time
-                    .map(|s| {
-                        let mut s = s.trim().to_string().replace(":", "H");
-                        if s.is_empty() {
-                            return 15 * 60;
-                        }
-                        s.push('m');
+                prep_seconds: r.prep_time.map_or(15 * 60, |s| {
+                    let mut s = s.trim().to_string().replace(':', "H");
+                    if s.is_empty() {
+                        return 15 * 60;
+                    }
+                    s.push('m');
 
-                        match parse_duration(&s) {
-                            Ok(d) => d.as_secs() as i32,
-                            Err(err) => {
-                                error!("Failed to parse prep time of an AccuChef recipe: {err}");
-                                15 * 60
-                            }
+                    match parse_duration(&s) {
+                        Ok(d) => i32::try_from(d.as_secs())
+                            .inspect_err(|err| {
+                                error!(
+                                    "Failed to parse prep time '{d:?}' of an AccuChef recipe: {err}"
+                                );
+                            })
+                            .unwrap_or_default(),
+                        Err(err) => {
+                            error!("Failed to parse prep time of an AccuChef recipe: {err}");
+                            15 * 60
                         }
-                    })
-                    .unwrap_or(15 * 60),
+                    }
+                }),
                 cook_seconds: 30 * 60,
             },
             instructions: r
@@ -132,7 +135,7 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
     }
 }
 
-/// Represents the parsed components of an AccuChef recipe.
+/// Represents the parsed components of an `AccuChef` recipe.
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
@@ -268,6 +271,7 @@ mod tests {
             vec![
                 Recipe {
                     r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["24 Hour Fruit Salad".into()],
@@ -297,6 +301,7 @@ mod tests {
                 },
                 Recipe {
                     r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["7 Layer Salad".into()],
@@ -326,6 +331,7 @@ mod tests {
                 },
                 Recipe {
                     r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["Aebleskiver".into()],
@@ -352,6 +358,7 @@ mod tests {
                 },
                 Recipe {
                     r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
                     cook_time: seconds_to_duration(1800),
                     is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text("AccuChef Import File")],
                     name: vec!["Ambrosia Delight".into()],

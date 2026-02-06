@@ -245,6 +245,7 @@ struct MRecipe {
 }
 
 impl From<CookmlRecipe> for Recipe {
+    #[allow(clippy::too_many_lines)]
     fn from(r: CookmlRecipe) -> Self {
         let created_date = DateTime::from_str(&r.head.createdate.unwrap_or_default()).ok();
         let changed_date = DateTime::from_str(&r.head.changedate.unwrap_or_default()).ok();
@@ -337,7 +338,7 @@ impl From<CookmlRecipe> for Recipe {
             } else {
                 Some(nutrition)
             }
-            .filter(|n| n.is_empty())
+            .filter(NutritionInformation::is_empty)
             .map(|n| vec![n])
             .unwrap_or_default(),
             prep_time: prep_time
@@ -366,7 +367,7 @@ impl From<CookmlRecipe> for Recipe {
                                 .map(|ing| ItemListItemListElementFieldEnum::Text(ing.to_string()))
                                 .collect(),
                             name: vec![title],
-                            number_of_items: vec![num_items as i32],
+                            number_of_items: vec![i32::try_from(num_items).unwrap_or_default()],
                             ..Default::default()
                         })]
                     }
@@ -376,7 +377,7 @@ impl From<CookmlRecipe> for Recipe {
                 .preparation
                 .text
                 .split("\n\n")
-                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace("\n", " ")))
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace('\n', " ")))
                 .collect(),
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text(format!(
                 "{} {}",
@@ -387,7 +388,7 @@ impl From<CookmlRecipe> for Recipe {
     }
 }
 
-/// Parses a CookML recipe file.
+/// Parses a `CookML` recipe file.
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read,

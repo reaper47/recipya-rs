@@ -38,7 +38,7 @@ const BATCH_SIZE: usize = 1000;
 
 #[async_trait]
 pub trait DataNotFetched<C: FdcFetcher>: Send + Sync {
-    /// Fetches the following data sets from the USDA FoodData Central API:
+    /// Fetches the following data sets from the `USDA FoodData Central` API:
     /// - Foundation Food Data
     async fn fetch(self, client: &C) -> Result<FdcParser<DataFetchedState>>;
 }
@@ -71,7 +71,7 @@ impl<'a> FdcClient<'a> {
 }
 
 #[async_trait]
-impl<'a> FdcFetcher for FdcClient<'a> {
+impl FdcFetcher for FdcClient<'_> {
     async fn fetch_foundation_foods(&self) -> Result<ZipArchive<Cursor<Vec<u8>>>> {
         let (foundation_food_release_date, json_url) = {
             let html = self
@@ -438,7 +438,7 @@ impl SRLegacyFoodDetails {
         food: &str,
     ) -> Result<Vec<SRLegacyFoodDetails>> {
         let food_results = diesel::sql_query(
-            r#"
+            r"
                 WITH q AS (
                     SELECT
                         plainto_tsquery('english', $1) AS plain_q,
@@ -467,7 +467,7 @@ impl SRLegacyFoodDetails {
                 ORDER BY
                     rank DESC
                 LIMIT 10;
-            "#
+            "
         )
         .bind::<Text, _>(food)
         .load::<FdcFoodResult>(conn)

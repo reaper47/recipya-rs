@@ -878,7 +878,7 @@ async fn push_recipes_to_db(
     recipes: Vec<schema_org::Recipe>,
     user_id: Uuid,
 ) -> (ReportForCreate, Vec<i64>) {
-    let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+    let mut report = ReportForCreate::new(&ReportTypes::Import, user_id);
     let mut curr = 0;
     let mut recipe_ids = Vec::new();
     let num_recipes = recipes.len() as i64;
@@ -976,7 +976,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
         let mut processed = 0;
         let mut successes = Vec::new();
         let mut failures = Vec::new();
-        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+        let mut report = ReportForCreate::new(&ReportTypes::Import, user_id);
 
         let mut last_progress_time = Instant::now();
         let progress_interval = std::time::Duration::from_millis(500);
@@ -1395,7 +1395,7 @@ impl FetchWebsiteContext {
             count_error: Arc::new(Default::default()),
             recipe_ids: Arc::new(Mutex::new(Vec::with_capacity(num_websites))),
             report: Arc::new(Mutex::new(ReportForCreate::new(
-                ReportTypes::Import,
+                &ReportTypes::Import,
                 user_id,
             ))),
             started_at: Instant::now(),

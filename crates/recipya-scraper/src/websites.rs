@@ -15,29 +15,29 @@ impl Website {
     pub fn from(url: &str) -> Result<Self> {
         let url = Url::parse(url).map_err(|err| Error::Parse(err.to_string()))?;
         let domain = url.domain().ok_or(Error::UnknownWebsite)?;
-        Website::from_domain(domain).ok_or(Error::DomainNotImplemented)
+        Self::from_domain(domain).ok_or(Error::DomainNotImplemented)
     }
 
     /// Parses the given HTML document manually.
     pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe> {
         match self {
-            Website::Zeezest => custom::z::zeezest::parse(doc, url),
-            Website::ZiaHatchChileCompany => custom::z::ziahatchchilecompany::parse(doc, url),
-            Website::ZibaKitchen => custom::z::zibakitchen::parse(doc, url),
-            Website::ZsuzsaIsInTheKitchen => custom::z::zsuzsaisinthekitchen::parse(doc, url),
-            Website::ZumaValley => custom::z::zumavalley::parse(doc, url),
-            Website::Zuranaz => custom::z::zuranazrecipe::parse(doc, url),
+            Self::Zeezest => custom::z::zeezest::parse(doc, url),
+            Self::ZiaHatchChileCompany => custom::z::ziahatchchilecompany::parse(doc, url),
+            Self::ZibaKitchen => custom::z::zibakitchen::parse(doc, url),
+            Self::ZsuzsaIsInTheKitchen => custom::z::zsuzsaisinthekitchen::parse(doc, url),
+            Self::ZumaValley => custom::z::zumavalley::parse(doc, url),
+            Self::Zuranaz => custom::z::zuranazrecipe::parse(doc, url),
             _ => Err(Error::DomainNotImplemented),
         }
     }
 
     /// Augments LD+JSON data with site-specific information.
     /// Some sites have incomplete or incorrect LD+JSON that needs fixing.
-    pub(crate) fn augment_ld_json(&self, doc: &Html, recipe: Recipe) -> Recipe {
+    pub(crate) fn augment_ld_json(self, doc: &Html, recipe: Recipe) -> Recipe {
         match self {
-            Website::ZaatarAndZaytoun => custom::z::zaatarandzaytoun::add_info(doc, recipe),
-            Website::ZabihaHalal => custom::z::zabihahalal::add_info(doc, recipe),
-            Website::ZagLeft => custom::z::zagleft::add_info(doc, recipe),
+            Self::ZaatarAndZaytoun => custom::z::zaatarandzaytoun::add_info(doc, recipe),
+            Self::ZabihaHalal => custom::z::zabihahalal::add_info(doc, recipe),
+            Self::ZagLeft => custom::z::zagleft::add_info(doc, recipe),
             _ => recipe,
         }
     }
@@ -55,27 +55,29 @@ pub trait ToHtmlTable {
     fn to_html_table_rows(&self) -> String;
 }
 
-impl<'a> ToHtmlTable for Vec<WebsiteMetadata<'a>> {
+use std::fmt::Write; // Add this import at the top of your file
+
+impl ToHtmlTable for Vec<WebsiteMetadata<'_>> {
     fn to_html_table_rows(&self) -> String {
         let mut html = String::new();
-
         if self.is_empty() {
             html.push_str(r#"<tr class="border text-center">"#);
-            html.push_str(r#"<td>-1</td>"#);
-            html.push_str(r#"<td>No result</td>"#);
-            html.push_str(r#"</tr>"#);
+            html.push_str("<td>-1</td>");
+            html.push_str("<td>No result</td>");
+            html.push_str("</tr>");
         } else {
             self.iter().enumerate().for_each(|(idx, website)| {
                 html.push_str(r#"<tr class="text-center">"#);
-                html.push_str(&format!(r#"<td>{}</td>"#, idx + 1));
-                html.push_str(&format!(
+                write!(html, "<td>{}</td>", idx + 1).unwrap_or_default();
+                write!(
+                    html,
                     r#"<td><a class="underline" href="{}" target="_blank">{}</a></td>"#,
                     website.url, website.host
-                ));
+                )
+                .unwrap_or_default();
                 html.push_str("</tr>");
             });
         }
-
         html
     }
 }

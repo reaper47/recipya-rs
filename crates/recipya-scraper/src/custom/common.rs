@@ -11,63 +11,58 @@ use support::strings::extract_number;
 
 use crate::{Error, Result};
 
-pub(crate) fn at_type_recipe() -> Option<String> {
+pub fn at_type_recipe() -> Option<String> {
     AtType::Recipe.to_opt()
 }
 
-pub(crate) fn extract_author(
+pub fn extract_author(
     fragment: &ElementRef,
     css_selector: &str,
 ) -> Result<Vec<RecipeAuthorFieldEnum>> {
-    match optional_text(fragment, css_selector)? {
-        Some(author) => Ok(vec![RecipeAuthorFieldEnum::new_person(author.trim())]),
-        None => Ok(vec![]),
-    }
+    (optional_text(fragment, css_selector)?).map_or_else(
+        || Ok(vec![]),
+        |author| Ok(vec![RecipeAuthorFieldEnum::new_person(author.trim())]),
+    )
 }
 
-pub(crate) fn extract_category(fragment: &ElementRef, css_selector: &str) -> Result<Vec<String>> {
-    match text_list(fragment, css_selector, ",")?.first() {
-        Some(category) => Ok(vec![category.clone()]),
-        None => Ok(vec![]),
-    }
+pub fn extract_category(fragment: &ElementRef, css_selector: &str) -> Result<Vec<String>> {
+    text_list(fragment, css_selector, ",")?
+        .first()
+        .map_or_else(|| Ok(vec![]), |category| Ok(vec![category.clone()]))
 }
 
-pub(crate) fn extract_cuisines(
+pub fn extract_cuisines(
     fragment: &ElementRef,
     css_selector: &str,
     default_cuisine: Option<&str>,
 ) -> Result<Vec<String>> {
     let cuisines = text_list(fragment, css_selector, ",")?;
     if cuisines.is_empty() {
-        match default_cuisine {
-            Some(cuisine) => Ok(vec![cuisine.to_string()]),
-            None => Err(Error::DomainNotImplemented),
-        }
+        default_cuisine.map_or(Err(Error::DomainNotImplemented), |cuisine| {
+            Ok(vec![cuisine.to_string()])
+        })
     } else {
         Ok(cuisines)
     }
 }
 
-pub(crate) fn extract_description(
+pub fn extract_description(
     fragment: &ElementRef,
     css_selector: &str,
 ) -> Result<Vec<RecipeDescriptionFieldEnum>> {
-    match optional_text(fragment, css_selector)? {
-        Some(s) => Ok(vec![RecipeDescriptionFieldEnum::Text(s.trim().into())]),
-        None => Ok(vec![]),
-    }
+    (optional_text(fragment, css_selector)?).map_or_else(
+        || Ok(vec![]),
+        |s| Ok(vec![RecipeDescriptionFieldEnum::Text(s.trim().into())]),
+    )
 }
 
-pub(crate) fn extract_duration(
-    fragment: &ElementRef,
-    css_selector: &str,
-) -> Result<Vec<DurationOrText>> {
+pub fn extract_duration(fragment: &ElementRef, css_selector: &str) -> Result<Vec<DurationOrText>> {
     Ok(optional_text(fragment, css_selector)?
         .map(|s| vec![DurationOrText::Text(s)])
         .unwrap_or_default())
 }
 
-pub(crate) fn extract_image_urls(
+pub fn extract_image_urls(
     fragment: &ElementRef,
     css_selector: &str,
 ) -> Result<Vec<RecipeImageFieldEnum>> {
@@ -81,9 +76,7 @@ pub(crate) fn extract_image_urls(
         .collect())
 }
 
-pub(crate) fn extract_ingredients(
-    content: &ElementRef,
-) -> Result<Vec<RecipeRecipeIngredientFieldEnum>> {
+pub fn extract_ingredients(content: &ElementRef) -> Result<Vec<RecipeRecipeIngredientFieldEnum>> {
     let h4_sel = Selector::parse("h4")?;
     let ingredients_container_sel = Selector::parse(".wprm-recipe-ingredients-container")?;
     let ingredient_group_sel = Selector::parse(".wprm-recipe-ingredient-group")?;
@@ -132,7 +125,7 @@ fn parse_ingredient_group(
                 &name,
                 ingredients
                     .iter()
-                    .map(|s| s.as_str())
+                    .map(String::as_str)
                     .collect::<Vec<_>>()
                     .as_slice(),
             )]
@@ -144,7 +137,7 @@ fn parse_ingredient_group(
     }
 }
 
-pub(crate) fn extract_keywords(
+pub fn extract_keywords(
     fragment: &ElementRef,
     css_selector: &str,
 ) -> Result<Vec<RecipeKeywordsFieldEnum>> {
@@ -159,7 +152,7 @@ pub(crate) fn extract_keywords(
     }
 }
 
-pub(crate) fn extract_attr<'a>(
+pub fn extract_attr<'a>(
     fragment: &'a ElementRef,
     css_selector: &'a str,
     attr: &'a str,
@@ -167,16 +160,16 @@ pub(crate) fn extract_attr<'a>(
     Ok(fragment
         .select(&Selector::parse(css_selector)?)
         .next()
-        .ok_or(Error::MissingElement(css_selector.into()))?
+        .ok_or_else(|| Error::MissingElement(css_selector.into()))?
         .value()
         .attr(attr))
 }
 
-pub(crate) fn extract_metadata_property(fragment: &Html, property: &str) -> Result<Vec<String>> {
+pub fn extract_metadata_property(fragment: &Html, property: &str) -> Result<Vec<String>> {
     let value = fragment
         .select(&Selector::parse(&format!("meta[property='{property}']"))?)
         .next()
-        .ok_or(Error::Parse("Meta data property not found".into()))?
+        .ok_or_else(|| Error::Parse("Meta property not found".into()))?
         .value()
         .attr("content")
         .unwrap_or_default();
@@ -188,31 +181,33 @@ pub(crate) fn extract_metadata_property(fragment: &Html, property: &str) -> Resu
     }
 }
 
-pub(crate) fn extract_yield(
+pub fn extract_yield(
     fragment: &ElementRef,
     css_selector: &str,
 ) -> Result<Vec<RecipeRecipeYieldFieldEnum>> {
-    match optional_text(fragment, css_selector)? {
-        Some(text) => match extract_number(&text).ok() {
-            Some(n) => Ok(vec![RecipeRecipeYieldFieldEnum::Text(n)]),
-            None => Ok(vec![]),
+    (optional_text(fragment, css_selector)?).map_or_else(
+        || Ok(vec![]),
+        |text| {
+            extract_number(&text).ok().map_or_else(
+                || Ok(vec![]),
+                |n| Ok(vec![RecipeRecipeYieldFieldEnum::Text(n)]),
+            )
         },
-        None => Ok(vec![]),
-    }
+    )
 }
 
-pub(crate) fn required_text(fragment: &ElementRef, css_selector: &str) -> Result<String> {
+pub fn required_text(fragment: &ElementRef, css_selector: &str) -> Result<String> {
     Ok(fragment
         .select(&Selector::parse(css_selector).unwrap())
         .next()
         .ok_or(Error::DomainNotImplemented)?
         .text()
         .next()
-        .ok_or(Error::MissingElement(css_selector.into()))?
+        .ok_or_else(|| Error::MissingElement(css_selector.into()))?
         .to_string())
 }
 
-pub(crate) fn required_text_list(fragment: &ElementRef, css_selector: &str) -> Result<Vec<String>> {
+pub fn required_text_list(fragment: &ElementRef, css_selector: &str) -> Result<Vec<String>> {
     let text = fragment
         .select(&Selector::parse(css_selector)?)
         .map(|s| normalize_text(&s))
@@ -225,7 +220,7 @@ pub(crate) fn required_text_list(fragment: &ElementRef, css_selector: &str) -> R
     }
 }
 
-pub(crate) fn optional_text(fragment: &ElementRef, css_selector: &str) -> Result<Option<String>> {
+pub fn optional_text(fragment: &ElementRef, css_selector: &str) -> Result<Option<String>> {
     let text = fragment
         .select(&Selector::parse(css_selector)?)
         .map(|s| s.text().next().unwrap_or_default())
@@ -238,21 +233,23 @@ pub(crate) fn optional_text(fragment: &ElementRef, css_selector: &str) -> Result
     }
 }
 
-pub(crate) fn text_list(
+pub fn text_list(
     fragment: &ElementRef,
     css_selector: &str,
     delimiter: &str,
 ) -> Result<Vec<String>> {
-    match optional_text(fragment, css_selector)? {
-        Some(text) => Ok(text
-            .split(delimiter)
-            .map(|s| s.trim().to_string())
-            .collect()),
-        None => Ok(Vec::new()),
-    }
+    (optional_text(fragment, css_selector)?).map_or_else(
+        || Ok(Vec::new()),
+        |text| {
+            Ok(text
+                .split(delimiter)
+                .map(|s| s.trim().to_string())
+                .collect())
+        },
+    )
 }
 
-pub(crate) fn normalize_text(li: &ElementRef) -> String {
+pub fn normalize_text(li: &ElementRef) -> String {
     li.text()
         .flat_map(str::split_whitespace)
         .filter(|s| *s != "▢")
@@ -260,7 +257,7 @@ pub(crate) fn normalize_text(li: &ElementRef) -> String {
         .join(" ")
 }
 
-pub(crate) fn extract_text_from_elements(
+pub fn extract_text_from_elements(
     fragment: &ElementRef,
     css_selector: &str,
 ) -> Result<Vec<String>> {

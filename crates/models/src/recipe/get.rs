@@ -4,6 +4,7 @@ use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use repository::{ModelManager, PgPooledConn, schema};
+use tracing::error;
 use url::Url;
 use uuid::Uuid;
 
@@ -280,7 +281,7 @@ pub async fn fetch_recipe_details(
         .load::<Uuid>(conn)
         .await?;
 
-    let ingredients = SectionComponents::from(
+    let ingredients = SectionComponents::try_from(
         schema::ingredients_recipes::table
             .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
             .inner_join(schema::ingredients::table)
@@ -319,9 +320,13 @@ pub async fn fetch_recipe_details(
             .into_values()
             .map(|(title, items)| SectionItem { title, items })
             .collect::<Vec<_>>(),
-    );
+    )
+    .inspect_err(|err| {
+        error!("Failed to load ingredients: {err}");
+    })
+    .unwrap_or_default();
 
-    let instructions = SectionComponents::from(
+    let instructions = SectionComponents::try_from(
         schema::instructions_recipes::table
             .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
             .inner_join(schema::instructions::table)
@@ -362,7 +367,11 @@ pub async fn fetch_recipe_details(
             .into_values()
             .map(|(title, items)| SectionItem { title, items })
             .collect::<Vec<_>>(),
-    );
+    )
+    .inspect_err(|err| {
+        error!("Failed to load instructions: {err}");
+    })
+    .unwrap_or_default();
 
     let keywords = if keywords.is_some() {
         schema::keywords_recipes::table

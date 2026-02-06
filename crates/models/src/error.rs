@@ -57,7 +57,7 @@ pub enum Error {
 
 impl From<diesel::result::Error> for Error {
     fn from(value: diesel::result::Error) -> Self {
-        Error::Diesel(value.to_string())
+        Self::Diesel(value.to_string())
     }
 }
 

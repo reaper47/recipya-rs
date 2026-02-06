@@ -311,17 +311,13 @@ pub async fn mw_refresh_token(
             }
         };
 
-        if let Err(err) = set_auth_cookies(
+        set_auth_cookies(
             &cookies,
             access_token,
             new_refresh_token_entry.token,
             refresh_token_entry.is_remember_me,
             state.config.read().await.is_production,
-        ) {
-            error!("Failed to set access token cookie: {err}");
-            clear_auth_cookies(&cookies);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR);
-        }
+        );
 
         req.extensions_mut()
             .insert(UserId(refresh_token_entry.user_id));

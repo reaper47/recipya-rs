@@ -64,7 +64,7 @@ pub struct Nextcloud<State, C: RecipeClient> {
 
 impl<C: RecipeClient> Nextcloud<UnauthenticatedState, C> {
     /// Creates a new unauthenticated Nextcloud client.
-    pub fn new(recipe_client: C) -> Self {
+    pub const fn new(recipe_client: C) -> Self {
         Self {
             recipe_client,
             _state: PhantomData,
@@ -118,7 +118,7 @@ impl RecipeClient for NextcloudRecipeClient {
         Ok(Self {
             host: self.host,
             client: Client::builder()
-                .default_headers(assemble_token_header(AuthType::Basic, &token)?)
+                .default_headers(assemble_token_header(&AuthType::Basic, &token)?)
                 .build()?,
         })
     }
@@ -148,7 +148,7 @@ impl RecipeClient for NextcloudRecipeClient {
 }
 
 impl NextcloudRecipeClient {
-    /// Creates a new instance of the NextcloudRecipeClient.
+    /// Creates a new instance of the `NextcloudRecipeClient`.
     pub fn new(base_url: impl Into<String>) -> Self {
         Self {
             host: Host::new(base_url),

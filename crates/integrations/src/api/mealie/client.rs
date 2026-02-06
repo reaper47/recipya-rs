@@ -74,7 +74,7 @@ pub struct Mealie<State, C: RecipeClient> {
 
 impl<C: RecipeClient> Mealie<UnauthenticatedState, C> {
     /// Creates a new unauthenticated Mealie client.
-    pub fn new(recipe_client: C) -> Self {
+    pub const fn new(recipe_client: C) -> Self {
         Self {
             recipe_client,
             _state: PhantomData,
@@ -133,7 +133,7 @@ impl RecipeClient for MealieRecipeClient {
         Ok(Self {
             host: self.host.clone(),
             client: Client::builder()
-                .default_headers(assemble_token_header(AuthType::Bearer, &token)?)
+                .default_headers(assemble_token_header(&AuthType::Bearer, &token)?)
                 .build()?,
         })
     }
@@ -198,7 +198,7 @@ impl RecipeClient for MealieRecipeClient {
 }
 
 impl MealieRecipeClient {
-    /// Creates a new instance of the MealieRecipeClient.
+    /// Creates a new instance of the `MealieRecipeClient`.
     pub fn new(base_url: impl Into<String>) -> Self {
         Self {
             host: Host::new(base_url),
@@ -265,7 +265,7 @@ impl MealieRecipeClient {
     }
 
     async fn fetch_recipes_page(&self, page: String) -> Result<MealieRecipes> {
-        let res = self.client.get(self.host.recipes_url(page)).send().await?;
+        let res = self.client.get(self.host.recipes_url(&page)).send().await?;
 
         if res.status().is_client_error() {
             let base = "Failed to fetch all recipes using the Mealie API";
@@ -325,6 +325,8 @@ impl MealieRecipeClient {
         Err((id, Error::ApiError("Mealie API - Exhausted retries".into())))
     }
 
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cast_possible_truncation)]
     async fn build_schema_recipe(&self, recipe: MealieRecipe, user: &MealieUser) -> Result<Recipe> {
         let (recipe_category, keywords) = recipe.extract_category_and_keywords();
 
@@ -409,12 +411,16 @@ impl MealieRecipeClient {
                 .unwrap_or_default(),
             perform_time: recipe
                 .perform_time
-                .map(|s| match iso8601::datetime(&s) {
-                    Ok(d) => vec![Duration {
-                        name: vec![d.to_string()],
-                        ..Default::default()
-                    }],
-                    Err(_) => vec![],
+                .map(|s| {
+                    iso8601::datetime(&s).map_or_else(
+                        |_| vec![],
+                        |d| {
+                            vec![Duration {
+                                name: vec![d.to_string()],
+                                ..Default::default()
+                            }]
+                        },
+                    )
                 })
                 .unwrap_or_default(),
             comment: recipe
@@ -440,7 +446,7 @@ impl MealieRecipeClient {
                 .unwrap_or_default(),
             date_created: recipe.created_at.map(|s| vec![s]).unwrap_or_default(),
             comment_count: if num_comments > 0 {
-                vec![num_comments as i32]
+                vec![i32::try_from(num_comments).unwrap_or_default()]
             } else {
                 vec![]
             },
@@ -458,20 +464,20 @@ impl MealieRecipeClient {
                 .author()
                 .map(|s: String| vec![RecipeAuthorFieldEnum::new_person(&s)])
                 .unwrap_or_default(),
-            image: match self.fetch_recipe_image(recipe.id, recipe.image).await? {
-                Some(s) => vec![RecipeImageFieldEnum::URL(
-                    s.to_str().map(String::from).unwrap_or_default(),
-                )],
-                None => vec![],
-            },
+            image: self
+                .fetch_recipe_image(recipe.id, recipe.image)
+                .await?
+                .map(|s| {
+                    vec![RecipeImageFieldEnum::URL(
+                        s.to_str().map(String::from).unwrap_or_default(),
+                    )]
+                })
+                .unwrap_or_default(),
             description: recipe
                 .description
                 .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
                 .unwrap_or_default(),
-            url: recipe
-                .org_url
-                .map(|u| vec![u.to_string()])
-                .unwrap_or_default(),
+            url: recipe.org_url.map(|u| vec![u]).unwrap_or_default(),
             name: match recipe.name {
                 Some(s) => vec![s],
                 None => vec![recipe.slug],
@@ -484,7 +490,7 @@ impl MealieRecipeClient {
         let res = self.client.get(self.host.user_url(user_id)).send().await?;
 
         if res.status().is_client_error() {
-            let base = "Failed to fetch user '{user_id}' using the Mealie API";
+            let base = format!("Failed to fetch user '{user_id}' using the Mealie API");
             error!("{base}: {}", res.text().await?);
             return Err(Error::ApiError(format!(
                 "{base} because of a validation error (422)."

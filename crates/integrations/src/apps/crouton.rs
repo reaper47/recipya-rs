@@ -38,6 +38,7 @@ struct Crouton {
 }
 
 #[derive(Deserialize)]
+#[allow(clippy::struct_field_names)]
 struct Ingredient {
     ingredient: IngredientDetails,
     order: i64,
@@ -64,6 +65,7 @@ struct IngredientDetails {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::struct_field_names)]
 struct Step {
     is_section: bool,
     step: String,
@@ -95,6 +97,7 @@ struct Quantity {
 }
 
 /// Parses a Crouton recipe from the file's content.
+#[allow(clippy::too_many_lines)]
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
@@ -104,7 +107,7 @@ where
     let (category, keywords) = match crouton
         .tags
         .into_iter()
-        .map(|tag| tag.name.clone())
+        .map(|tag| tag.name)
         .collect::<Vec<_>>()
         .as_slice()
     {
@@ -146,7 +149,9 @@ where
 
     Ok(vec![Recipe {
         r#type: AtType::Recipe.to_opt(),
-        cook_time: seconds_to_duration((crouton.cooking_duration * 60) as i32),
+        cook_time: seconds_to_duration(
+            i32::try_from(crouton.cooking_duration * 60).unwrap_or_default(),
+        ),
         description: vec![RecipeDescriptionFieldEnum::Text(
             "Imported from Crouton".into(),
         )],
@@ -217,7 +222,7 @@ where
         .filter(|n| n != &NutritionInformation::default())
         .map(|n| vec![n])
         .unwrap_or_default(),
-        prep_time: seconds_to_duration((crouton.duration * 60) as i32),
+        prep_time: seconds_to_duration(i32::try_from(crouton.duration * 60).unwrap_or_default()),
         recipe_category: category.map(|c| vec![c]).unwrap_or_default(),
         recipe_ingredient: crouton
             .ingredients

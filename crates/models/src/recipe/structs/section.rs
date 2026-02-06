@@ -9,19 +9,19 @@ use schema_org::field::{
     RecipeRecipeInstructionsFieldEnum,
 };
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum SectionComponents {
     Grouped(Vec<SectionItem>),
     Flat(Vec<Item>),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SectionItem {
     pub title: String,
     pub items: Vec<Item>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Item {
     pub text: String,
     pub duration_seconds: Option<i32>,
@@ -45,8 +45,8 @@ impl<'a> Iterator for SectionComponentsIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            SectionComponentsIter::Grouped(iter) => iter.next(),
-            SectionComponentsIter::Flat(iter) => iter.next(),
+            Self::Grouped(iter) => iter.next(),
+            Self::Flat(iter) => iter.next(),
         }
     }
 }
@@ -69,8 +69,8 @@ impl Iterator for SectionComponentsIntoIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            SectionComponentsIntoIter::Grouped(iter) => iter.next(),
-            SectionComponentsIntoIter::Flat(iter) => iter.next(),
+            Self::Grouped(iter) => iter.next(),
+            Self::Flat(iter) => iter.next(),
         }
     }
 }
@@ -89,8 +89,8 @@ impl<'a> Iterator for SectionComponentsIterMut<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            SectionComponentsIterMut::Grouped(iter) => iter.next(),
-            SectionComponentsIterMut::Flat(iter) => iter.next(),
+            Self::Grouped(iter) => iter.next(),
+            Self::Flat(iter) => iter.next(),
         }
     }
 }
@@ -110,10 +110,10 @@ impl SectionComponents {
     }
 
     /// Verifies whether there are items.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         match self {
-            SectionComponents::Grouped(section_items) => section_items.is_empty(),
-            SectionComponents::Flat(items) => items.is_empty(),
+            Self::Grouped(section_items) => section_items.is_empty(),
+            Self::Flat(items) => items.is_empty(),
         }
     }
 
@@ -127,15 +127,13 @@ impl SectionComponents {
         fn get_items(s: &SectionItem) -> std::slice::Iter<'_, Item> {
             s.items.iter()
         }
-
         match self {
-            SectionComponents::Grouped(sections) => {
+            Self::Grouped(sections) => {
                 SectionComponentsIter::Grouped(sections.iter().flat_map(get_items))
             }
-            SectionComponents::Flat(items) => SectionComponentsIter::Flat(items.iter()),
+            Self::Flat(items) => SectionComponentsIter::Flat(items.iter()),
         }
     }
-
     /// Iterates over the items mutably
     pub fn iter_mut(&mut self) -> SectionComponentsIterMut<'_> {
         fn get_items_mut(s: &mut SectionItem) -> std::slice::IterMut<'_, Item> {
@@ -143,39 +141,55 @@ impl SectionComponents {
         }
 
         match self {
-            SectionComponents::Grouped(sections) => {
+            Self::Grouped(sections) => {
                 SectionComponentsIterMut::Grouped(sections.iter_mut().flat_map(get_items_mut))
             }
-            SectionComponents::Flat(items) => SectionComponentsIterMut::Flat(items.iter_mut()),
+            Self::Flat(items) => SectionComponentsIterMut::Flat(items.iter_mut()),
         }
     }
 
     /// Returns the number of items in the section.
     pub fn len(&self) -> usize {
         match self {
-            SectionComponents::Grouped(sections) => {
-                sections.iter().map(|section| section.items.len()).sum()
-            }
-            SectionComponents::Flat(items) => items.len(),
+            Self::Grouped(sections) => sections.iter().map(|section| section.items.len()).sum(),
+            Self::Flat(items) => items.len(),
         }
     }
 
     /// Returns an iterator over the sections variant.
     pub fn sections_iter(&self) -> Option<impl Iterator<Item = &SectionItem>> {
         match self {
-            SectionComponents::Grouped(section_items) => Some(section_items.iter()),
-            SectionComponents::Flat(_) => None,
+            Self::Grouped(section_items) => Some(section_items.iter()),
+            Self::Flat(_) => None,
         }
     }
 
     /// Returns the section titles.
     pub fn titles(&self) -> impl Iterator<Item = &str> {
         match self {
-            SectionComponents::Grouped(section_items) => {
+            Self::Grouped(section_items) => {
                 Either::Left(section_items.iter().map(|section| section.title.as_str()))
             }
-            SectionComponents::Flat(_) => Either::Right(std::iter::empty()),
+            Self::Flat(_) => Either::Right(std::iter::empty()),
         }
+    }
+}
+
+impl<'a> IntoIterator for &'a SectionComponents {
+    type Item = &'a Item;
+    type IntoIter = SectionComponentsIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut SectionComponents {
+    type Item = &'a mut Item;
+    type IntoIter = SectionComponentsIterMut<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
     }
 }
 
@@ -185,18 +199,26 @@ impl Default for SectionComponents {
     }
 }
 
-impl From<Vec<SectionItem>> for SectionComponents {
-    fn from(mut sections: Vec<SectionItem>) -> Self {
+impl TryFrom<Vec<SectionItem>> for SectionComponents {
+    type Error = &'static str;
+
+    fn try_from(mut sections: Vec<SectionItem>) -> Result<Self, Self::Error> {
         match sections.as_slice() {
-            [] => Self::Flat(Default::default()),
-            [single] if single.title.is_empty() => Self::Flat(sections.pop().unwrap().items),
-            _ => Self::Grouped(sections),
+            [] => Ok(Self::Flat(Vec::default())),
+            [single] if single.title.is_empty() => sections
+                .pop()
+                .map(|section| Self::Flat(section.items))
+                .ok_or("Failed to extract section"),
+            _ => Ok(Self::Grouped(sections)),
         }
     }
 }
 
-impl From<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
-    fn from(items: Vec<RecipeRecipeIngredientFieldEnum>) -> Self {
+impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
+    type Error = &'static str;
+
+    #[allow(clippy::too_many_lines)]
+    fn try_from(items: Vec<RecipeRecipeIngredientFieldEnum>) -> Result<Self, Self::Error> {
         let mut sections = Vec::new();
         let mut current_items = Vec::new();
 
@@ -259,12 +281,7 @@ impl From<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                     let name = prop.name.first().cloned().unwrap_or_default();
 
                     let unit = {
-                        let code = prop
-                            .unit_code
-                            .first()
-                            .map(|s| s.to_string())
-                            .unwrap_or_default()
-                            .to_string();
+                        let code = prop.unit_code.first().cloned().unwrap_or_default().clone();
 
                         let text = if let Some(s) = prop.value.first().map(|v| match v {
                             PropertyValueValueFieldEnum::QuantitativeValue(q) => {
@@ -274,30 +291,30 @@ impl From<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                         }) {
                             s
                         } else {
-                            prop.unit_text
-                                .first()
-                                .map(|s| s.to_string())
-                                .unwrap_or_default()
-                                .to_string()
+                            prop.unit_text.first().cloned().unwrap_or_default().clone()
                         };
 
-                        if code.is_empty() { text } else { code }
+                        if code.is_empty() {
+                            text
+                        } else {
+                            code
+                        }
                     };
 
                     current_items.push(Item {
                         text: format!(
                             "{}{}{}",
-                            if !value.is_empty() {
-                                format!("{} ", value)
+                            if value.is_empty() {
+                                String::new()
                             } else {
-                                "".to_string()
+                                format!("{value} ")
                             },
-                            if !unit.is_empty() {
-                                format!("{} ", unit)
+                            if unit.is_empty() {
+                                String::new()
                             } else {
-                                "".to_string()
+                                format!("{unit} ")
                             },
-                            if !name.is_empty() { &name } else { "" }
+                            if name.is_empty() { "" } else { &name }
                         ),
                         duration_seconds: None,
                     });
@@ -319,17 +336,23 @@ impl From<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
         }
 
         if sections.is_empty() {
-            Self::Flat(Vec::new())
+            Ok(Self::Flat(Vec::new()))
         } else if sections.len() == 1 && sections[0].title.is_empty() {
-            Self::Flat(sections.into_iter().next().unwrap().items)
+            sections
+                .into_iter()
+                .next()
+                .map(|section| Self::Flat(section.items))
+                .ok_or("Failed to extract section")
         } else {
-            Self::Grouped(sections)
+            Ok(Self::Grouped(sections))
         }
     }
 }
 
-impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
-    fn from(items: Vec<RecipeRecipeInstructionsFieldEnum>) -> Self {
+impl TryFrom<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
+    type Error = &'static str;
+
+    fn try_from(items: Vec<RecipeRecipeInstructionsFieldEnum>) -> Result<Self, Self::Error> {
         let mut sections = Vec::new();
         let mut current_items = Vec::new();
 
@@ -342,7 +365,6 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                             items: std::mem::take(&mut current_items),
                         });
                     }
-
                     let items = list
                         .item_list_element
                         .into_iter()
@@ -354,7 +376,6 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                             _ => None,
                         })
                         .collect();
-
                     sections.push(SectionItem {
                         title: list.name.first().cloned().unwrap_or_default(),
                         items,
@@ -367,7 +388,6 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                             items: std::mem::take(&mut current_items),
                         });
                     }
-
                     sections.push(SectionItem {
                         title: work.name.first().cloned().unwrap_or_default(),
                         items: work
@@ -405,11 +425,15 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
         }
 
         if sections.is_empty() {
-            Self::Flat(Vec::new())
+            Ok(Self::Flat(Vec::new()))
         } else if sections.len() == 1 && sections[0].title.is_empty() {
-            Self::Flat(sections.into_iter().next().unwrap().items)
+            sections
+                .into_iter()
+                .next()
+                .map(|section| Self::Flat(section.items))
+                .ok_or("Failed to extract section")
         } else {
-            Self::Grouped(sections)
+            Ok(Self::Grouped(sections))
         }
     }
 }
@@ -424,10 +448,10 @@ impl IntoIterator for SectionComponents {
         }
 
         match self {
-            SectionComponents::Grouped(section_items) => SectionComponentsIntoIter::Grouped(
+            Self::Grouped(section_items) => SectionComponentsIntoIter::Grouped(
                 section_items.into_iter().flat_map(extract_items),
             ),
-            SectionComponents::Flat(items) => SectionComponentsIntoIter::Flat(items.into_iter()),
+            Self::Flat(items) => SectionComponentsIntoIter::Flat(items.into_iter()),
         }
     }
 }
@@ -451,7 +475,8 @@ impl Item {
         }
     }
 
-    pub fn with_duration(mut self, duration_seconds: i32) -> Self {
+    #[must_use]
+    pub const fn with_duration(mut self, duration_seconds: i32) -> Self {
         self.duration_seconds = Some(duration_seconds);
         self
     }

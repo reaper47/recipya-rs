@@ -1,4 +1,4 @@
-//! Parses the MealMaster file format.
+//! Parses the `MealMaster` file format.
 //!
 //! The following versions are supported:
 //!     - Meal-Master v6.14
@@ -11,7 +11,7 @@
 //!     - Meal-Master v8.02
 //!     - Meal-Master v8.05
 //!     - Meal-Master v8.06
-//!     - COOKmate
+//!     - `COOKmate`
 //!     - Now You're Cooking! v4.72 (Meal-Master Export Format)
 
 use std::borrow::Cow;
@@ -70,7 +70,7 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
                 "Notes",
                 split_by_asterisks(&line)
                     .iter()
-                    .map(|s| s.as_str())
+                    .map(String::as_str)
                     .collect(),
             ));
         }
@@ -80,7 +80,7 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
             title: r.title.to_string(),
             category: items.map(|(a, _b)| a.to_string()),
             keywords: items
-                .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect())
+                .map(|(_a, b)| b.iter().map(std::string::ToString::to_string).collect())
                 .unwrap_or_default(),
             yield_: r.servings,
             ingredients: r.ingredients.to_sections(),
@@ -133,7 +133,7 @@ impl From<MealMasterRecipe> for Recipe {
             recipe_category: vec![r.category.unwrap_or_default()],
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
-            recipe_yield: to_yield(r.yield_ as i64),
+            recipe_yield: to_yield(i64::from(r.yield_)),
             url: Url::parse(&r.source)
                 .ok()
                 .map(|u| vec![u.to_string()])
@@ -143,7 +143,7 @@ impl From<MealMasterRecipe> for Recipe {
     }
 }
 
-/// Parses a MealMaster recipe from the file's content.
+/// Parses a `MealMaster` recipe from the file's content.
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
@@ -173,7 +173,7 @@ fn parse_meal_master_recipe(input: &mut &str) -> Result<Vec<MealMasterRecipe>> {
 
 fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
     seq! {RecipeComponents {
-        _: repeat(0.., line_ending).fold(|| (), |_, _| ()),
+        _: repeat(0.., line_ending).fold(|| (), |(), _| ()),
         header: parse_header,
         title: parse_title,
         categories: parse_categories,
@@ -187,6 +187,7 @@ fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
     }}
     .parse_next(input)
 }
+
 fn parse_header<'s>(input: &mut &'s str) -> WResult<(&'s str, &'s str)> {
     let meal_master = "Meal-Master";
     let now_youre_cooking = "Now You're Cooking!";
@@ -205,9 +206,9 @@ fn parse_header<'s>(input: &mut &'s str) -> WResult<(&'s str, &'s str)> {
             literal(meal_master),
         )),
         take_while(0.., is_vchar_or_space),
-        repeat(1.., line_ending).fold(|| (), |_, _| ()),
+        repeat(1.., line_ending).fold(|| (), |(), _| ()),
     )
-        .map(|(_, _, tag, rest, _)| (tag, rest))
+        .map(|(_, _, tag, rest, ())| (tag, rest))
         .parse_next(input)
 }
 
@@ -303,14 +304,14 @@ fn parse_servings(input: &mut &str) -> WResult<i16> {
             opt(one_of(' ')),
             take_while(1..=4, |c: char| c.is_ascii_digit()),
             opt((one_of(' '), take_until(0.., "\n"))),
-            repeat(1.., line_ending).fold(|| (), |_, _| ()),
+            repeat(1.., line_ending).fold(|| (), |(), _| ()),
             opt((space0, line_ending)),
         )
-            .try_map(|(_, _, _, digits, _, _, _): (_, _, _, &str, _, _, _)| digits.parse()),
+            .try_map(|(_, _, _, digits, _, (), _): (_, _, _, &str, _, _, _)| digits.parse()),
         (
             space0,
             alt((literal("Servings: "), literal("Yield: "))),
-            repeat(1.., line_ending).fold(|| (), |_, _| ()),
+            repeat(1.., line_ending).fold(|| (), |(), _| ()),
             opt((space0, line_ending)),
         )
             .map(|_| 2),
@@ -354,10 +355,10 @@ fn parse_twocolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
                 ingredtwo,
                 one_of(' '),
                 ingredone,
-                repeat(0.., line_ending).fold(|| (), |_, _| ()),
+                repeat(0.., line_ending).fold(|| (), |(), _| ()),
             )
-                .map(|(ing1, _, ing2, _)| vec![ing1, ing2]),
-            terminated(ingredone, repeat(0.., line_ending).fold(|| (), |_, _| ()))
+                .map(|(ing1, _, ing2, ())| vec![ing1, ing2]),
+            terminated(ingredone, repeat(0.., line_ending).fold(|| (), |(), _| ()))
                 .map(|ing| vec![ing]),
         )),
     )
@@ -514,7 +515,7 @@ fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
         take_until_earliest_of(&["\n-----", "\n\n"]).verify(|line: &str| {
             !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
         }),
-        repeat(1.., line_ending).fold(|| (), |_, _| ()),
+        repeat(1.., line_ending).fold(|| (), |(), _| ()),
     )
     .parse_next(input)
 }

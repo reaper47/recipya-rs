@@ -42,12 +42,12 @@ impl From<RecipeComponents<'_>> for Recipe {
             .category
             .into_iter()
             .filter(|&s| !s.trim().is_empty())
-            .map(|s| s.to_string())
+            .map(std::string::ToString::to_string)
             .collect::<Vec<_>>()
             .as_slice()
         {
             [first, rest @ ..] => (
-                first.to_string(),
+                first.clone(),
                 rest.iter().map(|s| s.trim().to_string()).collect(),
             ),
             [] => match r.keywords.as_slice() {
@@ -78,7 +78,7 @@ impl From<RecipeComponents<'_>> for Recipe {
             recipe_category: vec![category],
             recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions: r.instructions.to_sections(),
-            recipe_yield: to_yield(r.r#yield as i64),
+            recipe_yield: to_yield(i64::from(r.r#yield)),
             ..Default::default()
         }
     }
@@ -259,10 +259,7 @@ fn parse_ingredient_block<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>
                             acc.push(item.clone());
                         }
                     }
-                    Ingredient::Section(_) => {
-                        acc.push(item.clone());
-                    }
-                    _ => {
+                    Ingredient::Section(_) | Ingredient::Line(_) => {
                         acc.push(item.clone());
                     }
                 }

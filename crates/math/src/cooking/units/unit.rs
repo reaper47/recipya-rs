@@ -127,6 +127,7 @@ impl fmt::Display for Unit {
 }
 
 #[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::cast_sign_loss)]
 fn format_fractional(value: f64) -> String {
     let whole = value.trunc();
     let frac = value.fract();

@@ -10,7 +10,7 @@ use crate::error::Result;
 use crate::{Error, Recipe, RecipeDetails};
 
 /// Represents a shared recipe
-#[derive(Debug, PartialEq, Queryable, Identifiable, Selectable)]
+#[derive(Debug, Eq, PartialEq, Queryable, Identifiable, Selectable)]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(Recipe))]
 #[diesel(table_name = schema::shares_recipes)]
@@ -51,32 +51,29 @@ impl ShareRecipe {
         recipe_id: i64,
         user_id: Uuid,
         expires_at: Option<NaiveDateTime>,
-    ) -> Result<ShareRecipe> {
+    ) -> Result<Self> {
         let mut conn = mm.pool.get().await?;
 
         diesel::insert_into(schema::shares_recipes::table)
             .values(&SharedRecipeForInsert {
-                recipe_id,
                 user_id,
+                recipe_id,
                 expires_at,
             })
             .on_conflict_do_nothing()
-            .returning(ShareRecipe::as_returning())
+            .returning(Self::as_returning())
             .get_result(&mut conn)
             .await
             .map_err(Error::from)
     }
 
     /// Retrieves a shared recipe by its link UUID.
-    pub async fn get_by_link(
-        mm: &ModelManager,
-        link: Uuid,
-    ) -> Result<(ShareRecipe, RecipeDetails)> {
+    pub async fn get_by_link(mm: &ModelManager, link: Uuid) -> Result<(Self, RecipeDetails)> {
         let mut conn = mm.pool.get().await?;
 
         let share = schema::shares_recipes::table
             .filter(schema::shares_recipes::link.eq(link))
-            .first::<ShareRecipe>(&mut conn)
+            .first::<Self>(&mut conn)
             .await
             .map_err(Error::from)?;
 

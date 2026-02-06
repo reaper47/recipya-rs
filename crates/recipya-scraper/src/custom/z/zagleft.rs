@@ -3,11 +3,11 @@ use scraper::{Html, Selector};
 
 use crate::custom::common::{extract_author, extract_metadata_property, required_text_list};
 
-pub(crate) fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
+pub fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
     let content = doc
         .select(&Selector::parse("div.wprm-recipe").unwrap())
         .next()
-        .ok_or(doc.root_element())
+        .ok_or_else(|| doc.root_element())
         .unwrap();
 
     recipe.author = extract_author(&content, ".wprm-recipe-author a").unwrap_or_default();

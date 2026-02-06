@@ -60,28 +60,27 @@ pub struct Ingredient {
 
 impl fmt::Display for Ingredient {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.original_text.as_ref() {
-            Some(s) => write!(f, "{s}"),
-            None => {
-                let res = [
-                    self.amount.to_string(),
-                    self.unit
-                        .as_ref()
-                        .map(|u| u.name.clone())
-                        .unwrap_or_default(),
-                    self.food
-                        .as_ref()
-                        .map(|f| f.name.clone())
-                        .unwrap_or_default(),
-                ]
-                .iter()
-                .filter(|s| !s.is_empty())
-                .map(|s| s.as_str())
-                .collect::<Vec<_>>()
-                .join(" ");
+        if let Some(s) = self.original_text.as_ref() {
+            write!(f, "{s}")
+        } else {
+            let res = [
+                self.amount.to_string(),
+                self.unit
+                    .as_ref()
+                    .map(|u| u.name.clone())
+                    .unwrap_or_default(),
+                self.food
+                    .as_ref()
+                    .map(|f| f.name.clone())
+                    .unwrap_or_default(),
+            ]
+            .iter()
+            .filter(|s| !s.is_empty())
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+            .join(" ");
 
-                write!(f, "{}", res)
-            }
+            write!(f, "{res}")
         }
     }
 }
@@ -113,23 +112,19 @@ pub struct Nutrition {
 
 impl From<Nutrition> for NutritionInformation {
     fn from(nutrition: Nutrition) -> Self {
-        NutritionInformation {
-            calories: match nutrition.calories {
-                Some(c) => vec![Energy::new(c.to_string())],
-                None => vec![],
-            },
-            carbohydrate_content: match nutrition.carbohydrates {
-                Some(c) => vec![Mass::new(c.to_string())],
-                None => vec![],
-            },
-            fat_content: match nutrition.fats {
-                Some(f) => vec![Mass::new(f.to_string())],
-                None => vec![],
-            },
-            protein_content: match nutrition.proteins {
-                Some(p) => vec![Mass::new(p.to_string())],
-                None => vec![],
-            },
+        Self {
+            calories: nutrition
+                .calories
+                .map_or_else(Vec::new, |c| vec![Energy::new(c.to_string())]),
+            carbohydrate_content: nutrition
+                .carbohydrates
+                .map_or_else(Vec::new, |c| vec![Mass::new(c.to_string())]),
+            fat_content: nutrition
+                .fats
+                .map_or_else(Vec::new, |f| vec![Mass::new(f.to_string())]),
+            protein_content: nutrition
+                .proteins
+                .map_or_else(Vec::new, |p| vec![Mass::new(p.to_string())]),
             ..Default::default()
         }
     }

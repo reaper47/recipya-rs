@@ -114,7 +114,7 @@ impl From<CooklangRecipe> for Recipe {
                             r#type: AtType::HowToTool.to_opt(),
                             name: vec![t.name],
                             required_quantity: vec![HowToToolRequiredQuantityFieldEnum::Number(
-                                t.quantity as f32,
+                                f32::from(t.quantity),
                             )],
                             ..Default::default()
                         }))
@@ -129,6 +129,8 @@ impl From<CooklangRecipe> for Recipe {
 
 impl CookLang {
     /// Parses a Cooklang recipe from the file's content.
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cast_possible_truncation)]
     pub fn parse<R>(&self, r: R, file_name: &str) -> Result<Vec<Recipe>>
     where
         R: Read + Seek,
@@ -192,12 +194,13 @@ impl CookLang {
 
         let total_time = time
             .clone()
-            .or(time.clone())
-            .or(time_required.clone())
-            .or(duration.clone())
+            .or_else(|| time.clone())
+            .or_else(|| time_required.clone())
+            .or_else(|| duration.clone())
             .filter(|_| time.is_some() || time_required.is_some() || duration.is_some())
-            .map(|v| parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 15)))
-            .unwrap_or((0, 15));
+            .map_or((0, 15), |v| {
+                parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 15))
+            });
 
         let prep_time = metadata
             .get("prep time")
@@ -211,10 +214,11 @@ impl CookLang {
 
         let prep = prep_time
             .clone()
-            .or(time_prep.clone())
+            .or_else(|| time_prep.clone())
             .filter(|_| prep_time.is_some() || time_prep.is_some())
-            .map(|v| parse_hours_minutes(&mut v.as_str()).unwrap_or(total_time))
-            .unwrap_or(total_time);
+            .map_or(total_time, |v| {
+                parse_hours_minutes(&mut v.as_str()).unwrap_or(total_time)
+            });
 
         let cook_time = metadata
             .get("cook time")
@@ -228,10 +232,11 @@ impl CookLang {
 
         let cook = cook_time
             .clone()
-            .or(time_cook.clone())
+            .or_else(|| time_cook.clone())
             .filter(|_| cook_time.is_some() || time_cook.is_some())
-            .map(|v| parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 30)))
-            .unwrap_or((0, 30));
+            .map_or((0, 30), |v| {
+                parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 30))
+            });
 
         let cooklang_recipe = CooklangRecipe {
             author: recipe
@@ -241,7 +246,7 @@ impl CookLang {
             name: recipe.metadata.title().unwrap_or(file_name).to_string(),
             category: category
                 .clone()
-                .or(course.clone())
+                .or_else(|| course.clone())
                 .filter(|_| category.is_some() || course.is_some()),
             cuisine: metadata
                 .get("cuisine")
@@ -259,9 +264,9 @@ impl CookLang {
             locale: recipe.metadata.locale().map(|(lang, _)| String::from(lang)),
             images: image
                 .clone()
-                .or(images.clone())
-                .or(picture.clone())
-                .or(pictures.clone())
+                .or_else(|| images.clone())
+                .or_else(|| picture.clone())
+                .or_else(|| pictures.clone())
                 .filter(|_| {
                     image.is_some() || images.is_some() || picture.is_some() || pictures.is_some()
                 })
@@ -318,12 +323,20 @@ impl CookLang {
             servings: recipe
                 .metadata
                 .servings()
-                .map(|v| v.as_number().map(|v| v as i16))
+                .map(|v| {
+                    v.as_number().map(|v| {
+                        i16::try_from(v)
+                            .inspect_err(|err| {
+                                error!("Failed to convert '{v}' servings to i16: {err}");
+                            })
+                            .unwrap_or_default()
+                    })
+                })
                 .unwrap_or_default(),
             source: recipe
                 .metadata
                 .source()
-                .map(|v| v.url().or(v.name()).map(String::from))
+                .map(|v| v.url().or_else(|| v.name()).map(String::from))
                 .unwrap_or_default(),
             tags: recipe
                 .metadata
@@ -338,22 +351,27 @@ impl CookLang {
                 })
                 .collect::<Vec<_>>(),
             times: Times {
-                prep_seconds: (prep.0 * 60 * 60 + prep.1 * 60) as i32,
-                cook_seconds: (cook.0 * 60 * 60 + cook.1 * 60) as i32,
+                prep_seconds: (prep.0 * 60 * 60 + prep.1 * 60).cast_signed(),
+                cook_seconds: (cook.0 * 60 * 60 + cook.1 * 60).cast_signed(),
             },
             tools: recipe
                 .cookware
                 .into_iter()
                 .map(|cookware| Tool {
                     name: cookware.name,
-                    quantity: match cookware.quantity {
-                        None => 1,
-                        Some(q) => match q.value() {
-                            Value::Number(v) => v.value() as i16,
-                            Value::Range { start, end: _ } => start.value() as i16,
-                            Value::Text(s) => s.parse().unwrap_or(1),
-                        },
-                    },
+                    quantity: cookware.quantity.map_or(1, |q| match q.value() {
+                        Value::Number(v) => v
+                            .value()
+                            .round()
+                            .clamp(f64::from(i16::MIN), f64::from(i16::MAX))
+                            as i16,
+                        Value::Range { start, end: _ } => start
+                            .value()
+                            .round()
+                            .clamp(f64::from(i16::MIN), f64::from(i16::MAX))
+                            as i16,
+                        Value::Text(s) => s.parse().unwrap_or(1),
+                    }),
                 })
                 .collect(),
         };

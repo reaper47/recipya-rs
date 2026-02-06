@@ -391,18 +391,13 @@ pub async fn login_post_handler(
         }
     };
 
-    if let Err(err) = set_auth_cookies(
+    set_auth_cookies(
         &cookies,
         access_token,
         refresh_token_entry.token,
         form.is_remember_me(),
         state.config.read().await.is_production,
-    ) {
-        let mut res = Error::GenerateToken.into_response();
-        add_hx_message(&mut res, MessageHtmx::error("Failed to set auth cookies."));
-        error!("Failed to set auth cookies for user {}: {err}", user.id);
-        return res;
-    }
+    );
 
     Redirect::to("/").into_response()
 }

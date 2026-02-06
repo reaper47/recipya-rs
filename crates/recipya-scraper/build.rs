@@ -54,7 +54,7 @@ impl FileContent {
     }}
 
     impl<'a> WebsiteMetadata<'a> {{
-        fn new(host: &'a str, url: &'a str, cuisine: Option<&'a str>) -> Self {{
+        const fn new(host: &'a str, url: &'a str, cuisine: Option<&'a str>) -> Self {{
             Self {{
                 host,
                 url,
@@ -70,7 +70,7 @@ impl FileContent {
 
     impl Website {{
         /// Returns the domain name of the website.
-        pub fn domain(&self) -> &'static str {{
+        pub const fn domain(&self) -> &'static str {{
             match self {{
     {domain_arms}        }}
         }}

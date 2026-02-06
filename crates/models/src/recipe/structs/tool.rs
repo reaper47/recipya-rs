@@ -2,13 +2,13 @@ use diesel::prelude::*;
 
 use repository::schema;
 use schema_org::HowToTool;
-use schema_org::field::RecipeToolFieldEnum;
+use schema_org::field::{FieldEnum60, RecipeToolFieldEnum};
 use support::strings::extract_number;
 
 use crate::Recipe;
 
 /// Represents a tool in the recipe management system.
-#[derive(Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Debug, Queryable, Identifiable, Eq, PartialEq, Selectable)]
 #[diesel(table_name = schema::tools)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Tool {
@@ -17,7 +17,7 @@ pub struct Tool {
 }
 
 /// Represents a tool being created in the recipe management system.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ToolForCreate {
     pub name: String,
     pub quantity: i16,
@@ -34,7 +34,7 @@ impl From<HowToTool> for ToolForCreate {
             quantity: value
                 .required_quantity
                 .first()
-                .map(|q| q.quantity())
+                .map(FieldEnum60::quantity)
                 .unwrap_or_default(),
         }
     }
@@ -48,7 +48,7 @@ pub(crate) struct ToolForInsert {
 }
 
 /// Represents the details of a tool used in a recipe.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ToolRecipe {
     pub name: String,
     pub quantity: i16,
@@ -84,19 +84,19 @@ impl From<&RecipeToolFieldEnum> for ToolForCreate {
                 quantity: tool
                     .required_quantity
                     .first()
-                    .map(|q| q.quantity())
+                    .map(FieldEnum60::quantity)
                     .unwrap_or_default(),
             },
-            RecipeToolFieldEnum::Text(s) => match extract_number::<i16>(s) {
-                Ok(n) => Self {
-                    name: s.replace(&n.to_string(), "").trim().to_string(),
-                    quantity: n,
-                },
-                Err(_) => Self {
+            RecipeToolFieldEnum::Text(s) => extract_number::<i16>(s).map_or_else(
+                |_| Self {
                     name: s.clone(),
                     quantity: 0,
                 },
-            },
+                |n| Self {
+                    name: s.replace(&n.to_string(), "").trim().to_string(),
+                    quantity: n,
+                },
+            ),
         }
     }
 }

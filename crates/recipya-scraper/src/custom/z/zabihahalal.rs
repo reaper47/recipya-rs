@@ -3,7 +3,7 @@ use scraper::Html;
 
 use crate::custom::common::required_text_list;
 
-pub(crate) fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
+pub fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
     recipe.recipe_ingredient = required_text_list(&doc.root_element(), ".ingredients p")
         .unwrap()
         .into_iter()

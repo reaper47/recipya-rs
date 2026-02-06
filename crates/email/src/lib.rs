@@ -109,13 +109,13 @@ impl EmailSender for EmailService {
         }
 
         match self {
-            EmailService::Smtp(sender) => sender.send_email(&email_to_send),
+            Self::Smtp(sender) => sender.send_email(&email_to_send),
         }
     }
 
     fn test_connection(&self) -> bool {
         match self {
-            EmailService::Smtp(sender) => sender.test_connection(),
+            Self::Smtp(sender) => sender.test_connection(),
         }
     }
 }
