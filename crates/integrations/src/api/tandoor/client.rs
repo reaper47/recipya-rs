@@ -62,7 +62,7 @@ pub struct Tandoor<State, C: RecipeClient> {
 
 impl<C: RecipeClient> Tandoor<UnauthenticatedState, C> {
     /// Creates a new unauthenticated Tandoor client.
-    pub fn new(recipe_client: C) -> Self {
+    pub const fn new(recipe_client: C) -> Self {
         Self {
             recipe_client,
             _state: PhantomData,
@@ -112,7 +112,7 @@ impl RecipeClient for TandoorRecipeClient {
         Ok(Self {
             host: self.host.clone(),
             client: Client::builder()
-                .default_headers(assemble_token_header(AuthType::Bearer, &token)?)
+                .default_headers(assemble_token_header(&AuthType::Bearer, &token)?)
                 .build()?,
         })
     }
@@ -142,7 +142,7 @@ impl RecipeClient for TandoorRecipeClient {
 }
 
 impl TandoorRecipeClient {
-    /// Creates a new instance of the TandoorRecipeClient.
+    /// Creates a new instance of the `TandoorRecipeClient`.
     pub fn new(base_url: impl Into<String>) -> Self {
         Self {
             host: Host::new(base_url),
@@ -241,6 +241,8 @@ impl TandoorRecipeClient {
         Err((id, Error::ApiError("Taboor API - Exhausted retries".into())))
     }
 
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cast_possible_truncation)]
     async fn build_recipe_schema(&self, recipe: RecipeRetrieve) -> Result<Recipe> {
         let (category, keywords) = match &recipe.keywords {
             Some(vec) if !vec.is_empty() => {
@@ -279,8 +281,8 @@ impl TandoorRecipeClient {
                 .map(|num_minutes| {
                     vec![DurationOrText::Text(
                         iso8601::Duration::YMDHMS {
-                            hour: (num_minutes / 60) as u32,
-                            minute: (num_minutes % 60) as u32,
+                            hour: (num_minutes / 60).cast_unsigned(),
+                            minute: (num_minutes % 60).cast_unsigned(),
                             second: 0,
                             millisecond: 0,
                             day: 0,
@@ -309,8 +311,8 @@ impl TandoorRecipeClient {
                 .map(|num_minutes| {
                     vec![DurationOrText::Text(
                         iso8601::Duration::YMDHMS {
-                            hour: (num_minutes / 60) as u32,
-                            minute: (num_minutes % 60) as u32,
+                            hour: (num_minutes / 60).cast_unsigned(),
+                            minute: (num_minutes % 60).cast_unsigned(),
                             second: 0,
                             millisecond: 0,
                             day: 0,
@@ -328,19 +330,21 @@ impl TandoorRecipeClient {
                 .collect(),
             aggregate_rating: recipe
                 .rating
-                .map(|r| vec![AggregateRating::new(r as f32, 1)])
+                .map(|r| {
+                    let rating = r.clamp(f64::from(f32::MIN), f64::from(f32::MAX)) as f32;
+                    vec![AggregateRating::new(rating, 1)]
+                })
                 .unwrap_or_default(),
             author: Some(recipe.created_by.username)
                 .filter(|s| !s.is_empty())
                 .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
                 .unwrap_or_default(),
             image: if let Some(image) = recipe.image {
-                match self.fetch_recipe_image(image).await? {
-                    Some(s) => vec![RecipeImageFieldEnum::URL(
+                (self.fetch_recipe_image(image).await?).map_or_else(Vec::new, |s| {
+                    vec![RecipeImageFieldEnum::URL(
                         s.to_str().map(String::from).unwrap_or_default(),
-                    )],
-                    None => vec![],
-                }
+                    )]
+                })
             } else {
                 vec![]
             },

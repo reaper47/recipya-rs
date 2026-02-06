@@ -10,7 +10,7 @@ use crate::handlers::general::{
 use crate::middleware::mw_auth::mw_refresh_token;
 
 /// Defines the routes for general endpoints of the web application.
-pub(super) fn general_routes(state: AppState) -> Router<AppState> {
+pub fn general_routes(state: &AppState) -> Router<AppState> {
     let protected = Router::new()
         .route("/search-suggestions", get(search_suggestions_handler))
         .route(

@@ -147,7 +147,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res.clone(),
+            &res,
             vec![
                 r#"<span class="px-2">2 cup blue spinach</span>"#,
                 r#"<span class="px-2">1 tbsp cinnamon</span>"#,

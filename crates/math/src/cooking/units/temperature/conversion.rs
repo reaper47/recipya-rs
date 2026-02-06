@@ -6,28 +6,28 @@ use crate::{Error, Result};
 
 impl UnitConverter for Temperature {
     fn convert(&self, to: UnitType) -> Result<Unit> {
-        use TemperatureUnit::*;
+        use TemperatureUnit::{Celsius, Fahrenheit};
 
         match self {
-            Temperature::Celsius(original_value) => match to {
+            Self::Celsius(original_value) => match to {
                 UnitType::Temperature(unit) => {
                     let value = measurements::Temperature::from_celsius(*original_value);
 
                     match unit {
                         Celsius => Ok(Unit::Temperature(self.with_value(*original_value))),
-                        Fahrenheit => Ok(Unit::Temperature(Temperature::Fahrenheit(
-                            value.as_fahrenheit(),
-                        ))),
+                        Fahrenheit => {
+                            Ok(Unit::Temperature(Self::Fahrenheit(value.as_fahrenheit())))
+                        }
                     }
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to)),
             },
-            Temperature::Fahrenheit(original_value) => match to {
+            Self::Fahrenheit(original_value) => match to {
                 UnitType::Temperature(unit) => {
                     let value = measurements::Temperature::from_fahrenheit(*original_value);
 
                     match unit {
-                        Celsius => Ok(Unit::Temperature(Temperature::Celsius(value.as_celsius()))),
+                        Celsius => Ok(Unit::Temperature(Self::Celsius(value.as_celsius()))),
                         Fahrenheit => Ok(Unit::Temperature(self.with_value(*original_value))),
                     }
                 }
@@ -41,7 +41,7 @@ impl UnitConverter for Temperature {
 mod tests {
     use super::*;
 
-    use TemperatureUnit::*;
+    use TemperatureUnit::{Celsius, Fahrenheit};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

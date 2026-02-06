@@ -16,8 +16,8 @@ use crate::templates::layouts;
 
 /// Renders the add recipe manually page.
 pub fn add_recipe_manual(
-    data: Data,
-    user_setting: UserSettingDetails,
+    data: &Data,
+    user_setting: &UserSettingDetails,
     categories: Vec<Category>,
     keywords: Vec<Keyword>,
 ) -> Markup {
@@ -30,7 +30,7 @@ pub fn add_recipe_manual(
             span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (render_add_recipe_manual(view, categories, keywords))
         } @else {
-            (layouts::main("Add Recipe Manually", path, &data, render_add_recipe_manual(view, categories, keywords), user_setting, true))
+            (&layouts::main("Add Recipe Manually", path, data, &render_add_recipe_manual(view, categories, keywords), user_setting, true))
         }
         (init_recipe_form_js())
     }
@@ -54,7 +54,7 @@ fn render_add_recipe_manual(
                             label .w-full {
                                 input required type="text" name="title" placeholder="Title of the recipe*"
                                     autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200"
-                                    value=[view.map(|v| v.recipe_details.recipe.name.to_string())];
+                                    value=[view.map(|v| v.recipe_details.recipe.name.clone())];
                             }
                         }
                         div {
@@ -142,13 +142,7 @@ fn render_categories(view: Option<&ViewRecipe>, categories: Vec<Category>) -> Ma
             input #category type="text" list="categories" name="category"
                 class="input input-sm w-11/12" placeholder="Breakfast"
                 autocomplete="off"
-                value=(
-                    if let Some(v) = view {
-                        v.recipe_details.category.to_string()
-                    } else {
-                        String::new()
-                    }
-                );
+                value=(view.map_or_else(String::new, |v| v.recipe_details.category.clone()));
             datalist id="categories" {
                 @for c in categories {
                     option { (c.name) }
@@ -162,15 +156,7 @@ fn render_description(view: Option<&ViewRecipe>) -> Markup {
     html! {
         textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {
             (
-                if let Some(v) = view {
-                    if let Some(description) = &v.recipe_details.recipe.description {
-                        description.to_string()
-                    } else {
-                        String::new()
-                    }
-                } else {
-                    String::new()
-                }
+                view.map_or_else(String::new, |v| v.recipe_details.recipe.description.as_ref().map_or_else(String::new, Clone::clone))
             )
         }
     }
@@ -316,16 +302,14 @@ fn render_nutrition_table() -> Markup {
 }
 
 fn render_source(view: Option<&ViewRecipe>) -> Markup {
-    let source = if let Some(v) = view {
+    let source = view.map_or_else(String::new, |v| {
         let src = &v.recipe_details.recipe.source;
         if src.is_empty() {
             src.clone()
         } else {
             String::new()
         }
-    } else {
-        String::new()
-    };
+    });
 
     html! {
         fieldset .fieldset {
@@ -402,14 +386,13 @@ fn render_yield(view: Option<&ViewRecipe>) -> Markup {
             label .label for="servings" { "Servings" }
             input #servings type="number" min="1" name="yield"
                 value=(
-                    view.map(|v| {
+                    view.map_or_else(|| "1".into(), |v| {
                         if v.recipe_details.recipe.yield_ == 0 {
                             "1".into()
                         } else {
-                             v.recipe_details.recipe.yield_.to_string()
+                            v.recipe_details.recipe.yield_.to_string()
                         }
                     })
-                    .unwrap_or("1".into())
                 )
                 class="input input-sm w-11/12";
         }

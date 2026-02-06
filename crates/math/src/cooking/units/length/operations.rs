@@ -4,7 +4,7 @@ use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Length {
     fn abbrev(&self) -> &str {
-        use Length::*;
+        use Length::{Centimetre, Foot, Inch, Kilometre, Metre, Millimetre};
 
         match self {
             Millimetre(_) => "mm",
@@ -17,37 +17,37 @@ impl UnitOperations for Length {
     }
 
     fn unit_type(&self) -> UnitType {
-        use LengthUnit::*;
+        use LengthUnit::{Centimetre, Foot, Inch, Kilometre, Metre, Millimetre};
 
         match self {
-            Length::Millimetre(_) => UnitType::Length(Millimetre),
-            Length::Centimetre(_) => UnitType::Length(Centimetre),
-            Length::Metre(_) => UnitType::Length(Metre),
-            Length::Kilometre(_) => UnitType::Length(Kilometre),
-            Length::Inch(_) => UnitType::Length(Inch),
-            Length::Foot(_) => UnitType::Length(Foot),
+            Self::Millimetre(_) => UnitType::Length(Millimetre),
+            Self::Centimetre(_) => UnitType::Length(Centimetre),
+            Self::Metre(_) => UnitType::Length(Metre),
+            Self::Kilometre(_) => UnitType::Length(Kilometre),
+            Self::Inch(_) => UnitType::Length(Inch),
+            Self::Foot(_) => UnitType::Length(Foot),
         }
     }
 
     fn value(&self) -> f64 {
         match self {
-            Length::Millimetre(v) => *v,
-            Length::Centimetre(v) => *v,
-            Length::Metre(v) => *v,
-            Length::Kilometre(v) => *v,
-            Length::Inch(v) => *v,
-            Length::Foot(v) => *v,
+            Self::Millimetre(v)
+            | Self::Centimetre(v)
+            | Self::Metre(v)
+            | Self::Kilometre(v)
+            | Self::Inch(v)
+            | Self::Foot(v) => *v,
         }
     }
 
     fn with_value(&self, value: f64) -> Self {
         match self {
-            Length::Millimetre(_) => Length::Millimetre(value),
-            Length::Centimetre(_) => Length::Centimetre(value),
-            Length::Metre(_) => Length::Metre(value),
-            Length::Kilometre(_) => Length::Kilometre(value),
-            Length::Inch(_) => Length::Inch(value),
-            Length::Foot(_) => Length::Foot(value),
+            Self::Millimetre(_) => Self::Millimetre(value),
+            Self::Centimetre(_) => Self::Centimetre(value),
+            Self::Metre(_) => Self::Metre(value),
+            Self::Kilometre(_) => Self::Kilometre(value),
+            Self::Inch(_) => Self::Inch(value),
+            Self::Foot(_) => Self::Foot(value),
         }
     }
 }

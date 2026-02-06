@@ -1,11 +1,14 @@
+use std::fmt::Write;
+
 use chrono::NaiveTime;
+use tracing::error;
 
 use crate::recipe::structs::time::Times;
 
 use super::Result;
 
 /// Stores recipe times formatted for display to the user.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FormattedTimes {
     pub cook: String,
     pub cook_datetime: String,
@@ -18,17 +21,27 @@ pub struct FormattedTimes {
 }
 
 impl FormattedTimes {
-    /// Creates a new FormattedTimes from the recipe's Times.
+    /// Creates a new `FormattedTimes` from the recipe's Times.
     pub fn from_times(times: &Times) -> Result<Self> {
         let cook = humantime::parse_duration(&format!("{}s", times.cook_seconds))?;
         let prep = humantime::parse_duration(&format!("{}s", times.prep_seconds))?;
         let total = humantime::parse_duration(&format!("{}s", times.total_seconds))?;
 
-        let prep_edit = NaiveTime::from_num_seconds_from_midnight_opt(prep.as_secs() as u32, 0)
-            .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
+        let prep_edit = NaiveTime::from_num_seconds_from_midnight_opt(
+            u32::try_from(prep.as_secs())
+                .inspect_err(|err| error!("Failed to convert prep time '{prep:?}' to u32: {err}"))
+                .unwrap_or_default(),
+            0,
+        )
+        .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
 
-        let cook_edit = NaiveTime::from_num_seconds_from_midnight_opt(cook.as_secs() as u32, 0)
-            .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
+        let cook_edit = NaiveTime::from_num_seconds_from_midnight_opt(
+            u32::try_from(cook.as_secs())
+                .inspect_err(|err| error!("Failed to convert cook time '{cook:?}' to u32: {err}"))
+                .unwrap_or_default(),
+            0,
+        )
+        .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
 
         Ok(Self {
             cook: humantime::format_duration(cook).to_string(),
@@ -51,19 +64,21 @@ fn duration_to_iso8601(duration: humantime::Duration) -> String {
     let seconds = total_secs % 60;
 
     let mut iso_duration = "P".to_string();
+
     if days > 0 {
-        iso_duration.push_str(&format!("{}D", days));
+        write!(iso_duration, "{days}D").unwrap();
     }
+
     if hours > 0 || minutes > 0 || seconds > 0 {
-        iso_duration.push('T'); // Time component starts
+        iso_duration.push('T');
         if hours > 0 {
-            iso_duration.push_str(&format!("{}H", hours));
+            write!(iso_duration, "{hours}H").unwrap();
         }
         if minutes > 0 {
-            iso_duration.push_str(&format!("{}M", minutes));
+            write!(iso_duration, "{minutes}M").unwrap();
         }
         if seconds > 0 {
-            iso_duration.push_str(&format!("{}S", seconds));
+            write!(iso_duration, "{seconds}S").unwrap();
         }
     }
 

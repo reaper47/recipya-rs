@@ -96,7 +96,7 @@ impl From<SaffronRecipe> for Recipe {
                 .into_iter()
                 .map(RecipeRecipeInstructionsFieldEnum::Text)
                 .collect(),
-            recipe_yield: to_yield(r.servings.unwrap_or_default() as i64),
+            recipe_yield: to_yield(i64::from(r.servings.unwrap_or_default())),
             url: r
                 .original_url
                 .map(|u| vec![u.to_string()])
@@ -183,7 +183,7 @@ fn parse_total_seconds(input: &mut &str) -> WResult<Option<i32>> {
 
 fn parse_time(mut s: &str) -> Option<i32> {
     if let Ok((hours, minutes)) = parse_hours_minutes(&mut s) {
-        Some((hours * 60 * 60 + minutes * 60) as i32)
+        Some((hours * 60 * 60 + minutes * 60).cast_signed())
     } else {
         None
     }

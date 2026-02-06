@@ -33,7 +33,11 @@ impl RecipeSearch {
     }
 
     pub async fn search(&self, mm: &ModelManager) -> Result<Vec<RecipeDetails>> {
-        use schema::recipes::dsl::*;
+        use schema::recipes::dsl::{
+            created_at, description, fts_category, fts_combined, fts_cuisine, fts_ingredients,
+            fts_instructions, fts_keywords, fts_tools, id, image, is_favourite, language,
+            measurement_system_id, name, notes, rating, source, updated_at, user_id, yield_,
+        };
 
         let mut conn = mm.pool.get().await?;
 
@@ -70,7 +74,7 @@ impl RecipeSearch {
             .into_boxed();
 
         if self.is_favourites {
-            query = query.filter(is_favourite.eq(true))
+            query = query.filter(is_favourite.eq(true));
         }
 
         if let Some(text) = &self.filters.category {
@@ -99,7 +103,7 @@ impl RecipeSearch {
         }
 
         if let Some(n) = self.filters.rating {
-            query = query.filter(rating.eq(n))
+            query = query.filter(rating.eq(n));
         }
 
         if let Some(text) = &self.filters.tools {
@@ -159,7 +163,7 @@ impl FromStr for SearchFilters {
 
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
         if s.is_empty() {
-            return Ok(SearchFilters::default());
+            return Ok(Self::default());
         }
 
         let input = s.to_lowercase();
@@ -184,7 +188,7 @@ impl FromStr for SearchFilters {
             }
             input = &input[pos..];
         } else {
-            return Ok(SearchFilters {
+            return Ok(Self {
                 unclassified: Some(s.to_string()),
                 ..Default::default()
             });
@@ -213,7 +217,7 @@ impl FromStr for SearchFilters {
                             .trim()
                             .parse::<i16>()
                             .ok()
-                            .filter(|r| *r >= 1 && *r <= 5)
+                            .filter(|r| *r >= 1 && *r <= 5);
                     }
                     PREFIX_TOOLS => tools = Some(text),
                     _ => unreachable!(),
@@ -222,7 +226,7 @@ impl FromStr for SearchFilters {
             }
         }
 
-        Ok(SearchFilters {
+        Ok(Self {
             category: category.map(|s| normalize_to_ts_query(&s, "|", "<->")),
             cuisine: cuisine.map(|s| normalize_to_ts_query(&s, "|", "<->")),
             ingredients: ingredients.map(|s| normalize_to_ts_query(&s, "&", "<->")),
@@ -238,7 +242,7 @@ impl FromStr for SearchFilters {
 }
 
 fn normalize_to_ts_query(s: &str, comma_char: &str, space_char: &str) -> String {
-    s.trim().replace(",", comma_char).replace(" ", space_char)
+    s.trim().replace(',', comma_char).replace(' ', space_char)
 }
 
 fn parse_any_section<'a>(input: &mut &'a str) -> winnow::Result<(&'a str, String)> {

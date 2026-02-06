@@ -1,5 +1,6 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::env::temp_dir;
+use std::hash::BuildHasher;
 use std::path::PathBuf;
 
 use axum::extract::multipart::{Field, InvalidBoundary};
@@ -11,6 +12,7 @@ use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use repository::schema;
 use support::regexp::time::TimeParser;
 use support::strings::normalise_vulgar_fractions;
+use tracing::error;
 use uuid::Uuid;
 
 use crate::Result;
@@ -29,22 +31,19 @@ use crate::recipe::structs::section::{SectionComponents, SectionForInsert};
 use crate::recipe::structs::tool::{ToolForCreate, ToolForInsert, ToolRecipeForInsert};
 use crate::user::UserKeyword;
 
-pub(crate) async fn get_category_id<C>(mut conn: &mut C, category: &Option<String>) -> Result<i64>
+pub async fn get_category_id<C>(mut conn: &mut C, category: Option<&String>) -> Result<i64>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
     let default = String::from("uncategorized");
 
-    let category = Option::from(
-        category
-            .clone()
-            .map(|c| {
-                c.split_once([',', ';'])
-                    .map(|(first, _)| first.to_lowercase())
-                    .unwrap_or_else(|| c.to_lowercase())
-            })
-            .unwrap_or(default.clone()),
-    );
+    let category = Option::from(category.map_or_else(
+        || default.clone(),
+        |c| {
+            c.split_once([',', ';'])
+                .map_or_else(|| c.to_lowercase(), |(first, _)| first.to_lowercase())
+        },
+    ));
 
     Ok(diesel::insert_into(schema::categories::table)
         .values(&CategoryForInsert {
@@ -58,7 +57,7 @@ where
         .await?)
 }
 
-pub(crate) async fn get_cuisine_id<C>(mut conn: &mut C, cuisine: String) -> Result<i64>
+pub async fn get_cuisine_id<C>(mut conn: &mut C, cuisine: String) -> Result<i64>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -74,7 +73,7 @@ where
         .await?)
 }
 
-pub(crate) async fn insert_additional_images<C>(
+pub async fn insert_additional_images<C>(
     mut conn: &mut C,
     recipe_id: i64,
     additional_images: Vec<Uuid>,
@@ -95,7 +94,7 @@ where
     Ok(())
 }
 
-pub(crate) async fn insert_ingredients<C>(
+pub async fn insert_ingredients<C>(
     conn: &mut C,
     sections_map: &HashMap<String, i64>,
     ingredients: &SectionComponents,
@@ -109,16 +108,16 @@ where
 
     match ingredients {
         SectionComponents::Grouped(sections) => {
-            for section in sections.iter() {
+            for section in sections {
                 let id = *sections_map.get(&section.title).unwrap_or(&1);
                 for (idx, item) in section.items.iter().enumerate() {
-                    all_ingredients.push((normalise_vulgar_fractions(&item.text), id, idx))
+                    all_ingredients.push((normalise_vulgar_fractions(&item.text), id, idx));
                 }
             }
         }
         SectionComponents::Flat(items) => {
             for (idx, item) in items.iter().enumerate() {
-                all_ingredients.push((normalise_vulgar_fractions(&item.text), 1, idx))
+                all_ingredients.push((normalise_vulgar_fractions(&item.text), 1, idx));
             }
         }
     }
@@ -174,7 +173,14 @@ where
                             ingredient_id,
                             recipe_id,
                             section_id: *section_id,
-                            item_order: *item_order as i16,
+                            item_order: i16::try_from(*item_order)
+                                .inspect_err(|err| {
+                                    error!(
+                                        "Failed to cast ingredients item order '{}': {err}",
+                                        *item_order
+                                    );
+                                })
+                                .unwrap_or_default(),
                         })
                 })
                 .collect::<Vec<_>>(),
@@ -185,7 +191,7 @@ where
     Ok(())
 }
 
-pub(crate) async fn insert_instructions<C>(
+pub async fn insert_instructions<C>(
     conn: &mut C,
     sections_map: &HashMap<String, i64>,
     instructions: &SectionComponents,
@@ -199,7 +205,7 @@ where
 
     match instructions {
         SectionComponents::Grouped(sections) => {
-            for section in sections.iter() {
+            for section in sections {
                 let section_id = *sections_map.get(&section.title).unwrap_or(&1);
                 for (idx, item) in section.items.iter().enumerate() {
                     let duration = time_parser.parse_max_time_seconds(&item.text);
@@ -260,7 +266,14 @@ where
                             instruction_id,
                             recipe_id,
                             section_id: *section_id,
-                            item_order: *item_order as i16,
+                            item_order: i16::try_from(*item_order)
+                                .inspect_err(|err| {
+                                    error!(
+                                        "Failed to cast instructions item order '{}': {err}",
+                                        *item_order
+                                    );
+                                })
+                                .unwrap_or_default(),
                         })
                 })
                 .collect::<Vec<_>>(),
@@ -271,7 +284,7 @@ where
     Ok(())
 }
 
-pub(crate) async fn insert_keywords<C>(
+pub async fn insert_keywords<C>(
     mut conn: &mut C,
     keywords: &[String],
     user_id: Uuid,
@@ -334,7 +347,7 @@ where
     Ok(())
 }
 
-pub(crate) async fn insert_nutrition(
+pub async fn insert_nutrition(
     conn: &mut AsyncPgConnection,
     recipe_id: i64,
     nutrition: &NutritionDetailsForCreate,
@@ -440,7 +453,7 @@ pub(crate) async fn insert_nutrition(
     Ok(())
 }
 
-pub(crate) async fn insert_sections<C>(
+pub async fn insert_sections<C>(
     mut conn: &mut C,
     recipe_c: &RecipeForCreate,
 ) -> Result<HashMap<String, i64>>
@@ -460,9 +473,10 @@ where
         .filter(|s| !s.name.is_empty())
         .collect::<Vec<_>>();
 
-    match sections_for_insert.is_empty() {
-        true => Ok(HashMap::new()),
-        false => Ok(diesel::insert_into(schema::sections::table)
+    if sections_for_insert.is_empty() {
+        Ok(HashMap::new())
+    } else {
+        Ok(diesel::insert_into(schema::sections::table)
             .values(&sections_for_insert)
             .on_conflict(schema::sections::name)
             .do_update()
@@ -472,11 +486,11 @@ where
             .await?
             .into_iter()
             .map(|(id, name)| (name, id))
-            .collect()),
+            .collect())
     }
 }
 
-pub(crate) async fn insert_tools<C>(
+pub async fn insert_tools<C>(
     mut conn: &mut C,
     tools: &[ToolForCreate],
     recipe_id: i64,
@@ -509,7 +523,9 @@ where
                 tool_id: id,
                 recipe_id,
                 quantity: tools.get(idx).map_or(1, |x| x.quantity),
-                tool_order: idx as i16,
+                tool_order: i16::try_from(idx)
+                    .inspect_err(|err| error!("Failed to cast tool order '{idx}': {err}"))
+                    .unwrap_or_default(),
             })
             .collect::<Vec<_>>();
 
@@ -522,7 +538,7 @@ where
     Ok(())
 }
 
-pub(crate) async fn insert_videos<C>(
+pub async fn insert_videos<C>(
     mut conn: &mut C,
     videos: &[VideoForCreate],
     recipe_id: i64,
@@ -539,10 +555,26 @@ where
                         video: video.video,
                         recipe_id,
                         duration: video.duration.map(|duration| {
+                            let days = i32::try_from(duration.num_days())
+                                .inspect_err(|err| {
+                                    error!(
+                                        "Failed to cast num days '{}': {err}",
+                                        duration.num_days()
+                                    );
+                                })
+                                .unwrap_or_default();
+
                             PgInterval::new(
                                 duration.num_microseconds().unwrap_or_default(),
-                                duration.num_days() as i32,
-                                (duration.num_weeks() as f64 / 4.34524) as i32,
+                                days,
+                                i32::try_from(duration.num_weeks() * 100_000 / 434_524)
+                                    .inspect_err(|err| {
+                                        error!(
+                                            "Failed to cast num weeks '{}': {err}",
+                                            duration.num_weeks()
+                                        );
+                                    })
+                                    .unwrap_or_default(),
                             )
                         }),
                         content_url: video.content_url.clone(),
@@ -557,10 +589,10 @@ where
     Ok(())
 }
 
-pub async fn save_media_field(
+pub async fn save_media_field<S: BuildHasher>(
     field: Field<'_>,
-    images: &mut HashMap<String, PathBuf>,
-    videos: &mut HashMap<String, PathBuf>,
+    images: &mut HashMap<String, PathBuf, S>,
+    videos: &mut HashMap<String, PathBuf, S>,
 ) -> std::result::Result<(), InvalidBoundary> {
     let filename = Uuid::new_v4();
 
@@ -569,9 +601,7 @@ pub async fn save_media_field(
         return Ok(());
     }
 
-    let mime = infer::get(&bytes)
-        .map(|k| k.mime_type())
-        .unwrap_or("application/octet-stream");
+    let mime = infer::get(&bytes).map_or("application/octet-stream", |k| k.mime_type());
 
     let path = temp_dir().join(filename.to_string());
     tokio::fs::write(&path, &bytes)
@@ -587,24 +617,21 @@ pub async fn save_media_field(
 }
 
 pub async fn text_trim(field: Field<'_>) -> Option<String> {
-    match field.text().await {
-        Ok(s) => {
-            let s = s.trim();
-            if s.is_empty() {
-                None
-            } else {
-                Some(s.to_owned())
-            }
+    field.text().await.map_or(None, |s| {
+        let s = s.trim();
+        if s.is_empty() {
+            None
+        } else {
+            Some(s.to_owned())
         }
-        Err(_) => None,
-    }
+    })
 }
 
-pub(crate) async fn update_category<C>(
+pub async fn update_category<C>(
     mut conn: &mut C,
     user_id: Uuid,
     recipe_id: i64,
-    category: &Option<String>,
+    category: Option<&String>,
 ) -> Result<()>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,

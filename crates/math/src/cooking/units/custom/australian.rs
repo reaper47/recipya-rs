@@ -38,6 +38,6 @@ impl VolumeAustralianTablespoonExt for Volume {
     }
 
     fn from_tablespoons_aus(tablespoons: f64) -> Volume {
-        Volume::from_millilitres(tablespoons * AUSTRALIAN_TABLESPOON_IN_MILLILITRES)
+        Self::from_millilitres(tablespoons * AUSTRALIAN_TABLESPOON_IN_MILLILITRES)
     }
 }

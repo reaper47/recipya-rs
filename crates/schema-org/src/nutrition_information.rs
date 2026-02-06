@@ -4,7 +4,7 @@ use crate::helpers::one_or_many;
 use crate::{Energy, Mass};
 
 ///<https://schema.org/NutritionInformation>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct NutritionInformation {
@@ -81,16 +81,16 @@ impl NutritionInformation {
 
     /// Checks whether the nutrition is per 100g. If the serving size is not provided, it is assumed to be per 100g.
     pub fn is_per_100g(&self) -> bool {
-        match &self.serving_size.first() {
-            Some(serving_size) => {
+        self.serving_size
+            .first()
+            .as_ref()
+            .is_none_or(|serving_size| {
                 let normalized = serving_size.to_lowercase();
 
                 normalized.contains("100 g")
                     || normalized.contains("100g")
                     || normalized.contains("100 gram")
-            }
-            None => true,
-        }
+            })
     }
 }
 

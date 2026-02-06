@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use support::envs::get_env;
 
 /// Configuration struct for the email client.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Config {
     pub smtp_host: String,
     pub smtp_port: u16,
@@ -25,7 +25,7 @@ impl Config {
         Self {
             smtp_host: get_env("SMTP_HOST").unwrap_or_default(),
             smtp_port: get_env("SMTP_PORT")
-                .unwrap_or("587".into())
+                .unwrap_or_else(|_| "587".into())
                 .parse()
                 .unwrap_or_default(),
             smtp_username: get_env("SMTP_USERNAME").unwrap_or_default(),
@@ -35,7 +35,7 @@ impl Config {
     }
 
     /// Returns whether the email is configured for use with SMTP.
-    pub fn is_smtp(&self) -> bool {
+    pub const fn is_smtp(&self) -> bool {
         !self.smtp_from_email.is_empty()
             && !self.smtp_host.is_empty()
             && !self.smtp_username.is_empty()

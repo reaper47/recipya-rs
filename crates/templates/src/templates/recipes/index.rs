@@ -13,22 +13,22 @@ use crate::templates::pagination::pagination;
 
 /// Renders the index page of recipes.
 pub fn index(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     path: &str,
-    data: Data,
-    data_dir: DataDir,
-    user_setting: UserSettingDetails,
+    data: &Data,
+    data_dir: &DataDir,
+    user_setting: &UserSettingDetails,
 ) -> Markup {
     if data.is_hx_request {
         html! {
-            (render_index(fs_support, path, &data, &data_dir))
+            (render_index(fs_support, path, data, data_dir))
         }
     } else {
         layouts::main(
             "Recipes",
             path,
-            &data,
-            render_index(fs_support, path, &data, &data_dir),
+            data,
+            &render_index(fs_support, path, data, data_dir),
             user_setting,
             false,
         )
@@ -36,7 +36,7 @@ pub fn index(
 }
 
 fn render_index(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     path: &str,
     data: &Data,
     data_dir: &DataDir,
@@ -62,9 +62,9 @@ fn render_index(
         html! {
             span #data-layout data-layout="with-aside" hx-swap-oob="true" {}
 
-            (search_bar(&data))
+            (search_bar(data))
             div #list-recipes class="min-h-0" {
-                (list_recipes(fs_support, path, &data, &data_dir))
+                (list_recipes(fs_support, path, data, data_dir))
             }
             @if data.is_hx_request && let Some(p) = &data.pagination {
                 (pagination(p))

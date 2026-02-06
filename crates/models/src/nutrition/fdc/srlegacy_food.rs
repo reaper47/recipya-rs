@@ -31,6 +31,7 @@ pub struct SrlegacyFood<'a> {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::struct_field_names)]
 pub struct FoodNutrient<'a> {
     #[serde(rename = "type")]
     pub type_field: Cow<'a, str>,
@@ -43,7 +44,7 @@ pub struct FoodNutrient<'a> {
     pub min: Option<f64>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Nutrient<'a> {
     pub id: i64,
@@ -53,7 +54,7 @@ pub struct Nutrient<'a> {
     pub unit_name: Cow<'a, str>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FoodNutrientDerivation<'a> {
     pub code: Option<Cow<'a, str>>,
@@ -61,7 +62,7 @@ pub struct FoodNutrientDerivation<'a> {
     pub food_nutrient_source: FoodNutrientSource<'a>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FoodNutrientSource<'a> {
     pub id: Option<i64>,
@@ -80,7 +81,7 @@ pub struct NutrientConversionFactor<'a> {
     pub carbohydrate_value: Option<f64>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FoodCategory<'a> {
     pub description: Cow<'a, str>,
@@ -98,7 +99,7 @@ pub struct FoodPortion<'a> {
     pub amount: f64,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MeasureUnit<'a> {
     pub id: i64,

@@ -198,7 +198,7 @@ pub struct MediaObject {
     ///<https://schema.org/encodings>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub encodings: Vec<MediaObject>,
+    pub encodings: Vec<Self>,
     ///<https://schema.org/keywords>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -222,7 +222,7 @@ pub struct MediaObject {
     ///<https://schema.org/encoding>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub encoding: Vec<MediaObject>,
+    pub encoding: Vec<Self>,
     ///<https://schema.org/discussionUrl>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -238,7 +238,7 @@ pub struct MediaObject {
     ///<https://schema.org/associatedMedia>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub associated_media: Vec<MediaObject>,
+    pub associated_media: Vec<Self>,
     ///<https://schema.org/award>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

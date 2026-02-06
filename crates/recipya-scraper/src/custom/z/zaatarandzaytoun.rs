@@ -9,11 +9,11 @@ use crate::{
     },
 };
 
-pub(crate) fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
+pub fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
     let content = doc
         .select(&Selector::parse("div.wprm-recipe-simple").unwrap())
         .next()
-        .ok_or(doc.root_element())
+        .ok_or_else(|| doc.root_element())
         .unwrap();
 
     recipe.aggregate_rating = extract_rating(&content).unwrap_or_default();
@@ -25,11 +25,12 @@ pub(crate) fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
     recipe.recipe_instructions = required_text_list(&content, ".wprm-recipe-instructions li")
         .unwrap_or_default()
         .into_iter()
-        .map(|ins| RecipeRecipeInstructionsFieldEnum::Text(ins.into()))
+        .map(RecipeRecipeInstructionsFieldEnum::Text)
         .collect();
     recipe
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn extract_rating(content: &ElementRef) -> Result<Vec<AggregateRating>> {
     let num_stars = content
         .select(&Selector::parse(".wprm-rating-star-full")?)

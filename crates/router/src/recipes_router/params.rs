@@ -26,7 +26,7 @@ pub struct ImportFromAppForm {
 
 impl ImportFromAppForm {
     /// Parses the recipe file contained in the form.
-    pub fn parse_recipes(&mut self) -> crate::error::Result<Vec<Recipe>> {
+    pub fn parse_recipes(&self) -> crate::error::Result<Vec<Recipe>> {
         let mut data = Cursor::new(&self.file_data);
         let app = &self.app;
         let file_name = &self.file_name;
@@ -44,7 +44,7 @@ where
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
         let mut multipart = Multipart::from_request(req, state).await?;
 
-        let mut form = ImportFromAppForm::default();
+        let mut form = Self::default();
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
             error!("Failed to read multipart field in import recipes from app: {err}");
@@ -64,8 +64,8 @@ where
                 "file" => {
                     let filename = field
                         .file_name()
-                        .map(|s| s.to_string())
-                        .ok_or(InvalidBoundary::default())?;
+                        .map(ToString::to_string)
+                        .ok_or_else(InvalidBoundary::default)?;
                     form.file_name = filename.clone();
 
                     form.file_data = field
@@ -163,7 +163,7 @@ where
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
         let mut multipart = Multipart::from_request(req, state).await?;
 
-        let mut form = TimelineEventForm::default();
+        let mut form = Self::default();
 
         let mut images: HashMap<String, PathBuf> = HashMap::new();
         let mut videos: HashMap<String, PathBuf> = HashMap::new();

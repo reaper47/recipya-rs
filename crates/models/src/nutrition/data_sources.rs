@@ -20,7 +20,7 @@ use crate::{
 };
 
 /// Nutrition data sources supported by the application.
-#[derive(Debug, Default, PartialEq, strum_macros::Display, EnumIter, EnumString)]
+#[derive(Debug, Default, Eq, PartialEq, strum_macros::Display, EnumIter, EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum NutritionDataSource {
     #[strum(serialize = "USDA FoodData Central")]
@@ -58,7 +58,7 @@ impl NutritionDataSource {
         ingredients: &[&str],
         num_servings: i16,
     ) -> Result<CalculatedNutrition> {
-        if self == &NutritionDataSource::Unknown {
+        if self == &Self::Unknown {
             return Err(Error::UnknownSource);
         }
 
@@ -78,15 +78,15 @@ impl NutritionDataSource {
 
     fn normalize_ingredients<'a>(&self, ingredients: &[&'a str]) -> Vec<Cow<'a, str>> {
         match self {
-            NutritionDataSource::USDAFoodDataCentral => ingredients
+            Self::USDAFoodDataCentral => ingredients
                 .iter()
-                .map(|&ing| self.normalize_ingredient(ing))
+                .map(|&ing| Self::normalize_ingredient(ing))
                 .collect(),
-            NutritionDataSource::Unknown => ingredients.iter().map(|&s| Cow::Borrowed(s)).collect(),
+            Self::Unknown => ingredients.iter().map(|&s| Cow::Borrowed(s)).collect(),
         }
     }
 
-    fn normalize_ingredient<'a>(&self, ing: &'a str) -> Cow<'a, str> {
+    fn normalize_ingredient(ing: &str) -> Cow<'_, str> {
         if ing.contains("egg") {
             Cow::Owned(
                 ing.replace("eggs", "egg")
@@ -101,14 +101,14 @@ impl NutritionDataSource {
         }
     }
 
-    async fn calculate_nutrition_facts<'a>(
+    async fn calculate_nutrition_facts(
         &self,
         conn: &mut AsyncPgConnection,
-        ingredients: Vec<IngredientForCalculation<'a>>,
+        ingredients: Vec<IngredientForCalculation<'_>>,
         num_servings: i16,
     ) -> Result<CalculatedNutrition> {
         match self {
-            NutritionDataSource::USDAFoodDataCentral => {
+            Self::USDAFoodDataCentral => {
                 let mut nutrition_data = Vec::with_capacity(ingredients.len());
 
                 for ing in ingredients {
@@ -117,9 +117,9 @@ impl NutritionDataSource {
                     }
                 }
 
-                self.aggregate_nutrition(nutrition_data, num_servings)
+                Ok(Self::aggregate_nutrition(&nutrition_data, num_servings))
             }
-            NutritionDataSource::Unknown => Err(Error::UnknownSource),
+            Self::Unknown => Err(Error::UnknownSource),
         }
     }
 
@@ -130,22 +130,20 @@ impl NutritionDataSource {
     ) -> Result<Option<(f64, CalculatedNutrition)>> {
         let foods = SRLegacyFoodDetails::get_relevant(conn, &ing.parsed.name).await?;
 
-        let most_relevant_food = match foods.first() {
-            Some(food) => food,
-            None => {
-                warn!("No food found for ingredient: {}", ing.parsed.name);
-                return Ok(None);
-            }
+        let Some(most_relevant_food) = foods.first() else {
+            warn!("No food found for ingredient: {}", ing.parsed.name);
+            return Ok(None);
         };
 
-        let nutrition = self.extract_nutrition_from_food(most_relevant_food);
-        let weight = self.calculate_ingredient_weight(most_relevant_food, ing);
-        let scaled_nutrition = self.scale_nutrition_to_weight(nutrition, weight);
+        let nutrition = Self::extract_nutrition_from_food(most_relevant_food);
+        let weight = Self::calculate_ingredient_weight(most_relevant_food, ing);
+        let scaled_nutrition = Self::scale_nutrition_to_weight(nutrition, weight);
 
         Ok(Some((weight, scaled_nutrition)))
     }
 
-    fn extract_nutrition_from_food(&self, food: &SRLegacyFoodDetails) -> NutritionComponents {
+    #[allow(clippy::cast_possible_truncation)]
+    fn extract_nutrition_from_food(food: &SRLegacyFoodDetails) -> NutritionComponents {
         food.food_nutrients.iter().fold(
             NutritionComponents::default(),
             |mut nutrition, nutrient| {
@@ -154,7 +152,10 @@ impl NutritionDataSource {
                     1003 => nutrition.protein_g = v,
                     1004 => nutrition.total_fat_g = v,
                     1005 => nutrition.total_carbohydrates = v,
-                    1008 => nutrition.calories_kcal = v as i16,
+                    1008 => {
+                        nutrition.calories_kcal =
+                            v.clamp(f64::from(i16::MIN), f64::from(i16::MAX)) as i16;
+                    }
                     1079 => nutrition.fiber_g = v,
                     1093 => nutrition.sodium_mg = v,
                     1253 => nutrition.cholesterol_mg = v,
@@ -169,7 +170,7 @@ impl NutritionDataSource {
         )
     }
 
-    fn parse_portion_units(&self, food: &SRLegacyFoodDetails) -> Vec<PortionUnit> {
+    fn parse_portion_units(food: &SRLegacyFoodDetails) -> Vec<PortionUnit> {
         food.food_portions
             .iter()
             .filter_map(|portion| {
@@ -186,20 +187,18 @@ impl NutritionDataSource {
     }
 
     fn calculate_ingredient_weight(
-        &self,
         food: &SRLegacyFoodDetails,
         ing: &IngredientForCalculation<'_>,
     ) -> f64 {
-        let portion_units = self.parse_portion_units(food);
+        let portion_units = Self::parse_portion_units(food);
 
         match &ing.unit {
-            Unit::Unitless(u) => self.calculate_unitless_weight(&portion_units, ing, u.value),
-            _ => self.calculate_unit_weight(&portion_units, ing),
+            Unit::Unitless(u) => Self::calculate_unitless_weight(&portion_units, ing, u.value),
+            _ => Self::calculate_unit_weight(&portion_units, ing),
         }
     }
 
     fn calculate_unitless_weight(
-        &self,
         portion_units: &[PortionUnit],
         ing: &IngredientForCalculation<'_>,
         value: f64,
@@ -208,18 +207,17 @@ impl NutritionDataSource {
             ing.original
                 .contains(p.modifier.split_ascii_whitespace().next().unwrap_or(""))
         }) {
-            return self.scale_by_amount(value, portion.amount, portion.gram_weight);
+            return Self::scale_by_amount(value, portion.amount, portion.gram_weight);
         }
 
         if let Some(portion) = portion_units.iter().find(|p| p.modifier == "medium") {
-            return self.scale_by_amount(value, portion.amount, portion.gram_weight);
+            return Self::scale_by_amount(value, portion.amount, portion.gram_weight);
         }
 
         1.0
     }
 
     fn calculate_unit_weight(
-        &self,
         portion_units: &[PortionUnit],
         ing: &IngredientForCalculation<'_>,
     ) -> f64 {
@@ -232,20 +230,20 @@ impl NutritionDataSource {
                     .original
                     .contains(p.modifier.rsplit(", ").next().unwrap_or_default())
         }) {
-            return self.scale_by_amount(ing_amount, portion.amount, portion.gram_weight);
+            return Self::scale_by_amount(ing_amount, portion.amount, portion.gram_weight);
         }
 
         if let Some(portion) = portion_units
             .iter()
             .find(|p| ing_unit_type == p.unit.unit_type())
         {
-            return self.scale_by_amount(ing_amount, portion.amount, portion.gram_weight);
+            return Self::scale_by_amount(ing_amount, portion.amount, portion.gram_weight);
         }
 
         2.0
     }
 
-    fn scale_by_amount(&self, ing_amount: f64, portion_amount: f64, gram_weight: f64) -> f64 {
+    fn scale_by_amount(ing_amount: f64, portion_amount: f64, gram_weight: f64) -> f64 {
         if (ing_amount - portion_amount).abs() < f64::EPSILON {
             gram_weight
         } else {
@@ -254,7 +252,6 @@ impl NutritionDataSource {
     }
 
     fn scale_nutrition_to_weight(
-        &self,
         nutrition: NutritionComponents,
         weight: f64,
     ) -> CalculatedNutrition {
@@ -267,10 +264,9 @@ impl NutritionDataSource {
     }
 
     fn aggregate_nutrition(
-        &self,
-        nutrition_data: Vec<(f64, CalculatedNutrition)>,
+        nutrition_data: &[(f64, CalculatedNutrition)],
         num_servings: i16,
-    ) -> Result<CalculatedNutrition> {
+    ) -> CalculatedNutrition {
         let total_weight: f64 = nutrition_data.iter().map(|(w, _)| w).sum();
         let scale_per_100g = 100.0 / total_weight;
 
@@ -292,10 +288,10 @@ impl NutritionDataSource {
                 })
                 / num_servings;
 
-        Ok(CalculatedNutrition {
+        CalculatedNutrition {
             per_100g,
             per_serving,
-        })
+        }
     }
 
     /// Updates the nutrition data for all sources.
@@ -324,34 +320,32 @@ impl NutritionDataSource {
         Ok(())
     }
 
-    fn id(&self) -> i16 {
+    const fn id(&self) -> i16 {
         match self {
-            NutritionDataSource::USDAFoodDataCentral => 1,
-            NutritionDataSource::Unknown => 0,
+            Self::USDAFoodDataCentral => 1,
+            Self::Unknown => 0,
         }
     }
 
     /// Updates the nutrition source's data. If the data is already up to date, it will not be updated.
     pub async fn update_data(&self, mm: &ModelManager) -> Result<()> {
         match self {
-            NutritionDataSource::USDAFoodDataCentral => {
-                match FdcParser::new().fetch(&FdcClient::new(mm)).await {
-                    Ok(f) => {
-                        f.push_into_database(mm).await?;
-                        info!("Updated nutrition data for '{self}'");
-                        Ok(())
-                    }
-                    Err(Error::NoNeedToUpdateNutrition) => {
-                        warn!("Nutrition data '{self}' already up to date.");
-                        Ok(())
-                    }
-                    Err(err) => {
-                        error!("Failed to update nutrition data '{self}': {err}");
-                        Err(err)
-                    }
+            Self::USDAFoodDataCentral => match FdcParser::new().fetch(&FdcClient::new(mm)).await {
+                Ok(f) => {
+                    f.push_into_database(mm).await?;
+                    info!("Updated nutrition data for '{self}'");
+                    Ok(())
                 }
-            }
-            NutritionDataSource::Unknown => Err(Error::NoNeedToUpdateNutrition),
+                Err(Error::NoNeedToUpdateNutrition) => {
+                    warn!("Nutrition data '{self}' already up to date.");
+                    Ok(())
+                }
+                Err(err) => {
+                    error!("Failed to update nutrition data '{self}': {err}");
+                    Err(err)
+                }
+            },
+            Self::Unknown => Err(Error::NoNeedToUpdateNutrition),
         }
     }
 }
@@ -359,8 +353,8 @@ impl NutritionDataSource {
 impl From<i16> for NutritionDataSource {
     fn from(id: i16) -> Self {
         match id {
-            1 => NutritionDataSource::USDAFoodDataCentral,
-            _ => NutritionDataSource::Unknown,
+            1 => Self::USDAFoodDataCentral,
+            _ => Self::Unknown,
         }
     }
 }

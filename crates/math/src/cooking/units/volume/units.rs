@@ -47,7 +47,7 @@ pub enum Volume {
     Jigger(f64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum VolumeUnit {
     // Metric
     Millilitre,
@@ -91,6 +91,12 @@ pub enum VolumeUnit {
 
 static VOLUME_REGEX: OnceLock<Regex> = OnceLock::new();
 
+/// Returns a compiled regex for matching volume units.
+///
+/// # Panics
+///
+/// Panics if the regex pattern is invalid. This should never happen in practice
+/// as the pattern is hardcoded and tested.
 pub fn get_regex<'a>() -> &'a Regex {
     VOLUME_REGEX.get_or_init(|| {
         Regex::new(r"(?i)(\d(?:\s?[\d.]*/?\d+)?)\s?(fl(?:uid)?\.?\s?o(?:z\.?|unce)?|[a-z]+\b)")
@@ -141,24 +147,24 @@ impl FromStr for Volume {
                 let unit = caps.get(2)?.as_str().to_lowercase();
 
                 match unit.trim_end_matches('s') {
-                    "ml" | "millilitre" | "milliliter" => Some(Volume::Millilitre(value)),
-                    "cl" | "centilitre" | "centiliter" => Some(Volume::Centilitre(value)),
-                    "dl" | "decilitre" | "deciliter" => Some(Volume::Decilitre(value)),
-                    "l" | "litre" | "liter" => Some(Volume::Litre(value)),
-                    "tsp" | "t" | "teaspoon" => Some(Volume::MetricTeaspoon(value)),
-                    "tbsp" | "tb" | "tablespoon" => Some(Volume::MetricTablespoon(value)),
+                    "ml" | "millilitre" | "milliliter" => Some(Self::Millilitre(value)),
+                    "cl" | "centilitre" | "centiliter" => Some(Self::Centilitre(value)),
+                    "dl" | "decilitre" | "deciliter" => Some(Self::Decilitre(value)),
+                    "l" | "litre" | "liter" => Some(Self::Litre(value)),
+                    "tsp" | "t" | "teaspoon" => Some(Self::MetricTeaspoon(value)),
+                    "tbsp" | "tb" | "tablespoon" => Some(Self::MetricTablespoon(value)),
                     "dsp" | "d" | "dstsp" | "dessertspoon" | "dessert" => {
-                        Some(Volume::MetricDessertspoon(value))
+                        Some(Self::MetricDessertspoon(value))
                     }
-                    "c" | "cup" => Some(Volume::MetricCup(value)),
+                    "c" | "cup" => Some(Self::MetricCup(value)),
                     "floz" | "fl. oz." | "fluid ounce" | "oz fl" => {
-                        Some(Volume::ImperialFluidOunce(value))
+                        Some(Self::ImperialFluidOunce(value))
                     }
-                    "gi" | "gill" => Some(Volume::ImperialGill(value)),
-                    "pt" | "pint" => Some(Volume::ImperialPint(value)),
-                    "qt" | "quart" => Some(Volume::ImperialQuart(value)),
-                    "gal" | "gallon" => Some(Volume::ImperialGallon(value)),
-                    "jig" | "jigger" => Some(Volume::Jigger(value)),
+                    "gi" | "gill" => Some(Self::ImperialGill(value)),
+                    "pt" | "pint" => Some(Self::ImperialPint(value)),
+                    "qt" | "quart" => Some(Self::ImperialQuart(value)),
+                    "gal" | "gallon" => Some(Self::ImperialGallon(value)),
+                    "jig" | "jigger" => Some(Self::Jigger(value)),
                     _ => None,
                 }
             })

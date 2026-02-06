@@ -6,7 +6,7 @@ use crate::templates::layouts;
 pub fn forgot_password() -> Markup {
     layouts::auth(
         "Forgot Password",
-        html! {
+        &html! {
             div #container {
                 form
                     class="card w-80 sm:w-96 bg-base-100 shadow-xl"
@@ -37,7 +37,7 @@ pub fn forgot_password() -> Markup {
 pub fn forgot_password_reset(token: &str) -> Markup {
     layouts::auth(
         "Reset Password",
-        html! {
+        &html! {
             div #container {
                 form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-boost="true" hx-target="#container" hx-swap="none" hx-post="/auth/forgot-password/reset" {
                     div class="card-body" {
@@ -69,7 +69,7 @@ pub fn forgot_password_reset(token: &str) -> Markup {
 pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
     layouts::auth(
         "Login",
-        html! {
+        &html! {
             form class="card w-80 sm:w-96 bg-base-100 shadow-xl" method="post" action="/auth/login" {
                 div class="card-body" {
                     h2 class="card-title underline self-center" {
@@ -119,7 +119,7 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
 pub fn register() -> Markup {
     layouts::auth(
         "Register",
-        html! {
+        &html! {
              form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/register" method="post" {
                 div class="card-body" {
                     h2 class="card-title underline self-center" {

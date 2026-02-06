@@ -23,11 +23,11 @@ pub enum Unit {
 impl Unit {
     pub fn replace(&self, s: impl Into<String>) -> String {
         let re = match self {
-            Unit::Length(_) => length::units::get_regex(),
-            Unit::Mass(_) => mass::units::get_regex(),
-            Unit::Temperature(_) => temperature::units::get_regex(),
-            Unit::Volume(_) => volume::units::get_regex(),
-            Unit::Unitless(_) => unitless::units::get_regex(),
+            Self::Length(_) => length::units::get_regex(),
+            Self::Mass(_) => mass::units::get_regex(),
+            Self::Temperature(_) => temperature::units::get_regex(),
+            Self::Volume(_) => volume::units::get_regex(),
+            Self::Unitless(_) => unitless::units::get_regex(),
         };
 
         let s: String = s.into();
@@ -38,41 +38,41 @@ impl Unit {
 impl UnitOperations for Unit {
     fn abbrev(&self) -> &str {
         match self {
-            Unit::Length(u) => u.abbrev(),
-            Unit::Mass(u) => u.abbrev(),
-            Unit::Temperature(u) => u.abbrev(),
-            Unit::Volume(u) => u.abbrev(),
-            Unit::Unitless(u) => u.abbrev(),
+            Self::Length(u) => u.abbrev(),
+            Self::Mass(u) => u.abbrev(),
+            Self::Temperature(u) => u.abbrev(),
+            Self::Volume(u) => u.abbrev(),
+            Self::Unitless(u) => u.abbrev(),
         }
     }
 
     fn unit_type(&self) -> UnitType {
         match self {
-            Unit::Length(u) => u.unit_type(),
-            Unit::Mass(u) => u.unit_type(),
-            Unit::Temperature(u) => u.unit_type(),
-            Unit::Volume(u) => u.unit_type(),
-            Unit::Unitless(u) => u.unit_type(),
+            Self::Length(u) => u.unit_type(),
+            Self::Mass(u) => u.unit_type(),
+            Self::Temperature(u) => u.unit_type(),
+            Self::Volume(u) => u.unit_type(),
+            Self::Unitless(u) => u.unit_type(),
         }
     }
 
     fn value(&self) -> f64 {
         match self {
-            Unit::Length(unit) => unit.value(),
-            Unit::Mass(unit) => unit.value(),
-            Unit::Temperature(unit) => unit.value(),
-            Unit::Volume(unit) => unit.value(),
-            Unit::Unitless(u) => u.value(),
+            Self::Length(unit) => unit.value(),
+            Self::Mass(unit) => unit.value(),
+            Self::Temperature(unit) => unit.value(),
+            Self::Volume(unit) => unit.value(),
+            Self::Unitless(u) => u.value(),
         }
     }
 
     fn with_value(&self, value: f64) -> Self {
         match self {
-            Unit::Length(unit) => Unit::Length(unit.with_value(value)),
-            Unit::Mass(unit) => Unit::Mass(unit.with_value(value)),
-            Unit::Temperature(unit) => Unit::Temperature(unit.with_value(value)),
-            Unit::Volume(unit) => Unit::Volume(unit.with_value(value)),
-            Unit::Unitless(u) => Unit::Unitless(u.with_value(value)),
+            Self::Length(unit) => Self::Length(unit.with_value(value)),
+            Self::Mass(unit) => Self::Mass(unit.with_value(value)),
+            Self::Temperature(unit) => Self::Temperature(unit.with_value(value)),
+            Self::Volume(unit) => Self::Volume(unit.with_value(value)),
+            Self::Unitless(u) => Self::Unitless(u.with_value(value)),
         }
     }
 }
@@ -80,11 +80,11 @@ impl UnitOperations for Unit {
 impl UnitConverter for Unit {
     fn convert(&self, to: UnitType) -> Result<Unit> {
         match self {
-            Unit::Length(u) => u.convert(to),
-            Unit::Mass(u) => u.convert(to),
-            Unit::Temperature(u) => u.convert(to),
-            Unit::Volume(u) => u.convert(to),
-            Unit::Unitless(_) => Ok(self.clone()),
+            Self::Length(u) => u.convert(to),
+            Self::Mass(u) => u.convert(to),
+            Self::Temperature(u) => u.convert(to),
+            Self::Volume(u) => u.convert(to),
+            Self::Unitless(_) => Ok(self.clone()),
         }
     }
 }
@@ -97,11 +97,11 @@ impl UnitScaler for Unit {
         }
 
         match self {
-            Unit::Length(u) => u.scale(factor),
-            Unit::Mass(u) => u.scale(factor),
-            Unit::Volume(u) => u.scale(factor),
-            Unit::Temperature(_) => Err(Error::InvalidScale),
-            Unit::Unitless(u) => u.scale(factor),
+            Self::Length(u) => u.scale(factor),
+            Self::Mass(u) => u.scale(factor),
+            Self::Volume(u) => u.scale(factor),
+            Self::Temperature(_) => Err(Error::InvalidScale),
+            Self::Unitless(u) => u.scale(factor),
         }
     }
 }
@@ -115,18 +115,19 @@ impl fmt::Display for Unit {
             "{}{}",
             format_fractional(self.value()),
             match self {
-                Unit::Length(u) => match u {
+                Self::Length(u) => match u {
                     Length::Inch(_) | Length::Foot(_) => abbrev.to_string(),
                     _ => format!(" {abbrev}"),
                 },
-                Unit::Temperature(_) => abbrev.to_string(),
-                Unit::Volume(_) | Unit::Mass(_) => format!(" {abbrev}"),
-                Unit::Unitless(_) => abbrev.to_string(),
+                Self::Temperature(_) | Self::Unitless(_) => abbrev.to_string(),
+                Self::Volume(_) | Self::Mass(_) => format!(" {abbrev}"),
             }
         )
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::cast_sign_loss)]
 fn format_fractional(value: f64) -> String {
     let whole = value.trunc();
     let frac = value.fract();
@@ -135,9 +136,9 @@ fn format_fractional(value: f64) -> String {
     let mut best = None;
     let mut best_error = f64::MAX;
 
-    for &den in denominators.iter() {
-        let num = (frac * den as f64).round();
-        let approx = num / den as f64;
+    for &den in &denominators {
+        let num = (frac * f64::from(den)).round();
+        let approx = num / f64::from(den);
         let error = (frac - approx).abs();
 
         if error < best_error {
@@ -164,15 +165,15 @@ impl FromStr for Unit {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         if let Ok(v) = Volume::from_str(s) {
-            Ok(Unit::Volume(v))
+            Ok(Self::Volume(v))
         } else if let Ok(v) = Mass::from_str(s) {
-            Ok(Unit::Mass(v))
+            Ok(Self::Mass(v))
         } else if let Ok(v) = Length::from_str(s) {
-            Ok(Unit::Length(v))
+            Ok(Self::Length(v))
         } else if let Ok(v) = Temperature::from_str(s) {
-            Ok(Unit::Temperature(v))
+            Ok(Self::Temperature(v))
         } else {
-            Ok(Unit::Unitless(Unitless::from_str(s)?))
+            Ok(Self::Unitless(Unitless::from_str(s)?))
         }
     }
 }

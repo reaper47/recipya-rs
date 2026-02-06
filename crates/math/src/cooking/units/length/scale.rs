@@ -1,4 +1,7 @@
-use measurements::length::*;
+use measurements::length::{
+    METER_CENTIMETER_FACTOR, METER_FEET_FACTOR, METER_INCH_FACTOR, METER_KILOMETER_FACTOR,
+    METER_MILLIMETER_FACTOR,
+};
 
 use crate::Result;
 use crate::cooking::units::length::units::Length;
@@ -10,40 +13,37 @@ impl UnitScaler for Length {
         let scaled_value = self.value() * factor;
 
         match self {
-            Length::Millimetre(_)
-            | Length::Centimetre(_)
-            | Length::Metre(_)
-            | Length::Kilometre(_) => {
+            Self::Millimetre(_) | Self::Centimetre(_) | Self::Metre(_) | Self::Kilometre(_) => {
                 let metres_base = match self {
-                    Length::Millimetre(_) => scaled_value / METER_MILLIMETER_FACTOR,
-                    Length::Centimetre(_) => scaled_value / METER_CENTIMETER_FACTOR,
-                    Length::Metre(_) => scaled_value,
-                    Length::Kilometre(_) => scaled_value / METER_KILOMETER_FACTOR,
-                    Length::Inch(_) => scaled_value / METER_INCH_FACTOR,
-                    Length::Foot(_) => scaled_value / METER_FEET_FACTOR,
+                    Self::Millimetre(_) => scaled_value / METER_MILLIMETER_FACTOR,
+                    Self::Centimetre(_) => scaled_value / METER_CENTIMETER_FACTOR,
+                    Self::Metre(_) => scaled_value,
+                    Self::Kilometre(_) => scaled_value / METER_KILOMETER_FACTOR,
+                    Self::Inch(_) => scaled_value / METER_INCH_FACTOR,
+                    Self::Foot(_) => scaled_value / METER_FEET_FACTOR,
                 };
 
                 if metres_base >= 1e3 {
-                    Ok(Unit::Length(Length::Kilometre(metres_base * 1e-3)))
+                    Ok(Unit::Length(Self::Kilometre(metres_base * 1e-3)))
                 } else if metres_base >= 1.0 {
-                    Ok(Unit::Length(Length::Metre(metres_base)))
+                    Ok(Unit::Length(Self::Metre(metres_base)))
                 } else if metres_base >= 1e-2 {
-                    Ok(Unit::Length(Length::Centimetre(metres_base * 1e2)))
+                    Ok(Unit::Length(Self::Centimetre(metres_base * 1e2)))
                 } else {
-                    Ok(Unit::Length(Length::Millimetre(metres_base * 1e3)))
+                    Ok(Unit::Length(Self::Millimetre(metres_base * 1e3)))
                 }
             }
-            Length::Inch(_) | Length::Foot(_) => {
+            Self::Inch(_) | Self::Foot(_) => {
                 let inches_base = match self {
-                    Length::Inch(_) => scaled_value,
-                    Length::Foot(_) => scaled_value * 12.0,
+                    Self::Inch(_) => scaled_value,
+                    Self::Foot(_) => scaled_value * 12.0,
                     _ => unreachable!(),
                 };
 
                 if inches_base >= 12.0 {
-                    Ok(Unit::Length(Length::Foot(inches_base / 12.0)))
+                    Ok(Unit::Length(Self::Foot(inches_base / 12.0)))
                 } else {
-                    Ok(Unit::Length(Length::Inch(inches_base)))
+                    Ok(Unit::Length(Self::Inch(inches_base)))
                 }
             }
         }

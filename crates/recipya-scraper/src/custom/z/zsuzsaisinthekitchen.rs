@@ -47,10 +47,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .find(|el| el.text().any(|t| t.contains(&title)))
             .map(|node| {
                 node.next_siblings()
-                    .take_while(|n| match n.value().as_element() {
-                        Some(el) => el.name() != "ul",
-                        None => true,
-                    })
+                    .take_while(|n| n.value().as_element().is_none_or(|el| el.name() != "ul"))
                     .filter_map(|node| {
                         node.value().as_element().and_then(|_| {
                             let text = scraper::ElementRef::wrap(node)?

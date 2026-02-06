@@ -17,7 +17,7 @@ pub struct Credentials {
 
 impl Credentials {
     /// Creates a new set of credentials.
-    pub fn new(username: String, password: String) -> Self {
+    pub const fn new(username: String, password: String) -> Self {
         Self { username, password }
     }
 }
@@ -26,7 +26,7 @@ pub struct AuthenticatedState;
 pub struct UnauthenticatedState;
 
 /// Assembles a token header for authentication.
-pub fn assemble_token_header(auth_type: AuthType, token: &str) -> Result<HeaderMap> {
+pub fn assemble_token_header(auth_type: &AuthType, token: &str) -> Result<HeaderMap> {
     let mut headers = HeaderMap::new();
     headers.insert(
         AUTHORIZATION,
@@ -47,8 +47,8 @@ impl fmt::Display for AuthType {
             f,
             "{}",
             match self {
-                AuthType::Basic => "Basic",
-                AuthType::Bearer => "Bearer",
+                Self::Basic => "Basic",
+                Self::Bearer => "Bearer",
             }
         )
     }

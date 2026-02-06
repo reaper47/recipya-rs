@@ -33,8 +33,11 @@ pub struct NutritionComponents {
 impl std::ops::Mul<f64> for NutritionComponents {
     type Output = Self;
 
+    #[allow(clippy::cast_possible_truncation)]
     fn mul(mut self, rhs: f64) -> Self {
-        self.calories_kcal = (self.calories_kcal as f64 * rhs).round() as i16;
+        self.calories_kcal = (f64::from(self.calories_kcal) * rhs)
+            .round()
+            .clamp(f64::from(i16::MIN), f64::from(i16::MAX)) as i16;
         self.total_carbohydrates *= rhs;
         self.sugars_g *= rhs;
         self.protein_g *= rhs;
@@ -53,17 +56,18 @@ impl std::ops::Div<i16> for NutritionComponents {
     type Output = Self;
 
     fn div(mut self, rhs: i16) -> Self {
+        let rhsf64 = f64::from(rhs);
         self.calories_kcal /= rhs;
-        self.total_carbohydrates /= rhs as f64;
-        self.sugars_g /= rhs as f64;
-        self.protein_g /= rhs as f64;
-        self.total_fat_g /= rhs as f64;
-        self.saturated_fat_g /= rhs as f64;
-        self.unsaturated_fat_g /= rhs as f64;
-        self.cholesterol_mg /= rhs as f64;
-        self.sodium_mg /= rhs as f64;
-        self.fiber_g /= rhs as f64;
-        self.trans_fat_g /= rhs as f64;
+        self.total_carbohydrates /= rhsf64;
+        self.sugars_g /= rhsf64;
+        self.protein_g /= rhsf64;
+        self.total_fat_g /= rhsf64;
+        self.saturated_fat_g /= rhsf64;
+        self.unsaturated_fat_g /= rhsf64;
+        self.cholesterol_mg /= rhsf64;
+        self.sodium_mg /= rhsf64;
+        self.fiber_g /= rhsf64;
+        self.trans_fat_g /= rhsf64;
         self
     }
 }

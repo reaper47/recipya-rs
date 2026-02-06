@@ -14,9 +14,9 @@ pub enum ReportTypes {
 }
 
 impl ReportTypes {
-    fn to_id(&self) -> i16 {
+    const fn to_id(&self) -> i16 {
         match self {
-            ReportTypes::Import => 1,
+            Self::Import => 1,
         }
     }
 }
@@ -32,7 +32,7 @@ pub struct ReportForCreate {
 
 impl ReportForCreate {
     /// Creates a new report with all the data required to insert into the database later on.
-    pub fn new(report_type: ReportTypes, user_id: Uuid) -> Self {
+    pub const fn new(report_type: &ReportTypes, user_id: Uuid) -> Self {
         Self {
             report_type_id: report_type.to_id(),
             user_id,
@@ -94,6 +94,7 @@ struct ReportType {
 
 /// Represents a collection of reports for the database.
 #[allow(dead_code)]
+#[allow(clippy::struct_field_names)]
 #[derive(Default, Associations, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = schema::reports)]
 #[diesel(belongs_to(ReportType))]
@@ -117,7 +118,7 @@ struct ReportForInsert {
 }
 
 /// Represents the details of a report.
-#[derive(Debug, PartialEq, Associations, Identifiable, Queryable, Selectable)]
+#[derive(Debug, Eq, PartialEq, Associations, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = schema::reports_logs)]
 #[diesel(belongs_to(Report))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -196,7 +197,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let mut report = ReportForCreate::new(ReportTypes::Import, user.id);
+        let mut report = ReportForCreate::new(&ReportTypes::Import, user.id);
         let warning_report = ReportLogForCreate::new_warning("Warning".into(), String::new());
         let error_report =
             ReportLogForCreate::new_error("Error".into(), "An error occurred".into());

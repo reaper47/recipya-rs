@@ -42,12 +42,12 @@ impl From<RecipeComponents<'_>> for Recipe {
             .category
             .into_iter()
             .filter(|&s| !s.trim().is_empty())
-            .map(|s| s.to_string())
+            .map(std::string::ToString::to_string)
             .collect::<Vec<_>>()
             .as_slice()
         {
             [first, rest @ ..] => (
-                first.to_string(),
+                first.clone(),
                 rest.iter().map(|s| s.trim().to_string()).collect(),
             ),
             [] => match r.keywords.as_slice() {
@@ -78,7 +78,7 @@ impl From<RecipeComponents<'_>> for Recipe {
             recipe_category: vec![category],
             recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions: r.instructions.to_sections(),
-            recipe_yield: to_yield(r.r#yield as i64),
+            recipe_yield: to_yield(i64::from(r.r#yield)),
             ..Default::default()
         }
     }
@@ -259,10 +259,7 @@ fn parse_ingredient_block<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>
                             acc.push(item.clone());
                         }
                     }
-                    Ingredient::Section(_) => {
-                        acc.push(item.clone());
-                    }
-                    _ => {
+                    Ingredient::Section(_) | Ingredient::Line(_) => {
                         acc.push(item.clone());
                     }
                 }
@@ -939,21 +936,21 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     name: vec!["Flammenkuchen von Marc".into()],
                     recipe_category: vec!["Frankreich".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", &[
                             "6 Essl. Mehl",
                             "1/2 Teel. ; Salz",
                             "1 Prise ; Pfeffer",
                             "1/2 Würfel Hefe",
                             "1/4 Litr. ; Wasser - (lauwarm)",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", &[
                             "250 Gramm Quark - 40% Fett",
                             "1 Be Saure Sahne",
                             "1/2 Teel. ; Salz",
                             "1 Prise ; Pfeffer",
                             "1 Zitrone",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", &[
                             "5 groß. Zwiebel",
                             "125 Gramm Durchwachsener Speck",
                             "125 Gramm Reibkäse - (optional)",
@@ -1014,13 +1011,13 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                     name: vec!["Zwiebelkuchen".into()],
                     recipe_category: vec!["Backen".into()],
                     recipe_ingredient: vec![
-                        RecipeRecipeIngredientFieldEnum::new_section("Teig", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Teig", &[
                             "250 Gramm Mehl",
                             "125 Gramm Margarine",
                             "1 Prise Salz",
                             "1 Eier",
                         ]),
-                        RecipeRecipeIngredientFieldEnum::new_section("Füllung", vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Füllung", &[
                             "6 groß. Zwiebeln",
                             "75 Gramm Butter",
                             "1 Be Joghurt",

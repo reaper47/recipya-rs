@@ -21,10 +21,10 @@ use crate::{Error, Result};
 
 /// Renders the edit recipe page.
 pub fn edit_recipe(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     mut data: Data,
     data_dir: &DataDir,
-    user_setting: UserSettingDetails,
+    user_setting: &UserSettingDetails,
     categories: Vec<Category>,
     keywords: Vec<Keyword>,
 ) -> Result<Markup> {
@@ -44,17 +44,17 @@ pub fn edit_recipe(
                 (page_title) " | Recipya"
             }
             span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
-            (render_edit_recipe(fs_support, view, &data_dir, categories, keywords))
+            (render_edit_recipe(fs_support, &view, data_dir, categories, keywords))
         } @else {
-            (layouts::main(&page_title, &path, &data, render_edit_recipe(fs_support, view, data_dir, categories, keywords), user_setting, true))
+            (layouts::main(&page_title, &path, &data, &render_edit_recipe(fs_support, &view, data_dir, categories, keywords), user_setting, true))
         }
         (init_recipe_form_js())
     })
 }
 
 fn render_edit_recipe(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
-    view: ViewRecipe,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
+    view: &ViewRecipe,
     data_dir: &DataDir,
     categories: Vec<Category>,
     keywords: Vec<Keyword>,
@@ -66,7 +66,7 @@ fn render_edit_recipe(
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
                     form .card-body.contents style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
-                        (render_title(&view))
+                        (render_title(view))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
                                 div #media-container class="grid grid-flow-col w-full text-center grid-cols-7 md:col-span-3 md:border-r dark:border-gray-700" {
@@ -90,7 +90,7 @@ fn render_edit_recipe(
                                             "Add"
                                         }
                                     }
-                                    (render_media(&view, fs_support, data_dir))
+                                    (render_media(view, fs_support, data_dir))
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
@@ -101,22 +101,22 @@ fn render_edit_recipe(
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
                                         div class="grid grid-flow-col grid-cols-3 gap-2 border-b border-t border-gray-700 px-2 md:col-span-2 md:border-b-0 md:border-r md:border-t-0 md:px-0" {
                                             div class="col-span-2 border-r border-gray-700 pb-2 px-2" {
-                                                (render_categories(&view, categories))
+                                                (render_categories(view, categories))
                                             }
                                             div class="col-span-1 pb-2" {
-                                                (render_yield(&view))
+                                                (render_yield(view))
                                             }
                                         }
                                         div class="relative px-2 pb-2 md:pr-0" {
-                                            (render_source(&view))
+                                            (render_source(view))
                                         }
                                     }
                                     div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
-                                        (render_keywords(&view, keywords))
+                                        (render_keywords(view, keywords))
                                     }
                                     div class="grid grid-flow-col col-span-6 py-1 border-b" {
                                         div class="contents grid grid-flow-col" {
-                                            (render_times(&view))
+                                            (render_times(view))
                                         }
                                     }
                                     div class="grid grid-flow-col col-span-6" {
@@ -126,7 +126,7 @@ fn render_edit_recipe(
                                             }
                                         }
                                          div class="grid grid-flow-col col-span-6 border-gray-700 overflow-x-auto" {
-                                            (render_nutrition(&view))
+                                            (render_nutrition(view))
                                         }
                                     }
                                 }
@@ -134,12 +134,12 @@ fn render_edit_recipe(
                         }
                         div #ingredients-instructions-container class="md:border-t grid text-sm md:grid-flow-col md:col-span-6 dark:border-gray-700" {
                             div class="col-span-6 px-2 py-2 border-y md:col-span-2 md:border-r md:border-y-0 dark:border-gray-700" {
-                                (render_tools(&view))
+                                (render_tools(view))
                                 div .divider {}
-                                (render_ingredients(&view))
+                                (render_ingredients(view))
                             }
                             div class="col-span-6 px-6 py-2 border-gray-700 md:rounded-bl-none md:col-span-4" {
-                                (render_instructions(&view))
+                                (render_instructions(view))
                             }
                         }
                         @let notes = view.recipe_details.recipe.notes.as_ref().map_or(String::new(), ToString::to_string);
@@ -254,7 +254,7 @@ fn render_keywords(view: &ViewRecipe, keywords: Vec<Keyword>) -> Markup {
 
 fn render_media(
     view: &ViewRecipe,
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     data_dir: &DataDir,
 ) -> Markup {
     html! {
@@ -350,16 +350,16 @@ fn render_nutrition(view: &ViewRecipe) -> Markup {
             (nutrition_table_header())
             tbody {
                 @let format_nutrition = |value: Option<f64>, unit: &str| -> String {
-                    value.map_or("-".into(), |v| if v < 1.0 {
-                        format!("{:.2}{unit}", v)
+                    value.map_or_else(|| "-".into(), |v| if v < 1.0 {
+                        format!("{v:.2}{unit}")
                     } else {
-                        format!("{:.0}{unit}", v)
+                        format!("{v:.0}{unit}")
                     })
                 };
 
                 @let nutrition = view.recipe_details.nutrition.per_100g.as_ref();
                 @for (name, name_attr, placeholder, value) in [
-                    ("Calories", "calories-per-100g", "368kcal", format_nutrition(nutrition.and_then(|n| n.calories_kcal.map(|v| v.into())), " kcal")),
+                    ("Calories", "calories-per-100g", "368kcal", format_nutrition(nutrition.and_then(|n| n.calories_kcal.map(Into::into)), " kcal")),
                     ("Total carbs", "total-carbohydrates-per-100g", "35g", format_nutrition(nutrition.and_then(|n| n.total_carbohydrates), "g")),
                     ("Sugars", "sugars-per-100g", "3g", format_nutrition(nutrition.and_then(|n| n.sugars_g), "g")),
                     ("Protein", "protein-per-100g", "21g", format_nutrition(nutrition.and_then(|n| n.protein_g), "g")),
@@ -383,8 +383,8 @@ fn render_nutrition(view: &ViewRecipe) -> Markup {
 
                 @let nutrition = view.recipe_details.nutrition.per_serving.as_ref();
                 @for (name, name_attr, placeholder, value) in [
-                    ("Serving size", "serving-size", "1/4 cup (45g)", nutrition.map(|nutrition| nutrition.serving_size.clone()).unwrap_or("-".into())),
-                    ("Calories", "calories-per-serving", "368kcal", format_nutrition(nutrition.and_then(|n| n.nutrition.calories_kcal.map(|v| v.into())), " kcal")),
+                    ("Serving size", "serving-size", "1/4 cup (45g)", nutrition.map_or_else(|| "-".into(), |nutrition| nutrition.serving_size.clone())),
+                    ("Calories", "calories-per-serving", "368kcal", format_nutrition(nutrition.and_then(|n| n.nutrition.calories_kcal.map(Into::into)), " kcal")),
                     ("Total carbs", "total-carbohydrates-per-serving", "35g", format_nutrition(nutrition.and_then(|n| n.nutrition.total_carbohydrates), "g")),
                     ("Sugars", "sugars-per-serving", "3g", format_nutrition(nutrition.and_then(|n| n.nutrition.sugars_g), "g")),
                     ("Protein", "protein-per-serving", "21g", format_nutrition(nutrition.and_then(|n| n.nutrition.protein_g), "g")),
@@ -434,7 +434,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             }
             label {
                 input type="text" name="time-prep"
-                    value=(view.formatted_times.prep_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.prep_edit.clone()))
+                    value=(if view.formatted_times.prep_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.prep_edit.clone() })
                     class="input input-xs max-w-24 html-duration-picker";
             }
         }
@@ -444,7 +444,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             }
             label {
                 input type="text" name="time-cook"
-                    value=(view.formatted_times.cook_edit.is_empty().then(|| "00:15:00".to_string()).unwrap_or_else(|| view.formatted_times.cook_edit.clone()))
+                    value=(if view.formatted_times.cook_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.cook_edit.clone() })
                     class="input input-xs max-w-24 html-duration-picker";
             }
         }

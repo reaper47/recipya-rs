@@ -1,6 +1,7 @@
 use axum::extract::{OriginalUri, Path, State};
 use axum::http::HeaderMap;
 use axum::response::IntoResponse;
+use iso8601::DateTime;
 use tracing::error;
 use uuid::Uuid;
 
@@ -50,10 +51,10 @@ pub async fn share_recipe_handler(
                 .unwrap_or_default();
 
             templates::recipes::view_recipe(
-                state.fs_support,
+                &state.fs_support,
                 uri.path(),
-                state.data_dir,
-                Data {
+                &state.data_dir,
+                &Data {
                     is_admin: user.is_admin,
                     is_authenticated: true,
                     is_autologin: state.config.read().await.is_autologin,
@@ -63,9 +64,9 @@ pub async fn share_recipe_handler(
                     about: AboutData {
                         is_update_available: false,
                         is_check_update: false,
-                        last_checked_update_at: Default::default(),
-                        last_updated_at: Default::default(),
-                        version: "".to_string(),
+                        last_checked_update_at: DateTime::default(),
+                        last_updated_at: DateTime::default(),
+                        version: String::new(),
                     },
                     pagination: None,
                     searchbar: None,
@@ -78,14 +79,14 @@ pub async fn share_recipe_handler(
                         formatted_times,
                     }],
                 },
-                settings,
+                &settings,
             )
         }
         None => templates::recipes::view_recipe(
-            state.fs_support,
+            &state.fs_support,
             uri.path(),
-            state.data_dir,
-            Data {
+            &state.data_dir,
+            &Data {
                 is_admin: false,
                 is_authenticated: true,
                 is_autologin: state.config.read().await.is_autologin,
@@ -95,9 +96,9 @@ pub async fn share_recipe_handler(
                 about: AboutData {
                     is_update_available: false,
                     is_check_update: false,
-                    last_checked_update_at: Default::default(),
-                    last_updated_at: Default::default(),
-                    version: "".to_string(),
+                    last_checked_update_at: DateTime::default(),
+                    last_updated_at: DateTime::default(),
+                    version: String::new(),
                 },
                 pagination: None,
                 searchbar: None,
@@ -110,7 +111,7 @@ pub async fn share_recipe_handler(
                     formatted_times,
                 }],
             },
-            UserSettingDetails::default(),
+            &UserSettingDetails::default(),
         ),
     };
 

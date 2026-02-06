@@ -3,7 +3,7 @@ use crate::cooking::units::{
     volume::units::VolumeUnit,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum UnitType {
     Length(LengthUnit),
     Mass(MassUnit),

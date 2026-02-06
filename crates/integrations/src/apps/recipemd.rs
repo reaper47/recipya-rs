@@ -5,12 +5,14 @@ use schema_org::field::{
     RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
     RecipeRecipeInstructionsFieldEnum,
 };
+use tracing::error;
 
 use crate::apps::helpers::read_file;
 use crate::error::Result;
 use crate::helpers::to_yield;
 
-/// Parses a RecipeMD recipe from the file's content.
+/// Parses a `RecipeMD` recipe from the file's content.
+#[allow(clippy::cast_possible_truncation)]
 pub fn parse<R>(r: R) -> Result<Vec<schema_org::Recipe>>
 where
     R: Read + Seek,
@@ -30,8 +32,9 @@ where
                 &group.title,
                 ingredients_to_string(group.ingredients)
                     .iter()
-                    .map(|s| s.as_str())
-                    .collect(),
+                    .map(std::string::String::as_str)
+                    .collect::<Vec<_>>()
+                    .as_slice(),
             )
         })
         .collect::<Vec<_>>();
@@ -56,19 +59,25 @@ where
             .unwrap_or_default()
             .replace("\r\n", "\n\n")
             .split("\n\n")
-            .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace("\n", " ")))
+            .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace('\n', " ")))
             .collect(),
-        recipe_yield: to_yield(
+        recipe_yield: to_yield(i64::from(
             recipe
                 .yields
                 .first()
                 .map(|amount| match amount.factor {
-                    Factor::Integer(n) => n as i16,
-                    Factor::Fraction(numerator, denominator) => (numerator / denominator) as i16,
-                    Factor::Float(n) => n as i16,
+                    Factor::Integer(n) => i16::try_from(n)
+                        .inspect_err(|err| error!("Failed to parse integer '{n}': {err}"))
+                        .unwrap_or_default(),
+                    Factor::Fraction(numerator, denominator) => {
+                        (numerator / denominator).cast_signed()
+                    }
+                    Factor::Float(n) => {
+                        n.round().clamp(f32::from(i16::MIN), f32::from(i16::MAX)) as i16
+                    }
                 })
-                .unwrap_or_default() as i64,
-        ),
+                .unwrap_or_default(),
+        )),
         ..Default::default()
     }])
 }
@@ -82,19 +91,20 @@ fn ingredient_to_string(ingredient: Ingredient) -> String {
         .amount
         .map(|amount| {
             let factor = match amount.factor {
-                Factor::Integer(n) => n as f64,
-                Factor::Fraction(numerator, denominator) => numerator as f64 / denominator as f64,
-                Factor::Float(n) => n as f64,
+                Factor::Integer(n) => f64::from(n),
+                Factor::Fraction(numerator, denominator) => {
+                    f64::from(numerator) / f64::from(denominator)
+                }
+                Factor::Float(n) => f64::from(n),
             };
             let unit = amount.unit.unwrap_or_default();
             format!("{factor} {unit}").trim().to_string()
         })
         .unwrap_or_default();
 
-    let link = match ingredient.link {
-        None => "".into(),
-        Some(link) => format!("[{link}]"),
-    };
+    let link = ingredient
+        .link
+        .map_or_else(String::new, |link| format!("[{link}]"));
 
     format!("{amount} {} {link}", ingredient.name).trim().into()
 }

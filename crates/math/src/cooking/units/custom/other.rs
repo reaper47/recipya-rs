@@ -1,10 +1,13 @@
 use measurements::{Measurement, Volume};
 
-const JIGGER_IN_MILLILITRES: f64 = 44.3602943;
+const JIGGER_IN_MILLILITRES: f64 = 44.360_294_3;
 
-/// A jigger, alcohol jigger or bar jigger is an hourglass-shaped bartender
-/// measuring tool used to ensure that they pour accurate amounts of alcohol
-/// into every drink (https://barsandbartending.com).
+/// A jigger is a bartender’s measuring tool for alcohol.
+///
+/// A jigger (also called an alcohol jigger or bar jigger) is an
+/// hourglass-shaped measuring tool used to ensure accurate amounts
+/// of alcohol are poured into drinks
+/// ([source](https://barsandbartending.com)).
 pub struct Jigger {
     pub value: f64,
 }
@@ -40,6 +43,6 @@ impl VolumeJiggerExt for Volume {
     }
 
     fn from_jiggers(jiggers: f64) -> Volume {
-        Volume::from_millilitres(jiggers * JIGGER_IN_MILLILITRES)
+        Self::from_millilitres(jiggers * JIGGER_IN_MILLILITRES)
     }
 }

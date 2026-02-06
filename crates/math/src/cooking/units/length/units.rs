@@ -15,7 +15,7 @@ pub enum Length {
     Foot(f64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum LengthUnit {
     Millimetre,
     Centimetre,
@@ -27,6 +27,11 @@ pub enum LengthUnit {
 
 static LENGTH_REGEX: OnceLock<Regex> = OnceLock::new();
 
+/// Returns the compiled length regex.
+///
+/// # Panics
+///
+/// Panics if the hard-coded regex literal is invalid.
 pub fn get_regex<'a>() -> &'a Regex {
     LENGTH_REGEX.get_or_init(|| Regex::new(r#"(?i)(\d(?:\s?[\d.]/?\d+)?)\s?([a-z"']+)"#).unwrap())
 }
@@ -73,11 +78,11 @@ impl FromStr for Length {
                 let unit = caps.get(2)?.as_str().to_lowercase();
 
                 match unit.trim_end_matches('s') {
-                    "mm" | "millimetre" | "millimeter" => Some(Length::Millimetre(value)),
-                    "cm" | "centimetre" | "centimeter" => Some(Length::Centimetre(value)),
-                    "m" | "metre" | "meter" => Some(Length::Metre(value)),
-                    "\"" | "inch" | "inche" | "in" => Some(Length::Inch(value)),
-                    "'" | "ft" | "foot" | "feet" => Some(Length::Foot(value)),
+                    "mm" | "millimetre" | "millimeter" => Some(Self::Millimetre(value)),
+                    "cm" | "centimetre" | "centimeter" => Some(Self::Centimetre(value)),
+                    "m" | "metre" | "meter" => Some(Self::Metre(value)),
+                    "\"" | "inch" | "inche" | "in" => Some(Self::Inch(value)),
+                    "'" | "ft" | "foot" | "feet" => Some(Self::Foot(value)),
                     _ => None,
                 }
             })

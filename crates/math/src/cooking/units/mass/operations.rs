@@ -4,7 +4,7 @@ use crate::cooking::units::traits::UnitOperations;
 
 impl UnitOperations for Mass {
     fn abbrev(&self) -> &str {
-        use Mass::*;
+        use Mass::{Dekagram, Gram, Hectogram, Kilogram, Milligram, Ounce, Pound};
 
         match self {
             Milligram(_) => "mg",
@@ -18,40 +18,40 @@ impl UnitOperations for Mass {
     }
 
     fn unit_type(&self) -> UnitType {
-        use MassUnit::*;
+        use MassUnit::{Dekagram, Gram, Hectogram, Kilogram, Milligram, Ounce, Pound};
 
         match self {
-            Mass::Milligram(_) => UnitType::Mass(Milligram),
-            Mass::Gram(_) => UnitType::Mass(Gram),
-            Mass::Dekagram(_) => UnitType::Mass(Dekagram),
-            Mass::Hectogram(_) => UnitType::Mass(Hectogram),
-            Mass::Kilogram(_) => UnitType::Mass(Kilogram),
-            Mass::Ounce(_) => UnitType::Mass(Ounce),
-            Mass::Pound(_) => UnitType::Mass(Pound),
+            Self::Milligram(_) => UnitType::Mass(Milligram),
+            Self::Gram(_) => UnitType::Mass(Gram),
+            Self::Dekagram(_) => UnitType::Mass(Dekagram),
+            Self::Hectogram(_) => UnitType::Mass(Hectogram),
+            Self::Kilogram(_) => UnitType::Mass(Kilogram),
+            Self::Ounce(_) => UnitType::Mass(Ounce),
+            Self::Pound(_) => UnitType::Mass(Pound),
         }
     }
 
     fn value(&self) -> f64 {
         match self {
-            Mass::Milligram(v) => *v,
-            Mass::Gram(v) => *v,
-            Mass::Dekagram(v) => *v,
-            Mass::Hectogram(v) => *v,
-            Mass::Kilogram(v) => *v,
-            Mass::Ounce(v) => *v,
-            Mass::Pound(v) => *v,
+            Self::Milligram(v)
+            | Self::Gram(v)
+            | Self::Dekagram(v)
+            | Self::Hectogram(v)
+            | Self::Kilogram(v)
+            | Self::Ounce(v)
+            | Self::Pound(v) => *v,
         }
     }
 
     fn with_value(&self, value: f64) -> Self {
         match self {
-            Mass::Milligram(_) => Mass::Milligram(value),
-            Mass::Gram(_) => Mass::Gram(value),
-            Mass::Dekagram(_) => Mass::Dekagram(value),
-            Mass::Hectogram(_) => Mass::Hectogram(value),
-            Mass::Kilogram(_) => Mass::Kilogram(value),
-            Mass::Ounce(_) => Mass::Ounce(value),
-            Mass::Pound(_) => Mass::Pound(value),
+            Self::Milligram(_) => Self::Milligram(value),
+            Self::Gram(_) => Self::Gram(value),
+            Self::Dekagram(_) => Self::Dekagram(value),
+            Self::Hectogram(_) => Self::Hectogram(value),
+            Self::Kilogram(_) => Self::Kilogram(value),
+            Self::Ounce(_) => Self::Ounce(value),
+            Self::Pound(_) => Self::Pound(value),
         }
     }
 }

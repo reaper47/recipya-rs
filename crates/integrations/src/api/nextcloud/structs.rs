@@ -10,6 +10,7 @@ pub struct Recipes {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::struct_field_names)]
 pub struct Recipe {
     pub name: String,
     pub keywords: String,
@@ -52,28 +53,24 @@ impl From<Nutrition> for NutritionInformation {
     fn from(n: Nutrition) -> Self {
         Self {
             r#type: AtType::NutritionInformation.to_opt(),
-            calories: if let Some(cal) = n.calories {
+            calories: n.calories.map_or_else(Vec::new, |cal| {
                 if cal.is_empty() {
                     vec![]
                 } else {
                     vec![Energy::new(cal)]
                 }
-            } else {
-                vec![]
-            },
+            }),
             carbohydrate_content: new_mass(n.carbohydrate_content),
             fat_content: new_mass(n.fat_content),
             fiber_content: new_mass(n.fiber_content),
             protein_content: new_mass(n.protein_content),
-            serving_size: if let Some(serving_size) = n.serving_size {
+            serving_size: n.serving_size.map_or_else(Vec::new, |serving_size| {
                 if serving_size.is_empty() {
                     vec![]
                 } else {
                     vec![serving_size]
                 }
-            } else {
-                vec![]
-            },
+            }),
             cholesterol_content: new_mass(n.cholesterol_content),
             context: at_context(),
             saturated_fat_content: new_mass(n.saturated_fat_content),
@@ -86,39 +83,33 @@ impl From<Nutrition> for NutritionInformation {
 }
 
 fn new_mass(s: Option<String>) -> Vec<Mass> {
-    match s {
-        Some(s) => {
-            if s.is_empty() {
-                vec![]
-            } else {
-                vec![Mass::new(s)]
-            }
+    s.map_or_else(Vec::new, |s| {
+        if s.is_empty() {
+            vec![]
+        } else {
+            vec![Mass::new(s)]
         }
-        None => vec![],
-    }
+    })
 }
 
 impl Nutrition {
     /// Verifies whether the nutrition information contains no information.
     pub fn is_empty(&self) -> bool {
-        is_opt_field_empty(&self.calories)
-            && is_opt_field_empty(&self.carbohydrate_content)
-            && is_opt_field_empty(&self.cholesterol_content)
-            && is_opt_field_empty(&self.fat_content)
-            && is_opt_field_empty(&self.fiber_content)
-            && is_opt_field_empty(&self.protein_content)
-            && is_opt_field_empty(&self.saturated_fat_content)
-            && is_opt_field_empty(&self.serving_size)
-            && is_opt_field_empty(&self.sodium_content)
-            && is_opt_field_empty(&self.sugar_content)
-            && is_opt_field_empty(&self.trans_fat_content)
-            && is_opt_field_empty(&self.unsaturated_fat_content)
+        is_opt_field_empty(self.calories.as_ref())
+            && is_opt_field_empty(self.carbohydrate_content.as_ref())
+            && is_opt_field_empty(self.cholesterol_content.as_ref())
+            && is_opt_field_empty(self.fat_content.as_ref())
+            && is_opt_field_empty(self.fiber_content.as_ref())
+            && is_opt_field_empty(self.protein_content.as_ref())
+            && is_opt_field_empty(self.saturated_fat_content.as_ref())
+            && is_opt_field_empty(self.serving_size.as_ref())
+            && is_opt_field_empty(self.sodium_content.as_ref())
+            && is_opt_field_empty(self.sugar_content.as_ref())
+            && is_opt_field_empty(self.trans_fat_content.as_ref())
+            && is_opt_field_empty(self.unsaturated_fat_content.as_ref())
     }
 }
 
-fn is_opt_field_empty(s: &Option<String>) -> bool {
-    match s {
-        Some(s) => s.is_empty(),
-        None => true,
-    }
+fn is_opt_field_empty(s: Option<&String>) -> bool {
+    s.is_none_or(String::is_empty)
 }

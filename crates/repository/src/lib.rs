@@ -1,3 +1,5 @@
+#![allow(clippy::wildcard_imports)]
+
 mod error;
 mod pool;
 
@@ -10,7 +12,7 @@ pub use pool::{DbPool, PgPooledConn, create_database_if_not_exists, make_db_pool
 /// `ModelManager` is a structure responsible for managing database interactions.
 #[derive(Clone)]
 pub struct ModelManager {
-    /// The connection pool for the PostgreSQL database.
+    /// The connection pool for the `PostgreSQL` database.
     pub pool: DbPool,
 }
 

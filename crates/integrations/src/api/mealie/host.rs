@@ -37,7 +37,7 @@ impl Host {
     }
 
     /// Assembles the URL to fetch recipes.
-    pub fn recipes_url(&self, page: String) -> String {
+    pub fn recipes_url(&self, page: &str) -> String {
         format!("{}/api/recipes?page={page}", self.0)
     }
 
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_host_recipes_url() {
-        let got = Host::new("https://example.com").recipes_url("1".to_string());
+        let got = Host::new("https://example.com").recipes_url("1");
 
         assert_eq!(got, "https://example.com/api/recipes?page=1");
     }

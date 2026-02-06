@@ -10,7 +10,7 @@ use crate::{Error, Result};
 
 /// Represents the timeline entity of a recipe stored in the database.
 #[derive(
-    Debug, Default, PartialEq, AsChangeset, Associations, Queryable, Identifiable, Selectable,
+    Debug, Default, Eq, PartialEq, AsChangeset, Associations, Queryable, Identifiable, Selectable,
 )]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(Recipe))]
@@ -33,7 +33,7 @@ struct RecipeTimelinePatch<'a> {
     title: Option<&'a str>,
     comment: Option<&'a str>,
     rating: Option<i16>,
-    image: Option<Option<Uuid>>,
+    image: Option<Uuid>,
     created_at: Option<chrono::NaiveDateTime>,
 }
 
@@ -61,11 +61,7 @@ struct TimelineForInsert {
 
 impl RecipeTimeline {
     /// Retrieves all timelines associated with the user's recipe.
-    pub async fn all(
-        mm: &ModelManager,
-        recipe_id: i64,
-        user_id: Uuid,
-    ) -> Result<Vec<RecipeTimeline>> {
+    pub async fn all(mm: &ModelManager, recipe_id: i64, user_id: Uuid) -> Result<Vec<Self>> {
         use schema::recipe_timelines;
 
         let mut conn = mm.pool.get().await?;
@@ -74,7 +70,7 @@ impl RecipeTimeline {
             .filter(recipe_timelines::recipe_id.eq(recipe_id))
             .filter(recipe_timelines::user_id.eq(user_id))
             .order(recipe_timelines::created_at.asc())
-            .load::<RecipeTimeline>(&mut conn)
+            .load::<Self>(&mut conn)
             .await?;
 
         Ok(timelines)
@@ -102,22 +98,18 @@ impl RecipeTimeline {
             .execute(&mut conn)
             .await?;
 
-        Ok(timeline_id as i64)
+        Ok(timeline_id.try_into().unwrap_or(i64::MAX))
     }
 
     /// Updates the fields of an existing timeline.
-    pub async fn edit(
-        mm: &ModelManager,
-        user_id: Uuid,
-        new_timeline: &RecipeTimeline,
-    ) -> Result<RecipeTimeline> {
+    pub async fn edit(mm: &ModelManager, user_id: Uuid, new_timeline: &Self) -> Result<Self> {
         let mut conn = mm.pool.get().await?;
 
         let patch = RecipeTimelinePatch {
             title: Some(&new_timeline.title),
             comment: new_timeline.comment.as_deref(),
             rating: new_timeline.rating,
-            image: Some(new_timeline.image),
+            image: new_timeline.image,
             created_at: (new_timeline.created_at != chrono::NaiveDateTime::default())
                 .then_some(new_timeline.created_at),
         };
@@ -128,7 +120,7 @@ impl RecipeTimeline {
                 .filter(schema::recipe_timelines::user_id.eq(user_id)),
         )
         .set(&patch)
-        .get_result::<RecipeTimeline>(&mut conn)
+        .get_result::<Self>(&mut conn)
         .await?;
 
         Ok(result)
@@ -140,14 +132,14 @@ impl RecipeTimeline {
         timeline_id: i64,
         recipe_id: i64,
         user_id: Uuid,
-    ) -> Result<RecipeTimeline> {
+    ) -> Result<Self> {
         let mut conn = mm.pool.get().await?;
 
         let timeline = match schema::recipe_timelines::table
             .filter(schema::recipe_timelines::id.eq(timeline_id))
             .filter(schema::recipe_timelines::recipe_id.eq(recipe_id))
             .filter(schema::recipe_timelines::user_id.eq(user_id))
-            .first::<RecipeTimeline>(&mut conn)
+            .first::<Self>(&mut conn)
             .await
         {
             Ok(v) => v,

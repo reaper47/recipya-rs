@@ -209,7 +209,7 @@ pub struct ImageObject {
     ///<https://schema.org/thumbnail>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub thumbnail: Vec<ImageObject>,
+    pub thumbnail: Vec<Self>,
     ///<https://schema.org/thumbnailUrl>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

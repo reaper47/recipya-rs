@@ -7,7 +7,7 @@ use models::settings::UserSettingDetails;
 use crate::templates::layouts;
 
 /// Renders the add recipe page.
-pub fn add_page(path: &str, data: Data, user_setting: UserSettingDetails) -> Markup {
+pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Markup {
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
@@ -17,8 +17,8 @@ pub fn add_page(path: &str, data: Data, user_setting: UserSettingDetails) -> Mar
             (layouts::main(
                 "Add Recipe",
                 path,
-                &data,
-                render_add_page(),
+                data,
+                &render_add_page(),
                 user_setting,
                 true
             ))
@@ -210,6 +210,7 @@ fn add_ocr_dialog() -> Markup {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn import_recipes_dialog() -> Markup {
     html! {
         dialog #import-recipes-dialog .modal {

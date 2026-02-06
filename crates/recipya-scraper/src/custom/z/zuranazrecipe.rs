@@ -57,7 +57,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         recipe_ingredient: extract_text_from_elements(root, "li[itemprop='ingredients']")
             .unwrap_or_default()
             .into_iter()
-            .map(|s| RecipeRecipeIngredientFieldEnum::Text(s))
+            .map(RecipeRecipeIngredientFieldEnum::Text)
             .collect(),
         recipe_instructions: extract_text_from_elements(
             root,
@@ -65,7 +65,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         )
         .unwrap_or_default()
         .into_iter()
-        .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s))
+        .map(RecipeRecipeInstructionsFieldEnum::Text)
         .collect(),
         url: vec![url.into()],
         ..Default::default()

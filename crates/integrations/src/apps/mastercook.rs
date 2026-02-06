@@ -42,10 +42,11 @@ struct RecipeComponents<'a> {
 }
 
 impl From<RecipeComponents<'_>> for Recipe {
+    #[allow(clippy::too_many_lines)]
     fn from(r: RecipeComponents) -> Self {
         let (category, keywords) = match r.categories.as_slice() {
             [first, rest @ ..] => (first.trim().to_string(), rest.to_vec()),
-            [] => ("".into(), Vec::new()),
+            [] => (String::new(), Vec::new()),
         };
 
         let rating = r
@@ -65,7 +66,7 @@ impl From<RecipeComponents<'_>> for Recipe {
         let source = r
             .source
             .map(|s| {
-                let mut s = s.trim_end_matches("\"").to_string();
+                let mut s = s.trim_end_matches('\"').to_string();
                 if !s.starts_with("Exported from") {
                     s.push_str(" [Exported from MasterCook]");
                 }
@@ -77,15 +78,14 @@ impl From<RecipeComponents<'_>> for Recipe {
             .instructions
             .into_iter()
             .map(|s| match s {
-                Instruction::Line(s) => s.to_string(),
-                Instruction::Section(s) => s.to_string(),
+                Instruction::Line(s) | Instruction::Section(s) => s.to_string(),
             })
             .collect::<Vec<_>>();
 
         if source == "Exported from  MasterCook II" && instructions.len() == 1 {
             instructions = instructions
                 .remove(0)
-                .split("\n")
+                .split('\n')
                 .map(String::from)
                 .collect::<Vec<_>>();
         }
@@ -99,7 +99,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                     ..Default::default()
                 }]
             } else {
-                Default::default()
+                Vec::default()
             },
             author: {
                 let s = r.author.trim();
@@ -111,7 +111,7 @@ impl From<RecipeComponents<'_>> for Recipe {
             },
             cook_time: seconds_to_duration(cook_secs),
             description: {
-                let s = r.description.trim_end_matches("\"");
+                let s = r.description.trim_end_matches('"');
                 if s.is_empty() {
                     vec![]
                 } else {
@@ -124,7 +124,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                 .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
                 .collect(),
             name: vec![r.title.into()],
-            nutrition: parse_nutrition_schema(r.nutrition),
+            nutrition: parse_nutrition_schema(r.nutrition.as_slice()),
             prep_time: seconds_to_duration(prep_secs),
             recipe_category: if category.is_empty() {
                 vec![]
@@ -135,8 +135,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                 .ingredients
                 .into_iter()
                 .map(|s| match s {
-                    Ingredient::Line(s) => s.to_string(),
-                    Ingredient::Section(s) => s.to_string(),
+                    Ingredient::Line(s) | Ingredient::Section(s) => s.to_string(),
                 })
                 .map(|s| {
                     RecipeRecipeIngredientFieldEnum::Text(
@@ -293,7 +292,7 @@ impl From<MastercookRecipe> for Recipe {
     fn from(r: MastercookRecipe) -> Self {
         let (category, keywords) = match r.categories.unwrap_or_default().categories.as_slice() {
             [first, rest @ ..] => (first.trim().to_string(), rest.to_vec()),
-            [] => ("".into(), Vec::new()),
+            [] => (String::new(), Vec::new()),
         };
 
         let prep_secs = parse_time(&r.prep_time.unwrap_or_default().elapsed);
@@ -335,7 +334,7 @@ impl From<MastercookRecipe> for Recipe {
             cook_time: seconds_to_duration(cook_secs),
             description: vec![RecipeDescriptionFieldEnum::Text(r.description)],
             is_based_on: match url::Url::parse(&source) {
-                Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(source.to_string())],
+                Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(source.clone())],
                 Err(_) => vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
             },
             image: (!r.img.is_empty())
@@ -349,10 +348,10 @@ impl From<MastercookRecipe> for Recipe {
                 .unwrap_or_default(),
             keywords: keywords
                 .into_iter()
-                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
             name: vec![r.name],
-            nutrition: parse_nutrition_schema(nutrition.split(";").collect()),
+            nutrition: parse_nutrition_schema(nutrition.split(';').collect::<Vec<_>>().as_slice()),
             prep_time: seconds_to_duration(prep_secs),
             recipe_category: if category.is_empty() {
                 vec![]
@@ -366,19 +365,14 @@ impl From<MastercookRecipe> for Recipe {
                     RecipeRecipeIngredientFieldEnum::Text(format!(
                         "{}{}{}{}",
                         ing.qty,
-                        match ing.unit {
-                            None => String::new(),
-                            Some(s) => format!(" {}", s),
-                        },
+                        ing.unit.map_or_else(String::new, |s| format!(" {s}")),
                         if ing.name.is_empty() {
                             String::new()
                         } else {
                             format!(" {}", ing.name)
                         },
-                        match ing.preparation {
-                            None => String::new(),
-                            Some(s) => format!(", {s}"),
-                        }
+                        ing.preparation
+                            .map_or_else(String::new, |s| format!(", {s}"))
                     ))
                 })
                 .collect(),
@@ -386,7 +380,7 @@ impl From<MastercookRecipe> for Recipe {
                 .directions
                 .directions
                 .into_iter()
-                .map(|d| RecipeRecipeInstructionsFieldEnum::Text(d.text.to_string()))
+                .map(|d| RecipeRecipeInstructionsFieldEnum::Text(d.text))
                 .collect(),
             recipe_yield: to_yield(r.serving.qty.parse().unwrap_or_default()),
             total_time: seconds_to_duration(total_secs),
@@ -400,50 +394,51 @@ fn parse_time(s: &str) -> i32 {
         return 0;
     }
 
-    let mut s = s.trim_end_matches("\"").replacen(":", "m", 1);
+    let mut s = s.trim_end_matches('"').replacen(':', "m", 1);
     s.push('s');
-    humantime::parse_duration(&s).unwrap_or_default().as_secs() as i32
+    i32::try_from(humantime::parse_duration(&s).unwrap_or_default().as_secs()).unwrap_or_default()
 }
 
-fn parse_nutrition_schema(s: Vec<&str>) -> Vec<NutritionInformation> {
+fn parse_nutrition_schema(s: &[&str]) -> Vec<NutritionInformation> {
     let mut nutrition = NutritionInformation {
         r#type: AtType::NutritionInformation.to_opt(),
         ..Default::default()
     };
-    s.iter().for_each(|s| {
+
+    for s in s {
         let (value, key) = s.trim().split_once(' ').unwrap_or_default();
         if value == "0g" || value == "0mg" {
-            return;
+            continue;
         }
 
         let energy = Energy::new(value);
         let mass = Mass::new(value);
 
         if key == "Calories" {
-            nutrition.calories = vec![energy]
+            nutrition.calories = vec![energy];
         } else if key.starts_with("Fat") {
-            nutrition.fat_content = vec![mass]
+            nutrition.fat_content = vec![mass];
         } else if key == "Protein" {
-            nutrition.protein_content = vec![mass]
+            nutrition.protein_content = vec![mass];
         } else if key == "Carbohydrate" {
-            nutrition.carbohydrate_content = vec![mass]
+            nutrition.carbohydrate_content = vec![mass];
         } else if key == "Dietary Fiber" {
-            nutrition.fiber_content = vec![mass]
+            nutrition.fiber_content = vec![mass];
         } else if key == "Cholesterol" {
-            nutrition.cholesterol_content = vec![mass]
+            nutrition.cholesterol_content = vec![mass];
         } else if key == "Sodium" {
-            nutrition.sodium_content = vec![mass]
+            nutrition.sodium_content = vec![mass];
         } else if key == "Total Sugars" {
-            nutrition.sugar_content = vec![mass]
+            nutrition.sugar_content = vec![mass];
         }
-    });
+    }
 
     (!nutrition.is_empty())
         .then_some(vec![nutrition])
         .unwrap_or_default()
 }
 
-/// Parses a MasterCook MX2 file.
+/// Parses a `MasterCook` MX2 file.
 pub fn parse_mx2<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
@@ -465,14 +460,14 @@ where
     Ok(root.recipes.into_iter().map(Recipe::from).collect())
 }
 
-/// Parses a MasterCook MXP file.
+/// Parses a `MasterCook` MXP file.
 pub fn parse_mxp<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
     let content = read_file(r)?;
 
-    let recipes = parse_mxp_helper(&mut content.as_str())?
+    let recipes = parse_mxp_helper(content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect::<Vec<_>>();
@@ -480,7 +475,7 @@ where
     Ok(recipes)
 }
 
-/// Parses a MasterCook MZ2 file.
+/// Parses a `MasterCook` MZ2 file.
 pub fn parse_mz2<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
@@ -491,7 +486,7 @@ where
     Ok(recipes)
 }
 
-fn parse_mxp_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
+fn parse_mxp_helper(input: &str) -> Result<Vec<RecipeComponents<'_>>> {
     repeat(1.., parse_recipe_mxp.map(|r| r))
         .parse(input)
         .map_err(|err| Error::Parse(err.to_string()))
@@ -549,7 +544,7 @@ fn parse_instructions_mxp<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s
         .map(|content: &str| {
             content
                 .split("\n\n")
-                .map(|s| s.trim())
+                .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(|s| Instruction::Line(Cow::Borrowed(s)))
                 .collect()
@@ -561,7 +556,7 @@ fn parse_flush_mxp<'s>(input: &mut &'s str) -> WResult<&'s str> {
     alt((take_until(0.., "*  Exported from  MasterCook II  *"), rest)).parse_next(input)
 }
 
-/// Parses a MasterCook TXT file.
+/// Parses a `MasterCook` TXT file.
 pub fn parse_txt<R>(mut r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
@@ -687,7 +682,7 @@ fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> 
         .map(|content: &str| {
             content
                 .split("\n\n")
-                .map(|s| s.trim())
+                .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(|s| Instruction::Line(Cow::Borrowed(s)))
                 .collect()
@@ -757,7 +752,7 @@ fn parse_nutrition<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     preceded(
         literal("Per Serving (excluding unknown items): "),
         terminated(take_until(0.., "\n"), line_ending)
-            .map(|content: &str| content.split(';').map(|s| s.trim()).collect::<Vec<&str>>()),
+            .map(|content: &str| content.split(';').map(str::trim).collect::<Vec<&str>>()),
     )
     .parse_next(input)
 }

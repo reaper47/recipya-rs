@@ -5,4 +5,4 @@ mod tests;
 
 pub mod params;
 
-pub(crate) use router::*;
+pub use router::*;

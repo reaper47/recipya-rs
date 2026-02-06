@@ -47,11 +47,11 @@ pub struct Review {
     ///<https://schema.org/associatedReview>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub associated_review: Vec<Review>,
+    pub associated_review: Vec<Self>,
     ///<https://schema.org/associatedClaimReview>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub associated_claim_review: Vec<Review>,
+    pub associated_claim_review: Vec<Self>,
     ///<https://schema.org/reviewAspect>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -71,7 +71,7 @@ pub struct Review {
     ///<https://schema.org/associatedMediaReview>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub associated_media_review: Vec<Review>,
+    pub associated_media_review: Vec<Self>,
     ///<https://schema.org/isBasedOnUrl>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -99,7 +99,7 @@ pub struct Review {
     ///<https://schema.org/review>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub review: Vec<Review>,
+    pub review: Vec<Self>,
     ///<https://schema.org/contributor>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -207,7 +207,7 @@ pub struct Review {
     ///<https://schema.org/reviews>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub reviews: Vec<Review>,
+    pub reviews: Vec<Self>,
     ///<https://schema.org/disambiguatingDescription>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

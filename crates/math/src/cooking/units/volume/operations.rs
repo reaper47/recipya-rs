@@ -4,7 +4,14 @@ use crate::cooking::units::volume::units::{Volume, VolumeUnit};
 
 impl UnitOperations for Volume {
     fn abbrev(&self) -> &str {
-        use Volume::*;
+        use Volume::{
+            AustralianCup, AustralianDessertspoon, AustralianTablespoon, AustralianTeaspoon,
+            Centilitre, Decilitre, ImperialCup, ImperialDessertspoon, ImperialFluidOunce,
+            ImperialGallon, ImperialGill, ImperialPint, ImperialQuart, ImperialTablespoon,
+            ImperialTeaspoon, Jigger, Litre, MetricCup, MetricDessertspoon, MetricTablespoon,
+            MetricTeaspoon, Millilitre, USCup, USFluidOunce, USGallon, USPint, USQuart,
+            USTablespoon, USTeaspoon,
+        };
 
         match self {
             Millilitre(_) => "ml",
@@ -30,106 +37,113 @@ impl UnitOperations for Volume {
     }
 
     fn unit_type(&self) -> UnitType {
-        use VolumeUnit::*;
+        use VolumeUnit::{
+            AustralianCup, AustralianDessertspoon, AustralianTablespoon, AustralianTeaspoon,
+            Centilitre, Decilitre, ImperialCup, ImperialDessertspoon, ImperialFluidOunce,
+            ImperialGallon, ImperialGill, ImperialPint, ImperialQuart, ImperialTablespoon,
+            ImperialTeaspoon, Jigger, Litre, MetricCup, MetricDessertSpoon, MetricTablespoon,
+            MetricTeaspoon, Millilitre, USCup, USFluidOunce, USGallon, USPint, USQuart,
+            USTablespoon, USTeaspoon,
+        };
 
         match self {
-            Volume::Millilitre(_) => UnitType::Volume(Millilitre),
-            Volume::Centilitre(_) => UnitType::Volume(Centilitre),
-            Volume::Decilitre(_) => UnitType::Volume(Decilitre),
-            Volume::Litre(_) => UnitType::Volume(Litre),
-            Volume::MetricTeaspoon(_) => UnitType::Volume(MetricTeaspoon),
-            Volume::MetricTablespoon(_) => UnitType::Volume(MetricTablespoon),
-            Volume::MetricDessertspoon(_) => UnitType::Volume(MetricDessertSpoon),
-            Volume::MetricCup(_) => UnitType::Volume(MetricCup),
-            Volume::AustralianTeaspoon(_) => UnitType::Volume(AustralianTeaspoon),
-            Volume::AustralianDessertspoon(_) => UnitType::Volume(AustralianDessertspoon),
-            Volume::AustralianTablespoon(_) => UnitType::Volume(AustralianTablespoon),
-            Volume::AustralianCup(_) => UnitType::Volume(AustralianCup),
-            Volume::ImperialTeaspoon(_) => UnitType::Volume(ImperialTeaspoon),
-            Volume::ImperialDessertspoon(_) => UnitType::Volume(ImperialDessertspoon),
-            Volume::ImperialTablespoon(_) => UnitType::Volume(ImperialTablespoon),
-            Volume::ImperialFluidOunce(_) => UnitType::Volume(ImperialFluidOunce),
-            Volume::ImperialGill(_) => UnitType::Volume(ImperialGill),
-            Volume::ImperialCup(_) => UnitType::Volume(ImperialCup),
-            Volume::ImperialPint(_) => UnitType::Volume(ImperialPint),
-            Volume::ImperialQuart(_) => UnitType::Volume(ImperialQuart),
-            Volume::ImperialGallon(_) => UnitType::Volume(ImperialGallon),
-            Volume::USTeaspoon(_) => UnitType::Volume(USTeaspoon),
-            Volume::USTablespoon(_) => UnitType::Volume(USTablespoon),
-            Volume::USFluidOunce(_) => UnitType::Volume(USFluidOunce),
-            Volume::USCup(_) => UnitType::Volume(USCup),
-            Volume::USPint(_) => UnitType::Volume(USPint),
-            Volume::USQuart(_) => UnitType::Volume(USQuart),
-            Volume::USGallon(_) => UnitType::Volume(USGallon),
-            Volume::Jigger(_) => UnitType::Volume(Jigger),
+            Self::Millilitre(_) => UnitType::Volume(Millilitre),
+            Self::Centilitre(_) => UnitType::Volume(Centilitre),
+            Self::Decilitre(_) => UnitType::Volume(Decilitre),
+            Self::Litre(_) => UnitType::Volume(Litre),
+            Self::MetricTeaspoon(_) => UnitType::Volume(MetricTeaspoon),
+            Self::MetricTablespoon(_) => UnitType::Volume(MetricTablespoon),
+            Self::MetricDessertspoon(_) => UnitType::Volume(MetricDessertSpoon),
+            Self::MetricCup(_) => UnitType::Volume(MetricCup),
+            Self::AustralianTeaspoon(_) => UnitType::Volume(AustralianTeaspoon),
+            Self::AustralianDessertspoon(_) => UnitType::Volume(AustralianDessertspoon),
+            Self::AustralianTablespoon(_) => UnitType::Volume(AustralianTablespoon),
+            Self::AustralianCup(_) => UnitType::Volume(AustralianCup),
+            Self::ImperialTeaspoon(_) => UnitType::Volume(ImperialTeaspoon),
+            Self::ImperialDessertspoon(_) => UnitType::Volume(ImperialDessertspoon),
+            Self::ImperialTablespoon(_) => UnitType::Volume(ImperialTablespoon),
+            Self::ImperialFluidOunce(_) => UnitType::Volume(ImperialFluidOunce),
+            Self::ImperialGill(_) => UnitType::Volume(ImperialGill),
+            Self::ImperialCup(_) => UnitType::Volume(ImperialCup),
+            Self::ImperialPint(_) => UnitType::Volume(ImperialPint),
+            Self::ImperialQuart(_) => UnitType::Volume(ImperialQuart),
+            Self::ImperialGallon(_) => UnitType::Volume(ImperialGallon),
+            Self::USTeaspoon(_) => UnitType::Volume(USTeaspoon),
+            Self::USTablespoon(_) => UnitType::Volume(USTablespoon),
+            Self::USFluidOunce(_) => UnitType::Volume(USFluidOunce),
+            Self::USCup(_) => UnitType::Volume(USCup),
+            Self::USPint(_) => UnitType::Volume(USPint),
+            Self::USQuart(_) => UnitType::Volume(USQuart),
+            Self::USGallon(_) => UnitType::Volume(USGallon),
+            Self::Jigger(_) => UnitType::Volume(Jigger),
         }
     }
 
     fn value(&self) -> f64 {
         match self {
-            Volume::Millilitre(v) => *v,
-            Volume::Centilitre(v) => *v,
-            Volume::Decilitre(v) => *v,
-            Volume::Litre(v) => *v,
-            Volume::MetricTeaspoon(v) => *v,
-            Volume::MetricTablespoon(v) => *v,
-            Volume::MetricDessertspoon(v) => *v,
-            Volume::MetricCup(v) => *v,
-            Volume::AustralianTeaspoon(v) => *v,
-            Volume::AustralianDessertspoon(v) => *v,
-            Volume::AustralianTablespoon(v) => *v,
-            Volume::AustralianCup(v) => *v,
-            Volume::ImperialTeaspoon(v) => *v,
-            Volume::ImperialDessertspoon(v) => *v,
-            Volume::ImperialTablespoon(v) => *v,
-            Volume::ImperialFluidOunce(v) => *v,
-            Volume::ImperialGill(v) => *v,
-            Volume::ImperialCup(v) => *v,
-            Volume::ImperialPint(v) => *v,
-            Volume::ImperialQuart(v) => *v,
-            Volume::ImperialGallon(v) => *v,
-            Volume::USTeaspoon(v) => *v,
-            Volume::USTablespoon(v) => *v,
-            Volume::USFluidOunce(v) => *v,
-            Volume::USCup(v) => *v,
-            Volume::USPint(v) => *v,
-            Volume::USQuart(v) => *v,
-            Volume::USGallon(v) => *v,
-            Volume::Jigger(v) => *v,
+            Self::Millilitre(v)
+            | Self::Centilitre(v)
+            | Self::Decilitre(v)
+            | Self::Litre(v)
+            | Self::MetricTeaspoon(v)
+            | Self::MetricTablespoon(v)
+            | Self::MetricDessertspoon(v)
+            | Self::MetricCup(v)
+            | Self::AustralianTeaspoon(v)
+            | Self::AustralianDessertspoon(v)
+            | Self::AustralianTablespoon(v)
+            | Self::AustralianCup(v)
+            | Self::ImperialTeaspoon(v)
+            | Self::ImperialDessertspoon(v)
+            | Self::ImperialTablespoon(v)
+            | Self::ImperialFluidOunce(v)
+            | Self::ImperialGill(v)
+            | Self::ImperialCup(v)
+            | Self::ImperialPint(v)
+            | Self::ImperialQuart(v)
+            | Self::ImperialGallon(v)
+            | Self::USTeaspoon(v)
+            | Self::USTablespoon(v)
+            | Self::USFluidOunce(v)
+            | Self::USCup(v)
+            | Self::USPint(v)
+            | Self::USQuart(v)
+            | Self::USGallon(v)
+            | Self::Jigger(v) => *v,
         }
     }
 
     fn with_value(&self, value: f64) -> Self {
         match self {
-            Volume::Millilitre(_) => Volume::Millilitre(value),
-            Volume::Centilitre(_) => Volume::Centilitre(value),
-            Volume::Decilitre(_) => Volume::Decilitre(value),
-            Volume::Litre(_) => Volume::Litre(value),
-            Volume::MetricTeaspoon(_) => Volume::MetricTeaspoon(value),
-            Volume::MetricTablespoon(_) => Volume::MetricTablespoon(value),
-            Volume::MetricDessertspoon(_) => Volume::MetricDessertspoon(value),
-            Volume::MetricCup(_) => Volume::MetricCup(value),
-            Volume::AustralianTeaspoon(_) => Volume::AustralianTeaspoon(value),
-            Volume::AustralianDessertspoon(_) => Volume::AustralianDessertspoon(value),
-            Volume::AustralianTablespoon(_) => Volume::AustralianTablespoon(value),
-            Volume::AustralianCup(_) => Volume::AustralianCup(value),
-            Volume::ImperialTeaspoon(_) => Volume::ImperialTeaspoon(value),
-            Volume::ImperialDessertspoon(_) => Volume::ImperialDessertspoon(value),
-            Volume::ImperialTablespoon(_) => Volume::ImperialTablespoon(value),
-            Volume::ImperialFluidOunce(_) => Volume::ImperialFluidOunce(value),
-            Volume::ImperialGill(_) => Volume::ImperialGill(value),
-            Volume::ImperialCup(_) => Volume::ImperialCup(value),
-            Volume::ImperialPint(_) => Volume::ImperialPint(value),
-            Volume::ImperialQuart(_) => Volume::ImperialQuart(value),
-            Volume::ImperialGallon(_) => Volume::ImperialGallon(value),
-            Volume::USTeaspoon(_) => Volume::USTeaspoon(value),
-            Volume::USTablespoon(_) => Volume::USTablespoon(value),
-            Volume::USFluidOunce(_) => Volume::USFluidOunce(value),
-            Volume::USCup(_) => Volume::USCup(value),
-            Volume::USPint(_) => Volume::USPint(value),
-            Volume::USQuart(_) => Volume::USQuart(value),
-            Volume::USGallon(_) => Volume::USGallon(value),
-            Volume::Jigger(_) => Volume::Jigger(value),
+            Self::Millilitre(_) => Self::Millilitre(value),
+            Self::Centilitre(_) => Self::Centilitre(value),
+            Self::Decilitre(_) => Self::Decilitre(value),
+            Self::Litre(_) => Self::Litre(value),
+            Self::MetricTeaspoon(_) => Self::MetricTeaspoon(value),
+            Self::MetricTablespoon(_) => Self::MetricTablespoon(value),
+            Self::MetricDessertspoon(_) => Self::MetricDessertspoon(value),
+            Self::MetricCup(_) => Self::MetricCup(value),
+            Self::AustralianTeaspoon(_) => Self::AustralianTeaspoon(value),
+            Self::AustralianDessertspoon(_) => Self::AustralianDessertspoon(value),
+            Self::AustralianTablespoon(_) => Self::AustralianTablespoon(value),
+            Self::AustralianCup(_) => Self::AustralianCup(value),
+            Self::ImperialTeaspoon(_) => Self::ImperialTeaspoon(value),
+            Self::ImperialDessertspoon(_) => Self::ImperialDessertspoon(value),
+            Self::ImperialTablespoon(_) => Self::ImperialTablespoon(value),
+            Self::ImperialFluidOunce(_) => Self::ImperialFluidOunce(value),
+            Self::ImperialGill(_) => Self::ImperialGill(value),
+            Self::ImperialCup(_) => Self::ImperialCup(value),
+            Self::ImperialPint(_) => Self::ImperialPint(value),
+            Self::ImperialQuart(_) => Self::ImperialQuart(value),
+            Self::ImperialGallon(_) => Self::ImperialGallon(value),
+            Self::USTeaspoon(_) => Self::USTeaspoon(value),
+            Self::USTablespoon(_) => Self::USTablespoon(value),
+            Self::USFluidOunce(_) => Self::USFluidOunce(value),
+            Self::USCup(_) => Self::USCup(value),
+            Self::USPint(_) => Self::USPint(value),
+            Self::USQuart(_) => Self::USQuart(value),
+            Self::USGallon(_) => Self::USGallon(value),
+            Self::Jigger(_) => Self::Jigger(value),
         }
     }
 }

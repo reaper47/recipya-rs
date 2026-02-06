@@ -26,6 +26,7 @@ futures-util.workspace = true
 humantime.workspace = true
 infer.workspace = true
 integrations.workspace = true
+iso8601.workspace = true
 itertools.workspace = true
 math.workspace = true
 mime_guess = "2.0.5"
@@ -33,7 +34,7 @@ models = { workspace = true, features = ["test-utils"] }
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
-rust-embed = { version = "8.9.0", features = ["axum-ex"] }
+rust-embed = { version = "8.11.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
@@ -55,10 +56,10 @@ axum-test.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 image = "0.25.9"
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
-serial_test = "3.2.0"
+serial_test = "3.3.1"
 testing.workspace = true
 time.workspace = true
 tokio.workspace = true
-tower = "0.5.2"
+tower = "0.5.3"

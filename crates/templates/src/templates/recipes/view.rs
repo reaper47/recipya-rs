@@ -26,11 +26,11 @@ use crate::{Error, Result};
 
 /// Renders the details of a recipe.
 pub fn view_recipe(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     path: &str,
-    data_dir: DataDir,
-    data: Data,
-    user_setting: UserSettingDetails,
+    data_dir: &DataDir,
+    data: &Data,
+    user_setting: &UserSettingDetails,
 ) -> Result<Markup> {
     let view = data
         .recipes
@@ -45,13 +45,13 @@ pub fn view_recipe(
             }
             span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             aside #desktop-nav data-layout="no-aside" hx-swap-oob="true" {}
-            (view_recipe_helper(fs_support, data_dir, &data)?)
+            (view_recipe_helper(fs_support, data_dir, data)?)
         } @else {
             (layouts::main(
                 &view.recipe_details.recipe.name,
                 path,
-                &data,
-                view_recipe_helper(fs_support, data_dir, &data)?,
+                data,
+                &view_recipe_helper(fs_support, data_dir, data)?,
                 user_setting,
                 true,
             ))
@@ -60,9 +60,10 @@ pub fn view_recipe(
     })
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn view_recipe_helper(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
-    data_dir: DataDir,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
+    data_dir: &DataDir,
     data: &Data,
 ) -> Result<Markup> {
     let view = data
@@ -98,9 +99,9 @@ pub fn view_recipe_helper(
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none"
                     dir=(if recipe_details.is_rtl() { "rtl" } else { "ltr" }) {
                     div class="card-body contents" style="padding: 0" {
-                        (render_header(recipe_id, &data, recipe_details, recipe.is_favourite))
+                        (render_header(recipe_id, data, recipe_details, recipe.is_favourite))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
-                            (render_media(fs_support, &view.recipe_details, &data_dir))
+                            (render_media(fs_support, &view.recipe_details, data_dir))
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
                                 div class="grid grid-flow-col border-gray-700 col-span-6 md:border-t md:row-span-1 print:border-none" {
                                     div class={
@@ -212,14 +213,14 @@ pub fn view_recipe_helper(
                                         }
                                     }
                                     div class="col-span-3" {
-                                        (render_nutrition(&recipe_details))
+                                        (render_nutrition(recipe_details))
                                     }
                                 }
                             }
                         }
-                        (print_description(&recipe))
+                        (print_description(recipe))
                         div class="border-gray-700 md:border-t" {
-                            (render_ingredients_instructions(&recipe_details))
+                            (render_ingredients_instructions(recipe_details))
                             div class="hidden print:grid col-span-6 ml-2 my-1" {
                                 (render_tools(recipe_details))
                                 (render_ingredients(recipe_details))
@@ -242,7 +243,7 @@ pub fn view_recipe_helper(
             }
         }
 
-        (render_dialog(recipe.id, vec![]))
+        (render_dialog(recipe.id, &[]))
     })
 }
 
@@ -330,6 +331,7 @@ fn render_left_controls(recipe_id: i64, data: &Data) -> Markup {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn render_right_controls(recipe_id: i64, is_favourite: bool, data: &Data) -> Markup {
     html! {
         span class="md:hidden" {
@@ -559,7 +561,7 @@ fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
 }
 
 fn render_media(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     recipe_details: &RecipeDetails,
     data_dir: &DataDir,
 ) -> Markup {
@@ -679,16 +681,12 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
             }
             tbody {
                 @let format_nutrition = |value: Option<f64>, unit: &str| -> String {
-                    value.map_or("-".into(), |v| if v < 1.0 {
-                        format!("{:.2}{unit}", v)
-                    } else {
-                        format!("{:.0}{unit}", v)
-                    })
+                    value.map_or_else(|| "-".into(), |v| if v < 1.0 { format!("{v:.2}{unit}") } else { format!("{v:.0}{unit}") })
                 };
 
                 @if let Some(nutrition) = &recipe_details.nutrition.per_100g {
                         @for (name, value) in [
-                            ("Calories:", format_nutrition(nutrition.calories_kcal.map(|n| n.into()), " kcal")),
+                            ("Calories:", format_nutrition(nutrition.calories_kcal.map(Into::into), " kcal")),
                             ("Total carbs:", format_nutrition(nutrition.total_carbohydrates, "g")),
                             ("Sugars:", format_nutrition(nutrition.sugars_g, "g")),
                             ("Protein:", format_nutrition(nutrition.protein_g, "g")),
@@ -729,7 +727,7 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
                 @if let Some(nutrition) = &recipe_details.nutrition.per_serving {
                     @for (name, value) in [
                         ("Serving size:", if nutrition.serving_size.is_empty() { "1" } else { Default::default() }.to_string()),
-                        ("Calories:", format_nutrition(nutrition.nutrition.calories_kcal.map(|n| n.into()), " kcal")),
+                        ("Calories:", format_nutrition(nutrition.nutrition.calories_kcal.map(Into::into), " kcal")),
                         ("Total carbs:", format_nutrition(nutrition.nutrition.total_carbohydrates, "g")),
                         ("Sugars:", format_nutrition(nutrition.nutrition.sugars_g, "g")),
                         ("Protein:", format_nutrition(nutrition.nutrition.protein_g, "g")),
@@ -916,7 +914,7 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
 }
 
 fn format_timer_label(seconds: i32) -> String {
-    let duration = Duration::from_secs(seconds as u64);
+    let duration = Duration::from_secs(u64::from(seconds.unsigned_abs()));
     format!("Start {} timer", humantime::format_duration(duration))
 }
 

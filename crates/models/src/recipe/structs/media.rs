@@ -19,7 +19,7 @@ pub(crate) struct AdditionalImageForInsert {
 }
 
 /// Represents a video associated with a recipe.
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct Video {
     pub video: Uuid,
     pub duration: Option<chrono::Duration>,
@@ -29,7 +29,7 @@ pub struct Video {
 }
 
 /// Represents the association between a video and a recipe in the `videos_recipes` table.
-#[derive(Debug, PartialEq, Identifiable, Selectable, Queryable, Associations)]
+#[derive(Debug, Eq, PartialEq, Identifiable, Selectable, Queryable, Associations)]
 #[diesel(table_name = schema::videos_recipes)]
 #[diesel(belongs_to(Recipe))]
 #[diesel(check_for_backend(diesel::pg::Pg))]

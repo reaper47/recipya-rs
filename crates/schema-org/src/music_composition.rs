@@ -46,7 +46,7 @@ pub struct MusicComposition {
     ///<https://schema.org/musicArrangement>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub music_arrangement: Vec<MusicComposition>,
+    pub music_arrangement: Vec<Self>,
     ///<https://schema.org/musicalKey>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -54,7 +54,7 @@ pub struct MusicComposition {
     ///<https://schema.org/includedComposition>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub included_composition: Vec<MusicComposition>,
+    pub included_composition: Vec<Self>,
     ///<https://schema.org/composer>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

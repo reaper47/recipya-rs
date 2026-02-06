@@ -58,7 +58,13 @@ pub async fn add_user_handler(
         }
     };
 
-    templates::settings::new_user_with_new_row(num_users as usize, &user).into_response()
+    templates::settings::new_user_with_new_row(
+        usize::try_from(num_users)
+            .inspect_err(|err| error!("Failed to cast num users to usize '{num_users}': {err}"))
+            .unwrap_or_default(),
+        &user,
+    )
+    .into_response()
 }
 
 /// Handles deleting a user.
@@ -103,7 +109,7 @@ pub async fn delete_user_handler(
     };
 
     broadcast_success(&state, caller_user_id, "User deleted.").await;
-    templates::settings::render_users_table(users, true).into_response()
+    templates::settings::render_users_table(&users, true).into_response()
 }
 
 /// Renders the form to update the user form from the admin table.
@@ -150,7 +156,7 @@ pub async fn update_user_handler(
     }
 
     match User::update_password_by_user_id(&state.mm, user_id, &form.new_password).await {
-        Ok(_) => {}
+        Ok(()) => {}
         Err(err) => {
             error!("Error updating user password for user #'{user_id}': {err}");
             broadcast_error(&state, caller_user_id, "Failed to update user password.").await;

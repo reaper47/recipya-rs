@@ -29,22 +29,22 @@ impl MeasurementSystem {
     /// - Metric => 2
     /// - Metric (Australia) => 3
     /// - US Customary => 4
-    pub fn id(&self) -> i16 {
+    pub const fn id(&self) -> i16 {
         match self {
-            MeasurementSystem::ImperialUK => 1,
-            MeasurementSystem::Metric => 2,
-            MeasurementSystem::MetricAustralia => 3,
-            MeasurementSystem::UsCustomary => 4,
+            Self::ImperialUK => 1,
+            Self::Metric => 2,
+            Self::MetricAustralia => 3,
+            Self::UsCustomary => 4,
         }
     }
 
-    /// Creates a MeasurementSystem from its numeric ID
-    pub fn from_id(id: i16) -> Result<Self> {
+    /// Creates a `MeasurementSystem` from its numeric ID
+    pub const fn from_id(id: i16) -> Result<Self> {
         match id {
-            1 => Ok(MeasurementSystem::ImperialUK),
-            2 => Ok(MeasurementSystem::Metric),
-            3 => Ok(MeasurementSystem::MetricAustralia),
-            4 => Ok(MeasurementSystem::UsCustomary),
+            1 => Ok(Self::ImperialUK),
+            2 => Ok(Self::Metric),
+            3 => Ok(Self::MetricAustralia),
+            4 => Ok(Self::UsCustomary),
             _ => Err(Error::InvalidMeasurementSystem(id)),
         }
     }
@@ -60,61 +60,46 @@ impl MeasurementSystem {
                 let Ok(unit) = match unit {
                     Unit::Volume(u) => match u {
                         Volume::MetricTeaspoon(v) => match self {
-                            MeasurementSystem::ImperialUK => {
-                                Unit::Volume(Volume::ImperialTeaspoon(v))
-                            }
-                            MeasurementSystem::Metric => Unit::Volume(Volume::MetricTeaspoon(v)),
-                            MeasurementSystem::MetricAustralia => {
-                                Unit::Volume(Volume::AustralianTeaspoon(v))
-                            }
-                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USTeaspoon(v)),
+                            Self::ImperialUK => Unit::Volume(Volume::ImperialTeaspoon(v)),
+                            Self::Metric => Unit::Volume(Volume::MetricTeaspoon(v)),
+                            Self::MetricAustralia => Unit::Volume(Volume::AustralianTeaspoon(v)),
+                            Self::UsCustomary => Unit::Volume(Volume::USTeaspoon(v)),
                         },
                         Volume::MetricTablespoon(v) => match self {
-                            MeasurementSystem::ImperialUK => {
-                                Unit::Volume(Volume::ImperialTablespoon(v))
-                            }
-                            MeasurementSystem::Metric => Unit::Volume(Volume::MetricTablespoon(v)),
-                            MeasurementSystem::MetricAustralia => {
-                                Unit::Volume(Volume::AustralianTablespoon(v))
-                            }
-                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USTablespoon(v)),
+                            Self::ImperialUK => Unit::Volume(Volume::ImperialTablespoon(v)),
+                            Self::Metric => Unit::Volume(Volume::MetricTablespoon(v)),
+                            Self::MetricAustralia => Unit::Volume(Volume::AustralianTablespoon(v)),
+                            Self::UsCustomary => Unit::Volume(Volume::USTablespoon(v)),
                         },
                         Volume::MetricDessertspoon(v) => match self {
-                            MeasurementSystem::ImperialUK => {
+                            Self::ImperialUK | Self::UsCustomary => {
                                 Unit::Volume(Volume::ImperialDessertspoon(v))
                             }
-                            MeasurementSystem::Metric => {
-                                Unit::Volume(Volume::MetricDessertspoon(v))
-                            }
-                            MeasurementSystem::MetricAustralia => {
+                            Self::Metric => Unit::Volume(Volume::MetricDessertspoon(v)),
+                            Self::MetricAustralia => {
                                 Unit::Volume(Volume::AustralianDessertspoon(v))
-                            }
-                            MeasurementSystem::UsCustomary => {
-                                Unit::Volume(Volume::ImperialDessertspoon(v))
                             }
                         },
                         Volume::MetricCup(v) => match self {
-                            MeasurementSystem::ImperialUK => Unit::Volume(Volume::ImperialCup(v)),
-                            MeasurementSystem::Metric => Unit::Volume(Volume::MetricCup(v)),
-                            MeasurementSystem::MetricAustralia => {
-                                Unit::Volume(Volume::AustralianCup(v))
-                            }
-                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USCup(v)),
+                            Self::ImperialUK => Unit::Volume(Volume::ImperialCup(v)),
+                            Self::Metric => Unit::Volume(Volume::MetricCup(v)),
+                            Self::MetricAustralia => Unit::Volume(Volume::AustralianCup(v)),
+                            Self::UsCustomary => Unit::Volume(Volume::USCup(v)),
                         },
                         Volume::ImperialFluidOunce(v) => match self {
-                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USFluidOunce(v)),
+                            Self::UsCustomary => Unit::Volume(Volume::USFluidOunce(v)),
                             _ => Unit::Volume(Volume::ImperialFluidOunce(v)),
                         },
                         Volume::ImperialPint(v) => match self {
-                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USPint(v)),
+                            Self::UsCustomary => Unit::Volume(Volume::USPint(v)),
                             _ => Unit::Volume(Volume::ImperialPint(v)),
                         },
                         Volume::ImperialQuart(v) => match self {
-                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USQuart(v)),
+                            Self::UsCustomary => Unit::Volume(Volume::USQuart(v)),
                             _ => Unit::Volume(Volume::ImperialQuart(v)),
                         },
                         Volume::ImperialGallon(v) => match self {
-                            MeasurementSystem::UsCustomary => Unit::Volume(Volume::USGallon(v)),
+                            Self::UsCustomary => Unit::Volume(Volume::USGallon(v)),
                             _ => Unit::Volume(Volume::ImperialGallon(v)),
                         },
                         _ => Unit::Volume(u),
@@ -134,58 +119,56 @@ impl MeasurementSystem {
     fn from_unit(unit: &Unit) -> Self {
         match unit {
             Unit::Length(v) => match v {
-                Length::Millimetre(_) => MeasurementSystem::Metric,
-                Length::Centimetre(_) => MeasurementSystem::Metric,
-                Length::Metre(_) => MeasurementSystem::Metric,
-                Length::Kilometre(_) => MeasurementSystem::Metric,
-                Length::Inch(_) => MeasurementSystem::UsCustomary,
-                Length::Foot(_) => MeasurementSystem::UsCustomary,
+                Length::Millimetre(_)
+                | Length::Centimetre(_)
+                | Length::Metre(_)
+                | Length::Kilometre(_) => Self::Metric,
+                Length::Inch(_) | Length::Foot(_) => Self::UsCustomary,
             },
             Unit::Mass(v) => match v {
-                Mass::Milligram(_) => MeasurementSystem::Metric,
-                Mass::Gram(_) => MeasurementSystem::Metric,
-                Mass::Dekagram(_) => MeasurementSystem::Metric,
-                Mass::Hectogram(_) => MeasurementSystem::Metric,
-                Mass::Kilogram(_) => MeasurementSystem::Metric,
-                Mass::Ounce(_) => MeasurementSystem::UsCustomary,
-                Mass::Pound(_) => MeasurementSystem::UsCustomary,
+                Mass::Milligram(_)
+                | Mass::Gram(_)
+                | Mass::Dekagram(_)
+                | Mass::Hectogram(_)
+                | Mass::Kilogram(_) => Self::Metric,
+                Mass::Ounce(_) | Mass::Pound(_) => Self::UsCustomary,
             },
             Unit::Temperature(v) => match v {
-                Temperature::Celsius(_) => MeasurementSystem::Metric,
-                Temperature::Fahrenheit(_) => MeasurementSystem::UsCustomary,
+                Temperature::Celsius(_) => Self::Metric,
+                Temperature::Fahrenheit(_) => Self::UsCustomary,
             },
             Unit::Volume(v) => match v {
-                Volume::Millilitre(_) => MeasurementSystem::Metric,
-                Volume::Centilitre(_) => MeasurementSystem::Metric,
-                Volume::Decilitre(_) => MeasurementSystem::Metric,
-                Volume::Litre(_) => MeasurementSystem::Metric,
-                Volume::MetricTeaspoon(_) => MeasurementSystem::Metric,
-                Volume::MetricTablespoon(_) => MeasurementSystem::Metric,
-                Volume::MetricDessertspoon(_) => MeasurementSystem::Metric,
-                Volume::MetricCup(_) => MeasurementSystem::Metric,
-                Volume::AustralianTeaspoon(_) => MeasurementSystem::MetricAustralia,
-                Volume::AustralianDessertspoon(_) => MeasurementSystem::MetricAustralia,
-                Volume::AustralianTablespoon(_) => MeasurementSystem::MetricAustralia,
-                Volume::AustralianCup(_) => MeasurementSystem::MetricAustralia,
-                Volume::ImperialTeaspoon(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialDessertspoon(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialTablespoon(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialFluidOunce(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialGill(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialCup(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialPint(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialQuart(_) => MeasurementSystem::ImperialUK,
-                Volume::ImperialGallon(_) => MeasurementSystem::ImperialUK,
-                Volume::USTeaspoon(_) => MeasurementSystem::UsCustomary,
-                Volume::USTablespoon(_) => MeasurementSystem::UsCustomary,
-                Volume::USFluidOunce(_) => MeasurementSystem::UsCustomary,
-                Volume::USCup(_) => MeasurementSystem::UsCustomary,
-                Volume::USPint(_) => MeasurementSystem::UsCustomary,
-                Volume::USQuart(_) => MeasurementSystem::UsCustomary,
-                Volume::USGallon(_) => MeasurementSystem::UsCustomary,
-                Volume::Jigger(_) => MeasurementSystem::UsCustomary,
+                Volume::Millilitre(_)
+                | Volume::Centilitre(_)
+                | Volume::Decilitre(_)
+                | Volume::Litre(_)
+                | Volume::MetricTeaspoon(_)
+                | Volume::MetricTablespoon(_)
+                | Volume::MetricDessertspoon(_)
+                | Volume::MetricCup(_) => Self::Metric,
+                Volume::AustralianTeaspoon(_)
+                | Volume::AustralianDessertspoon(_)
+                | Volume::AustralianTablespoon(_)
+                | Volume::AustralianCup(_) => Self::MetricAustralia,
+                Volume::ImperialTeaspoon(_)
+                | Volume::ImperialDessertspoon(_)
+                | Volume::ImperialTablespoon(_)
+                | Volume::ImperialFluidOunce(_)
+                | Volume::ImperialGill(_)
+                | Volume::ImperialCup(_)
+                | Volume::ImperialPint(_)
+                | Volume::ImperialQuart(_)
+                | Volume::ImperialGallon(_) => Self::ImperialUK,
+                Volume::USTeaspoon(_)
+                | Volume::USTablespoon(_)
+                | Volume::USFluidOunce(_)
+                | Volume::USCup(_)
+                | Volume::USPint(_)
+                | Volume::USQuart(_)
+                | Volume::USGallon(_)
+                | Volume::Jigger(_) => Self::UsCustomary,
             },
-            Unit::Unitless(_) => MeasurementSystem::default(),
+            Unit::Unitless(_) => Self::default(),
         }
     }
 }
@@ -196,17 +179,14 @@ impl From<Vec<&str>> for MeasurementSystem {
 
         for element in &elements {
             if let Ok(unit) = Unit::from_str(element) {
-                *counter
-                    .entry(MeasurementSystem::from_unit(&unit))
-                    .or_insert(0) += 1;
+                *counter.entry(Self::from_unit(&unit)).or_insert(0) += 1;
             }
         }
 
         counter
             .into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(system, _)| system)
-            .unwrap_or(MeasurementSystem::Metric)
+            .map_or(Self::Metric, |(system, _)| system)
     }
 }
 

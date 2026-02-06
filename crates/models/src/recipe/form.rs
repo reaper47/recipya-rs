@@ -42,6 +42,7 @@ where
 {
     type Rejection = MultipartRejection;
 
+    #[allow(clippy::too_many_lines)]
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
         let mut multipart = Multipart::from_request(req, state).await?;
 
@@ -85,7 +86,9 @@ where
                     }
                 }
                 "media-existing-image" => {
-                    let filename = text_trim(field).await.ok_or(InvalidBoundary::default())?;
+                    let filename = text_trim(field)
+                        .await
+                        .ok_or_else(InvalidBoundary::default)?;
                     let path = PathBuf::from(filename);
 
                     let uuid = path
@@ -99,7 +102,9 @@ where
                     images.insert(uuid.into(), path);
                 }
                 "media-existing-video" => {
-                    let filename = text_trim(field).await.ok_or(InvalidBoundary::default())?;
+                    let filename = text_trim(field)
+                        .await
+                        .ok_or_else(InvalidBoundary::default)?;
                     let path = PathBuf::from(filename);
 
                     let uuid = path
@@ -120,8 +125,8 @@ where
                 "title" => {
                     title = text_trim(field)
                         .await
-                        .ok_or(InvalidBoundary::default())?
-                        .into()
+                        .ok_or_else(InvalidBoundary::default)?
+                        .into();
                 }
                 "tool" => field.text().await.ok().iter().for_each(|tool| {
                     let quantity = tool
@@ -132,51 +137,51 @@ where
 
                     let name = tool.replace(&quantity.to_string(), "").trim().to_owned();
                     if !name.is_empty() {
-                        tools.push(ToolForCreate { name, quantity })
+                        tools.push(ToolForCreate { name, quantity });
                     }
                 }),
                 "yield" => yield_ = parse_i16(field).await,
 
                 "calories-per-100g" => nutrition_per_100g.calories_kcal = parse_i16(field).await,
                 "cholesterol-per-100g" => {
-                    nutrition_per_100g.cholesterol_mg = parse_i16(field).await
+                    nutrition_per_100g.cholesterol_mg = parse_i16(field).await;
                 }
                 "fiber-per-100g" => nutrition_per_100g.fiber_g = parse_i16(field).await,
                 "protein-per-100g" => nutrition_per_100g.protein_g = parse_i16(field).await,
                 "total-carbohydrates-per-100g" => {
-                    nutrition_per_100g.total_carbohydrates = parse_i16(field).await
+                    nutrition_per_100g.total_carbohydrates = parse_i16(field).await;
                 }
                 "total-fat-per-100g" => nutrition_per_100g.total_fat_g = parse_i16(field).await,
                 "saturated-fat-per-100g" => {
-                    nutrition_per_100g.saturated_fat_g = parse_i16(field).await
+                    nutrition_per_100g.saturated_fat_g = parse_i16(field).await;
                 }
                 "sodium-per-100g" => nutrition_per_100g.sodium_mg = parse_i16(field).await,
                 "sugars-per-100g" => nutrition_per_100g.sugars_g = parse_i16(field).await,
                 "trans-fat-per-100g" => nutrition_per_100g.trans_fat_g = parse_i16(field).await,
                 "unsaturated-fat-per-100g" => {
-                    nutrition_per_100g.unsaturated_fat_g = parse_i16(field).await
+                    nutrition_per_100g.unsaturated_fat_g = parse_i16(field).await;
                 }
 
                 "calories-per-serving" => {
-                    nutrition_per_serving.nutrition.calories_kcal = parse_i16(field).await
+                    nutrition_per_serving.nutrition.calories_kcal = parse_i16(field).await;
                 }
                 "cholesterol-per-serving" => {
-                    nutrition_per_serving.nutrition.cholesterol_mg = parse_i16(field).await
+                    nutrition_per_serving.nutrition.cholesterol_mg = parse_i16(field).await;
                 }
                 "fiber-per-serving" => {
-                    nutrition_per_serving.nutrition.fiber_g = parse_i16(field).await
+                    nutrition_per_serving.nutrition.fiber_g = parse_i16(field).await;
                 }
                 "protein-per-serving" => {
-                    nutrition_per_serving.nutrition.protein_g = parse_i16(field).await
+                    nutrition_per_serving.nutrition.protein_g = parse_i16(field).await;
                 }
                 "total-carbohydrates-per-serving" => {
-                    nutrition_per_serving.nutrition.total_carbohydrates = parse_i16(field).await
+                    nutrition_per_serving.nutrition.total_carbohydrates = parse_i16(field).await;
                 }
                 "total-fat-per-serving" => {
-                    nutrition_per_serving.nutrition.total_fat_g = parse_i16(field).await
+                    nutrition_per_serving.nutrition.total_fat_g = parse_i16(field).await;
                 }
                 "saturated-fat-per-serving" => {
-                    nutrition_per_serving.nutrition.saturated_fat_g = parse_i16(field).await
+                    nutrition_per_serving.nutrition.saturated_fat_g = parse_i16(field).await;
                 }
                 "serving-size" => field
                     .text()
@@ -185,16 +190,16 @@ where
                     .iter()
                     .for_each(|s| nutrition_per_serving.serving_size = s.into()),
                 "sodium-per-serving" => {
-                    nutrition_per_serving.nutrition.sodium_mg = parse_i16(field).await
+                    nutrition_per_serving.nutrition.sodium_mg = parse_i16(field).await;
                 }
                 "sugars-per-serving" => {
-                    nutrition_per_serving.nutrition.sugars_g = parse_i16(field).await
+                    nutrition_per_serving.nutrition.sugars_g = parse_i16(field).await;
                 }
                 "trans-fat-per-serving" => {
-                    nutrition_per_serving.nutrition.trans_fat_g = parse_i16(field).await
+                    nutrition_per_serving.nutrition.trans_fat_g = parse_i16(field).await;
                 }
                 "unsaturated-fat-per-serving" => {
-                    nutrition_per_serving.nutrition.unsaturated_fat_g = parse_i16(field).await
+                    nutrition_per_serving.nutrition.unsaturated_fat_g = parse_i16(field).await;
                 }
                 _ => {}
             }
@@ -204,8 +209,8 @@ where
             return Err(InvalidBoundary::default())?;
         }
 
-        Ok(RecipeForm {
-            title: title.ok_or(InvalidBoundary::default())?,
+        Ok(Self {
+            title: title.ok_or_else(InvalidBoundary::default)?,
             category,
             cuisine,
             description,
@@ -239,7 +244,7 @@ where
 }
 
 async fn calc_time_from_field(field: Field<'_>) -> i32 {
-    if let Ok(text) = field.text().await {
+    field.text().await.map_or(0, |text| {
         let parts: Vec<&str> = text.split(':').collect();
         if parts.len() == 3 {
             let [hours, minutes, seconds]: [i32; 3] = parts
@@ -253,7 +258,5 @@ async fn calc_time_from_field(field: Field<'_>) -> i32 {
         } else {
             0
         }
-    } else {
-        0
-    }
+    })
 }

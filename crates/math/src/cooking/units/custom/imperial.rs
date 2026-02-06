@@ -39,7 +39,7 @@ impl VolumeImperialTeaspoonExt for Volume {
     }
 
     fn from_teaspoons_uk(teaspoons: f64) -> Volume {
-        Volume::from_millilitres(teaspoons * IMPERIAL_TEASPOON_IN_MILLILITRES)
+        Self::from_millilitres(teaspoons * IMPERIAL_TEASPOON_IN_MILLILITRES)
     }
 }
 
@@ -82,7 +82,7 @@ impl VolumeImperialTablespoonExt for Volume {
     }
 
     fn from_tablespoons_uk(tablespoons: f64) -> Volume {
-        Volume::from_millilitres(tablespoons * IMPERIAL_TABLESPOON_IN_MILLILITRES)
+        Self::from_millilitres(tablespoons * IMPERIAL_TABLESPOON_IN_MILLILITRES)
     }
 }
 
@@ -123,7 +123,7 @@ impl VolumeImperialDessertSpoonExt for Volume {
     }
 
     fn from_dessertspoons_uk(spoons: f64) -> Volume {
-        Volume::from_millilitres(spoons * IMPERIAL_DESSERTSPOON_IN_MILLILITERS)
+        Self::from_millilitres(spoons * IMPERIAL_DESSERTSPOON_IN_MILLILITERS)
     }
 }
 
@@ -164,11 +164,11 @@ impl VolumeImperialCupExt for Volume {
     }
 
     fn from_cups_uk(cups: f64) -> Volume {
-        Volume::from_millilitres(cups * IMPERIAL_CUP_IN_MILLILITERS)
+        Self::from_millilitres(cups * IMPERIAL_CUP_IN_MILLILITERS)
     }
 }
 
-const IMPERIAL_GILL_IN_MILLILITERS: f64 = 142.0653125;
+const IMPERIAL_GILL_IN_MILLILITERS: f64 = 142.065_312_5;
 
 pub struct ImperialGill {
     pub value: f64,
@@ -205,11 +205,11 @@ impl VolumeImperialGillExt for Volume {
     }
 
     fn from_gills_uk(gills: f64) -> Volume {
-        Volume::from_millilitres(gills * IMPERIAL_GILL_IN_MILLILITERS)
+        Self::from_millilitres(gills * IMPERIAL_GILL_IN_MILLILITERS)
     }
 }
 
-const IMPERIAL_QUART_IN_LITERS: f64 = 1.136522;
+const IMPERIAL_QUART_IN_LITERS: f64 = 1.136_522;
 
 pub struct ImperialQuart {
     pub value: f64,
@@ -246,6 +246,6 @@ impl VolumeImperialQuartExt for Volume {
     }
 
     fn from_quarts_uk(quarts: f64) -> Volume {
-        Volume::from_litres(quarts * IMPERIAL_QUART_IN_LITERS)
+        Self::from_litres(quarts * IMPERIAL_QUART_IN_LITERS)
     }
 }

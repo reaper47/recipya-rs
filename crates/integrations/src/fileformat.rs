@@ -3,7 +3,7 @@ use std::path::Path;
 use tracing::warn;
 
 /// Represents the supported file formats for some applications.
-#[derive(Debug, Default, strum_macros::Display, PartialEq)]
+#[derive(Debug, Default, strum_macros::Display, Eq, PartialEq)]
 pub enum FileFormat {
     Json,
     MCB,
@@ -37,18 +37,18 @@ impl FileFormat {
             .unwrap_or("");
 
         match ext {
-            "json" => FileFormat::Json,
-            "mcb" => FileFormat::MCB,
-            "mx2" => FileFormat::MX2,
-            "mxp" => FileFormat::MXP,
-            "mz2" => FileFormat::MZ2,
-            "mm" | "mmf" => FileFormat::MealMaster,
-            "rzk" | "rk" => FileFormat::Rezkonv,
-            "txt" => FileFormat::Txt,
-            "xml" => FileFormat::Xml,
+            "json" => Self::Json,
+            "mcb" => Self::MCB,
+            "mx2" => Self::MX2,
+            "mxp" => Self::MXP,
+            "mz2" => Self::MZ2,
+            "mm" | "mmf" => Self::MealMaster,
+            "rzk" | "rk" => Self::Rezkonv,
+            "txt" => Self::Txt,
+            "xml" => Self::Xml,
             _ => {
                 warn!("File '{filename}' has an unknown file format: {ext}");
-                FileFormat::Unknown
+                Self::Unknown
             }
         }
     }
