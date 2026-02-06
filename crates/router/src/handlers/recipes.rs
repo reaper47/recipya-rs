@@ -15,6 +15,7 @@ use futures_util::future::join_all;
 use futures_util::pin_mut;
 use futures_util::stream::{self, StreamExt};
 use integrations::api::Credentials;
+use iso8601::DateTime;
 use itertools::izip;
 use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
@@ -49,7 +50,8 @@ use templates::recipes::timeline::Event;
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{
-    IMessage, MessageHtmx, MessageType, broadcast_error, broadcast_success, broadcast_warning,
+    IMessage, MessageHtmx, MessageStatus, MessageType, broadcast_error, broadcast_success,
+    broadcast_warning,
 };
 use crate::middleware::mw_auth::RequireAuth;
 use crate::recipes_router::params::{
@@ -65,7 +67,7 @@ pub async fn delete_recipe_handler(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     match Recipe::delete(&state.mm, recipe_id, user.id).await {
-        Ok(_) => {
+        Ok(()) => {
             state.remove_cached_recipe((user.id, recipe_id)).await;
             (StatusCode::NO_CONTENT, [(HX_REDIRECT, "/")]).into_response()
         }
@@ -134,9 +136,9 @@ pub async fn recipes_handler(
     };
 
     Ok(templates::recipes::index(
-        state.fs_support,
+        &state.fs_support,
         uri.path(),
-        Data {
+        &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
@@ -146,9 +148,9 @@ pub async fn recipes_handler(
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,
-                last_checked_update_at: Default::default(),
-                last_updated_at: Default::default(),
-                version: "".to_string(),
+                last_checked_update_at: DateTime::default(),
+                last_updated_at: DateTime::default(),
+                version: String::new(),
             },
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
@@ -159,8 +161,8 @@ pub async fn recipes_handler(
             share: None,
             recipes,
         },
-        state.data_dir,
-        settings,
+        &state.data_dir,
+        &settings,
     )
     .into_response())
 }
@@ -198,7 +200,7 @@ pub async fn duplicate_recipe_handler(
     recipe.recipe_details.recipe.name = format!("{} (copy)", recipe.recipe_details.recipe.name);
 
     Ok(templates::recipes::add_recipe_manual(
-        Data {
+        &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
@@ -206,7 +208,7 @@ pub async fn duplicate_recipe_handler(
             recipes: vec![recipe],
             ..Default::default()
         },
-        settings,
+        &settings,
         categories,
         keywords,
     )
@@ -238,19 +240,20 @@ pub async fn edit_recipe_handler(
     };
 
     let recipe_id = recipe.recipe_details.recipe.id;
+    let is_autologin = state.config.read().await.is_autologin;
 
     match templates::recipes::edit_recipe(
-        state.fs_support,
+        &state.fs_support,
         Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            is_autologin,
             is_hx_request: is_hx_request(&header_map),
             recipes: vec![recipe],
             ..Default::default()
         },
         &state.data_dir,
-        settings,
+        &settings,
         categories,
         keywords,
     ) {
@@ -384,7 +387,7 @@ pub async fn edit_recipe_put_handler(
     };
 
     match Recipe::update(&state.mm, user.id, recipe_id, &mut recipe_c).await {
-        Ok(_) => {
+        Ok(()) => {
             state.remove_cached_recipe((user.id, recipe_id)).await;
         }
         Err(err) => {
@@ -395,7 +398,7 @@ pub async fn edit_recipe_put_handler(
             broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }
-    };
+    }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
     if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
@@ -428,10 +431,10 @@ pub async fn scale_recipe_handler(
                 system::MeasurementSystem::from_id(recipe.recipe.measurement_system_id)
                     .unwrap_or_default();
 
-            let factor = params.yield_param as f64 / recipe.recipe.yield_ as f64;
+            let factor = f64::from(params.yield_param) / f64::from(recipe.recipe.yield_);
             let items = recipe.ingredients.items_as_text();
             let scaled = measurement_system.scale(
-                items.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+                items.iter().map(ToString::to_string).collect::<Vec<_>>(),
                 factor,
             );
 
@@ -542,7 +545,7 @@ pub async fn timeline_get_handler(
     let mut all_events = static_events;
     all_events.extend(events);
 
-    templates::recipes::timeline::render_events(recipe_id, all_events).into_response()
+    templates::recipes::timeline::render_events(recipe_id, &all_events).into_response()
 }
 
 /// Handles adding a timeline component to the recipe.
@@ -560,7 +563,7 @@ pub async fn timeline_post_handler(
             title: form.title,
             comment: form.comment,
             rating: form.rating,
-            image: upload_image(form.image, Arc::clone(&state.fs_support), &state.data_dir).await,
+            image: upload_image(form.image, &Arc::clone(&state.fs_support), &state.data_dir),
             created_at: form.date,
         },
     )
@@ -578,9 +581,9 @@ pub async fn timeline_post_handler(
     (StatusCode::CREATED, "").into_response()
 }
 
-async fn upload_image(
+fn upload_image(
     map: HashMap<String, PathBuf>,
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     data_dir: &DataDir,
 ) -> Option<Uuid> {
     map.into_iter()
@@ -605,7 +608,7 @@ async fn upload_image(
         )
         .collect::<Vec<_>>()
         .first()
-        .cloned()
+        .copied()
 }
 
 /// Handles getting a timeline event for view.
@@ -693,7 +696,7 @@ pub async fn timeline_put_handler(
     {
         Some(img)
     } else {
-        upload_image(form.image, Arc::clone(&state.fs_support), &state.data_dir).await
+        upload_image(form.image, &Arc::clone(&state.fs_support), &state.data_dir)
     };
 
     let new_event_params = RecipeTimeline {
@@ -756,7 +759,7 @@ pub async fn toggle_favourite_handler(
 
         state.remove_cached_recipe(cache_key).await;
         state.cache_recipe(cache_key, &view_recipe).await;
-    };
+    }
 
     let path = uri.path();
     let is_deletable = path.starts_with("/recipes/search") && path.contains("fav=true");
@@ -781,14 +784,14 @@ pub async fn add_recipes_handler(
 
     Ok(templates::recipes::add_page(
         uri.path(),
-        Data {
+        &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
-        settings,
+        &settings,
     )
     .into_response())
 }
@@ -829,10 +832,21 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             }
         };
 
-        let num_recipes = recipes.len() as i64;
+        let num_recipes = recipes
+            .len()
+            .try_into()
+            .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
+            .unwrap_or(i64::MAX);
 
         let (mut report, recipe_ids) = push_recipes_to_db(&state, recipes, user_id).await;
-        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
+        report.exec_time_ms = i64::try_from(start_time.elapsed().as_millis())
+            .inspect_err(|err| {
+                error!(
+                    "Failed to cast parsed recipes exec time ms '{}': {err}",
+                    start_time.elapsed().as_millis()
+                );
+            })
+            .unwrap_or_default();
 
         broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
     });
@@ -840,7 +854,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
 
 async fn parse_recipes(
     state: &AppState,
-    mut form: ImportFromAppForm,
+    form: ImportFromAppForm,
     user_id: Uuid,
 ) -> Result<Vec<schema_org::Recipe>> {
     state
@@ -877,10 +891,14 @@ async fn push_recipes_to_db(
     recipes: Vec<schema_org::Recipe>,
     user_id: Uuid,
 ) -> (ReportForCreate, Vec<i64>) {
-    let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+    let mut report = ReportForCreate::new(&ReportTypes::Import, user_id);
     let mut curr = 0;
     let mut recipe_ids = Vec::new();
-    let num_recipes = recipes.len() as i64;
+    let num_recipes = recipes
+        .len()
+        .try_into()
+        .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
+        .unwrap_or(i64::MAX);
 
     for schema in recipes {
         curr += 1;
@@ -927,6 +945,7 @@ pub async fn add_recipe_import_api_handler(
     (StatusCode::ACCEPTED, "").into_response()
 }
 
+#[allow(clippy::too_many_lines)]
 fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uuid) {
     tokio::spawn(async move {
         let api = form.api.to_string();
@@ -974,8 +993,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
         let mut total = -1;
         let mut processed = 0;
         let mut successes = Vec::new();
-        let mut failures = Vec::new();
-        let mut report = ReportForCreate::new(ReportTypes::Import, user_id);
+        let mut report = ReportForCreate::new(&ReportTypes::Import, user_id);
 
         let mut last_progress_time = Instant::now();
         let progress_interval = std::time::Duration::from_millis(500);
@@ -994,7 +1012,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
 
                     successes.push(recipe_id);
                 }
-                Err((recipe_api_id, recipe_name, num_recipes, err)) => {
+                Err((_recipe_api_id, recipe_name, num_recipes, err)) => {
                     if total == -1 {
                         total = num_recipes;
                     }
@@ -1019,8 +1037,6 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
                             ));
                         }
                     }
-
-                    failures.push((recipe_api_id, err));
                 }
             }
 
@@ -1041,7 +1057,14 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
             .broadcast_progress("Fetching recipes...", processed, total, true, user_id)
             .await;
 
-        report.exec_time_ms = start_time.elapsed().as_millis() as i64;
+        report.exec_time_ms = i64::try_from(start_time.elapsed().as_millis())
+            .inspect_err(|err| {
+                error!(
+                    "Failed to cast exec_time_ms '{:?}': {err}",
+                    start_time.elapsed()
+                );
+            })
+            .unwrap_or_default();
         broadcast_import_done_toast(&state, successes, processed, report, api, user_id).await;
     });
 }
@@ -1076,7 +1099,9 @@ async fn broadcast_import_done_toast(
 ) {
     state.hide_broadcast(user_id).await;
 
-    let num_success = recipe_ids.len() as i64;
+    let num_success = i64::try_from(recipe_ids.len())
+        .inspect_err(|err| error!("Failed to cast num success '{}': {err}", recipe_ids.len()))
+        .unwrap_or(i64::MAX);
     let num_skipped = num_recipes - num_success;
 
     info!(
@@ -1124,22 +1149,23 @@ pub async fn add_recipe_import_preview_handler(
 
             let fs_support = Arc::clone(&state.fs_support);
             let data_dir = state.data_dir.clone();
+            let is_autologin = state.config.read().await.is_autologin;
 
             match templates::recipes::view_recipe_helper(
-                fs_support,
-                data_dir,
+                &fs_support,
+                &data_dir,
                 &Data {
                     is_admin: user.is_admin,
                     is_authenticated: true,
-                    is_autologin: state.config.read().await.is_autologin,
+                    is_autologin,
                     is_hx_request: true,
                     is_preview: true,
                     about: AboutData {
                         is_update_available: false,
                         is_check_update: false,
-                        last_checked_update_at: Default::default(),
-                        last_updated_at: Default::default(),
-                        version: "".to_string(),
+                        last_checked_update_at: DateTime::default(),
+                        last_updated_at: DateTime::default(),
+                        version: String::new(),
                     },
                     pagination: Some(PaginationData::hidden()),
                     searchbar: Some(SearchbarData {
@@ -1192,17 +1218,18 @@ pub async fn add_recipe_import_raw_handler(
                 Ok(recipe_id) => {
                     let url = format!("/recipes/{recipe_id}");
 
-                    match HeaderValue::from_str(&url) {
-                        Ok(hv) => (StatusCode::OK, [(HX_REDIRECT, hv)]).into_response(),
-                        Err(_) => (StatusCode::BAD_REQUEST, "invalid redirect url").into_response(),
-                    }
+                    HeaderValue::from_str(&url).map_or_else(
+                        |_| (StatusCode::BAD_REQUEST, "invalid redirect url").into_response(),
+                        |hv| (StatusCode::OK, [(HX_REDIRECT, hv)]).into_response(),
+                    )
                 }
-                Err(DuplicateEntity) => {
+                Err(models::Error::DuplicateEntityWithID(_)) => {
                     warn!("Recipe exists: {}", recipe_c.name);
                     broadcast_error(&state, user.id, "Recipe exists.").await;
                     Error::EntityExists { entity: "recipe" }.into_response()
                 }
                 Err(err) => {
+                    println!("Error saving recipe '{}': {err}", recipe_c.name);
                     error!("Error saving recipe '{}': {err}", recipe_c.name);
                     broadcast_error(&state, user.id, "Failed to insert recipe.").await;
                     Error::Database.into_response()
@@ -1233,14 +1260,14 @@ pub async fn add_manual_recipe_handler(
     };
 
     Ok(templates::recipes::add_recipe_manual(
-        Data {
+        &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },
-        settings,
+        &settings,
         categories,
         keywords,
     )
@@ -1298,7 +1325,7 @@ pub async fn add_manual_recipe_post_handler(
 
     let ingredients = form.ingredients;
     let measurement_system_id =
-        system::MeasurementSystem::from(ingredients.iter().map(|s| s.as_str()).collect::<Vec<_>>())
+        system::MeasurementSystem::from(ingredients.iter().map(String::as_str).collect::<Vec<_>>())
             .id();
 
     let recipe_id = match Recipe::create(
@@ -1314,7 +1341,7 @@ pub async fn add_manual_recipe_post_handler(
             is_favourite: false,
             rating: form.rating,
             videos,
-            category: form.category.or(Some("uncategorized".into())),
+            category: form.category.or_else(|| Some("uncategorized".into())),
             cuisine: form.cuisine,
             ingredients: SectionComponents::Flat(ingredients.iter().map(Item::new).collect()),
             instructions: SectionComponents::Flat(
@@ -1388,16 +1415,19 @@ struct FetchWebsiteContext {
 impl FetchWebsiteContext {
     fn new(num_websites: usize, user_id: Uuid) -> Self {
         Self {
-            count_success: Arc::new(Default::default()),
-            count_warning: Arc::new(Default::default()),
-            count_error: Arc::new(Default::default()),
+            count_success: Arc::new(AtomicI64::default()),
+            count_warning: Arc::new(AtomicI64::default()),
+            count_error: Arc::new(AtomicI64::default()),
             recipe_ids: Arc::new(Mutex::new(Vec::with_capacity(num_websites))),
             report: Arc::new(Mutex::new(ReportForCreate::new(
-                ReportTypes::Import,
+                &ReportTypes::Import,
                 user_id,
             ))),
             started_at: Instant::now(),
-            total: num_websites as i64,
+            total: num_websites
+                .try_into()
+                .inspect_err(|err| error!("Failed to cast total '{num_websites}' to i64: {err}"))
+                .unwrap_or(i64::MAX),
         }
     }
 
@@ -1416,6 +1446,7 @@ impl FetchWebsiteContext {
                     "Operation Warning",
                     "The recipe exists.",
                 )
+                .status(MessageStatus::Warning)
                 .action(Some(&view_recipe_link))
                 .build()
             } else if count_error == 1 {
@@ -1485,6 +1516,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let (tx, mut rx) = mpsc::channel::<()>(num_websites);
         let fetch_ctx = FetchWebsiteContext::new(num_websites, user_id);
         let start_time = Instant::now();
+        let num_recipes = urls.len();
 
         for url in urls {
             let tx = tx.clone();
@@ -1492,7 +1524,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             let state = state.clone();
 
             tokio::spawn(async move {
-                match state.scrape(url.clone()) {
+                match state.scrape(url.clone()).await {
                     Ok(schema) => {
                         let recipe_c = schema_to_recipe_for_create(&state, schema).await;
 
@@ -1508,19 +1540,26 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
                                     .push(ReportLogForCreate::new_success(url.into()));
                             }
                             Err(err) => {
-                                fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
+                                fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
                                 error!("Error inserting recipe into database '{url}': {err}");
-                                if matches!(err, DuplicateEntity) {
-                                    fetch_ctx.report.lock().await.report_logs.push(
-                                        ReportLogForCreate::new_warning(
-                                            url.into(),
-                                            "Recipe exists".into(),
-                                        ),
-                                    );
-                                } else {
-                                    fetch_ctx.report.lock().await.report_logs.push(
-                                        ReportLogForCreate::new_error(url.into(), err.to_string()),
-                                    );
+                                match err {
+                                    models::Error::DuplicateEntityWithID(id) => {
+                                        fetch_ctx.recipe_ids.lock().await.push(id);
+                                        fetch_ctx.report.lock().await.report_logs.push(
+                                            ReportLogForCreate::new_warning(
+                                                url.into(),
+                                                "Recipe exists".into(),
+                                            ),
+                                        );
+                                    }
+                                    _ => {
+                                        fetch_ctx.report.lock().await.report_logs.push(
+                                            ReportLogForCreate::new_error(
+                                                url.into(),
+                                                err.to_string(),
+                                            ),
+                                        );
+                                    }
                                 }
                             }
                         }
@@ -1542,6 +1581,16 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         }
         drop(tx);
 
+        let num_recipes = num_recipes
+            .try_into()
+            .inspect_err(|err| {
+                error!("Failed to convert num_recipes '{num_recipes}' to i64: {err}");
+            })
+            .unwrap_or(i64::MAX);
+        state
+            .broadcast_progress("Fetching recipes", 0, num_recipes, true, user_id)
+            .await;
+
         let mut processed = 0;
         while rx.recv().await.is_some() {
             processed += 1;
@@ -1555,7 +1604,15 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
 
         state.hide_broadcast(user_id).await;
 
-        fetch_ctx.report.lock().await.exec_time_ms = start_time.elapsed().as_millis() as i64;
+        fetch_ctx.report.lock().await.exec_time_ms =
+            i64::try_from(start_time.elapsed().as_millis())
+                .inspect_err(|err| {
+                    error!(
+                        "Failed to caststart time '{:?}': {err}",
+                        start_time.elapsed()
+                    );
+                })
+                .unwrap_or_default();
         if let Err(err) = fetch_ctx.report.lock().await.insert(&state.mm).await {
             error!("Error inserting report into the database: {err}");
         }
@@ -1584,61 +1641,52 @@ async fn extract_images(
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<Uuid> {
-    let fetches: Vec<_> = schema
+    let urls = schema
         .image
         .iter()
-        .filter_map(|img| {
-            let state = state.clone();
+        .filter_map(|img| match img {
+            schema_org::field::FieldEnum22::ImageObject(image_object) => {
+                image_object.url.first().cloned()
+            }
+            schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
+        })
+        .collect::<Vec<_>>();
+
+    let futures = urls
+        .iter()
+        .map(|url| state.scraper.fetch_and_upload_to_temp(url.as_str()));
+
+    let results = join_all(futures).await;
+
+    stream::iter(urls.into_iter().zip(results.into_iter()))
+        .filter_map(|(_, res)| {
             let fs_support = fs_support.clone();
 
-            let url_opt = match img {
-                schema_org::field::FieldEnum22::ImageObject(image_object) => {
-                    image_object.url.first().cloned()
-                }
-                schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
-            };
+            async move {
+                let path = res.ok()?;
+                let file_name = Uuid::new_v4();
 
-            url_opt.map(|url| async move { fetch_image_async(&state, fs_support, &url).await })
+                fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
+
+                let thumbnails_dir = state.data_dir.images.thumbnails.clone();
+
+                let res =
+                    if fs_support.is_file_exists(file_name, &state.data_dir.images.root, ".webp") {
+                        Some(file_name)
+                    } else {
+                        None
+                    };
+
+                let fs_support = Arc::clone(&state.fs_support);
+                tokio::spawn(async move {
+                    fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                });
+
+                res
+            }
         })
-        .collect();
-
-    join_all(fetches).await.into_iter().flatten().collect()
-}
-
-async fn fetch_image_async(
-    state: &AppState,
-    fs_support: Arc<dyn FsSupport>,
-    file_path: &str,
-) -> Option<Uuid> {
-    let file_path = file_path.to_string();
-    let state = state.clone();
-
-    tokio::task::spawn_blocking(move || fetch_image(&state, fs_support, &file_path))
+        .collect::<Vec<_>>()
         .await
-        .ok()
-        .flatten()
-}
-
-fn fetch_image(state: &AppState, fs_support: Arc<dyn FsSupport>, file_path: &str) -> Option<Uuid> {
-    let path = if file_path.starts_with("/tmp") {
-        PathBuf::from(file_path)
-    } else {
-        PathBuf::new()
-    };
-
-    let file_name = Uuid::new_v4();
-    fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
-
-    let thumbnails_dir = state.data_dir.images.thumbnails.clone();
-    let fs_support = Arc::clone(&state.fs_support);
-    tokio::spawn(async move {
-        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
-    });
-
-    state
-        .fs_support
-        .is_file_exists(file_name, &state.data_dir.images.root, ".webp")
-        .then_some(file_name)
 }
 
 async fn extract_videos(
@@ -1646,7 +1694,7 @@ async fn extract_videos(
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<VideoForCreate> {
-    use schema_org::field::FieldEnum19::*;
+    use schema_org::field::FieldEnum19::{Clip, VideoObject};
 
     let urls = schema
         .video
@@ -1684,7 +1732,7 @@ async fn extract_videos(
 
                 fs_support
                     .clone()
-                    .upload_videos(vec![path.clone()], &state.data_dir.images.root);
+                    .upload_videos(vec![path.clone()], &state.data_dir.videos);
 
                 if fs_support.is_file_exists(file_name, &state.data_dir.videos, ".webp") {
                     let duration = fs_support
@@ -1762,48 +1810,45 @@ pub async fn view_recipe_handler(
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let cache_key = (user.id, recipe_id);
-    let view_recipe = match state.get_cached_recipe(cache_key).await {
-        Some(recipe) => recipe,
-        None => {
-            let recipe = match Recipe::get(&state.mm, user.id, recipe_id).await {
-                Ok(recipe) => recipe,
-                Err(_) => {
-                    return Ok(templates::general::simple(
-                        "Recipe Not Found",
-                        "The recipe you requested to view is not found.",
-                    ));
-                }
-            };
+    let view_recipe = if let Some(recipe) = state.get_cached_recipe(cache_key).await {
+        recipe
+    } else {
+        let Ok(recipe) = Recipe::get(&state.mm, user.id, recipe_id).await else {
+            return Ok(templates::general::simple(
+                "Recipe Not Found",
+                "The recipe you requested to view is not found.",
+            ));
+        };
 
-            let formatted_times = FormattedTimes::from_times(&recipe.times)?;
-            let view_recipe = ViewRecipe {
-                recipe_details: recipe,
-                formatted_times,
-            };
+        let formatted_times = FormattedTimes::from_times(&recipe.times)?;
+        let view_recipe = ViewRecipe {
+            recipe_details: recipe,
+            formatted_times,
+        };
 
-            state.cache_recipe(cache_key, &view_recipe).await;
-            view_recipe
-        }
+        state.cache_recipe(cache_key, &view_recipe).await;
+        view_recipe
     };
 
     let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
+    let is_autologin = state.config.read().await.is_autologin;
 
     match templates::recipes::view_recipe(
-        state.fs_support,
+        &state.fs_support,
         uri.path(),
-        state.data_dir,
-        Data {
+        &state.data_dir,
+        &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            is_autologin,
             is_hx_request: is_hx_request(&header_map),
             is_preview: false,
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,
-                last_checked_update_at: Default::default(),
-                last_updated_at: Default::default(),
-                version: "".to_string(),
+                last_checked_update_at: DateTime::default(),
+                last_updated_at: DateTime::default(),
+                version: String::new(),
             },
             pagination: Some(PaginationData::hidden()),
             searchbar: Some(SearchbarData {
@@ -1817,7 +1862,7 @@ pub async fn view_recipe_handler(
             }),
             recipes: vec![view_recipe],
         },
-        user_settings,
+        &user_settings,
     ) {
         Ok(res) => Ok(res),
         Err(err) => {
@@ -1881,9 +1926,9 @@ pub async fn search_recipes_handler(
     let settings = get_settings(&state, user.id).await?;
 
     Ok(templates::recipes::search_results(
-        state.fs_support,
+        &state.fs_support,
         uri.path(),
-        Data {
+        &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
@@ -1893,21 +1938,21 @@ pub async fn search_recipes_handler(
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,
-                last_checked_update_at: Default::default(),
-                last_updated_at: Default::default(),
-                version: "".to_string(),
+                last_checked_update_at: DateTime::default(),
+                last_updated_at: DateTime::default(),
+                version: String::new(),
             },
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
-                recipes.len() as i64,
+                recipes.len().try_into().unwrap_or(i64::MAX),
                 headers.get(axum_htmx::HX_REQUEST).is_some(),
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
             share: None,
             recipes,
         },
-        state.data_dir,
-        settings,
+        &state.data_dir,
+        &settings,
     )
     .into_response())
 }

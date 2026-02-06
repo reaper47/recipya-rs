@@ -8,83 +8,83 @@ impl UnitScaler for Mass {
         let scaled_value = self.value() * factor;
 
         match self {
-            Mass::Milligram(_) => {
+            Self::Milligram(_) => {
                 if scaled_value >= 1e6 {
-                    Ok(Unit::Mass(Mass::Kilogram(scaled_value * 1e-6)))
+                    Ok(Unit::Mass(Self::Kilogram(scaled_value * 1e-6)))
                 } else if scaled_value >= 1e5 {
-                    Ok(Unit::Mass(Mass::Hectogram(scaled_value * 1e-5)))
+                    Ok(Unit::Mass(Self::Hectogram(scaled_value * 1e-5)))
                 } else if scaled_value >= 1e4 {
-                    Ok(Unit::Mass(Mass::Dekagram(scaled_value * 1e-4)))
+                    Ok(Unit::Mass(Self::Dekagram(scaled_value * 1e-4)))
                 } else if scaled_value >= 1e3 {
-                    Ok(Unit::Mass(Mass::Gram(scaled_value * 1e-3)))
+                    Ok(Unit::Mass(Self::Gram(scaled_value * 1e-3)))
                 } else {
-                    Ok(Unit::Mass(Mass::Milligram(scaled_value)))
+                    Ok(Unit::Mass(Self::Milligram(scaled_value)))
                 }
             }
-            Mass::Gram(_) => {
+            Self::Gram(_) => {
                 if scaled_value >= 1e3 {
-                    Ok(Unit::Mass(Mass::Kilogram(scaled_value * 1e-3)))
+                    Ok(Unit::Mass(Self::Kilogram(scaled_value * 1e-3)))
                 } else if scaled_value >= 1e2 {
-                    Ok(Unit::Mass(Mass::Hectogram(scaled_value * 1e-2)))
+                    Ok(Unit::Mass(Self::Hectogram(scaled_value * 1e-2)))
                 } else if scaled_value >= 1e1 {
-                    Ok(Unit::Mass(Mass::Dekagram(scaled_value * 1e-1)))
+                    Ok(Unit::Mass(Self::Dekagram(scaled_value * 1e-1)))
                 } else if scaled_value >= 1.0 {
-                    Ok(Unit::Mass(Mass::Gram(scaled_value)))
+                    Ok(Unit::Mass(Self::Gram(scaled_value)))
                 } else {
-                    Ok(Unit::Mass(Mass::Milligram(scaled_value * 10.0)))
+                    Ok(Unit::Mass(Self::Milligram(scaled_value * 10.0)))
                 }
             }
-            Mass::Dekagram(_) => {
+            Self::Dekagram(_) => {
                 if scaled_value >= 1e2 {
-                    Ok(Unit::Mass(Mass::Kilogram(scaled_value * 1e-2)))
+                    Ok(Unit::Mass(Self::Kilogram(scaled_value * 1e-2)))
                 } else if scaled_value >= 1e1 {
-                    Ok(Unit::Mass(Mass::Hectogram(scaled_value * 1e-1)))
+                    Ok(Unit::Mass(Self::Hectogram(scaled_value * 1e-1)))
                 } else if scaled_value >= 1.0 {
-                    Ok(Unit::Mass(Mass::Dekagram(scaled_value)))
+                    Ok(Unit::Mass(Self::Dekagram(scaled_value)))
                 } else if scaled_value >= 1e-1 {
-                    Ok(Unit::Mass(Mass::Gram(scaled_value * 1e1)))
+                    Ok(Unit::Mass(Self::Gram(scaled_value * 1e1)))
                 } else {
-                    Ok(Unit::Mass(Mass::Milligram(scaled_value * 1e4)))
+                    Ok(Unit::Mass(Self::Milligram(scaled_value * 1e4)))
                 }
             }
-            Mass::Hectogram(_) => {
+            Self::Hectogram(_) => {
                 if scaled_value >= 1e1 {
-                    Ok(Unit::Mass(Mass::Kilogram(scaled_value * 1e-1)))
+                    Ok(Unit::Mass(Self::Kilogram(scaled_value * 1e-1)))
                 } else if scaled_value >= 1.0 {
-                    Ok(Unit::Mass(Mass::Hectogram(scaled_value)))
+                    Ok(Unit::Mass(Self::Hectogram(scaled_value)))
                 } else if scaled_value >= 1e-1 {
-                    Ok(Unit::Mass(Mass::Dekagram(scaled_value * 1e1)))
+                    Ok(Unit::Mass(Self::Dekagram(scaled_value * 1e1)))
                 } else if scaled_value >= 1e-2 {
-                    Ok(Unit::Mass(Mass::Gram(scaled_value * 1e2)))
+                    Ok(Unit::Mass(Self::Gram(scaled_value * 1e2)))
                 } else {
-                    Ok(Unit::Mass(Mass::Milligram(scaled_value * 1e5)))
+                    Ok(Unit::Mass(Self::Milligram(scaled_value * 1e5)))
                 }
             }
-            Mass::Kilogram(_) => {
+            Self::Kilogram(_) => {
                 if scaled_value >= 1.0 {
-                    Ok(Unit::Mass(Mass::Kilogram(scaled_value)))
+                    Ok(Unit::Mass(Self::Kilogram(scaled_value)))
                 } else if scaled_value >= 1e-1 {
-                    Ok(Unit::Mass(Mass::Hectogram(scaled_value * 1e1)))
+                    Ok(Unit::Mass(Self::Hectogram(scaled_value * 1e1)))
                 } else if scaled_value >= 1e-2 {
-                    Ok(Unit::Mass(Mass::Dekagram(scaled_value * 1e2)))
+                    Ok(Unit::Mass(Self::Dekagram(scaled_value * 1e2)))
                 } else if scaled_value >= 1e-3 {
-                    Ok(Unit::Mass(Mass::Gram(scaled_value * 1e3)))
+                    Ok(Unit::Mass(Self::Gram(scaled_value * 1e3)))
                 } else {
-                    Ok(Unit::Mass(Mass::Milligram(scaled_value * 1e6)))
+                    Ok(Unit::Mass(Self::Milligram(scaled_value * 1e6)))
                 }
             }
-            Mass::Ounce(_) => {
+            Self::Ounce(_) => {
                 if scaled_value >= 16.0 {
-                    Ok(Unit::Mass(Mass::Pound(scaled_value * 0.0625)))
+                    Ok(Unit::Mass(Self::Pound(scaled_value * 0.0625)))
                 } else {
-                    Ok(Unit::Mass(Mass::Ounce(scaled_value)))
+                    Ok(Unit::Mass(Self::Ounce(scaled_value)))
                 }
             }
-            Mass::Pound(_) => {
+            Self::Pound(_) => {
                 if scaled_value >= 1.0 {
-                    Ok(Unit::Mass(Mass::Pound(scaled_value)))
+                    Ok(Unit::Mass(Self::Pound(scaled_value)))
                 } else {
-                    Ok(Unit::Mass(Mass::Ounce(scaled_value * 16.0)))
+                    Ok(Unit::Mass(Self::Ounce(scaled_value * 16.0)))
                 }
             }
         }

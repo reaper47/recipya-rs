@@ -2,6 +2,7 @@ use axum::Form;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
+use iso8601::DateTime;
 use models::nutrition::NutritionDataSource;
 use tracing::error;
 
@@ -72,7 +73,7 @@ pub async fn settings_handler(
     };
 
     templates::settings::settings(
-        Data {
+        &Data {
             is_admin,
             is_authenticated: true,
             is_autologin: config.is_autologin,
@@ -81,15 +82,15 @@ pub async fn settings_handler(
             about: AboutData {
                 is_update_available: false,
                 is_check_update: false,
-                last_checked_update_at: Default::default(),
-                last_updated_at: Default::default(),
-                version: "".to_string(),
+                last_checked_update_at: DateTime::default(),
+                last_updated_at: DateTime::default(),
+                version: String::new(),
             },
             ..Default::default()
         },
         users,
-        settings,
-        categories,
+        &settings,
+        &categories,
         &SettingsForView {
             is_autologin: config.is_autologin,
             is_allow_signups: config.is_no_signups,
@@ -98,13 +99,10 @@ pub async fn settings_handler(
                 email_admin: email_config.smtp_from_email.clone(),
                 host: email_config.smtp_host.clone(),
                 username: email_config.smtp_username.clone(),
-                is_connected: state
-                    .email_service
-                    .map(|s| s.is_connected)
-                    .unwrap_or_default(),
+                is_connected: state.email_service.is_some_and(|s| s.is_connected),
             },
-            azure_di_key: "".to_string(),
-            azure_di_endpoint: "".to_string(),
+            azure_di_key: String::new(),
+            azure_di_endpoint: String::new(),
         },
     )
     .into_response()
@@ -116,21 +114,18 @@ pub async fn set_nutrition_source_handler(
     State(state): State<AppState>,
     Form(payload): Form<NutritionSourcePayload>,
 ) -> impl IntoResponse {
-    let source = match payload.nutrition_source.parse::<NutritionDataSource>() {
-        Ok(s) => s,
-        Err(_) => {
-            error!("Invalid nutrition source: {}", payload.nutrition_source);
-            broadcast_error(
-                &state,
-                user.id,
-                &format!(
-                    "Nutrition source '{}' is invalid.",
-                    payload.nutrition_source
-                ),
-            )
-            .await;
-            return Error::InvalidPayload.into_response();
-        }
+    let Ok(source) = payload.nutrition_source.parse::<NutritionDataSource>() else {
+        error!("Invalid nutrition source: {}", payload.nutrition_source);
+        broadcast_error(
+            &state,
+            user.id,
+            &format!(
+                "Nutrition source '{}' is invalid.",
+                payload.nutrition_source
+            ),
+        )
+        .await;
+        return Error::InvalidPayload.into_response();
     };
 
     if let Err(err) = source.save(&state.mm, user.id).await {
@@ -180,18 +175,15 @@ where
     F: FnOnce(Theme, ModelManager, Uuid) -> Fut,
     Fut: Future<Output = Result<(), models::Error>> + Send,
 {
-    let theme = match payload.theme.parse::<Theme>() {
-        Ok(theme) => theme,
-        Err(_) => {
-            error!("Invalid theme: {}", payload.theme);
-            broadcast_error(
-                &state,
-                user.id,
-                &format!("Theme '{}' is invalid.", payload.theme),
-            )
-            .await;
-            return Error::InvalidPayload.into_response();
-        }
+    let Ok(theme) = payload.theme.parse::<Theme>() else {
+        error!("Invalid theme: {}", payload.theme);
+        broadcast_error(
+            &state,
+            user.id,
+            &format!("Theme '{}' is invalid.", payload.theme),
+        )
+        .await;
+        return Error::InvalidPayload.into_response();
     };
 
     if let Err(err) = save_operation(theme, state.mm.clone(), user.id).await {

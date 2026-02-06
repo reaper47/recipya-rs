@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 
 use regex::Regex;
-use tracing::warn;
 use whatlang::{Lang, detect_lang};
 
 macro_rules! time_regexes {
@@ -180,315 +179,321 @@ impl TimeParser {
             Some(&p) => p,
         };
 
-        self.extract_time(text, pattern, lang)
+        extract_time(text, pattern, lang)
     }
+}
 
-    fn extract_time(&self, text: &str, pattern: &Regex, lang: Lang) -> Option<i32> {
-        pattern
-            .captures_iter(text)
-            .filter_map(|cap| {
-                let max_val = cap.name("max").and_then(|m| m.as_str().parse::<f32>().ok());
-                let unit = cap.name("unit")?.as_str();
-                self.normalize_to_seconds(max_val.unwrap_or_default(), unit, lang)
-            })
-            .max()
-    }
+fn extract_time(text: &str, pattern: &Regex, lang: Lang) -> Option<i32> {
+    pattern
+        .captures_iter(text)
+        .filter_map(|cap| {
+            let max_val = cap.name("max").and_then(|m| m.as_str().parse::<f32>().ok());
+            let unit = cap.name("unit")?.as_str();
+            normalize_to_seconds(max_val.unwrap_or_default(), unit, lang)
+        })
+        .max()
+}
 
-    fn normalize_to_seconds(&self, value: f32, unit: &str, lang: Lang) -> Option<i32> {
-        match lang {
-            Lang::Cmn => match unit {
-                s if s.starts_with("秒钟") || s.starts_with("秒") => self.to_seconds(value),
-                s if s.starts_with("分") => self.to_minutes(value),
-                s if s.starts_with("小") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Eng
-            | Lang::Epo
-            | Lang::Fra
-            | Lang::Por
-            | Lang::Spa
-            | Lang::Ita
-            | Lang::Ces
-            | Lang::Ron
-            | Lang::Lat
-            | Lang::Slk
-            | Lang::Cat
-            | Lang::Tgl => match unit {
-                s if s.starts_with("s") || s.starts_with("d") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("h") || s.starts_with("o") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Deu | Lang::Lav => match unit.to_lowercase().as_str() {
-                s if s.starts_with("sek") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("st") || s.starts_with("o") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Kat => match unit {
-                s if s.starts_with("წა") => self.to_seconds(value),
-                s if s.starts_with("წუ") => self.to_minutes(value),
-                s if s.starts_with("ს") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Ara => match unit {
-                s if s.starts_with("ثا") => self.to_seconds(value),
-                s if s.starts_with("د") => self.to_minutes(value),
-                s if s.starts_with("س") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Hin => match unit {
-                s if s.starts_with("से") => self.to_seconds(value),
-                s if s.starts_with("मि") => self.to_minutes(value),
-                s if s.starts_with("घं") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Jpn => match unit {
-                s if s.starts_with("秒") => self.to_seconds(value),
-                s if s.starts_with("分") => self.to_minutes(value),
-                s if s.starts_with("時") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Heb => match unit {
-                s if s.starts_with("שנ") => self.to_seconds(value),
-                s if s.starts_with("ד") => self.to_minutes(value),
-                s if s.starts_with("שע") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Yid => match unit {
-                s if s.starts_with("ס") => self.to_seconds(value),
-                s if s.starts_with("מ") => self.to_minutes(value),
-                s if s.starts_with("ש") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Pol => match unit {
-                s if s.starts_with("s") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("g") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Amh => match unit {
-                s if s.starts_with("ሰከ") => self.to_seconds(value),
-                s if s.starts_with("ደ") => self.to_minutes(value),
-                s if s.starts_with("ሰዓ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Jav | Lang::Ind => match unit {
-                s if s.starts_with("d") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("j") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Kor => match unit {
-                s if s.starts_with("초") => self.to_seconds(value),
-                s if s.starts_with("분") => self.to_minutes(value),
-                s if s.starts_with("시") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Nob | Lang::Dan | Lang::Swe | Lang::Fin | Lang::Est => match unit {
-                s if s.starts_with("s") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("t") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Tur | Lang::Aze => match unit {
-                s if s.starts_with("san") => self.to_seconds(value),
-                s if s.starts_with("d") => self.to_minutes(value),
-                s if s.starts_with("saa") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Nld | Lang::Slv | Lang::Afr => match unit {
-                s if s.starts_with("s") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("u") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Hun => match unit {
-                s if s.starts_with("m") => self.to_seconds(value),
-                s if s.starts_with("p") => self.to_minutes(value),
-                s if s.starts_with("ó") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Ell => match unit {
-                s if s.starts_with("δ") => self.to_seconds(value),
-                s if s.starts_with("λ") => self.to_minutes(value),
-                s if s.starts_with("ώ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Bel => match unit {
-                s if s.starts_with("с") => self.to_seconds(value),
-                s if s.starts_with("х") => self.to_minutes(value),
-                s if s.starts_with("г") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Mar => match unit {
-                s if s.starts_with("से") => self.to_seconds(value),
-                s if s.starts_with("मि") => self.to_minutes(value),
-                s if s.starts_with("ता") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Kan => match unit {
-                s if s.starts_with("ಸೆ") => self.to_seconds(value),
-                s if s.starts_with("ನಿ") => self.to_minutes(value),
-                s if s.starts_with("ಗ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Hrv | Lang::Tuk => match unit {
-                s if s.starts_with("se") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("sa") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Srp => match unit {
-                s if s.starts_with("се") => self.to_seconds(value),
-                s if s.starts_with("м") => self.to_minutes(value),
-                s if s.starts_with("са") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Lit => match unit {
-                s if s.starts_with("s") => self.to_seconds(value),
-                s if s.starts_with("m") => self.to_minutes(value),
-                s if s.starts_with("v") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Tam => match unit {
-                s if s.starts_with("வி") => self.to_seconds(value),
-                s if s.starts_with("நி") => self.to_minutes(value),
-                s if s.starts_with("ம") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Vie => match unit {
-                s if s.starts_with("giâ") => self.to_seconds(value),
-                s if s.starts_with("p") => self.to_minutes(value),
-                s if s.starts_with("giờ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Urd => match unit {
-                s if s.starts_with("س") => self.to_seconds(value),
-                s if s.starts_with("م") => self.to_minutes(value),
-                s if s.starts_with("گ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Tha => match unit {
-                s if s.starts_with("วิ") => self.to_seconds(value),
-                s if s.starts_with("น") => self.to_minutes(value),
-                s if s.starts_with("ชั่") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Guj => match unit {
-                s if s.starts_with("સે") => self.to_seconds(value),
-                s if s.starts_with("મિ") => self.to_minutes(value),
-                s if s.starts_with("ક") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Uzb => match unit {
-                s if s.starts_with("son") => self.to_seconds(value),
-                s if s.starts_with("d") => self.to_minutes(value),
-                s if s.starts_with("soa") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Pan => match unit {
-                s if s.starts_with("ਸਕ") => self.to_seconds(value),
-                s if s.starts_with("ਮਿੰ") => self.to_minutes(value),
-                s if s.starts_with("ਘੰ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Tel => match unit {
-                s if s.starts_with("సె") => self.to_seconds(value),
-                s if s.starts_with("ని") => self.to_minutes(value),
-                s if s.starts_with("గం") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Pes => match unit {
-                s if s.starts_with("ث") => self.to_seconds(value),
-                s if s.starts_with("د") => self.to_minutes(value),
-                s if s.starts_with("س") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Mal => match unit {
-                s if s.starts_with("സെ") => self.to_seconds(value),
-                s if s.starts_with("മി") => self.to_minutes(value),
-                s if s.starts_with("മ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Ori => match unit {
-                s if s.starts_with("ସେ") => self.to_seconds(value),
-                s if s.starts_with("ମି") => self.to_minutes(value),
-                s if s.starts_with("ଘ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Mya => match unit {
-                s if s.starts_with("စ") => self.to_seconds(value),
-                s if s.starts_with("မိ") => self.to_minutes(value),
-                s if s.starts_with("န") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Nep => match unit {
-                s if s.starts_with("से") => self.to_seconds(value),
-                s if s.starts_with("मि") => self.to_minutes(value),
-                s if s.starts_with("घ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Sin => match unit {
-                s if s.starts_with("ත") => self.to_seconds(value),
-                s if s.starts_with("වි") => self.to_minutes(value),
-                s if s.starts_with("ප") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Khm => match unit {
-                s if s.starts_with("វិនា") => self.to_seconds(value),
-                s if s.starts_with("នា") => self.to_minutes(value),
-                s if s.starts_with("ម៉ោ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Aka => match unit {
-                s if s.starts_with("sik") => self.to_seconds(value),
-                s if s.starts_with("si") => self.to_minutes(value),
-                s if s.starts_with("n") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Zul => match unit {
-                s if s.starts_with("i") => self.to_seconds(value),
-                s if s.starts_with("amam") => self.to_minutes(value),
-                s if s.starts_with("amah") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Sna => match unit {
-                s if s.starts_with("mas") => self.to_seconds(value),
-                s if s.starts_with("mam") => self.to_minutes(value),
-                s if s.starts_with("maa") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Hye => match unit {
-                s if s.starts_with("վ") => self.to_seconds(value),
-                s if s.starts_with("ր") => self.to_minutes(value),
-                s if s.starts_with("ժ") => self.to_hours(value),
-                _ => None,
-            },
-            Lang::Rus | Lang::Ukr | Lang::Bul | Lang::Mkd => match unit {
-                s if s.starts_with("с") => self.to_seconds(value),
-                s if s.starts_with("м") || s.starts_with("х") => self.to_minutes(value),
-                s if s.starts_with("ч") || s.starts_with("г") => self.to_hours(value),
-                _ => None,
-            },
-            u => {
-                warn!("Time parser unsupported language: {u}");
-                None
-            }
-        }
+#[allow(clippy::too_many_lines)]
+fn normalize_to_seconds(value: f32, unit: &str, lang: Lang) -> Option<i32> {
+    match lang {
+        Lang::Cmn => match unit {
+            s if s.starts_with("秒钟") || s.starts_with('秒') => Some(to_seconds(value)),
+            s if s.starts_with('分') => Some(to_minutes(value)),
+            s if s.starts_with('小') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Eng
+        | Lang::Epo
+        | Lang::Fra
+        | Lang::Por
+        | Lang::Spa
+        | Lang::Ita
+        | Lang::Ces
+        | Lang::Ron
+        | Lang::Lat
+        | Lang::Slk
+        | Lang::Cat
+        | Lang::Tgl => match unit {
+            s if s.starts_with('s') || s.starts_with('d') => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with('h') || s.starts_with('o') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Deu | Lang::Lav => match unit.to_lowercase().as_str() {
+            s if s.starts_with("sek") => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with("st") || s.starts_with('o') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Kat => match unit {
+            s if s.starts_with("წა") => Some(to_seconds(value)),
+            s if s.starts_with("წუ") => Some(to_minutes(value)),
+            s if s.starts_with('ს') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Ara => match unit {
+            s if s.starts_with("ثا") => Some(to_seconds(value)),
+            s if s.starts_with("د") => Some(to_minutes(value)),
+            s if s.starts_with("س") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Hin => match unit {
+            s if s.starts_with("से") => Some(to_seconds(value)),
+            s if s.starts_with("मि") => Some(to_minutes(value)),
+            s if s.starts_with("घं") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Jpn => match unit {
+            s if s.starts_with("秒") => Some(to_seconds(value)),
+            s if s.starts_with("分") => Some(to_minutes(value)),
+            s if s.starts_with("時") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Heb => match unit {
+            s if s.starts_with("שנ") => Some(to_seconds(value)),
+            s if s.starts_with("ד") => Some(to_minutes(value)),
+            s if s.starts_with("שע") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Yid => match unit {
+            s if s.starts_with("ס") => Some(to_seconds(value)),
+            s if s.starts_with("מ") => Some(to_minutes(value)),
+            s if s.starts_with("ש") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Pol => match unit {
+            s if s.starts_with('s') => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with('g') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Amh => match unit {
+            s if s.starts_with("ሰከ") => Some(to_seconds(value)),
+            s if s.starts_with("ደ") => Some(to_minutes(value)),
+            s if s.starts_with("ሰዓ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Jav | Lang::Ind => match unit {
+            s if s.starts_with('d') => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with('j') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Kor => match unit {
+            s if s.starts_with("초") => Some(to_seconds(value)),
+            s if s.starts_with("분") => Some(to_minutes(value)),
+            s if s.starts_with("시") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Nob | Lang::Dan | Lang::Swe | Lang::Fin | Lang::Est => match unit {
+            s if s.starts_with('s') => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with('t') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Tur | Lang::Aze => match unit {
+            s if s.starts_with("san") => Some(to_seconds(value)),
+            s if s.starts_with('d') => Some(to_minutes(value)),
+            s if s.starts_with("saa") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Nld | Lang::Slv | Lang::Afr => match unit {
+            s if s.starts_with('s') => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with('u') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Hun => match unit {
+            s if s.starts_with('m') => Some(to_seconds(value)),
+            s if s.starts_with('p') => Some(to_minutes(value)),
+            s if s.starts_with('ó') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Ell => match unit {
+            s if s.starts_with('δ') => Some(to_seconds(value)),
+            s if s.starts_with('λ') => Some(to_minutes(value)),
+            s if s.starts_with('ώ') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Ben => match unit {
+            s if s.starts_with("সে") => Some(to_seconds(value)),
+            s if s.starts_with("মি'") => Some(to_minutes(value)),
+            s if s.starts_with('ঘ') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Bel => match unit {
+            s if s.starts_with('с') => Some(to_seconds(value)),
+            s if s.starts_with('х') => Some(to_minutes(value)),
+            s if s.starts_with('г') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Mar => match unit {
+            s if s.starts_with("से") => Some(to_seconds(value)),
+            s if s.starts_with("मि") => Some(to_minutes(value)),
+            s if s.starts_with("ता") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Kan => match unit {
+            s if s.starts_with("ಸೆ") => Some(to_seconds(value)),
+            s if s.starts_with("ನಿ") => Some(to_minutes(value)),
+            s if s.starts_with("ಗ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Hrv | Lang::Tuk => match unit {
+            s if s.starts_with("se") => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with("sa") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Srp => match unit {
+            s if s.starts_with("се") => Some(to_seconds(value)),
+            s if s.starts_with('м') => Some(to_minutes(value)),
+            s if s.starts_with("са") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Lit => match unit {
+            s if s.starts_with('s') => Some(to_seconds(value)),
+            s if s.starts_with('m') => Some(to_minutes(value)),
+            s if s.starts_with('v') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Tam => match unit {
+            s if s.starts_with("வி") => Some(to_seconds(value)),
+            s if s.starts_with("நி") => Some(to_minutes(value)),
+            s if s.starts_with("ம") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Vie => match unit {
+            s if s.starts_with("giâ") => Some(to_seconds(value)),
+            s if s.starts_with('p') => Some(to_minutes(value)),
+            s if s.starts_with("giờ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Urd => match unit {
+            s if s.starts_with("س") => Some(to_seconds(value)),
+            s if s.starts_with("م") => Some(to_minutes(value)),
+            s if s.starts_with("گ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Tha => match unit {
+            s if s.starts_with("วิ") => Some(to_seconds(value)),
+            s if s.starts_with('น') => Some(to_minutes(value)),
+            s if s.starts_with("ชั่") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Guj => match unit {
+            s if s.starts_with("સે") => Some(to_seconds(value)),
+            s if s.starts_with("મિ") => Some(to_minutes(value)),
+            s if s.starts_with('ક') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Uzb => match unit {
+            s if s.starts_with("son") => Some(to_seconds(value)),
+            s if s.starts_with('d') => Some(to_minutes(value)),
+            s if s.starts_with("soa") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Pan => match unit {
+            s if s.starts_with("ਸਕ") => Some(to_seconds(value)),
+            s if s.starts_with("ਮਿੰ") => Some(to_minutes(value)),
+            s if s.starts_with("ਘੰ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Tel => match unit {
+            s if s.starts_with("సె") => Some(to_seconds(value)),
+            s if s.starts_with("ని") => Some(to_minutes(value)),
+            s if s.starts_with("గం") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Pes => match unit {
+            s if s.starts_with("ث") => Some(to_seconds(value)),
+            s if s.starts_with("د") => Some(to_minutes(value)),
+            s if s.starts_with("س") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Mal => match unit {
+            s if s.starts_with("സെ") => Some(to_seconds(value)),
+            s if s.starts_with("മി") => Some(to_minutes(value)),
+            s if s.starts_with("മ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Ori => match unit {
+            s if s.starts_with("ସେ") => Some(to_seconds(value)),
+            s if s.starts_with("ମି") => Some(to_minutes(value)),
+            s if s.starts_with("ଘ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Mya => match unit {
+            s if s.starts_with("စ") => Some(to_seconds(value)),
+            s if s.starts_with("မိ") => Some(to_minutes(value)),
+            s if s.starts_with("န") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Nep => match unit {
+            s if s.starts_with("से") => Some(to_seconds(value)),
+            s if s.starts_with("मि") => Some(to_minutes(value)),
+            s if s.starts_with("घ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Sin => match unit {
+            s if s.starts_with("ත") => Some(to_seconds(value)),
+            s if s.starts_with("වි") => Some(to_minutes(value)),
+            s if s.starts_with("ප") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Khm => match unit {
+            s if s.starts_with("វិនា") => Some(to_seconds(value)),
+            s if s.starts_with("នា") => Some(to_minutes(value)),
+            s if s.starts_with("ម៉ោ") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Aka => match unit {
+            s if s.starts_with("sik") => Some(to_seconds(value)),
+            s if s.starts_with("si") => Some(to_minutes(value)),
+            s if s.starts_with('n') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Zul => match unit {
+            s if s.starts_with('i') => Some(to_seconds(value)),
+            s if s.starts_with("amam") => Some(to_minutes(value)),
+            s if s.starts_with("amah") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Sna => match unit {
+            s if s.starts_with("mas") => Some(to_seconds(value)),
+            s if s.starts_with("mam") => Some(to_minutes(value)),
+            s if s.starts_with("maa") => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Hye => match unit {
+            s if s.starts_with('վ') => Some(to_seconds(value)),
+            s if s.starts_with('ր') => Some(to_minutes(value)),
+            s if s.starts_with('ժ') => Some(to_hours(value)),
+            _ => None,
+        },
+        Lang::Rus | Lang::Ukr | Lang::Bul | Lang::Mkd => match unit {
+            s if s.starts_with('с') => Some(to_seconds(value)),
+            s if s.starts_with('м') || s.starts_with('х') => Some(to_minutes(value)),
+            s if s.starts_with('ч') || s.starts_with('г') => Some(to_hours(value)),
+            _ => None,
+        },
     }
+}
 
-    const fn to_seconds(&self, value: f32) -> Option<i32> {
-        Some(value as i32)
-    }
+#[allow(clippy::cast_possible_truncation)]
+const fn to_seconds(value: f32) -> i32 {
+    value as i32
+}
 
-    const fn to_minutes(&self, value: f32) -> Option<i32> {
-        Some(value.round() as i32 * 60)
-    }
+#[allow(clippy::cast_possible_truncation)]
+const fn to_minutes(value: f32) -> i32 {
+    value.round() as i32 * 60
+}
 
-    const fn to_hours(&self, value: f32) -> Option<i32> {
-        Some((value * 3600.0).round() as i32)
-    }
+#[allow(clippy::cast_possible_truncation)]
+const fn to_hours(value: f32) -> i32 {
+    (value * 3600.0).round() as i32
 }
 
 #[cfg(test)]

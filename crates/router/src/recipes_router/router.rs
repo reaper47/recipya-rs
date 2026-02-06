@@ -3,7 +3,17 @@ use axum::routing::{get, post};
 use axum::{Router, middleware};
 
 use crate::AppState;
-use crate::handlers::recipes::*;
+use crate::handlers::recipes::{
+    add_manual_recipe_handler, add_manual_recipe_post_handler, add_recipe_import_api_handler,
+    add_recipe_import_app_handler, add_recipe_import_preview_handler,
+    add_recipe_import_raw_handler, add_recipes_handler, add_website_post_handler,
+    delete_recipe_categories_handler, delete_recipe_handler, duplicate_recipe_handler,
+    edit_recipe_handler, edit_recipe_put_handler, post_recipe_categories_handler,
+    recipe_schema_handler, recipes_handler, scale_recipe_handler, search_recipes_handler,
+    share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
+    timeline_event_get_edit_handler, timeline_event_get_handler, timeline_get_handler,
+    timeline_post_handler, timeline_put_handler, toggle_favourite_handler, view_recipe_handler,
+};
 use crate::middleware::mw_auth::mw_refresh_token;
 
 const FIFTY_MB: usize = 50 * 1024 * 1024;

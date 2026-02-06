@@ -54,28 +54,19 @@ pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
     let mut i = 0;
     while i < ingredients.len() {
         if i >= 2 {
-            let current = match ingredients.get(i) {
-                Some(Ingredient::Line(current)) => current,
-                _ => {
-                    i += 1;
-                    continue;
-                }
+            let Some(Ingredient::Line(current)) = ingredients.get(i) else {
+                i += 1;
+                continue;
             };
 
-            let starts_with_lowercase = current
-                .chars()
-                .next()
-                .map(char::is_lowercase)
-                .unwrap_or(false);
-
-            if starts_with_lowercase {
+            if current.chars().next().is_some_and(char::is_lowercase) {
                 let idx = match ingredients.get(i - 2) {
                     Some(Ingredient::Line(prev)) if prev.ends_with(']') => 1,
                     _ => 2,
                 };
 
                 if let Some(Ingredient::Line(prev)) = ingredients.get(i - idx).cloned() {
-                    let combined = format!("{} [{}]", prev, current);
+                    let combined = format!("{prev} [{current}]");
                     ingredients[i - idx] = Ingredient::Line(Cow::Owned(combined));
                     ingredients.remove(i);
                     continue;
@@ -89,7 +80,7 @@ pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
 impl From<KalorioTextRecipe> for Recipe {
     fn from(r: KalorioTextRecipe) -> Self {
         let (category, keywords) = match r.keywords.as_slice() {
-            [first, rest @ ..] => (Some(first.to_string()), rest.to_vec()),
+            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
             [] => (None, Vec::new()),
         };
 
@@ -108,7 +99,7 @@ impl From<KalorioTextRecipe> for Recipe {
             recipe_category: category.map(|c| vec![c]).unwrap_or_default(),
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
-            recipe_yield: Default::default(),
+            recipe_yield: Vec::default(),
             ..Default::default()
         }
     }
@@ -129,9 +120,9 @@ where
     let is_based_on = recipes.last().map(|r| r.is_based_on.clone());
 
     if let Some(based_on) = is_based_on {
-        recipes
-            .iter_mut()
-            .for_each(|r| r.is_based_on = based_on.clone());
+        for r in &mut recipes {
+            r.is_based_on.clone_from(&based_on);
+        }
     }
 
     Ok(recipes)
@@ -171,7 +162,7 @@ fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
         space1,
         terminated(
             take_until(0.., "\n"),
-            repeat(1.., line_ending).fold(|| (), |_, _| ()),
+            repeat(1.., line_ending).fold(|| (), |(), _| ()),
         ),
     )
     .parse_next(input)
@@ -197,9 +188,9 @@ fn twocolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
             (
                 literal("    "),
                 ingredone,
-                repeat(1.., line_ending).fold(|| (), |_, _| ()),
+                repeat(1.., line_ending).fold(|| (), |(), _| ()),
             )
-                .map(|(_, ing, _)| vec![ing]),
+                .map(|(_, ing, ())| vec![ing]),
         )),
     )
     .map(|nested: Vec<_>| nested.into_iter().flatten().collect())
@@ -280,7 +271,7 @@ fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> 
 fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
     terminated(
         take_until(0.., "\n\n")
-            .verify(|text: &str| !text.starts_with(":") && !text.trim_start().starts_with("-----")),
+            .verify(|text: &str| !text.starts_with(':') && !text.trim_start().starts_with("-----")),
         (line_ending, line_ending),
     )
     .parse_next(input)

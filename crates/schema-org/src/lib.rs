@@ -124,7 +124,7 @@ pub fn at_context() -> Option<String> {
 }
 
 /// Enumeration of all possible @type values.
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 pub enum AtType {
     AggregateRating,

@@ -23,13 +23,9 @@ const BASE_HTML_DIR: &str = "crates/recipya-scraper/src/tests/data/html";
 
 #[async_trait::async_trait]
 impl HttpClient for MockHttpClient {
-    async fn get_async<'a>(&'a self, _host: Website, _url: &str) -> Result<String> {
-        Ok("".to_string())
-    }
-
-    fn get(&self, host: Website, url: &str) -> Result<String> {
+    async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String> {
         let path = get_html_file_path(
-            &host,
+            host,
             url.rsplit_once("<Number>")
                 .unwrap_or(("0", "0"))
                 .1
@@ -49,7 +45,11 @@ impl HttpClient for MockHttpClient {
         }
     }
 
-    fn get_bytes(&self, _url: &str) -> Result<Bytes> {
+    fn get(&self, _host: Website, _url: &str) -> Result<String> {
+        unimplemented!()
+    }
+
+    async fn get_bytes(&self, _url: &str) -> Result<Bytes> {
         Ok(Bytes::new())
     }
 }
@@ -62,31 +62,38 @@ fn mock_scraper() -> &'static Scraper {
 }
 
 /// Fetches the recipe from a website and stores the content in an HTML file.
-pub fn scrape(website: Website, number: usize) -> Result<Recipe> {
+///
+/// # Panics
+///
+/// Panics if:
+/// - The `number` index is out of bounds for the website's test URLs
+/// - The HTML file cannot be created at the specified path
+/// - The response bytes cannot be written to the file
+pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
     let urls = website.test_urls();
     let url = urls.get(number).expect("url to test not in vector of urls");
 
-    let path = get_html_file_path(&website, number);
+    let path = get_html_file_path(website, number);
 
     if !path.exists() {
-        let client = reqwest::blocking::Client::new();
-        match client.get(*url).send() {
+        let client = reqwest::Client::new();
+        match client.get(*url).send().await {
             Ok(res) => {
                 fs::File::create(path)
                     .unwrap()
-                    .write(&res.bytes()?)
+                    .write(&res.bytes().await?)
                     .inspect_err(|err| error!("Could not write {website}: {err}"))
                     .unwrap();
             }
             Err(err) => error!("Could not fetch {website}: {err}"),
-        };
+        }
     }
 
     let url = format!("{url}<number>{number}");
-    mock_scraper().scrape(&url)
+    mock_scraper().scrape(&url).await
 }
 
-fn get_html_file_path(website: &Website, number: usize) -> PathBuf {
+fn get_html_file_path(website: Website, number: usize) -> PathBuf {
     let path = std::env::current_dir()
         .unwrap()
         .join(format!("{BASE_HTML_DIR}/{website}_{number}.html"));
@@ -106,6 +113,13 @@ fn get_html_file_path(website: &Website, number: usize) -> PathBuf {
 }
 
 /// Scrapes some test websites for use in tests outside the scraper.
+///
+/// # Panics
+///
+/// Panics if:
+/// - The selected website has no test URLs configured
+/// - The HTML file cannot be created
+/// - The response bytes cannot be written to the file
 #[allow(unused)]
 pub async fn scrape_test_websites(number: usize) -> Result<()> {
     let website = match number {
@@ -117,11 +131,11 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
 
     let url = website
         .test_urls()
-        .get(0)
-        .cloned()
+        .first()
+        .copied()
         .expect("url to test not in vector of urls");
 
-    let path = get_html_file_path(&website, 0);
+    let path = get_html_file_path(website, 0);
 
     if !path.exists() {
         let client = reqwest::Client::new();
@@ -134,9 +148,9 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
                     .unwrap();
             }
             Err(err) => {
-                error!("Could not fetch {website}: {err:?}")
+                error!("Could not fetch {website}: {err:?}");
             }
-        };
+        }
     }
 
     Ok(())

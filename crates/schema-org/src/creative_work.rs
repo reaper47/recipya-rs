@@ -47,11 +47,11 @@ pub struct CreativeWork {
     ///<https://schema.org/translationOfWork>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub translation_of_work: Vec<CreativeWork>,
+    pub translation_of_work: Vec<Self>,
     ///<https://schema.org/workTranslation>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub work_translation: Vec<CreativeWork>,
+    pub work_translation: Vec<Self>,
     ///<https://schema.org/dateCreated>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -179,8 +179,8 @@ pub struct CreativeWork {
 }
 
 impl CreativeWork {
-    /// Creates a new CreativeWork from the value only.
-    pub fn new(r#type: AtType, text: &str) -> Self {
+    /// Creates a new `CreativeWork` from the value only.
+    pub fn new(r#type: &AtType, text: &str) -> Self {
         Self {
             r#type: Some(r#type.to_string()),
             text: vec![text.into()],

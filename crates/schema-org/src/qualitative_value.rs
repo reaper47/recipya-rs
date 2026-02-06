@@ -23,15 +23,15 @@ pub struct QualitativeValue {
     ///<https://schema.org/lesser>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub lesser: Vec<QualitativeValue>,
+    pub lesser: Vec<Self>,
     ///<https://schema.org/greater>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub greater: Vec<QualitativeValue>,
+    pub greater: Vec<Self>,
     ///<https://schema.org/equal>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub equal: Vec<QualitativeValue>,
+    pub equal: Vec<Self>,
     ///<https://schema.org/valueReference>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -39,15 +39,15 @@ pub struct QualitativeValue {
     ///<https://schema.org/greaterOrEqual>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub greater_or_equal: Vec<QualitativeValue>,
+    pub greater_or_equal: Vec<Self>,
     ///<https://schema.org/nonEqual>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub non_equal: Vec<QualitativeValue>,
+    pub non_equal: Vec<Self>,
     ///<https://schema.org/lesserOrEqual>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub lesser_or_equal: Vec<QualitativeValue>,
+    pub lesser_or_equal: Vec<Self>,
     ///<https://schema.org/additionalProperty>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

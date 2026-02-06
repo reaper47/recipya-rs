@@ -18,7 +18,7 @@ rust-version.workspace = true
 app.workspace = true
 auth.workspace = true
 axum.workspace = true
-clap = { version = "4.5.53", features = ["derive"] }
+clap = { version = "4.5.57", features = ["derive"] }
 config.workspace = true
 derive_more.workspace = true
 diesel.workspace = true

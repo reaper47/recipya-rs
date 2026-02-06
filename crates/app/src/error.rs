@@ -31,6 +31,6 @@ impl std::error::Error for Error {}
 
 impl From<&str> for Error {
     fn from(s: &str) -> Self {
-        Error::FromStr(s.to_string())
+        Self::FromStr(s.to_string())
     }
 }

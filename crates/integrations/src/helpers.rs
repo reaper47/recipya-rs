@@ -5,7 +5,7 @@ use schema_org::field::{
 };
 use schema_org::{AtType, CreativeWork, DurationOrText, QuantitativeValue, Recipe, at_context};
 
-pub(super) fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
+pub fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
     format!("P{secs}S")
         .parse::<Duration>()
         .ok()
@@ -14,7 +14,7 @@ pub(super) fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
         .unwrap_or(vec![])
 }
 
-pub(super) fn to_is_based_on(value: &str) -> Vec<RecipeIsBasedOnFieldEnum> {
+pub fn to_is_based_on(value: &str) -> Vec<RecipeIsBasedOnFieldEnum> {
     if value.is_empty() {
         vec![]
     } else {
@@ -33,7 +33,8 @@ pub(super) fn to_is_based_on(value: &str) -> Vec<RecipeIsBasedOnFieldEnum> {
     }
 }
 
-pub(super) fn to_yield(value: i64) -> Vec<RecipeRecipeYieldFieldEnum> {
+#[allow(clippy::cast_precision_loss)]
+pub fn to_yield(value: i64) -> Vec<RecipeRecipeYieldFieldEnum> {
     if value == 0 {
         vec![]
     } else {
@@ -41,13 +42,13 @@ pub(super) fn to_yield(value: i64) -> Vec<RecipeRecipeYieldFieldEnum> {
             QuantitativeValue {
                 r#type: AtType::QuantitativeValue.to_string(),
                 context: at_context(),
-                value: vec![QuantitativeValueValueFieldEnum::Number(value as f32)],
+                value: vec![QuantitativeValueValueFieldEnum::Number(value as f64)],
                 ..Default::default()
             },
         ))]
     }
 }
 
-pub(crate) trait ToRecipeSchema {
+pub trait ToRecipeSchema {
     fn to_recipe_schema(&self) -> Recipe;
 }

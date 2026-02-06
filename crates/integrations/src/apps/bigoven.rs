@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::io::{Read, Seek};
 
+use tracing::error;
 use url::Url;
 use winnow::Result as WResult;
 use winnow::ascii::line_ending;
@@ -74,7 +75,7 @@ impl Display for Ingredient<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = format!(
             "{} {} {}",
-            self.quantity.map(|i| i.to_string()).unwrap_or_default(),
+            self.quantity.map(ToString::to_string).unwrap_or_default(),
             self.measure.unwrap_or_default(),
             self.name
         )
@@ -102,7 +103,7 @@ impl From<RecipeComponents<'_>> for BigOvenRecipe {
             total_minutes: r.total_minutes,
             category: items.map(|(a, _b)| a.to_string()),
             keywords: items
-                .map(|(_a, b)| b.iter().map(|s| s.to_string()).collect())
+                .map(|(_a, b)| b.iter().map(ToString::to_string).collect())
                 .unwrap_or_default(),
         }
     }
@@ -124,14 +125,14 @@ fn transform_ingredient_types<'a>(
                 IngredientType::Line(ing) => {
                     let s = format!(
                         "{} {} {}",
-                        ing.quantity.map(|i| i.to_string()).unwrap_or_default(),
+                        ing.quantity.map(ToString::to_string).unwrap_or_default(),
                         ing.measure.unwrap_or_default(),
                         ing.name
                     )
                     .replace("  ", " ");
 
                     if current_section.is_some() {
-                        items.push(s)
+                        items.push(s);
                     }
                 }
                 IngredientType::Section(ing) => {
@@ -145,7 +146,7 @@ fn transform_ingredient_types<'a>(
         }
 
         if let Some(section) = current_section {
-            result.push((section, items))
+            result.push((section, items));
         }
 
         result
@@ -160,7 +161,15 @@ fn transform_ingredient_types<'a>(
                         .map(ItemListItemListElementFieldEnum::Text)
                         .collect(),
                     name: vec![section.trim_matches('-').trim().to_string()],
-                    number_of_items: vec![num_items as i32],
+                    number_of_items: vec![
+                        i32::try_from(num_items)
+                            .inspect_err(|err| {
+                                error!(
+                                    "Failed to convert number of items '{num_items}' to i32: {err}"
+                                );
+                            })
+                            .unwrap_or_default(),
+                    ],
                     ..Default::default()
                 })
             })
@@ -170,7 +179,7 @@ fn transform_ingredient_types<'a>(
             .iter()
             .filter_map(|v| match v {
                 IngredientType::Line(ing) => Some(ing),
-                _ => None,
+                IngredientType::Section(_) => None,
             })
             .collect();
 
@@ -178,7 +187,7 @@ fn transform_ingredient_types<'a>(
             .map(|ing| {
                 let s = format!(
                     "{} {} {}",
-                    ing.quantity.map(|i| i.to_string()).unwrap_or_default(),
+                    ing.quantity.map(ToString::to_string).unwrap_or_default(),
                     ing.measure.unwrap_or_default(),
                     ing.name
                 )
@@ -191,23 +200,25 @@ fn transform_ingredient_types<'a>(
 }
 
 impl From<BigOvenRecipe> for Recipe {
+    #[allow(clippy::cast_precision_loss)]
+    #[allow(clippy::cast_possible_truncation)]
     fn from(r: BigOvenRecipe) -> Self {
         let url = Url::parse(&r.source.clone().unwrap_or_default()).ok();
 
-        Recipe {
+        Self {
             r#type: AtType::Recipe.to_opt(),
             aggregate_rating: if r.taste_rating > 0 {
                 vec![AggregateRating {
                     r#type: AtType::AggregateRating.to_opt(),
-                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(
-                        r.taste_rating as f32,
-                    )],
+                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(f32::from(
+                        r.taste_rating,
+                    ))],
                     ..Default::default()
                 }]
             } else {
                 vec![]
             },
-            cook_time: seconds_to_duration((r.total_minutes - r.active_minutes) as i32),
+            cook_time: seconds_to_duration(i32::from(r.total_minutes - r.active_minutes)),
             keywords: r
                 .keywords
                 .into_iter()
@@ -217,7 +228,7 @@ impl From<BigOvenRecipe> for Recipe {
                 .filter(|s| !s.is_empty())
                 .into_iter()
                 .collect(),
-            prep_time: seconds_to_duration(r.active_minutes as i32),
+            prep_time: seconds_to_duration(i32::from(r.active_minutes)),
             recipe_category: r.category.into_iter().collect(),
             recipe_ingredient: r.ingredients,
             recipe_instructions: r
@@ -225,14 +236,14 @@ impl From<BigOvenRecipe> for Recipe {
                 .into_iter()
                 .map(RecipeRecipeInstructionsFieldEnum::Text)
                 .collect(),
-            recipe_yield: to_yield(r.servings.round() as i64),
+            recipe_yield: to_yield(r.servings.round().clamp(0.0, i64::MAX as f32) as i64),
             url: url.map(String::from).into_iter().collect(),
             ..Default::default()
         }
     }
 }
 
-/// Parses a BigOven text file recipe.
+/// Parses a `BigOven` text file recipe.
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
@@ -833,14 +844,14 @@ Below assumes you are making your own chicken tenders, whereas the recipe above 
                 name: vec!["Applebee's Oriental Chicken Salad".into()],
                 recipe_category: vec!["Low Carb".into()],
                 recipe_ingredient: vec![
-                    RecipeRecipeIngredientFieldEnum::new_section("Salad Dressing", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Salad Dressing", &[
                         "6 tablespoon Honey",
                         "3 tablespoon Rice wine vinegar",
                         "1/2 cup Mayonnaise",
                         "2 teaspoon Grey Poupon Dijon Mustard",
                         "1/4 teaspoon Sesame Oil",
                     ]),
-                    RecipeRecipeIngredientFieldEnum::new_section("Salad", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Salad", &[
                         "1 package Breaded Chicken Tenders",
                         "6 cups Romaine lettuce",
                         "2 cup Red cabbage",

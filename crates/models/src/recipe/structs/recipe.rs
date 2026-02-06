@@ -1,13 +1,14 @@
 use diesel::prelude::*;
 use schema_org::ToIso8601;
-use support::strings::extract_number;
+use tracing::error;
 use uuid::Uuid;
 use whatlang::Lang;
 
 use math::cooking::units::system;
 use repository::schema;
-use schema_org::field::{RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum};
+use schema_org::field::{FieldEnum20, RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum};
 use support::name_entity_with_relations;
+use support::strings::extract_number;
 
 use crate::recipe::RecipeForm;
 use crate::recipe::structs::media::{Video, VideoForCreate};
@@ -19,7 +20,16 @@ use crate::user::User;
 
 /// Represents a recipe entity stored in the database.
 #[derive(
-    Clone, Debug, Default, PartialEq, AsChangeset, Associations, Queryable, Identifiable, Selectable,
+    Clone,
+    Debug,
+    Default,
+    Eq,
+    PartialEq,
+    AsChangeset,
+    Associations,
+    Queryable,
+    Identifiable,
+    Selectable,
 )]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(MeasurementSystem))]
@@ -92,7 +102,7 @@ pub struct RecipeDetails {
 
 impl RecipeDetails {
     /// Returns the number of images the recipe has.
-    pub fn num_images(&self) -> usize {
+    pub const fn num_images(&self) -> usize {
         match self.recipe.image {
             Some(_) => 1 + self.additional_images.len(),
             None => 0,
@@ -100,12 +110,12 @@ impl RecipeDetails {
     }
 
     /// Returns the number of images and videos the recipe has.
-    pub fn num_media(&self) -> usize {
+    pub const fn num_media(&self) -> usize {
         self.num_images() + self.num_videos()
     }
 
     /// Returns the number of videos the recipe has.
-    pub fn num_videos(&self) -> usize {
+    pub const fn num_videos(&self) -> usize {
         self.videos.len()
     }
 
@@ -153,7 +163,9 @@ impl From<RecipeForCreate> for RecipeDetails {
                 .enumerate()
                 .map(|(idx, t)| {
                     let mut tool = ToolRecipe::from(&t);
-                    tool.tool_order = idx as i16;
+                    tool.tool_order = i16::try_from(idx)
+                        .inspect_err(|err| error!("Failed to convert tool index to i16: {err}"))
+                        .unwrap_or_default();
                     tool
                 })
                 .collect(),
@@ -208,7 +220,7 @@ impl RecipeForCreate {
                         .items_as_text()
                         .iter()
                         .chain(&self.instructions.items_as_text())
-                        .map(|s| s.to_string()),
+                        .map(ToString::to_string),
                     " ".into(),
                 )
                 .collect::<String>(),
@@ -262,7 +274,11 @@ impl From<RecipeForm> for RecipeForCreate {
 impl From<&schema_org::Recipe> for RecipeForCreate {
     fn from(schema: &schema_org::Recipe) -> Self {
         let original_ingredients = schema.recipe_ingredient.clone();
-        let ingredients = SectionComponents::from(original_ingredients);
+        let ingredients = SectionComponents::try_from(original_ingredients)
+            .inspect_err(|err| {
+                error!("Failed to parse ingredients: {err}");
+            })
+            .unwrap_or_default();
         let measurement_system_id =
             system::MeasurementSystem::from(ingredients.items_as_text()).id();
         let nutrition = schema
@@ -280,28 +296,29 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
                 }
             }),
             images: vec![],
-            r#yield: schema
-                .recipe_yield
-                .first()
-                .map(|v| v.to_i16())
-                .unwrap_or_else(|| {
+            r#yield: schema.recipe_yield.first().map_or_else(
+                || {
                     nutrition
                         .per_serving
                         .as_ref()
                         .map(|v| extract_number(v.serving_size.as_ref()).ok())
                         .unwrap_or_default()
-                }),
+                },
+                FieldEnum20::to_i16,
+            ),
             source: schema.url.first().cloned().unwrap_or_default(),
             is_favourite: false,
             rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             videos: vec![],
-            category: match schema.recipe_category.first() {
-                Some(category) => Some(category.clone()),
-                None => Some("uncategorized".into()),
-            },
+            category: schema.recipe_category.first().map_or_else(
+                || Some("uncategorized".into()),
+                |category| Some(category.clone()),
+            ),
             cuisine: schema.recipe_cuisine.first().cloned(),
             ingredients,
-            instructions: SectionComponents::from(schema.recipe_instructions.clone()),
+            instructions: SectionComponents::try_from(schema.recipe_instructions.clone())
+                .inspect(|err| error!("Failed to parse instructions: {:?}", err))
+                .unwrap_or_default(),
             keywords: schema
                 .keywords
                 .iter()
@@ -326,7 +343,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
 }
 
 /// Represents a measurement system entity stored in the database.
-#[derive(Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Debug, Queryable, Identifiable, Eq, PartialEq, Selectable)]
 #[diesel(table_name = schema::measurement_systems)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct MeasurementSystem {

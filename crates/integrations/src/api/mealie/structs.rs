@@ -51,6 +51,7 @@ pub struct MealieTool {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::struct_excessive_bools)]
 pub struct MealieUser {
     pub id: Uuid,
     pub username: Option<String>,
@@ -192,11 +193,9 @@ pub struct MealieRecipeComment {
 
 impl MealieRecipeComment {
     pub fn author(&self) -> Option<String> {
-        if let Some(u) = self.full_name.clone() {
-            Some(u)
-        } else {
-            self.username.clone()
-        }
+        self.full_name
+            .clone()
+            .map_or_else(|| self.username.clone(), Some)
     }
 }
 
@@ -208,8 +207,8 @@ pub struct AuthPayload {
 }
 
 impl AuthPayload {
-    pub fn new(username: String, password: String, remember_me: bool) -> Self {
-        AuthPayload {
+    pub const fn new(username: String, password: String, remember_me: bool) -> Self {
+        Self {
             username,
             password,
             remember_me,
@@ -247,12 +246,13 @@ impl MealieRecipe {
 
 impl MealieUser {
     pub fn author(&self) -> Option<String> {
-        if let Some(u) = self.full_name.clone() {
-            Some(u)
-        } else if let Some(u) = self.username.clone() {
-            Some(u)
-        } else {
-            self.email.clone()
-        }
+        self.full_name.clone().map_or_else(
+            || {
+                self.username
+                    .clone()
+                    .map_or_else(|| self.email.clone(), Some)
+            },
+            Some,
+        )
     }
 }

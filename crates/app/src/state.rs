@@ -35,6 +35,10 @@ pub struct AppState {
 impl AppState {
     /// Creates a new instance of `AppState` by initializing the `ModelManager`
     /// with the provided database URL.
+    ///
+    /// # Panics
+    ///
+    /// This function contains an infallible expect that will never panic in practice.
     pub async fn new(
         config: Config,
         http_client: Arc<dyn HttpClient + Send + Sync>,
@@ -63,6 +67,7 @@ impl AppState {
     }
 
     /// Broadcasts a progress notification.
+    #[allow(clippy::cast_precision_loss)]
     pub async fn broadcast_progress(
         &self,
         title: &str,
@@ -120,11 +125,13 @@ impl AppState {
                 continue;
             }
 
-            match timeout(send_timeout, ws.send(message.clone())).await {
-                Ok(Ok(())) => alive.push(ws),
-                _ => {
-                    // Broken pipe / timeout / other: drop silently
-                }
+            if matches!(
+                timeout(send_timeout, ws.send(message.clone())).await,
+                Ok(Ok(()))
+            ) {
+                alive.push(ws);
+            } else {
+                // Broken pipe / timeout / other: drop silently
             }
         }
 
@@ -153,8 +160,8 @@ impl AppState {
     }
 
     /// Scrapes a recipe from the specified website.
-    pub fn scrape(&self, url: Url) -> Result<Recipe> {
+    pub async fn scrape(&self, url: Url) -> Result<Recipe> {
         let url = url.as_str();
-        Ok(self.scraper.scrape(url)?)
+        Ok(self.scraper.scrape(url).await?)
     }
 }

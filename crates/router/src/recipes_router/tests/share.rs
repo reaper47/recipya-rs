@@ -45,7 +45,7 @@ mod tests {
         let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 &format!(
                     r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
@@ -80,7 +80,7 @@ mod tests {
         let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 &format!(
                     r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,

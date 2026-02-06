@@ -397,7 +397,7 @@ impl Recipe {
     /// Generates the schema definition of `RecipeSchema`.
     #[cfg(feature = "json-schema")]
     pub fn schema() -> String {
-        let schema = schemars::schema_for!(Recipe);
+        let schema = schemars::schema_for!(Self);
         serde_json::to_string_pretty(&schema).unwrap_or_default()
     }
 }

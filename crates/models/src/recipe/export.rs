@@ -7,6 +7,7 @@ use crate::{Error, Result};
 
 impl RecipeDetails {
     /// Converts the `Recipe` instance into a Markdown-formatted `String`.
+    #[allow(clippy::too_many_lines)]
     pub fn to_markdown(&self, base_url: &str) -> Result<String> {
         let mut md = String::new();
 
@@ -16,8 +17,7 @@ impl RecipeDetails {
         if let Some(main_image) = self.recipe.image {
             writeln!(
                 &mut md,
-                "![Image of the recipe]({base_url}/data/images/{}.webp)",
-                main_image
+                "![Image of the recipe]({base_url}/data/images/{main_image}.webp)",
             )?;
             writeln!(&mut md)?;
         }
@@ -43,7 +43,7 @@ impl RecipeDetails {
             writeln!(&mut md, "## Description")?;
             writeln!(&mut md)?;
 
-            writeln!(&mut md, "{}", description)?;
+            writeln!(&mut md, "{description}")?;
             writeln!(&mut md)?;
         }
 
@@ -51,7 +51,7 @@ impl RecipeDetails {
             writeln!(&mut md, "## Tools")?;
             writeln!(&mut md)?;
 
-            for tool in self.tools.iter() {
+            for tool in &self.tools {
                 writeln!(&mut md, "* {} {}", tool.quantity, tool.name)?;
             }
             writeln!(&mut md)?;
@@ -67,7 +67,7 @@ impl RecipeDetails {
                         writeln!(&mut md, "### {}", section.title)?;
                         writeln!(&mut md)?;
 
-                        for item in section.items.iter() {
+                        for item in &section.items {
                             writeln!(&mut md, "* {}", item.text)?;
                         }
                         writeln!(&mut md)?;
@@ -116,7 +116,7 @@ impl RecipeDetails {
             writeln!(&mut md, "|------------------------|----------|")?;
 
             if let Some(calories) = nutrition.calories_kcal {
-                writeln!(&mut md, "| **Calories**           | {} kcal |", calories)?;
+                writeln!(&mut md, "| **Calories**           | {calories} kcal |")?;
             }
 
             if let Some(total_fat) = nutrition.total_fat_g {

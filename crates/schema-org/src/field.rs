@@ -11,7 +11,7 @@ use crate::{
     TextObject, Thing, VideoObject, WebContent, WebPage,
 };
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum2 {
@@ -188,9 +188,9 @@ impl Default for FieldEnum6 {
 impl FieldEnum6 {
     pub fn is_default(&self) -> bool {
         match self {
-            FieldEnum6::Organization(org) => org == &Organization::default(),
-            FieldEnum6::Person(person) => person == &Person::default(),
-            FieldEnum6::Text(text) => text.is_empty(),
+            Self::Organization(org) => org == &Organization::default(),
+            Self::Person(person) => person == &Person::default(),
+            Self::Text(text) => text.is_empty(),
         }
     }
 }
@@ -789,7 +789,7 @@ pub enum FieldEnum19 {
 }
 impl Default for FieldEnum19 {
     fn default() -> Self {
-        Self::Clip(Default::default())
+        Self::Clip(Box::default())
     }
 }
 ///<https://schema.org/video>
@@ -833,17 +833,17 @@ impl Default for FieldEnum20 {
 }
 impl FieldEnum20 {
     /// Creates a new `QuantitativeValue` field.
-    pub fn new_quantitative_value(value: f32) -> Self {
+    pub fn new_quantitative_value(value: f64) -> Self {
         Self::QuantitativeValue(Box::new(QuantitativeValue::new(value)))
     }
 
     pub fn to_i16(&self) -> Option<i16> {
         match self {
-            FieldEnum20::QuantitativeValue(q) => q.value.first().map(|q| match q {
+            Self::QuantitativeValue(q) => q.value.first().map(|q| match q {
                 QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => {
                     s.parse::<i16>().ok().unwrap_or_default()
                 }
-                QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
+                QuantitativeValueValueFieldEnum::Number(n) => float_to_i16_safe(*n),
                 QuantitativeValueValueFieldEnum::StructuredValue(v) => v
                     .name
                     .first()
@@ -851,7 +851,7 @@ impl FieldEnum20 {
                     .unwrap_or_default(),
                 QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
             }),
-            FieldEnum20::Text(s) => s
+            Self::Text(s) => s
                 .split_whitespace()
                 .find_map(|part| part.parse::<i16>().ok()),
         }
@@ -1015,113 +1015,113 @@ impl Default for FieldEnum23 {
         Self::Text(String::new())
     }
 }
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ClipDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type WebContentDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MeasurementTypeEnumerationDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type StructuredValueDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MusicPlaylistDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type EnumerationDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type BreadcrumbListDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type HowToToolDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type QuantitativeValueDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type DistanceDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MusicRecordingDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ProductDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ReviewDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type DefinedTermSetDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ThingDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type WebPageElementDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type PersonDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type WebPageDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type AudioObjectDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type RatingDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MediaObjectDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MusicCompositionDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ActionDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type SizeSpecificationDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type PlaceDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ItemListDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MassDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type InteractionCounterDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MusicReleaseDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type AggregateRatingDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type CountryDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type QualitativeValueDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ImageObjectDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type HowToStepDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type ListItemDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type HowToSectionDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type DefinedTermDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type OrganizationDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type RecipeDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type DurationDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MusicAlbumDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type CreativeWorkDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description
+/// [Schema Description](https://schema.org/description)
 pub type EnergyDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type MonetaryAmountDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type TextObjectDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type LanguageDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type HowToDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type CommentDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type PropertyValueDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type VideoObjectDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type EventDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type HowToSupplyDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type EntryPointDescriptionFieldEnum = FieldEnum23;
-///<https://schema.org/description>
+/// [Schema Description](https://schema.org/description)
 pub type PostalAddressDescriptionFieldEnum = FieldEnum23;
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -1135,7 +1135,7 @@ pub enum FieldEnum24 {
 }
 impl Default for FieldEnum24 {
     fn default() -> Self {
-        Self::CreativeWork(Default::default())
+        Self::CreativeWork(Box::default())
     }
 }
 ///<https://schema.org/subjectOf>
@@ -1230,7 +1230,7 @@ pub enum FieldEnum26 {
 }
 impl Default for FieldEnum26 {
     fn default() -> Self {
-        Self::EntryPoint(Default::default())
+        Self::EntryPoint(Box::default())
     }
 }
 ///<https://schema.org/target>
@@ -1247,7 +1247,7 @@ pub enum FieldEnum35 {
 }
 impl Default for FieldEnum35 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/address>
@@ -1268,7 +1268,7 @@ pub enum FieldEnum41 {
 }
 impl Default for FieldEnum41 {
     fn default() -> Self {
-        Self::ItemList(Default::default())
+        Self::ItemList(Box::default())
     }
 }
 ///<https://schema.org/track>
@@ -1289,7 +1289,7 @@ pub enum FieldEnum44 {
 }
 impl Default for FieldEnum44 {
     fn default() -> Self {
-        Self::DefinedTermSet(Default::default())
+        Self::DefinedTermSet(Box::default())
     }
 }
 ///<https://schema.org/inDefinedTermSet>
@@ -1303,10 +1303,11 @@ pub enum FieldEnum48 {
     Distance(Distance),
     ///<https://schema.org/QuantitativeValue>
     QuantitativeValue(QuantitativeValue),
+    Integer(i32),
 }
 impl Default for FieldEnum48 {
     fn default() -> Self {
-        Self::Distance(Default::default())
+        Self::Distance(Distance::default())
     }
 }
 ///<https://schema.org/height>
@@ -1425,21 +1426,21 @@ pub enum FieldEnum60 {
 }
 impl Default for FieldEnum60 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 impl FieldEnum60 {
     pub fn quantity(&self) -> i16 {
         match self {
-            FieldEnum60::Number(n) => *n as i16,
-            FieldEnum60::QuantitativeValue(q) => q
+            Self::Number(n) => float_to_i16_safe(*n),
+            Self::QuantitativeValue(q) => q
                 .value
                 .first()
                 .map(|q| match q {
                     QuantitativeValueValueFieldEnum::BooleanEnumOrText(t) => {
                         t.parse().ok().unwrap_or_default()
                     }
-                    QuantitativeValueValueFieldEnum::Number(n) => *n as i16,
+                    QuantitativeValueValueFieldEnum::Number(n) => float_to_i16_safe(*n),
                     QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
                     QuantitativeValueValueFieldEnum::StructuredValue(v) => v
                         .name
@@ -1448,7 +1449,7 @@ impl FieldEnum60 {
                         .unwrap_or_default(),
                 })
                 .unwrap_or_default(),
-            FieldEnum60::Text(s) => s.parse::<i16>().unwrap_or_default(),
+            Self::Text(s) => s.parse::<i16>().unwrap_or_default(),
         }
     }
 }
@@ -1480,7 +1481,7 @@ pub enum FieldEnum63 {
 }
 impl Default for FieldEnum63 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/valueReference>
@@ -1500,7 +1501,7 @@ pub enum FieldEnum64 {
     ///<https://schema.org/Text>
     BooleanEnumOrText(String),
     ///<https://schema.org/Number>
-    Number(f32),
+    Number(f64),
     ///<https://schema.org/StructuredValue>
     StructuredValue(Box<StructuredValue>),
     ///<https://schema.org/QuantitativeValue>
@@ -1520,14 +1521,14 @@ impl<'de> Deserialize<'de> for FieldEnum64 {
         let value = Value::deserialize(deserializer)?;
 
         match &value {
-            Value::String(s) => Ok(FieldEnum64::BooleanEnumOrText(s.clone())),
-            Value::Number(n) => Ok(FieldEnum64::Number(n.as_f64().unwrap_or_default() as f32)),
+            Value::String(s) => Ok(Self::BooleanEnumOrText(s.clone())),
+            Value::Number(n) => Ok(Self::Number(n.as_f64().unwrap_or_default())),
             Value::Object(map) => match map.get("@type").and_then(|v| v.as_str()) {
                 Some("StructuredValue") => serde_json::from_value(value)
-                    .map(FieldEnum64::StructuredValue)
+                    .map(Self::StructuredValue)
                     .map_err(serde::de::Error::custom),
                 Some("QuantitativeValue") => serde_json::from_value(value)
-                    .map(FieldEnum64::QuantitativeValue)
+                    .map(Self::QuantitativeValue)
                     .map_err(serde::de::Error::custom),
                 _ => Err(serde::de::Error::custom(
                     "Expected StructuredValue or QuantitativeValue object for FieldEnum64",
@@ -1558,7 +1559,7 @@ pub enum FieldEnum73 {
 }
 impl Default for FieldEnum73 {
     fn default() -> Self {
-        Self::Comment(Default::default())
+        Self::Comment(Comment::default())
     }
 }
 ///<https://schema.org/parentItem>
@@ -1566,7 +1567,7 @@ pub type CorrectionCommentParentItemFieldEnum = FieldEnum73;
 ///<https://schema.org/parentItem>
 pub type CommentParentItemFieldEnum = FieldEnum73;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum91 {
@@ -1577,7 +1578,7 @@ pub enum FieldEnum91 {
 }
 impl Default for FieldEnum91 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/gender>
@@ -1594,7 +1595,7 @@ pub enum FieldEnum96 {
 }
 impl Default for FieldEnum96 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/caption>
@@ -1615,7 +1616,7 @@ pub enum FieldEnum102 {
 }
 impl Default for FieldEnum102 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/estimatedCost>
@@ -1638,7 +1639,7 @@ pub enum FieldEnum113 {
 }
 impl Default for FieldEnum113 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/itemListElement>
@@ -1650,7 +1651,7 @@ pub type HowToStepItemListElementFieldEnum = FieldEnum113;
 ///<https://schema.org/itemListElement>
 pub type HowToSectionItemListElementFieldEnum = FieldEnum113;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum FieldEnum114 {
@@ -1661,7 +1662,7 @@ pub enum FieldEnum114 {
 }
 impl Default for FieldEnum114 {
     fn default() -> Self {
-        Self::Text(Default::default())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/itemListOrder>
@@ -1687,7 +1688,7 @@ pub enum FieldEnum116 {
 }
 impl Default for FieldEnum116 {
     fn default() -> Self {
-        Self::TextOrURL(Default::default())
+        Self::TextOrURL(String::default())
     }
 }
 ///<https://schema.org/measurementMethod>
@@ -1726,7 +1727,7 @@ pub enum FieldEnum141 {
 }
 impl Default for FieldEnum141 {
     fn default() -> Self {
-        Self::Text(String::new())
+        Self::Text(String::default())
     }
 }
 ///<https://schema.org/steps>
@@ -1737,7 +1738,7 @@ pub type RecipeRecipeInstructionsFieldEnum = FieldEnum141;
 impl RecipeRecipeInstructionsFieldEnum {
     /// Creates a new section.
     pub fn new_section<T: Into<String>>(name: &str, items: Vec<T>) -> Self {
-        let num_items = items.len() as i32;
+        let num_items = i32::try_from(items.len()).unwrap_or_default();
 
         Self::ItemList(
             ItemList {
@@ -1760,7 +1761,7 @@ impl RecipeRecipeInstructionsFieldEnum {
     pub fn push_item(&mut self, item: &str) {
         if let Self::ItemList(list) = self {
             list.item_list_element
-                .push(ItemListItemListElementFieldEnum::Text(item.to_string()))
+                .push(ItemListItemListElementFieldEnum::Text(item.to_string()));
         }
     }
 
@@ -1804,17 +1805,17 @@ impl<'de> Deserialize<'de> for FieldEnum149 {
         let value = Value::deserialize(deserializer)?;
 
         match &value {
-            Value::String(s) => Ok(FieldEnum149::Text(s.clone())),
+            Value::String(s) => Ok(Self::Text(s.clone())),
             Value::Object(map) => match map.get("@type").and_then(|v| v.as_str()) {
                 Some("PropertyValue") => serde_json::from_value(value)
-                    .map(FieldEnum149::PropertyValue)
+                    .map(Self::PropertyValue)
                     .map_err(serde::de::Error::custom),
                 Some("ItemList") => serde_json::from_value(value)
-                    .map(FieldEnum149::ItemList)
+                    .map(Self::ItemList)
                     .map_err(serde::de::Error::custom),
                 _ => serde_json::from_value::<PropertyValue>(value.clone())
-                    .map(FieldEnum149::PropertyValue)
-                    .or_else(|_| serde_json::from_value(value).map(FieldEnum149::ItemList))
+                    .map(Self::PropertyValue)
+                    .or_else(|_| serde_json::from_value(value).map(Self::ItemList))
                     .map_err(serde::de::Error::custom),
             },
             _ => Err(serde::de::Error::custom(
@@ -1828,8 +1829,8 @@ impl<'de> Deserialize<'de> for FieldEnum149 {
 pub type RecipeRecipeIngredientFieldEnum = FieldEnum149;
 
 impl RecipeRecipeIngredientFieldEnum {
-    /// Creates a new ItemList that contains a title and a list of items.
-    pub fn new_section(name: &str, items: Vec<&str>) -> Self {
+    /// Creates a new `ItemList` that contains a title and a list of items.
+    pub fn new_section(name: &str, items: &[&str]) -> Self {
         Self::ItemList(ItemList {
             r#type: AtType::ItemList.to_string(),
             item_list_element: items
@@ -1837,7 +1838,7 @@ impl RecipeRecipeIngredientFieldEnum {
                 .map(|v| ItemListItemListElementFieldEnum::Text(v.to_string()))
                 .collect(),
             name: vec![name.into()],
-            number_of_items: vec![items.len() as i32],
+            number_of_items: vec![i32::try_from(items.len()).unwrap_or_default()],
             ..Default::default()
         })
     }
@@ -1931,7 +1932,7 @@ pub type RecipeSupplyFieldEnum = FieldEnum152;
 ///<https://schema.org/supply>
 pub type HowToSupplyFieldEnum = FieldEnum152;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum IntegerOrText {
@@ -1941,5 +1942,16 @@ pub enum IntegerOrText {
 impl Default for IntegerOrText {
     fn default() -> Self {
         Self::Integer(0)
+    }
+}
+
+pub(crate) fn float_to_i16_safe<F: Into<f64>>(n: F) -> i16 {
+    let clamped = n
+        .into()
+        .round()
+        .clamp(f64::from(i16::MIN), f64::from(i16::MAX));
+    #[allow(clippy::cast_possible_truncation)]
+    {
+        clamped as i16
     }
 }

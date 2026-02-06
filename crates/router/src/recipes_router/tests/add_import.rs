@@ -210,7 +210,7 @@ mod tests {
 
         fn assert_other_json_html(res: TestResponse) {
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<span class="text-center pb-2 print:w-full w-full" itemprop="name">Dry Toast</span>"#,
                     r#"<p class="text-sm text-center">1 servings</p>"#,
@@ -240,7 +240,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<div class="text-error">Invalid JSON: key must be a string at line 1 column 2</div>"#,
                 ],
@@ -287,7 +287,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<h2 class="card-title bg-base-200 px-2 pt-2 place-content-center rounded-t-2xl print:border-b print:border-black" style="justify-content: space-between"><span class="text-center pb-2 print:w-full w-full" itemprop="name">Mom's World Famous Banana Bread</span></h2>"#,
                 ],

@@ -12,7 +12,7 @@ use crate::handlers::auth::{
 use crate::middleware::mw_auth::mw_refresh_token;
 
 /// Defines the authentication-related routes for the web application.
-pub(super) fn auth_routes(state: AppState) -> Router<AppState> {
+pub fn auth_routes(state: &AppState) -> Router<AppState> {
     let protected = Router::new()
         .route("/change-password", post(change_password_post_handler))
         .route("/user", delete(user_delete_handler))
@@ -199,7 +199,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<title hx-swap-oob="true">Success | Recipya</title>"#,
                     r#"Your account has been verified."#,
@@ -303,7 +303,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<title hx-swap-oob="true">Forgot Password | Recipya</title>"#,
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email"></fieldset>"#,
@@ -356,7 +356,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<h2 class="card-title underline self-center">Password Reset Requested</h2>"#,
                     r#"An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account."#,
@@ -374,7 +374,7 @@ mod tests {
             let res = server.get(URI_RESET).await;
 
             res.assert_status_bad_request();
-            assert_html(res, vec![]);
+            assert_html(&res, vec![]);
             Ok(())
         }
 
@@ -394,7 +394,7 @@ mod tests {
 
             res.assert_status_bad_request();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<title hx-swap-oob="true">Token Expired | Recipya</title>"#,
                     "The token associated with the URL expired.",
@@ -419,7 +419,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
                     &format!(
@@ -528,7 +528,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" method="post" action="/auth/login"><div class="card-body">"#,
                     r#"<h2 class="card-title underline self-center">Log In</h2>"#,
@@ -554,7 +554,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value="demo@demo.com"></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demo"></fieldset>"#,
@@ -577,7 +577,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_not_in_html(
-                res,
+                &res,
                 vec![
                     r#"<a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a>"#,
                 ],

@@ -16,7 +16,7 @@ pub enum Mass {
     Pound(f64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum MassUnit {
     Milligram,
     Gram,
@@ -29,6 +29,11 @@ pub enum MassUnit {
 
 static MASS_REGEX: OnceLock<Regex> = OnceLock::new();
 
+/// Returns the compiled mass regex.
+///
+/// # Panics
+///
+/// Panics if the hard-coded regex literal is invalid.
 pub fn get_regex<'a>() -> &'a Regex {
     MASS_REGEX.get_or_init(|| Regex::new(r"(?i)(\d(?:\s?[\d.]/?\d+)?)\s?([a-zμ]+)\b").unwrap())
 }
@@ -75,15 +80,15 @@ impl FromStr for Mass {
                 let unit = caps.get(2)?.as_str().to_lowercase();
 
                 match unit.trim_end_matches('s') {
-                    "g" | "gram" | "gramme" => Some(Mass::Gram(value)),
-                    "mg" | "milligram" | "milligramme" => Some(Mass::Milligram(value)),
-                    "kg" | "kilogram" | "kilogramme" => Some(Mass::Kilogram(value)),
-                    "oz" | "ounce" => Some(Mass::Ounce(value)),
-                    "lb" | "pound" => Some(Mass::Pound(value)),
+                    "g" | "gram" | "gramme" => Some(Self::Gram(value)),
+                    "mg" | "milligram" | "milligramme" => Some(Self::Milligram(value)),
+                    "kg" | "kilogram" | "kilogramme" => Some(Self::Kilogram(value)),
+                    "oz" | "ounce" => Some(Self::Ounce(value)),
+                    "lb" | "pound" => Some(Self::Pound(value)),
                     "dag" | "dekagram" | "dekagramme" | "decagram" | "decagramme" => {
-                        Some(Mass::Dekagram(value))
+                        Some(Self::Dekagram(value))
                     }
-                    "hg" | "hectogram" | "hectogramme" => Some(Mass::Hectogram(value)),
+                    "hg" | "hectogram" | "hectogramme" => Some(Self::Hectogram(value)),
                     _ => None,
                 }
             })

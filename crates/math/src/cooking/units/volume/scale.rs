@@ -1,206 +1,205 @@
 use crate::Result;
-use crate::cooking::units::custom::factors::volume::*;
+use crate::cooking::units::custom::factors::volume::{
+    AUSTRALIAN_TABLESPOON_TEASPOON_FACTOR, CUP_TEASPOON_FACTOR, DESERT_SPOON_TEASPOON_FACTOR,
+    IMPERIAL_GALLON_FLOZ_FACTOR, IMPERIAL_GILL_FLOZ_FACTOR, IMPERIAL_PINT_FLOZ_FACTOR,
+    IMPERIAL_QUART_FLOZ_FACTOR, LITRE_CENTILITRE_FACTOR, LITRE_DECILITRE_FACTOR,
+    METRIC_CUP_TEASPOON_FACTOR, TABLESPOON_TEASPOON_FACTOR, US_GALLON_FLOZ_FACTOR,
+    US_PINT_FLOZ_FACTOR, US_QUART_FLOZ_FACTOR,
+};
 use crate::cooking::units::traits::{UnitOperations, UnitScaler};
 use crate::cooking::units::unit::Unit;
 use crate::cooking::units::volume::units::Volume;
 
 impl UnitScaler for Volume {
+    #[allow(clippy::too_many_lines)]
     fn scale(&self, factor: f64) -> Result<Unit> {
         let scaled_value = self.value() * factor;
 
         match self {
-            Volume::Millilitre(_)
-            | Volume::Centilitre(_)
-            | Volume::Decilitre(_)
-            | Volume::Litre(_) => {
+            Self::Millilitre(_) | Self::Centilitre(_) | Self::Decilitre(_) | Self::Litre(_) => {
                 let litres = match self {
-                    Volume::Millilitre(_) => {
+                    Self::Millilitre(_) => {
                         scaled_value / measurements::volume::LITER_MILLILITERS_FACTOR
                     }
-                    Volume::Centilitre(_) => scaled_value / LITRE_CENTILITRE_FACTOR,
-                    Volume::Decilitre(_) => scaled_value / LITRE_DECILITRE_FACTOR,
-                    Volume::Litre(_) => scaled_value,
+                    Self::Centilitre(_) => scaled_value / LITRE_CENTILITRE_FACTOR,
+                    Self::Decilitre(_) => scaled_value / LITRE_DECILITRE_FACTOR,
+                    Self::Litre(_) => scaled_value,
                     _ => unreachable!(),
                 };
 
                 if litres >= 1.0 {
-                    Ok(Unit::Volume(Volume::Litre(litres)))
+                    Ok(Unit::Volume(Self::Litre(litres)))
                 } else if litres >= 1e-1 {
-                    Ok(Unit::Volume(Volume::Decilitre(litres * 1e1)))
+                    Ok(Unit::Volume(Self::Decilitre(litres * 1e1)))
                 } else if litres >= 1e-2 {
-                    Ok(Unit::Volume(Volume::Centilitre(litres * 1e2)))
+                    Ok(Unit::Volume(Self::Centilitre(litres * 1e2)))
                 } else {
-                    Ok(Unit::Volume(Volume::Millilitre(litres * 1e3)))
+                    Ok(Unit::Volume(Self::Millilitre(litres * 1e3)))
                 }
             }
 
-            Volume::MetricTeaspoon(_)
-            | Volume::MetricTablespoon(_)
-            | Volume::MetricDessertspoon(_)
-            | Volume::MetricCup(_) => {
+            Self::MetricTeaspoon(_)
+            | Self::MetricTablespoon(_)
+            | Self::MetricDessertspoon(_)
+            | Self::MetricCup(_) => {
                 let tsp = match self {
-                    Volume::MetricTeaspoon(_) => scaled_value,
-                    Volume::MetricTablespoon(_) => scaled_value * TABLESPOON_TEASPOON_FACTOR,
-                    Volume::MetricDessertspoon(_) => scaled_value * DESERT_SPOON_TEASPOON_FACTOR,
-                    Volume::MetricCup(_) => scaled_value * METRIC_CUP_TEASPOON_FACTOR,
+                    Self::MetricTeaspoon(_) => scaled_value,
+                    Self::MetricTablespoon(_) => scaled_value * TABLESPOON_TEASPOON_FACTOR,
+                    Self::MetricDessertspoon(_) => scaled_value * DESERT_SPOON_TEASPOON_FACTOR,
+                    Self::MetricCup(_) => scaled_value * METRIC_CUP_TEASPOON_FACTOR,
                     _ => unreachable!(),
                 };
 
                 if tsp >= METRIC_CUP_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::MetricCup(
+                    Ok(Unit::Volume(Self::MetricCup(
                         tsp / METRIC_CUP_TEASPOON_FACTOR,
                     )))
                 } else if tsp >= TABLESPOON_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::MetricTablespoon(
+                    Ok(Unit::Volume(Self::MetricTablespoon(
                         tsp / TABLESPOON_TEASPOON_FACTOR,
                     )))
                 } else if tsp >= DESERT_SPOON_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::MetricDessertspoon(
+                    Ok(Unit::Volume(Self::MetricDessertspoon(
                         tsp / DESERT_SPOON_TEASPOON_FACTOR,
                     )))
                 } else {
-                    Ok(Unit::Volume(Volume::MetricTeaspoon(tsp)))
+                    Ok(Unit::Volume(Self::MetricTeaspoon(tsp)))
                 }
             }
 
-            Volume::AustralianTeaspoon(_)
-            | Volume::AustralianDessertspoon(_)
-            | Volume::AustralianTablespoon(_)
-            | Volume::AustralianCup(_) => {
+            Self::AustralianTeaspoon(_)
+            | Self::AustralianDessertspoon(_)
+            | Self::AustralianTablespoon(_)
+            | Self::AustralianCup(_) => {
                 let tsp = match self {
-                    Volume::AustralianTeaspoon(_) => scaled_value,
-                    Volume::AustralianDessertspoon(_) => {
-                        scaled_value * DESERT_SPOON_TEASPOON_FACTOR
-                    }
-                    Volume::AustralianTablespoon(_) => {
+                    Self::AustralianTeaspoon(_) => scaled_value,
+                    Self::AustralianDessertspoon(_) => scaled_value * DESERT_SPOON_TEASPOON_FACTOR,
+                    Self::AustralianTablespoon(_) => {
                         scaled_value * AUSTRALIAN_TABLESPOON_TEASPOON_FACTOR
                     }
-                    Volume::AustralianCup(_) => scaled_value * METRIC_CUP_TEASPOON_FACTOR,
+                    Self::AustralianCup(_) => scaled_value * METRIC_CUP_TEASPOON_FACTOR,
                     _ => unreachable!(),
                 };
 
                 if tsp >= METRIC_CUP_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::AustralianCup(
+                    Ok(Unit::Volume(Self::AustralianCup(
                         tsp / METRIC_CUP_TEASPOON_FACTOR,
                     )))
                 } else if tsp >= AUSTRALIAN_TABLESPOON_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::AustralianTablespoon(
+                    Ok(Unit::Volume(Self::AustralianTablespoon(
                         tsp / AUSTRALIAN_TABLESPOON_TEASPOON_FACTOR,
                     )))
                 } else if tsp >= DESERT_SPOON_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::AustralianDessertspoon(
+                    Ok(Unit::Volume(Self::AustralianDessertspoon(
                         tsp / DESERT_SPOON_TEASPOON_FACTOR,
                     )))
                 } else {
-                    Ok(Unit::Volume(Volume::AustralianTeaspoon(tsp)))
+                    Ok(Unit::Volume(Self::AustralianTeaspoon(tsp)))
                 }
             }
 
-            Volume::ImperialTeaspoon(_)
-            | Volume::ImperialDessertspoon(_)
-            | Volume::ImperialTablespoon(_)
-            | Volume::ImperialCup(_) => {
+            Self::ImperialTeaspoon(_)
+            | Self::ImperialDessertspoon(_)
+            | Self::ImperialTablespoon(_)
+            | Self::ImperialCup(_) => {
                 let tsp = match self {
-                    Volume::ImperialTeaspoon(_) => scaled_value,
-                    Volume::ImperialDessertspoon(_) => scaled_value * DESERT_SPOON_TEASPOON_FACTOR,
-                    Volume::ImperialTablespoon(_) => scaled_value * TABLESPOON_TEASPOON_FACTOR,
-                    Volume::ImperialCup(_) => scaled_value * CUP_TEASPOON_FACTOR,
+                    Self::ImperialTeaspoon(_) => scaled_value,
+                    Self::ImperialDessertspoon(_) => scaled_value * DESERT_SPOON_TEASPOON_FACTOR,
+                    Self::ImperialTablespoon(_) => scaled_value * TABLESPOON_TEASPOON_FACTOR,
+                    Self::ImperialCup(_) => scaled_value * CUP_TEASPOON_FACTOR,
                     _ => unreachable!(),
                 };
 
                 if tsp >= CUP_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::ImperialCup(tsp / CUP_TEASPOON_FACTOR)))
+                    Ok(Unit::Volume(Self::ImperialCup(tsp / CUP_TEASPOON_FACTOR)))
                 } else if tsp >= TABLESPOON_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::ImperialTablespoon(
+                    Ok(Unit::Volume(Self::ImperialTablespoon(
                         tsp / TABLESPOON_TEASPOON_FACTOR,
                     )))
                 } else if tsp >= DESERT_SPOON_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::ImperialDessertspoon(
+                    Ok(Unit::Volume(Self::ImperialDessertspoon(
                         tsp / DESERT_SPOON_TEASPOON_FACTOR,
                     )))
                 } else {
-                    Ok(Unit::Volume(Volume::ImperialTeaspoon(tsp)))
+                    Ok(Unit::Volume(Self::ImperialTeaspoon(tsp)))
                 }
             }
 
-            Volume::ImperialFluidOunce(_)
-            | Volume::ImperialGill(_)
-            | Volume::ImperialPint(_)
-            | Volume::ImperialQuart(_)
-            | Volume::ImperialGallon(_) => {
+            Self::ImperialFluidOunce(_)
+            | Self::ImperialGill(_)
+            | Self::ImperialPint(_)
+            | Self::ImperialQuart(_)
+            | Self::ImperialGallon(_) => {
                 let floz = match self {
-                    Volume::ImperialFluidOunce(_) => scaled_value,
-                    Volume::ImperialGill(_) => scaled_value * IMPERIAL_GILL_FLOZ_FACTOR,
-                    Volume::ImperialPint(_) => scaled_value * IMPERIAL_PINT_FLOZ_FACTOR,
-                    Volume::ImperialQuart(_) => scaled_value * IMPERIAL_QUART_FLOZ_FACTOR,
-                    Volume::ImperialGallon(_) => scaled_value * IMPERIAL_GALLON_FLOZ_FACTOR,
+                    Self::ImperialFluidOunce(_) => scaled_value,
+                    Self::ImperialGill(_) => scaled_value * IMPERIAL_GILL_FLOZ_FACTOR,
+                    Self::ImperialPint(_) => scaled_value * IMPERIAL_PINT_FLOZ_FACTOR,
+                    Self::ImperialQuart(_) => scaled_value * IMPERIAL_QUART_FLOZ_FACTOR,
+                    Self::ImperialGallon(_) => scaled_value * IMPERIAL_GALLON_FLOZ_FACTOR,
                     _ => unreachable!(),
                 };
 
                 if floz >= IMPERIAL_GALLON_FLOZ_FACTOR {
-                    Ok(Unit::Volume(Volume::ImperialGallon(
+                    Ok(Unit::Volume(Self::ImperialGallon(
                         floz / IMPERIAL_GALLON_FLOZ_FACTOR,
                     )))
                 } else if floz >= IMPERIAL_QUART_FLOZ_FACTOR {
-                    Ok(Unit::Volume(Volume::ImperialQuart(
+                    Ok(Unit::Volume(Self::ImperialQuart(
                         floz / IMPERIAL_QUART_FLOZ_FACTOR,
                     )))
                 } else if floz >= IMPERIAL_PINT_FLOZ_FACTOR {
-                    Ok(Unit::Volume(Volume::ImperialPint(
+                    Ok(Unit::Volume(Self::ImperialPint(
                         floz / IMPERIAL_PINT_FLOZ_FACTOR,
                     )))
                 } else if floz >= IMPERIAL_GILL_FLOZ_FACTOR {
-                    Ok(Unit::Volume(Volume::ImperialGill(
+                    Ok(Unit::Volume(Self::ImperialGill(
                         floz / IMPERIAL_GILL_FLOZ_FACTOR,
                     )))
                 } else {
-                    Ok(Unit::Volume(Volume::ImperialFluidOunce(floz)))
+                    Ok(Unit::Volume(Self::ImperialFluidOunce(floz)))
                 }
             }
 
-            Volume::USTeaspoon(_) | Volume::USTablespoon(_) | Volume::USCup(_) => {
+            Self::USTeaspoon(_) | Self::USTablespoon(_) | Self::USCup(_) => {
                 let tsp = match self {
-                    Volume::USTeaspoon(_) => scaled_value,
-                    Volume::USTablespoon(_) => scaled_value * TABLESPOON_TEASPOON_FACTOR,
-                    Volume::USCup(_) => scaled_value * CUP_TEASPOON_FACTOR,
+                    Self::USTeaspoon(_) => scaled_value,
+                    Self::USTablespoon(_) => scaled_value * TABLESPOON_TEASPOON_FACTOR,
+                    Self::USCup(_) => scaled_value * CUP_TEASPOON_FACTOR,
                     _ => unreachable!(),
                 };
 
                 if tsp >= CUP_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::USCup(tsp / CUP_TEASPOON_FACTOR)))
+                    Ok(Unit::Volume(Self::USCup(tsp / CUP_TEASPOON_FACTOR)))
                 } else if tsp >= TABLESPOON_TEASPOON_FACTOR {
-                    Ok(Unit::Volume(Volume::USTablespoon(
+                    Ok(Unit::Volume(Self::USTablespoon(
                         tsp / TABLESPOON_TEASPOON_FACTOR,
                     )))
                 } else {
-                    Ok(Unit::Volume(Volume::USTeaspoon(tsp)))
+                    Ok(Unit::Volume(Self::USTeaspoon(tsp)))
                 }
             }
 
-            Volume::USFluidOunce(_)
-            | Volume::USPint(_)
-            | Volume::USQuart(_)
-            | Volume::USGallon(_) => {
+            Self::USFluidOunce(_) | Self::USPint(_) | Self::USQuart(_) | Self::USGallon(_) => {
                 let floz = match self {
-                    Volume::USFluidOunce(_) => scaled_value,
-                    Volume::USPint(_) => scaled_value * US_PINT_FLOZ_FACTOR,
-                    Volume::USQuart(_) => scaled_value * US_QUART_FLOZ_FACTOR,
-                    Volume::USGallon(_) => scaled_value * US_GALLON_FLOZ_FACTOR,
+                    Self::USFluidOunce(_) => scaled_value,
+                    Self::USPint(_) => scaled_value * US_PINT_FLOZ_FACTOR,
+                    Self::USQuart(_) => scaled_value * US_QUART_FLOZ_FACTOR,
+                    Self::USGallon(_) => scaled_value * US_GALLON_FLOZ_FACTOR,
                     _ => unreachable!(),
                 };
 
                 if floz >= US_GALLON_FLOZ_FACTOR {
-                    Ok(Unit::Volume(Volume::USGallon(floz / US_GALLON_FLOZ_FACTOR)))
+                    Ok(Unit::Volume(Self::USGallon(floz / US_GALLON_FLOZ_FACTOR)))
                 } else if floz >= US_QUART_FLOZ_FACTOR {
-                    Ok(Unit::Volume(Volume::USQuart(floz / US_QUART_FLOZ_FACTOR)))
+                    Ok(Unit::Volume(Self::USQuart(floz / US_QUART_FLOZ_FACTOR)))
                 } else if floz >= US_PINT_FLOZ_FACTOR {
-                    Ok(Unit::Volume(Volume::USPint(floz / US_PINT_FLOZ_FACTOR)))
+                    Ok(Unit::Volume(Self::USPint(floz / US_PINT_FLOZ_FACTOR)))
                 } else {
-                    Ok(Unit::Volume(Volume::USFluidOunce(floz)))
+                    Ok(Unit::Volume(Self::USFluidOunce(floz)))
                 }
             }
 
-            Volume::Jigger(_) => Ok(Unit::Volume(self.with_value(scaled_value))),
+            Self::Jigger(_) => Ok(Unit::Volume(self.with_value(scaled_value))),
         }
     }
 }

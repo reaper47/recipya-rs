@@ -41,14 +41,14 @@ pub fn auth_config() -> &'static AuthConfig {
 }
 
 impl AuthConfig {
-    fn load_from_file() -> Result<AuthConfig> {
+    fn load_from_file() -> Result<Self> {
         let data_dir = get_base_dir()?;
         let config_path = data_dir.join("auth_config.json");
 
         match fs::read_to_string(&config_path) {
             Ok(config_str) => {
                 info!("Loading auth config from file");
-                let mut auth: AuthConfig = serde_json::from_str(&config_str)?;
+                let mut auth: Self = serde_json::from_str(&config_str)?;
                 auth.decoded_password_key = URL_SAFE_NO_PAD
                     .decode(&auth.password_key)
                     .expect("Invalid auth config password key");
@@ -69,7 +69,7 @@ impl AuthConfig {
                 let password_key = URL_SAFE_NO_PAD.encode(generate_key());
                 let token_key = URL_SAFE_NO_PAD.encode(generate_key());
 
-                let config = AuthConfig {
+                let config = Self {
                     jwt_secret: URL_SAFE_NO_PAD.encode(generate_key()),
                     password_key: password_key.clone(),
                     token_key: token_key.clone(),
@@ -83,7 +83,7 @@ impl AuthConfig {
                 };
 
                 match fs::write(config_path, serde_json::to_string_pretty(&config)?) {
-                    Ok(_) => Ok(config),
+                    Ok(()) => Ok(config),
                     Err(err) => {
                         error!("Failed to write auth config to file: {err:?}");
                         Err(Error::ConfigFileWriteFailed)

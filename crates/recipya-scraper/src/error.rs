@@ -28,7 +28,7 @@ impl_display_as_debug!(Error);
 
 impl From<scraper::error::SelectorErrorKind<'_>> for Error {
     fn from(value: scraper::error::SelectorErrorKind) -> Self {
-        Error::Select(value.to_string())
+        Self::Select(value.to_string())
     }
 }
 

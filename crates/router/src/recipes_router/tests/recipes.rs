@@ -25,7 +25,7 @@ mod tests {
         let res = server.get(BASE_URI).await;
 
         assert_html(
-            res,
+            &res,
             vec![
                 r#"<title hx-swap-oob="true">Recipes | Recipya</title>"#,
                 r##"<p class="pb-2">Your recipe collection looks a bit empty at the moment.</p><p>Why not start adding recipes by clicking the <a class="underline font-semibold cursor-pointer" hx-get="/recipes/add" hx-target="#content" hx-push-url="true">Add recipe</a> button at the top?</p>"##,
@@ -50,7 +50,7 @@ mod tests {
         let res = server.get(BASE_URI).await;
 
         assert_html(
-            res,
+            &res,
             vec![
                 r#"<title hx-swap-oob="true">Recipes | Recipya</title>"#,
                 r##"<form class="flex w-full" hx-get="/recipes/search" hx-vals="{&quot;page&quot;:1}" hx-target="#list-recipes" hx-swap="outerHTML" hx-push-url="true" hx-trigger="submit, change target:.sort-option"><div class="relative w-full"><label class="input input-sm flex justify-between px-0 gap-2 z-20 w-full"><button id="search-shortcut" type="button" class="pl-2" popovertarget="search-help" _="on click toggle .hidden on #search-help"><svg xmlns="http://www.w3.org/2000/svg" class="size-6 self-center hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button><input id="search-recipes" type="search" name="q" placeholder="Search for recipes..." autocomplete="off" value="""##,
@@ -80,7 +80,7 @@ mod tests {
         let res = server.get(BASE_URI).await;
 
         let _ = assert_not_in_html(
-            res,
+            &res,
             vec![
                 r#"<div class="rating rating-sm"><div class="mask mask-star-2" aria-label="1 star"></div>"#,
             ],

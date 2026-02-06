@@ -24,7 +24,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .map(|s| {
                 vec![RecipeAuthorFieldEnum::new_person(
                     s.trim_end_matches('/')
-                        .rsplit_once("/")
+                        .rsplit_once('/')
                         .unwrap_or_default()
                         .1,
                 )]
@@ -46,7 +46,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                 .join("\n\n");
 
             (!s.is_empty())
-                .then(|| RecipeDescriptionFieldEnum::Text(s))
+                .then_some(RecipeDescriptionFieldEnum::Text(s))
                 .into_iter()
                 .collect()
         },
@@ -57,7 +57,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .collect::<Vec<_>>(),
         image: root
             .select(&Selector::parse("img[itemprop='image']")?)
-            .flat_map(|el| el.attr("src"))
+            .filter_map(|el| el.attr("src"))
             .map(|s| RecipeImageFieldEnum::URL(s.into()))
             .collect::<Vec<_>>(),
         name: extract_attr(root, "a[itemprop='name']", "title")?
@@ -72,7 +72,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .filter_map(|el| el.text().next())
             .collect::<Vec<_>>()
             .first()
-            .map(|s| vec![s.rsplit_once("(").unwrap_or((s, "")).0.trim().to_string()])
+            .map(|s| vec![s.rsplit_once('(').unwrap_or((s, "")).0.trim().to_string()])
             .unwrap_or_default(),
         recipe_ingredient: root
             .select(&Selector::parse("li[itemprop='recipeIngredient']")?)

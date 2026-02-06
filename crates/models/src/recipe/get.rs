@@ -4,6 +4,7 @@ use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use repository::{ModelManager, PgPooledConn, schema};
+use tracing::error;
 use url::Url;
 use uuid::Uuid;
 
@@ -71,7 +72,7 @@ impl Recipe {
                 schema::keywords::name.nullable(),
                 schema::times::all_columns,
             ))
-            .first::<(Recipe, String, Option<String>, Option<String>, Times)>(&mut conn)
+            .first::<(Self, String, Option<String>, Option<String>, Times)>(&mut conn)
             .await
             .optional()?
             .ok_or_else(|| Error::EntityNotFound {
@@ -83,18 +84,14 @@ impl Recipe {
     }
 
     /// Gets the recipe only.
-    pub async fn get_recipe_only(
-        mm: &ModelManager,
-        user_id: Uuid,
-        recipe_id: i64,
-    ) -> Result<Recipe> {
+    pub async fn get_recipe_only(mm: &ModelManager, user_id: Uuid, recipe_id: i64) -> Result<Self> {
         let mut conn = mm.pool.get().await?;
 
         let recipe = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .filter(schema::recipes::id.eq(recipe_id))
-            .select(Recipe::as_select())
-            .first::<Recipe>(&mut conn)
+            .select(Self::as_select())
+            .first::<Self>(&mut conn)
             .await?;
 
         Ok(recipe)
@@ -107,7 +104,7 @@ impl Recipe {
         search_params: &SearchParams,
     ) -> Result<Vec<RecipeDetails>> {
         let query = search_params.q.as_deref().unwrap_or_default();
-        let page = search_params.page.unwrap_or(1) as i64;
+        let page = search_params.page.unwrap_or(1).cast_signed();
         let is_favourites = search_params.is_favourites.unwrap_or(false);
 
         let recipe_search = RecipeSearch::new(query, page, is_favourites, user_id)?;
@@ -256,7 +253,7 @@ impl Recipe {
         Ok(sources
             .into_iter()
             .map(|s| match Url::parse(&s) {
-                Ok(url) => url.host_str().map(|s| s.to_string()).unwrap_or_else(|| s),
+                Ok(url) => url.host_str().map_or_else(|| s, ToString::to_string),
                 Err(_) => s,
             })
             .collect())
@@ -264,6 +261,7 @@ impl Recipe {
 }
 
 /// Fetches all the details of a recipe.
+#[allow(clippy::too_many_lines)]
 pub async fn fetch_recipe_details(
     conn: &mut PgPooledConn<'_>,
     recipe: Recipe,
@@ -280,7 +278,7 @@ pub async fn fetch_recipe_details(
         .load::<Uuid>(conn)
         .await?;
 
-    let ingredients = SectionComponents::from(
+    let ingredients = SectionComponents::try_from(
         schema::ingredients_recipes::table
             .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
             .inner_join(schema::ingredients::table)
@@ -319,9 +317,13 @@ pub async fn fetch_recipe_details(
             .into_values()
             .map(|(title, items)| SectionItem { title, items })
             .collect::<Vec<_>>(),
-    );
+    )
+    .inspect_err(|err| {
+        error!("Failed to load ingredients: {err}");
+    })
+    .unwrap_or_default();
 
-    let instructions = SectionComponents::from(
+    let instructions = SectionComponents::try_from(
         schema::instructions_recipes::table
             .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
             .inner_join(schema::instructions::table)
@@ -345,7 +347,7 @@ pub async fn fetch_recipe_details(
                             items.push(Item {
                                 text: instruction.clone(),
                                 duration_seconds,
-                            })
+                            });
                         })
                         .or_insert_with(|| {
                             (
@@ -362,7 +364,11 @@ pub async fn fetch_recipe_details(
             .into_values()
             .map(|(title, items)| SectionItem { title, items })
             .collect::<Vec<_>>(),
-    );
+    )
+    .inspect_err(|err| {
+        error!("Failed to load instructions: {err}");
+    })
+    .unwrap_or_default();
 
     let keywords = if keywords.is_some() {
         schema::keywords_recipes::table
@@ -401,14 +407,11 @@ pub async fn fetch_recipe_details(
         .into_iter()
         .map(|v| Video {
             video: v.video,
-            duration: match v.duration {
-                None => None,
-                Some(d) => {
-                    let ms = chrono::Duration::milliseconds(d.microseconds / 1000);
-                    let days = chrono::Duration::days(d.days as i64);
-                    Some(ms + days)
-                }
-            },
+            duration: v.duration.map(|d| {
+                let ms = chrono::Duration::milliseconds(d.microseconds / 1000);
+                let days = chrono::Duration::days(i64::from(d.days));
+                ms + days
+            }),
             content_url: v.content_url,
             embed_url: v.embed_url,
             created_at: v.created_at,
@@ -425,7 +428,7 @@ pub async fn fetch_recipe_details(
         .first::<Nutrition>(conn)
         .await
         .optional()?
-        .and_then(|n| n.sanitize());
+        .and_then(Nutrition::sanitize);
 
     let nutrition_per_serving: Option<(Nutrition, String)> = schema::nutrition_per_serving::table
         .inner_join(

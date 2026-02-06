@@ -6,7 +6,7 @@ use support::impl_display_as_debug;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Enumeration of errors related to the scheme.
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 pub enum Error {
     Key,
     Salt,

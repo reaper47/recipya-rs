@@ -12,7 +12,7 @@ use repository::{ModelManager, schema};
 use crate::Result;
 
 /// Represents an email verification token in the database.
-#[derive(Clone, Debug, PartialEq, Queryable, Identifiable, Selectable, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Queryable, Identifiable, Selectable, Serialize)]
 #[diesel(table_name = schema::email_verification_tokens)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct EmailVerificationToken {
@@ -101,7 +101,7 @@ impl EmailVerificationToken {
 }
 
 /// Represents a password reset token in the database.
-#[derive(Clone, Debug, PartialEq, Queryable, Identifiable, Selectable, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Queryable, Identifiable, Selectable, Serialize)]
 #[diesel(table_name = schema::password_reset_tokens)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct PasswordResetToken {
@@ -189,7 +189,7 @@ impl PasswordResetToken {
 }
 
 /// Represents a refresh token in the database.
-#[derive(Clone, Debug, PartialEq, Queryable, Identifiable, Selectable, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Queryable, Identifiable, Selectable, Serialize)]
 #[diesel(table_name = schema::refresh_tokens)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct RefreshToken {

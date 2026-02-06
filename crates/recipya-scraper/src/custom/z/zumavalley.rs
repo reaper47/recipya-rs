@@ -18,12 +18,12 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         description: extract_metadata_property(doc, "og:description")
             .unwrap_or_default()
             .into_iter()
-            .map(|s| RecipeDescriptionFieldEnum::Text(s))
+            .map(RecipeDescriptionFieldEnum::Text)
             .collect::<Vec<_>>(),
         image: extract_metadata_property(doc, "og:image:secure_url")
             .unwrap_or_default()
             .into_iter()
-            .map(|s| RecipeImageFieldEnum::URL(s))
+            .map(RecipeImageFieldEnum::URL)
             .collect::<Vec<_>>(),
         name: extract_metadata_property(doc, "og:title")?,
         recipe_ingredient: root
@@ -35,7 +35,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                     .split("<br>")
                     .map(|s| s.trim().to_string())
                     .filter(|s| !s.is_empty())
-                    .map(|s| RecipeRecipeIngredientFieldEnum::Text(s))
+                    .map(RecipeRecipeIngredientFieldEnum::Text)
                     .collect()
             })
             .unwrap_or_default(),

@@ -54,6 +54,8 @@ struct List {
 }
 
 impl From<CookmateRecipe> for Recipe {
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cast_precision_loss)]
     fn from(r: CookmateRecipe) -> Self {
         let categories = r.categories.split_first();
         let url = Url::parse(&r.url).ok();
@@ -85,12 +87,16 @@ impl From<CookmateRecipe> for Recipe {
                     })
                 })
                 .collect(),
-            comment_count: vec![num_comments as i32]
-                .into_iter()
-                .filter(|c| *c > 0)
-                .collect(),
+            comment_count: vec![
+                i32::try_from(num_comments)
+                    .inspect_err(|err| error!("Failed to convert comment_count to i32: {err}"))
+                    .unwrap_or_default(),
+            ]
+            .into_iter()
+            .filter(|c| *c > 0)
+            .collect(),
             cook_time: match parse_duration(&r.cooktime) {
-                Ok(d) => seconds_to_duration(d.as_secs() as i32),
+                Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
                 Err(err) => {
                     error!(
                         "Failed to parse cook time '{}' of an AccuChef recipe: {err}",
@@ -109,10 +115,10 @@ impl From<CookmateRecipe> for Recipe {
                 .filter_map(|image| Url::parse(&image).ok())
                 .map(|u| RecipeImageFieldEnum::URL(u.to_string()))
                 .collect::<Vec<_>>(),
-            is_based_on: if !r.source.is_empty() {
-                to_is_based_on(&r.source)
-            } else {
+            is_based_on: if r.source.is_empty() {
                 to_is_based_on(&r.url)
+            } else {
+                to_is_based_on(&r.source)
             },
             keywords: categories
                 .map(|(_, b)| {
@@ -129,7 +135,7 @@ impl From<CookmateRecipe> for Recipe {
                 vec![]
             },
             prep_time: match parse_duration(&r.preptime) {
-                Ok(d) => seconds_to_duration(d.as_secs() as i32),
+                Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
                 Err(err) => {
                     error!(
                         "Failed to parse prep time '{}' of a CookMate XML recipe: {err}",
@@ -139,7 +145,7 @@ impl From<CookmateRecipe> for Recipe {
                 }
             },
             recipe_category: categories
-                .map(|(a, _b)| vec![a.to_string()])
+                .map(|(a, _b)| vec![a.clone()])
                 .unwrap_or_default(),
             recipe_ingredient: r
                 .ingredient
@@ -178,7 +184,7 @@ impl From<CookmateRecipe> for Recipe {
     }
 }
 
-/// Parses a COOKmate XML recipe file.
+/// Parses a `COOKmate` XML recipe file.
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read,

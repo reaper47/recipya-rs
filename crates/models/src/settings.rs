@@ -11,7 +11,7 @@ use crate::nutrition::NutritionDataSource;
 use crate::nutrition::tables::NutritionSource;
 use crate::{Error, Result};
 
-#[derive(Debug, Default, PartialEq, Display, EnumString, EnumIter)]
+#[derive(Debug, Default, Eq, PartialEq, Display, EnumString, EnumIter)]
 #[strum(serialize_all = "lowercase")]
 pub enum Theme {
     Default,
@@ -98,7 +98,7 @@ impl Theme {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Queryable, Identifiable, Selectable)]
+#[derive(Debug, Clone, Eq, PartialEq, Queryable, Identifiable, Selectable)]
 #[diesel(table_name = schema::themes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ThemeModel {
@@ -114,7 +114,7 @@ impl ThemeModel {
         let mut conn = mm.pool.get().await?;
 
         Ok(themes::table
-            .select(ThemeModel::as_select())
+            .select(Self::as_select())
             .load(&mut conn)
             .await?)
     }
@@ -138,7 +138,7 @@ struct UserSetting {
     selected_theme: i32,
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct UserSettingDetails {
     pub user_id: Uuid,
     pub measurement_system: MeasurementSystem,

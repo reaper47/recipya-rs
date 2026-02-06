@@ -9,6 +9,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     DuplicateEntity,
+    DuplicateEntityWithID(i64),
     EntityNotFound {
         entity: &'static str,
         id: String,
@@ -56,7 +57,7 @@ pub enum Error {
 
 impl From<diesel::result::Error> for Error {
     fn from(value: diesel::result::Error) -> Self {
-        Error::Diesel(value.to_string())
+        Self::Diesel(value.to_string())
     }
 }
 

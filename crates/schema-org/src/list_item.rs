@@ -28,11 +28,11 @@ pub struct ListItem {
     ///<https://schema.org/nextItem>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub next_item: Vec<ListItem>,
+    pub next_item: Vec<Self>,
     ///<https://schema.org/previousItem>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub previous_item: Vec<ListItem>,
+    pub previous_item: Vec<Self>,
     ///<https://schema.org/position>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

@@ -21,11 +21,15 @@ pub(crate) fn generate_token(
 
     let claims = Claims {
         sub: user_id.to_string(),
-        exp: (now + Duration::from_secs(duration_sec))
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs() as usize,
-        iat: now.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() as usize,
+        exp: usize::try_from(
+            (now + Duration::from_secs(duration_sec))
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        )
+        .unwrap_or_default(),
+        iat: usize::try_from(now.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs())
+            .unwrap_or_default(),
     };
 
     encode(

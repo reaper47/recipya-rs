@@ -3,7 +3,7 @@ use std::{iter::Sum, str::FromStr};
 use serde::{Deserialize, Serialize};
 
 ///<https://schema.org/Mass>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 pub struct Mass(String);
 

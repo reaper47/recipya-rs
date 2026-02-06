@@ -29,6 +29,7 @@ pub struct Paginated<T> {
 }
 
 impl<T> Paginated<T> {
+    #[must_use]
     pub fn per_page(self, per_page: i64) -> Self {
         Self {
             per_page,

@@ -245,6 +245,7 @@ struct MRecipe {
 }
 
 impl From<CookmlRecipe> for Recipe {
+    #[allow(clippy::too_many_lines)]
     fn from(r: CookmlRecipe) -> Self {
         let created_date = DateTime::from_str(&r.head.createdate.unwrap_or_default()).ok();
         let changed_date = DateTime::from_str(&r.head.changedate.unwrap_or_default()).ok();
@@ -337,7 +338,7 @@ impl From<CookmlRecipe> for Recipe {
             } else {
                 Some(nutrition)
             }
-            .filter(|n| n.is_empty())
+            .filter(NutritionInformation::is_empty)
             .map(|n| vec![n])
             .unwrap_or_default(),
             prep_time: prep_time
@@ -366,7 +367,7 @@ impl From<CookmlRecipe> for Recipe {
                                 .map(|ing| ItemListItemListElementFieldEnum::Text(ing.to_string()))
                                 .collect(),
                             name: vec![title],
-                            number_of_items: vec![num_items as i32],
+                            number_of_items: vec![i32::try_from(num_items).unwrap_or_default()],
                             ..Default::default()
                         })]
                     }
@@ -376,7 +377,7 @@ impl From<CookmlRecipe> for Recipe {
                 .preparation
                 .text
                 .split("\n\n")
-                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace("\n", " ")))
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace('\n', " ")))
                 .collect(),
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text(format!(
                 "{} {}",
@@ -387,7 +388,7 @@ impl From<CookmlRecipe> for Recipe {
     }
 }
 
-/// Parses a CookML recipe file.
+/// Parses a `CookML` recipe file.
 pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
@@ -736,21 +737,21 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
                 name: vec!["Flammenkuchen von Marc".into()],
                 recipe_category: vec!["Frankreich".into()],
                 recipe_ingredient: vec![
-                    RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Für den Brotteig:", &[
                         "6 tb Mehl C200011 gram=24",
                         "0.5 ts Salz R111011",
                         "1 pn Pfeffer R258011",
                         "0.5  Würfel Hefe J731000 gram=10",
                         "0.25 l Wasser N110000 [(lauwarm)]",
                     ]),
-                    RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Für den Belag", &[
                         "250 g Quark M713200 [40% Fett]",
                         "1 ct Saure Sahne M172500 gram=40",
                         "0.5 ts Salz R111011",
                         "1 pn Pfeffer R258011",
                         "1  Zitrone F601600 gram=30",
                     ]),
-                    RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", vec![
+                    RecipeRecipeIngredientFieldEnum::new_section("Für die Garnitur", &[
                         "5 lg Zwiebel G480111 gram=150",
                         "125 g Durchwachsener Speck W411011",
                         "125 g Reibkäse M600300 [(optional)]",

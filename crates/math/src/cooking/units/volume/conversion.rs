@@ -13,11 +13,19 @@ use crate::cooking::units::volume::units::Volume;
 use crate::cooking::units::volume::units::VolumeUnit;
 
 impl UnitConverter for Volume {
+    #[allow(clippy::too_many_lines)]
     fn convert(&self, to: UnitType) -> Result<Unit> {
-        use VolumeUnit::*;
+        use VolumeUnit::{
+            AustralianCup, AustralianDessertspoon, AustralianTablespoon, AustralianTeaspoon,
+            Centilitre, Decilitre, ImperialCup, ImperialDessertspoon, ImperialFluidOunce,
+            ImperialGallon, ImperialGill, ImperialPint, ImperialQuart, ImperialTablespoon,
+            ImperialTeaspoon, Jigger, Litre, MetricCup, MetricDessertSpoon, MetricTablespoon,
+            MetricTeaspoon, Millilitre, USCup, USFluidOunce, USGallon, USPint, USQuart,
+            USTablespoon, USTeaspoon,
+        };
 
         match self {
-            Volume::Millilitre(original_value) => match to {
+            Self::Millilitre(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_millilitres(*original_value);
 
@@ -85,7 +93,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::Centilitre(original_value) => match to {
+            Self::Centilitre(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_centilitres(*original_value);
 
@@ -153,7 +161,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::Decilitre(original_value) => match to {
+            Self::Decilitre(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_decilitres(*original_value);
 
@@ -221,7 +229,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::Litre(original_value) => match to {
+            Self::Litre(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_litres(*original_value);
 
@@ -289,7 +297,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::MetricTeaspoon(original_value) => match to {
+            Self::MetricTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_teaspoons_metric(*original_value);
 
@@ -355,7 +363,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::MetricTablespoon(original_value) => match to {
+            Self::MetricTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_tablespoons_metric(*original_value);
 
@@ -421,7 +429,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::MetricDessertspoon(original_value) => match to {
+            Self::MetricDessertspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_dessertspoons_metric(*original_value);
 
@@ -487,7 +495,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::MetricCup(original_value) => match to {
+            Self::MetricCup(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_cups_metric(*original_value);
 
@@ -555,7 +563,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::AustralianTeaspoon(original_value) => match to {
+            Self::AustralianTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_teaspoons_metric(*original_value);
 
@@ -621,7 +629,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::AustralianDessertspoon(original_value) => match to {
+            Self::AustralianDessertspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_dessertspoons_metric(*original_value);
 
@@ -689,7 +697,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::AustralianTablespoon(original_value) => match to {
+            Self::AustralianTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_tablespoons_aus(*original_value);
 
@@ -755,7 +763,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::AustralianCup(original_value) => match to {
+            Self::AustralianCup(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_cups_metric(*original_value);
 
@@ -821,7 +829,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialTeaspoon(original_value) => match to {
+            Self::ImperialTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_teaspoons_uk(*original_value);
 
@@ -887,7 +895,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialDessertspoon(original_value) => match to {
+            Self::ImperialDessertspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_dessertspoons_uk(*original_value);
 
@@ -953,7 +961,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialTablespoon(original_value) => match to {
+            Self::ImperialTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_tablespoons_uk(*original_value);
 
@@ -1019,7 +1027,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialFluidOunce(original_value) => match to {
+            Self::ImperialFluidOunce(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_fluid_ounces_uk(*original_value);
 
@@ -1085,7 +1093,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialGill(original_value) => match to {
+            Self::ImperialGill(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_gills_uk(*original_value);
 
@@ -1153,7 +1161,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialCup(original_value) => match to {
+            Self::ImperialCup(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_cups_uk(*original_value);
 
@@ -1221,7 +1229,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialPint(original_value) => match to {
+            Self::ImperialPint(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_pints_uk(*original_value);
 
@@ -1289,7 +1297,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialQuart(original_value) => match to {
+            Self::ImperialQuart(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_quarts_uk(*original_value);
 
@@ -1355,7 +1363,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::ImperialGallon(original_value) => match to {
+            Self::ImperialGallon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_gallons_uk(*original_value);
 
@@ -1421,7 +1429,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::USTeaspoon(original_value) => match to {
+            Self::USTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_teaspoons(*original_value);
 
@@ -1489,7 +1497,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::USTablespoon(original_value) => match to {
+            Self::USTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_tablespoons(*original_value);
 
@@ -1555,7 +1563,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::USFluidOunce(original_value) => match to {
+            Self::USFluidOunce(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_fluid_ounces(*original_value);
 
@@ -1621,7 +1629,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::USCup(original_value) => match to {
+            Self::USCup(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_cups(*original_value);
 
@@ -1661,7 +1669,7 @@ impl UnitConverter for Volume {
                         ImperialTablespoon => Ok(Unit::Volume(Self::ImperialTablespoon(
                             value.as_tablespoons_uk(),
                         ))),
-                        ImperialFluidOunce => Ok(Unit::Volume(Volume::ImperialFluidOunce(
+                        ImperialFluidOunce => Ok(Unit::Volume(Self::ImperialFluidOunce(
                             value.as_fluid_ounces_uk(),
                         ))),
                         ImperialGill => Ok(Unit::Volume(Self::ImperialGill(value.as_gills_uk()))),
@@ -1689,7 +1697,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::USPint(original_value) => match to {
+            Self::USPint(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_pints(*original_value);
 
@@ -1757,7 +1765,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::USQuart(original_value) => match to {
+            Self::USQuart(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_quarts(*original_value);
 
@@ -1825,7 +1833,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::USGallon(original_value) => match to {
+            Self::USGallon(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_gallons(*original_value);
 
@@ -1893,7 +1901,7 @@ impl UnitConverter for Volume {
                 }
                 _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
             },
-            Volume::Jigger(original_value) => match to {
+            Self::Jigger(original_value) => match to {
                 UnitType::Volume(unit) => {
                     let value = measurements::Volume::from_jiggers(*original_value);
 

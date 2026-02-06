@@ -11,7 +11,9 @@ pub trait ToIso8601 {
 
 impl ToIso8601 for Vec<DurationOrText> {
     fn to_is8601_duration(&self) -> Option<iso8601::Duration> {
-        self.first().map(|d| d.to_iso8601()).unwrap_or_default()
+        self.first()
+            .map(DurationOrText::to_iso8601)
+            .unwrap_or_default()
     }
 }
 
@@ -34,12 +36,12 @@ pub enum DurationOrText {
 }
 
 impl DurationOrText {
-    /// Creates a new DurationOrText::Text.
+    /// Creates a new `DurationOrText::Text`.
     pub fn new_text(s: impl Into<String>) -> Self {
         Self::Text(s.into())
     }
 
-    /// Converts the DurationOrText to iso8601.
+    /// Converts the `DurationOrText` to iso8601.
     pub fn to_iso8601(&self) -> Option<iso8601::Duration> {
         match self {
             Self::Duration(d) => d

@@ -26,11 +26,20 @@ pub mod test_utils {
     };
 
     /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    /// - The date 2012-12-31 or 2022-02-24 cannot be constructed (invalid calendar date)
+    /// - The time 00:00:00 cannot be constructed (invalid time)
+    /// - The recipe yield is not present in the source data
+    /// - The recipe category is not present in the source data
+    /// - Converting the tool index to `i16` fails (if there are more than 32,767 tools)
     pub fn a_complete_recipe() -> RecipeDetails {
         let recipe_c = a_complete_recipe_for_create();
 
         let images = recipe_c.images;
-        let additional_images = images.last().iter().cloned().cloned().collect::<Vec<_>>();
+        let additional_images = images.last().iter().copied().copied().collect::<Vec<_>>();
 
         let created_date = NaiveDate::from_ymd_opt(2012, 12, 31).expect("end of the world");
         let updated_date = NaiveDate::from_ymd_opt(2022, 2, 24).expect("russia invaded Ukraine");
@@ -41,7 +50,7 @@ pub mod test_utils {
                 id: 1,
                 name: recipe_c.name,
                 description: recipe_c.description,
-                image: images.first().cloned().or(None),
+                image: images.first().copied().or(None),
                 yield_: recipe_c.r#yield.ok_or(4).expect("a yield found"),
                 language: "en".into(),
                 measurement_system_id: 2,
@@ -97,7 +106,7 @@ pub mod test_utils {
                 .map(|(i, t)| ToolRecipe {
                     name: t.name.clone(),
                     quantity: t.quantity,
-                    tool_order: i as i16,
+                    tool_order: i16::try_from(i).unwrap_or_default(),
                 })
                 .collect(),
             videos: vec![],

@@ -3,7 +3,7 @@ use std::ops::Not;
 use diesel::prelude::*;
 
 use repository::schema;
-use schema_org::NutritionInformation;
+use schema_org::{Energy, Mass, NutritionInformation};
 
 use crate::nutrition::NutritionComponents;
 
@@ -70,32 +70,29 @@ impl From<Nutrition> for NutritionForCreate {
 impl From<&NutritionInformation> for NutritionDetailsForCreate {
     fn from(schema: &NutritionInformation) -> Self {
         let nutrition_c = NutritionForCreate {
-            calories_kcal: schema.calories.first().map(|v| v.to_number()),
+            calories_kcal: schema.calories.first().map(Energy::to_number),
             total_carbohydrates: schema
                 .carbohydrate_content
                 .first()
-                .map(|v| v.to_number::<f64>()),
-            sugars_g: schema.sugar_content.first().map(|v| v.to_number::<f64>()),
-            protein_g: schema.protein_content.first().map(|v| v.to_number::<f64>()),
-            total_fat_g: schema.fat_content.first().map(|v| v.to_number::<f64>()),
+                .map(Mass::to_number::<f64>),
+            sugars_g: schema.sugar_content.first().map(Mass::to_number::<f64>),
+            protein_g: schema.protein_content.first().map(Mass::to_number::<f64>),
+            total_fat_g: schema.fat_content.first().map(Mass::to_number::<f64>),
             saturated_fat_g: schema
                 .saturated_fat_content
                 .first()
-                .map(|v| v.to_number::<f64>()),
+                .map(Mass::to_number::<f64>),
             unsaturated_fat_g: schema
                 .unsaturated_fat_content
                 .first()
-                .map(|v| v.to_number::<f64>()),
+                .map(Mass::to_number::<f64>),
             cholesterol_mg: schema
                 .cholesterol_content
                 .first()
-                .map(|v| v.to_number::<f64>()),
-            sodium_mg: schema.sodium_content.first().map(|v| v.to_number::<f64>()),
-            fiber_g: schema.fiber_content.first().map(|v| v.to_number::<f64>()),
-            trans_fat_g: schema
-                .trans_fat_content
-                .first()
-                .map(|v| v.to_number::<f64>()),
+                .map(Mass::to_number::<f64>),
+            sodium_mg: schema.sodium_content.first().map(Mass::to_number::<f64>),
+            fiber_g: schema.fiber_content.first().map(Mass::to_number::<f64>),
+            trans_fat_g: schema.trans_fat_content.first().map(Mass::to_number::<f64>),
         };
 
         if schema.is_per_100g() {
@@ -155,7 +152,7 @@ impl NutritionDetailsForCreate {
     }
 
     /// Checks whether the nutrition details is empty.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         match (&self.per_100g, &self.per_serving) {
             (None, None) => true,
             (Some(per_100g), Some(per_serving)) => {
@@ -192,7 +189,7 @@ pub struct NutritionForCreate {
 
 impl NutritionForCreate {
     /// Verifies whether all fields are blank.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.calories_kcal.is_none()
             && self.total_carbohydrates.is_none()
             && self.sugars_g.is_none()
@@ -244,7 +241,7 @@ pub struct Nutrition {
 impl Nutrition {
     /// Formats the nutrition as a sentence.
     pub fn to_line(&self) -> Option<String> {
-        if self == &Nutrition::default() {
+        if self == &Self::default() {
             return None;
         }
 
@@ -380,7 +377,16 @@ impl From<NutritionComponents> for NutritionForInsert {
 
 /// Represents a nutrition per 100g record.
 #[derive(
-    AsChangeset, Associations, Clone, Debug, Default, Queryable, Identifiable, PartialEq, Selectable,
+    AsChangeset,
+    Associations,
+    Clone,
+    Debug,
+    Default,
+    Queryable,
+    Identifiable,
+    Eq,
+    PartialEq,
+    Selectable,
 )]
 #[diesel(belongs_to(Nutrition))]
 #[diesel(table_name = schema::nutrition_per_100g)]
@@ -402,7 +408,16 @@ pub struct NutritionPer100gForInsert {
 
 /// Represents a nutrition per serving record.
 #[derive(
-    AsChangeset, Associations, Clone, Debug, Default, Queryable, Identifiable, PartialEq, Selectable,
+    AsChangeset,
+    Associations,
+    Clone,
+    Debug,
+    Default,
+    Queryable,
+    Identifiable,
+    Eq,
+    PartialEq,
+    Selectable,
 )]
 #[diesel(belongs_to(Nutrition))]
 #[diesel(table_name = schema::nutrition_per_serving)]

@@ -4,8 +4,7 @@ use axum::http::HeaderMap;
 pub fn is_hx_request(header_map: &HeaderMap) -> bool {
     header_map
         .get(axum_htmx::headers::HX_REQUEST)
-        .map(|v| v == "true")
-        .unwrap_or(false)
+        .is_some_and(|v| v == "true")
 }
 
 #[cfg(test)]

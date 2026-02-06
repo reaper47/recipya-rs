@@ -8,7 +8,8 @@ use tracing::warn;
 use std::env;
 
 /// Configuration struct for the application.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Config {
     pub base_url: String,
     pub database_url: String,
@@ -58,25 +59,25 @@ impl Config {
 }
 
 fn get_env_on_load(name: &'static str) -> Result<String> {
-    match env::var(name) {
-        Ok(v) => {
+    env::var(name).map_or_else(
+        |_| {
+            warn!("Missing environment variable: {name} (default set)");
+            match name {
+                "RECIPYA_IS_ALLOW_SIGNUPS"
+                | "RECIPYA_IS_AUTOLOGIN"
+                | "RECIPYA_IS_DEMO"
+                | "RECIPYA_IS_PRODUCTION" => Ok("false".into()),
+                "RUST_LOG" => Ok("debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn".into()),
+                _ => Err(Error::MissingEnv(name)),
+            }
+        },
+        |v| {
             let trimmed = v.trim_matches('"');
             if trimmed.is_empty() {
                 Err(Error::MissingEnv(name))
             } else {
                 Ok(trimmed.to_string())
             }
-        }
-        Err(_) => {
-            warn!("Missing environment variable (setting default value): {name}");
-            match name {
-                "RECIPYA_IS_ALLOW_SIGNUPS" => Ok("false".into()),
-                "RECIPYA_IS_AUTOLOGIN" => Ok("false".into()),
-                "RECIPYA_IS_DEMO" => Ok("false".into()),
-                "RECIPYA_IS_PRODUCTION" => Ok("false".into()),
-                "RUST_LOG" => Ok("debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn".into()),
-                _ => Err(Error::MissingEnv(name)),
-            }
-        }
-    }
+        },
+    )
 }

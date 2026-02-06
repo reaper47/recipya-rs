@@ -52,6 +52,7 @@ impl Recipe {
     /// - If images are provided, the first image is treated as the main image, and the rest are
     ///   stored as additional images.
     /// - The detected language of the recipe is used for further processing and localization.
+    #[allow(clippy::too_many_lines)]
     pub async fn create(
         mm: &ModelManager,
         user_id: Uuid,
@@ -67,9 +68,9 @@ impl Recipe {
                     // Images
                     let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
-                    let recipe_id = diesel::insert_into(schema::recipes::table)
+                    let insert_result = diesel::insert_into(schema::recipes::table)
                         .values(&RecipeForInsert {
-                            name: recipe_c.name.to_string(),
+                            name: recipe_c.name.clone(),
                             description: recipe_c.description.clone(),
                             image: main_image,
                             yield_: recipe_c.r#yield,
@@ -80,16 +81,32 @@ impl Recipe {
                             rating: recipe_c.rating,
                             user_id,
                         })
+                        .on_conflict((
+                            schema::recipes::name,
+                            schema::recipes::source,
+                            schema::recipes::yield_,
+                            schema::recipes::user_id,
+                        ))
+                        .do_nothing()
                         .returning(schema::recipes::id)
                         .get_result::<i64>(&mut conn)
                         .await
-                        .map_err(|_| Error::DuplicateEntity)?;
+                        .optional()?;
+
+                    let Some(recipe_id) = insert_result else {
+                        let recipe_id = schema::recipes::table
+                            .filter(schema::recipes::name.eq(&recipe_c.name))
+                            .select(schema::recipes::id)
+                            .get_result::<i64>(&mut conn)
+                            .await?;
+                        return Err(Error::DuplicateEntityWithID(recipe_id));
+                    };
 
                     // Additional Images
                     insert_additional_images(&mut conn, recipe_id, additional_images).await?;
 
                     // Category
-                    let category_id = get_category_id(conn, &recipe_c.category).await?;
+                    let category_id = get_category_id(conn, recipe_c.category.as_ref()).await?;
 
                     diesel::insert_into(schema::categories_recipes::table)
                         .values(&CategoryRecipe {
@@ -164,17 +181,17 @@ impl Recipe {
                     // Videos
                     insert_videos(conn, &recipe_c.videos, recipe_id).await?;
 
+                    diesel::insert_into(schema::users_recipes::table)
+                        .values((
+                            schema::users_recipes::user_id.eq(user_id),
+                            schema::users_recipes::recipe_id.eq(recipe_id),
+                        ))
+                        .execute(&mut conn)
+                        .await?;
+
                     Ok(recipe_id)
                 })
             })
-            .await?;
-
-        diesel::insert_into(schema::users_recipes::table)
-            .values((
-                schema::users_recipes::user_id.eq(user_id),
-                schema::users_recipes::recipe_id.eq(recipe_id),
-            ))
-            .execute(&mut conn)
             .await?;
 
         Ok(recipe_id)
@@ -432,7 +449,7 @@ mod tests {
 
         match got {
             Ok(_) => Err("Should have returned an error".into()),
-            Err(Error::DuplicateEntity) => Ok(()),
+            Err(Error::DuplicateEntityWithID(_)) => Ok(()),
             Err(err) => Err(format!("Wrong error occurred: {err}").into()),
         }
     }

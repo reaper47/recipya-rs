@@ -22,7 +22,7 @@ pub type PgPool = bb8::Pool<PgConn>;
 /// The path to the migration files to embed into the binary.
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/migrations");
 
-/// A wrapper around a PostgreSQL connection pool (`PgPool`).
+/// A wrapper around a `PostgreSQL` connection pool (`PgPool`).
 #[derive(Clone)]
 pub struct DbPool(pub PgPool);
 
@@ -33,7 +33,7 @@ impl DbPool {
     }
 }
 
-/// Creates and initializes a PostgreSQL connection pool.
+/// Creates and initializes a `PostgreSQL` connection pool.
 pub async fn make_db_pool(database_url: &str) -> Result<DbPool, bb8::RunError> {
     let mut config = ManagerConfig::<PgConn>::default();
     config.custom_setup = Box::new(|url| establish(url).boxed());
@@ -50,6 +50,18 @@ struct CountResult {
 }
 
 /// Creates a new database if it doesn't already exist.
+///
+/// # Panics
+///
+/// Panics if:
+/// - The `DATABASE_URL` environment variable is not set
+/// - Unable to establish a connection to the database using the provided URL
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The database existence check fails
+/// - The database creation fails
 pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result::Error> {
     let db_url =
         std::env::var("DATABASE_URL").expect("Environment variable 'DATABASE_URL' not set");
@@ -84,7 +96,7 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
     }
 }
 
-/// Establishes a connection to the PostgreSQL database and applies migrations.
+/// Establishes a connection to the `PostgreSQL` database and applies migrations.
 async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
     diesel::PgConnection::establish(database_url)
         .expect("error connecting to database")

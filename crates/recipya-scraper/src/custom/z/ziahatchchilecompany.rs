@@ -14,7 +14,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
     let article_body = doc
         .select(&Selector::parse("div[itemprop='articleBody']")?)
         .next()
-        .ok_or(Error::MissingElement("div[itemprop='articleBody']".into()))?;
+        .ok_or_else(|| Error::MissingElement("div[itemprop='articleBody']".into()))?;
 
     Ok(Recipe {
         r#type: AtType::Recipe.to_opt(),
@@ -27,12 +27,12 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         description: extract_metadata_property(doc, "og:description")
             .unwrap_or_default()
             .into_iter()
-            .map(|v| RecipeDescriptionFieldEnum::Text(v))
+            .map(RecipeDescriptionFieldEnum::Text)
             .collect(),
         image: extract_metadata_property(doc, "og:image:secure_url")
             .unwrap_or_default()
             .into_iter()
-            .map(|v| RecipeImageFieldEnum::URL(v))
+            .map(RecipeImageFieldEnum::URL)
             .collect(),
         name: extract_metadata_property(doc, "og:title")?,
         recipe_ingredient: article_body

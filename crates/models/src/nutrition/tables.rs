@@ -11,7 +11,7 @@ use repository::{ModelManager, schema};
 use crate::Result;
 
 /// Represents a nutrition database.
-#[derive(Debug, Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Debug, Queryable, Identifiable, Eq, PartialEq, Selectable)]
 #[diesel(table_name = schema::nutrition_sources)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NutritionSource {
@@ -38,7 +38,7 @@ impl NutritionSource {
 }
 
 /// Represents a foundation food.
-#[derive(Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Queryable, Identifiable, Eq, PartialEq, Selectable)]
 #[diesel(table_name = schema::fdc_foods)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct FoundationFood {
@@ -87,7 +87,7 @@ pub(crate) struct FoundationFoodForInsert<'a> {
 }
 
 /// Represents an FDC nutrient.
-#[derive(Queryable, Identifiable, PartialEq, Selectable)]
+#[derive(Queryable, Identifiable, Eq, PartialEq, Selectable)]
 #[diesel(table_name = schema::fdc_nutrients)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct FdcNutrient {
@@ -154,15 +154,13 @@ impl NutritionSource {
 
         let nutrition_source = schema::nutrition_sources::table
             .filter(schema::nutrition_sources::name.eq(source_name))
-            .first::<NutritionSource>(&mut conn)
+            .first::<Self>(&mut conn)
             .await?;
 
-        match nutrition_source.updated_on {
-            Some(updated_on) => {
-                Ok((updated_on.year(), updated_on.month()) < (date.year(), date.month()))
-            }
-            None => Ok(true),
-        }
+        nutrition_source.updated_on.map_or_else(
+            || Ok(true),
+            |updated_on| Ok((updated_on.year(), updated_on.month()) < (date.year(), date.month())),
+        )
     }
 }
 

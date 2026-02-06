@@ -55,7 +55,7 @@ impl<'de> Deserialize<'de> for Api {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        Api::from_str(&s).or(Ok(Api::Unknown))
+        Self::from_str(&s).or(Ok(Self::Unknown))
     }
 }
 
@@ -66,6 +66,7 @@ pub fn all_apis() -> Vec<Api> {
 
 impl Api {
     /// Fetches recipes from the given input source and returns a vector of `schema_org::Recipe` objects.
+    #[allow(clippy::too_many_lines)]
     pub fn fetch_recipes_stream(
         &self,
         base_url: &str,
@@ -74,7 +75,7 @@ impl Api {
     {
         stream! {
             match self {
-                Api::Mealie => {
+                Self::Mealie => {
                         let mealie = match Mealie::new(MealieRecipeClient::new(base_url)).login(credentials).await {
                             Ok(m) => Arc::new(m),
                             Err(err) => {
@@ -91,7 +92,9 @@ impl Api {
                             }
                         };
 
-                        let num_recipes = recipe_ids.len() as i64;
+                        let num_recipes = recipe_ids.len()
+                            .try_into()
+                            .unwrap_or(i64::MAX);
 
                         {
                             let users = Arc::new(Mutex::new(HashMap::<Uuid, MealieUser>::new()));
@@ -101,8 +104,10 @@ impl Api {
                                 let mealie = Arc::clone(&mealie);
 
                                 async move {
-                                    let mut users_guard = users.lock().await;
-                                    let recipe = mealie.fetch_recipe(id, &mut users_guard).await;
+                                    let recipe = {
+                                        let mut users_guard = users.lock().await;
+                                        mealie.fetch_recipe(id, &mut users_guard).await
+                                    };
                                     (id, recipe)
                                 }
                             }).buffer_unordered(10);
@@ -125,7 +130,7 @@ impl Api {
                             Err(_) => yield Err((String::new(), num_recipes, Error::ApiError("Failed to logout: Arc still shared".into()))),
                         }
                 }
-                Api::Nextcloud => {
+                Self::Nextcloud => {
                     let nextcloud = match Nextcloud::new(NextcloudRecipeClient::new(base_url)).login(credentials).await {
                         Ok(n) => Arc::new(n),
                         Err(err) => {
@@ -142,7 +147,9 @@ impl Api {
                         }
                     };
 
-                    let num_recipes = recipe_ids.len() as i64;
+                    let num_recipes = recipe_ids.len()
+                        .try_into()
+                        .unwrap_or(i64::MAX);
 
                     let fetches = futures::stream::iter(recipe_ids).map(|id| {
                         let nc = Arc::clone(&nextcloud);
@@ -163,7 +170,7 @@ impl Api {
                         }
                     }
                 },
-                Api::Tandoor => {
+                Self::Tandoor => {
                     let tandoor = match Tandoor::new(TandoorRecipeClient::new(base_url)).login(credentials).await {
                         Ok(t) => Arc::new(t),
                         Err(err) => {
@@ -180,7 +187,9 @@ impl Api {
                         }
                     };
 
-                    let num_recipes = recipe_ids.len() as i64;
+                    let num_recipes = recipe_ids.len()
+                        .try_into()
+                        .unwrap_or(i64::MAX);
 
                     let fetches = futures::stream::iter(recipe_ids).map(|id| {
                         let tan = Arc::clone(&tandoor);
@@ -201,7 +210,7 @@ impl Api {
                         }
                     }
                 },
-                Api::Unknown => {
+                Self::Unknown => {
                     yield Err((String::new(), 0, Error::UnsupportedApi));
                     return;
                 }

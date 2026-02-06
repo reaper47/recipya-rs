@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 ///<https://schema.org/MusicAlbumProductionType>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum MusicAlbumProductionTypeEnum {
@@ -26,7 +26,7 @@ pub enum MusicAlbumProductionTypeEnum {
     CompilationAlbum,
 }
 ///<https://schema.org/MusicReleaseFormatType>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum MusicReleaseFormatTypeEnum {
@@ -47,7 +47,7 @@ pub enum MusicReleaseFormatTypeEnum {
     DVDFormat,
 }
 ///<https://schema.org/ActionStatusType>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum ActionStatusTypeEnum {
@@ -62,7 +62,7 @@ pub enum ActionStatusTypeEnum {
     FailedActionStatus,
 }
 ///<https://schema.org/OfferItemCondition>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum OfferItemConditionEnum {
@@ -77,7 +77,7 @@ pub enum OfferItemConditionEnum {
     DamagedCondition,
 }
 ///<https://schema.org/RestrictedDiet>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(try_from = "String")]
 pub enum RestrictedDietEnum {
@@ -112,39 +112,39 @@ impl From<String> for RestrictedDietEnum {
         let value = value.to_lowercase();
 
         if value.contains("diabetic") {
-            RestrictedDietEnum::DiabeticDiet
+            Self::DiabeticDiet
         } else if value.contains("gluten") {
-            RestrictedDietEnum::GlutenFreeDiet
+            Self::GlutenFreeDiet
         } else if value.contains("halal") {
-            RestrictedDietEnum::HalalDiet
+            Self::HalalDiet
         } else if value.contains("hindu") {
-            RestrictedDietEnum::HinduDiet
+            Self::HinduDiet
         } else if value.contains("kosher") {
-            RestrictedDietEnum::KosherDiet
+            Self::KosherDiet
         } else if value.contains("low") {
             if value.contains("calorie") {
-                RestrictedDietEnum::LowCalorieDiet
+                Self::LowCalorieDiet
             } else if value.contains("fat") {
-                RestrictedDietEnum::LowFatDiet
+                Self::LowFatDiet
             } else if value.contains("lactose") {
-                RestrictedDietEnum::LowLactoseDiet
+                Self::LowLactoseDiet
             } else if value.contains("salt") {
-                RestrictedDietEnum::LowSaltDiet
+                Self::LowSaltDiet
             } else {
-                RestrictedDietEnum::UnspecifiedDiet
+                Self::UnspecifiedDiet
             }
         } else if value.contains("vegan") {
-            RestrictedDietEnum::VeganDiet
+            Self::VeganDiet
         } else if value.contains("vegetarian") {
-            RestrictedDietEnum::VegetarianDiet
+            Self::VegetarianDiet
         } else {
-            RestrictedDietEnum::UnspecifiedDiet
+            Self::UnspecifiedDiet
         }
     }
 }
 
 ///<https://schema.org/AdultOrientedEnumeration>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum AdultOrientedEnumerationEnum {
@@ -171,7 +171,7 @@ pub enum AdultOrientedEnumerationEnum {
     UnclassifiedAdultConsideration,
 }
 ///<https://schema.org/ItemListOrderType>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum ItemListOrderTypeEnum {
@@ -184,7 +184,7 @@ pub enum ItemListOrderTypeEnum {
     ItemListUnordered,
 }
 ///<https://schema.org/MeasurementMethodEnum>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum MeasurementMethodEnumEnum {
@@ -193,7 +193,7 @@ pub enum MeasurementMethodEnumEnum {
     ExampleMeasurementMethodEnum,
 }
 ///<https://schema.org/EventStatusType>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum EventStatusTypeEnum {
@@ -210,7 +210,7 @@ pub enum EventStatusTypeEnum {
     EventCancelled,
 }
 ///<https://schema.org/EventAttendanceModeEnumeration>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum EventAttendanceModeEnumerationEnum {
@@ -223,7 +223,7 @@ pub enum EventAttendanceModeEnumerationEnum {
     OnlineEventAttendanceMode,
 }
 ///<https://schema.org/GenderType>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum GenderTypeEnum {
@@ -234,7 +234,7 @@ pub enum GenderTypeEnum {
     Female,
 }
 ///<https://schema.org/MusicAlbumReleaseType>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum MusicAlbumReleaseTypeEnum {
@@ -249,7 +249,7 @@ pub enum MusicAlbumReleaseTypeEnum {
     BroadcastRelease,
 }
 ///<https://schema.org/ContactPointOption>
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum ContactPointOptionEnum {

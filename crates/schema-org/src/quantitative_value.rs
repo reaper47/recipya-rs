@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::field::{
     FieldEnum64, QuantitativeValueDescriptionFieldEnum, QuantitativeValueValueFieldEnum,
-    QuantitativeValueValueReferenceFieldEnum,
+    QuantitativeValueValueReferenceFieldEnum, float_to_i16_safe,
 };
 use crate::helpers::one_or_many;
 use crate::{AtType, at_context};
@@ -65,7 +65,7 @@ pub struct QuantitativeValue {
 
 impl QuantitativeValue {
     /// Creates a new `QuantitativeValue` for the given value.
-    pub fn new(value: f32) -> Self {
+    pub fn new(value: f64) -> Self {
         Self {
             r#type: AtType::QuantitativeValue.to_string(),
             context: at_context(),
@@ -80,7 +80,7 @@ impl QuantitativeValue {
             .first()
             .map(|v| match v {
                 FieldEnum64::BooleanEnumOrText(s) => s.parse().ok().unwrap_or_default(),
-                FieldEnum64::Number(n) => *n as i16,
+                FieldEnum64::Number(n) => float_to_i16_safe(*n),
                 FieldEnum64::StructuredValue(v) => v
                     .name
                     .first()

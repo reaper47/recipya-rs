@@ -86,7 +86,7 @@ pub struct Action {
     ///<https://schema.org/potentialAction>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub potential_action: Vec<Action>,
+    pub potential_action: Vec<Self>,
     ///<https://schema.org/additionalType>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

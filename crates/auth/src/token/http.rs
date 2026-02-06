@@ -16,17 +16,12 @@ pub fn set_auth_cookies(
     refresh_token: String,
     remember_me: bool,
     is_production: bool,
-) -> Result<()> {
-    set_access_token_cookie(cookies, access_token, is_production)?;
-    set_refresh_token_cookie(cookies, refresh_token, remember_me, is_production)?;
-    Ok(())
+) {
+    set_access_token_cookie(cookies, access_token, is_production);
+    set_refresh_token_cookie(cookies, refresh_token, remember_me, is_production);
 }
 
-fn set_access_token_cookie(
-    cookies: &Cookies,
-    token_value: String,
-    is_production: bool,
-) -> Result<()> {
+fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production: bool) {
     let mut cookie = Cookie::new(AUTH_TOKEN, token_value);
     cookie.set_http_only(true);
     cookie.set_same_site(SameSite::Strict);
@@ -38,7 +33,6 @@ fn set_access_token_cookie(
     }
 
     cookies.add(cookie);
-    Ok(())
 }
 
 fn set_refresh_token_cookie(
@@ -46,7 +40,7 @@ fn set_refresh_token_cookie(
     token_value: String,
     remember_me: bool,
     is_production: bool,
-) -> Result<()> {
+) {
     let mut cookie = Cookie::new(REFRESH_TOKEN, token_value);
     cookie.set_http_only(true);
     cookie.set_same_site(SameSite::Strict);
@@ -61,7 +55,6 @@ fn set_refresh_token_cookie(
     }
 
     cookies.add(cookie);
-    Ok(())
 }
 
 /// Removes the auth tokens from the user's browser storage.

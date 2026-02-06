@@ -54,8 +54,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
     fn to_sections(&self) -> Vec<RecipeRecipeIngredientFieldEnum> {
         self.iter()
             .filter(|ing| match ing {
-                Ingredient::Line(name) => !name.is_empty(),
-                Ingredient::Section(name) => !name.is_empty(),
+                Ingredient::Line(name) | Ingredient::Section(name) => !name.is_empty(),
             })
             .fold(Vec::new(), |mut acc, ing| {
                 match ing {
@@ -66,7 +65,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         if name.starts_with("           ") && name.ends_with("--") {
                             acc.push(RecipeRecipeIngredientFieldEnum::new_section(
                                 &name_trimmed,
-                                vec![],
+                                &[],
                             ));
                             return acc;
                         }
@@ -82,10 +81,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         }
                     }
                     Ingredient::Section(section) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
-                            section,
-                            vec![],
-                        ));
+                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(section, &[]));
                     }
                 }
                 acc
@@ -97,11 +93,11 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         .item_list_element
                         .into_iter()
                         .filter_map(|l| match l {
-                            ItemListItemListElementFieldEnum::ListItem(_) => None,
                             ItemListItemListElementFieldEnum::Text(s) => {
                                 (!s.is_empty()).then_some(s)
                             }
-                            ItemListItemListElementFieldEnum::Thing(_) => None,
+                            ItemListItemListElementFieldEnum::ListItem(_)
+                            | ItemListItemListElementFieldEnum::Thing(_) => None,
                         })
                         .collect::<Vec<_>>();
 
@@ -122,7 +118,11 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
 
                     RecipeRecipeIngredientFieldEnum::new_section(
                         &list.name[0],
-                        merged.iter().map(|s| s.as_str()).collect(),
+                        merged
+                            .iter()
+                            .map(String::as_str)
+                            .collect::<Vec<_>>()
+                            .as_slice(),
                     )
                 }
                 RecipeRecipeIngredientFieldEnum::PropertyValue(v) => {
