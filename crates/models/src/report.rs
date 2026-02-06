@@ -197,7 +197,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let mut report = ReportForCreate::new(ReportTypes::Import, user.id);
+        let mut report = ReportForCreate::new(&ReportTypes::Import, user.id);
         let warning_report = ReportLogForCreate::new_warning("Warning".into(), String::new());
         let error_report =
             ReportLogForCreate::new_error("Error".into(), "An error occurred".into());
