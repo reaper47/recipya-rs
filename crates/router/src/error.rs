@@ -81,70 +81,72 @@ pub enum Error {
 impl Error {
     /// Determines the HTTP status code and corresponding client error based on the current error state.
     pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
-        use self::Error::*;
+        use self::Error::{
+            BadTimeFormat, ConfirmForbidden, ConfirmInvalidToken, DeleteForbidden, EntityExists,
+            EntityNotFound, FailParse, FileExists, Form, Gone, InvalidClaims, InvalidPayload,
+            InvalidQuery, LoginFailUsernameNotFound, LogoutFail, LogoutForbidden, Model, NoToken,
+            NoUser, PwdNotMatching, UserNotAdmin,
+        };
 
         match self {
             // Auth
-            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::CONFIRM_FAIL),
-            ConfirmInvalidToken => (StatusCode::BAD_REQUEST, ClientError::CONFIRM_FAIL),
+            ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::ConfirmFail),
+            ConfirmInvalidToken => (StatusCode::BAD_REQUEST, ClientError::ConfirmFail),
             LoginFailUsernameNotFound | PwdNotMatching { .. } => {
-                (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL)
+                (StatusCode::FORBIDDEN, ClientError::LoginFail)
             }
-            LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LOGOUT_FAIL),
-            LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LOGOUT_FAIL),
-            NoToken => (StatusCode::BAD_REQUEST, ClientError::MISSING_PARAMS),
+            LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LogoutFail),
+            LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LogoutFail),
+            NoToken => (StatusCode::BAD_REQUEST, ClientError::MissingParams),
 
-            BadTimeFormat => (StatusCode::BAD_REQUEST, ClientError::BAD_TIME_FORMAT),
-            DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DELETE_FORBIDDEN),
+            BadTimeFormat => (StatusCode::BAD_REQUEST, ClientError::BadTimeFormat),
+            DeleteForbidden => (StatusCode::FORBIDDEN, ClientError::DeleteForbidden),
             EntityExists { entity } => (
                 StatusCode::CONFLICT,
-                ClientError::ENTITY_NOT_FOUND {
+                ClientError::EntityNotFound {
                     entity,
                     id: "-1".into(),
                 },
             ),
             EntityNotFound { entity } => (
                 StatusCode::NOT_FOUND,
-                ClientError::ENTITY_NOT_FOUND {
+                ClientError::EntityNotFound {
                     entity,
                     id: "-1".into(),
                 },
             ),
-            FailParse => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
+            FailParse | InvalidPayload | InvalidQuery => {
+                (StatusCode::BAD_REQUEST, ClientError::InvalidPayload)
+            }
             FileExists => (
                 StatusCode::CONFLICT,
-                ClientError::ENTITY_NOT_FOUND {
+                ClientError::EntityNotFound {
                     entity: "",
                     id: "-1".into(),
                 },
             ),
-            Form => (StatusCode::BAD_REQUEST, ClientError::FORM_ERROR),
-            Gone => (StatusCode::GONE, ClientError::GONE),
-            InvalidClaims => (StatusCode::UNAUTHORIZED, ClientError::UNAUTHORIZED),
-            InvalidPayload => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
-            InvalidQuery => (StatusCode::BAD_REQUEST, ClientError::INVALID_PAYLOAD),
+            Form => (StatusCode::BAD_REQUEST, ClientError::FormError),
+            Gone => (StatusCode::GONE, ClientError::Gone),
+            InvalidClaims => (StatusCode::UNAUTHORIZED, ClientError::Unauthorized),
             NoUser => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                ClientError::ENTITY_NOT_FOUND {
+                ClientError::EntityNotFound {
                     entity: "user",
                     id: "-1".into(),
                 },
             ),
-            UserNotAdmin => (StatusCode::FORBIDDEN, ClientError::FORBIDDEN_REQUEST),
+            UserNotAdmin => (StatusCode::FORBIDDEN, ClientError::ForbiddenRequest),
 
             // Modules
             Model(models::Error::EntityNotFound { entity, id }) => (
                 StatusCode::NOT_FOUND,
-                ClientError::ENTITY_NOT_FOUND {
+                ClientError::EntityNotFound {
                     entity,
-                    id: id.to_string(),
+                    id: id.clone(),
                 },
             ),
 
-            _ => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ClientError::SERVICE_ERROR,
-            ),
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, ClientError::ServiceError),
         }
     }
 }
@@ -167,18 +169,18 @@ impl std::error::Error for Error {}
 #[serde(tag = "message", content = "detail")]
 #[allow(non_camel_case_types)]
 pub enum ClientError {
-    CONFIRM_FAIL,
-    DELETE_FORBIDDEN,
-    ENTITY_NOT_FOUND { entity: &'static str, id: String },
-    BAD_TIME_FORMAT,
-    FORBIDDEN_REQUEST,
-    FORM_ERROR,
-    GONE,
-    INVALID_PAYLOAD,
-    INVALID_QUERY,
-    LOGIN_FAIL,
-    LOGOUT_FAIL,
-    MISSING_PARAMS,
-    SERVICE_ERROR,
-    UNAUTHORIZED,
+    ConfirmFail,
+    DeleteForbidden,
+    EntityNotFound { entity: &'static str, id: String },
+    BadTimeFormat,
+    ForbiddenRequest,
+    FormError,
+    Gone,
+    InvalidPayload,
+    InvalidQuery,
+    LoginFail,
+    LogoutFail,
+    MissingParams,
+    ServiceError,
+    Unauthorized,
 }

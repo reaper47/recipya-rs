@@ -121,7 +121,7 @@ fn format_number(num: u64) -> String {
     }
 }
 
-fn calc_start_result(page: u64, per_page: u64) -> u64 {
+const fn calc_start_result(page: u64, per_page: u64) -> u64 {
     (page - 1) * per_page + 1
 }
 

@@ -78,7 +78,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 r##"<title hx-swap-oob="true">Recipe Not Found | Recipya</title>"##,
                 "Recipe Not Found",
@@ -105,7 +105,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 r#"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp">"#,
             ],
@@ -131,7 +131,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![&format!(
                 "<img id=\"output\" style=\"object-fit: cover\" alt=\"Image of the recipe\" class=\"w-full max-h-80 md:max-h-[34rem]\" src=\"/data/images/{img1}.webp\">"
             )],
@@ -156,7 +156,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 r##"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-1">❮</a><a class="btn btn-soft btn-sm" href="#media-1">❯</a></div></div><div id="media-1" class="carousel-item relative w-full">"##,
                 r##"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-0">❮</a><a class="btn btn-soft btn-sm" href="#media-0">❯</a></div></div></div>"##,
@@ -187,7 +187,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 r#"<video controls preload="metadata" src="https://example.com/embed/yg8FG4"></video>"#,
             ],
@@ -225,7 +225,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 r##"<video controls preload="metadata" src="https://example.com/embed/yg8FG4"></video><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-1">❮</a><a class="btn btn-soft btn-sm" href="#media-1">❯</a></div></div><div id="media-1" class="carousel-item relative w-full"><iframe src="https://example.com/embed/yg8FG4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;"></iframe><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-0">❮</a><a class="btn btn-soft btn-sm" href="#media-0">❯</a></div></div>"##,
                 r##"<div id="media-1" class="carousel-item relative w-full"><iframe src="https://example.com/embed/yg8FG4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;"></iframe>"##,
@@ -264,7 +264,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 r##"<div class="carousel w-full"><div id="media-0" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-3">❮</a><a class="btn btn-soft btn-sm" href="#media-1">❯</a></div></div>"##,
                 r##"<div id="media-1" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-0">❮</a><a class="btn btn-soft btn-sm" href="#media-2">❯</a></div></div>"##,
@@ -316,7 +316,7 @@ mod tests {
 
     fn assert_complete_recipe(res: TestResponse, recipe: RecipeForCreate) {
         assert_html(
-            res,
+            &res,
             vec![
                 &format!(
                     "<title hx-swap-oob=\"true\">{} | Recipya</title>",

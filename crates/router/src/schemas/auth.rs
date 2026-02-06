@@ -57,7 +57,7 @@ pub struct RegisterForm {
 }
 
 impl RegisterForm {
-    /// Converts the form to a UserForCreate.
+    /// Converts the form to a `UserForCreate`.
     pub fn to_user(&self) -> UserForCreate {
         UserForCreate {
             email: self.email.clone(),

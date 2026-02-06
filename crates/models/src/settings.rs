@@ -138,7 +138,7 @@ struct UserSetting {
     selected_theme: i32,
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct UserSettingDetails {
     pub user_id: Uuid,
     pub measurement_system: MeasurementSystem,

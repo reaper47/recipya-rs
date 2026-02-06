@@ -10,7 +10,7 @@ use models::data::Data;
 use models::settings::UserSettingDetails;
 
 /// Renders the authentication layout template.
-pub fn auth(title: &str, content: Markup) -> Markup {
+pub fn auth(title: &str, content: &Markup) -> Markup {
     html! {
         (DOCTYPE)
         html lang="en" class="h-full bg-indigo-100 dark:bg-gray-800" {
@@ -24,12 +24,13 @@ pub fn auth(title: &str, content: Markup) -> Markup {
 }
 
 /// Renders the main layout template.
+#[allow(clippy::too_many_lines)]
 pub fn main(
     title: &str,
     path: &str,
     data: &Data,
-    content: Markup,
-    user_settings: UserSettingDetails,
+    content: &Markup,
+    user_settings: &UserSettingDetails,
     is_hide_nav: bool,
 ) -> Markup {
     let data_layout = if is_hide_nav {

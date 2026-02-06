@@ -53,8 +53,7 @@ pub async fn server() -> Result<()> {
 
     NutritionDataSource::update_all(&state.mm).await;
 
-    let router = router(state.clone())
-        .await?
+    let router = router(state.clone())?
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 
@@ -200,7 +199,7 @@ async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
             .await
-            .expect("Failed to install Ctrl+C handler")
+            .expect("Failed to install Ctrl+C handler");
     };
 
     #[cfg(unix)]
@@ -215,7 +214,7 @@ async fn shutdown_signal() {
     let terminate = std::future::pending::<()>();
 
     tokio::select! {
-        _ = ctrl_c => {},
+        () = ctrl_c => {},
         _ = terminate => {}
     }
 }

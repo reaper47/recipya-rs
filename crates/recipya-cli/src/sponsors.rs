@@ -3,10 +3,8 @@ use std::process::Command;
 
 use tracing::{error, info};
 
-use crate::error::Result;
-
 /// Generates the GitHub sponsors image for use in the README.
-pub fn generate_sponsors_image() -> Result<()> {
+pub fn generate_sponsors_image() {
     let web_dir = Path::new("web").join("sponsors");
 
     let npm_install = Command::new("npm")
@@ -32,6 +30,4 @@ pub fn generate_sponsors_image() -> Result<()> {
     }
 
     info!("Sponsor images generated successfully!");
-
-    Ok(())
 }

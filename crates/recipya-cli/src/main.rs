@@ -70,7 +70,7 @@ async fn main() -> Result<()> {
             server().await?;
         }
         Commands::Sponsors => {
-            generate_sponsors_image()?;
+            generate_sponsors_image();
         }
     }
 

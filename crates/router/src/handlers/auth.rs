@@ -54,7 +54,7 @@ pub async fn change_password_post_handler(
     }
 
     match User::update_password_by_user_id(&state.mm, user.id, &form.new_password).await {
-        Ok(_) => {
+        Ok(()) => {
             let toast = MessageWs::success("Your password has been updated.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
@@ -75,20 +75,19 @@ pub async fn verify_email_handler(
     State(state): State<AppState>,
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token = match get_token_from_query(query) {
+    let token = match get_token_from_query(&query) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
 
-    let verification_token = match EmailVerificationToken::find_by_token(&state.mm, &token).await {
-        Ok(Some(token)) => token,
-        Ok(_) | Err(_) => {
-            return Error::Model(models::Error::EntityNotFound {
-                entity: "email token",
-                id: token,
-            })
-            .into_response();
-        }
+    let Ok(Some(verification_token)) =
+        EmailVerificationToken::find_by_token(&state.mm, &token).await
+    else {
+        return Error::Model(models::Error::EntityNotFound {
+            entity: "email token",
+            id: token,
+        })
+        .into_response();
     };
 
     if verification_token.is_expired() {
@@ -103,7 +102,7 @@ pub async fn verify_email_handler(
         EmailVerificationToken::verify_user_email(&state.mm, verification_token.user_id).await
     {
         return Error::Model(err).into_response();
-    };
+    }
 
     if let Err(err) = EmailVerificationToken::delete(&state.mm, &token).await {
         error!("Failed to delete email verification token '{token}': {err}");
@@ -113,11 +112,10 @@ pub async fn verify_email_handler(
     templates::general::simple("Success", "Your account has been verified.").into_response()
 }
 
-fn get_token_from_query(query: HashMap<String, String>) -> Result<String> {
-    match query.get("token") {
-        Some(token) => Ok(token.to_string()),
-        None => Err(Error::NoToken),
-    }
+fn get_token_from_query(query: &HashMap<String, String>) -> Result<String> {
+    query
+        .get("token")
+        .map_or_else(|| Err(Error::NoToken), |token| Ok(token.clone()))
 }
 
 /// Renders the forgot password request page.
@@ -134,45 +132,44 @@ pub async fn forgot_password_post_handler(
     State(state): State<AppState>,
     Form(form): Form<ForgotPasswordForm>,
 ) -> impl IntoResponse {
-    match user {
-        Some(_) => Redirect::to("/recipes").into_response(),
-        None => {
-            if form.validate().is_err() {
-                return Error::Form.into_response();
-            }
-
-            let user_email = form.email;
-
-            if let Some(email) = state.email_service
-                && let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await
-                && let Ok(password_token) =
-                    PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user.id, 1))
-                        .await
-            {
-                let payload = Email {
-                    to: user_email.clone(),
-                    subject: "Reset password".into(),
-                    body: "".to_string(),
-                    template: Some(Template::ForgotPassword),
-                    data: Some(Data {
-                        token: password_token.token,
-                        username: user_email,
-                        url: state.config.read().await.base_url.clone(),
-                    }),
-                };
-
-                tokio::spawn(async move {
-                    if let Err(err) = email.send(&payload) {
-                        error!("Could not send email 'Reset password': {:?}", err);
-                    }
-                });
-            }
-
-            templates::general::simple(
-                "Password Reset Requested",
-                "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
-            ).into_response()
+    if user.is_some() {
+        Redirect::to("/recipes").into_response()
+    } else {
+        if form.validate().is_err() {
+            return Error::Form.into_response();
         }
+
+        let user_email = form.email;
+
+        if let Some(email) = state.email_service
+            && let Ok(Some(user)) = User::get_user_by_email(&state.mm, &user_email).await
+            && let Ok(password_token) =
+                PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user.id, 1))
+                    .await
+        {
+            let payload = Email {
+                to: user_email.clone(),
+                subject: "Reset password".into(),
+                body: String::new(),
+                template: Some(Template::ForgotPassword),
+                data: Some(Data {
+                    token: password_token.token,
+                    username: user_email,
+                    url: state.config.read().await.base_url.clone(),
+                }),
+            };
+
+            tokio::spawn(async move {
+                if let Err(err) = email.send(&payload) {
+                    error!("Could not send email 'Reset password': {:?}", err);
+                }
+            });
+        }
+
+        templates::general::simple(
+             "Password Reset Requested",
+             "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
+         ).into_response()
     }
 }
 
@@ -181,7 +178,7 @@ pub async fn forgot_password_reset_handler(
     State(state): State<AppState>,
     Query(query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token = match get_token_from_query(query) {
+    let token = match get_token_from_query(&query) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
@@ -223,7 +220,7 @@ pub async fn forgot_password_reset_post_handler(
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, MessageHtmx::success("Password is invalid"));
+        add_hx_message(&mut res, &MessageHtmx::success("Password is invalid"));
         return res;
     }
 
@@ -258,7 +255,7 @@ pub async fn forgot_password_reset_post_handler(
     if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
         error!("Failed to update password for user '{user_id}': {err}",);
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, MessageHtmx::error("Failed to update password."));
+        add_hx_message(&mut res, &MessageHtmx::error("Failed to update password."));
         return res;
     }
 
@@ -270,7 +267,7 @@ pub async fn forgot_password_reset_post_handler(
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
     add_hx_message(
         &mut res,
-        MessageHtmx::success("Your password has been updated."),
+        &MessageHtmx::success("Your password has been updated."),
     );
 
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
@@ -286,13 +283,12 @@ pub async fn login_handler(
     OptionalAuth(user): OptionalAuth,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    match user {
-        Some(_) => Redirect::to("/recipes").into_response(),
-        None => {
-            let config = state.config.read().await;
+    if user.is_some() {
+        Redirect::to("/recipes").into_response()
+    } else {
+        let config = state.config.read().await;
 
-            templates::auth::login(config.is_demo, config.is_no_signups).into_response()
-        }
+        templates::auth::login(config.is_demo, config.is_no_signups).into_response()
     }
 }
 
@@ -304,7 +300,7 @@ pub async fn login_post_handler(
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid."));
+        add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
         return res;
     }
 
@@ -312,7 +308,7 @@ pub async fn login_post_handler(
         Ok(user) => match user {
             None => {
                 let mut res = Error::LoginFailUsernameNotFound.into_response();
-                add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid."));
+                add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
                 return res;
             }
             Some(user) => user,
@@ -332,13 +328,13 @@ pub async fn login_post_handler(
         Ok(status) => status,
         Err(_err) => {
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
-            add_hx_message(&mut res, MessageHtmx::error("Credentials are invalid."));
+            add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
             return res;
         }
     };
 
     // Update password scheme if needed
-    if let SchemeStatus::Outdated = scheme_status {
+    if matches!(scheme_status, SchemeStatus::Outdated) {
         debug!("pwd encrypt scheme outdated, upgrading");
         if user
             .update_password(&state.mm, &form.password)
@@ -348,10 +344,10 @@ pub async fn login_post_handler(
             let mut res = Error::UpdatePassword.into_response();
             add_hx_message(
                 &mut res,
-                MessageHtmx::error("Failed to update password schema."),
+                &MessageHtmx::error("Failed to update password schema."),
             );
             return res;
-        };
+        }
     }
 
     let access_token = match generate_access_token(&user.id) {
@@ -360,7 +356,7 @@ pub async fn login_post_handler(
             let mut res = Error::GenerateToken.into_response();
             add_hx_message(
                 &mut res,
-                MessageHtmx::error("Failed to generate access token."),
+                &MessageHtmx::error("Failed to generate access token."),
             );
             error!(
                 "Failed to generate access token for user {}: {err}",
@@ -381,7 +377,7 @@ pub async fn login_post_handler(
             let mut res = Error::GenerateToken.into_response();
             add_hx_message(
                 &mut res,
-                MessageHtmx::error("Failed to generate refresh token."),
+                &MessageHtmx::error("Failed to generate refresh token."),
             );
             error!(
                 "Failed to generate refresh token for user {}: {err}",
@@ -427,15 +423,14 @@ pub async fn register_handler(
     OptionalAuth(user): OptionalAuth,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    match user {
-        Some(_) => Redirect::to("/recipes").into_response(),
-        None => {
-            if state.config.read().await.is_no_signups {
-                return Redirect::to("/auth/login").into_response();
-            }
-
-            templates::auth::register().into_response()
+    if user.is_some() {
+        Redirect::to("/recipes").into_response()
+    } else {
+        if state.config.read().await.is_no_signups {
+            return Redirect::to("/auth/login").into_response();
         }
+
+        templates::auth::register().into_response()
     }
 }
 
@@ -445,88 +440,88 @@ pub async fn register_post_handler(
     State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
-    match user {
-        Some(_) => Redirect::to("/recipes").into_response(),
-        None => {
-            let config = state.config.read().await;
+    if user.is_some() {
+        Redirect::to("/recipes").into_response()
+    } else {
+        let config = state.config.read().await;
 
-            if config.is_no_signups {
-                return Redirect::to("/auth/login").into_response();
+        if config.is_no_signups {
+            return Redirect::to("/auth/login").into_response();
+        }
+
+        if form.validate().is_err() {
+            let mut res = Error::PwdNotMatching {
+                user_id: Uuid::nil(),
             }
+            .into_response();
+            add_hx_message(&mut res, &MessageHtmx::error("Passwords do not match."));
+            return res;
+        }
 
-            if form.validate().is_err() {
-                let mut res = Error::PwdNotMatching {
-                    user_id: Uuid::nil(),
-                }
-                .into_response();
-                add_hx_message(&mut res, MessageHtmx::error("Passwords do not match."));
-                return res;
-            }
+        match User::get_user_by_email(&state.mm, form.email.clone()).await {
+            Ok(Some(_)) => Redirect::to("/recipes").into_response(),
+            Ok(_) => {
+                let user = match User::new(&state.mm, form.to_user()).await {
+                    Ok(id) => id,
+                    Err(err) => {
+                        error!("Error creating user: {}", err);
+                        let mut res = Error::Model(err).into_response();
+                        add_hx_message(
+                            &mut res,
+                            &MessageHtmx::error("An error occurred during registration."),
+                        );
+                        return res;
+                    }
+                };
 
-            match User::get_user_by_email(&state.mm, form.email.clone()).await {
-                Ok(Some(_)) => Redirect::to("/recipes").into_response(),
-                Ok(_) => {
-                    let user = match User::new(&state.mm, form.to_user()).await {
-                        Ok(id) => id,
+                if let Some(service) = state.email_service {
+                    let token_entry = match EmailVerificationToken::new(
+                        &state.mm,
+                        EmailVerificationTokenForCreate::new(user.id, 24),
+                    )
+                    .await
+                    {
+                        Ok(entry) => entry,
                         Err(err) => {
-                            error!("Error creating user: {}", err);
+                            error!("Error creating email verification token: {err}");
                             let mut res = Error::Model(err).into_response();
                             add_hx_message(
                                 &mut res,
-                                MessageHtmx::error("An error occurred during registration."),
+                                &MessageHtmx::error("An error occurred during registration."),
                             );
                             return res;
                         }
                     };
 
-                    if let Some(service) = state.email_service {
-                        let token_entry = match EmailVerificationToken::new(
-                            &state.mm,
-                            EmailVerificationTokenForCreate::new(user.id, 24),
-                        )
-                        .await
-                        {
-                            Ok(entry) => entry,
-                            Err(err) => {
-                                error!("Error creating email verification token: {err}");
-                                let mut res = Error::Model(err).into_response();
-                                add_hx_message(
-                                    &mut res,
-                                    MessageHtmx::error("An error occurred during registration."),
-                                );
-                                return res;
-                            }
-                        };
+                    let base_url = config.base_url.clone();
+                    drop(config);
 
-                        let base_url = config.base_url.clone();
-
-                        tokio::spawn(async move {
-                            service.send(&Email {
-                                to: user.email,
-                                subject: "Verify your email address".into(),
-                                body: "".into(),
-                                template: Some(Template::Intro),
-                                data: Some(Data {
-                                    token: token_entry.token,
-                                    username: form.email,
-                                    url: base_url,
-                                }),
-                            })
-                        });
-                    }
-
-                    Redirect::to("/auth/login").into_response()
+                    tokio::spawn(async move {
+                        service.send(&Email {
+                            to: user.email,
+                            subject: "Verify your email address".into(),
+                            body: String::new(),
+                            template: Some(Template::Intro),
+                            data: Some(Data {
+                                token: token_entry.token,
+                                username: form.email,
+                                url: base_url,
+                            }),
+                        })
+                    });
                 }
-                Err(err) => {
-                    error!("Failed to fetch user from database: {err}");
 
-                    let mut res = Error::FailFetch.into_response();
-                    add_hx_message(
-                        &mut res,
-                        MessageHtmx::error("Failed to fetch user from database."),
-                    );
-                    res
-                }
+                Redirect::to("/auth/login").into_response()
+            }
+            Err(err) => {
+                error!("Failed to fetch user from database: {err}");
+
+                let mut res = Error::FailFetch.into_response();
+                add_hx_message(
+                    &mut res,
+                    &MessageHtmx::error("Failed to fetch user from database."),
+                );
+                res
             }
         }
     }
@@ -556,7 +551,7 @@ pub async fn user_delete_handler(
     }
 
     match User::delete(&state.mm, user.id).await {
-        Ok(_) => {
+        Ok(()) => {
             drop(config);
             logout_post_handler(OptionalAuth(Some(user)), State(state), cookies)
                 .await

@@ -19,6 +19,7 @@ use crate::{Error, Result};
 
 impl Recipe {
     /// Updates a recipe from the updated fields.
+    #[allow(clippy::too_many_lines)]
     pub async fn update(
         mm: &ModelManager,
         user_id: Uuid,
@@ -81,10 +82,12 @@ impl Recipe {
                     // Category
                     match &new_recipe.category {
                         None if old_recipe.category != *"uncategorized" => {
-                            update_category(conn, user_id, recipe_id, &new_recipe.category).await?
+                            update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
+                                .await?;
                         }
                         Some(category) if old_recipe.category != *category => {
-                            update_category(conn, user_id, recipe_id, &new_recipe.category).await?
+                            update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
+                                .await?;
                         }
                         _ => {}
                     }

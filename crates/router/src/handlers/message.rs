@@ -86,14 +86,14 @@ impl MessageBuilder {
 
     /// Sets the message status.
     #[allow(dead_code)]
-    pub fn status(mut self, status: MessageStatus) -> Self {
+    pub const fn status(mut self, status: MessageStatus) -> Self {
         self.status = status;
         self
     }
 
     /// Sets the message type.
     #[allow(dead_code)]
-    pub fn message_type(mut self, message_type: MessageType) -> Self {
+    pub const fn message_type(mut self, message_type: MessageType) -> Self {
         self.message_type = message_type;
         self
     }
@@ -208,7 +208,7 @@ impl IMessage for MessageWs {
 }
 
 /// Adds an HTMX message to a response's headers.
-pub fn add_hx_message(res: &mut Response<Body>, message: MessageHtmx) {
+pub fn add_hx_message(res: &mut Response<Body>, message: &MessageHtmx) {
     if let Ok(toast) = serde_json::to_string(&message)
         && let Ok(value) = HeaderValue::from_str(&toast)
     {

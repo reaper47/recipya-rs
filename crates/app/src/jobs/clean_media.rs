@@ -27,16 +27,16 @@ pub async fn clean_media(
         &data_dir.images.root,
         &images,
         true,
-        Arc::clone(&fs_support),
-    )
-    .await?;
+        &Arc::clone(&fs_support),
+    );
 
     let (num_videos_deleted, videos_space_reclaimed_bytes) =
-        clean_files(&data_dir.videos, &videos, false, fs_support).await?;
+        clean_files(&data_dir.videos, &videos, false, &fs_support);
+
+    let mb_reclaimed = (images_space_reclaimed_bytes + videos_space_reclaimed_bytes) / 1_000_000;
 
     info!(
-        "CleanMedia: Removed {num_images_deleted} images and {num_videos_deleted} videos. Reclaimed {:.2} MB.",
-        ((images_space_reclaimed_bytes + videos_space_reclaimed_bytes) as f64) / 1_000_000.0
+        "CleanMedia: Removed {num_images_deleted} images and {num_videos_deleted} videos. Reclaimed {mb_reclaimed:.2} MB.",
     );
 
     Ok(())
@@ -91,12 +91,12 @@ async fn fetch_images(
         .collect())
 }
 
-async fn clean_files(
+fn clean_files(
     dir: &PathBuf,
     files_to_keep: &HashSet<PathBuf>,
     is_delete_thumbnails: bool,
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
-) -> Result<(u64, u64)> {
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
+) -> (u64, u64) {
     let mut num_files_deleted = 0u64;
     let mut space_reclaimed_bytes = 0u64;
 
@@ -118,7 +118,7 @@ async fn clean_files(
                     Err(err) => {
                         error!("CleanMedia: Failed to delete file {:?}: {err}", path);
                     }
-                })
+                });
         }
         Err(err) => {
             error!(
@@ -128,14 +128,15 @@ async fn clean_files(
         }
     }
 
-    Ok((num_files_deleted, space_reclaimed_bytes))
+    (num_files_deleted, space_reclaimed_bytes)
 }
 
 fn process_thumbnail(path: &Path) -> Result<u64> {
-    if let Some(thumbnail) = generate_thumbnail_path(path) {
-        match fs::metadata(&thumbnail) {
+    generate_thumbnail_path(path).map_or_else(
+        || Err("CleanMedia: Thumbnail does not exist".into()),
+        |thumbnail| match fs::metadata(&thumbnail) {
             Ok(metadata) => match fs::remove_file(&thumbnail) {
-                Ok(_) => Ok(metadata.size()),
+                Ok(()) => Ok(metadata.size()),
                 Err(err) => {
                     error!(
                         "CleanMedia: Failed to remove thumbnail {:?}: {err}",
@@ -151,10 +152,8 @@ fn process_thumbnail(path: &Path) -> Result<u64> {
                 );
                 Err(err.into())
             }
-        }
-    } else {
-        Err("CleanMedia: Thumbnail does not exist".into())
-    }
+        },
+    )
 }
 
 fn generate_thumbnail_path(path: &Path) -> Option<PathBuf> {

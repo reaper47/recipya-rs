@@ -26,6 +26,7 @@ futures-util.workspace = true
 humantime.workspace = true
 infer.workspace = true
 integrations.workspace = true
+iso8601.workspace = true
 itertools.workspace = true
 math.workspace = true
 mime_guess = "2.0.5"

@@ -62,10 +62,10 @@ fn empty_recipe_category() -> Markup {
 
 /// Renders the settings dialog.
 pub fn settings(
-    data: Data,
+    data: &Data,
     users: Option<Vec<User>>,
-    user_setting: UserSettingDetails,
-    categories: Vec<Category>,
+    user_setting: &UserSettingDetails,
+    categories: &[Category],
     config: &SettingsForView,
 ) -> Markup {
     html! {
@@ -120,22 +120,23 @@ pub fn settings(
                 }
             }
             div #settings-blocks class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem" {
-                (settings_recipes(categories, &user_setting))
+                (settings_recipes(categories, user_setting))
                 @if data.is_admin {
                     (settings_connections(config))
-                    (settings_server(&data, config))
-                    (settings_admin(users.unwrap_or_default(), &user_setting))
+                    (settings_server(data, config))
+                    (settings_admin(&users.unwrap_or_default(), user_setting))
                 }
-                (settings_data(&data))
-                (settings_account(&user_setting))
+                (settings_data(data))
+                (settings_account(user_setting))
                 (settings_about(data))
             }
         }
-        (supported_nutrition_sources_dialog(&user_setting))
+        (supported_nutrition_sources_dialog(user_setting))
     }
 }
 
-fn settings_recipes(categories: Vec<Category>, settings: &UserSettingDetails) -> Markup {
+#[allow(clippy::too_many_lines)]
+fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> Markup {
     html! {
         div #settings-recipes class="p-3 md:h-[50vh] overflow-y-auto" {
             div class="flex justify-between items-center text-sm" {
@@ -311,7 +312,7 @@ fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
                                         td class="py-1" { (source.name) }
                                         td class="py-1" { (source.description) }
                                         td class="py-1" { (source.country) }
-                                        td class="py-1" { (source.updated_on.map(|date| date.format("%Y-%m-%d").to_string()).unwrap_or("Unknown".to_string())) }
+                                        td class="py-1" { (source.updated_on.map_or_else(|| "Unknown".to_string(), |date| date.format("%Y-%m-%d").to_string())) }
                                         td class="py-1" { a class="link" href=(source.url) target="_blank" { "Visit" }
                                     }
                                 }
@@ -460,7 +461,7 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
     }
 }
 
-fn settings_admin(users: Vec<User>, user_settings: &UserSettingDetails) -> Markup {
+fn settings_admin(users: &[User], user_settings: &UserSettingDetails) -> Markup {
     html! {
         div #settings-admin class="hidden p-3 md:max-h-96"  {
             div class="flex justify-between items-center text-sm" {
@@ -489,7 +490,7 @@ fn settings_admin(users: Vec<User>, user_settings: &UserSettingDetails) -> Marku
     }
 }
 
-pub fn render_users_table(users: Vec<User>, is_swap_oob: bool) -> Markup {
+pub fn render_users_table(users: &[User], is_swap_oob: bool) -> Markup {
     if is_swap_oob {
         html! {
             table #users-table class="table table-zebra table-sm" hx-swap-oob="true" {
@@ -812,11 +813,11 @@ fn themes_palette(is_set_default: bool, default_theme: &Theme, selected_theme: &
                 div class="grid grid-cols-1 gap-3 p-3" {
                     @if is_set_default {
                         @for theme in Theme::iter().skip(1) {
-                            (render_theme(theme, endpoint, theme_id))
+                            (render_theme(&theme, endpoint, theme_id))
                         }
                     } @else {
                         @for theme in Theme::iter() {
-                            (render_theme(theme, endpoint, theme_id))
+                            (render_theme(&theme, endpoint, theme_id))
                         }
                     }
                     a class="outline-base-content overflow-hidden rounded-lg text-center" href="/theme-generator/" {
@@ -830,7 +831,7 @@ fn themes_palette(is_set_default: bool, default_theme: &Theme, selected_theme: &
     }
 }
 
-fn render_theme(theme_name: Theme, endpoint: &str, theme_id: &str) -> Markup {
+fn render_theme(theme_name: &Theme, endpoint: &str, theme_id: &str) -> Markup {
     if endpoint == "/settings/theme-default" {
         html! {
             button class="outline-base-content text-start outline-offset-4"
@@ -841,7 +842,7 @@ fn render_theme(theme_name: Theme, endpoint: &str, theme_id: &str) -> Markup {
                     hx-swap="none"
                     hx-on::after-request="this.closest('.dropdown').querySelector(':focus')?.blur()"
                     _=(PreEscaped(format!("on click put '{theme_name}' into #{theme_id}"))) {
-                (render_theme_button_content(&theme_name))
+                (render_theme_button_content(theme_name))
             }
         }
     } else {
@@ -855,7 +856,7 @@ fn render_theme(theme_name: Theme, endpoint: &str, theme_id: &str) -> Markup {
                     hx-trigger="click"
                     hx-swap="none"
                     _=(PreEscaped(format!("on click put '{theme_name}' into #{theme_id}"))) {
-                (render_theme_button_content(&theme_name))
+                (render_theme_button_content(theme_name))
             }
         }
     }
@@ -882,7 +883,7 @@ fn render_theme_button_content(theme_name: &Theme) -> Markup {
     }
 }
 
-fn settings_about(data: Data) -> Markup {
+fn settings_about(data: &Data) -> Markup {
     html! {
         div #settings-about class={
             "hidden p-3 md:p-0 md:pr-4"

@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::sync::Arc;
 
 use maud::{Markup, PreEscaped, html};
@@ -117,7 +118,7 @@ pub(super) fn add_instruction(name: &str) -> Markup {
 
 /// Renders a list of recipes.
 pub fn list_recipes(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     path: &str,
     data: &Data,
     data_dir: &DataDir,
@@ -205,7 +206,7 @@ pub fn list_recipes(
 
 fn category_badge(category: &str, is_inside_card: bool) -> Markup {
     html! {
-        @if !category.contains(":") {
+        @if !category.contains(':') {
             span class={
                     "badge badge-primary select-none cursor-pointer badge-sm p-2 m-1 sm:badge-md sm:m-0 hover:bg-neutral"
                     @if !is_inside_card { " indicator-item indicator-center" }
@@ -225,7 +226,7 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
                 "badge badge-primary select-none cursor-pointer"
                 @if !is_inside_card { " indicator-item indicator-center" }
             } {
-                @for (i, sub_cat) in category.split(":").enumerate() {
+                @for (i, sub_cat) in category.split(':').enumerate() {
                     @if i > 0 {
                         ":"
                     }
@@ -233,7 +234,7 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
                         hx-get="/recipes/search" hx-target="#list-recipes"
                         hx-push-url="true" hx-swap="innerHTML show:window:top transition:true"
                         hx-vals=(json!({
-                            "q": format!(r#"cat:{sub_cat}"#)
+                            "q": format!(r"cat:{sub_cat}")
                         }))
                         _=(format!("on click put 'cat:{sub_cat}' into #search-recipes.value")) {
                         (sub_cat)
@@ -258,9 +259,9 @@ pub(super) enum RatingSize {
 }
 
 impl RatingSize {
-    pub fn to_class<'a>(&self) -> &'a str {
+    pub const fn to_class<'a>(&self) -> &'a str {
         match self {
-            RatingSize::Small => "rating-sm",
+            Self::Small => "rating-sm",
         }
     }
 }
@@ -341,7 +342,7 @@ pub(super) fn render_media_editor(image_num: usize, image_src: &str) -> Markup {
             } {
                 img src=(image_src) alt=(format!("Image #{image_num} of the recipe")) class="block w-full h-full object-contain";
                 @if !image_src.is_empty() {
-                    @let name = if image_src.ends_with(".webp") {
+                    @let name = if Path::new(image_src).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("webp")) {
                         "media-existing-image"
                     } else {
                         "media-existing-video"

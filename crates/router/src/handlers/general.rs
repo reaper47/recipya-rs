@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use axum::Json;
 use axum::extract::ws::WebSocket;
 use axum::extract::{Multipart, Query, State, WebSocketUpgrade};
@@ -55,21 +57,21 @@ pub async fn search_suggestions_handler(
         let options = match res {
             Ok(items) => items
                 .iter()
-                .map(|item| {
+                .fold(String::new(), |mut acc, item| {
                     let full_value = format!("{q}{item}");
-                    format!(
+                    let _ = write!(
+                        acc,
                         r#"<li><a tabindex="0" _="on click
                             set #search-recipes.value to '{}'
                             then add .hidden to #search-suggestions-menu
                             then call #search-recipes.focus()
                             then set #search-recipes.selectionStart to #search-recipes.value.length
                             then set #search-recipes.selectionEnd to #search-recipes.value.length">{}</a></li>"#,
-                        full_value.replace("'", "\\'"),
+                        full_value.replace('\'', "\\'"),
                         item
-                    )
-                })
-                .collect::<Vec<String>>()
-                .join(""),
+                    );
+                    acc
+                }),
             Err(err) => {
                 error!(
                     "(search_suggestions_handler) Error fetching items '{q}' for user '{}': {err}",
@@ -159,13 +161,12 @@ pub async fn user_initials_handler(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     match User::get_user_by_id(&state.mm, user.id).await {
-        Ok(Some(user)) => {
-            if let Some(first) = user.email.to_uppercase().chars().next() {
-                first.to_string()
-            } else {
-                "A".into()
-            }
-        }
+        Ok(Some(user)) => user
+            .email
+            .to_uppercase()
+            .chars()
+            .next()
+            .map_or_else(|| "A".into(), |first| first.to_string()),
         Ok(None) => {
             error!("User {} does not exist", user.id);
             "A".into()

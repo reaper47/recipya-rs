@@ -54,7 +54,7 @@ pub struct Nutrient<'a> {
     pub unit_name: Cow<'a, str>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FoodNutrientDerivation<'a> {
     pub code: Option<Cow<'a, str>>,

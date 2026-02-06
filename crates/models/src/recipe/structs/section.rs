@@ -294,11 +294,7 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                             prop.unit_text.first().cloned().unwrap_or_default().clone()
                         };
 
-                        if code.is_empty() {
-                            text
-                        } else {
-                            code
-                        }
+                        if code.is_empty() { text } else { code }
                     };
 
                     current_items.push(Item {

@@ -12,6 +12,7 @@ use crate::error::Result;
 use crate::helpers::to_yield;
 
 /// Parses a `RecipeMD` recipe from the file's content.
+#[allow(clippy::cast_possible_truncation)]
 pub fn parse<R>(r: R) -> Result<Vec<schema_org::Recipe>>
 where
     R: Read + Seek,

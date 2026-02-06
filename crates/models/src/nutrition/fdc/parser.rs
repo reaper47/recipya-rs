@@ -45,7 +45,7 @@ pub trait DataNotFetched<C: FdcFetcher>: Send + Sync {
 
 #[async_trait]
 pub trait DataFetched: Send + Sync {
-    /// Pushes the data sets fetched from the FoodData Central API into the database.
+    /// Pushes the data sets fetched from the `FoodData Central API` into the database.
     async fn push_into_database<'a>(&'a self, mm: &'a ModelManager) -> Result<()>;
 }
 
@@ -72,6 +72,7 @@ impl<'a> FdcClient<'a> {
 
 #[async_trait]
 impl FdcFetcher for FdcClient<'_> {
+    #[allow(clippy::items_after_statements)]
     async fn fetch_foundation_foods(&self) -> Result<ZipArchive<Cursor<Vec<u8>>>> {
         let (foundation_food_release_date, json_url) = {
             let html = self
@@ -149,9 +150,9 @@ pub struct FdcParser<'a, State> {
     _state: PhantomData<State>,
 }
 
-impl<'a> FdcParser<'a, DataNotFetchedState> {
+impl FdcParser<'_, DataNotFetchedState> {
     /// Creates a new [FoodData Central](https://fdc.nal.usda.gov/) parser.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             srlegacy_food_data: Vec::new(),
             _state: PhantomData,
@@ -159,18 +160,24 @@ impl<'a> FdcParser<'a, DataNotFetchedState> {
     }
 }
 
-impl<'a> Default for FdcParser<'a, DataNotFetchedState> {
+impl Default for FdcParser<'_, DataNotFetchedState> {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[async_trait]
-impl<'a, C: FdcFetcher> DataNotFetched<C> for FdcParser<'a, DataNotFetchedState> {
+impl<C: FdcFetcher> DataNotFetched<C> for FdcParser<'_, DataNotFetchedState> {
     async fn fetch(self, client: &C) -> Result<FdcParser<DataFetchedState>> {
         let mut archive = client.fetch_foundation_foods().await?;
         let mut file = archive.by_index(0).map_err(|_| Error::NoFileInZip)?;
-        let mut bytes = Vec::with_capacity(file.size() as usize);
+        let mut bytes = Vec::with_capacity(
+            usize::try_from(file.size())
+                .inspect_err(|err| {
+                    error!("Failed to cast file size to usize '{}': {err}", file.size());
+                })
+                .unwrap_or_default(),
+        );
         file.read_to_end(&mut bytes)?;
 
         let data: SrLegacyRoot = simd_json::serde::from_slice(&mut bytes)?;
@@ -183,7 +190,8 @@ impl<'a, C: FdcFetcher> DataNotFetched<C> for FdcParser<'a, DataNotFetchedState>
 }
 
 #[async_trait]
-impl<'a> DataFetched for FdcParser<'a, DataFetchedState> {
+#[allow(clippy::too_many_lines)]
+impl DataFetched for FdcParser<'_, DataFetchedState> {
     async fn push_into_database<'b>(&'b self, mm: &'b ModelManager) -> Result<()> {
         use schema::fdc_foods;
 
@@ -433,10 +441,7 @@ pub struct FdcFoodResult {
 
 impl SRLegacyFoodDetails {
     /// Retrieves the most relevant details of a foundation food from the database.
-    pub async fn get_relevant(
-        conn: &mut AsyncPgConnection,
-        food: &str,
-    ) -> Result<Vec<SRLegacyFoodDetails>> {
+    pub async fn get_relevant(conn: &mut AsyncPgConnection, food: &str) -> Result<Vec<Self>> {
         let food_results = diesel::sql_query(
             r"
                 WITH q AS (
@@ -476,7 +481,7 @@ impl SRLegacyFoodDetails {
         let mut foods = Vec::with_capacity(food_results.len());
 
         for food in food_results {
-            foods.push(SRLegacyFoodDetails {
+            foods.push(Self {
                 id: food.id,
                 fdc_id: food.fdc_id,
                 food_class: food.food_class,
@@ -525,7 +530,7 @@ impl SRLegacyFoodDetails {
                         amount: row.amount,
                     })
                     .collect::<Vec<_>>(),
-            })
+            });
         }
 
         Ok(foods)

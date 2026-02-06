@@ -54,7 +54,7 @@ pub enum AuthRejection {
 }
 
 impl AuthRejection {
-    fn unauthorized(error: Error) -> Self {
+    fn unauthorized(error: &Error) -> Self {
         Self::Unauthorized(error.to_string())
     }
 
@@ -72,8 +72,8 @@ pub struct OptionalAuth(pub Option<User>);
 impl IntoResponse for AuthRejection {
     fn into_response(self) -> Response {
         match self {
-            AuthRejection::Redirect(redirect) => redirect.into_response(),
-            AuthRejection::Unauthorized(message) => {
+            Self::Redirect(redirect) => redirect.into_response(),
+            Self::Unauthorized(message) => {
                 (StatusCode::UNAUTHORIZED, Json(json!({"error": message}))).into_response()
             }
         }
@@ -97,10 +97,10 @@ where
         if app_state.config.read().await.is_autologin {
             let admin = User::get_first_admin(&app_state.mm)
                 .await
-                .map_err(|_| AuthRejection::unauthorized(Error::NoUser))?
+                .map_err(|_| AuthRejection::unauthorized(&Error::NoUser))?
                 .expect("At least one admin user should be in the database");
 
-            return Ok(RequireAuth(admin));
+            return Ok(Self(admin));
         }
 
         match parts.extensions.get::<UserId>().cloned() {
@@ -108,11 +108,11 @@ where
                 let user = User::get_user_by_id(&app_state.mm, *user_id)
                     .await
                     .map_err(|err| rejection_for_error(err, is_api))?
-                    .ok_or_else(|| rejection_for(Error::NoUser, is_api))?;
+                    .ok_or_else(|| rejection_for(&Error::NoUser, is_api))?;
 
-                Ok(RequireAuth(user))
+                Ok(Self(user))
             }
-            None => Err(AuthRejection::unauthorized(Error::NoUser)),
+            None => Err(AuthRejection::unauthorized(&Error::NoUser)),
         }
     }
 }
@@ -148,7 +148,7 @@ where
     Ok(cookies.get(AUTH_TOKEN).map(|c| c.value().to_string()))
 }
 
-fn rejection_for(error: Error, is_api: bool) -> AuthRejection {
+fn rejection_for(error: &Error, is_api: bool) -> AuthRejection {
     if is_api {
         AuthRejection::unauthorized(error)
     } else {
@@ -177,7 +177,7 @@ where
     ) -> std::result::Result<Self, Self::Rejection> {
         let user = try_authenticate_optional(parts, state).await;
 
-        Ok(OptionalAuth(user))
+        Ok(Self(user))
     }
 }
 
@@ -191,7 +191,7 @@ where
     if app_state.config.read().await.is_autologin {
         return User::get_first_admin(&app_state.mm)
             .await
-            .map_err(|_| AuthRejection::unauthorized(Error::NoUser))
+            .map_err(|_| AuthRejection::unauthorized(&Error::NoUser))
             .ok()?;
     }
 
@@ -262,7 +262,7 @@ pub async fn mw_refresh_token(
 
             if let Err(err) = RefreshToken::delete_all_for_user(&state.mm, user_id).await {
                 error!("Failed to delete all refresh tokens for user: {err}");
-            };
+            }
 
             if let Some(service) = state.email_service
                 && let Ok(Some(user)) = User::get_user_by_id(&state.mm, user_id).await
@@ -271,7 +271,7 @@ pub async fn mw_refresh_token(
                     service.send(&Email {
                         to: user.email,
                         subject: "Security Alert: Suspicious Activity Detected".into(),
-                        body: "".into(),
+                        body: String::new(),
                         template: Some(Template::SecurityAlert),
                         data: None,
                     })

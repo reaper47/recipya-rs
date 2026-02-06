@@ -17,7 +17,7 @@ pub struct Event {
 
 impl From<RecipeTimeline> for Event {
     fn from(value: RecipeTimeline) -> Self {
-        Event {
+        Self {
             id: value.id,
             date: value.created_at.date().format("%x").to_string(),
             title: value.title,
@@ -30,7 +30,7 @@ impl From<RecipeTimeline> for Event {
     }
 }
 
-pub fn render_dialog(recipe_id: i64, events: Vec<Event>) -> Markup {
+pub fn render_dialog(recipe_id: i64, events: &[Event]) -> Markup {
     html! {
         dialog #timeline-dialog .modal {
             div class="modal-box relative w-fit max-w-[80vw] overflow-auto" {
@@ -101,7 +101,7 @@ pub fn render_dialog(recipe_id: i64, events: Vec<Event>) -> Markup {
     }
 }
 
-pub fn render_events(recipe_id: i64, events: Vec<Event>) -> Markup {
+pub fn render_events(recipe_id: i64, events: &[Event]) -> Markup {
     let num_events = events.len();
 
     html! {
@@ -233,11 +233,11 @@ pub fn render_edit(
                     ("")
                 }
                 div popover #cally-popover-timeline class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor:--cally-timeline" {
-                    calendar-date class="cally" _=(format!(r#"
+                    calendar-date class="cally" _=(format!(r"
                         on change
                             put my value into value of #{date_id}
                             put my value into innerText of #{cally_timeline_id}
-                            call #cally-popover-timeline.hidePopover()"#)) {
+                            call #cally-popover-timeline.hidePopover()")) {
                         svg aria-label="Previous" class="fill-current size-6" slot="previous" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
                             path d="M15.75 19.5 8.25 12l7.5-7.5" {}
                         }
@@ -264,7 +264,7 @@ pub fn render_edit(
                 @let file_id = format!("image-upload-{event_id}");
                 input type="file" id=(file_id) name="image" accept="image/*" form=(form_id)
                         class="file-input file-input-sm file-input-bordered w-full max-w-sm"
-                        _=(format!(r#"
+                        _=(format!(r"
                             on change
                                 set img to the first <img/> in the previous <figure/>
                                 make an FileReader called reader
@@ -278,13 +278,13 @@ pub fn render_edit(
                                 set img to the first <img/> in the previous <figure/>
                                 if img exists
                                     call loadURLToInputField(img.src, '{file_id}')
-                                end"#,
+                                end",
                         ));
 
-                (PreEscaped(format!(r##"<script>
+                (PreEscaped(format!(r"<script>
                     document.querySelector('#{date_id}').value = (new Date('{local_time}')).toISOString().split('T')[0];
                     document.querySelector('#{cally_timeline_id}').innerText = (new Date('{local_time}')).toISOString().split('T')[0];
-                </script>"##)))
+                </script>")))
             }
             @if index != num_events - 1 {
                 hr;

@@ -6,7 +6,8 @@ use app::state::AppState;
 use crate::handlers::shared::share_recipe_handler;
 
 /// Defines the routes for shared resources.
-pub(super) fn shared_routes() -> Router<AppState> {
+#[allow(clippy::literal_string_with_formatting_args)]
+pub fn shared_routes() -> Router<AppState> {
     Router::new().route("/r/{:link}", get(share_recipe_handler))
 }
 
@@ -56,13 +57,13 @@ mod tests {
         res.assert_status_ok();
         assert_complete_recipe(res.clone(), a_complete_recipe_for_create());
         assert_html(
-            res.clone(),
+            &res,
             vec![
                 r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input md:max-w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
             ],
         );
         assert_not_in_html(
-            res,
+            &res,
             vec![
                 r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
                 r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
@@ -87,7 +88,7 @@ mod tests {
 
         res.assert_status_ok();
         assert_html(
-            res,
+            &res,
             vec![
                 r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
                 r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input md:max-w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
@@ -111,14 +112,14 @@ mod tests {
         res.assert_status_ok();
         assert_complete_recipe(res.clone(), a_complete_recipe_for_create());
         assert_html(
-            res.clone(),
+            &res,
             vec![
                 r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
                 "<p class=\"text-xs\">Nutrition Facts\nPer 100g: calories 300 kcal; total carbohydrates 55g; sugar 43g; protein 7g; total fat 6g; saturated fat 1g; unsaturated fat 2g; trans fat 3g; cholesterol 5mg; sodium 12mg; fiber 10g</p>",
             ],
         );
         assert_not_in_html(
-            res,
+            &res,
             vec![
                 r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
                 r##"<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
@@ -131,7 +132,7 @@ mod tests {
 
     fn assert_complete_recipe(res: TestResponse, recipe: RecipeForCreate) {
         assert_html(
-            res,
+            &res,
             vec![
                 &format!(
                     "<title hx-swap-oob=\"true\">{} | Recipya</title>",

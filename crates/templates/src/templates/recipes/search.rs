@@ -14,21 +14,17 @@ use crate::templates::pagination::pagination;
 
 /// Renders search results for recipes.
 pub fn search_results(
-    fs_support: Arc<dyn FsSupport + Sync + Send>,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     path: &str,
-    data: Data,
-    data_dir: DataDir,
-    user_setting: UserSettingDetails,
+    data: &Data,
+    data_dir: &DataDir,
+    user_setting: &UserSettingDetails,
 ) -> Markup {
     if data.is_hx_request {
-        let is_fav = data
-            .searchbar
-            .as_ref()
-            .map(|sb| sb.is_favourites)
-            .unwrap_or(false);
+        let is_fav = data.searchbar.as_ref().is_some_and(|sb| sb.is_favourites);
 
         html! {
-            (list_recipes(fs_support, path, &data, &data_dir))
+            (list_recipes(fs_support, path, data, data_dir))
             (render_search_favourites_button(is_fav, true))
             @if let Some(p) = &data.pagination {
                 (pagination(p))
@@ -36,11 +32,11 @@ pub fn search_results(
         }
     } else {
         let content: Markup = html! {
-            (search_bar(&data))
-            (list_recipes(fs_support, path, &data, &data_dir))
+            (search_bar(data))
+            (list_recipes(fs_support, path, data, data_dir))
         };
 
-        layouts::main("Recipes", path, &data, content, user_setting, false)
+        layouts::main("Recipes", path, data, &content, user_setting, false)
     }
 }
 
@@ -54,13 +50,9 @@ pub fn search_bar(data: &Data) -> Markup {
                         class="flex w-full"
                         hx-get="/recipes/search"
                         hx-vals=(
-                            if let Some(p) = &data.pagination {
-                                json!({
-                                    "page": p.search.current_page
-                                }).to_string()
-                            } else {
-                                String::new()
-                            }
+                            data.pagination.as_ref().map_or_else(String::new, |p| json!({
+                                "page": p.search.current_page
+                            }).to_string())
                         )
                         hx-target="#list-recipes"
                         hx-swap="outerHTML"

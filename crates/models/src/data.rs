@@ -40,7 +40,7 @@ pub enum PageSlot {
 }
 
 /// Holds pagination data.
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct PaginationData {
     pub prev: u64,
     pub selected: u64,
@@ -80,7 +80,7 @@ pub struct PaginationHtmxData {
 }
 
 /// olds search data for the pagination.
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct PaginationSearchData {
     pub current_page: u64,
 }
@@ -93,17 +93,17 @@ impl PaginationData {
             target: "#content".into(),
         };
 
-        let queries = match &params.sort {
-            Some(sort) => format!("sort={sort}"),
-            None => String::new(),
-        };
+        let queries = params
+            .sort
+            .as_ref()
+            .map_or_else(String::new, |sort| format!("sort={sort}"));
 
         let mut page = params.page.unwrap_or(1);
         if page < 1 {
-            page = 1
+            page = 1;
         }
 
-        Self::new("/recipes", queries, page, num_recipes as u64, htmx)
+        Self::new("/recipes", queries, page, num_recipes.cast_unsigned(), htmx)
     }
 
     fn new(
@@ -174,8 +174,8 @@ fn page_slots(curr: u64, total: u64) -> Vec<PageSlot> {
     slots
 }
 
-/// SearchbarData holds data related to the searchbar.
-#[derive(Clone, Debug, Default, PartialEq)]
+/// Holds data related to the searchbar.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct SearchbarData {
     pub is_favourites: bool,
     pub sort: String,
@@ -183,7 +183,7 @@ pub struct SearchbarData {
 }
 
 impl SearchbarData {
-    /// Creates a SearchbarData from the query parameters.
+    /// Creates a `SearchbarData` from the query parameters.
     pub fn from_params(params: SearchParams) -> Self {
         Self {
             is_favourites: params.is_favourites.unwrap_or_default(),
@@ -193,13 +193,13 @@ impl SearchbarData {
     }
 }
 
-/// ShareData holds information on the entity being shared.
+/// Holds information on the entity being shared.
 pub struct ShareData {
     pub is_from_host: bool,
     pub is_shared: bool,
 }
 
-/// ViewRecipeData holds template data related to viewing a recipe.
+/// Holds template data related to viewing a recipe.
 #[derive(Clone)]
 pub struct ViewRecipe {
     pub recipe_details: RecipeDetails,

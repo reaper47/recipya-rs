@@ -242,6 +242,7 @@ impl TandoorRecipeClient {
     }
 
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cast_possible_truncation)]
     async fn build_recipe_schema(&self, recipe: RecipeRetrieve) -> Result<Recipe> {
         let (category, keywords) = match &recipe.keywords {
             Some(vec) if !vec.is_empty() => {

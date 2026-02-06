@@ -10,7 +10,7 @@ use crate::handlers::settings::{
 use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
 /// Defines the routes for endpoints related to the settings module.
-pub(super) fn settings_routes(state: AppState) -> Router<AppState> {
+pub fn settings_routes(state: &AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
         .route("/nutrition/source", post(set_nutrition_source_handler))
@@ -56,7 +56,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res.clone(),
+                &res,
                 vec![
                     r#"<div id="settings-recipes""#,
                     r#"<div id="settings-data""#,
@@ -65,7 +65,7 @@ mod tests {
                 ],
             );
             assert_not_in_html(
-                res,
+                &res,
                 vec![
                     r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"##,
                     r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"##,
@@ -88,7 +88,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res,
+                &res,
                 vec![
                     r##"<table class="table table-xs"><thead><tr><th></th><th>Setting</th><th>Environment</th><th>Value</th></tr></thead><tbody>"##,
                     r#"<td>Host</td><td>SMTP_HOST</td><td>smtp.gmail.com</td></tr>"#,
@@ -125,7 +125,7 @@ mod tests {
 
             res.assert_status_ok();
             assert_html(
-                res.clone(),
+                &res,
                 vec![
                     r#"<div class="flex flex-col menu-sm sm:flex-row sm:menu-md">"#,
                     r#"<ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical" _="on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target">"#,

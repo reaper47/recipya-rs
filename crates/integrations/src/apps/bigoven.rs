@@ -200,6 +200,8 @@ fn transform_ingredient_types<'a>(
 }
 
 impl From<BigOvenRecipe> for Recipe {
+    #[allow(clippy::cast_precision_loss)]
+    #[allow(clippy::cast_possible_truncation)]
     fn from(r: BigOvenRecipe) -> Self {
         let url = Url::parse(&r.source.clone().unwrap_or_default()).ok();
 
@@ -234,7 +236,7 @@ impl From<BigOvenRecipe> for Recipe {
                 .into_iter()
                 .map(RecipeRecipeInstructionsFieldEnum::Text)
                 .collect(),
-            recipe_yield: to_yield(r.servings.round() as i64),
+            recipe_yield: to_yield(r.servings.round().clamp(0.0, i64::MAX as f32) as i64),
             url: url.map(String::from).into_iter().collect(),
             ..Default::default()
         }

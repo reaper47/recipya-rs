@@ -52,6 +52,7 @@ impl Recipe {
     /// - If images are provided, the first image is treated as the main image, and the rest are
     ///   stored as additional images.
     /// - The detected language of the recipe is used for further processing and localization.
+    #[allow(clippy::too_many_lines)]
     pub async fn create(
         mm: &ModelManager,
         user_id: Uuid,
@@ -69,7 +70,7 @@ impl Recipe {
 
                     let insert_result = diesel::insert_into(schema::recipes::table)
                         .values(&RecipeForInsert {
-                            name: recipe_c.name.to_string(),
+                            name: recipe_c.name.clone(),
                             description: recipe_c.description.clone(),
                             image: main_image,
                             yield_: recipe_c.r#yield,
@@ -92,23 +93,20 @@ impl Recipe {
                         .await
                         .optional()?;
 
-                    let recipe_id = match insert_result {
-                        Some(id) => id,
-                        None => {
-                            let recipe_id = schema::recipes::table
-                                .filter(schema::recipes::name.eq(&recipe_c.name))
-                                .select(schema::recipes::id)
-                                .get_result::<i64>(&mut conn)
-                                .await?;
-                            return Err(Error::DuplicateEntityWithID(recipe_id));
-                        }
+                    let Some(recipe_id) = insert_result else {
+                        let recipe_id = schema::recipes::table
+                            .filter(schema::recipes::name.eq(&recipe_c.name))
+                            .select(schema::recipes::id)
+                            .get_result::<i64>(&mut conn)
+                            .await?;
+                        return Err(Error::DuplicateEntityWithID(recipe_id));
                     };
 
                     // Additional Images
                     insert_additional_images(&mut conn, recipe_id, additional_images).await?;
 
                     // Category
-                    let category_id = get_category_id(conn, &recipe_c.category).await?;
+                    let category_id = get_category_id(conn, recipe_c.category.as_ref()).await?;
 
                     diesel::insert_into(schema::categories_recipes::table)
                         .values(&CategoryRecipe {

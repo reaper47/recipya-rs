@@ -10,12 +10,12 @@ use schema_org::field::{FieldEnum20, RecipeDescriptionFieldEnum, RecipeKeywordsF
 use support::name_entity_with_relations;
 use support::strings::extract_number;
 
+use crate::recipe::RecipeForm;
 use crate::recipe::structs::media::{Video, VideoForCreate};
 use crate::recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCreate};
 use crate::recipe::structs::section::{Section, SectionComponents};
 use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
-use crate::recipe::RecipeForm;
 use crate::user::User;
 
 /// Represents a recipe entity stored in the database.

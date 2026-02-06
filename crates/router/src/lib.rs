@@ -28,14 +28,14 @@ use crate::shared_router::shared_routes;
 use crate::static_files_router::static_files_routes;
 
 /// Creates the Router for the web server.
-pub async fn router(state: AppState) -> Result<Router<AppState>> {
+pub fn router(state: AppState) -> Result<Router<AppState>> {
     let router = Router::new()
-        .nest("/admin", admin_routes(state.clone()))
-        .nest("/auth", auth_routes(state.clone()))
+        .nest("/admin", admin_routes(&state))
+        .nest("/auth", auth_routes(&state))
         .nest("/recipes", recipes_routes(state.clone()))
-        .nest("/settings", settings_router::settings_routes(state.clone()))
+        .nest("/settings", settings_router::settings_routes(&state))
         .nest("/shared", shared_routes())
-        .merge(general_routes(state.clone()))
+        .merge(general_routes(&state))
         .merge(static_files_routes(state));
 
     Ok(router)
