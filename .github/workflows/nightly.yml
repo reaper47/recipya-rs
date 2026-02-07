@@ -64,11 +64,6 @@ jobs:
           #  artifact: recipya-nightly-armv7-unknown-linux-gnueabihf
 
           # macOS builds (use native)
-          - os: macos-13
-            target: x86_64-apple-darwin
-            artifact: recipya-nightly-x86_64-apple-darwin
-            use_docker: false
-
           - os: macos-14
             target: aarch64-apple-darwin
             artifact: recipya-nightly-aarch64-apple-darwin
