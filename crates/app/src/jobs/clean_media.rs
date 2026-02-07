@@ -1,6 +1,9 @@
 use std::collections::HashSet;
 use std::fs;
+#[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
+#[cfg(windows)]
+use std::os::windows::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -136,7 +139,17 @@ fn process_thumbnail(path: &Path) -> Result<u64> {
         || Err("CleanMedia: Thumbnail does not exist".into()),
         |thumbnail| match fs::metadata(&thumbnail) {
             Ok(metadata) => match fs::remove_file(&thumbnail) {
-                Ok(()) => Ok(metadata.size()),
+                Ok(()) => {
+                    #[cfg(unix)]
+                    {
+                        Ok(metadata.size())
+                    }
+
+                    #[cfg(windows)]
+                    {
+                        Ok(metadata.file_size())
+                    }
+                }
                 Err(err) => {
                     error!(
                         "CleanMedia: Failed to remove thumbnail {:?}: {err}",
