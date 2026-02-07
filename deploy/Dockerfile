@@ -13,11 +13,14 @@ RUN apt-get update && \
     pax-utils \
     ca-certificates \
     perl \
-    perl-base && \
-    rm -rf /var/lib/apt/lists/*
+    perl-base \
+    clang \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/recipya
 
+ENV CC=clang
+ENV CXX=clang++
 ENV OPENSSL_NO_VENDOR=1
 
 COPY . .
