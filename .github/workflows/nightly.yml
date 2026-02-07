@@ -114,6 +114,23 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
+      - name: Install Postgres (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install libpq
+          echo "PQ_LIB_DIR=$(brew --prefix libpq)/lib" >> $GITHUB_ENV
+          echo "PQ_INCLUDE_DIR=$(brew --prefix libpq)/include" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix libpq)/lib/pkgconfig" >> $GITHUB_ENV
+
+      - name: Install Postgres (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          choco install postgresql --no-progress
+          echo "PQ_LIB_DIR=C:\Program Files\PostgreSQL\18\lib" >> $env:GITHUB_ENV
+          echo "PQ_INCLUDE_DIR=C:\Program Files\PostgreSQL\18\include" >> $env:GITHUB_ENV
+          echo "C:\Program Files\PostgreSQL\18\bin" >> $env:GITHUB_PATH
+
       - name: Build Binary
         if: ${{ !matrix.use_docker }}
         run: cargo build -r --target ${{ matrix.target }}
@@ -134,6 +151,12 @@ jobs:
             cp ./output/usr/local/bin/${BINARY_NAME} "${TARGET_DIR}/${BINARY_NAME}"
           elif [ "${{ runner.os }}" = "Windows" ]; then
             cp "target/${{ matrix.target }}/release/${BINARY_NAME}.exe" "${TARGET_DIR}/${BINARY_NAME}.exe"
+            PG_BIN="/c/Program Files/PostgreSQL/18/bin"
+            cp "$PG_BIN"/libpq.dll "${TARGET_DIR}/"
+            cp "$PG_BIN"/libcrypto-*.dll "${TARGET_DIR}/"
+            cp "$PG_BIN"/libssl-*.dll "${TARGET_DIR}/"
+            cp "$PG_BIN"/libintl-*.dll "${TARGET_DIR}/"
+            cp "$PG_BIN"/libiconv-*.dll "${TARGET_DIR}/"
           else
             cp "target/${{ matrix.target }}/release/${BINARY_NAME}" "${TARGET_DIR}/${BINARY_NAME}"
           fi
