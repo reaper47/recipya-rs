@@ -31,7 +31,7 @@ jobs:
         run: echo "commits=$(git log --oneline --since '24 hours ago' | wc -l)" >> "$GITHUB_OUTPUT"
 
   binaries:
-    timeout-minutes: 60
+    timeout-minutes: 120
     needs: commits
     runs-on: ${{ matrix.os }}
     if: ${{ needs.commits.outputs.numCommits > 0 }}
