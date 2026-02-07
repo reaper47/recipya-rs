@@ -1,7 +1,7 @@
 # ---------------------------------------------------
 # 1 - Build Stage
 # ---------------------------------------------------
-FROM rust:1.93.0-slim AS builder
+FROM rust:1.93.0-slim-trixie AS builder
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
