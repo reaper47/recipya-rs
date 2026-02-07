@@ -1,7 +1,7 @@
 # ---------------------------------------------------
 # 1 - Build Stage
 # ---------------------------------------------------
-FROM rust:1.93.0-slim AS build
+FROM rust:1.93.0-slim AS builder
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -51,11 +51,11 @@ LABEL org.opencontainers.image.source="https://github.com/reaper47/recipya-rs" \
     org.opencontainers.image.licenses="AGPL-3.0"
 
 # Copy runtime dependencies
-COPY --from=build /runtime-deps/usr /usr
-COPY --from=build /runtime-deps/lib /lib
+COPY --from=builder /runtime-deps/usr /usr
+COPY --from=builder /runtime-deps/lib /lib
 
 # Copy application files
-COPY --from=build /usr/src/recipya/target/release/recipya-cli /usr/local/bin/recipya
+COPY --from=builder /usr/src/recipya/target/release/recipya-cli /usr/local/bin/recipya
 
 USER nonroot:nonroot
 EXPOSE 8078
