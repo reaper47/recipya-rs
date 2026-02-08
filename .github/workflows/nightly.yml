@@ -1,13 +1,9 @@
 name: Nightly
 
 on:
-  # schedule:
-  #   - cron: "0 0 * * *"
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-
+  schedule:
+    - cron: "0 0 * * *"
+  
 permissions:
   contents: write
   packages: write
