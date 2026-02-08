@@ -16,6 +16,7 @@ use crate::recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCre
 use crate::recipe::structs::section::{Section, SectionComponents};
 use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
+use crate::recipe::structs::types::Source;
 use crate::user::User;
 
 /// Represents a recipe entity stored in the database.
@@ -54,7 +55,7 @@ pub struct Recipe {
     /// Optional notes of the recipe.
     pub notes: Option<String>,
     /// An optional reference to the origin or inspiration of the recipe.
-    pub source: String,
+    pub source: Source,
     /// Specifies whether the recipe has been marked as favourite.
     pub is_favourite: bool,
     /// Optional 1-5 rating. None is used for no rating.
@@ -78,7 +79,7 @@ pub(crate) struct RecipeForInsert {
     pub yield_: Option<i16>,
     pub language: String,
     pub notes: Option<String>,
-    pub source: String,
+    pub source: Source,
     pub is_favourite: bool,
     pub rating: Option<i16>,
     pub user_id: Uuid,
@@ -184,7 +185,7 @@ pub struct RecipeForCreate {
     pub is_favourite: bool,
     pub measurement_system_id: i16,
     pub notes: Option<String>,
-    pub source: String,
+    pub source: Source,
     pub rating: Option<i16>,
     pub videos: Vec<VideoForCreate>,
     pub r#yield: Option<i16>,
@@ -244,7 +245,7 @@ impl From<&RecipeForm> for RecipeForCreate {
             description: form.description.clone(),
             images: Vec::new(),
             r#yield: form.yield_,
-            source: form.source.clone().unwrap_or_default(),
+            source: Source::from(form.source.clone()),
             is_favourite: false,
             rating: form.rating,
             videos: Vec::new(),
@@ -306,7 +307,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
                 },
                 FieldEnum20::to_i16,
             ),
-            source: schema.url.first().cloned().unwrap_or_default(),
+            source: Source::from(schema.url.first().cloned()),
             is_favourite: false,
             rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             videos: vec![],

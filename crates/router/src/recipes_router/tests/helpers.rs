@@ -68,8 +68,9 @@ pub(super) fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         form = form.add_part("description", Part::text(v))
     }
 
-    if !&recipe.source.is_empty() {
-        form = form.add_part("source", Part::text(&recipe.source))
+    let source = recipe.source.as_str();
+    if !source.is_empty() {
+        form = form.add_part("source", Part::text(source))
     }
 
     if let Some(n) = &recipe.nutrition.per_100g {

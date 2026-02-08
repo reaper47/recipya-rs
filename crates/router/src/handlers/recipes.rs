@@ -17,6 +17,7 @@ use futures_util::stream::{self, StreamExt};
 use integrations::api::Credentials;
 use iso8601::DateTime;
 use itertools::izip;
+use models::recipe::structs::types::Source;
 use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -1337,7 +1338,7 @@ pub async fn add_manual_recipe_post_handler(
             images,
             measurement_system_id,
             r#yield: form.yield_,
-            source: form.source.unwrap_or_default(),
+            source: Source::from(form.source),
             is_favourite: false,
             rating: form.rating,
             videos,

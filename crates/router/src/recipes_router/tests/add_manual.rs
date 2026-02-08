@@ -14,6 +14,7 @@ mod tests {
     use models::recipe::structs::section::SectionComponents;
     use models::recipe::structs::section::SectionItem;
     use models::recipe::structs::time::TimesForCreate;
+    use models::recipe::structs::types::Source;
     use models::user::User;
     use uuid::Uuid;
 
@@ -261,7 +262,7 @@ mod tests {
             images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
             measurement_system_id: 2,
             r#yield: Some(6),
-            source: "My mother's maple syrup recipes cookbook".into(),
+            source: Source::new("My mother's maple syrup recipes cookbook"),
             is_favourite: false,
             rating: Some(4),
             videos: vec![VideoForCreate {

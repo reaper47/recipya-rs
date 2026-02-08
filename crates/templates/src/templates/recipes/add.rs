@@ -3,6 +3,7 @@ use maud::{Markup, PreEscaped, html};
 use models::data::{Data, ViewRecipe};
 use models::recipe::structs::recipe::{Category, Keyword};
 use models::recipe::structs::section::SectionComponents;
+use models::recipe::structs::types::Source;
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
@@ -302,19 +303,12 @@ fn render_nutrition_table() -> Markup {
 }
 
 fn render_source(view: Option<&ViewRecipe>) -> Markup {
-    let source = view.map_or_else(String::new, |v| {
-        let src = &v.recipe_details.recipe.source;
-        if src.is_empty() {
-            src.clone()
-        } else {
-            String::new()
-        }
-    });
+    let source = view.map_or_else(Source::default, |v| v.recipe_details.recipe.source.clone());
 
     html! {
         fieldset .fieldset {
             label .label for="source" { "Source" }
-            input #source type="text" placeholder="Source" name="source" class="input input-sm w-11/12" value=(source);
+            input #source type="text" placeholder="Source" name="source" class="input input-sm w-11/12" value=(*source);
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"

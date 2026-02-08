@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use maud::{Markup, PreEscaped, html};
 use models::recipe::structs::section::SectionComponents;
+use models::recipe::structs::types::Source;
 use serde_json::json;
 use url::Url;
 
@@ -261,15 +262,17 @@ fn print_description(recipe: &Recipe) -> Markup {
 }
 
 fn print_source(recipe: &Recipe) -> Markup {
+    let source = recipe.source.as_str();
+
     html! {
         div class="hidden print:block print:mx-2 print:mb-2 print:text-sm" {
             h1 class="print:mb-1" {
                 b { "Source" }
             }
-            @if !&recipe.source.is_empty() {
-                 @if Url::parse(&recipe.source).is_ok() {
+            @if !source.is_empty() {
+                 @if Url::parse(source).is_ok() {
                     p class="print:overflow-hidden" {
-                        (&recipe.source)
+                        (source)
                     }
                  } @else {
                        p { "Source: Unknown" }
@@ -760,24 +763,24 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
     }
 }
 
-fn render_source(source: &String) -> Markup {
+fn render_source(source: &Source) -> Markup {
     html! {
-        @if !source.is_empty() {
-           @if Url::parse(source).is_ok() {
-                a class="btn btn-sm btn-outline no-underline print:hidden" href=(source) target="_blank" { "Source" }
-                p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (source) }
-           } @else {
-                p class="text-center" {
-                    "Source:"
-                    br;
-                    (source)
+        @match source {
+            Source::Url(url) => {
+                a class="btn btn-sm btn-outline no-underline print:hidden" href=(url) target="_blank" { "Source" }
+                p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (url) }
+            }
+            Source::Other(other) => {
+                @if other.is_empty() {
+                    p class="text-center" {
+                        "Source:"
+                        br;
+                        "Unknown"
+                    }
+                } @else {
+                    p class="no-underline print:hidden" { "Source" }
+                    p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (other) }
                 }
-           }
-        } @else {
-            p class="text-center" {
-                "Source:"
-                br;
-                "Unknown"
             }
         }
     }

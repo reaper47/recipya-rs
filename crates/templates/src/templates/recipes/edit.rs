@@ -416,7 +416,7 @@ fn render_source(view: &ViewRecipe) -> Markup {
             label .label for="source" { "Source" }
             input #source type="text" placeholder="Source" name="source"
                 class="input input-sm w-11/12"
-                value=(&view.recipe_details.recipe.source);
+                value=(view.recipe_details.recipe.source.as_str());
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"

@@ -213,6 +213,7 @@ mod tests {
             test_utils::a_complete_recipe_for_create,
             time::Times,
             tool::{ToolForCreate, ToolRecipe},
+            types::Source,
         },
     };
 
@@ -347,7 +348,7 @@ mod tests {
                 image: main_image,
                 yield_: recipe.r#yield.unwrap_or(4),
                 language: "eng".into(),
-                source: recipe.source,
+                source: Source::from(recipe.source),
                 measurement_system_id: 2,
                 notes: recipe.notes,
                 user_id,

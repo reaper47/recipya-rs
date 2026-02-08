@@ -161,8 +161,9 @@ impl RecipeDetails {
             writeln!(&mut md)?;
         }
 
-        if !&self.recipe.source.is_empty() {
-            writeln!(&mut md, "Source: {}", self.recipe.source)?;
+        let src = self.recipe.source.as_str();
+        if !src.is_empty() {
+            writeln!(&mut md, "Source: {src}")?;
         }
 
         Ok(md)

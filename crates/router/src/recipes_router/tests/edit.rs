@@ -19,6 +19,7 @@ mod tests {
             test_utils::a_complete_recipe_for_create,
             time::{Times, TimesForCreate},
             tool::{ToolForCreate, ToolRecipe},
+            types::Source,
         },
         user::User,
     };
@@ -269,7 +270,7 @@ mod tests {
             images: vec![Uuid::new_v4(), Uuid::new_v4()],
             measurement_system_id: 2,
             r#yield: Some(12),
-            source: "My father's maple syrup recipes cookbook".into(),
+            source: Source::new("My father's maple syrup recipes cookbook"),
             is_favourite: false,
             rating: Some(4),
             videos: vec![VideoForCreate {
