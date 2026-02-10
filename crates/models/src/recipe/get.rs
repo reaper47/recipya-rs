@@ -486,9 +486,9 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
-            let users = User::all(&state.mm).await?;
-            let user = users[0].clone();
-            let user2 = users[1].clone();
+            let all_users = User::all(&state.mm).await?;
+            let user = all_users[0].clone();
+            let user2 = all_users[1].clone();
             for i in 0..5 {
                 let mut recipe = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
@@ -602,9 +602,9 @@ mod tests {
         recipe.cuisine = Some(cuisine2.clone());
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
 
-        let cuisines = Recipe::fetch_cuisines(&state.mm, user.id).await?;
+        let got = Recipe::fetch_cuisines(&state.mm, user.id).await?;
 
-        pretty_assertions::assert_eq!(cuisines, vec![cuisine1, cuisine2]);
+        pretty_assertions::assert_eq!(got, vec![cuisine1, cuisine2]);
         Ok(())
     }
 

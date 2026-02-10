@@ -55,7 +55,7 @@ mod tests {
         let res = server.get(&base_uri(share.link)).await;
 
         res.assert_status_ok();
-        assert_complete_recipe(res.clone(), a_complete_recipe_for_create());
+        assert_complete_recipe(&res, &a_complete_recipe_for_create());
         assert_html(
             &res,
             vec![
@@ -110,7 +110,7 @@ mod tests {
         let res = server.get(&base_uri(share.link)).await;
 
         res.assert_status_ok();
-        assert_complete_recipe(res.clone(), a_complete_recipe_for_create());
+        assert_complete_recipe(&res, &a_complete_recipe_for_create());
         assert_html(
             &res,
             vec![
@@ -130,9 +130,9 @@ mod tests {
         Ok(())
     }
 
-    fn assert_complete_recipe(res: TestResponse, recipe: RecipeForCreate) {
+    fn assert_complete_recipe(res: &TestResponse, recipe: &RecipeForCreate) {
         assert_html(
-            &res,
+            res,
             vec![
                 &format!(
                     "<title hx-swap-oob=\"true\">{} | Recipya</title>",
@@ -158,6 +158,6 @@ mod tests {
                 r#"<div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden"><h2 class="font-semibold text-center underline pb-1">Instructions</h2><ol class="grid list-decimal"><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Mix all these ingredients</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Turn the oven at 300 F</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Soak the chicken in the lemon juice</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Bake for 35 minutes</div><div id="timer-container-2" class="timer-container"><button class="timer btn btn-sm btn-circle btn-ghost" title="Start 35m timer" _="on click add .hidden to me"#,
                 r#"<h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><ol class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">"#,
             ],
-        )
+        );
     }
 }

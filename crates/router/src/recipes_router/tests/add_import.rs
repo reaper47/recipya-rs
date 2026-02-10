@@ -208,9 +208,9 @@ mod tests {
 
         const BASE_URI: &str = "/recipes/add/import/preview";
 
-        fn assert_other_json_html(res: TestResponse) {
+        fn assert_other_json_html(res: &TestResponse) {
             assert_html(
-                &res,
+                res,
                 vec![
                     r#"<span class="text-center pb-2 print:w-full w-full" itemprop="name">Dry Toast</span>"#,
                     r#"<p class="text-sm text-center">1 servings</p>"#,
@@ -259,7 +259,7 @@ mod tests {
                 .await;
 
             res.assert_status_ok();
-            assert_other_json_html(res);
+            assert_other_json_html(&res);
             Ok(())
         }
 
@@ -274,7 +274,7 @@ mod tests {
                 .await;
 
             res.assert_status_ok();
-            assert_other_json_html(res);
+            assert_other_json_html(&res);
             Ok(())
         }
 

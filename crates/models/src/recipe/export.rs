@@ -184,7 +184,7 @@ mod tests {
         recipe.recipe.image = Some(Uuid::parse_str("637bcefb-9fa4-4970-b490-b73023ac772f")?);
 
         let got = recipe.to_markdown("https://example.com/images")?;
-        let expected = r####"# Best Chinese Kale
+        let expected = r"# Best Chinese Kale
 
 ![Image of the recipe](https://example.com/images/data/images/637bcefb-9fa4-4970-b490-b73023ac772f.webp)
 
@@ -249,7 +249,7 @@ This is the most delicious recipe!
 | **Protein**            | 7g      |
 
 Source: https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/
-"####;
+";
         pretty_assertions::assert_eq!(expected, got);
         Ok(())
     }

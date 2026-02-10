@@ -206,7 +206,7 @@ mod tests {
     }
 
     fn recipe1_file<'a>() -> &'a str {
-        r##"Deviled Eggs
+        r"Deviled Eggs
 
 https://www.allrecipes.com/recipe/22390/special-deviled-eggs/
 
@@ -227,6 +227,6 @@ Place eggs in a medium saucepan and cover with cold water. Bring water to a boil
 Slice each egg in half lengthwise and remove yolks; set aside egg white halves and place yolks in a medium bowl. Use a fork to mash yolks, then mix in mayonnaise, relish, onion, horseradish, and mustard until well combined.
 
 Use a spoon or pastry bag to fill egg white halves with yolk mixture. Garnish with paprika, salt, and pepper. Chill in the refrigerator until serving.
-"##
+"
     }
 }

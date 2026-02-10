@@ -371,7 +371,7 @@ mod tests {
 
     mod files {
         pub fn txt<'a>() -> &'a str {
-            r##"
+            r"
  Ananas-Käsekuchen
 
     150  g Kokoszwieback                    1 kl Ananas
@@ -486,7 +486,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
 :Erfasser/Name: Jochen 'Nunz' Herz
 
 ----------------------------------------------------------------------------
- Recipe handled by Kalorio! V4.04 [ unregistered ]"##
+ Recipe handled by Kalorio! V4.04 [ unregistered ]"
         }
     }
 
@@ -495,6 +495,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
 
         use super::*;
 
+        #[allow(clippy::too_many_lines)]
         pub fn all_recipes_txt() -> Vec<Recipe> {
             vec![
                 Recipe {

@@ -430,8 +430,9 @@ mod tests {
     }
 
     mod files {
+        #[allow(clippy::too_many_lines)]
         pub fn recipes1<'a>() -> &'a str {
-            r##"<?xml version="1.0" encoding="UTF-8" ?>
+            r#"<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE cookml SYSTEM "cookml.dtd">
 <?xml-stylesheet href="cookml.xsl" type="text/xsl"?>
 <cookml version="1.0.11" prog="Kalorio" progver="4.04">
@@ -634,7 +635,7 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
       <line></line>
     </remark>
   </recipe>
-</cookml>"##
+</cookml>"#
         }
     }
 
@@ -643,6 +644,7 @@ Und jetzt: &quot;A güata !&quot; wie man bei uns sagt
 
         use super::*;
 
+        #[allow(clippy::too_many_lines)]
         pub fn all_recipes1() -> Vec<Recipe> {
             vec![Recipe {
                 r#type: AtType::Recipe.to_opt(),

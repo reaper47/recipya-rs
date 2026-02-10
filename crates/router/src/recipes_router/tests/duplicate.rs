@@ -43,11 +43,11 @@ mod tests {
 
         let res = server.get(&base_uri(1)).await;
 
-        assert_recipe_form(res);
+        assert_recipe_form(&res);
         Ok(())
     }
 
-    fn assert_recipe_form(res: TestResponse) {
+    fn assert_recipe_form(res: &TestResponse) {
         let expected = [
             r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
             r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
@@ -68,7 +68,7 @@ mod tests {
             r#"<input required type="text" name="ingredient" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
             r#"<input required type="text" name="ingredient" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
             r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Instructions</span><sup class="text-red-600">*</sup></h2>"#,
-            r##"<ol id="instructions-list" class="grid list-decimal"><li class="pt-2 md:pl-0"><div class="flex"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""##,
+            r#"<ol id="instructions-list" class="grid list-decimal"><li class="pt-2 md:pl-0"><div class="flex"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
             r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea>"#,
             r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea>"#,
             r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,

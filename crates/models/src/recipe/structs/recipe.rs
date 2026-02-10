@@ -516,7 +516,7 @@ mod tests {
 
             let got = recipe.all_images();
 
-            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            let got_str = got.iter().map(ToString::to_string).collect::<Vec<_>>();
             pretty_assertions::assert_eq!(got_str, Vec::<String>::new());
         }
 
@@ -528,7 +528,7 @@ mod tests {
 
             let got = recipe.all_images();
 
-            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            let got_str = got.iter().map(ToString::to_string).collect::<Vec<_>>();
             pretty_assertions::assert_eq!(got_str, vec![an_image.to_string()]);
         }
 
@@ -542,7 +542,7 @@ mod tests {
 
             let got = recipe.all_images();
 
-            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            let got_str = got.iter().map(ToString::to_string).collect::<Vec<_>>();
             pretty_assertions::assert_eq!(
                 got_str,
                 vec![an_image.to_string(), an_image2.to_string()]
@@ -730,7 +730,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert!(recipe.r#yield.is_none())
+                assert!(recipe.r#yield.is_none());
             }
 
             #[test]
@@ -744,7 +744,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(4))
+                assert_eq!(recipe.r#yield, Some(4));
             }
 
             #[test]
@@ -755,7 +755,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(8))
+                assert_eq!(recipe.r#yield, Some(8));
             }
 
             #[test]
@@ -769,7 +769,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(12))
+                assert_eq!(recipe.r#yield, Some(12));
             }
         }
 

@@ -65,7 +65,7 @@ mod tests {
 
         let res = server.get(&base_uri(1)).await;
 
-        assert_recipe_form(res);
+        assert_recipe_form(&res);
         Ok(())
     }
 
@@ -84,7 +84,7 @@ mod tests {
 
         let res = server.get(&base_uri(1)).await;
 
-        assert_recipe_form(res);
+        assert_recipe_form(&res);
         Ok(())
     }
 
@@ -414,7 +414,7 @@ mod tests {
         Ok(())
     }
 
-    fn assert_recipe_form(res: TestResponse) {
+    fn assert_recipe_form(res: &TestResponse) {
         let expected = [
             r#"<title hx-swap-oob="true">Edit Best Chinese Kale | Recipya</title>"#,
             r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/1/edit" hx-indicator="#fullscreen-loader">"##,
@@ -437,7 +437,7 @@ mod tests {
             r#"<input required type="text" name="ingredient" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
             r#"<input required type="text" name="ingredient" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
             r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Instructions</span><sup class="text-red-600">*</sup></h2>"#,
-            r##"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""##,
+            r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
             r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea>"#,
             r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea>"#,
             r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,
@@ -478,7 +478,7 @@ mod tests {
                 user_id,
             },
             additional_images: reference.additional_images.clone(),
-            category: recipe_c.category.unwrap_or("uncategorized".into()),
+            category: recipe_c.category.unwrap_or_else(|| "uncategorized".into()),
             cuisine: recipe_c.cuisine,
             ingredients: recipe_c.ingredients,
             instructions: recipe_c.instructions,
@@ -539,7 +539,7 @@ mod tests {
                 .map(|(idx, t)| ToolRecipe {
                     name: t.name,
                     quantity: t.quantity,
-                    tool_order: (idx + 1) as i16,
+                    tool_order: i16::try_from(idx + 1).unwrap_or_default(),
                 })
                 .collect(),
             videos: vec![],

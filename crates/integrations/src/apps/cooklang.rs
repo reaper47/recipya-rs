@@ -429,7 +429,7 @@ mod tests {
 
     #[test]
     fn test_complete_recipe_ok() -> Result<()> {
-        let file = r##">> title: Spaghetti Carbonara
+        let file = r">> title: Spaghetti Carbonara
 >> description: This is the best recipe!
 >> servings: 1
 >> produce: 550%g
@@ -457,7 +457,7 @@ Heat a #frying pan{} over a medium heat with a little @oil and sauté the vegeta
 Put the sauted vegetables into a saucepan and pour water over them until just covered. Bring to the boil over a medium heat, then lower the heat and leave at a low simmer until the potatoes are tender.
 
 Remove the soup from the heat and blend with a #blender, add the @double cream{50%g} and @salt to taste. Garnish with freshly cracked black pepper.
-"##;
+";
         let buf = Cursor::new(file.as_bytes());
         let parser = CookLang::default();
 

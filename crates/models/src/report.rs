@@ -215,7 +215,7 @@ mod tests {
             .await?;
         assert_report(
             &got_report,
-            Report {
+            &Report {
                 id: 1,
                 report_type_id: ReportTypes::Import.to_id(),
                 user_id: user.id,
@@ -236,7 +236,7 @@ mod tests {
                     is_success: false,
                     is_warning: true,
                     is_error: false,
-                    error_reason: "".into(),
+                    error_reason: String::new(),
                 },
                 ReportLog {
                     id: 2,
@@ -254,14 +254,14 @@ mod tests {
                     is_success: true,
                     is_warning: false,
                     is_error: false,
-                    error_reason: "".into(),
+                    error_reason: String::new(),
                 }
             ]
         );
         Ok(())
     }
 
-    fn assert_report(got_report: &Report, want: Report) {
+    fn assert_report(got_report: &Report, want: &Report) {
         pretty_assertions::assert_eq!(got_report.id, want.id);
         pretty_assertions::assert_eq!(got_report.report_type_id, want.report_type_id);
         pretty_assertions::assert_eq!(got_report.user_id, want.user_id);

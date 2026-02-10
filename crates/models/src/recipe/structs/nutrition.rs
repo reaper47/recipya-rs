@@ -515,7 +515,7 @@ mod tests {
                 fiber_g: Some(10.),
                 trans_fat_g: Some(11.),
             }
-        )
+        );
     }
 
     #[test]
@@ -554,7 +554,7 @@ mod tests {
 
         let got = NutritionDetails::from(&details);
 
-        pretty_assertions::assert_eq!(got, a_nutrition_details())
+        pretty_assertions::assert_eq!(got, a_nutrition_details());
     }
 
     #[test]

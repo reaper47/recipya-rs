@@ -52,7 +52,7 @@ mod tests {
         let res = server.get(BASE_URI).await;
 
         res.assert_status_ok();
-        assert_recipe_form(res);
+        assert_recipe_form(&res);
         Ok(())
     }
 
@@ -64,7 +64,7 @@ mod tests {
         let res = server.get(BASE_URI).await;
 
         res.assert_status_ok();
-        assert_recipe_form(res);
+        assert_recipe_form(&res);
         Ok(())
     }
 
@@ -253,6 +253,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::too_many_lines)]
     async fn test_post_submit_recipe_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
@@ -443,7 +444,7 @@ mod tests {
                     .map(|(idx, tool_c)| ToolRecipe {
                         name: tool_c.name,
                         quantity: tool_c.quantity,
-                        tool_order: (idx + 1) as i16,
+                        tool_order: i16::try_from(idx + 1).unwrap_or_default(),
                     })
                     .collect(),
                 videos: vec![],
@@ -452,7 +453,7 @@ mod tests {
         Ok(())
     }
 
-    fn assert_recipe_form(res: TestResponse) {
+    fn assert_recipe_form(res: &TestResponse) {
         let expected = [
             r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
             r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,

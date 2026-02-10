@@ -202,7 +202,7 @@ mod tests {
                 &res,
                 vec![
                     r#"<title hx-swap-oob="true">Success | Recipya</title>"#,
-                    r#"Your account has been verified."#,
+                    r"Your account has been verified.",
                 ],
             );
             Ok(())
@@ -359,7 +359,7 @@ mod tests {
                 &res,
                 vec![
                     r#"<h2 class="card-title underline self-center">Password Reset Requested</h2>"#,
-                    r#"An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account."#,
+                    r"An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
                     r#"<a href="/" class="btn btn-primary btn-block btn-sm">Back Home</a>"#,
                 ],
             );
@@ -631,7 +631,8 @@ mod tests {
             res.assert_header("Location", "/");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
-            let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
+            let now =
+                usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
             assert!(
                 (claims.exp - now) >= 15 * 60,
                 "expiration time should be 15 minutes"
@@ -712,7 +713,8 @@ mod tests {
             res.assert_header("Location", "/");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
-            let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
+            let now =
+                usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
             assert!(
                 (claims.exp - now) >= 15 * 60,
                 "expiration time should be 15 minutes"

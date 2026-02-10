@@ -260,6 +260,7 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_recipe1_ok() -> Result<()> {
         let file = recipe1_file();
         let buf = Cursor::new(file);
@@ -382,8 +383,9 @@ mod tests {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn recipe1_file<'a>() -> &'a str {
-        r##"*****AccuChef Import File (C)SIVART Software https://www.AccuChef.com
+        r"*****AccuChef Import File (C)SIVART Software https://www.AccuChef.com
 A24 Hour Fruit Salad
 BFruit
 MServings
@@ -485,6 +487,6 @@ H
 IOrange Sherbet
 JMix all together about 2 hours before serving. Serve a with a scoop of
 Jorange sherbet on top.
-Z.....End of recipe definition"##
+Z.....End of recipe definition"
     }
 }

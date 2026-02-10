@@ -290,8 +290,8 @@ mod tests {
 
             let expected = SearchbarData {
                 is_favourites: false,
-                sort: "".into(),
-                term: "".into(),
+                sort: String::new(),
+                term: String::new(),
             };
             pretty_assertions::assert_eq!(expected, got);
         }
@@ -323,7 +323,7 @@ mod tests {
         fn test_pagination_new_some_results_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                "".into(),
+                String::new(),
                 1,
                 20,
                 PaginationHtmxData {
@@ -358,7 +358,7 @@ mod tests {
         fn test_pagination_new_no_results_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                "".into(),
+                String::new(),
                 2,
                 12,
                 PaginationHtmxData {
@@ -393,7 +393,7 @@ mod tests {
         fn test_pagination_new_hundreds_results_left_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                "".into(),
+                String::new(),
                 4,
                 258,
                 PaginationHtmxData {
@@ -436,7 +436,7 @@ mod tests {
         fn test_pagination_new_hundreds_results_middle_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                "".into(),
+                String::new(),
                 11,
                 258,
                 PaginationHtmxData {
@@ -479,7 +479,7 @@ mod tests {
         fn test_pagination_new_hundreds_results_right_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                "".into(),
+                String::new(),
                 16,
                 258,
                 PaginationHtmxData {
@@ -522,7 +522,7 @@ mod tests {
         fn test_pagination_new_hundreds_results_last_page_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                "".into(),
+                String::new(),
                 18,
                 258,
                 PaginationHtmxData {
@@ -565,7 +565,7 @@ mod tests {
         fn test_pagination_thousands_results_last_page_ok() {
             let got = PaginationData::new(
                 "/recipes",
-                "".into(),
+                String::new(),
                 193,
                 2888,
                 PaginationHtmxData {

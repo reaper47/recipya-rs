@@ -124,9 +124,7 @@ mod tests {
 
         let res = server
             .delete(BASE_URI)
-            .form(&RecipeCategoryForm {
-                category: category.to_string(),
-            })
+            .form(&RecipeCategoryForm { category })
             .await;
 
         res.assert_status_bad_request();
