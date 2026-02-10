@@ -21,6 +21,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zaatar_and_zaytoun_ok() -> Result<()> {
         let got = scrape(Website::ZaatarAndZaytoun, 0).await?;
 
@@ -260,6 +261,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zardyplants_ok() -> Result<()> {
         let got = scrape(Website::ZardyPlants, 0).await?;
 
@@ -896,6 +898,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zenbelly_ok() -> Result<()> {
         let got = scrape(Website::Zenbelly, 0).await?;
 
@@ -1057,6 +1060,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zenhealth_ok() -> Result<()> {
         let got = scrape(Website::ZenHealth, 0).await?;
 
@@ -1399,6 +1403,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zestfulkitchen_ok() -> Result<()> {
         let got = scrape(Website::ZestfulKitchen, 0).await?;
 
@@ -1688,6 +1693,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zestysouthindiankitchen_ok() -> Result<()> {
         let got = scrape(Website::ZestSouthIndianKitchen, 0).await?;
 
@@ -2182,6 +2188,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zhangcatherine_ok() -> Result<()> {
         let got = scrape(Website::ZhangCatherine, 0).await?;
 
@@ -2280,7 +2287,7 @@ mod tests {
                     ],
                     author: vec![RecipeAuthorFieldEnum::new_org("Zhang Catherine")],
                     ..Default::default()
-                }.into(),
+                }
             ],
             total_time: vec![DurationOrText::Text("PT30M".into())],
             url: vec!["https://zhangcatherine.com/pistachio-macarons/".into()],
@@ -2395,6 +2402,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zibakitchen_ok() -> Result<()> {
         let got = scrape(Website::ZibaKitchen, 0).await?;
 
@@ -2520,6 +2528,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zoebakes_ok() -> Result<()> {
         let got = scrape(Website::ZoeBakes, 0).await?;
 
@@ -2718,6 +2727,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zonacooks_ok() -> Result<()> {
         let got = scrape(Website::ZonaCooks, 0).await?;
 

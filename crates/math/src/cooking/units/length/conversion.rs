@@ -22,7 +22,7 @@ impl UnitConverter for Length {
                         Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Length(*self), to)),
             },
             Self::Centimetre(original_value) => match to {
                 UnitType::Length(unit) => {
@@ -37,7 +37,7 @@ impl UnitConverter for Length {
                         Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Length(*self), to)),
             },
             Self::Metre(original_value) => {
                 let value = measurements::Length::from_metres(*original_value);
@@ -51,7 +51,7 @@ impl UnitConverter for Length {
                         Inch => Ok(Unit::Length(Self::Inch(value.as_inches()))),
                         Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     },
-                    _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
+                    _ => Err(Error::UnsupportedUnit(Unit::Length(*self), to)),
                 }
             }
             Self::Kilometre(original_value) => match to {
@@ -67,7 +67,7 @@ impl UnitConverter for Length {
                         Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Length(*self), to)),
             },
             Self::Inch(original_value) => match to {
                 UnitType::Length(unit) => {
@@ -82,7 +82,7 @@ impl UnitConverter for Length {
                         Foot => Ok(Unit::Length(Self::Foot(value.as_feet()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Length(*self), to)),
             },
             Self::Foot(original_value) => match to {
                 UnitType::Length(unit) => {
@@ -97,7 +97,7 @@ impl UnitConverter for Length {
                         Foot => Ok(Unit::Length(self.with_value(*original_value))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Length(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Length(*self), to)),
             },
         }
     }
@@ -291,15 +291,15 @@ mod tests {
     fn test_very_small_values() -> Result<()> {
         let got = Length::Millimetre(0.001).convert(UnitType::Length(LengthUnit::Metre))?;
 
-        assert_approx_eq(got, Unit::Length(Length::Metre(0.000001)), 1e-12);
+        assert_approx_eq(got, Unit::Length(Length::Metre(0.000_001)), 1e-12);
         Ok(())
     }
 
     #[test]
     fn test_very_large_values() -> Result<()> {
-        let got = Length::Metre(1000000.0).convert(UnitType::Length(LengthUnit::Millimetre))?;
+        let got = Length::Metre(1_000_000.0).convert(UnitType::Length(LengthUnit::Millimetre))?;
 
-        assert_approx_eq(got, Unit::Length(Length::Millimetre(1000000000.0)), 1e-6);
+        assert_approx_eq(got, Unit::Length(Length::Millimetre(1_000_000_000.0)), 1e-6);
         Ok(())
     }
 
@@ -313,7 +313,7 @@ mod tests {
 
     #[test]
     fn test_precise_decimal() -> Result<()> {
-        let got = Length::Metre(1.234567).convert(UnitType::Length(LengthUnit::Centimetre))?;
+        let got = Length::Metre(1.234_567).convert(UnitType::Length(LengthUnit::Centimetre))?;
 
         assert_approx_eq(got, Unit::Length(Length::Centimetre(123.4567)), 1e-10);
         Ok(())

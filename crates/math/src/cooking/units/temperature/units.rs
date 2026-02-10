@@ -5,7 +5,7 @@ use regex::Regex;
 
 use crate::Error;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Temperature {
     Celsius(f64),
     Fahrenheit(f64),
@@ -70,7 +70,7 @@ mod tests {
                     assert_eq!(
                         got, expected,
                         "got {got:?} instead of {expected:?} for text '{text}'"
-                    )
+                    );
                 }
                 Err(err) => {
                     panic!("{err:?} for text '{text}'");
@@ -79,7 +79,7 @@ mod tests {
         }
 
         #[test]
-        fn test_celsius() -> Result<()> {
+        fn test_celsius() {
             assert_text(
                 "Rope with 200 degrees celsius of rice.",
                 Temperature::Celsius(200.0),
@@ -89,7 +89,6 @@ mod tests {
             assert_text("Heat the oven to 100 C", Temperature::Celsius(100.0));
             assert_text("Heat the oven to 375°C", Temperature::Celsius(375.0));
             assert_text("Heat the oven to 375 celsius", Temperature::Celsius(375.0));
-            Ok(())
         }
 
         #[test]
@@ -110,11 +109,11 @@ mod tests {
         }
 
         #[test]
-        fn test_celsius_and_fahrenheit_invalid() -> Result<()> {
-            if Temperature::from_str("1 cup of flour").is_ok() {
-                panic!("1 cup of flour is not temperature");
-            }
-            Ok(())
+        fn test_celsius_and_fahrenheit_invalid() {
+            assert!(
+                Temperature::from_str("1 cup of flour").is_err(),
+                "1 cup of flour is not temperature"
+            );
         }
     }
 }

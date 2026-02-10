@@ -101,18 +101,18 @@ mod tests {
     fn some_websites<'a>() -> Vec<WebsiteMetadata<'a>> {
         vec![
             WebsiteMetadata {
-                url: "https://15gram.be/recepten".into(),
-                host: "15gram.be".into(),
+                url: "https://15gram.be/recepten",
+                host: "15gram.be",
                 cuisine: None,
             },
             WebsiteMetadata {
-                url: "https://www.750g.com".into(),
-                host: "750g.com".into(),
+                url: "https://www.750g.com",
+                host: "750g.com",
                 cuisine: None,
             },
             WebsiteMetadata {
-                url: "https://101cookbooks.com".into(),
-                host: "101cookbooks.com".into(),
+                url: "https://101cookbooks.com",
+                host: "101cookbooks.com",
                 cuisine: None,
             },
         ]

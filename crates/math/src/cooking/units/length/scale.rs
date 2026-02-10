@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn test_km_to_mm() -> Result<()> {
         assert_approx_eq(
-            Length::Kilometre(1.0).scale(0.000005)?,
+            Length::Kilometre(1.0).scale(0.000_005)?,
             Unit::Length(Length::Millimetre(5.0)),
             1e-10,
         );

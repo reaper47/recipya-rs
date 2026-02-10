@@ -11,7 +11,7 @@ use crate::cooking::units::volume::units::Volume;
 use crate::cooking::units::{UnitType, length, mass, temperature, unitless, volume};
 use crate::{Error, Result};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Unit {
     Length(Length),
     Mass(Mass),
@@ -84,7 +84,7 @@ impl UnitConverter for Unit {
             Self::Mass(u) => u.convert(to),
             Self::Temperature(u) => u.convert(to),
             Self::Volume(u) => u.convert(to),
-            Self::Unitless(_) => Ok(self.clone()),
+            Self::Unitless(_) => Ok(*self),
         }
     }
 }
@@ -185,6 +185,7 @@ mod tests {
     use Mass::*;
     use Temperature::*;
     use Volume::*;
+    use approx::assert_relative_eq;
 
     mod tests_display {
         use super::*;
@@ -399,6 +400,7 @@ mod tests {
         }
 
         #[test]
+        #[allow(clippy::too_many_lines)]
         fn test_volume() {
             let s = "1 mg of grandma's clear water";
             assert_replace(
@@ -569,7 +571,7 @@ mod tests {
             assert_eq!(
                 Unit::Temperature(Temperature::Celsius(165.0)).abbrev(),
                 "°C"
-            )
+            );
         }
 
         #[test]
@@ -579,77 +581,233 @@ mod tests {
     }
 
     mod tests_value {
+        use std::f64;
+
         use super::*;
 
         #[test]
         fn test_length() {
-            assert_eq!(Unit::Length(Length::Millimetre(5.5)).value(), 5.5);
-            assert_eq!(Unit::Length(Length::Centimetre(10.0)).value(), 10.0);
-            assert_eq!(Unit::Length(Length::Metre(2.5)).value(), 2.5);
-            assert_eq!(Unit::Length(Length::Inch(12.25)).value(), 12.25);
-            assert_eq!(Unit::Length(Length::Foot(3.75)).value(), 3.75);
+            assert_relative_eq!(
+                Unit::Length(Length::Millimetre(5.5)).value(),
+                5.5,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Length(Length::Centimetre(10.0)).value(),
+                10.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Length(Length::Metre(2.5)).value(),
+                2.5,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Length(Length::Inch(12.25)).value(),
+                12.25,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Length(Length::Foot(3.75)).value(),
+                3.75,
+                epsilon = f64::EPSILON
+            );
         }
 
         #[test]
         fn test_mass() {
-            assert_eq!(Unit::Mass(Mass::Milligram(100.0)).value(), 100.0);
-            assert_eq!(Unit::Mass(Mass::Gram(50.5)).value(), 50.5);
-            assert_eq!(Unit::Mass(Mass::Dekagram(10.25)).value(), 10.25);
-            assert_eq!(Unit::Mass(Mass::Hectogram(5.75)).value(), 5.75);
-            assert_eq!(Unit::Mass(Mass::Kilogram(2.3)).value(), 2.3);
-            assert_eq!(Unit::Mass(Mass::Ounce(16.5)).value(), 16.5);
-            assert_eq!(Unit::Mass(Mass::Pound(3.2)).value(), 3.2);
+            assert_relative_eq!(
+                Unit::Mass(Mass::Milligram(100.0)).value(),
+                100.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Mass(Mass::Gram(50.5)).value(),
+                50.5,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Mass(Mass::Dekagram(10.25)).value(),
+                10.25,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Mass(Mass::Hectogram(5.75)).value(),
+                5.75,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Mass(Mass::Kilogram(2.3)).value(),
+                2.3,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Mass(Mass::Ounce(16.5)).value(),
+                16.5,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Mass(Mass::Pound(3.2)).value(),
+                3.2,
+                epsilon = f64::EPSILON
+            );
         }
 
         #[test]
         fn test_temperature() {
-            assert_eq!(Unit::Temperature(Temperature::Celsius(25.0)).value(), 25.0);
-            assert_eq!(
+            assert_relative_eq!(
+                Unit::Temperature(Temperature::Celsius(25.0)).value(),
+                25.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
                 Unit::Temperature(Temperature::Fahrenheit(77.0)).value(),
-                77.0
+                77.0,
+                epsilon = f64::EPSILON
             );
-            assert_eq!(
+            assert_relative_eq!(
                 Unit::Temperature(Temperature::Celsius(-10.5)).value(),
-                -10.5
+                -10.5,
+                epsilon = f64::EPSILON
             );
-            assert_eq!(
+            assert_relative_eq!(
                 Unit::Temperature(Temperature::Fahrenheit(32.0)).value(),
-                32.0
+                32.0,
+                epsilon = f64::EPSILON
             );
         }
 
         #[test]
+        #[allow(clippy::too_many_lines)]
         fn test_volume() {
-            assert_eq!(Unit::Volume(Volume::Millilitre(250.0)).value(), 250.0);
-            assert_eq!(Unit::Volume(Volume::Centilitre(25.0)).value(), 25.0);
-            assert_eq!(Unit::Volume(Volume::Decilitre(2.5)).value(), 2.5);
-            assert_eq!(Unit::Volume(Volume::Litre(1.5)).value(), 1.5);
-            assert_eq!(Unit::Volume(Volume::MetricTeaspoon(5.0)).value(), 5.0);
-            assert_eq!(Unit::Volume(Volume::MetricTablespoon(15.0)).value(), 15.0);
-            assert_eq!(Unit::Volume(Volume::MetricDessertspoon(10.0)).value(), 10.0);
-            assert_eq!(Unit::Volume(Volume::MetricCup(250.0)).value(), 250.0);
+            assert_relative_eq!(
+                Unit::Volume(Volume::Millilitre(250.0)).value(),
+                250.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::Centilitre(25.0)).value(),
+                25.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::Decilitre(2.5)).value(),
+                2.5,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::Litre(1.5)).value(),
+                1.5,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::MetricTeaspoon(5.0)).value(),
+                5.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::MetricTablespoon(15.0)).value(),
+                15.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::MetricDessertspoon(10.0)).value(),
+                10.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::MetricCup(250.0)).value(),
+                250.0,
+                epsilon = f64::EPSILON
+            );
 
-            assert_eq!(Unit::Volume(Volume::ImperialTeaspoon(1.0)).value(), 1.0);
-            assert_eq!(Unit::Volume(Volume::ImperialDessertspoon(2.0)).value(), 2.0);
-            assert_eq!(Unit::Volume(Volume::ImperialTablespoon(3.0)).value(), 3.0);
-            assert_eq!(Unit::Volume(Volume::ImperialFluidOunce(4.0)).value(), 4.0);
-            assert_eq!(Unit::Volume(Volume::ImperialGill(5.0)).value(), 5.0);
-            assert_eq!(Unit::Volume(Volume::ImperialCup(8.0)).value(), 8.0);
-            assert_eq!(Unit::Volume(Volume::ImperialPint(16.0)).value(), 16.0);
-            assert_eq!(Unit::Volume(Volume::ImperialQuart(32.0)).value(), 32.0);
-            assert_eq!(Unit::Volume(Volume::ImperialGallon(128.0)).value(), 128.0);
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialTeaspoon(1.0)).value(),
+                1.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialDessertspoon(2.0)).value(),
+                2.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialTablespoon(3.0)).value(),
+                3.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialFluidOunce(4.0)).value(),
+                4.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialGill(5.0)).value(),
+                5.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialCup(8.0)).value(),
+                8.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialPint(16.0)).value(),
+                16.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialQuart(32.0)).value(),
+                32.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::ImperialGallon(128.0)).value(),
+                128.0,
+                epsilon = f64::EPSILON
+            );
 
-            assert_eq!(Unit::Volume(Volume::USTeaspoon(4.93)).value(), 4.93);
-            assert_eq!(Unit::Volume(Volume::USTablespoon(14.79)).value(), 14.79);
-            assert_eq!(Unit::Volume(Volume::USFluidOunce(29.57)).value(), 29.57);
-            assert_eq!(Unit::Volume(Volume::USCup(236.59)).value(), 236.59);
-            assert_eq!(Unit::Volume(Volume::USPint(473.18)).value(), 473.18);
-            assert_eq!(Unit::Volume(Volume::USQuart(946.35)).value(), 946.35);
-            assert_eq!(Unit::Volume(Volume::USGallon(3785.41)).value(), 3785.41);
+            assert_relative_eq!(
+                Unit::Volume(Volume::USTeaspoon(4.93)).value(),
+                4.93,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::USTablespoon(14.79)).value(),
+                14.79,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::USFluidOunce(29.57)).value(),
+                29.57,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::USCup(236.59)).value(),
+                236.59,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::USPint(473.18)).value(),
+                473.18,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::USQuart(946.35)).value(),
+                946.35,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                Unit::Volume(Volume::USGallon(3785.41)).value(),
+                3785.41,
+                epsilon = f64::EPSILON
+            );
         }
     }
 
     mod tests_with_value {
+        use std::f64;
+
         use super::*;
 
         #[test]
@@ -660,14 +818,15 @@ mod tests {
             let inch = Unit::Length(Length::Inch(4.0));
             let foot = Unit::Length(Length::Foot(5.0));
 
-            assert_eq!(mm.with_value(10.5).value(), 10.5);
-            assert_eq!(cm.with_value(20.5).value(), 20.5);
-            assert_eq!(m.with_value(30.5).value(), 30.5);
-            assert_eq!(inch.with_value(40.5).value(), 40.5);
-            assert_eq!(foot.with_value(50.5).value(), 50.5);
+            assert_relative_eq!(mm.with_value(10.5).value(), 10.5, epsilon = f64::EPSILON);
+            assert_relative_eq!(cm.with_value(20.5).value(), 20.5, epsilon = f64::EPSILON);
+            assert_relative_eq!(m.with_value(30.5).value(), 30.5, epsilon = f64::EPSILON);
+            assert_relative_eq!(inch.with_value(40.5).value(), 40.5, epsilon = f64::EPSILON);
+            assert_relative_eq!(foot.with_value(50.5).value(), 50.5, epsilon = f64::EPSILON);
         }
 
         #[test]
+        #[allow(clippy::cast_precision_loss)]
         fn test_mass() {
             let units = [
                 Unit::Mass(Mass::Milligram(1.0)),
@@ -682,7 +841,7 @@ mod tests {
             for (i, unit) in units.iter().enumerate() {
                 let new_value = 100.0 + i as f64;
                 let updated_unit = unit.with_value(new_value);
-                assert_eq!(updated_unit.value(), new_value);
+                assert_relative_eq!(updated_unit.value(), new_value, epsilon = f64::EPSILON);
             }
         }
 
@@ -691,8 +850,16 @@ mod tests {
             let celsius = Unit::Temperature(Temperature::Celsius(20.0));
             let fahrenheit = Unit::Temperature(Temperature::Fahrenheit(68.0));
 
-            assert_eq!(celsius.with_value(100.0).value(), 100.0);
-            assert_eq!(fahrenheit.with_value(212.0).value(), 212.0);
+            assert_relative_eq!(
+                celsius.with_value(100.0).value(),
+                100.0,
+                epsilon = f64::EPSILON
+            );
+            assert_relative_eq!(
+                fahrenheit.with_value(212.0).value(),
+                212.0,
+                epsilon = f64::EPSILON
+            );
         }
 
         #[test]
@@ -700,14 +867,15 @@ mod tests {
             let unit = Unit::Mass(Mass::Gram(1.0));
             let result = unit.with_value(2.0).with_value(3.0).with_value(4.0);
 
-            assert_eq!(result.value(), 4.0);
+            assert_relative_eq!(result.value(), 4.0, epsilon = f64::EPSILON);
             match result {
-                Unit::Mass(Mass::Gram(v)) => assert_eq!(v, 4.0),
+                Unit::Mass(Mass::Gram(v)) => assert_relative_eq!(v, 4.0, epsilon = f64::EPSILON),
                 _ => panic!("Expected Gram unit"),
             }
         }
 
         #[test]
+        #[allow(clippy::cast_precision_loss)]
         fn test_volume() {
             let metric_units = vec![
                 (Unit::Volume(Volume::Millilitre(1.0)), "Millilitre"),
@@ -725,10 +893,10 @@ mod tests {
                 ),
                 (Unit::Volume(Volume::MetricCup(1.0)), "MetricCup"),
             ];
-            for (unit, name) in metric_units {
+            for (unit, _) in metric_units {
                 let new_value = 42.5;
                 let updated = unit.with_value(new_value);
-                assert_eq!(updated.value(), new_value, "Failed for {name}");
+                assert_relative_eq!(updated.value(), new_value, epsilon = f64::EPSILON);
             }
 
             let imperial_units = [
@@ -743,12 +911,14 @@ mod tests {
                 Unit::Volume(Volume::ImperialGallon(1.0)),
             ];
             for (i, unit) in imperial_units.iter().enumerate() {
-                let test_value = 10.0 + i as f64 * 0.5;
+                let test_value = (i as f64).mul_add(0.5, 10.0);
                 let updated = unit.with_value(test_value);
-                assert_eq!(updated.value(), test_value);
+                assert_relative_eq!(updated.value(), test_value, epsilon = f64::EPSILON);
             }
             match Unit::Volume(Volume::ImperialPint(20.0)).with_value(568.26) {
-                Unit::Volume(Volume::ImperialPint(v)) => assert_eq!(v, 568.26),
+                Unit::Volume(Volume::ImperialPint(v)) => {
+                    assert_relative_eq!(v, 568.26, epsilon = f64::EPSILON);
+                }
                 _ => panic!("Expected ImperialPint unit"),
             }
         }
@@ -760,7 +930,7 @@ mod tests {
 
             let got = unit.with_value(new_value);
 
-            assert_eq!(got.value(), new_value);
+            assert_relative_eq!(got.value(), new_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -844,6 +1014,7 @@ mod tests {
         }
 
         #[test]
+        #[allow(clippy::too_many_lines)]
         fn test_volume() {
             assert_eq!(
                 Unit::Volume(Volume::Millilitre(250.0)).unit_type(),
@@ -961,6 +1132,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_precision_loss)]
     fn test_all_unit_types_covered() {
         let all_units = vec![
             // Length
@@ -1016,8 +1188,12 @@ mod tests {
 
         for (i, unit) in all_units.iter().enumerate() {
             let test_value = i as f64 + 0.5;
-            assert_eq!(unit.value(), 1.0);
-            assert_eq!(unit.with_value(test_value).value(), test_value);
+            assert_relative_eq!(unit.value(), 1.0, epsilon = f64::EPSILON);
+            assert_relative_eq!(
+                unit.with_value(test_value).value(),
+                test_value,
+                epsilon = f64::EPSILON
+            );
         }
     }
 }

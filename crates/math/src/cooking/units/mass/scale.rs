@@ -283,7 +283,7 @@ mod tests {
     #[test]
     fn test_kg_to_mg() -> crate::Result<()> {
         assert_eq!(
-            Unit::Mass(Mass::Kilogram(1.0)).scale(0.000002)?,
+            Unit::Mass(Mass::Kilogram(1.0)).scale(0.000_002)?,
             Unit::Mass(Mass::Milligram(2.0))
         );
         Ok(())

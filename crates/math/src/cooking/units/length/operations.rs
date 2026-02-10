@@ -54,6 +54,10 @@ impl UnitOperations for Length {
 
 #[cfg(test)]
 mod tests {
+    use std::f64;
+
+    use approx::assert_relative_eq;
+
     use super::*;
 
     fn create_length_variants() -> Vec<Length> {
@@ -98,12 +102,12 @@ mod tests {
         let inch = Length::Inch(39.37);
         let foot = Length::Foot(3.28);
 
-        assert_eq!(mm.value(), 100.0);
-        assert_eq!(cm.value(), 10.0);
-        assert_eq!(m.value(), 1.0);
-        assert_eq!(km.value(), 0.001);
-        assert_eq!(inch.value(), 39.37);
-        assert_eq!(foot.value(), 3.28);
+        assert_relative_eq!(mm.value(), 100.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(cm.value(), 10.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(m.value(), 1.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(km.value(), 0.001, epsilon = f64::EPSILON);
+        assert_relative_eq!(inch.value(), 39.37, epsilon = f64::EPSILON);
+        assert_relative_eq!(foot.value(), 3.28, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -139,7 +143,7 @@ mod tests {
         ];
 
         for (length, expected) in test_values {
-            assert_eq!(length.value(), expected);
+            assert_relative_eq!(length.value(), expected, epsilon = f64::EPSILON);
         }
     }
 
@@ -153,7 +157,7 @@ mod tests {
             let new_variant = variant.with_value(new_value);
 
             assert_eq!(new_variant.unit_type(), original_type);
-            assert_eq!(new_variant.value(), new_value);
+            assert_relative_eq!(new_variant.value(), new_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -186,9 +190,9 @@ mod tests {
         ];
 
         for variant in zero_variants {
-            assert_eq!(variant.value(), 0.0);
+            assert_relative_eq!(variant.value(), 0.0, epsilon = f64::EPSILON);
             let new_variant = variant.with_value(10.0);
-            assert_eq!(new_variant.value(), 10.0);
+            assert_relative_eq!(new_variant.value(), 10.0, epsilon = f64::EPSILON);
         }
     }
 
@@ -203,13 +207,13 @@ mod tests {
             Length::Foot(-1.8),
         ];
 
-        for variant in negative_variants.clone() {
+        for variant in negative_variants {
             assert!(variant.value() < 0.0);
         }
 
         let mm = Length::Millimetre(10.0);
         let negative_mm = mm.with_value(-15.7);
-        assert_eq!(negative_mm.value(), -15.7);
+        assert_relative_eq!(negative_mm.value(), -15.7, epsilon = f64::EPSILON);
         assert_eq!(
             negative_mm.unit_type(),
             UnitType::Length(LengthUnit::Millimetre)
@@ -223,7 +227,7 @@ mod tests {
 
         for variant in variants {
             let large_variant = variant.with_value(large_value);
-            assert_eq!(large_variant.value(), large_value);
+            assert_relative_eq!(large_variant.value(), large_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -234,7 +238,7 @@ mod tests {
 
         for variant in variants {
             let small_variant = variant.with_value(small_value);
-            assert_eq!(small_variant.value(), small_value);
+            assert_relative_eq!(small_variant.value(), small_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -250,16 +254,6 @@ mod tests {
 
         let nan_mm = mm.with_value(f64::NAN);
         assert!(nan_mm.value().is_nan());
-    }
-
-    #[test]
-    fn test_clone_functionality() {
-        let original = Length::Metre(42.0);
-        let cloned = original.clone();
-
-        assert_eq!(original, cloned);
-        assert_eq!(original.value(), cloned.value());
-        assert_eq!(original.unit_type(), cloned.unit_type());
     }
 
     #[test]
@@ -308,7 +302,7 @@ mod tests {
 
             let new_variant = variant.with_value(123.45);
             assert_eq!(new_variant.unit_type(), original_type);
-            assert_eq!(new_variant.value(), 123.45);
+            assert_relative_eq!(new_variant.value(), 123.45, epsilon = f64::EPSILON);
 
             let restored = new_variant.with_value(original_value);
             assert_eq!(restored, variant);
@@ -320,10 +314,10 @@ mod tests {
         let value = 0.1 + 0.2; // Known floating point precision issue
         let mm = Length::Millimetre(value);
 
-        assert_eq!(mm.value(), value);
+        assert_relative_eq!(mm.value(), value, epsilon = f64::EPSILON);
 
         let new_mm = mm.with_value(0.3);
-        assert_eq!(new_mm.value(), 0.3);
+        assert_relative_eq!(new_mm.value(), 0.3, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -357,7 +351,7 @@ mod tests {
 
         let result = original.with_value(20.0).with_value(30.0).with_value(40.0);
 
-        assert_eq!(result.value(), 40.0);
+        assert_relative_eq!(result.value(), 40.0, epsilon = f64::EPSILON);
         assert_eq!(result.unit_type(), UnitType::Length(LengthUnit::Metre));
     }
 
@@ -381,7 +375,7 @@ mod tests {
         for variant in variants {
             for &test_value in &test_values {
                 let modified = variant.with_value(test_value);
-                assert_eq!(modified.value(), test_value);
+                assert_relative_eq!(modified.value(), test_value, epsilon = f64::EPSILON);
                 assert_eq!(modified.unit_type(), variant.unit_type());
             }
         }

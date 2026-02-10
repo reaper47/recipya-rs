@@ -91,7 +91,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::Centilitre(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -159,7 +159,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::Decilitre(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -227,7 +227,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::Litre(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -295,7 +295,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::MetricTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -361,7 +361,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::MetricTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -427,7 +427,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::MetricDessertspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -493,7 +493,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::MetricCup(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -561,7 +561,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::AustralianTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -627,7 +627,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::AustralianDessertspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -695,7 +695,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::AustralianTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -761,7 +761,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::AustralianCup(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -827,7 +827,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -893,7 +893,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialDessertspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -959,7 +959,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1025,7 +1025,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialFluidOunce(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1091,7 +1091,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialGill(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1159,7 +1159,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialCup(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1227,7 +1227,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialPint(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1295,7 +1295,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialQuart(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1361,7 +1361,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::ImperialGallon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1427,7 +1427,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::USTeaspoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1495,7 +1495,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::USTablespoon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1561,7 +1561,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::USFluidOunce(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1627,7 +1627,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::USCup(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1695,7 +1695,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::USPint(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1763,7 +1763,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::USQuart(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1831,7 +1831,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::USGallon(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1899,7 +1899,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(Self::Jigger(value.as_jiggers()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
             Self::Jigger(original_value) => match to {
                 UnitType::Volume(unit) => {
@@ -1967,7 +1967,7 @@ impl UnitConverter for Volume {
                         Jigger => Ok(Unit::Volume(self.with_value(*original_value))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Volume(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Volume(*self), to)),
             },
         }
     }
@@ -1992,6 +1992,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_millilitre_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::Millilitre(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -2056,7 +2057,7 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::Millilitre(15.0))
                 .convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(2.112676)),
+            Unit::Volume(Volume::ImperialDessertspoon(2.112_676)),
             1e-5,
         );
         assert_approx_eq(
@@ -2076,27 +2077,27 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Millilitre(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(0.879877)),
+            Unit::Volume(Volume::ImperialPint(0.879_877)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Millilitre(890.0)).convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(0.783091)),
+            Unit::Volume(Volume::ImperialQuart(0.783_091)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Millilitre(1500.0)).convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(0.329954)),
+            Unit::Volume(Volume::ImperialGallon(0.329_954)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Millilitre(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(1.014421)),
+            Unit::Volume(Volume::USTeaspoon(1.014_421)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Millilitre(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(1.014421)),
+            Unit::Volume(Volume::USTablespoon(1.014_421)),
             1e-6,
         );
         assert_approx_eq(
@@ -2133,6 +2134,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_centilitre_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::Centilitre(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -2186,12 +2188,12 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(5.0)).convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(8.446816)),
+            Unit::Volume(Volume::ImperialTeaspoon(8.446_816)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(15.0)).convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(8.446821)),
+            Unit::Volume(Volume::ImperialTablespoon(8.446_821)),
             1e-5,
         );
         assert_approx_eq(
@@ -2207,37 +2209,37 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(400.0)).convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(28.156064)),
+            Unit::Volume(Volume::ImperialGill(28.156_064)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(11.262426)),
+            Unit::Volume(Volume::ImperialCup(11.262_426)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(8.79876993)),
+            Unit::Volume(Volume::ImperialPint(8.798_769_93)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(890.0)).convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(7.8309087)),
+            Unit::Volume(Volume::ImperialQuart(7.830_908_7)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(1500.0)).convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(3.2995387)),
+            Unit::Volume(Volume::ImperialGallon(3.299_538_7)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(10.144206)),
+            Unit::Volume(Volume::USTeaspoon(10.144_206)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(10.14420681)),
+            Unit::Volume(Volume::USTablespoon(10.144_206_81)),
             1e-6,
         );
         assert_approx_eq(
@@ -2267,13 +2269,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Centilitre(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(12.623901821)),
+            Unit::Volume(Volume::Jigger(12.623_901_821)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_decilitre_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::Decilitre(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -2353,22 +2356,22 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Decilitre(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(112.62426504)),
+            Unit::Volume(Volume::ImperialCup(112.624_265_04)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Decilitre(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(87.9876993)),
+            Unit::Volume(Volume::ImperialPint(87.987_699_3)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Decilitre(890.0)).convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(78.309087)),
+            Unit::Volume(Volume::ImperialQuart(78.309_087)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Decilitre(1500.0)).convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(32.995387)),
+            Unit::Volume(Volume::ImperialGallon(32.995_387)),
             1e-5,
         );
         assert_approx_eq(
@@ -2378,7 +2381,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Decilitre(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(101.4420681)),
+            Unit::Volume(Volume::USTablespoon(101.442_068_1)),
             1e-6,
         );
         assert_approx_eq(
@@ -2408,13 +2411,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Decilitre(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(126.23901821)),
+            Unit::Volume(Volume::Jigger(126.239_018_21)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_litre_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::Litre(1.0)).convert(UnitType::Volume(Millilitre))?,
@@ -2476,27 +2480,27 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Litre(15.0)).convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(2112.676056)),
+            Unit::Volume(Volume::ImperialDessertspoon(2_112.676_056)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Litre(45.0)).convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(1583.777898)),
+            Unit::Volume(Volume::ImperialFluidOunce(1_583.777_898)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Litre(400.0)).convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(2815.6063782)),
+            Unit::Volume(Volume::ImperialGill(2_815.606_378_2)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Litre(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(1126.2426504)),
+            Unit::Volume(Volume::ImperialCup(1_126.242_650_4)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::Litre(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(879.876993)),
+            Unit::Volume(Volume::ImperialPint(879.876_993)),
             1e-5,
         );
         assert_approx_eq(
@@ -2516,7 +2520,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Litre(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(1014.420681)),
+            Unit::Volume(Volume::USTablespoon(1_014.420_681)),
             1e-6,
         );
         assert_approx_eq(
@@ -2541,7 +2545,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Litre(1.0)).convert(UnitType::Volume(USGallon))?,
-            Unit::Volume(Volume::USGallon(0.264172)),
+            Unit::Volume(Volume::USGallon(0.264_172)),
             1e-3,
         );
         assert_approx_eq(
@@ -2553,6 +2557,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_metric_tsp_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::MetricTeaspoon(1.0)).convert(UnitType::Volume(Millilitre))?,
@@ -2610,13 +2615,13 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(5.0))
                 .convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(4.2234081552)),
+            Unit::Volume(Volume::ImperialTeaspoon(4.223_408_155_2)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(15.0))
                 .convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(4.2234081552)),
+            Unit::Volume(Volume::ImperialTablespoon(4.223_408_155_2)),
             1e-5,
         );
         assert_approx_eq(
@@ -2633,28 +2638,28 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(400.0)).convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(14.078031)),
+            Unit::Volume(Volume::ImperialGill(14.078_031)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(5.6312132)),
+            Unit::Volume(Volume::ImperialCup(5.631_213_2)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(4.399384)),
+            Unit::Volume(Volume::ImperialPint(4.399_384)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(890.0)).convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(3.9154543)),
+            Unit::Volume(Volume::ImperialQuart(3.915_454_3)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(1.649769)),
+            Unit::Volume(Volume::ImperialGallon(1.649_769)),
             1e-5,
         );
         assert_approx_eq(
@@ -2664,18 +2669,18 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(5.072103)),
+            Unit::Volume(Volume::USTablespoon(5.072_103)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(35.4882))
                 .convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(5.999994)),
+            Unit::Volume(Volume::USFluidOunce(5.999_994)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTeaspoon(236.5882)).convert(UnitType::Volume(USCup))?,
-            Unit::Volume(Volume::USCup(4.999999)),
+            Unit::Volume(Volume::USCup(4.999_999)),
             1e-3,
         );
         assert_approx_eq(
@@ -2702,6 +2707,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_metric_tbsp_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::MetricTablespoon(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -2761,13 +2767,13 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(5.0))
                 .convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(12.6702244)),
+            Unit::Volume(Volume::ImperialTeaspoon(12.670_224_4)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(15.0))
                 .convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(12.6702244)),
+            Unit::Volume(Volume::ImperialTablespoon(12.670_224_4)),
             1e-5,
         );
         assert_eq!(
@@ -2778,13 +2784,13 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(45.0))
                 .convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(23.756668)),
+            Unit::Volume(Volume::ImperialFluidOunce(23.756_668)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(400.0))
                 .convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(42.234095)),
+            Unit::Volume(Volume::ImperialGill(42.234_095)),
             1e-5,
         );
         assert_approx_eq(
@@ -2795,40 +2801,40 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(500.0))
                 .convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(13.198154)),
+            Unit::Volume(Volume::ImperialPint(13.198_154)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(890.0))
                 .convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(11.746363026848577)),
+            Unit::Volume(Volume::ImperialQuart(11.746_363_026_848_577)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(4.9493080867275)),
+            Unit::Volume(Volume::ImperialGallon(4.949_308_086_727_5)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(15.216310215)),
+            Unit::Volume(Volume::USTeaspoon(15.216_310_215)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(15.216310215)),
+            Unit::Volume(Volume::USTablespoon(15.216_310_215)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(35.4882))
                 .convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(17.9999820057321)),
+            Unit::Volume(Volume::USFluidOunce(17.999_982_005_732_1)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(236.5882)).convert(UnitType::Volume(USCup))?,
-            Unit::Volume(Volume::USCup(14.999997686809676)),
+            Unit::Volume(Volume::USCup(14.999_997_686_809_676)),
             1e-3,
         );
         assert_approx_eq(
@@ -2848,13 +2854,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricTablespoon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(18.935852731707417)),
+            Unit::Volume(Volume::Jigger(18.935_852_731_707_417)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_metric_dessert_spoon_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::MetricDessertspoon(150.0))
@@ -2915,72 +2922,72 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(5.0))
                 .convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(8.446816)),
+            Unit::Volume(Volume::ImperialTeaspoon(8.446_816)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(15.0))
                 .convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::MetricDessertspoon(8.446816)),
+            Unit::Volume(Volume::MetricDessertspoon(8.446_816)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(15.0))
                 .convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(21.126760563380284)),
+            Unit::Volume(Volume::ImperialDessertspoon(21.126_760_563_380_284)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(45.0))
                 .convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(15.837778908)),
+            Unit::Volume(Volume::ImperialFluidOunce(15.837_778_908)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(400.0))
                 .convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(28.156063)),
+            Unit::Volume(Volume::ImperialGill(28.156_063)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(320.0))
                 .convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(11.262426)),
+            Unit::Volume(Volume::ImperialCup(11.262_426)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(500.0))
                 .convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(8.79876993195)),
+            Unit::Volume(Volume::ImperialPint(8.798_769_931_95)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(890.0))
                 .convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(7.83090868)),
+            Unit::Volume(Volume::ImperialQuart(7.830_908_68)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(3.299538)),
+            Unit::Volume(Volume::ImperialGallon(3.299_538)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(10.14420681)),
+            Unit::Volume(Volume::USTeaspoon(10.144_206_81)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(15.0))
                 .convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(10.14420681)),
+            Unit::Volume(Volume::USTablespoon(10.144_206_81)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(35.4882))
                 .convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(11.999988)),
+            Unit::Volume(Volume::USFluidOunce(11.999_988)),
             1e-3,
         );
         assert_approx_eq(
@@ -3006,13 +3013,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricDessertspoon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(12.6239018)),
+            Unit::Volume(Volume::Jigger(12.623_901_8)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_metric_cup_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::MetricCup(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -3066,18 +3074,18 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(5.0)).convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(211.1704077)),
+            Unit::Volume(Volume::ImperialTeaspoon(211.170_407_7)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(15.0)).convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(211.1705266)),
+            Unit::Volume(Volume::ImperialTablespoon(211.170_526_6)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(15.0))
                 .convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(528.169014)),
+            Unit::Volume(Volume::ImperialDessertspoon(528.169_014)),
             1e-5,
         );
         assert_approx_eq(
@@ -3087,17 +3095,17 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(400.0)).convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(703.9015945)),
+            Unit::Volume(Volume::ImperialGill(703.901_594_5)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(281.560662)),
+            Unit::Volume(Volume::ImperialCup(281.560_662)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(219.969248)),
+            Unit::Volume(Volume::ImperialPint(219.969_248)),
             1e-5,
         );
         assert_approx_eq(
@@ -3112,12 +3120,12 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(253.605170)),
+            Unit::Volume(Volume::USTeaspoon(253.605_170)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(253.605170)),
+            Unit::Volume(Volume::USTablespoon(253.605_170)),
             1e-6,
         );
         assert_approx_eq(
@@ -3127,7 +3135,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(236.5882)).convert(UnitType::Volume(USCup))?,
-            Unit::Volume(Volume::USCup(249.999961)),
+            Unit::Volume(Volume::USCup(249.999_961)),
             1e-3,
         );
         assert_approx_eq(
@@ -3147,13 +3155,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::MetricCup(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(315.597545)),
+            Unit::Volume(Volume::Jigger(315.597_545)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_australian_tsp_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::AustralianTeaspoon(150.0))
@@ -3257,7 +3266,7 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTeaspoon(890.0))
                 .convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(3.915454)),
+            Unit::Volume(Volume::ImperialQuart(3.915_454)),
             1e-4,
         );
         assert_approx_eq(
@@ -3313,6 +3322,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_australian_dsp_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::AustralianDessertspoon(150.0))
@@ -3479,6 +3489,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_australian_tbsp_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::AustralianTablespoon(150.0))
@@ -3555,25 +3566,25 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(15.0))
                 .convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(42.253521)),
+            Unit::Volume(Volume::ImperialDessertspoon(42.253_521)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(45.0))
                 .convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(31.675557)),
+            Unit::Volume(Volume::ImperialFluidOunce(31.675_557)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(400.0))
                 .convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(56.3121275)),
+            Unit::Volume(Volume::ImperialGill(56.312_127_5)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(320.0))
                 .convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(22.524853)),
+            Unit::Volume(Volume::ImperialCup(22.524_853)),
             1e-5,
         );
         assert_approx_eq(
@@ -3585,31 +3596,31 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(890.0))
                 .convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(15.661817)),
+            Unit::Volume(Volume::ImperialQuart(15.661_817)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(6.5990774)),
+            Unit::Volume(Volume::ImperialGallon(6.599_077_4)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(5.0))
                 .convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(20.288413)),
+            Unit::Volume(Volume::USTeaspoon(20.288_413)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(15.0))
                 .convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(20.288413)),
+            Unit::Volume(Volume::USTablespoon(20.288_413)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(35.4882))
                 .convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(23.999976)),
+            Unit::Volume(Volume::USFluidOunce(23.999_976)),
             1e-3,
         );
         assert_approx_eq(
@@ -3638,13 +3649,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianTablespoon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(25.247803)),
+            Unit::Volume(Volume::Jigger(25.247_803)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_australian_cup_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::AustralianCup(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -3786,13 +3798,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::AustralianCup(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(315.597545)),
+            Unit::Volume(Volume::Jigger(315.597_545)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_tsp_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::ImperialTeaspoon(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -3800,16 +3813,16 @@ mod tests {
         );
         assert_eq!(
             Unit::Volume(Volume::ImperialTeaspoon(15.0)).convert(UnitType::Volume(Centilitre))?,
-            Unit::Volume(Volume::Centilitre(8.879085)),
+            Unit::Volume(Volume::Centilitre(8.879_085)),
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(150.0)).convert(UnitType::Volume(Decilitre))?,
-            Unit::Volume(Volume::Decilitre(8.879085)),
+            Unit::Volume(Volume::Decilitre(8.879_085)),
             1e-10,
         );
         assert_eq!(
             Unit::Volume(Volume::ImperialTeaspoon(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(0.8879085)),
+            Unit::Volume(Volume::Litre(0.887_908_5)),
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(5.0))
@@ -3869,19 +3882,19 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(15.0))
                 .convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(12.5057535)),
+            Unit::Volume(Volume::ImperialDessertspoon(12.505_753_5)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(45.0))
                 .convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(9.374999)),
+            Unit::Volume(Volume::ImperialFluidOunce(9.374_999)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(400.0))
                 .convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(16.666672)),
+            Unit::Volume(Volume::ImperialGill(16.666_672)),
             1e-5,
         );
         assert_approx_eq(
@@ -3892,40 +3905,40 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(500.0))
                 .convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(5.208335)),
+            Unit::Volume(Volume::ImperialPint(5.208_335)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(890.0))
                 .convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(4.6354202)),
+            Unit::Volume(Volume::ImperialQuart(4.635_420_2)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(1.953125)),
+            Unit::Volume(Volume::ImperialGallon(1.953_125)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(6.0047516)),
+            Unit::Volume(Volume::USTeaspoon(6.004_751_6)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(6.0047516)),
+            Unit::Volume(Volume::USTablespoon(6.004_751_6)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(35.4882))
                 .convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(7.103260)),
+            Unit::Volume(Volume::USFluidOunce(7.103_260)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(236.5882)).convert(UnitType::Volume(USCup))?,
-            Unit::Volume(Volume::USCup(5.919389)),
+            Unit::Volume(Volume::USCup(5.919_389)),
             1e-3,
         );
         assert_approx_eq(
@@ -3945,13 +3958,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTeaspoon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(7.472579)),
+            Unit::Volume(Volume::Jigger(7.472_579)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_dessert_spoon_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::ImperialDessertspoon(150.0))
@@ -4021,13 +4035,13 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialDessertspoon(5.0))
                 .convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(5.997239)),
+            Unit::Volume(Volume::ImperialTeaspoon(5.997_239)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialDessertspoon(15.0))
                 .convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(5.9972429)),
+            Unit::Volume(Volume::ImperialTablespoon(5.997_242_9)),
             1e-4,
         );
         assert_approx_eq(
@@ -4063,13 +4077,13 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialDessertspoon(890.0))
                 .convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(5.559945)),
+            Unit::Volume(Volume::ImperialQuart(5.559_945)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialDessertspoon(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(2.342672)),
+            Unit::Volume(Volume::ImperialGallon(2.342_672)),
             1e-5,
         );
         assert_approx_eq(
@@ -4081,13 +4095,13 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialDessertspoon(15.0))
                 .convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(7.202386)),
+            Unit::Volume(Volume::USTablespoon(7.202_386)),
             1e-6,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialDessertspoon(35.4882))
                 .convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(8.5199914)),
+            Unit::Volume(Volume::USFluidOunce(8.519_991_4)),
             1e-3,
         );
         assert_approx_eq(
@@ -4116,13 +4130,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialDessertspoon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(8.962970)),
+            Unit::Volume(Volume::Jigger(8.962_970)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_tablespoon_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::ImperialTablespoon(150.0))
@@ -4141,7 +4156,7 @@ mod tests {
         );
         assert_eq!(
             Unit::Volume(Volume::ImperialTablespoon(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(2.663724)),
+            Unit::Volume(Volume::Litre(2.663_724)),
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(5.0))
@@ -4163,7 +4178,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(250.0)).convert(UnitType::Volume(MetricCup))?,
-            Unit::Volume(Volume::MetricCup(17.758164)),
+            Unit::Volume(Volume::MetricCup(17.758_164)),
             1e-4,
         );
         assert_eq!(
@@ -4226,30 +4241,30 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(500.0))
                 .convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(15.624996)),
+            Unit::Volume(Volume::ImperialPint(15.624_996)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(890.0))
                 .convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(13.906252)),
+            Unit::Volume(Volume::ImperialQuart(13.906_252)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(5.859373)),
+            Unit::Volume(Volume::ImperialGallon(5.859_373)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(18.014244)),
+            Unit::Volume(Volume::USTeaspoon(18.014_244)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(15.0))
                 .convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(18.014244)),
+            Unit::Volume(Volume::USTablespoon(18.014_244)),
             1e-6,
         );
         assert_approx_eq(
@@ -4281,32 +4296,33 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialTablespoon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(22.417726)),
+            Unit::Volume(Volume::Jigger(22.417_726)),
             1e-6,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_fluid_ounce_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::ImperialFluidOunce(150.0))
                 .convert(UnitType::Volume(Millilitre))?,
-            Unit::Volume(Volume::Millilitre(4261.961250507437)),
+            Unit::Volume(Volume::Millilitre(4_261.961_250_507_437)),
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialFluidOunce(15.0)).convert(UnitType::Volume(Centilitre))?,
-            Unit::Volume(Volume::Centilitre(42.619612)),
+            Unit::Volume(Volume::Centilitre(42.619_612)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialFluidOunce(150.0)).convert(UnitType::Volume(Decilitre))?,
-            Unit::Volume(Volume::Decilitre(42.619612)),
+            Unit::Volume(Volume::Decilitre(42.619_612)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialFluidOunce(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(4.261961)),
+            Unit::Volume(Volume::Litre(4.261_961)),
             1e-5,
         );
         assert_approx_eq(
@@ -4329,7 +4345,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialFluidOunce(250.0)).convert(UnitType::Volume(MetricCup))?,
-            Unit::Volume(Volume::MetricCup(28.413075)),
+            Unit::Volume(Volume::MetricCup(28.413_075)),
             1e-4,
         );
         assert_approx_eq(
@@ -4457,10 +4473,11 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_gill_conversions() -> Result<()> {
         assert_eq!(
             Unit::Volume(Volume::ImperialGill(150.0)).convert(UnitType::Volume(Millilitre))?,
-            Unit::Volume(Volume::Millilitre(21309.796875)),
+            Unit::Volume(Volume::Millilitre(21_309.796_875)),
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialGill(15.0)).convert(UnitType::Volume(Centilitre))?,
@@ -4501,12 +4518,12 @@ mod tests {
         assert_eq!(
             Unit::Volume(Volume::ImperialGill(5.0))
                 .convert(UnitType::Volume(AustralianTeaspoon))?,
-            Unit::Volume(Volume::AustralianTeaspoon(142.0653125)),
+            Unit::Volume(Volume::AustralianTeaspoon(142.065_312_5)),
         );
         assert_eq!(
             Unit::Volume(Volume::ImperialGill(10.0))
                 .convert(UnitType::Volume(AustralianDessertspoon))?,
-            Unit::Volume(Volume::AustralianDessertspoon(142.0653125)),
+            Unit::Volume(Volume::AustralianDessertspoon(142.065_312_5)),
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialGill(40.0))
@@ -4554,7 +4571,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialGill(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(124.999999)),
+            Unit::Volume(Volume::ImperialPint(124.999_999)),
             1e-4,
         );
         assert_approx_eq(
@@ -4564,7 +4581,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialGill(1500.0)).convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(46.874999)),
+            Unit::Volume(Volume::ImperialGallon(46.874_999)),
             1e-4,
         );
         assert_approx_eq(
@@ -4611,6 +4628,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_cup_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialCup(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -4765,6 +4783,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_pint_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialPint(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -4922,10 +4941,11 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_quart_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialQuart(150.0)).convert(UnitType::Volume(Millilitre))?,
-            Unit::Volume(Volume::Millilitre(170478.3)),
+            Unit::Volume(Volume::Millilitre(170_478.3)),
             1e-4,
         );
         assert_approx_eq(
@@ -4996,7 +5016,7 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialQuart(15.0))
                 .convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(959.999797)),
+            Unit::Volume(Volume::ImperialTablespoon(959.999_797)),
             1e-3,
         );
         assert_approx_eq(
@@ -5034,7 +5054,7 @@ mod tests {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialQuart(1500.0))
                 .convert(UnitType::Volume(ImperialGallon))?,
-            Unit::Volume(Volume::ImperialGallon(374.999835)),
+            Unit::Volume(Volume::ImperialGallon(374.999_835)),
             1e-4,
         );
         assert_approx_eq(
@@ -5049,7 +5069,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialQuart(35.4882)).convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(1363.825036)),
+            Unit::Volume(Volume::USFluidOunce(1_363.825_036)),
             1e-3,
         );
         assert_approx_eq(
@@ -5074,17 +5094,18 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialQuart(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(1434.734214)),
+            Unit::Volume(Volume::Jigger(1_434.734_214)),
             1e-4,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_imperial_gallon_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::ImperialGallon(150.0)).convert(UnitType::Volume(Millilitre))?,
-            Unit::Volume(Volume::Millilitre(681913.5)),
+            Unit::Volume(Volume::Millilitre(681_913.5)),
             1e-4,
         );
         assert_approx_eq(
@@ -5235,32 +5256,33 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::ImperialGallon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(5738.939383)),
+            Unit::Volume(Volume::Jigger(5_738.939_383)),
             1e-4,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_us_teaspoon_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(150.0)).convert(UnitType::Volume(Millilitre))?,
-            Unit::Volume(Volume::Millilitre(739.338239)),
+            Unit::Volume(Volume::Millilitre(739.338_239)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(15.0)).convert(UnitType::Volume(Centilitre))?,
-            Unit::Volume(Volume::Centilitre(7.3933823)),
+            Unit::Volume(Volume::Centilitre(7.393_382_3)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(150.0)).convert(UnitType::Volume(Decilitre))?,
-            Unit::Volume(Volume::Decilitre(7.3933823)),
+            Unit::Volume(Volume::Decilitre(7.393_382_3)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(0.73933823)),
+            Unit::Volume(Volume::Litre(0.739_338_23)),
             1e-5,
         );
         assert_approx_eq(
@@ -5307,28 +5329,28 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(5.0)).convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(4.163369)),
+            Unit::Volume(Volume::ImperialTeaspoon(4.163_369)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(15.0)).convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(4.163369)),
+            Unit::Volume(Volume::ImperialTablespoon(4.163_369)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(15.0))
                 .convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(10.4132146)),
+            Unit::Volume(Volume::ImperialDessertspoon(10.413_214_6)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(45.0)).convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(7.8063170)),
+            Unit::Volume(Volume::ImperialFluidOunce(7.806_317_0)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(400.0)).convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(13.877903)),
+            Unit::Volume(Volume::ImperialGill(13.877_903)),
             1e-4,
         );
         assert_approx_eq(
@@ -5338,12 +5360,12 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(4.3368447)),
+            Unit::Volume(Volume::ImperialPint(4.336_844_7)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTeaspoon(890.0)).convert(UnitType::Volume(ImperialQuart))?,
-            Unit::Volume(Volume::ImperialQuart(3.859793)),
+            Unit::Volume(Volume::ImperialQuart(3.859_793)),
             1e-3,
         );
         assert_approx_eq(
@@ -5395,6 +5417,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_us_tablespoon_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -5403,17 +5426,17 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(15.0)).convert(UnitType::Volume(Centilitre))?,
-            Unit::Volume(Volume::Centilitre(22.180147)),
+            Unit::Volume(Volume::Centilitre(22.180_147)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(150.0)).convert(UnitType::Volume(Decilitre))?,
-            Unit::Volume(Volume::Decilitre(22.180147)),
+            Unit::Volume(Volume::Decilitre(22.180_147)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(2.218014)),
+            Unit::Volume(Volume::Litre(2.218_014)),
             1e-5,
         );
         assert_approx_eq(
@@ -5462,35 +5485,35 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(5.0)).convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(12.490108)),
+            Unit::Volume(Volume::ImperialTeaspoon(12.490_108)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(15.0))
                 .convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(12.490108)),
+            Unit::Volume(Volume::ImperialTablespoon(12.490_108)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(15.0))
                 .convert(UnitType::Volume(ImperialDessertspoon))?,
-            Unit::Volume(Volume::ImperialDessertspoon(31.239643)),
+            Unit::Volume(Volume::ImperialDessertspoon(31.239_643)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(45.0))
                 .convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(23.418951)),
+            Unit::Volume(Volume::ImperialFluidOunce(23.418_951)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(400.0)).convert(UnitType::Volume(ImperialGill))?,
-            Unit::Volume(Volume::ImperialGill(41.633709)),
+            Unit::Volume(Volume::ImperialGill(41.633_709)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(16.6534851)),
+            Unit::Volume(Volume::ImperialCup(16.653_485_1)),
             1e-3,
         );
         assert_approx_eq(
@@ -5545,13 +5568,14 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USTablespoon(56.0)).convert(UnitType::Volume(Jigger))?,
-            Unit::Volume(Volume::Jigger(18.666666)),
+            Unit::Volume(Volume::Jigger(18.666_666)),
             1e-4,
         );
         Ok(())
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_us_floz_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::USFluidOunce(150.0)).convert(UnitType::Volume(Millilitre))?,
@@ -5570,7 +5594,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USFluidOunce(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(4.436029)),
+            Unit::Volume(Volume::Litre(4.436_029)),
             1e-5,
         );
         assert_approx_eq(
@@ -5619,13 +5643,13 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USFluidOunce(5.0)).convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(24.980217)),
+            Unit::Volume(Volume::ImperialTeaspoon(24.980_217)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USFluidOunce(15.0))
                 .convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(24.980217)),
+            Unit::Volume(Volume::ImperialTablespoon(24.980_217)),
             1e-3,
         );
         assert_approx_eq(
@@ -5652,7 +5676,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USFluidOunce(500.0)).convert(UnitType::Volume(ImperialPint))?,
-            Unit::Volume(Volume::ImperialPint(26.021068)),
+            Unit::Volume(Volume::ImperialPint(26.021_068)),
             1e-4,
         );
         assert_approx_eq(
@@ -5709,6 +5733,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_us_cup_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::USCup(2.0)).convert(UnitType::Volume(Millilitre))?,
@@ -5717,17 +5742,17 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USCup(15.0)).convert(UnitType::Volume(Centilitre))?,
-            Unit::Volume(Volume::Centilitre(354.882354)),
+            Unit::Volume(Volume::Centilitre(354.882_354)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USCup(150.0)).convert(UnitType::Volume(Decilitre))?,
-            Unit::Volume(Volume::Decilitre(354.882354)),
+            Unit::Volume(Volume::Decilitre(354.882_354)),
             1e-5,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USCup(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(35.488235)),
+            Unit::Volume(Volume::Litre(35.488_235)),
             1e-5,
         );
         assert_approx_eq(
@@ -5772,12 +5797,12 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USCup(5.0)).convert(UnitType::Volume(ImperialTeaspoon))?,
-            Unit::Volume(Volume::ImperialTeaspoon(199.841737)),
+            Unit::Volume(Volume::ImperialTeaspoon(199.841_737)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USCup(15.0)).convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(199.841737)),
+            Unit::Volume(Volume::ImperialTablespoon(199.841_737)),
             1e-3,
         );
         assert_approx_eq(
@@ -5797,7 +5822,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USCup(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(266.455762)),
+            Unit::Volume(Volume::ImperialCup(266.455_762)),
             1e-3,
         );
         assert_approx_eq(
@@ -5827,7 +5852,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USCup(35.4882)).convert(UnitType::Volume(USFluidOunce))?,
-            Unit::Volume(Volume::USFluidOunce(283.905599)),
+            Unit::Volume(Volume::USFluidOunce(283.905_599)),
             1e-3,
         );
         assert_approx_eq(
@@ -5859,6 +5884,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_us_pint_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::USPint(2.0)).convert(UnitType::Volume(Millilitre))?,
@@ -5882,17 +5908,17 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(5.0)).convert(UnitType::Volume(MetricTeaspoon))?,
-            Unit::Volume(Volume::MetricTeaspoon(473.176472)),
+            Unit::Volume(Volume::MetricTeaspoon(473.176_472)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(15.0)).convert(UnitType::Volume(MetricTablespoon))?,
-            Unit::Volume(Volume::MetricTablespoon(473.176472)),
+            Unit::Volume(Volume::MetricTablespoon(473.176_472)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(10.0)).convert(UnitType::Volume(MetricDessertSpoon))?,
-            Unit::Volume(Volume::MetricDessertspoon(473.176472)),
+            Unit::Volume(Volume::MetricDessertspoon(473.176_472)),
             1e-4,
         );
         assert_approx_eq(
@@ -5937,7 +5963,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(45.0)).convert(UnitType::Volume(ImperialFluidOunce))?,
-            Unit::Volume(Volume::ImperialFluidOunce(749.406436)),
+            Unit::Volume(Volume::ImperialFluidOunce(749.406_436)),
             1e-4,
         );
         assert_approx_eq(
@@ -5982,22 +6008,22 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(236.5882)).convert(UnitType::Volume(USCup))?,
-            Unit::Volume(Volume::USCup(473.176472)),
+            Unit::Volume(Volume::USCup(473.176_472)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(473.1765)).convert(UnitType::Volume(USPint))?,
-            Unit::Volume(Volume::USPint(473.176472)),
+            Unit::Volume(Volume::USPint(473.176_472)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(946.353)).convert(UnitType::Volume(USQuart))?,
-            Unit::Volume(Volume::USQuart(473.176472)),
+            Unit::Volume(Volume::USQuart(473.176_472)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USPint(3785.412)).convert(UnitType::Volume(USGallon))?,
-            Unit::Volume(Volume::USGallon(473.176472)),
+            Unit::Volume(Volume::USGallon(473.176_472)),
             1e-3,
         );
         assert_approx_eq(
@@ -6009,6 +6035,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_us_quart_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::USQuart(2.0)).convert(UnitType::Volume(Millilitre))?,
@@ -6160,6 +6187,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_us_gallon_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(2.0)).convert(UnitType::Volume(Millilitre))?,
@@ -6183,17 +6211,17 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(5.0)).convert(UnitType::Volume(MetricTeaspoon))?,
-            Unit::Volume(Volume::MetricTeaspoon(3785.411784)),
+            Unit::Volume(Volume::MetricTeaspoon(3_785.411_784)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(15.0)).convert(UnitType::Volume(MetricTablespoon))?,
-            Unit::Volume(Volume::MetricTablespoon(3785.411784)),
+            Unit::Volume(Volume::MetricTablespoon(3_785.411_784)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(10.0)).convert(UnitType::Volume(MetricDessertSpoon))?,
-            Unit::Volume(Volume::MetricDessertspoon(3785.411784)),
+            Unit::Volume(Volume::MetricDessertspoon(3_785.411_784)),
             1e-4,
         );
         assert_approx_eq(
@@ -6269,12 +6297,12 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(5.0)).convert(UnitType::Volume(USTeaspoon))?,
-            Unit::Volume(Volume::USTeaspoon(3839.999999)),
+            Unit::Volume(Volume::USTeaspoon(3_839.999_999)),
             1e-4,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(15.0)).convert(UnitType::Volume(USTablespoon))?,
-            Unit::Volume(Volume::USTablespoon(3839.999999)),
+            Unit::Volume(Volume::USTablespoon(3_839.999_999)),
             1e-4,
         );
         assert_approx_eq(
@@ -6284,22 +6312,22 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(236.5882)).convert(UnitType::Volume(USCup))?,
-            Unit::Volume(Volume::USCup(3785.411784)),
+            Unit::Volume(Volume::USCup(3_785.411_784)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(473.1765)).convert(UnitType::Volume(USPint))?,
-            Unit::Volume(Volume::USPint(3785.411784)),
+            Unit::Volume(Volume::USPint(3_785.411_784)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(946.353)).convert(UnitType::Volume(USQuart))?,
-            Unit::Volume(Volume::USQuart(3785.411784)),
+            Unit::Volume(Volume::USQuart(3_785.411_784)),
             1e-3,
         );
         assert_approx_eq(
             Unit::Volume(Volume::USGallon(3785.412)).convert(UnitType::Volume(USGallon))?,
-            Unit::Volume(Volume::USGallon(3785.411784)),
+            Unit::Volume(Volume::USGallon(3_785.411_784)),
             1e-3,
         );
         assert_approx_eq(
@@ -6311,10 +6339,11 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn test_jigger_conversions() -> Result<()> {
         assert_approx_eq(
             Unit::Volume(Volume::Jigger(2.0)).convert(UnitType::Volume(Millilitre))?,
-            Unit::Volume(Volume::Millilitre(88.7205886)),
+            Unit::Volume(Volume::Millilitre(88.720_588_6)),
             1e-4,
         );
         assert_approx_eq(
@@ -6329,7 +6358,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Jigger(150.0)).convert(UnitType::Volume(Litre))?,
-            Unit::Volume(Volume::Litre(6.654044)),
+            Unit::Volume(Volume::Litre(6.654_044)),
             1e-5,
         );
         assert_approx_eq(
@@ -6379,7 +6408,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Jigger(15.0)).convert(UnitType::Volume(ImperialTablespoon))?,
-            Unit::Volume(Volume::ImperialTablespoon(37.470346)),
+            Unit::Volume(Volume::ImperialTablespoon(37.470_346)),
             1e-3,
         );
         assert_approx_eq(
@@ -6399,7 +6428,7 @@ mod tests {
         );
         assert_approx_eq(
             Unit::Volume(Volume::Jigger(320.0)).convert(UnitType::Volume(ImperialCup))?,
-            Unit::Volume(Volume::ImperialCup(49.96045542)),
+            Unit::Volume(Volume::ImperialCup(49.960_455_42)),
             1e-3,
         );
         assert_approx_eq(

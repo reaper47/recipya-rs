@@ -378,6 +378,7 @@ mod tests {
         }
 
         #[test]
+        #[allow(clippy::too_many_lines)]
         fn test_us_customary() {
             assert_eq!(
                 MeasurementSystem::from_unit(&Unit::Volume(Volume::Millilitre(1.0))),

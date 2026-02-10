@@ -17,9 +17,9 @@ use crate::recipes::common::render_rating;
 use crate::recipes::timeline::render_dialog;
 use crate::templates::icons::{
     icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_clock, icon_cooking_pot,
-    icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_heart,
-    icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share, icon_stop,
-    icon_timeline, icon_trash,
+    icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_globe_alt,
+    icon_heart, icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share,
+    icon_stop, icon_timeline, icon_trash,
 };
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
@@ -100,7 +100,7 @@ pub fn view_recipe_helper(
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none"
                     dir=(if recipe_details.is_rtl() { "rtl" } else { "ltr" }) {
                     div class="card-body contents" style="padding: 0" {
-                        (render_header(recipe_id, data, recipe_details, recipe.is_favourite))
+                        (render_header(recipe_id, data, recipe, recipe_details))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
                             (render_media(fs_support, &view.recipe_details, data_dir))
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
@@ -287,8 +287,8 @@ fn print_source(recipe: &Recipe) -> Markup {
 fn render_header(
     recipe_id: i64,
     data: &Data,
+    recipe: &Recipe,
     recipe_details: &RecipeDetails,
-    is_favourite: bool,
 ) -> Markup {
     html! {
         h2 class="card-title bg-base-200 px-2 pt-2 place-content-center rounded-t-2xl print:border-b print:border-black" style="justify-content: space-between" {
@@ -302,7 +302,7 @@ fn render_header(
                     (recipe_details.recipe.name)
             }
             @if !data.is_preview {
-                (render_right_controls(recipe_id, is_favourite, data))
+                (render_right_controls(recipe_id, &recipe.source, recipe.is_favourite, data))
             }
         }
     }
@@ -335,7 +335,12 @@ fn render_left_controls(recipe_id: i64, data: &Data) -> Markup {
 }
 
 #[allow(clippy::too_many_lines)]
-fn render_right_controls(recipe_id: i64, is_favourite: bool, data: &Data) -> Markup {
+fn render_right_controls(
+    recipe_id: i64,
+    recipe_source: &Source,
+    is_favourite: bool,
+    data: &Data,
+) -> Markup {
     html! {
         span class="md:hidden" {
             button title="Open recipe options menu" popovertarget="recipe_menu" popovertargetaction="toggle" {
@@ -443,6 +448,14 @@ fn render_right_controls(recipe_id: i64, is_favourite: bool, data: &Data) -> Mar
                             button _="on click call #timeline-new-event-dialog.showModal()" {
                                 (icon_fire())
                                 "Recipe made"
+                            }
+                        }
+                        @if matches!(recipe_source, Source::Url(_)) {
+                            li _="on click document.activeElement.blur()" {
+                                button _="on click log 'Rescrape'" {
+                                    (icon_globe_alt())
+                                    "Rescrape"
+                                }
                             }
                         }
                         li _="on click document.activeElement.blur()" {
@@ -767,7 +780,10 @@ fn render_source(source: &Source) -> Markup {
     html! {
         @match source {
             Source::Url(url) => {
-                a class="btn btn-sm btn-outline no-underline print:hidden" href=(url) target="_blank" { "Source" }
+                a class="btn btn-sm btn-outline no-underline print:hidden" href=(url) target="_blank" {
+                    (icon_globe_alt())
+                    "Source"
+                }
                 p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (url) }
             }
             Source::Other(other) => {

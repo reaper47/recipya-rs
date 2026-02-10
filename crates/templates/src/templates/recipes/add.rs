@@ -308,7 +308,7 @@ fn render_source(view: Option<&ViewRecipe>) -> Markup {
     html! {
         fieldset .fieldset {
             label .label for="source" { "Source" }
-            input #source type="text" placeholder="Source" name="source" class="input input-sm w-11/12" value=(*source);
+            input #source type="text" placeholder="Source" name="source" class="input input-sm w-11/12" value=(source.as_str());
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"

@@ -47,17 +47,6 @@ impl Source {
     }
 }
 
-impl std::ops::Deref for Source {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            Self::Url(url) => url,
-            Self::Other(other) => other,
-        }
-    }
-}
-
 impl From<String> for Source {
     fn from(s: String) -> Self {
         Self::new(s)
@@ -174,14 +163,6 @@ mod tests {
 
             let other_source = Source::new("some text");
             assert_eq!(other_source.into_string(), "some text");
-        }
-
-        #[test]
-        fn test_source_deref() {
-            let source = Source::new("https://example.com");
-
-            assert_eq!(source.len(), 22);
-            assert!(source.starts_with("https://"));
         }
 
         #[test]

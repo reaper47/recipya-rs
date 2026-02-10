@@ -149,7 +149,7 @@ mod tests {
         #[test]
         fn test_utf8_with_bom() {
             let mut bom_bytes = vec![0xEF, 0xBB, 0xBF]; // UTF-8 BOM
-            bom_bytes.extend_from_slice("Hello".as_bytes());
+            bom_bytes.extend_from_slice(b"Hello");
 
             let result = auto_convert_to_utf8(&bom_bytes);
 
@@ -208,11 +208,10 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_no_number_err() -> Result<()> {
+        fn test_no_number_err() {
             let res = extract_number::<i16>("");
 
             assert!(res.is_err());
-            Ok(())
         }
 
         #[test]

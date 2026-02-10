@@ -5,7 +5,7 @@ use regex::Regex;
 
 use crate::Error;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Unitless {
     pub value: f64,
 }
@@ -92,7 +92,7 @@ mod tests {
         assert_text("4 big apples", Unitless::new(4.0));
         assert_text(
             "4 2/3 cans of bamboo sticks",
-            Unitless::new(4.666666666666667),
+            Unitless::new(4.666_666_666_666_667),
         );
         assert_text("3can of tomato paste", Unitless::new(3.0));
         assert_text(
