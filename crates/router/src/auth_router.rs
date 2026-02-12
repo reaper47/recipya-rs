@@ -455,7 +455,7 @@ mod tests {
 
             res.assert_status_bad_request();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Operation Successful"}}"#,
             );
             Ok(())
@@ -482,10 +482,10 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#,
             );
-            res.assert_header(axum_htmx::headers::HX_REDIRECT, "/auth/login");
+            res.assert_header(axum_htmx::HX_REDIRECT, "/auth/login");
             assert!(
                 PasswordResetToken::find_by_token(&state.mm, &entry.token)
                     .await?
@@ -667,7 +667,7 @@ mod tests {
 
             res.assert_status_bad_request();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
             );
             Ok(())
@@ -689,7 +689,7 @@ mod tests {
 
             res.assert_status_bad_request();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
             );
             Ok(())

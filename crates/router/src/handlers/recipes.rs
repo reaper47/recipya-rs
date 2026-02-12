@@ -414,6 +414,85 @@ pub struct YieldQueryParams {
     pub yield_param: u16,
 }
 
+pub async fn recrape_recipe_handler(
+    header_map: HeaderMap,
+    RequireAuth(user): RequireAuth,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse> {
+    let user_id = user.id;
+
+    let (old_recipe_c, is_nutrition_calculated_by_source) =
+        match Recipe::get(&state.mm, user_id, recipe_id).await {
+            Ok(r) => {
+                let is_precalculated = r.nutrition.is_precalculated();
+                (RecipeForCreate::from(r), is_precalculated)
+            }
+            Err(err) => {
+                error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}",);
+                broadcast_error(&state, user_id, "Recipe not found.").await;
+                return Err(Error::Model(EntityNotFound {
+                    id: recipe_id.to_string(),
+                    entity: "recipe",
+                }));
+            }
+        };
+
+    let new_recipe_c = match state.scraper.scrape(old_recipe_c.source.as_str()).await {
+        Ok(r) => schema_to_recipe_for_create(&state, r).await,
+        Err(err) => {
+            error!("Error scraping recipe '{recipe_id}' for user '{user_id}': {err}");
+            broadcast_error(
+                &state,
+                user.id,
+                "Error scraping recipe or recipe source is not a URL.",
+            )
+            .await;
+            return Err(Error::FailFetch);
+        }
+    };
+
+    let changes = new_recipe_c.diff(&old_recipe_c, is_nutrition_calculated_by_source);
+
+    if changes.is_empty() {
+        broadcast_warning(&state, user.id, "Recipe has not changed.").await;
+        return Ok(().into_response());
+    }
+
+    let is_autologin = state.config.read().await.is_autologin;
+    let is_hx_request = is_hx_request(&header_map);
+
+    let mut res = templates::recipes::rescrape_recipe_diff(
+        &Data {
+            is_admin: user.is_admin,
+            is_authenticated: true,
+            is_autologin,
+            is_hx_request,
+            recipes: vec![],
+            ..Default::default()
+        },
+        &get_settings(&state, user.id).await?,
+        recipe_id,
+        &old_recipe_c,
+        &new_recipe_c,
+        changes,
+    )
+    .into_response();
+
+    if is_hx_request {
+        res.headers_mut().insert(
+            axum_htmx::HX_PUSH_URL,
+            format!("/recipes/{recipe_id}/rescrape").parse().unwrap(),
+        );
+        res.headers_mut().insert(
+            axum_htmx::HX_RESWAP,
+            "innerHTML transition:true".parse().unwrap(),
+        );
+    }
+
+    Ok(res)
+}
+
 /// Handles scaling the recipe's yield.
 pub async fn scale_recipe_handler(
     RequireAuth(user): RequireAuth,
@@ -432,7 +511,7 @@ pub async fn scale_recipe_handler(
                 system::MeasurementSystem::from_id(recipe.recipe.measurement_system_id)
                     .unwrap_or_default();
 
-            let factor = f64::from(params.yield_param) / f64::from(recipe.recipe.yield_);
+            let factor = f64::from(params.yield_param) / f64::from(recipe.recipe.r#yield);
             let items = recipe.ingredients.items_as_text();
             let scaled = measurement_system.scale(
                 items.iter().map(ToString::to_string).collect::<Vec<_>>(),

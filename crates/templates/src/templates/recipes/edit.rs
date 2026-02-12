@@ -487,7 +487,7 @@ fn render_yield(view: &ViewRecipe) -> Markup {
         fieldset .fieldset {
             label .label for="servings" { "Servings" }
             input #servings type="number" min="1" name="yield"
-                value=(view.recipe_details.recipe.yield_.to_string())
+                value=(view.recipe_details.recipe.r#yield.to_string())
                 class="input input-sm w-11/12";
         }
     }

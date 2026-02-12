@@ -2956,6 +2956,7 @@ dependencies = [
  "async-trait",
  "auth",
  "axum",
+ "bitflags",
  "chrono",
  "config",
  "derive_more",

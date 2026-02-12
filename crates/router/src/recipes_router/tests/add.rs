@@ -18,7 +18,7 @@ mod tests {
     async fn test_add_recipe_is_htmx_request_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let mut server = build_server_logged_in(config).await?;
-        server.add_header(axum_htmx::headers::HX_REQUEST, "true");
+        server.add_header(axum_htmx::HX_REQUEST, "true");
 
         let res = server.get(BASE_URI).await;
 

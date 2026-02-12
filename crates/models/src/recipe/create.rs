@@ -73,7 +73,7 @@ impl Recipe {
                             name: recipe_c.name.clone(),
                             description: recipe_c.description.clone(),
                             image: main_image,
-                            yield_: recipe_c.r#yield,
+                            r#yield: recipe_c.r#yield,
                             language: recipe_c.detect_language().code().to_string(),
                             notes: recipe_c.notes.clone(),
                             source: recipe_c.source.clone(),
@@ -84,7 +84,7 @@ impl Recipe {
                         .on_conflict((
                             schema::recipes::name,
                             schema::recipes::source,
-                            schema::recipes::yield_,
+                            schema::recipes::r#yield,
                             schema::recipes::user_id,
                         ))
                         .do_nothing()
@@ -345,7 +345,7 @@ mod tests {
                 name: recipe.name,
                 description: recipe.description,
                 image: main_image,
-                yield_: recipe.r#yield.unwrap_or(4),
+                r#yield: recipe.r#yield.unwrap_or(4),
                 language: "eng".into(),
                 source: recipe.source,
                 measurement_system_id: 2,

@@ -21,6 +21,7 @@ test-utils = []
 async-trait.workspace = true
 auth.workspace = true
 axum.workspace = true
+bitflags = "2.10.0"
 chrono.workspace = true
 config.workspace = true
 derive_more.workspace = true

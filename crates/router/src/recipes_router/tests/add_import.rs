@@ -331,7 +331,7 @@ mod tests {
             let res = server.post(BASE_URI).form(&valid_preview_form()).await;
 
             res.assert_status_ok();
-            res.assert_header(axum_htmx::headers::HX_REDIRECT, "/recipes/1");
+            res.assert_header(axum_htmx::HX_REDIRECT, "/recipes/1");
             Ok(())
         }
 

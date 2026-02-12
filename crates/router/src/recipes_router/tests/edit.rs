@@ -73,10 +73,7 @@ mod tests {
     async fn test_get_recipe_exists_htmx_request_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let mut server = build_server_logged_in(config.clone()).await?;
-        server.add_header(
-            axum_htmx::headers::HX_REQUEST,
-            HeaderValue::from_static("true"),
-        );
+        server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
@@ -466,7 +463,7 @@ mod tests {
                 name: recipe_c.name,
                 description: recipe_c.description,
                 image: reference.recipe.image,
-                yield_: recipe_c.r#yield.unwrap_or(4),
+                r#yield: recipe_c.r#yield.unwrap_or(4),
                 language: "eng".into(),
                 measurement_system_id: 2,
                 notes: recipe_c.notes,

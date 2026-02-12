@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 use diesel::prelude::*;
 use schema_org::ToIso8601;
 use tracing::error;
@@ -18,6 +19,28 @@ use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
 use crate::recipe::structs::types::Source;
 use crate::user::User;
+
+bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct RecipeField: u32 {
+        const NAME         = 1 << 0;
+        const DESCRIPTION  = 1 << 1;
+        const IMAGES       = 1 << 2;
+        const NOTES        = 1 << 3;
+        const SOURCE       = 1 << 4;
+        const RATING       = 1 << 5;
+        const VIDEOS       = 1 << 6;
+        const YIELD        = 1 << 7;
+        const CATEGORY     = 1 << 8;
+        const CUISINE      = 1 << 9;
+        const INGREDIENTS  = 1 << 10;
+        const INSTRUCTIONS = 1 << 11;
+        const KEYWORDS     = 1 << 12;
+        const NUTRITION    = 1 << 13;
+        const TIMES        = 1 << 14;
+        const TOOLS        = 1 << 15;
+    }
+}
 
 /// Represents a recipe entity stored in the database.
 #[derive(
@@ -47,7 +70,7 @@ pub struct Recipe {
     /// An optional UUID referencing an image associated with the recipe.
     pub image: Option<Uuid>,
     /// The quantity of servings or portions the recipe produces.
-    pub yield_: i16,
+    pub r#yield: i16,
     /// The language in which the recipe is written.
     pub language: String,
     /// The original measurement system the recipe is in.
@@ -76,7 +99,7 @@ pub(crate) struct RecipeForInsert {
     pub name: String,
     pub description: Option<String>,
     pub image: Option<Uuid>,
-    pub yield_: Option<i16>,
+    pub r#yield: Option<i16>,
     pub language: String,
     pub notes: Option<String>,
     pub source: Source,
@@ -145,7 +168,7 @@ impl From<RecipeForCreate> for RecipeDetails {
             recipe: Recipe {
                 name: recipe_c.name.clone(),
                 description: recipe_c.description.clone(),
-                yield_: recipe_c.r#yield.unwrap_or(4),
+                r#yield: recipe_c.r#yield.unwrap_or(4),
                 language: recipe_c.detect_language().code().to_string(),
                 measurement_system_id: 1,
                 source: recipe_c.source,
@@ -230,6 +253,41 @@ impl RecipeForCreate {
         )
         .unwrap_or(Lang::Eng)
     }
+
+    /// Diff gets the changes between the current recipe and another recipe.
+    pub fn diff(&self, other: &Self, is_nutrition_calculated_by_source: bool) -> RecipeField {
+        let mut changes = RecipeField::empty();
+
+        changes.set(RecipeField::NAME, self.name != other.name);
+        changes.set(
+            RecipeField::DESCRIPTION,
+            self.description != other.description,
+        );
+        changes.set(RecipeField::IMAGES, self.images.len() != other.images.len());
+        changes.set(RecipeField::NOTES, self.notes != other.notes);
+        changes.set(RecipeField::RATING, self.rating != other.rating);
+        changes.set(RecipeField::VIDEOS, self.videos != other.videos);
+        changes.set(RecipeField::YIELD, self.r#yield != other.r#yield);
+        changes.set(RecipeField::CATEGORY, self.category != other.category);
+        changes.set(RecipeField::CUISINE, self.cuisine != other.cuisine);
+        changes.set(
+            RecipeField::INGREDIENTS,
+            self.ingredients.items_as_text() != other.ingredients.items_as_text(),
+        );
+        changes.set(
+            RecipeField::INSTRUCTIONS,
+            self.instructions.items_as_text() != other.instructions.items_as_text(),
+        );
+        changes.set(RecipeField::KEYWORDS, self.keywords != other.keywords);
+        changes.set(
+            RecipeField::NUTRITION,
+            is_nutrition_calculated_by_source && self.nutrition != other.nutrition,
+        );
+        changes.set(RecipeField::TIMES, self.times != other.times);
+        changes.set(RecipeField::TOOLS, self.tools != other.tools);
+
+        changes
+    }
 }
 
 impl From<&RecipeForm> for RecipeForCreate {
@@ -269,6 +327,33 @@ impl From<&RecipeForm> for RecipeForCreate {
 impl From<RecipeForm> for RecipeForCreate {
     fn from(form: RecipeForm) -> Self {
         Self::from(&form)
+    }
+}
+
+impl From<RecipeDetails> for RecipeForCreate {
+    fn from(r: RecipeDetails) -> Self {
+        let recipe = r.recipe.clone();
+
+        Self {
+            name: recipe.name,
+            description: recipe.description,
+            images: r.all_images(),
+            is_favourite: recipe.is_favourite,
+            measurement_system_id: recipe.measurement_system_id,
+            notes: recipe.notes,
+            source: recipe.source,
+            rating: recipe.rating,
+            videos: r.videos.into_iter().map(VideoForCreate::from).collect(),
+            r#yield: Some(recipe.r#yield),
+            category: Some(r.category),
+            cuisine: r.cuisine,
+            ingredients: r.ingredients,
+            instructions: r.instructions,
+            keywords: r.keywords,
+            nutrition: NutritionDetailsForCreate::from(r.nutrition),
+            times: Some(TimesForCreate::from(r.times)),
+            tools: r.tools.into_iter().map(ToolForCreate::from).collect(),
+        }
     }
 }
 
@@ -317,9 +402,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             ),
             cuisine: schema.recipe_cuisine.first().cloned(),
             ingredients,
-            instructions: SectionComponents::try_from(schema.recipe_instructions.clone())
-                .inspect(|err| error!("Failed to parse instructions: {:?}", err))
-                .unwrap_or_default(),
+            instructions: SectionComponents::from(schema.recipe_instructions.clone()),
             keywords: schema
                 .keywords
                 .iter()

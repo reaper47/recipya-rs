@@ -130,10 +130,10 @@ pub fn view_recipe_helper(
                                                         type="number"
                                                         min="1"
                                                         name="yield"
-                                                        value=(if recipe.yield_ == 0 {
+                                                        value=(if recipe.r#yield == 0 {
                                                             "1".into()
                                                         } else {
-                                                            recipe.yield_.to_string()
+                                                            recipe.r#yield.to_string()
                                                         })
                                                         class="input md:max-w-24"
                                                         hx-get=(format!("/recipes/{recipe_id}/scale"))
@@ -143,12 +143,12 @@ pub fn view_recipe_helper(
                                             }
                                         } @else {
                                             p class="text-sm text-center" {
-                                                (format!("{} servings", recipe.yield_))
+                                                (format!("{} servings", recipe.r#yield))
                                             }
                                         }
                                     }
                                     p class="hidden p-0 pt-2 md:col-span-1 print:grid print:text-center print:place-content-center" {
-                                        (recipe.yield_.to_string()) " servings"
+                                        (recipe.r#yield.to_string()) " servings"
                                     }
                                     div class={
                                         "flex items-center justify-center col-span-2 text-sm md:col-span-1 print:hidden"
@@ -452,7 +452,10 @@ fn render_right_controls(
                         }
                         @if matches!(recipe_source, Source::Url(_)) {
                             li _="on click document.activeElement.blur()" {
-                                button _="on click log 'Rescrape'" {
+                                button hx-get=(format!("/recipes/{recipe_id}/rescrape"))
+                                    hx-target="#content"
+                                    hx-swap="none"
+                                    hx-indicator="#fullscreen-loader" {
                                     (icon_globe_alt())
                                     "Rescrape"
                                 }

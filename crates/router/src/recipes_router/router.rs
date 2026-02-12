@@ -9,10 +9,11 @@ use crate::handlers::recipes::{
     add_recipe_import_raw_handler, add_recipes_handler, add_website_post_handler,
     delete_recipe_categories_handler, delete_recipe_handler, duplicate_recipe_handler,
     edit_recipe_handler, edit_recipe_put_handler, post_recipe_categories_handler,
-    recipe_schema_handler, recipes_handler, scale_recipe_handler, search_recipes_handler,
-    share_recipe_post_handler, supported_applications_handler, supported_websites_handler,
-    timeline_event_get_edit_handler, timeline_event_get_handler, timeline_get_handler,
-    timeline_post_handler, timeline_put_handler, toggle_favourite_handler, view_recipe_handler,
+    recipe_schema_handler, recipes_handler, recrape_recipe_handler, scale_recipe_handler,
+    search_recipes_handler, share_recipe_post_handler, supported_applications_handler,
+    supported_websites_handler, timeline_event_get_edit_handler, timeline_event_get_handler,
+    timeline_get_handler, timeline_post_handler, timeline_put_handler, toggle_favourite_handler,
+    view_recipe_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
 
@@ -35,6 +36,7 @@ pub fn recipes_routes(state: AppState) -> Router<AppState> {
                 .layer(DefaultBodyLimit::max(FIFTY_MB)),
         )
         .route("/{recipe_id}/favourite", post(toggle_favourite_handler))
+        .route("/{recipe_id}/rescrape", get(recrape_recipe_handler))
         .route("/{recipe_id}/scale", get(scale_recipe_handler))
         .route("/{recipe_id}/share", post(share_recipe_post_handler))
         .route(

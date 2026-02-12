@@ -36,7 +36,7 @@ impl RecipeDetails {
         if !self.keywords.is_empty() {
             writeln!(&mut md, "Keywords: {}", self.keywords.join(", "))?;
         }
-        writeln!(&mut md, "Yield: {}", self.recipe.yield_)?;
+        writeln!(&mut md, "Yield: {}", self.recipe.r#yield)?;
         writeln!(&mut md)?;
 
         if let Some(description) = &self.recipe.description {

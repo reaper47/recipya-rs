@@ -100,6 +100,15 @@ impl From<TimesForCreate> for Times {
     }
 }
 
+impl From<Times> for TimesForCreate {
+    fn from(t: Times) -> Self {
+        Self {
+            prep_seconds: t.prep_seconds,
+            cook_seconds: t.cook_seconds,
+        }
+    }
+}
+
 /// Represents the preparation and cooking times for a recipe stored in the database.
 #[derive(AsChangeset, Associations, Insertable, Eq, PartialEq)]
 #[diesel(table_name = schema::times)]

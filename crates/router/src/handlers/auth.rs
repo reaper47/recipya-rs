@@ -271,8 +271,7 @@ pub async fn forgot_password_reset_post_handler(
     );
 
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
-        res.headers_mut()
-            .insert(axum_htmx::headers::HX_REDIRECT, value);
+        res.headers_mut().insert(axum_htmx::HX_REDIRECT, value);
     }
 
     res

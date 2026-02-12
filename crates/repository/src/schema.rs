@@ -367,7 +367,7 @@ diesel::table! {
         description -> Nullable<Text>,
         image -> Nullable<Uuid>,
         #[sql_name = "yield"]
-        yield_ -> Int2,
+        r#yield -> Int2,
         #[max_length = 3]
         language -> Bpchar,
         measurement_system_id -> Int2,

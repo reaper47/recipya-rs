@@ -44,10 +44,7 @@ mod tests {
     async fn test_get_logged_in_htmx_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let mut server = build_server_logged_in(config).await?;
-        server.add_header(
-            axum_htmx::headers::HX_REQUEST,
-            HeaderValue::from_static("true"),
-        );
+        server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
 
         let res = server.get(BASE_URI).await;
 
@@ -139,7 +136,7 @@ mod tests {
         let user_id = users[0].id;
         let got = Recipe::get(&state.mm, user_id, 1).await?;
         pretty_assertions::assert_eq!(got.category, "uncategorized");
-        pretty_assertions::assert_eq!(got.recipe.yield_, 1);
+        pretty_assertions::assert_eq!(got.recipe.r#yield, 1);
         Ok(())
     }
 
@@ -362,7 +359,7 @@ mod tests {
                     name: recipe.name,
                     description: recipe.description,
                     image: Some(got.recipe.image.expect("A main image")),
-                    yield_: 6,
+                    r#yield: 6,
                     language: "eng".into(),
                     measurement_system_id: 2,
                     notes: Some("# Test\n\nSome notes".into()),

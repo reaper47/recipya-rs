@@ -84,4 +84,12 @@
     .recipes-sidebar-not-selected {
         @apply flex p-1 pr-1 lg:pr-4 select-none cursor-pointer hover:bg-red-600 hover:text-white;
     }
+
+    .diff-minus {
+        @apply bg-error/10 border border-error/30 cursor-pointer hover:bg-error/20 transition-colors;
+    }
+
+    .diff-plus {
+        @apply bg-success/10 border border-success/30 cursor-pointer hover:bg-success/20 transition-colors;
+    }
 }

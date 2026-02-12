@@ -53,7 +53,7 @@ pub mod test_utils {
                 name: recipe_c.name,
                 description: recipe_c.description,
                 image: images.first().copied().or(None),
-                yield_: recipe_c.r#yield.ok_or(4).expect("a yield found"),
+                r#yield: recipe_c.r#yield.ok_or(4).expect("a yield found"),
                 language: "en".into(),
                 measurement_system_id: 2,
                 notes: Some("# Notes\n\nHere are some notes".into()),
