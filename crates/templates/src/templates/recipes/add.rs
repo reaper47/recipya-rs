@@ -124,7 +124,7 @@ fn render_add_recipe_manual(
                                 (render_instructions(view))
                             }
                         }
-                        div class="col-span-6 dark:border-gray-700" _="on load call initNotes()" {
+                        div class="col-span-6 dark:border-gray-700" data-textarea-id="notes" _="on load call initNotes(me.dataset.textareaId)" {
                             textarea #notes name="notes" placeholder="Write some notes about the recipe..." rows="8" class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {}
                         }
                         div class="card-actions justify-end" {

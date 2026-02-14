@@ -19,11 +19,19 @@ document.body.addEventListener("showMessageHtmx", (event) => {
   receiveToastMessage(event);
 });
 
-function initNotes(initialValue) {
+function initNotes(elementId, initialValue) {
+  const textarea = document.getElementById(elementId);
+  if (!textarea) {
+    console.error(`initNotesById: textarea with id '${elementId}' not found`);
+    return;
+  }
+
+  let isReadonly = elementId.includes("-old") || elementId.includes("-new");
+
   const easyMDE = new EasyMDE({
     autoDownloadFontAwesome: true,
     direction: "ltr",
-    element: document.getElementById("notes"),
+    element: textarea,
     forceSync: true,
     imageAccept: ["image/png", "image/jpeg", "image/webp"],
     imageMaxSize: 1024 * 1024 * 10,
@@ -34,29 +42,32 @@ function initNotes(initialValue) {
     showIcons: ["upload-image"],
     sideBySideFullscreen: false,
     spellChecker: false,
-    toolbar: [
-      "bold",
-      "italic",
-      "heading",
-      "|",
-      "quote",
-      "unordered-list",
-      "ordered-list",
-      "|",
-      "link",
-      "image",
-      {
-        name: "upload-image",
-        action: EasyMDE.drawUploadedImage,
-        className: "fa fa-upload",
-        title: "Upload image",
-      },
-      "|",
-      "preview",
-      "side-by-side",
-      "|",
-      "guide",
-    ],
+    status: isReadonly,
+    toolbar: isReadonly
+      ? []
+      : [
+          "bold",
+          "italic",
+          "heading",
+          "|",
+          "quote",
+          "unordered-list",
+          "ordered-list",
+          "|",
+          "link",
+          "image",
+          {
+            name: "upload-image",
+            action: EasyMDE.drawUploadedImage,
+            className: "fa fa-upload",
+            title: "Upload image",
+          },
+          "|",
+          "preview",
+          "side-by-side",
+          "|",
+          "guide",
+        ],
     uploadImage: true,
   });
 
