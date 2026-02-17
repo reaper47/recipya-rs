@@ -585,12 +585,14 @@ async function loadURLToInputField(url, containerId) {
   return file;
 }
 
-function filterNutritionRows(type) {
-  document.querySelectorAll("[data-nutrition-type]").forEach((row) => {
-    if (row.dataset.nutritionType === type) {
-      row.classList.remove("hidden");
-    } else {
-      row.classList.add("hidden");
-    }
-  });
+function filterNutritionRows(el, type) {
+  const table = el?.nextElementSibling?.matches("table")
+    ? el.nextElementSibling
+    : el?.closest("table");
+
+  table
+    ?.querySelectorAll("[data-nutrition-type]")
+    .forEach((row) =>
+      row.classList.toggle("hidden", row.dataset.nutritionType !== type),
+    );
 }

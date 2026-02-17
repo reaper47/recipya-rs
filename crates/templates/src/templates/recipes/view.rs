@@ -13,7 +13,7 @@ use models::settings::UserSettingDetails;
 use models::{Recipe, RecipeDetails};
 use support::fs::FsSupport;
 
-use crate::recipes::common::render_rating;
+use crate::recipes::common::{format_nutrition, render_rating};
 use crate::recipes::timeline::render_dialog;
 use crate::templates::icons::{
     icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_clock, icon_cooking_pot,
@@ -689,20 +689,15 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
         table class="table table-zebra table-xs print:hidden" {
             thead {
                 tr {
-                    select class="select select-sm" onchange="filterNutritionRows(this.value)" {
+                    select class="select select-sm" onchange="filterNutritionRows(me, this.value)" {
                         option value="per-100g" { "Nutrition (per 100g)" }
                         @if recipe_details.nutrition.per_serving.is_some() {
                             option value="per-serving" { "Nutrition (per serving)" }
                         }
                     }
-                    th { "Amount" }
                 }
             }
             tbody {
-                @let format_nutrition = |value: Option<f64>, unit: &str| -> String {
-                    value.map_or_else(|| "-".into(), |v| if v < 1.0 { format!("{v:.2}{unit}") } else { format!("{v:.0}{unit}") })
-                };
-
                 @if let Some(nutrition) = &recipe_details.nutrition.per_100g {
                         @for (name, value) in [
                             ("Calories:", format_nutrition(nutrition.calories_kcal.map(Into::into), " kcal")),

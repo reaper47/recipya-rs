@@ -59,6 +59,12 @@ jobs:
         with:
           node-version: latest
 
+      - name: Clippy production code
+        run: cargo clippy
+
+      - name: Clippy tests
+        run: cargo clippy --tests
+
       - name: Test
         run: cargo nextest run
         env:

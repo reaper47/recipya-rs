@@ -2,6 +2,7 @@ use maud::{Markup, html};
 use models::{
     data::Data,
     recipe::structs::{
+        nutrition::{NutritionDetailsForCreate, NutritionForCreate},
         recipe::{RecipeField, RecipeForCreate},
         section::SectionComponents,
         time::{Times, TimesForCreate},
@@ -13,7 +14,7 @@ use models::{
 };
 
 use crate::{
-    recipes::common::render_rating,
+    recipes::common::{format_nutrition, nutrition_table_header, render_rating},
     templates::{
         icons::{icon_cooking_pot, icon_cutting_board, icon_globe_alt},
         layouts,
@@ -48,6 +49,7 @@ pub fn rescrape_recipe_diff(
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn render_rescrape(
     recipe_id: i64,
     old_recipe_c: &RecipeForCreate,
@@ -124,22 +126,22 @@ fn render_rescrape(
                                             ))
                                         }
                                     }
-                                    @if changes.contains(RecipeField::DESCRIPTION) && changes.contains(RecipeField::NUTRITION) {
+                                    @if !changes.contains(RecipeField::DESCRIPTION) && !changes.contains(RecipeField::NUTRITION) {
                                         div class="grid grid-flow-col col-span-6" {
                                             div class="flex gray-700" {
                                                 (render_description(old_recipe_c.description.as_deref(), new_recipe_c.description.as_deref(), changes))
                                             }
                                              div class="grid grid-flow-col col-span-6 border-gray-700 overflow-x-auto" {
-                                                // (render_nutrition(view))
+                                                (render_nutrition(&old_recipe_c.nutrition, &new_recipe_c.nutrition, changes))
                                             }
                                         }
                                     } @else {
-                                        div class="grid grid-flow-col col-span-6" {
+                                        div class="grid grid-cols-2 gap-4 col-span-6" {
                                             div class="grid col-span-6 border-gray-700" {
                                                 (render_description(old_recipe_c.description.as_deref(), new_recipe_c.description.as_deref(), changes))
                                             }
                                              div class="grid grid-flow-col col-span-6 border-gray-700 overflow-x-auto" {
-                                                // (render_nutrition(view))
+                                                (render_nutrition(&old_recipe_c.nutrition, &new_recipe_c.nutrition, changes))
                                             }
                                         }
                                     }
@@ -177,8 +179,8 @@ fn render_rescrape(
                         }
                         div .flex {
                             (render_notes(
-                                old_recipe_c.notes.as_ref().map(String::as_str).unwrap_or_default(),
-                                new_recipe_c.notes.as_ref().map(String::as_str).unwrap_or_default(),
+                                old_recipe_c.notes.as_deref().unwrap_or_default(),
+                                new_recipe_c.notes.as_deref().unwrap_or_default(),
                                 changes,
                             ))
                         }
@@ -324,6 +326,7 @@ fn render_description(
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn render_ingredients(
     old_ingredients: &SectionComponents,
     new_ingredients: &SectionComponents,
@@ -641,6 +644,267 @@ fn render_notes(old_notes: &str, new_notes: &str, changes: RecipeField) -> Marku
     }
 }
 
+struct NutritionField<'a> {
+    label: &'a str,
+    key: &'a str,
+    unit: &'a str,
+    extractor: fn(&NutritionForCreate) -> Option<f64>,
+}
+
+const NUTRITION_FIELDS: &[NutritionField] = &[
+    NutritionField {
+        label: "Calories",
+        key: "calories",
+        unit: " kcal",
+        extractor: |n| n.calories_kcal.map(Into::into),
+    },
+    NutritionField {
+        label: "Total carbs",
+        key: "total-carbohydrates",
+        unit: "g",
+        extractor: |n| n.total_carbohydrates,
+    },
+    NutritionField {
+        label: "Sugars",
+        key: "sugars",
+        unit: "g",
+        extractor: |n| n.sugars_g,
+    },
+    NutritionField {
+        label: "Protein",
+        key: "protein",
+        unit: "g",
+        extractor: |n| n.protein_g,
+    },
+    NutritionField {
+        label: "Total fat",
+        key: "total-fat",
+        unit: "g",
+        extractor: |n| n.total_fat_g,
+    },
+    NutritionField {
+        label: "Saturated fat",
+        key: "saturated-fat",
+        unit: "g",
+        extractor: |n| n.saturated_fat_g,
+    },
+    NutritionField {
+        label: "Unsaturated fat",
+        key: "unsaturated-fat",
+        unit: "g",
+        extractor: |n| n.saturated_fat_g,
+    },
+    NutritionField {
+        label: "Trans fat",
+        key: "trans-fat",
+        unit: "g",
+        extractor: |n| n.trans_fat_g,
+    },
+    NutritionField {
+        label: "Cholesterol",
+        key: "cholesterol",
+        unit: "mg",
+        extractor: |n| n.cholesterol_mg,
+    },
+    NutritionField {
+        label: "Sodium",
+        key: "sodium",
+        unit: "mg",
+        extractor: |n| n.sodium_mg,
+    },
+    NutritionField {
+        label: "Fiber",
+        key: "fiber",
+        unit: "g",
+        extractor: |n| n.fiber_g,
+    },
+];
+
+#[allow(clippy::too_many_lines)]
+fn render_nutrition(
+    old_nutrition: &NutritionDetailsForCreate,
+    new_nutrition: &NutritionDetailsForCreate,
+    changes: RecipeField,
+) -> Markup {
+    const NUTRITION_SOURCE: &str = "nutrition-source";
+    const NUTRITION_OLD: &str = "nutrition-old";
+    const NUTRITION_NEW: &str = "nutrition-new";
+
+    const SERVING_SIZE: &str = "serving-size";
+
+    let old_per_100g_vals: Vec<_> = NUTRITION_FIELDS
+        .iter()
+        .map(|f| {
+            let val = old_nutrition
+                .per_100g
+                .as_ref()
+                .and_then(|n| (f.extractor)(n));
+            (f, format_nutrition(val, f.unit))
+        })
+        .collect();
+
+    let old_per_serving_vals: Vec<_> = NUTRITION_FIELDS
+        .iter()
+        .map(|f| {
+            let val = old_nutrition
+                .per_serving
+                .as_ref()
+                .and_then(|n| (f.extractor)(&n.nutrition));
+            (f, format_nutrition(val, f.unit))
+        })
+        .collect();
+
+    let old_serving_size = old_nutrition
+        .per_serving
+        .as_ref()
+        .map_or("-", |n| n.serving_size.as_str());
+
+    let new_per_100g_vals: Vec<_> = NUTRITION_FIELDS
+        .iter()
+        .map(|f| {
+            let val = new_nutrition
+                .per_100g
+                .as_ref()
+                .and_then(|n| (f.extractor)(n));
+            (f, format_nutrition(val, f.unit))
+        })
+        .collect();
+
+    let new_per_serving_vals: Vec<_> = NUTRITION_FIELDS
+        .iter()
+        .map(|f| {
+            let val = new_nutrition
+                .per_serving
+                .as_ref()
+                .and_then(|n| (f.extractor)(&n.nutrition));
+            (f, format_nutrition(val, f.unit))
+        })
+        .collect();
+
+    let new_serving_size = new_nutrition
+        .per_serving
+        .as_ref()
+        .map_or("-", |n| n.serving_size.as_str());
+
+    if changes.contains(RecipeField::NUTRITION) {
+        html! {
+            label class="w-full py-2 diff-minus" {
+                input type="radio" name=(NUTRITION_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
+                table class="table table-zebra table-xs" {
+                    (nutrition_table_header())
+                    tbody {
+                        @for (field, formatted) in &old_per_100g_vals {
+                            tr data-nutrition-type="per-100g" {
+                                td { (field.label) }
+                                td { (formatted) }
+                            }
+                        }
+
+                        @if let Some(serving) = old_nutrition.per_serving.as_ref() {
+                            tr data-nutrition-type="per-serving" .hidden {
+                                td { "Serving size" }
+                                td { @if serving.serving_size.is_empty() { "-" } @else { (serving.serving_size) } }
+                            }
+                            @for (field, formatted) in &old_per_serving_vals {
+                                tr data-nutrition-type="per-serving" .hidden {
+                                    td { (field.label) }
+                                    td { (formatted) }
+                                }
+                            }
+                        }
+                    }
+                }
+                input type="hidden" name=(NUTRITION_SOURCE) value=(OLD);
+
+                @for (field, formatted) in &old_per_100g_vals {
+                    input type="hidden" name={ (NUTRITION_OLD) "-" (field.key) "-per-100g" } value=(formatted);
+                }
+
+                @if old_nutrition.per_serving.is_some() {
+                    input type="hidden" name=(SERVING_SIZE) value=(old_serving_size);
+                    @for (field, formatted) in &old_per_serving_vals {
+                        input type="hidden" name={ (NUTRITION_OLD) "-" (field.key) "-per-serving" } value=(formatted);
+                    }
+                }
+            }
+            label class="w-full py-2 diff-plus" {
+                input type="radio" name=(NUTRITION_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
+                table class="table table-zebra table-xs" {
+                    (nutrition_table_header())
+                    tbody {
+                        @for (field, formatted) in &new_per_100g_vals {
+                            tr data-nutrition-type="per-100g" {
+                                td { (field.label) }
+                                td { (formatted) }
+                            }
+                        }
+
+                        tr data-nutrition-type="per-serving" .hidden {
+                            td { "Serving size" }
+                            td { @if new_serving_size.is_empty() { "-" } @else { (new_serving_size) } }
+                        }
+                        @for (field, formatted) in &new_per_serving_vals {
+                            tr data-nutrition-type="per-serving" .hidden {
+                                td { (field.label) }
+                                td { (formatted) }
+                            }
+                        }
+                    }
+                }
+                input type="hidden" name=(NUTRITION_SOURCE) value=(OLD);
+
+                @for (field, formatted) in &new_per_100g_vals {
+                    input type="hidden" name={ (NUTRITION_NEW) "-" (field.key) "-per-100g" } value=(formatted);
+                }
+
+                @if new_nutrition.per_serving.is_some() {
+                    input type="hidden" name=(SERVING_SIZE) value=(new_serving_size);
+                    @for (field, formatted) in &old_per_serving_vals {
+                        input type="hidden" name={ (NUTRITION_NEW) "-" (field.key) "-per-serving" } value=(formatted);
+                    }
+                }
+            }
+        }
+    } else {
+        html! {
+            table class="table table-zebra table-xs" {
+                (nutrition_table_header())
+                tbody {
+                    @for (field, formatted) in &old_per_100g_vals {
+                        tr data-nutrition-type="per-100g" {
+                            td { (field.label) }
+                            td { (formatted) }
+                        }
+                    }
+
+                    tr data-nutrition-type="per-serving" .hidden {
+                        td { "Serving size" }
+                        td { @if old_serving_size.is_empty() { "-" } @else { (old_serving_size) } }
+                    }
+                    @for (field, formatted) in &old_per_serving_vals {
+                        tr data-nutrition-type="per-serving" .hidden {
+                            td { (field.label) }
+                            td { (formatted) }
+                        }
+                    }
+                }
+            }
+            input type="hidden" name=(NUTRITION_SOURCE) value=(OLD);
+
+            @for (field, formatted) in &old_per_100g_vals {
+                input type="hidden" name={ (NUTRITION_OLD) "-" (field.key) "-per-100g" } value=(formatted);
+            }
+
+            @if old_nutrition.per_serving.is_some() {
+                input type="hidden" name=(SERVING_SIZE) value=(old_serving_size);
+                @for (field, formatted) in &old_per_serving_vals {
+                    input type="hidden" name={ (NUTRITION_OLD) "-" (field.key) "-per-serving" } value=(formatted);
+                }
+            }
+        }
+    }
+}
+
 fn render_source(source: &Source) -> Markup {
     html! {
         a class="btn btn-sm btn-outline no-underline" href=(source.as_str()) target="_blank" {
@@ -681,6 +945,7 @@ fn render_rating_diff(
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn render_times(
     old_times: Option<&TimesForCreate>,
     new_times: Option<&TimesForCreate>,
@@ -714,15 +979,17 @@ fn render_times(
     let new_times = new_times.map(format_times);
 
     let (old_prep_edit, old_cook_edit, old_prep_datetime, old_prep, old_cook_datetime, old_cook) =
-        old_times.as_ref().map_or(
-            (
-                DEFAULT_TIME.to_string(),
-                DEFAULT_TIME.to_string(),
-                DEFAULT_DATETIME.to_string(),
-                DEFAULT_DISPLAY.to_string(),
-                DEFAULT_DATETIME.to_string(),
-                DEFAULT_DISPLAY.to_string(),
-            ),
+        old_times.as_ref().map_or_else(
+            || {
+                (
+                    DEFAULT_TIME.to_string(),
+                    DEFAULT_TIME.to_string(),
+                    DEFAULT_DATETIME.to_string(),
+                    DEFAULT_DISPLAY.to_string(),
+                    DEFAULT_DATETIME.to_string(),
+                    DEFAULT_DISPLAY.to_string(),
+                )
+            },
             |t| {
                 (
                     non_empty_or(&t.prep_edit, DEFAULT_TIME),
@@ -736,15 +1003,17 @@ fn render_times(
         );
 
     let (new_prep_edit, new_cook_edit, new_prep_datetime, new_prep, new_cook_datetime, new_cook) =
-        new_times.as_ref().map_or(
-            (
-                DEFAULT_TIME.to_string(),
-                DEFAULT_TIME.to_string(),
-                DEFAULT_DATETIME.to_string(),
-                DEFAULT_DISPLAY.to_string(),
-                DEFAULT_DATETIME.to_string(),
-                DEFAULT_DISPLAY.to_string(),
-            ),
+        new_times.as_ref().map_or_else(
+            || {
+                (
+                    DEFAULT_TIME.to_string(),
+                    DEFAULT_TIME.to_string(),
+                    DEFAULT_DATETIME.to_string(),
+                    DEFAULT_DISPLAY.to_string(),
+                    DEFAULT_DATETIME.to_string(),
+                    DEFAULT_DISPLAY.to_string(),
+                )
+            },
             |t| {
                 (
                     non_empty_or(&t.prep_edit, DEFAULT_TIME),

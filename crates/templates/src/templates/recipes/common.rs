@@ -463,13 +463,21 @@ pub(super) fn nutrition_table_header() -> Markup {
         thead {
             tr {
                 th {
-                    select class="select select-sm" onchange="filterNutritionRows(this.value)" {
+                    select class="select select-sm" onchange="filterNutritionRows(this, this.value)" {
                         option value="per-100g" { "Nutrition (per 100g)" }
                         option value="per-serving" { "Nutrition (per serving)" }
                     }
                 }
-                th { "Amount" }
             }
         }
+    }
+}
+
+pub(super) fn format_nutrition(value: Option<f64>, unit: &str) -> String {
+    match value {
+        None => "-".to_string(),
+        Some(v) if v < 0.005 => "-".to_string(),
+        Some(v) if v < 1.0 => format!("{v:.2}{unit}"),
+        Some(v) => format!("{v:.0}{unit}"),
     }
 }
