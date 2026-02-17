@@ -46,7 +46,7 @@ use models::time::FormattedTimes;
 use models::user::User;
 use models::{Recipe, RecipeDetails};
 use support::fs::FsSupport;
-use templates::recipes::timeline::Event;
+use templates::recipes::{RecipeDiff, timeline::Event};
 
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
@@ -471,11 +471,15 @@ pub async fn recrape_recipe_handler(
             recipes: vec![],
             ..Default::default()
         },
+        &state.data_dir,
+        &state.fs_support,
         &get_settings(&state, user.id).await?,
         recipe_id,
-        &old_recipe_c,
-        &new_recipe_c,
-        changes,
+        RecipeDiff {
+            old: old_recipe_c,
+            new: new_recipe_c,
+            changes,
+        },
     )
     .into_response();
 

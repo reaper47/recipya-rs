@@ -1,7 +1,11 @@
+use std::sync::Arc;
+
+use config::DataDir;
 use maud::{Markup, html};
 use models::{
     data::Data,
     recipe::structs::{
+        media::VideoForCreate,
         nutrition::{NutritionDetailsForCreate, NutritionForCreate},
         recipe::{RecipeField, RecipeForCreate},
         section::SectionComponents,
@@ -12,6 +16,8 @@ use models::{
     settings::UserSettingDetails,
     time::FormattedTimes,
 };
+use support::fs::FsSupport;
+use uuid::Uuid;
 
 use crate::{
     recipes::common::{format_nutrition, nutrition_table_header, render_rating},
@@ -24,17 +30,24 @@ use crate::{
 const OLD: &str = "old";
 const NEW: &str = "new";
 
+/// Represents the difference between two recipes.
+pub struct RecipeDiff {
+    pub old: RecipeForCreate,
+    pub new: RecipeForCreate,
+    pub changes: RecipeField,
+}
+
 /// Renders the rescrape recipe difference page.
 pub fn rescrape_recipe_diff(
     data: &Data,
+    data_dir: &DataDir,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     user_setting: &UserSettingDetails,
     recipe_id: i64,
-    old_recipe_c: &RecipeForCreate,
-    new_recipe_c: &RecipeForCreate,
-    changes: RecipeField,
+    diff: RecipeDiff,
 ) -> Markup {
-    let page_title = format!("Rescrape {}", old_recipe_c.name);
-    let content = render_rescrape(recipe_id, old_recipe_c, new_recipe_c, changes);
+    let page_title = format!("Rescrape {}", diff.old.name);
+    let content = render_rescrape(data_dir, fs_support, recipe_id, diff);
 
     html! {
         @if data.is_hx_request {
@@ -51,11 +64,15 @@ pub fn rescrape_recipe_diff(
 
 #[allow(clippy::too_many_lines)]
 fn render_rescrape(
+    data_dir: &DataDir,
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
     recipe_id: i64,
-    old_recipe_c: &RecipeForCreate,
-    new_recipe_c: &RecipeForCreate,
-    changes: RecipeField,
+    diff: RecipeDiff,
 ) -> Markup {
+    let old_recipe_c = diff.old;
+    let new_recipe_c = diff.new;
+    let changes = diff.changes;
+
     html! {
         section .p-2 {
             div class="flex justify-center" {
@@ -64,28 +81,22 @@ fn render_rescrape(
                         (render_title(&old_recipe_c.name, &new_recipe_c.name, changes))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
-                                div #media-container class="grid grid-flow-col w-full text-center grid-cols-7 md:col-span-3 md:border-r dark:border-gray-700" {
-                                    div class="buttons-container flex flex-col gap-1 p-1" {
-                                        // @if view.recipe_details.videos.is_empty() && view.recipe_details.recipe.image.is_none() {
-                                        //     button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event)" {
-                                        //         "Media 1"
-                                        //     }
-                                        // } @else {
-                                        //     @for i in 0..view.recipe_details.num_media() {
-                                        //         button id=(format!("media-button-{}", i+1)) type="button" class={
-                                        //             "btn btn-sm btn-ghost"
-                                        //             @if i == 0 { " btn-active" }
-                                        //         } onclick="switchMedia(event)" {
-                                        //             (format!("Media {}", i + 1))
-                                        //         }
-                                        //     }
-                                        // }
-                                        // button #add-media-button type="button" class="btn btn-sm btn-ghost" onclick="addMedia(event)" {
-                                        //     (icon_plus_circle())
-                                        //     "Add"
-                                        // }
-                                    }
-                                    // (render_media(view, fs_support, data_dir))
+                                div #media-container class="flex flex-row w-full md:col-span-3 md:border-r dark:border-gray-700" {
+                                    (render_media(
+                                        fs_support,
+                                        data_dir,
+                                        &DiffMedia {
+                                            old: Media {
+                                                images: old_recipe_c.images.as_slice(),
+                                                videos: old_recipe_c.videos.as_slice(),
+                                            },
+                                            new: Media {
+                                                images: new_recipe_c.images.as_slice(),
+                                                videos: new_recipe_c.videos.as_slice(),
+                                            },
+                                        },
+                                        changes,
+                                    ))
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid grid-flow-col border-gray-700 col-span-6" {
@@ -224,23 +235,6 @@ fn render_title(old_title: &str, new_title: &str, changes: RecipeField) -> Marku
         }
     }
 }
-
-// fn render_tools(view: &ViewRecipe) -> Markup {
-//     html! {
-//         h2 class="font-semibold text-center pb-2" {
-//             span .underline { "Tools" }
-//         }
-//         ol #tools-list class="pl-4" {
-//             @if !view.recipe_details.tools.is_empty() {
-//                 @for tool in &view.recipe_details.tools {
-//                     (add_tool(Some(tool)))
-//                 }
-//             } @else {
-//                 (add_tool(None))
-//             }
-//         }
-//     }
-// }
 
 fn render_category(
     old_category: Option<&str>,
@@ -603,6 +597,281 @@ fn render_keywords(
                 }
             }
             input type="hidden" name=(KEYWORDS_SOURCE) value=(OLD);
+        }
+    }
+}
+
+struct DiffMedia<'a> {
+    old: Media<'a>,
+    new: Media<'a>,
+}
+
+struct Media<'a> {
+    images: &'a [Uuid],
+    videos: &'a [VideoForCreate],
+}
+
+impl Media<'_> {
+    const fn len(&self) -> usize {
+        self.images.len() + self.videos.len()
+    }
+
+    const fn is_empty(&self) -> bool {
+        self.images.is_empty() && self.videos.is_empty()
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+fn render_media(
+    fs_support: &Arc<dyn FsSupport + Sync + Send>,
+    data_dir: &DataDir,
+    diff: &DiffMedia,
+    changes: RecipeField,
+) -> Markup {
+    const MEDIA_SOURCE: &str = "media-source";
+    const MEDIA_OLD: &str = "media-old";
+    const MEDIA_NEW: &str = "media-new";
+
+    const EXT_IMAGE: &str = ".webp";
+    const EXT_VIDEO: &str = ".webm";
+
+    let old_num_images = diff.old.images.len();
+    let new_num_images = diff.new.images.len();
+
+    if changes.contains(RecipeField::MEDIA) {
+        html! {
+            label class="w-full py-2 diff-minus" {
+                input type="radio" name=(MEDIA_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
+
+                div #media-old class="col-span-6 my-2" {
+                    @if diff.old.is_empty() {
+                        p { "No images" }
+                    } @else {
+                        @for (idx, &image) in diff.old.images.iter().enumerate() {
+                            @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
+                            @let image_src = if image_exists {
+                                &format!("/data/images/{image}{EXT_IMAGE}")
+                            } else {
+                                ""
+                            };
+
+                            label id=(format!("media-{}", idx+1)) class={
+                                "block"
+                                @if (idx+1) > 1 { " hidden" }
+                            } {
+                                div class={
+                                    "cropper-wrap mb-2 w-full min-h-[20rem] relative overflow-hidden"
+                                    @if image_src.is_empty() { " hidden" }
+                                } {
+                                    img src=(image_src) alt=(format!("Image #{} of the recipe", idx+1)) class="block w-full h-full object-contain";
+                                    input type="hidden" name=(MEDIA_NEW) value=(image_src);
+                                }
+                            }
+                        }
+                        @for (idx, video) in diff.old.videos.iter().enumerate() {
+                            @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
+                            @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
+
+                            label id=(format!("media-{}", idx+1+old_num_images)) class={
+                                @if old_num_images > 0 || idx > 0 { "hidden" }
+                            } {
+                                img src="" alt="" class="mb-2";
+                                @if video_exists {
+                                    video controls class="mb-2" src=(video_url) type="video/webm" {}
+                                    input type="hidden" name=(MEDIA_NEW) value=(video_url);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                div class="buttons-container-old flex flex-col gap-1 p-1" {
+                    @if diff.old.videos.is_empty() && diff.old.images.is_empty() {
+                        button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
+                            "Media 1"
+                        }
+                    } @else {
+                        @for i in 0..(diff.old.videos.len() + diff.old.images.len()) {
+                            button id=(format!("media-button-{}", i+1)) type="button" class={
+                                "btn btn-sm btn-ghost"
+                                @if i == 0 { " btn-active" }
+                            } onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
+                                (format!("Media {}", i + 1))
+                            }
+                        }
+                    }
+                }
+            }
+            label class="w-full py-2 diff-plus" {
+                input type="radio" name=(MEDIA_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
+
+                div #media-new class="col-span-6 my-2" {
+                    @if diff.new.is_empty() {
+                        p { "No images" }
+                    } @else {
+                        @for (idx, &image) in diff.new.images.iter().enumerate() {
+                            @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
+                            @let image_src = if image_exists {
+                                &format!("/data/images/{image}{EXT_IMAGE}")
+                            } else {
+                                ""
+                            };
+
+                            label id=(format!("media-{}", idx+1)) class={
+                                "block"
+                                @if (idx+1) > 1 { " hidden" }
+                            } {
+                                div class={
+                                    "cropper-wrap mb-2 w-full min-h-[20rem] relative overflow-hidden"
+                                    @if image_src.is_empty() { " hidden" }
+                                } {
+                                    img src=(image_src) alt=(format!("Image #{} of the recipe", idx+1)) class="block w-full h-full object-contain";
+                                    input type="hidden" name=(MEDIA_OLD) value=(image_src);
+                                }
+                            }
+                        }
+                        @for (idx, video) in diff.new.videos.iter().enumerate() {
+                            @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
+                            @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
+
+                            label id=(format!("media-{}", idx+1+new_num_images)) class={
+                                @if new_num_images > 0 || idx > 0 { "hidden" }
+                            } {
+                                img src="" alt="" class="mb-2";
+                                @if video_exists {
+                                    video controls class="mb-2" src=(video_url) type="video/webm" {}
+                                    input type="hidden" name=(MEDIA_OLD) value=(video_url);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                div class="buttons-container-new flex flex-col gap-1 p-1" {
+                    @if diff.new.videos.is_empty() && diff.new.images.is_empty() {
+                        button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
+                            "Media 1"
+                        }
+                    } @else {
+                        @for i in 0..(diff.new.videos.len() + diff.new.images.len()) {
+                            button id=(format!("media-button-{}", i+1)) type="button" class={
+                                "btn btn-sm btn-ghost"
+                                @if i == 0 { " btn-active" }
+                            } onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
+                                (format!("Media {}", i + 1))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        html! {
+            div class="col-span-full w-[95vw] md:w-full text-center border-b border-gray-700 md:border-r md:border-b-0 flex items-center justify-center" {
+                @match diff.old.len()  {
+                    0 => {
+                        img style="object-fit: cover"
+                            alt="Image of the recipe"
+                            class="w-full max-h-80 md:max-h-[34rem]"
+                            src="/data/images/Placeholders/placeholder.recipe.webp" {}
+                    },
+                    1 => {
+                        @if old_num_images == 1 {
+                            @let image = diff.old.images[0];
+                            @if fs_support.is_file_exists(image, &data_dir.images.root, EXT_IMAGE) {
+                                img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src=(format!("/data/images/{image}.webp"));
+                            } @else {
+                               img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
+                            }
+                        } @else if let Some(video) = diff.old.videos.first() {
+                            @if let Some(url) = &video.embed_url {
+                                iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
+                            } @else if let Some(url) = &video.content_url {
+                                video controls preload="metadata" src=(url) {}
+                            } @else if fs_support.is_file_exists(video.video, &data_dir.videos, ".webm") {
+                                video controls preload="metadata" src=(format!("/data/videos/{}.webm",video.video)) type="video/webm" {}
+                            } @else {
+                                p {
+                                    "Video is currently being processed."
+                                    br;
+                                    "Please refresh the page later."
+                                }
+                            }
+                        }
+                    },
+                    _ => {
+                        div class="carousel w-full" {
+                            @for (idx, &img) in diff.old.images.iter().enumerate() {
+                                div id=(format!("media-{idx}")) class="carousel-item relative w-full" {
+                                    @if fs_support.is_file_exists(img, &data_dir.images.root, ".webp") {
+                                         img style="object-fit: cover"
+                                        alt="Image of the recipe"
+                                        class="w-full max-h-80 md:max-h-[34rem]"
+                                        src=(format!("/data/images/{img}.webp"));
+                                    } @else {
+                                          img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]"
+                                              src="/data/images/Placeholders/placeholder.recipe.webp";
+                                    }
+                                    div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
+                                        a class="btn btn-soft btn-sm"
+                                            href=(if idx == 0 {
+                                                format!("#media-{}", diff.old.len() - 1)
+                                            } else {
+                                                format!("#media-{}", idx-1)
+                                            }) {
+                                            "❮"
+                                        }
+                                        a class="btn btn-soft btn-sm"
+                                          href=(if idx == diff.old.len() - 1 {
+                                                "#media-0".into()
+                                          } else {
+                                                format!("#media-{}", idx+1)
+                                            }) {
+                                            "❯"
+                                        }
+                                    }
+                                }
+                            }
+                            @for (idx, v) in diff.old.videos.iter().enumerate() {
+                                div id=(format!("media-{}", idx+old_num_images)) class="carousel-item relative w-full" {
+                                    @if let Some(url) = &v.embed_url {
+                                        iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
+                                    } @else if let Some(url) = &v.content_url {
+                                        video controls preload="metadata" src=(url) {}
+                                    } @else if fs_support.is_file_exists(v.video, &data_dir.videos, ".webm") {
+                                        video controls preload="metadata" src=(format!("/data/videos/{}.webm", v.video)) type="video/webm" {}
+                                    } @else {
+                                        p class="grid place-self-center" {
+                                            (format!("Video #{} is currently being processed.", idx+1))
+                                            br;
+                                            "Please refresh the page later."
+                                        }
+                                    }
+                                    div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
+                                        a class="btn btn-soft btn-sm" href=(format!("#media-{}", idx.checked_add(old_num_images).and_then(|val| val.checked_sub(1)).unwrap_or(1))) { "❮" }
+                                        a class="btn btn-soft btn-sm"
+                                          href=(if idx == diff.old.videos.len() - 1 {
+                                                "#media-0".into()
+                                            } else {
+                                                format!("#media-{}", idx+old_num_images +1)
+                                            }) {
+                                            "❯"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            input type="hidden" name=(MEDIA_SOURCE) value=(OLD);
+            @for image in diff.old.images {
+                input type="hidden" name=(MEDIA_OLD) value=(format!("/data/images/{image}{EXT_IMAGE}"));
+            }
+            @for video in diff.old.videos {
+                input type="hidden" name=(MEDIA_OLD) value=(format!("/data/videos/{}{EXT_VIDEO}", video.video));
+            }
         }
     }
 }

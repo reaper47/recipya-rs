@@ -255,15 +255,18 @@ fn render_media(
     fs_support: &Arc<dyn FsSupport + Sync + Send>,
     data_dir: &DataDir,
 ) -> Markup {
+    const EXT_IMAGE: &str = ".webp";
+    const EXT_VIDEO: &str = ".webm";
+
     html! {
         div #media .col-span-6 {
             @if view.recipe_details.videos.is_empty() && view.recipe_details.recipe.image.is_none() {
                 (render_media_editor(1, ""))
             } @else {
                 @for (idx, &image) in view.recipe_details.all_images().iter().enumerate() {
-                    @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
+                    @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, EXT_IMAGE);
                     @let image_src = if image_exists {
-                        &format!("/data/images/{image}.webp")
+                        &format!("/data/images/{image}{EXT_IMAGE}")
                     } else {
                         ""
                     };
@@ -271,8 +274,8 @@ fn render_media(
                     (render_media_editor(idx+1, image_src))
                 }
                 @for (idx, video) in view.recipe_details.videos.iter().enumerate() {
-                    @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
-                    @let video_url = format!("/data/videos/{}.webp", video.video);
+                    @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, EXT_VIDEO);
+                    @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
                     @let num_images = view.recipe_details.num_images();
 
                     label id=(format!("media-{}", idx+1+num_images)) class={
@@ -280,7 +283,7 @@ fn render_media(
                     } {
                         img src="" alt="" class="mb-2";
                         @if video_exists {
-                            video controls class="mb-2" src=(format!("/data/videos/{}.webm", video.video)) type="video/webm" {}
+                            video controls class="mb-2" src=(format!("/data/videos/{}{EXT_VIDEO}", video.video)) type="video/webm" {}
                         }
                         span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;" {
                             div class="mr-1 hidden" {

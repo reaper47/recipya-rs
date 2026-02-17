@@ -25,20 +25,19 @@ bitflags! {
     pub struct RecipeField: u32 {
         const NAME         = 1 << 0;
         const DESCRIPTION  = 1 << 1;
-        const IMAGES       = 1 << 2;
+        const MEDIA       = 1 << 2;
         const NOTES        = 1 << 3;
         const SOURCE       = 1 << 4;
         const RATING       = 1 << 5;
-        const VIDEOS       = 1 << 6;
-        const YIELD        = 1 << 7;
-        const CATEGORY     = 1 << 8;
-        const CUISINE      = 1 << 9;
-        const INGREDIENTS  = 1 << 10;
-        const INSTRUCTIONS = 1 << 11;
-        const KEYWORDS     = 1 << 12;
-        const NUTRITION    = 1 << 13;
-        const TIMES        = 1 << 14;
-        const TOOLS        = 1 << 15;
+        const YIELD        = 1 << 6;
+        const CATEGORY     = 1 << 7;
+        const CUISINE      = 1 << 8;
+        const INGREDIENTS  = 1 << 9;
+        const INSTRUCTIONS = 1 << 10;
+        const KEYWORDS     = 1 << 11;
+        const NUTRITION    = 1 << 12;
+        const TIMES        = 1 << 13;
+        const TOOLS        = 1 << 14;
     }
 }
 
@@ -263,10 +262,12 @@ impl RecipeForCreate {
             RecipeField::DESCRIPTION,
             self.description != other.description,
         );
-        changes.set(RecipeField::IMAGES, self.images.len() != other.images.len());
+        changes.set(
+            RecipeField::MEDIA,
+            self.images.len() != other.images.len() || self.videos != other.videos,
+        );
         changes.set(RecipeField::NOTES, self.notes != other.notes);
         changes.set(RecipeField::RATING, self.rating != other.rating);
-        changes.set(RecipeField::VIDEOS, self.videos != other.videos);
         changes.set(RecipeField::YIELD, self.r#yield != other.r#yield);
         changes.set(RecipeField::CATEGORY, self.category != other.category);
         changes.set(RecipeField::CUISINE, self.cuisine != other.cuisine);
