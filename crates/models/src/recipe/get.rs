@@ -56,7 +56,7 @@ impl Recipe {
                     schema::recipes::name,
                     schema::recipes::description,
                     schema::recipes::image,
-                    schema::recipes::r#yield,
+                    schema::recipes::yield_,
                     schema::recipes::language,
                     schema::recipes::measurement_system_id,
                     schema::recipes::notes,

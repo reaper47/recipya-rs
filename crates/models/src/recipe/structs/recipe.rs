@@ -69,6 +69,7 @@ pub struct Recipe {
     /// An optional UUID referencing an image associated with the recipe.
     pub image: Option<Uuid>,
     /// The quantity of servings or portions the recipe produces.
+    #[diesel(column_name = yield_)]
     pub r#yield: i16,
     /// The language in which the recipe is written.
     pub language: String,
@@ -98,6 +99,7 @@ pub(crate) struct RecipeForInsert {
     pub name: String,
     pub description: Option<String>,
     pub image: Option<Uuid>,
+    #[diesel(column_name = yield_)]
     pub r#yield: Option<i16>,
     pub language: String,
     pub notes: Option<String>,

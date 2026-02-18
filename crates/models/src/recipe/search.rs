@@ -36,7 +36,7 @@ impl RecipeSearch {
         use schema::recipes::dsl::{
             created_at, description, fts_category, fts_combined, fts_cuisine, fts_ingredients,
             fts_instructions, fts_keywords, fts_tools, id, image, is_favourite, language,
-            measurement_system_id, name, notes, rating, source, updated_at, user_id, r#yield,
+            measurement_system_id, name, notes, rating, source, updated_at, user_id, yield_,
         };
 
         let mut conn = mm.pool.get().await?;
@@ -54,7 +54,7 @@ impl RecipeSearch {
                     name,
                     description,
                     image,
-                    r#yield,
+                    yield_,
                     language,
                     measurement_system_id,
                     notes,

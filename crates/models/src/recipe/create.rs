@@ -84,7 +84,7 @@ impl Recipe {
                         .on_conflict((
                             schema::recipes::name,
                             schema::recipes::source,
-                            schema::recipes::r#yield,
+                            schema::recipes::yield_,
                             schema::recipes::user_id,
                         ))
                         .do_nothing()
