@@ -116,6 +116,43 @@ function switchMedia(
   document.getElementById(event.target.id).classList.add("btn-active");
 }
 
+function generateUuidV4() {
+  const bytes = new Uint8Array(16);
+  (window.crypto || self.crypto).getRandomValues(bytes);
+
+  // Per RFC 4122 section 4.4: set the version to 4 and the variant to 10xx
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+  const byteToHex = [];
+  for (let i = 0; i < 256; ++i) {
+    byteToHex.push((i + 0x100).toString(16).substr(1));
+  }
+
+  return (
+    byteToHex[bytes[0]] +
+    byteToHex[bytes[1]] +
+    byteToHex[bytes[2]] +
+    byteToHex[bytes[3]] +
+    "-" +
+    byteToHex[bytes[4]] +
+    byteToHex[bytes[5]] +
+    "-" +
+    byteToHex[bytes[6]] +
+    byteToHex[bytes[7]] +
+    "-" +
+    byteToHex[bytes[8]] +
+    byteToHex[bytes[9]] +
+    "-" +
+    byteToHex[bytes[10]] +
+    byteToHex[bytes[11]] +
+    byteToHex[bytes[12]] +
+    byteToHex[bytes[13]] +
+    byteToHex[bytes[14]] +
+    byteToHex[bytes[15]]
+  );
+}
+
 function updateMediaFromFetch(input, url) {
   if (url === window.location.href) {
     input.value = "";
@@ -134,14 +171,7 @@ function updateMediaFromFetch(input, url) {
   } else if (pathRegexVideo.test(urlObject.pathname)) {
     uuid = urlObject.pathname.match(pathRegexVideo)[1];
   } else {
-    uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-      /[xy]/g,
-      function (c) {
-        const r = (Math.random() * 16) | 0;
-        const v = c === "x" ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      },
-    );
+    uuid = generateUuidV4();
   }
   fetch(url)
     .then((response) => response.blob())
