@@ -497,6 +497,9 @@ pub async fn recrape_recipe_handler(
     Ok(res)
 }
 
+/// Handles saving the rescraped recipe.
+pub async fn recrape_recipe_post_handler(RequireAuth(user): RequireAuth) -> impl IntoResponse {}
+
 /// Handles scaling the recipe's yield.
 pub async fn scale_recipe_handler(
     RequireAuth(user): RequireAuth,

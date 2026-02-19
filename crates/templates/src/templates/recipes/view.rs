@@ -689,7 +689,7 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
         table class="table table-zebra table-xs print:hidden" {
             thead {
                 tr {
-                    select class="select select-sm" onchange="filterNutritionRows(me, this.value)" {
+                    select class="select select-sm" onchange="filterNutritionRows(this, this.value)" {
                         option value="per-100g" { "Nutrition (per 100g)" }
                         @if recipe_details.nutrition.per_serving.is_some() {
                             option value="per-serving" { "Nutrition (per serving)" }

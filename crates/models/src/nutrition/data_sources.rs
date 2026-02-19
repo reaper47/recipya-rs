@@ -298,7 +298,7 @@ impl NutritionDataSource {
     pub async fn update_all(mm: &ModelManager) {
         info!("Updating nutrition data sources");
         for source in all_nutrition_sources() {
-            info!("Updating data for {source}");
+            info!("Updating data for '{source}'");
             let _ = source.update_data(mm).await;
         }
     }

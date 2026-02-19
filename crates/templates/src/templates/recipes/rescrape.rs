@@ -77,7 +77,7 @@ fn render_rescrape(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body.contents style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/edit")) hx-indicator="#fullscreen-loader" {
+                    form .card-body.contents style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/rescrape")) hx-indicator="#fullscreen-loader" {
                         (render_title(&old_recipe_c.name, &new_recipe_c.name, changes))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
@@ -424,6 +424,7 @@ fn render_ingredients(
                                         li class="text-sm" {
                                             (ing.text)
                                         }
+                                        input type="hidden" name=(format!("{INGREDIENTS_OLD}<>{}", section.title)) value=(ing.text);
                                     }
                                 }
                             },
@@ -432,6 +433,7 @@ fn render_ingredients(
                                     li class="text-sm" {
                                         (ing.text)
                                     }
+                                    input type="hidden" name=(INGREDIENTS_OLD) value=(ing.text);
                                 }
                             },
                         }
@@ -887,28 +889,37 @@ fn render_notes(old_notes: &str, new_notes: &str, changes: RecipeField) -> Marku
 
     if changes.contains(RecipeField::NOTES) {
         html! {
-            label class="w-full py-2 diff-minus" {
-                input type="radio" name=(NOTES_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
-                div class="col-span-6 dark:border-gray-700" data-notes=(old_notes) data-textarea-id="notes-old" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
-                     textarea #notes-old name="notes-old" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {}
+            div .flex {
+                label class="w-full py-2 diff-minus" {
+                    input type="radio" name=(NOTES_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
+                    div class="col-span-6 dark:border-gray-700" data-notes=(old_notes) data-textarea-id="notes-old" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
+                        textarea #notes-old name="notes-old" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {}
+                    }
+                    input type="hidden" name=(NOTES_OLD) value=(old_notes);
                 }
-                input type="hidden" name=(NOTES_OLD) value=(old_notes);
-            }
-            label class="w-full py-2 diff-plus" {
-                input type="radio" name=(NOTES_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
-                div class="col-span-6 dark:border-gray-700" data-notes=(new_notes) data-textarea-id="notes-new" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
-                     textarea #notes-new name="notes-new" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {}
+                label class="w-full py-2 diff-plus" {
+                    input type="radio" name=(NOTES_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
+                    div class="col-span-6 dark:border-gray-700" data-notes=(new_notes) data-textarea-id="notes-new" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
+                        textarea #notes-new name="notes-new" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {}
+                    }
+                    input type="hidden" name=(NOTES_NEW) value=(new_notes);
                 }
-                input type="hidden" name=(NOTES_NEW) value=(new_notes);
             }
+        }
+    } else if old_notes.is_empty() {
+        html! {
+            input type="hidden" name=(NOTES_SOURCE) value=(OLD);
+            input type="hidden" name=(NOTES_OLD) value=(old_notes);
         }
     } else {
         html! {
-            div class="col-span-6 dark:border-gray-700" data-notes=(old_notes) data-textarea-id="notes" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
-                 textarea #notes name="notes" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {}
+            div class="col-span-6 w-full dark:border-gray-700" data-notes=(old_notes) data-textarea-id="notes" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
+                 textarea #notes name="notes" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {
+                     (old_notes)
+                 }
             }
-            input type="hidden" name=(NOTES_SOURCE) value=(old_notes);
-            input type="hidden" name=(NOTES_OLD) value=(OLD);
+            input type="hidden" name=(NOTES_SOURCE) value=(OLD);
+            input type="hidden" name=(NOTES_OLD) value=(old_notes);
         }
     }
 }
@@ -1083,7 +1094,6 @@ fn render_nutrition(
                         }
                     }
                 }
-                input type="hidden" name=(NUTRITION_SOURCE) value=(OLD);
 
                 @for (field, formatted) in &old_per_100g_vals {
                     input type="hidden" name={ (NUTRITION_OLD) "-" (field.key) "-per-100g" } value=(formatted);
@@ -1120,7 +1130,6 @@ fn render_nutrition(
                         }
                     }
                 }
-                input type="hidden" name=(NUTRITION_SOURCE) value=(OLD);
 
                 @for (field, formatted) in &new_per_100g_vals {
                     input type="hidden" name={ (NUTRITION_NEW) "-" (field.key) "-per-100g" } value=(formatted);
