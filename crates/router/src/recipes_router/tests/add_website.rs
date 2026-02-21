@@ -33,7 +33,9 @@ mod tests {
 
         let res = server
             .post(BASE_URI)
-            .form(&RecipeScrapeForm { urls: "".into() })
+            .form(&RecipeScrapeForm {
+                urls: String::new(),
+            })
             .await;
 
         res.assert_status_bad_request();
@@ -150,7 +152,7 @@ mod tests {
         assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#).await;
         tokio::time::sleep(Duration::from_millis(100)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        let want_logs = vec![
+        let want_logs = [
             zweigles_report_log(1),
             ReportLog {
                 id: 2,
@@ -202,7 +204,7 @@ mod tests {
         assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 3. Skipped: 0","status":"alert-info","title":"Operation Successful"}}"#).await;
         tokio::time::sleep(Duration::from_millis(50)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        let want_logs = vec![
+        let want_logs = [
             zweigles_report_log(1),
             ReportLog {
                 id: 2,
@@ -212,7 +214,7 @@ mod tests {
                 is_success: true,
                 is_warning: false,
                 is_error: false,
-                error_reason: "".to_owned(),
+                error_reason: String::new(),
             },
             ReportLog {
                 id: 3,
@@ -222,7 +224,7 @@ mod tests {
                 is_success: true,
                 is_warning: false,
                 is_error: false,
-                error_reason: "".to_owned(),
+                error_reason: String::new(),
             },
         ];
         let normalize = |log: &ReportLog| {
@@ -261,7 +263,7 @@ mod tests {
             is_success: true,
             is_warning: false,
             is_error: false,
-            error_reason: "".into(),
+            error_reason: String::new(),
         }
     }
 

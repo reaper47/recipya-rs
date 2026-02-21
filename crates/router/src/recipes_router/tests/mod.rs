@@ -9,6 +9,7 @@ mod favourite;
 mod helpers;
 mod recipe;
 mod recipes;
+mod rescrape;
 mod scale;
 mod search;
 mod share;

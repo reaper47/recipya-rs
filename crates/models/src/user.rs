@@ -501,6 +501,7 @@ mod tests {
         }
 
         #[tokio::test]
+        #[allow(clippy::cast_possible_wrap)]
         async fn test_keywords_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
@@ -569,7 +570,7 @@ mod tests {
         let user_id = Uuid::new_v4();
 
         match User::delete(&state.mm, user_id).await {
-            Ok(_) => Err("An error was supposed to be thrown".into()),
+            Ok(()) => Err("An error was supposed to be thrown".into()),
             Err(_) => Ok(()),
         }
     }

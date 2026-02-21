@@ -22,6 +22,8 @@ impl UnitOperations for Unitless {
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
+
     use super::*;
 
     #[test]
@@ -48,7 +50,7 @@ mod tests {
 
         let got = unit.value();
 
-        assert_eq!(got, 4.0);
+        assert_relative_eq!(got, 4.0, epsilon = f64::EPSILON);
     }
 
     #[test]

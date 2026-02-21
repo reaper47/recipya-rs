@@ -169,8 +169,8 @@ mod tests {
             let mut got = parse(buf)?;
 
             let mut want = results::example1();
-            want.sort_by_key(|r| r.name.first().as_ref().unwrap().to_string());
-            got.sort_by_key(|r| r.name.first().as_ref().unwrap().to_string());
+            want.sort_by_key(|r| (*r.name.first().as_ref().unwrap()).clone());
+            got.sort_by_key(|r| (*r.name.first().as_ref().unwrap()).clone());
             for (got_item, want_item) in got.iter_mut().zip(want.iter()) {
                 got_item.image = want_item.image.clone();
             }

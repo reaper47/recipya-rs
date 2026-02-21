@@ -145,11 +145,11 @@ mod tests {
         }
 
         fn user_id1() -> Uuid {
-            Uuid::from_u128(12345678901234567890123456789012)
+            Uuid::from_u128(12_345_678_901_234_567_890_123_456_789_012)
         }
 
         fn user_id2() -> Uuid {
-            Uuid::from_u128(12345678901234567890123456789013)
+            Uuid::from_u128(12_345_678_901_234_567_890_123_456_789_013)
         }
 
         #[tokio::test]
@@ -212,9 +212,10 @@ mod tests {
                 assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User deleted.","status":"alert-info","title":"Operation Successful"}}"# ).await;
                 let state = create_app_state(config.clone()).await;
                 let user = User::get_user_by_id(&state.mm, user2.id).await;
-                if user.is_ok() && user.unwrap().is_some() {
-                    panic!("User should be deleted");
-                }
+                assert!(
+                    !(user.is_ok() && user.unwrap().is_some()),
+                    "User should be deleted"
+                );
                 Ok(())
             }
         }
@@ -244,7 +245,7 @@ mod tests {
                 let res = server
                     .patch(&base_uri(user_id1()))
                     .form(&UpdatePasswordForm {
-                        new_password: "".into(),
+                        new_password: String::new(),
                         new_password_confirm: "test".into(),
                         row_index: 0,
                     })
@@ -307,7 +308,7 @@ mod tests {
             use super::*;
 
             fn user_id3() -> Uuid {
-                Uuid::from_u128(12345678901234567890123456789114)
+                Uuid::from_u128(12_345_678_901_234_567_890_123_456_789_114)
             }
 
             #[tokio::test]

@@ -3,7 +3,7 @@ use axum::http::HeaderMap;
 /// Checks whether the request was sent by htmx.
 pub fn is_hx_request(header_map: &HeaderMap) -> bool {
     header_map
-        .get(axum_htmx::headers::HX_REQUEST)
+        .get(axum_htmx::HX_REQUEST)
         .is_some_and(|v| v == "true")
 }
 
@@ -17,10 +17,7 @@ mod tests {
     #[test]
     fn test_hx_request_present_and_true() {
         let mut headers = HeaderMap::new();
-        headers.insert(
-            axum_htmx::headers::HX_REQUEST,
-            HeaderValue::from_static("true"),
-        );
+        headers.insert(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
 
         assert!(is_hx_request(&headers));
     }
@@ -28,10 +25,7 @@ mod tests {
     #[test]
     fn test_hx_request_present_but_false() {
         let mut headers = HeaderMap::new();
-        headers.insert(
-            axum_htmx::headers::HX_REQUEST,
-            HeaderValue::from_static("false"),
-        );
+        headers.insert(axum_htmx::HX_REQUEST, HeaderValue::from_static("false"));
 
         assert!(!is_hx_request(&headers));
     }
@@ -46,10 +40,7 @@ mod tests {
     #[test]
     fn test_hx_request_case_sensitivity() {
         let mut headers = HeaderMap::new();
-        headers.insert(
-            axum_htmx::headers::HX_REQUEST,
-            HeaderValue::from_static("TRUE"),
-        );
+        headers.insert(axum_htmx::HX_REQUEST, HeaderValue::from_static("TRUE"));
 
         assert!(!is_hx_request(&headers));
     }
@@ -57,10 +48,7 @@ mod tests {
     #[test]
     fn test_hx_request_extra_whitespace() {
         let mut headers = HeaderMap::new();
-        headers.insert(
-            axum_htmx::headers::HX_REQUEST,
-            HeaderValue::from_static(" true "),
-        );
+        headers.insert(axum_htmx::HX_REQUEST, HeaderValue::from_static(" true "));
 
         assert!(!is_hx_request(&headers));
     }

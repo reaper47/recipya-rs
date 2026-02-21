@@ -20,7 +20,7 @@ impl UnitConverter for Temperature {
                         }
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Temperature(*self), to)),
             },
             Self::Fahrenheit(original_value) => match to {
                 UnitType::Temperature(unit) => {
@@ -31,7 +31,7 @@ impl UnitConverter for Temperature {
                         Fahrenheit => Ok(Unit::Temperature(self.with_value(*original_value))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Temperature(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Temperature(*self), to)),
             },
         }
     }
@@ -76,7 +76,7 @@ mod tests {
         assert_approx_eq(
             Unit::Temperature(Temperature::Fahrenheit(100.0))
                 .convert(UnitType::Temperature(Celsius))?,
-            Unit::Temperature(Temperature::Celsius(37.7777778)),
+            Unit::Temperature(Temperature::Celsius(37.777_777_8)),
             1e-5,
         );
         assert_eq!(

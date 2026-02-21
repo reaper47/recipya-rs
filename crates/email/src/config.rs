@@ -94,7 +94,7 @@ mod tests {
             smtp_port: 587,
             smtp_username: "smtp_username".to_string(),
             smtp_password: "smtp_password".to_string(),
-            smtp_from_email: "".to_string(),
+            smtp_from_email: String::new(),
         };
 
         pretty_assertions::assert_eq!(config.is_smtp(), false);

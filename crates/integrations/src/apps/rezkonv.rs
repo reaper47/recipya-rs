@@ -373,8 +373,9 @@ mod tests {
     }
 
     mod files {
+        #[allow(clippy::too_many_lines)]
         pub fn cookmate<'a>() -> &'a str {
-            r##"===== Recipe via Cookmate [REZKONV Export Format] =====
+            r"===== Recipe via Cookmate [REZKONV Export Format] =====
 
       Titel: Aunt Julia's Paella
 Kategorien: Pork/ham, Poultry, Fish/sea, Spanish
@@ -563,11 +564,12 @@ minutes of baking.
 
 =====
 
-"##
+"
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn kalorio_v4_03<'a>() -> &'a str {
-            r##"========== 'Kalorio V4.03' (unreg.) nach REZKONV
+            r#"========== 'Kalorio V4.03' (unreg.) nach REZKONV
 
      Titel: Ananas-Käsekuchen
 Kategorien: , ,
@@ -794,7 +796,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
 
 
 =====
-"##
+"#
         }
     }
 
@@ -888,6 +890,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
             ]
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn kalorio_v4_03() -> Vec<Recipe> {
             vec![
                 Recipe {

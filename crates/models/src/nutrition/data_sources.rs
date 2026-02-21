@@ -298,7 +298,7 @@ impl NutritionDataSource {
     pub async fn update_all(mm: &ModelManager) {
         info!("Updating nutrition data sources");
         for source in all_nutrition_sources() {
-            info!("Updating data for {source}");
+            info!("Updating data for '{source}'");
             let _ = source.update_data(mm).await;
         }
     }
@@ -371,7 +371,7 @@ mod tests {
     fn test_all_nutrition_sources() {
         let got = all_nutrition_sources();
 
-        pretty_assertions::assert_eq!(got, vec![NutritionDataSource::USDAFoodDataCentral])
+        pretty_assertions::assert_eq!(got, vec![NutritionDataSource::USDAFoodDataCentral]);
     }
 
     #[test]
@@ -463,28 +463,28 @@ mod tests {
                 CalculatedNutrition {
                     per_100g: NutritionComponents {
                         calories_kcal: 312,
-                        total_carbohydrates: 38.764939987365764,
-                        sugars_g: 24.448962939566222,
-                        protein_g: 4.255598020635922,
-                        total_fat_g: 16.08292482627921,
-                        saturated_fat_g: 7.657184670456936,
-                        unsaturated_fat_g: 7.361701200252684,
-                        cholesterol_mg: 64.39618867129921,
-                        sodium_mg: 356.6101284480943,
-                        fiber_g: 1.4140345335860178,
-                        trans_fat_g: 0.3954769425142135,
+                        total_carbohydrates: 38.764_939_987_365_764,
+                        sugars_g: 24.448_962_939_566_222,
+                        protein_g: 4.255_598_020_635_922,
+                        total_fat_g: 16.082_924_826_279_21,
+                        saturated_fat_g: 7.657_184_670_456_936,
+                        unsaturated_fat_g: 7.361_701_200_252_684,
+                        cholesterol_mg: 64.396_188_671_299_21,
+                        sodium_mg: 356.610_128_448_094_3,
+                        fiber_g: 1.414_034_533_586_017_8,
+                        trans_fat_g: 0.395_476_942_514_213_5,
                     },
                     per_serving: NutritionComponents {
                         calories_kcal: 740,
-                        total_carbohydrates: 92.04735000000001,
-                        sugars_g: 58.0540625,
-                        protein_g: 10.104917499999999,
-                        total_fat_g: 38.18890499999999,
-                        saturated_fat_g: 18.181984999999997,
-                        unsaturated_fat_g: 17.4803595,
+                        total_carbohydrates: 92.047_350_000_000_01,
+                        sugars_g: 58.054_062_5,
+                        protein_g: 10.104_917_499_999_999,
+                        total_fat_g: 38.188_904_999_999_99,
+                        saturated_fat_g: 18.181_984_999_999_997,
+                        unsaturated_fat_g: 17.480_359_5,
                         cholesterol_mg: 152.90875,
                         sodium_mg: 846.77075,
-                        fiber_g: 3.3576249999999996,
+                        fiber_g: 3.357_624_999_999_999_6,
                         trans_fat_g: 0.93906,
                     },
                 }

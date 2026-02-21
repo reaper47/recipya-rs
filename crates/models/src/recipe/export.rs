@@ -36,7 +36,7 @@ impl RecipeDetails {
         if !self.keywords.is_empty() {
             writeln!(&mut md, "Keywords: {}", self.keywords.join(", "))?;
         }
-        writeln!(&mut md, "Yield: {}", self.recipe.yield_)?;
+        writeln!(&mut md, "Yield: {}", self.recipe.r#yield)?;
         writeln!(&mut md)?;
 
         if let Some(description) = &self.recipe.description {
@@ -161,8 +161,9 @@ impl RecipeDetails {
             writeln!(&mut md)?;
         }
 
-        if !&self.recipe.source.is_empty() {
-            writeln!(&mut md, "Source: {}", self.recipe.source)?;
+        let src = self.recipe.source.as_str();
+        if !src.is_empty() {
+            writeln!(&mut md, "Source: {src}")?;
         }
 
         Ok(md)
@@ -183,7 +184,7 @@ mod tests {
         recipe.recipe.image = Some(Uuid::parse_str("637bcefb-9fa4-4970-b490-b73023ac772f")?);
 
         let got = recipe.to_markdown("https://example.com/images")?;
-        let expected = r####"# Best Chinese Kale
+        let expected = r"# Best Chinese Kale
 
 ![Image of the recipe](https://example.com/images/data/images/637bcefb-9fa4-4970-b490-b73023ac772f.webp)
 
@@ -248,7 +249,7 @@ This is the most delicious recipe!
 | **Protein**            | 7g      |
 
 Source: https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/
-"####;
+";
         pretty_assertions::assert_eq!(expected, got);
         Ok(())
     }

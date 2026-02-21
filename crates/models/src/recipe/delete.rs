@@ -105,6 +105,7 @@ mod tests {
         use super::*;
 
         #[tokio::test]
+        #[allow(clippy::too_many_lines)]
         async fn test_delete_recipe_found_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
@@ -244,7 +245,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
 
             match Recipe::delete(&state.mm, 1, user.id).await {
-                Ok(_) => panic!("Should not return error"),
+                Ok(()) => panic!("Should not return error"),
                 Err(Error::EntityNotFound { .. }) => Ok(()),
                 Err(err) => Err(err.into()),
             }

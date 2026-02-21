@@ -202,6 +202,7 @@ CREATE TABLE ingredients_recipes (
   ingredient_id int8 NOT NULL REFERENCES ingredients (id) ON DELETE CASCADE,
   recipe_id int8 NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
   section_id int8 NOT NULL DEFAULT 1 REFERENCES sections (id) ON DELETE SET DEFAULT,
+  section_order int2 NOT NULL DEFAULT 0,
   item_order int2 NOT NULL
 );
 
@@ -210,6 +211,7 @@ CREATE TABLE instructions_recipes (
   instruction_id int8 NOT NULL REFERENCES instructions (id) ON DELETE CASCADE,
   recipe_id int8 NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
   section_id int8 NOT NULL DEFAULT 1 REFERENCES sections (id) ON DELETE SET DEFAULT,
+  section_order int2 NOT NULL DEFAULT 0,
   item_order int2 NOT NULL
 );
 

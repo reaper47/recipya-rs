@@ -37,6 +37,10 @@ impl UnitOperations for Temperature {
 
 #[cfg(test)]
 mod tests {
+    use std::f64;
+
+    use approx::assert_relative_eq;
+
     use super::*;
 
     fn create_temperature_variants() -> Vec<Temperature> {
@@ -57,8 +61,7 @@ mod tests {
             assert_eq!(
                 temp.abbrev(),
                 expected,
-                "Failed for temperature variant: {:?}",
-                temp
+                "Failed for temperature variant: {temp:?}",
             );
         }
     }
@@ -68,8 +71,8 @@ mod tests {
         let celsius = Temperature::Celsius(20.0);
         let fahrenheit = Temperature::Fahrenheit(68.0);
 
-        assert_eq!(celsius.value(), 20.0);
-        assert_eq!(fahrenheit.value(), 68.0);
+        assert_relative_eq!(celsius.value(), 20.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(fahrenheit.value(), 68.0, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -117,7 +120,7 @@ mod tests {
         ];
 
         for (temperature, expected) in test_values {
-            assert_eq!(temperature.value(), expected);
+            assert_relative_eq!(temperature.value(), expected, epsilon = f64::EPSILON);
         }
     }
 
@@ -131,7 +134,7 @@ mod tests {
             let new_variant = variant.with_value(new_value);
 
             assert_eq!(new_variant.unit_type(), original_type);
-            assert_eq!(new_variant.value(), new_value);
+            assert_relative_eq!(new_variant.value(), new_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -171,9 +174,9 @@ mod tests {
         let zero_variants = vec![Temperature::Celsius(0.0), Temperature::Fahrenheit(0.0)];
 
         for variant in zero_variants {
-            assert_eq!(variant.value(), 0.0);
+            assert_relative_eq!(variant.value(), 0.0, epsilon = f64::EPSILON);
             let new_variant = variant.with_value(25.0);
-            assert_eq!(new_variant.value(), 25.0);
+            assert_relative_eq!(new_variant.value(), 25.0, epsilon = f64::EPSILON);
         }
     }
 
@@ -186,13 +189,13 @@ mod tests {
             Temperature::Fahrenheit(-459.67),
         ];
 
-        for variant in negative_variants.clone() {
+        for variant in negative_variants {
             assert!(variant.value() < 0.0);
         }
 
         let celsius = Temperature::Celsius(20.0);
         let negative_celsius = celsius.with_value(-15.5);
-        assert_eq!(negative_celsius.value(), -15.5);
+        assert_relative_eq!(negative_celsius.value(), -15.5, epsilon = f64::EPSILON);
         assert_eq!(
             negative_celsius.unit_type(),
             UnitType::Temperature(TemperatureUnit::Celsius)
@@ -204,8 +207,16 @@ mod tests {
         let absolute_zero_celsius = Temperature::Celsius(-273.15);
         let absolute_zero_fahrenheit = Temperature::Fahrenheit(-459.67);
 
-        assert_eq!(absolute_zero_celsius.value(), -273.15);
-        assert_eq!(absolute_zero_fahrenheit.value(), -459.67);
+        assert_relative_eq!(
+            absolute_zero_celsius.value(),
+            -273.15,
+            epsilon = f64::EPSILON
+        );
+        assert_relative_eq!(
+            absolute_zero_fahrenheit.value(),
+            -459.67,
+            epsilon = f64::EPSILON
+        );
     }
 
     #[test]
@@ -213,8 +224,8 @@ mod tests {
         let boiling_celsius = Temperature::Celsius(100.0);
         let boiling_fahrenheit = Temperature::Fahrenheit(212.0);
 
-        assert_eq!(boiling_celsius.value(), 100.0);
-        assert_eq!(boiling_fahrenheit.value(), 212.0);
+        assert_relative_eq!(boiling_celsius.value(), 100.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(boiling_fahrenheit.value(), 212.0, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -222,8 +233,8 @@ mod tests {
         let freezing_celsius = Temperature::Celsius(0.0);
         let freezing_fahrenheit = Temperature::Fahrenheit(32.0);
 
-        assert_eq!(freezing_celsius.value(), 0.0);
-        assert_eq!(freezing_fahrenheit.value(), 32.0);
+        assert_relative_eq!(freezing_celsius.value(), 0.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(freezing_fahrenheit.value(), 32.0, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -231,8 +242,8 @@ mod tests {
         let body_temp_celsius = Temperature::Celsius(37.0);
         let body_temp_fahrenheit = Temperature::Fahrenheit(98.6);
 
-        assert_eq!(body_temp_celsius.value(), 37.0);
-        assert_eq!(body_temp_fahrenheit.value(), 98.6);
+        assert_relative_eq!(body_temp_celsius.value(), 37.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(body_temp_fahrenheit.value(), 98.6, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -242,7 +253,7 @@ mod tests {
 
         for variant in variants {
             let large_variant = variant.with_value(large_value);
-            assert_eq!(large_variant.value(), large_value);
+            assert_relative_eq!(large_variant.value(), large_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -253,7 +264,7 @@ mod tests {
 
         for variant in variants {
             let small_variant = variant.with_value(small_value);
-            assert_eq!(small_variant.value(), small_value);
+            assert_relative_eq!(small_variant.value(), small_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -279,24 +290,11 @@ mod tests {
     }
 
     #[test]
-    fn test_clone_functionality() {
-        let variants = create_temperature_variants();
-
-        for original in variants {
-            let cloned = original.clone();
-
-            assert_eq!(original, cloned);
-            assert_eq!(original.value(), cloned.value());
-            assert_eq!(original.unit_type(), cloned.unit_type());
-        }
-    }
-
-    #[test]
     fn test_debug_formatting() {
         let temperatures = create_temperature_variants();
 
         for temperature in temperatures {
-            let debug_str = format!("{:?}", temperature);
+            let debug_str = format!("{temperature:?}");
             assert!(!debug_str.is_empty());
 
             match temperature {
@@ -311,7 +309,7 @@ mod tests {
         let units = create_temperature_unit_variants();
 
         for unit in units {
-            let debug_str = format!("{:?}", unit);
+            let debug_str = format!("{unit:?}");
             assert!(!debug_str.is_empty());
 
             match unit {
@@ -348,7 +346,7 @@ mod tests {
 
             let new_variant = variant.with_value(180.0);
             assert_eq!(new_variant.unit_type(), original_type);
-            assert_eq!(new_variant.value(), 180.0);
+            assert_relative_eq!(new_variant.value(), 180.0, epsilon = f64::EPSILON);
 
             let restored = new_variant.with_value(original_value);
             assert_eq!(restored, variant);
@@ -360,10 +358,10 @@ mod tests {
         let value = 0.1 + 0.2;
         let celsius = Temperature::Celsius(value);
 
-        assert_eq!(celsius.value(), value);
+        assert_relative_eq!(celsius.value(), value, epsilon = f64::EPSILON);
 
         let new_celsius = celsius.with_value(0.3);
-        assert_eq!(new_celsius.value(), 0.3);
+        assert_relative_eq!(new_celsius.value(), 0.3, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -386,7 +384,7 @@ mod tests {
 
         let result = original.with_value(30.0).with_value(40.0).with_value(50.0);
 
-        assert_eq!(result.value(), 50.0);
+        assert_relative_eq!(result.value(), 50.0, epsilon = f64::EPSILON);
         assert_eq!(
             result.unit_type(),
             UnitType::Temperature(TemperatureUnit::Celsius)
@@ -421,12 +419,12 @@ mod tests {
         let candy_temp_celsius = Temperature::Celsius(118.0); // Soft ball stage
         let candy_temp_fahrenheit = Temperature::Fahrenheit(244.0); // Soft ball stage
 
-        assert_eq!(oven_temp_celsius.value(), 180.0);
-        assert_eq!(oven_temp_fahrenheit.value(), 350.0);
-        assert_eq!(deep_fry_celsius.value(), 175.0);
-        assert_eq!(deep_fry_fahrenheit.value(), 347.0);
-        assert_eq!(candy_temp_celsius.value(), 118.0);
-        assert_eq!(candy_temp_fahrenheit.value(), 244.0);
+        assert_relative_eq!(oven_temp_celsius.value(), 180.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(oven_temp_fahrenheit.value(), 350.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(deep_fry_celsius.value(), 175.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(deep_fry_fahrenheit.value(), 347.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(candy_temp_celsius.value(), 118.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(candy_temp_fahrenheit.value(), 244.0, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -441,14 +439,14 @@ mod tests {
         let beef_medium_c = Temperature::Celsius(63.0);
         let beef_medium_f = Temperature::Fahrenheit(145.0);
 
-        assert_eq!(danger_zone_start_c.value(), 4.0);
-        assert_eq!(danger_zone_start_f.value(), 40.0);
-        assert_eq!(danger_zone_end_c.value(), 60.0);
-        assert_eq!(danger_zone_end_f.value(), 140.0);
-        assert_eq!(chicken_safe_c.value(), 74.0);
-        assert_eq!(chicken_safe_f.value(), 165.0);
-        assert_eq!(beef_medium_c.value(), 63.0);
-        assert_eq!(beef_medium_f.value(), 145.0);
+        assert_relative_eq!(danger_zone_start_c.value(), 4.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(danger_zone_start_f.value(), 40.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(danger_zone_end_c.value(), 60.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(danger_zone_end_f.value(), 140.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(chicken_safe_c.value(), 74.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(chicken_safe_f.value(), 165.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(beef_medium_c.value(), 63.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(beef_medium_f.value(), 145.0, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -458,10 +456,10 @@ mod tests {
         let liquid_nitrogen_c = Temperature::Celsius(-196.0); // Molecular gastronomy
         let liquid_nitrogen_f = Temperature::Fahrenheit(-321.0); // Molecular gastronomy
 
-        assert_eq!(pizza_oven_c.value(), 480.0);
-        assert_eq!(pizza_oven_f.value(), 900.0);
-        assert_eq!(liquid_nitrogen_c.value(), -196.0);
-        assert_eq!(liquid_nitrogen_f.value(), -321.0);
+        assert_relative_eq!(pizza_oven_c.value(), 480.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(pizza_oven_f.value(), 900.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(liquid_nitrogen_c.value(), -196.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(liquid_nitrogen_f.value(), -321.0, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -504,7 +502,7 @@ mod tests {
         for variant in variants {
             for &test_value in &test_values {
                 let modified = variant.with_value(test_value);
-                assert_eq!(modified.value(), test_value);
+                assert_relative_eq!(modified.value(), test_value, epsilon = f64::EPSILON);
                 assert_eq!(modified.unit_type(), variant.unit_type());
             }
         }
@@ -518,12 +516,12 @@ mod tests {
         let cold_to_hot_c = sub_zero_c.with_value(40.0);
         let cold_to_hot_f = sub_zero_f.with_value(104.0);
 
-        assert_eq!(cold_to_hot_c.value(), 40.0);
+        assert_relative_eq!(cold_to_hot_c.value(), 40.0, epsilon = f64::EPSILON);
         assert_eq!(
             cold_to_hot_c.unit_type(),
             UnitType::Temperature(TemperatureUnit::Celsius)
         );
-        assert_eq!(cold_to_hot_f.value(), 104.0);
+        assert_relative_eq!(cold_to_hot_f.value(), 104.0, epsilon = f64::EPSILON);
         assert_eq!(
             cold_to_hot_f.unit_type(),
             UnitType::Temperature(TemperatureUnit::Fahrenheit)

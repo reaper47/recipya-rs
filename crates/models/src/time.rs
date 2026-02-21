@@ -8,7 +8,7 @@ use crate::recipe::structs::time::Times;
 use super::Result;
 
 /// Stores recipe times formatted for display to the user.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct FormattedTimes {
     pub cook: String,
     pub cook_datetime: String,

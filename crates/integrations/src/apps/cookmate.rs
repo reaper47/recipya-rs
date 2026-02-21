@@ -243,8 +243,9 @@ mod tests {
         use std::io::Cursor;
         use testing::utils::open_test_file;
 
+        #[allow(clippy::too_many_lines)]
         pub fn xml_file<'a>() -> &'a str {
-            r##"<?xml version="1.0" encoding="utf-8"?>
+            r#"<?xml version="1.0" encoding="utf-8"?>
 <cookbook version="71">
 <recipe>
 <title>Asparagus Soup (Zuppa Di Asparagi)</title>
@@ -489,7 +490,7 @@ mod tests {
 <category>Fish/sea</category>
 <category>Spanish</category>
 </recipe>
-</cookbook>"##
+</cookbook>"#
         }
 
         pub fn backup() -> Cursor<Vec<u8>> {
@@ -504,6 +505,7 @@ mod tests {
 
         use crate::helpers::to_yield;
 
+        #[allow(clippy::too_many_lines)]
         pub fn xml_recipes() -> Vec<Recipe> {
             vec![
                 Recipe {
@@ -544,7 +546,7 @@ mod tests {
                             "Add the broth and bring to a boil; reduce the heat and simmer for 15".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("minutes, or until the asparagus is tender.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Beat the eggs and cheese together. When the asparagus is tender, reduce".into(),
                         ),
@@ -561,14 +563,14 @@ mod tests {
                             "the eggs mixture into the soup pot. The soup must not boil or the eggs".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("will scramble. Heat until thickened.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Put one slice of toasted bread into each soup dish. Ladle the hot soup on".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("top and pass additional grated cheese.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text("Serves 6.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "NOTE: To trim asparagus, hold the tip in one hand and the base of the".into(),
                         ),
@@ -576,11 +578,11 @@ mod tests {
                             "stalk in the other. Bend gently. The asparagus will snap, leaving the".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("tender part with the tip.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "[ \"We Called It Macaroni\"; Nancy Verde Barr; Knopf; ISBN 0-394-55798-0 ]".into(),
                         ),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text("Posted by Fred Peters.".into()),
                     ],
                     recipe_yield: to_yield(6),
@@ -618,7 +620,7 @@ mod tests {
                             "1> Preheat the oven to 200c/400f/Gas 6. Bake the aubergine for".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("puree the flesh in a blender or processor.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Add the garlic, tahini and lemon juice and process until mixed.".into(),
                         ),
@@ -626,7 +628,7 @@ mod tests {
                             "With the motor running, drizzle in the oil to make a smooth paste.".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("Season to taste.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Transfer to a serving dish, garnish and serve cold with pitta bread.".into(),
                         ),
@@ -686,7 +688,7 @@ mod tests {
                             "cheese. Toss well. Sprinkle over top layer. Bake 20 minutes or until bread".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("cubes are golden and eggplant is tender.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "SOURCE: Good Houskeeping's Around The World Cookbook. Consolidated Book".into(),
                         ),
@@ -725,9 +727,9 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "dish was then further refined by Scharfenberg's mentor August Goerg. K.B.))".into(),
                         ),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text("Per person: thick, trimmed".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Mix together the shallot or onion with the pepper and mace. Insert a few".into(),
                         ),
@@ -737,7 +739,7 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "steak with the shallot mixture, pressing it in so it will adhere.".into(),
                         ),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Remove the loose shallot pieces and grill the steak (over a fire of oak".into(),
                         ),
@@ -748,12 +750,12 @@ mod tests {
                             "steaks off the grill while they are still pink inside. Sprinkle them with".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("salt.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "*Note: A special grill is used, suspended with 3 chains from an iron".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("tripod and constantly swinging through the flames.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "From: THE CUISINES OF GERMANY by Horst Scharfenberg, Simon &".into(),
                         ),
@@ -821,7 +823,7 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "{ Submitted by Chiqui Collier, Cookery N'Orleans Restaurant }".into(),
                         ),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "In a large electric skillet or paella pan, brown the chicken pieces (that".into(),
                         ),
@@ -838,7 +840,7 @@ mod tests {
                             "necessary) add the onion, garlic, bell pepper, celery and carrot. Stir-fry".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("for 2 minutes.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Add the peas, peeled shrimp, pimentos, capers, chicken, calamari and pork.".into(),
                         ),
@@ -848,7 +850,7 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "bouillon cubes and saffron. Let it stand for 5 minutes until dissolved.".into(),
                         ),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Gently stir the rice into the skillet mixture. Slowly pour in enough of".into(),
                         ),
@@ -862,7 +864,7 @@ mod tests {
                             "egg slices and raw unpeeled shrimp on the top. (Add more broth as necessary".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("to keep the rice moist.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Cover and steam for another 10 minutes until the shrimp are cooked and the".into(),
                         ),
@@ -872,18 +874,18 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "hot pad on the serving table and let everyone help themselves.".into(),
                         ),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "Serve with a mixed green salad, red ripe tomatoes and some French bread.".into(),
                         ),
                         RecipeRecipeInstructionsFieldEnum::Text("Also mix up a pitcher of Sangria and enjoy!".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text("Serves: 12.".into()),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text(
                             "[ The Legends of Louisisna Cookbook; Sheila Ainbinder; ISBN 0-671-70817-1 ]".into(),
                         ),
-                        RecipeRecipeInstructionsFieldEnum::Text("".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(String::new()),
                         RecipeRecipeInstructionsFieldEnum::Text("Posted by Fred Peters".into()),
                     ],
                     recipe_yield: to_yield(6),

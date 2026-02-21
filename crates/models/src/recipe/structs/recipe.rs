@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 use diesel::prelude::*;
 use schema_org::ToIso8601;
 use tracing::error;
@@ -16,7 +17,29 @@ use crate::recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCre
 use crate::recipe::structs::section::{Section, SectionComponents};
 use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
+use crate::recipe::structs::types::Source;
 use crate::user::User;
+
+bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct RecipeField: u32 {
+        const NAME         = 1 << 0;
+        const DESCRIPTION  = 1 << 1;
+        const MEDIA       = 1 << 2;
+        const NOTES        = 1 << 3;
+        const SOURCE       = 1 << 4;
+        const RATING       = 1 << 5;
+        const YIELD        = 1 << 6;
+        const CATEGORY     = 1 << 7;
+        const CUISINE      = 1 << 8;
+        const INGREDIENTS  = 1 << 9;
+        const INSTRUCTIONS = 1 << 10;
+        const KEYWORDS     = 1 << 11;
+        const NUTRITION    = 1 << 12;
+        const TIMES        = 1 << 13;
+        const TOOLS        = 1 << 14;
+    }
+}
 
 /// Represents a recipe entity stored in the database.
 #[derive(
@@ -46,7 +69,8 @@ pub struct Recipe {
     /// An optional UUID referencing an image associated with the recipe.
     pub image: Option<Uuid>,
     /// The quantity of servings or portions the recipe produces.
-    pub yield_: i16,
+    #[diesel(column_name = yield_)]
+    pub r#yield: i16,
     /// The language in which the recipe is written.
     pub language: String,
     /// The original measurement system the recipe is in.
@@ -54,7 +78,7 @@ pub struct Recipe {
     /// Optional notes of the recipe.
     pub notes: Option<String>,
     /// An optional reference to the origin or inspiration of the recipe.
-    pub source: String,
+    pub source: Source,
     /// Specifies whether the recipe has been marked as favourite.
     pub is_favourite: bool,
     /// Optional 1-5 rating. None is used for no rating.
@@ -75,10 +99,11 @@ pub(crate) struct RecipeForInsert {
     pub name: String,
     pub description: Option<String>,
     pub image: Option<Uuid>,
-    pub yield_: Option<i16>,
+    #[diesel(column_name = yield_)]
+    pub r#yield: Option<i16>,
     pub language: String,
     pub notes: Option<String>,
-    pub source: String,
+    pub source: Source,
     pub is_favourite: bool,
     pub rating: Option<i16>,
     pub user_id: Uuid,
@@ -144,7 +169,7 @@ impl From<RecipeForCreate> for RecipeDetails {
             recipe: Recipe {
                 name: recipe_c.name.clone(),
                 description: recipe_c.description.clone(),
-                yield_: recipe_c.r#yield.unwrap_or(4),
+                r#yield: recipe_c.r#yield.unwrap_or(4),
                 language: recipe_c.detect_language().code().to_string(),
                 measurement_system_id: 1,
                 source: recipe_c.source,
@@ -184,7 +209,7 @@ pub struct RecipeForCreate {
     pub is_favourite: bool,
     pub measurement_system_id: i16,
     pub notes: Option<String>,
-    pub source: String,
+    pub source: Source,
     pub rating: Option<i16>,
     pub videos: Vec<VideoForCreate>,
     pub r#yield: Option<i16>,
@@ -229,6 +254,43 @@ impl RecipeForCreate {
         )
         .unwrap_or(Lang::Eng)
     }
+
+    /// Diff gets the changes between the current recipe and another recipe.
+    pub fn diff(&self, other: &Self, is_nutrition_calculated_by_source: bool) -> RecipeField {
+        let mut changes = RecipeField::empty();
+
+        changes.set(RecipeField::NAME, self.name != other.name);
+        changes.set(
+            RecipeField::DESCRIPTION,
+            self.description != other.description,
+        );
+        changes.set(
+            RecipeField::MEDIA,
+            self.images.len() != other.images.len() || self.videos != other.videos,
+        );
+        changes.set(RecipeField::NOTES, self.notes != other.notes);
+        changes.set(RecipeField::RATING, self.rating != other.rating);
+        changes.set(RecipeField::YIELD, self.r#yield != other.r#yield);
+        changes.set(RecipeField::CATEGORY, self.category != other.category);
+        changes.set(RecipeField::CUISINE, self.cuisine != other.cuisine);
+        changes.set(
+            RecipeField::INGREDIENTS,
+            self.ingredients.items_as_text() != other.ingredients.items_as_text(),
+        );
+        changes.set(
+            RecipeField::INSTRUCTIONS,
+            self.instructions.items_as_text() != other.instructions.items_as_text(),
+        );
+        changes.set(RecipeField::KEYWORDS, self.keywords != other.keywords);
+        changes.set(
+            RecipeField::NUTRITION,
+            is_nutrition_calculated_by_source && self.nutrition != other.nutrition,
+        );
+        changes.set(RecipeField::TIMES, self.times != other.times);
+        changes.set(RecipeField::TOOLS, self.tools != other.tools);
+
+        changes
+    }
 }
 
 impl From<&RecipeForm> for RecipeForCreate {
@@ -243,8 +305,8 @@ impl From<&RecipeForm> for RecipeForCreate {
             name: form.title.clone(),
             description: form.description.clone(),
             images: Vec::new(),
-            r#yield: form.yield_,
-            source: form.source.clone().unwrap_or_default(),
+            r#yield: form.r#yield,
+            source: Source::from(form.source.clone()),
             is_favourite: false,
             rating: form.rating,
             videos: Vec::new(),
@@ -268,6 +330,33 @@ impl From<&RecipeForm> for RecipeForCreate {
 impl From<RecipeForm> for RecipeForCreate {
     fn from(form: RecipeForm) -> Self {
         Self::from(&form)
+    }
+}
+
+impl From<RecipeDetails> for RecipeForCreate {
+    fn from(r: RecipeDetails) -> Self {
+        let recipe = r.recipe.clone();
+
+        Self {
+            name: recipe.name,
+            description: recipe.description,
+            images: r.all_images(),
+            is_favourite: recipe.is_favourite,
+            measurement_system_id: recipe.measurement_system_id,
+            notes: recipe.notes,
+            source: recipe.source,
+            rating: recipe.rating,
+            videos: r.videos.into_iter().map(VideoForCreate::from).collect(),
+            r#yield: Some(recipe.r#yield),
+            category: Some(r.category),
+            cuisine: r.cuisine,
+            ingredients: r.ingredients,
+            instructions: r.instructions,
+            keywords: r.keywords,
+            nutrition: NutritionDetailsForCreate::from(r.nutrition),
+            times: Some(TimesForCreate::from(r.times)),
+            tools: r.tools.into_iter().map(ToolForCreate::from).collect(),
+        }
     }
 }
 
@@ -306,7 +395,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
                 },
                 FieldEnum20::to_i16,
             ),
-            source: schema.url.first().cloned().unwrap_or_default(),
+            source: Source::from(schema.url.first().cloned()),
             is_favourite: false,
             rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
             videos: vec![],
@@ -316,9 +405,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             ),
             cuisine: schema.recipe_cuisine.first().cloned(),
             ingredients,
-            instructions: SectionComponents::try_from(schema.recipe_instructions.clone())
-                .inspect(|err| error!("Failed to parse instructions: {:?}", err))
-                .unwrap_or_default(),
+            instructions: SectionComponents::from(schema.recipe_instructions.clone()),
             keywords: schema
                 .keywords
                 .iter()
@@ -396,6 +483,7 @@ pub(crate) struct IngredientRecipeForInsert {
     pub ingredient_id: i64,
     pub recipe_id: i64,
     pub section_id: i64,
+    pub section_order: i16,
     pub item_order: i16,
 }
 
@@ -417,6 +505,7 @@ pub(crate) struct InstructionRecipeForInsert {
     pub instruction_id: i64,
     pub recipe_id: i64,
     pub section_id: i64,
+    pub section_order: i16,
     pub item_order: i16,
 }
 
@@ -515,7 +604,7 @@ mod tests {
 
             let got = recipe.all_images();
 
-            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            let got_str = got.iter().map(ToString::to_string).collect::<Vec<_>>();
             pretty_assertions::assert_eq!(got_str, Vec::<String>::new());
         }
 
@@ -527,7 +616,7 @@ mod tests {
 
             let got = recipe.all_images();
 
-            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            let got_str = got.iter().map(ToString::to_string).collect::<Vec<_>>();
             pretty_assertions::assert_eq!(got_str, vec![an_image.to_string()]);
         }
 
@@ -541,7 +630,7 @@ mod tests {
 
             let got = recipe.all_images();
 
-            let got_str = got.iter().map(|v| v.to_string()).collect::<Vec<_>>();
+            let got_str = got.iter().map(ToString::to_string).collect::<Vec<_>>();
             pretty_assertions::assert_eq!(
                 got_str,
                 vec![an_image.to_string(), an_image2.to_string()]
@@ -729,7 +818,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert!(recipe.r#yield.is_none())
+                assert!(recipe.r#yield.is_none());
             }
 
             #[test]
@@ -743,7 +832,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(4))
+                assert_eq!(recipe.r#yield, Some(4));
             }
 
             #[test]
@@ -754,7 +843,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(8))
+                assert_eq!(recipe.r#yield, Some(8));
             }
 
             #[test]
@@ -768,7 +857,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(12))
+                assert_eq!(recipe.r#yield, Some(12));
             }
         }
 

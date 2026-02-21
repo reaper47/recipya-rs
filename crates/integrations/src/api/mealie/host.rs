@@ -89,10 +89,7 @@ mod tests {
 
         assert_eq!(
             got,
-            format!(
-                "https://example.com/api/media/recipes/{}/images/original.webp",
-                recipe_id
-            )
+            format!("https://example.com/api/media/recipes/{recipe_id}/images/original.webp")
         );
     }
 
@@ -103,10 +100,7 @@ mod tests {
 
         let got = host.recipe_url(recipe_id);
 
-        assert_eq!(
-            got,
-            format!("https://example.com/api/recipes/{}", recipe_id)
-        );
+        assert_eq!(got, format!("https://example.com/api/recipes/{recipe_id}"));
     }
 
     #[test]
@@ -125,7 +119,7 @@ mod tests {
 
         assert_eq!(
             got,
-            format!("https://example.com/api/admin/users/{}", user_id)
+            format!("https://example.com/api/admin/users/{user_id}")
         );
     }
 }

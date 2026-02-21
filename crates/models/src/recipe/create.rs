@@ -73,7 +73,7 @@ impl Recipe {
                             name: recipe_c.name.clone(),
                             description: recipe_c.description.clone(),
                             image: main_image,
-                            yield_: recipe_c.r#yield,
+                            r#yield: recipe_c.r#yield,
                             language: recipe_c.detect_language().code().to_string(),
                             notes: recipe_c.notes.clone(),
                             source: recipe_c.source.clone(),
@@ -201,6 +201,7 @@ impl Recipe {
 #[cfg(test)]
 mod tests {
     use app::state::AppState;
+    use chrono::NaiveDateTime;
     use testing::utils::{TestDb, build_server_logged_in, create_app_state, insert_user};
 
     use super::*;
@@ -248,12 +249,11 @@ mod tests {
 
             let res = Recipe::add_category(&state.mm, category, user.id).await;
 
-            match res {
-                Ok(_) => panic!("Should not succeed"),
-                Err(_) => {
-                    assert_category(state, category).await?;
-                    Ok(())
-                }
+            if res.is_ok() {
+                panic!("Should not succeed")
+            } else {
+                assert_category(state, category).await?;
+                Ok(())
             }
         }
 
@@ -345,7 +345,7 @@ mod tests {
                 name: recipe.name,
                 description: recipe.description,
                 image: main_image,
-                yield_: recipe.r#yield.unwrap_or(4),
+                r#yield: recipe.r#yield.unwrap_or(4),
                 language: "eng".into(),
                 source: recipe.source,
                 measurement_system_id: 2,
@@ -357,7 +357,7 @@ mod tests {
                 rating: Some(4),
             },
             additional_images,
-            category: recipe.category.unwrap_or("uncategorized".into()),
+            category: recipe.category.unwrap_or_else(|| "uncategorized".into()),
             cuisine: recipe.cuisine,
             ingredients: recipe.ingredients,
             instructions: recipe.instructions,
@@ -377,7 +377,7 @@ mod tests {
                 .map(|(idx, t)| ToolRecipe {
                     name: t.name,
                     quantity: t.quantity,
-                    tool_order: (idx + 1) as i16,
+                    tool_order: i16::try_from(idx + 1).unwrap_or_default(),
                 })
                 .collect::<Vec<_>>(),
             videos: recipe
@@ -392,14 +392,7 @@ mod tests {
                     created_at: got
                         .videos
                         .get(idx)
-                        .unwrap_or(&Video {
-                            video: Default::default(),
-                            duration: None,
-                            content_url: None,
-                            embed_url: None,
-                            created_at: Default::default(),
-                        })
-                        .created_at,
+                        .map_or_else(NaiveDateTime::default, |v| v.created_at),
                 })
                 .collect::<Vec<_>>(),
         }

@@ -40,6 +40,15 @@ impl From<HowToTool> for ToolForCreate {
     }
 }
 
+impl From<ToolRecipe> for ToolForCreate {
+    fn from(t: ToolRecipe) -> Self {
+        Self {
+            name: t.name,
+            quantity: t.quantity,
+        }
+    }
+}
+
 /// Represents a tool being inserted into the `tools` table.
 #[derive(Insertable)]
 #[diesel(table_name = schema::tools)]

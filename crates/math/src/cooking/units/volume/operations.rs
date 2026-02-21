@@ -150,6 +150,8 @@ impl UnitOperations for Volume {
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
+
     use super::*;
 
     fn create_test_volumes() -> Vec<Volume> {
@@ -265,8 +267,7 @@ mod tests {
             assert_eq!(
                 volume.abbrev(),
                 expected,
-                "Failed for volume variant: {:?}",
-                volume
+                "Failed for volume variant: {volume:?}",
             );
         }
     }
@@ -274,13 +275,13 @@ mod tests {
     #[test]
     fn test_volume_construction_and_value() {
         let vol = Volume::Millilitre(250.0);
-        assert_eq!(vol.value(), 250.0);
+        assert_relative_eq!(vol.value(), 250.0, epsilon = f64::EPSILON);
 
         let vol2 = Volume::USCup(1.5);
-        assert_eq!(vol2.value(), 1.5);
+        assert_relative_eq!(vol2.value(), 1.5, epsilon = f64::EPSILON);
 
         let vol3 = Volume::ImperialPint(0.5);
-        assert_eq!(vol3.value(), 0.5);
+        assert_relative_eq!(vol3.value(), 0.5, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -289,7 +290,7 @@ mod tests {
         let volumes = all_volumes_with_value(test_value);
 
         for volume in volumes {
-            assert_eq!(volume.value(), test_value);
+            assert_relative_eq!(volume.value(), test_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -302,8 +303,8 @@ mod tests {
 
         for volume in volumes {
             let new_volume = volume.with_value(new_value);
-            assert_eq!(new_volume.value(), new_value);
-            assert_eq!(volume.value(), original_value);
+            assert_relative_eq!(new_volume.value(), new_value, epsilon = f64::EPSILON);
+            assert_relative_eq!(volume.value(), original_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -393,14 +394,10 @@ mod tests {
     #[test]
     fn test_clone() {
         let original = Volume::Litre(2.5);
-        let cloned = original.clone();
+        let modified = original.with_value(5.0);
 
-        assert_eq!(original, cloned);
-        assert_eq!(original.value(), cloned.value());
-
-        let modified = cloned.with_value(5.0);
-        assert_eq!(original.value(), 2.5);
-        assert_eq!(modified.value(), 5.0);
+        assert_relative_eq!(original.value(), 2.5, epsilon = f64::EPSILON);
+        assert_relative_eq!(modified.value(), 5.0, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -418,7 +415,7 @@ mod tests {
     #[test]
     fn test_debug_output() {
         let vol = Volume::USCup(1.5);
-        let debug_str = format!("{:?}", vol);
+        let debug_str = format!("{vol:?}");
         assert!(debug_str.contains("USCup"));
         assert!(debug_str.contains("1.5"));
     }
@@ -426,16 +423,16 @@ mod tests {
     #[test]
     fn test_special_float_values() {
         let zero_vol = Volume::Litre(0.0);
-        assert_eq!(zero_vol.value(), 0.0);
+        assert_relative_eq!(zero_vol.value(), 0.0, epsilon = f64::EPSILON);
 
         let negative_vol = Volume::Millilitre(-100.0);
-        assert_eq!(negative_vol.value(), -100.0);
+        assert_relative_eq!(negative_vol.value(), -100.0, epsilon = f64::EPSILON);
 
         let large_vol = Volume::Millilitre(f64::MAX / 2.0);
-        assert_eq!(large_vol.value(), f64::MAX / 2.0);
+        assert_relative_eq!(large_vol.value(), f64::MAX / 2.0, epsilon = f64::EPSILON);
 
         let small_vol = Volume::Millilitre(f64::MIN_POSITIVE);
-        assert_eq!(small_vol.value(), f64::MIN_POSITIVE);
+        assert_relative_eq!(small_vol.value(), f64::MIN_POSITIVE, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -447,7 +444,7 @@ mod tests {
             let new_volume = volume.with_value(999.0);
 
             assert_eq!(new_volume.unit_type(), original_unit_type);
-            assert_eq!(new_volume.value(), 999.0);
+            assert_relative_eq!(new_volume.value(), 999.0, epsilon = f64::EPSILON);
         }
     }
 
@@ -475,7 +472,7 @@ mod tests {
         assert_eq!(unit1, unit2);
         assert_ne!(unit1, unit3);
 
-        let debug_str = format!("{:?}", unit1);
+        let debug_str = format!("{unit1:?}");
         assert!(debug_str.contains("Millilitre"));
     }
 
@@ -488,8 +485,8 @@ mod tests {
         let new_vol = vol.with_value(value * 2.0);
 
         assert_eq!(unit_type, UnitType::Volume(VolumeUnit::USFluidOunce));
-        assert_eq!(value, 8.0);
-        assert_eq!(new_vol.value(), 16.0);
+        assert_relative_eq!(value, 8.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(new_vol.value(), 16.0, epsilon = f64::EPSILON);
         assert_eq!(new_vol.unit_type(), unit_type);
     }
 
@@ -500,9 +497,9 @@ mod tests {
         let vol3 = vol1.with_value(vol1.value() + 50.0);
         let vol4 = vol1.with_value(vol1.value() / 4.0);
 
-        assert_eq!(vol2.value(), 200.0);
-        assert_eq!(vol3.value(), 150.0);
-        assert_eq!(vol4.value(), 25.0);
+        assert_relative_eq!(vol2.value(), 200.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(vol3.value(), 150.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(vol4.value(), 25.0, epsilon = f64::EPSILON);
         assert_eq!(vol1.unit_type(), vol2.unit_type());
         assert_eq!(vol1.unit_type(), vol3.unit_type());
         assert_eq!(vol1.unit_type(), vol4.unit_type());

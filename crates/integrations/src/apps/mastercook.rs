@@ -822,7 +822,7 @@ mod tests {
         use testing::utils::open_test_file;
 
         pub fn mx2<'a>() -> &'a str {
-            r##"<?xml version="1.0" standalone="yes" encoding="ISO-8859-1"?>
+            r#"<?xml version="1.0" standalone="yes" encoding="ISO-8859-1"?>
 <!DOCTYPE mx2 SYSTEM "mx2.dtd">
 <mx2 source="MasterCook" date="April 14, 2025">
 <Summ>
@@ -911,11 +911,11 @@ My mother&apos;s recipe cookbook
 <Nutr>
 Per Serving (excluding unknown items): 34 Calories; 1g Fat (21.3% calories from fat); 1g Protein; 6g Carbohydrate; 0g Dietary Fiber; 31mg Cholesterol; 108mg Sodium; 4g Total Sugars; trace Vitamin D; 5mg Calcium; trace Iron; 12mg Potassium; 17mg Phosphorus.  Exchanges: .
 </Nutr>
-</RcpE></mx2>"##
+</RcpE></mx2>"#
         }
 
         pub fn mxp<'a>() -> &'a str {
-            r##"                    *  Exported from  MasterCook II  *
+            r#"                    *  Exported from  MasterCook II  *
 
                                 Apple Slaw
 
@@ -1013,7 +1013,7 @@ I just have to pass this along to you. I don't want you to prepare this bec none
                    - - - - - - - - - - - - - - - - - -
 
 
-"##
+"#
         }
 
         pub fn mz2() -> Cursor<Vec<u8>> {
@@ -1021,7 +1021,7 @@ I just have to pass this along to you. I don't want you to prepare this bec none
         }
 
         pub fn txt<'a>() -> &'a str {
-            r##"
+            r#"
 * Exported from MasterCook *
 
                                Best Chicken
@@ -1094,7 +1094,7 @@ Per Serving (excluding unknown items): 34 Calories; 1g Fat (21.3% calories from 
 
 
 Nutr. Assoc. : 0 0 0
-"##
+"#
         }
     }
 

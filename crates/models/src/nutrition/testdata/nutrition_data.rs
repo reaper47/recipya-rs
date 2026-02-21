@@ -19,7 +19,7 @@ pub mod nutrition_data_for_tests {
         selected_dataset: String,
     }
 
-    impl<'a> FdcClientForTests<'a> {
+    impl FdcClientForTests<'_> {
         pub fn new(selected_dataset: impl Into<String>) -> Self {
             Self {
                 selected_dataset: selected_dataset.into(),
@@ -42,12 +42,12 @@ pub mod nutrition_data_for_tests {
     }
 
     #[async_trait]
-    impl<'a> FdcFetcher for FdcClientForTests<'a> {
+    impl FdcFetcher for FdcClientForTests<'_> {
         async fn fetch_foundation_foods(&self) -> Result<ZipArchive<Cursor<Vec<u8>>>> {
             let dataset = self
                 .datasets
                 .get(&self.selected_dataset.as_ref())
-                .cloned()
+                .copied()
                 .unwrap_or_else(|| panic!("dataset {}", self.selected_dataset));
 
             let mut zip_buffer = Cursor::new(Vec::new());

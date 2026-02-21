@@ -202,7 +202,7 @@ mod tests {
                 &res,
                 vec![
                     r#"<title hx-swap-oob="true">Success | Recipya</title>"#,
-                    r#"Your account has been verified."#,
+                    r"Your account has been verified.",
                 ],
             );
             Ok(())
@@ -359,7 +359,7 @@ mod tests {
                 &res,
                 vec![
                     r#"<h2 class="card-title underline self-center">Password Reset Requested</h2>"#,
-                    r#"An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account."#,
+                    r"An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
                     r#"<a href="/" class="btn btn-primary btn-block btn-sm">Back Home</a>"#,
                 ],
             );
@@ -455,7 +455,7 @@ mod tests {
 
             res.assert_status_bad_request();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Operation Successful"}}"#,
             );
             Ok(())
@@ -482,10 +482,10 @@ mod tests {
 
             res.assert_status_see_other();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#,
             );
-            res.assert_header(axum_htmx::headers::HX_REDIRECT, "/auth/login");
+            res.assert_header(axum_htmx::HX_REDIRECT, "/auth/login");
             assert!(
                 PasswordResetToken::find_by_token(&state.mm, &entry.token)
                     .await?
@@ -631,7 +631,8 @@ mod tests {
             res.assert_header("Location", "/");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
-            let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
+            let now =
+                usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
             assert!(
                 (claims.exp - now) >= 15 * 60,
                 "expiration time should be 15 minutes"
@@ -666,7 +667,7 @@ mod tests {
 
             res.assert_status_bad_request();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
             );
             Ok(())
@@ -688,7 +689,7 @@ mod tests {
 
             res.assert_status_bad_request();
             res.assert_header(
-                axum_htmx::headers::HX_TRIGGER,
+                axum_htmx::HX_TRIGGER,
                 r#"{"showMessageHtmx":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
             );
             Ok(())
@@ -712,7 +713,8 @@ mod tests {
             res.assert_header("Location", "/");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
-            let now = OffsetDateTime::now_utc().unix_timestamp() as usize;
+            let now =
+                usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
             assert!(
                 (claims.exp - now) >= 15 * 60,
                 "expiration time should be 15 minutes"

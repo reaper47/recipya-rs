@@ -58,6 +58,10 @@ impl UnitOperations for Mass {
 
 #[cfg(test)]
 mod tests {
+    use std::f64;
+
+    use approx::assert_relative_eq;
+
     use super::*;
 
     fn create_mass_variants() -> Vec<Mass> {
@@ -99,12 +103,7 @@ mod tests {
         ];
 
         for (mass, expected) in test_cases {
-            assert_eq!(
-                mass.abbrev(),
-                expected,
-                "Failed for mass variant: {:?}",
-                mass
-            );
+            assert_eq!(mass.abbrev(), expected, "Failed for mass variant: {mass:?}",);
         }
     }
 
@@ -118,13 +117,13 @@ mod tests {
         let oz = Mass::Ounce(16.0);
         let lb = Mass::Pound(2.2);
 
-        assert_eq!(mg.value(), 1000.0);
-        assert_eq!(g.value(), 100.0);
-        assert_eq!(dag.value(), 10.0);
-        assert_eq!(hg.value(), 5.0);
-        assert_eq!(kg.value(), 2.5);
-        assert_eq!(oz.value(), 16.0);
-        assert_eq!(lb.value(), 2.2);
+        assert_relative_eq!(mg.value(), 1000.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(g.value(), 100.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(dag.value(), 10.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(hg.value(), 5.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(kg.value(), 2.5, epsilon = f64::EPSILON);
+        assert_relative_eq!(oz.value(), 16.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(lb.value(), 2.2, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -182,7 +181,7 @@ mod tests {
         ];
 
         for (mass, expected) in test_values {
-            assert_eq!(mass.value(), expected);
+            assert_relative_eq!(mass.value(), expected, epsilon = f64::EPSILON);
         }
     }
 
@@ -196,7 +195,7 @@ mod tests {
             let new_variant = variant.with_value(new_value);
 
             assert_eq!(new_variant.unit_type(), original_type);
-            assert_eq!(new_variant.value(), new_value);
+            assert_relative_eq!(new_variant.value(), new_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -231,9 +230,9 @@ mod tests {
         ];
 
         for variant in zero_variants {
-            assert_eq!(variant.value(), 0.0);
+            assert_relative_eq!(variant.value(), 0.0, epsilon = f64::EPSILON);
             let new_variant = variant.with_value(15.5);
-            assert_eq!(new_variant.value(), 15.5);
+            assert_relative_eq!(new_variant.value(), 15.5, epsilon = f64::EPSILON);
         }
     }
 
@@ -249,14 +248,14 @@ mod tests {
             Mass::Pound(-0.75),
         ];
 
-        for variant in negative_variants.clone() {
+        for variant in negative_variants {
             assert!(variant.value() < 0.0);
         }
 
         // Test with_value with negative values
         let g = Mass::Gram(10.0);
         let negative_g = g.with_value(-25.7);
-        assert_eq!(negative_g.value(), -25.7);
+        assert_relative_eq!(negative_g.value(), -25.7, epsilon = f64::EPSILON);
         assert_eq!(negative_g.unit_type(), UnitType::Mass(MassUnit::Gram));
     }
 
@@ -267,7 +266,7 @@ mod tests {
 
         for variant in variants {
             let large_variant = variant.with_value(large_value);
-            assert_eq!(large_variant.value(), large_value);
+            assert_relative_eq!(large_variant.value(), large_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -278,7 +277,7 @@ mod tests {
 
         for variant in variants {
             let small_variant = variant.with_value(small_value);
-            assert_eq!(small_variant.value(), small_value);
+            assert_relative_eq!(small_variant.value(), small_value, epsilon = f64::EPSILON);
         }
     }
 
@@ -301,24 +300,11 @@ mod tests {
     }
 
     #[test]
-    fn test_clone_functionality() {
-        let variants = create_mass_variants();
-
-        for original in variants {
-            let cloned = original.clone();
-
-            assert_eq!(original, cloned);
-            assert_eq!(original.value(), cloned.value());
-            assert_eq!(original.unit_type(), cloned.unit_type());
-        }
-    }
-
-    #[test]
     fn test_debug_formatting() {
         let masses = create_mass_variants();
 
         for mass in masses {
-            let debug_str = format!("{:?}", mass);
+            let debug_str = format!("{mass:?}");
             assert!(!debug_str.is_empty());
 
             // Verify the debug string contains the variant name
@@ -339,7 +325,7 @@ mod tests {
         let units = create_mass_unit_variants();
 
         for unit in units {
-            let debug_str = format!("{:?}", unit);
+            let debug_str = format!("{unit:?}");
             assert!(!debug_str.is_empty());
 
             // Verify the debug string contains the unit name
@@ -384,7 +370,7 @@ mod tests {
             // Test that with_value preserves type and sets value correctly
             let new_variant = variant.with_value(999.99);
             assert_eq!(new_variant.unit_type(), original_type);
-            assert_eq!(new_variant.value(), 999.99);
+            assert_relative_eq!(new_variant.value(), 999.99, epsilon = f64::EPSILON);
 
             // Test that we can restore the original
             let restored = new_variant.with_value(original_value);
@@ -397,10 +383,10 @@ mod tests {
         let value = 0.1 + 0.2; // Known floating point precision issue
         let g = Mass::Gram(value);
 
-        assert_eq!(g.value(), value);
+        assert_relative_eq!(g.value(), value, epsilon = f64::EPSILON);
 
         let new_g = g.with_value(0.3);
-        assert_eq!(new_g.value(), 0.3);
+        assert_relative_eq!(new_g.value(), 0.3, epsilon = f64::EPSILON);
     }
 
     #[test]
@@ -437,7 +423,7 @@ mod tests {
 
         let result = original.with_value(2.0).with_value(3.0).with_value(4.5);
 
-        assert_eq!(result.value(), 4.5);
+        assert_relative_eq!(result.value(), 4.5, epsilon = f64::EPSILON);
         assert_eq!(result.unit_type(), UnitType::Mass(MassUnit::Kilogram));
     }
 
@@ -488,7 +474,7 @@ mod tests {
         for variant in variants {
             for &test_value in &test_values {
                 let modified = variant.with_value(test_value);
-                assert_eq!(modified.value(), test_value);
+                assert_relative_eq!(modified.value(), test_value, epsilon = f64::EPSILON);
                 assert_eq!(modified.unit_type(), variant.unit_type());
             }
         }
@@ -503,11 +489,11 @@ mod tests {
         let spice = Mass::Milligram(500.0); // Pinch of spice
         let meat = Mass::Pound(2.5); // Roast
 
-        assert_eq!(flour.value(), 250.0);
-        assert_eq!(butter.value(), 113.0);
-        assert_eq!(sugar.value(), 1.0);
-        assert_eq!(spice.value(), 500.0);
-        assert_eq!(meat.value(), 2.5);
+        assert_relative_eq!(flour.value(), 250.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(butter.value(), 113.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(sugar.value(), 1.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(spice.value(), 500.0, epsilon = f64::EPSILON);
+        assert_relative_eq!(meat.value(), 2.5, epsilon = f64::EPSILON);
 
         // Test conversions maintain unit type
         let heavy_spice = spice.with_value(2000.0);

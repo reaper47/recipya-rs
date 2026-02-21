@@ -499,6 +499,7 @@ mod tests {
     }
 
     mod files {
+        #[allow(clippy::too_many_lines)]
         pub fn recipe1<'a>() -> &'a str {
             r##"<html>
 

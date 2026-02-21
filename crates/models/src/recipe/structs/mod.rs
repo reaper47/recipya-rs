@@ -4,6 +4,7 @@ pub mod recipe;
 pub mod section;
 pub mod time;
 pub mod tool;
+pub mod types;
 
 #[cfg(feature = "test-utils")]
 pub mod test_utils {
@@ -22,6 +23,7 @@ pub mod test_utils {
             section::{Item, SectionComponents, SectionItem},
             time::{Times, TimesForCreate},
             tool::{ToolForCreate, ToolRecipe},
+            types::Source,
         },
     };
 
@@ -51,7 +53,7 @@ pub mod test_utils {
                 name: recipe_c.name,
                 description: recipe_c.description,
                 image: images.first().copied().or(None),
-                yield_: recipe_c.r#yield.ok_or(4).expect("a yield found"),
+                r#yield: recipe_c.r#yield.ok_or(4).expect("a yield found"),
                 language: "en".into(),
                 measurement_system_id: 2,
                 notes: Some("# Notes\n\nHere are some notes".into()),
@@ -126,7 +128,9 @@ pub mod test_utils {
             images: vec![main_image, secondary_image],
             measurement_system_id: 2,
             r#yield: Some(4),
-            source: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
+            source: Source::new(
+                "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
+            ),
             is_favourite: false,
             rating: Some(4),
             videos: vec![VideoForCreate {

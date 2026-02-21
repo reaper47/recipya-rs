@@ -5,7 +5,7 @@ use regex::Regex;
 
 use crate::Error;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Length {
     Millimetre(f64),
     Centimetre(f64),

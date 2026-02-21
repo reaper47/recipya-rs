@@ -563,7 +563,7 @@ mod tests {
             foods,
             vec![SRLegacyFoodDetails {
                 id: 1,
-                fdc_id: 174289,
+                fdc_id: 174_289,
                 food_class: "FinalFood".into(),
                 description: "Hummus, commercial".into(),
                 food_nutrients: vec![
@@ -654,6 +654,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::too_many_lines)]
     async fn test_parses_correctly_complex_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config).await;
@@ -670,7 +671,7 @@ mod tests {
             vec![
                 SRLegacyFoodDetails {
                     id: 1,
-                    fdc_id: 173421,
+                    fdc_id: 173_421,
                     food_class: "FinalFood".into(),
                     description: "Egg, yolk, raw, frozen, pasteurized".into(),
                     food_nutrients: vec![
@@ -749,7 +750,7 @@ mod tests {
                 },
                 SRLegacyFoodDetails {
                     id: 2,
-                    fdc_id: 173422,
+                    fdc_id: 173_422,
                     food_class: "FinalFood".into(),
                     description: "Egg, yolk, raw, frozen, sugared, pasteurized".into(),
                     food_nutrients: vec![

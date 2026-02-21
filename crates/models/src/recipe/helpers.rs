@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::env::temp_dir;
 use std::hash::BuildHasher;
 use std::path::PathBuf;
@@ -103,21 +103,25 @@ pub async fn insert_ingredients<C>(
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
-    // Collect all ingredients
     let mut all_ingredients = Vec::new();
 
     match ingredients {
         SectionComponents::Grouped(sections) => {
-            for section in sections {
+            for (section_idx, section) in sections.iter().enumerate() {
                 let id = *sections_map.get(&section.title).unwrap_or(&1);
                 for (idx, item) in section.items.iter().enumerate() {
-                    all_ingredients.push((normalise_vulgar_fractions(&item.text), id, idx));
+                    all_ingredients.push((
+                        normalise_vulgar_fractions(&item.text),
+                        id,
+                        idx,
+                        section_idx,
+                    ));
                 }
             }
         }
         SectionComponents::Flat(items) => {
             for (idx, item) in items.iter().enumerate() {
-                all_ingredients.push((normalise_vulgar_fractions(&item.text), 1, idx));
+                all_ingredients.push((normalise_vulgar_fractions(&item.text), 1, idx, 0));
             }
         }
     }
@@ -126,22 +130,20 @@ where
         return Ok(());
     }
 
-    // Remove duplicates
     let mut seen = HashSet::new();
     let mut unique_ingredients = Vec::new();
 
-    for (name, section_id, idx) in all_ingredients {
+    for (name, section_id, idx, section_order) in all_ingredients {
         if seen.insert(name.clone()) {
-            unique_ingredients.push((name, section_id, idx));
+            unique_ingredients.push((name, section_id, idx, section_order));
         }
     }
 
     let ingredient_names = unique_ingredients
         .iter()
-        .map(|(name, _, _)| name.clone())
+        .map(|(name, _, _, _)| name.clone())
         .collect::<Vec<_>>();
 
-    // Insert into ingredients table
     let ingredients_with_ids: Vec<(i64, String)> = diesel::insert_into(schema::ingredients::table)
         .values(
             &ingredient_names
@@ -156,7 +158,6 @@ where
         .get_results(conn)
         .await?;
 
-    // Insert into junctions table
     let name_to_id: HashMap<String, i64> = ingredients_with_ids
         .into_iter()
         .map(|(id, name)| (name, id))
@@ -166,13 +167,21 @@ where
         .values(
             &unique_ingredients
                 .iter()
-                .filter_map(|(name, section_id, item_order)| {
+                .filter_map(|(name, section_id, item_order, section_order)| {
                     name_to_id
                         .get(name)
                         .map(|&ingredient_id| IngredientRecipeForInsert {
                             ingredient_id,
                             recipe_id,
                             section_id: *section_id,
+                            section_order: i16::try_from(*section_order)
+                                .inspect_err(|err| {
+                                    error!(
+                                        "Failed to cast ingredients section order '{}': {err}",
+                                        *section_order
+                                    );
+                                })
+                                .unwrap_or_default(),
                             item_order: i16::try_from(*item_order)
                                 .inspect_err(|err| {
                                     error!(
@@ -205,38 +214,42 @@ where
 
     match instructions {
         SectionComponents::Grouped(sections) => {
-            for section in sections {
+            for (section_idx, section) in sections.iter().enumerate() {
                 let section_id = *sections_map.get(&section.title).unwrap_or(&1);
                 for (idx, item) in section.items.iter().enumerate() {
                     let duration = time_parser.parse_max_time_seconds(&item.text);
-                    all_instructions.push((item.text.clone(), duration, section_id, idx));
+                    all_instructions.push((
+                        item.text.clone(),
+                        duration,
+                        section_id,
+                        idx,
+                        section_idx,
+                    ));
                 }
             }
         }
         SectionComponents::Flat(items) => {
             for (idx, item) in items.iter().enumerate() {
                 let duration = time_parser.parse_max_time_seconds(&item.text);
-                all_instructions.push((item.text.clone(), duration, 1, idx));
+                all_instructions.push((item.text.clone(), duration, 1, idx, 0));
             }
         }
     }
 
-    // Remove duplicates
     let mut seen = HashSet::new();
     let mut unique_instructions = Vec::new();
 
-    for (name, duration, section_id, idx) in all_instructions {
+    for (name, duration, section_id, idx, section_order) in all_instructions {
         if seen.insert(name.clone()) {
-            unique_instructions.push((name, duration, section_id, idx));
+            unique_instructions.push((name, duration, section_id, idx, section_order));
         }
     }
 
-    // Insert into instructions table
     let instruction_ids: Vec<(i64, String)> = diesel::insert_into(schema::instructions::table)
         .values(
             &unique_instructions
                 .iter()
-                .map(|(name, duration, _, _)| InstructionForInsert {
+                .map(|(name, duration, _, _, _)| InstructionForInsert {
                     name: name.clone(),
                     duration_seconds: *duration,
                 })
@@ -254,18 +267,25 @@ where
         .map(|(id, name)| (name, id))
         .collect();
 
-    // Insert into junction table
     diesel::insert_into(schema::instructions_recipes::table)
         .values(
             &unique_instructions
                 .iter()
-                .filter_map(|(name, _, section_id, item_order)| {
+                .filter_map(|(name, _, section_id, item_order, section_order)| {
                     name_to_id
                         .get(name)
                         .map(|&instruction_id| InstructionRecipeForInsert {
                             instruction_id,
                             recipe_id,
                             section_id: *section_id,
+                            section_order: i16::try_from(*section_order)
+                                .inspect_err(|err| {
+                                    error!(
+                                        "Failed to cast instructions section order '{}': {err}",
+                                        *section_order
+                                    );
+                                })
+                                .unwrap_or_default(),
                             item_order: i16::try_from(*item_order)
                                 .inspect_err(|err| {
                                     error!(
@@ -460,17 +480,21 @@ pub async fn insert_sections<C>(
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
-    let sections_for_insert = recipe_c
+    let ordered_titles: Vec<String> = recipe_c
         .ingredients
         .titles()
         .chain(recipe_c.instructions.titles())
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .rev()
-        .map(|name| SectionForInsert {
-            name: name.to_string(),
-        })
-        .filter(|s| !s.name.is_empty())
+        .filter(|s| !s.is_empty())
+        .fold(Vec::new(), |mut acc, title| {
+            if !acc.iter().any(|t| t == title) {
+                acc.push(title.to_string());
+            }
+            acc
+        });
+
+    let sections_for_insert = ordered_titles
+        .iter()
+        .map(|name| SectionForInsert { name: name.clone() })
         .collect::<Vec<_>>();
 
     if sections_for_insert.is_empty() {

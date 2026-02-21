@@ -44,7 +44,7 @@ pub struct VideoRecipe {
 }
 
 /// Represents the data required to create a new video associated with a recipe.
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct VideoForCreate {
     pub video: Uuid,
     pub duration: Option<chrono::Duration>,
@@ -69,6 +69,17 @@ impl VideoForCreate {
                 .ok(),
             content_url: None,
             embed_url: None,
+        }
+    }
+}
+
+impl From<Video> for VideoForCreate {
+    fn from(v: Video) -> Self {
+        Self {
+            video: v.video,
+            duration: v.duration,
+            content_url: v.content_url,
+            embed_url: v.embed_url,
         }
     }
 }

@@ -67,12 +67,12 @@ mod tests {
             assert_not_in_html(
                 &res,
                 vec![
-                    r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"##,
-                    r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"##,
-                    r##"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections">"##,
-                    r##"<div id="settings-admin""##,
-                    r##"<div id="settings-server""##,
-                    r##"<div id="settings-connections""##,
+                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"#,
+                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"#,
+                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections">"#,
+                    r#"<div id="settings-admin""#,
+                    r#"<div id="settings-server""#,
+                    r#"<div id="settings-connections""#,
                 ],
             )?;
             Ok(())
@@ -90,11 +90,11 @@ mod tests {
             assert_html(
                 &res,
                 vec![
-                    r##"<table class="table table-xs"><thead><tr><th></th><th>Setting</th><th>Environment</th><th>Value</th></tr></thead><tbody>"##,
-                    r#"<td>Host</td><td>SMTP_HOST</td><td>smtp.gmail.com</td></tr>"#,
-                    r#"<tr><th></th><td>From</td><td>SMTP_FROM_EMAIL</td><td>demo@demo.com</td></tr>"#,
-                    r#"<tr><th></th><td>Username</td><td>SMTP_USERNAME</td><td>demo@demo.com</td></tr>"#,
-                    r#"<tr><th></th><td>Password</td><td>SMTP_PASSWORD</td><td>Not displayed</td></tr></tbody></table></div>"#,
+                    r#"<table class="table table-xs"><thead><tr><th></th><th>Setting</th><th>Environment</th><th>Value</th></tr></thead><tbody>"#,
+                    r"<td>Host</td><td>SMTP_HOST</td><td>smtp.gmail.com</td></tr>",
+                    r"<tr><th></th><td>From</td><td>SMTP_FROM_EMAIL</td><td>demo@demo.com</td></tr>",
+                    r"<tr><th></th><td>Username</td><td>SMTP_USERNAME</td><td>demo@demo.com</td></tr>",
+                    r"<tr><th></th><td>Password</td><td>SMTP_PASSWORD</td><td>Not displayed</td></tr></tbody></table></div>",
                     // TODO: Add Azure OCR key and endpoint
                 ],
             );
@@ -142,8 +142,8 @@ mod tests {
                     r#"<div id="settings-server" class="hidden p-3 md:max-h-96">"#,
                     r#"<div id="settings-data" class="hidden p-3">"#,
                     r#"<div id="settings-admin" class="hidden p-3 md:max-h-96">"#,
-                    r##"<div id="settings-account" class="hidden p-3 md:max-h-96">"##,
-                    r##"<div id="settings-about" class="hidden p-3 md:p-0 md:pr-4 hidden">"##,
+                    r#"<div id="settings-account" class="hidden p-3 md:max-h-96">"#,
+                    r#"<div id="settings-about" class="hidden p-3 md:p-0 md:pr-4 hidden">"#,
                 ],
             );
             Ok(())

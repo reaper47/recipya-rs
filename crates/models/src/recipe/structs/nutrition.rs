@@ -35,6 +35,17 @@ impl NutritionDetails {
             }),
         )
     }
+
+    /// Verifies whether the nutrition has been precalculated by the source.
+    pub fn is_precalculated(&self) -> bool {
+        self.per_100g
+            .as_ref()
+            .is_some_and(|n| n.is_precalculated_by_source)
+            || self
+                .per_serving
+                .as_ref()
+                .is_some_and(|n| n.nutrition.is_precalculated_by_source)
+    }
 }
 
 impl From<&NutritionDetailsForCreate> for NutritionDetails {
@@ -129,7 +140,7 @@ impl From<&NutritionPerServingDetailsForCreate> for NutritionPerServingDetails {
 }
 
 /// Holds the nutritional information for creating a new recipe.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct NutritionDetailsForCreate {
     pub per_100g: Option<NutritionForCreate>,
     pub per_serving: Option<NutritionPerServingDetailsForCreate>,
@@ -164,11 +175,29 @@ impl NutritionDetailsForCreate {
     }
 }
 
+impl From<NutritionDetails> for NutritionDetailsForCreate {
+    fn from(n: NutritionDetails) -> Self {
+        Self {
+            per_100g: n.per_100g.map(NutritionForCreate::from),
+            per_serving: n.per_serving.map(NutritionPerServingDetailsForCreate::from),
+        }
+    }
+}
+
 /// Holds the nutritional information for creating a new nutrition per serving record.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct NutritionPerServingDetailsForCreate {
     pub nutrition: NutritionForCreate,
     pub serving_size: String,
+}
+
+impl From<NutritionPerServingDetails> for NutritionPerServingDetailsForCreate {
+    fn from(n: NutritionPerServingDetails) -> Self {
+        Self {
+            nutrition: NutritionForCreate::from(n.nutrition),
+            serving_size: n.serving_size,
+        }
+    }
 }
 
 /// Represents the nutritional information provided when creating a new recipe.
@@ -515,7 +544,7 @@ mod tests {
                 fiber_g: Some(10.),
                 trans_fat_g: Some(11.),
             }
-        )
+        );
     }
 
     #[test]
@@ -554,7 +583,7 @@ mod tests {
 
         let got = NutritionDetails::from(&details);
 
-        pretty_assertions::assert_eq!(got, a_nutrition_details())
+        pretty_assertions::assert_eq!(got, a_nutrition_details());
     }
 
     #[test]
@@ -770,6 +799,89 @@ mod tests {
             };
 
             assert!(!details.is_empty());
+        }
+    }
+
+    mod tests_nutrition_details_is_precalculated_by_source {
+        use super::*;
+
+        #[test]
+        fn test_both_none() {
+            let details = NutritionDetails::default();
+
+            assert!(!details.is_precalculated());
+        }
+
+        #[test]
+        fn test_per_100g_precalculated() {
+            let details = NutritionDetails {
+                per_100g: Some(Nutrition {
+                    is_precalculated_by_source: true,
+                    ..Default::default()
+                }),
+                per_serving: None,
+            };
+
+            assert!(details.is_precalculated());
+        }
+
+        #[test]
+        fn test_per_100g_not_precalculated() {
+            let details = NutritionDetails {
+                per_100g: Some(Nutrition::default()),
+                per_serving: None,
+            };
+
+            assert!(!details.is_precalculated());
+        }
+
+        #[test]
+        fn test_per_serving_precalculated() {
+            let mut nutrition = NutritionPerServingDetails::default();
+            nutrition.nutrition.is_precalculated_by_source = true;
+
+            let details = NutritionDetails {
+                per_100g: None,
+                per_serving: Some(nutrition),
+            };
+
+            assert!(details.is_precalculated());
+        }
+
+        #[test]
+        fn test_per_serving_not_precalculated() {
+            let details = NutritionDetails {
+                per_100g: None,
+                per_serving: Some(NutritionPerServingDetails::default()),
+            };
+
+            assert!(!details.is_precalculated());
+        }
+
+        #[test]
+        fn test_both_precalculated() {
+            let mut nutrition2 = NutritionPerServingDetails::default();
+            nutrition2.nutrition.is_precalculated_by_source = true;
+
+            let details = NutritionDetails {
+                per_100g: Some(Nutrition {
+                    is_precalculated_by_source: true,
+                    ..Default::default()
+                }),
+                per_serving: Some(nutrition2),
+            };
+
+            assert!(details.is_precalculated());
+        }
+
+        #[test]
+        fn test_both_not_precalculated() {
+            let details = NutritionDetails {
+                per_100g: Some(Nutrition::default()),
+                per_serving: Some(NutritionPerServingDetails::default()),
+            };
+
+            assert!(!details.is_precalculated());
         }
     }
 }

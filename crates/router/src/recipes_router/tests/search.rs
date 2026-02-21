@@ -82,7 +82,7 @@ mod tests {
         let res = server
             .get(BASE_URI)
             .add_query_params(SearchParams {
-                q: Some("".to_string()),
+                q: Some(String::new()),
                 page: Some(0),
                 ..Default::default()
             })

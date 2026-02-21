@@ -12,6 +12,7 @@ use crate::recipe::helpers::{
     insert_keywords, insert_nutrition, insert_sections, insert_tools, insert_videos,
     update_category,
 };
+use crate::recipe::structs::nutrition::NutritionDetails;
 use crate::recipe::structs::recipe::RecipeForCreate;
 use crate::recipe::structs::time::TimesForInsert;
 use crate::settings::UserSettingDetails;
@@ -44,9 +45,9 @@ impl Recipe {
             recipe.notes = new_recipe.notes.clone();
         }
         if let Some(n) = new_recipe.r#yield
-            && recipe.yield_ != n
+            && recipe.r#yield != n
         {
-            recipe.yield_ = n;
+            recipe.r#yield = n;
         }
         if recipe.source != new_recipe.source {
             recipe.source = new_recipe.source.clone();
@@ -97,13 +98,20 @@ impl Recipe {
                         Some(cuisine) if old_recipe.cuisine != new_recipe.cuisine => {
                             let cuisine_id = get_cuisine_id(conn, cuisine.into()).await?;
 
-                            diesel::update(
+                            diesel::delete(
                                 schema::cuisines_recipes::table
                                     .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id)),
                             )
-                            .set(schema::cuisines_recipes::cuisine_id.eq(cuisine_id))
                             .execute(conn)
                             .await?;
+
+                            diesel::insert_into(schema::cuisines_recipes::table)
+                                .values((
+                                    schema::cuisines_recipes::recipe_id.eq(recipe_id),
+                                    schema::cuisines_recipes::cuisine_id.eq(cuisine_id),
+                                ))
+                                .execute(conn)
+                                .await?;
                         }
                         None => {
                             diesel::delete(
@@ -184,6 +192,20 @@ impl Recipe {
                             new_recipe.r#yield.unwrap_or(1),
                         )
                         .await?;
+                    } else if old_recipe.nutrition.is_precalculated() {
+                        let new_recipe_nutrition = NutritionDetails::from(&new_recipe.nutrition);
+
+                        if new_recipe_nutrition != old_recipe.nutrition {
+                            insert_nutrition(
+                                conn,
+                                recipe_id,
+                                &new_recipe.nutrition,
+                                new_ingredients.as_slice(),
+                                user_settings.nutrition_source,
+                                new_recipe.r#yield.unwrap_or(1),
+                            )
+                            .await?;
+                        }
                     }
 
                     // Times

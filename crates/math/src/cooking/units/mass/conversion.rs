@@ -25,7 +25,7 @@ impl UnitConverter for Mass {
                         Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(*self), to)),
             },
             Self::Gram(original_value) => match to {
                 UnitType::Mass(unit) => {
@@ -41,7 +41,7 @@ impl UnitConverter for Mass {
                         Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(*self), to)),
             },
             Self::Dekagram(original_value) => match to {
                 UnitType::Mass(unit) => {
@@ -57,7 +57,7 @@ impl UnitConverter for Mass {
                         Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(*self), to)),
             },
             Self::Hectogram(original_value) => match to {
                 UnitType::Mass(unit) => {
@@ -73,7 +73,7 @@ impl UnitConverter for Mass {
                         Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(*self), to)),
             },
             Self::Kilogram(original_value) => match to {
                 UnitType::Mass(unit) => {
@@ -89,7 +89,7 @@ impl UnitConverter for Mass {
                         Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(*self), to)),
             },
             Self::Ounce(original_value) => match to {
                 UnitType::Mass(unit) => {
@@ -105,7 +105,7 @@ impl UnitConverter for Mass {
                         Pound => Ok(Unit::Mass(Self::Pound(value.as_pounds()))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(*self), to)),
             },
             Self::Pound(original_value) => match to {
                 UnitType::Mass(unit) => {
@@ -121,7 +121,7 @@ impl UnitConverter for Mass {
                         Pound => Ok(Unit::Mass(self.with_value(*original_value))),
                     }
                 }
-                _ => Err(Error::UnsupportedUnit(Unit::Mass(self.clone()), to)),
+                _ => Err(Error::UnsupportedUnit(Unit::Mass(*self), to)),
             },
         }
     }
@@ -160,11 +160,11 @@ mod tests {
             Unit::Mass(Mass::Dekagram(1.0)),
         );
         assert_eq!(
-            Unit::Mass(Mass::Milligram(100000.0)).convert(UnitType::Mass(Hectogram))?,
+            Unit::Mass(Mass::Milligram(100_000.0)).convert(UnitType::Mass(Hectogram))?,
             Unit::Mass(Mass::Hectogram(1.0)),
         );
         assert_eq!(
-            Unit::Mass(Mass::Milligram(1000000.0)).convert(UnitType::Mass(Kilogram))?,
+            Unit::Mass(Mass::Milligram(1_000_000.0)).convert(UnitType::Mass(Kilogram))?,
             Unit::Mass(Mass::Kilogram(1.0)),
         );
         assert_approx_eq(
@@ -173,7 +173,7 @@ mod tests {
             0.1,
         );
         assert_approx_eq(
-            Unit::Mass(Mass::Milligram(453592.0)).convert(UnitType::Mass(Pound))?,
+            Unit::Mass(Mass::Milligram(453_592.0)).convert(UnitType::Mass(Pound))?,
             Unit::Mass(Mass::Pound(1.0)),
             0.1,
         );
@@ -275,7 +275,7 @@ mod tests {
         );
 
         assert_approx_eq(
-            Unit::Mass(Mass::Hectogram(0.283495)).convert(UnitType::Mass(Ounce))?,
+            Unit::Mass(Mass::Hectogram(0.283_495)).convert(UnitType::Mass(Ounce))?,
             Unit::Mass(Mass::Ounce(1.0)),
             0.01,
         );
@@ -311,12 +311,12 @@ mod tests {
         );
 
         assert_approx_eq(
-            Unit::Mass(Mass::Kilogram(0.0283495)).convert(UnitType::Mass(Ounce))?,
+            Unit::Mass(Mass::Kilogram(0.028_349_5)).convert(UnitType::Mass(Ounce))?,
             Unit::Mass(Mass::Ounce(1.0)),
             0.001,
         );
         assert_approx_eq(
-            Unit::Mass(Mass::Kilogram(0.453592)).convert(UnitType::Mass(Pound))?,
+            Unit::Mass(Mass::Kilogram(0.453_592)).convert(UnitType::Mass(Pound))?,
             Unit::Mass(Mass::Pound(1.0)),
             0.001,
         );
@@ -342,12 +342,12 @@ mod tests {
         );
         assert_eq!(
             Unit::Mass(Mass::Ounce(1.0)).convert(UnitType::Mass(Hectogram))?,
-            Unit::Mass(Mass::Hectogram(0.28349523125)),
+            Unit::Mass(Mass::Hectogram(0.283_495_231_25)),
         );
         assert_approx_eq(
             Unit::Mass(Mass::Ounce(1.0)).convert(UnitType::Mass(Kilogram))?,
-            Unit::Mass(Mass::Kilogram(0.0283495)),
-            0.000001,
+            Unit::Mass(Mass::Kilogram(0.028_349_5)),
+            0.000_001,
         );
         assert_eq!(
             Unit::Mass(Mass::Ounce(1.0)).convert(UnitType::Mass(Ounce))?,
@@ -364,7 +364,7 @@ mod tests {
     fn test_pound_conversions() -> Result<()> {
         assert_eq!(
             Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Milligram))?,
-            Unit::Mass(Mass::Milligram(453592.37)),
+            Unit::Mass(Mass::Milligram(453_592.37)),
         );
         assert_eq!(
             Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Gram))?,
@@ -372,15 +372,15 @@ mod tests {
         );
         assert_eq!(
             Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Dekagram))?,
-            Unit::Mass(Mass::Dekagram(45.359237)),
+            Unit::Mass(Mass::Dekagram(45.359_237)),
         );
         assert_eq!(
             Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Hectogram))?,
-            Unit::Mass(Mass::Hectogram(4.5359237)),
+            Unit::Mass(Mass::Hectogram(4.535_923_7)),
         );
         assert_eq!(
             Unit::Mass(Mass::Pound(1.0)).convert(UnitType::Mass(Kilogram))?,
-            Unit::Mass(Mass::Kilogram(0.45359237)),
+            Unit::Mass(Mass::Kilogram(0.453_592_37)),
         );
 
         assert_eq!(
@@ -410,7 +410,7 @@ mod tests {
         );
         assert_eq!(
             Unit::Mass(Mass::Kilogram(1000.0)).convert(UnitType::Mass(Gram))?,
-            Unit::Mass(Mass::Gram(1000000.0)),
+            Unit::Mass(Mass::Gram(1_000_000.0)),
         );
         Ok(())
     }

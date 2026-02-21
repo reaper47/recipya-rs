@@ -20,9 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.93.0
+          components: clippy
+
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@nextest
 
@@ -58,6 +61,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: latest
+
+      - name: Clippy production code
+        run: cargo clippy
+
+      - name: Clippy tests
+        run: cargo clippy --tests
 
       - name: Test
         run: cargo nextest run

@@ -63,3 +63,4 @@ testing.workspace = true
 time.workspace = true
 tokio.workspace = true
 tower = "0.5.3"
+tracing-test.workspace = true

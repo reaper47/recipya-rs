@@ -41,11 +41,10 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     #[test]
-    fn test_b64u_encode_ok() -> Result<()> {
+    fn test_b64u_encode() {
         let got = b64u_encode("hello world");
 
         assert_eq!(got, "aGVsbG8gd29ybGQ");
-        Ok(())
     }
 
     #[test]
@@ -57,11 +56,8 @@ mod tests {
     }
 
     #[test]
-    fn test_b64u_decode_err() -> Result<()> {
-        match b64u_decode("1") {
-            Ok(_) => panic!("Should not have parsed"),
-            Err(_) => Ok(()),
-        }
+    fn test_b64u_decode() {
+        assert!(b64u_decode("1").is_err(), "Should not have parsed");
     }
 
     #[test]
@@ -73,10 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn test_b64u_decode_to_string_err() -> Result<()> {
-        match b64u_decode("1") {
-            Ok(_) => panic!("Should not have parsed"),
-            Err(_) => Ok(()),
-        }
+    fn test_b64u_decode_to_string() {
+        assert!(b64u_decode("1").is_err(), "Should not have parsed");
     }
 }

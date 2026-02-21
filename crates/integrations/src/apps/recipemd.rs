@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_basic_recipe_ok() -> Result<()> {
-        let data = r##"# Guacamole
+        let data = r"# Guacamole
 
 Some people call it guac.
 
@@ -140,7 +140,7 @@ Remove flesh from avocado and roughly mash with fork. Season to taste
 with salt, pepper and lemon juice.
 
 Eat, mix and sleep!
-"##;
+";
         let buf = Cursor::new(data.as_bytes());
 
         let got = parse(buf)?;

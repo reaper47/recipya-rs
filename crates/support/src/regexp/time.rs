@@ -506,6 +506,7 @@ mod tests {
         mod tests_parse_max_time {
             use super::*;
 
+            #[allow(clippy::too_many_lines)]
             fn base_text(lang: Lang, t: &str) -> String {
                 match lang {
                     Lang::Epo => format!(

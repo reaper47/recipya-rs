@@ -5,7 +5,7 @@ use regex::Regex;
 
 use crate::Error;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Volume {
     // Metric
     Millilitre(f64),

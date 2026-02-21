@@ -3,6 +3,7 @@ use maud::{Markup, PreEscaped, html};
 use models::data::{Data, ViewRecipe};
 use models::recipe::structs::recipe::{Category, Keyword};
 use models::recipe::structs::section::SectionComponents;
+use models::recipe::structs::types::Source;
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
@@ -123,7 +124,7 @@ fn render_add_recipe_manual(
                                 (render_instructions(view))
                             }
                         }
-                        div class="col-span-6 dark:border-gray-700" _="on load call initNotes()" {
+                        div class="col-span-6 dark:border-gray-700" data-textarea-id="notes" _="on load call initNotes(me.dataset.textareaId)" {
                             textarea #notes name="notes" placeholder="Write some notes about the recipe..." rows="8" class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {}
                         }
                         div class="card-actions justify-end" {
@@ -302,19 +303,12 @@ fn render_nutrition_table() -> Markup {
 }
 
 fn render_source(view: Option<&ViewRecipe>) -> Markup {
-    let source = view.map_or_else(String::new, |v| {
-        let src = &v.recipe_details.recipe.source;
-        if src.is_empty() {
-            src.clone()
-        } else {
-            String::new()
-        }
-    });
+    let source = view.map_or_else(Source::default, |v| v.recipe_details.recipe.source.clone());
 
     html! {
         fieldset .fieldset {
             label .label for="source" { "Source" }
-            input #source type="text" placeholder="Source" name="source" class="input input-sm w-11/12" value=(source);
+            input #source type="text" placeholder="Source" name="source" class="input input-sm w-11/12" value=(source.as_str());
         }
         button type="button" class="tooltip tooltip-left absolute top-1 right-1"
             _="on click toggle .tooltip-open"
@@ -387,10 +381,10 @@ fn render_yield(view: Option<&ViewRecipe>) -> Markup {
             input #servings type="number" min="1" name="yield"
                 value=(
                     view.map_or_else(|| "1".into(), |v| {
-                        if v.recipe_details.recipe.yield_ == 0 {
+                        if v.recipe_details.recipe.r#yield == 0 {
                             "1".into()
                         } else {
-                            v.recipe_details.recipe.yield_.to_string()
+                            v.recipe_details.recipe.r#yield.to_string()
                         }
                     })
                 )

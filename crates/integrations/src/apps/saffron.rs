@@ -313,7 +313,7 @@ mod tests {
 
     mod files {
         pub fn recipe1_file<'a>() -> &'a str {
-            r#"Title: Apple Puff Pancake
+            r"Title: Apple Puff Pancake
 Description: Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.
 Source: KMKIDMAN5
 Original URL: https://www.allrecipes.com/recipe/50936/apple-puff-pancake/
@@ -339,11 +339,11 @@ Instructions:
 	Preheat the oven to 425 degrees F (220 degrees C).
 	Blend eggs, milk, and vanilla with an electric mixer in a large bowl. Add flour, sugar, salt, and cinnamon; mix just until blended. Set batter aside.
 	Melt butter in a 9x9-inch square pan. Arrange apple slices in the bottom of the pan; pour batter over them. Sprinkle brown sugar on top.
-	Bake in the preheated oven until puffed and lightly browned, about 20 minutes."#
+	Bake in the preheated oven until puffed and lightly browned, about 20 minutes."
         }
 
         pub fn recipe2_file<'a>() -> &'a str {
-            r#"Title: Yay
+            r"Title: Yay
 Description:
 Source: Mom
 Original URL:
@@ -358,7 +358,7 @@ Ingredients:
 Instructions:
 	Mix stuff
 	Eat a melon
-	Profit"#
+	Profit"
         }
     }
 }

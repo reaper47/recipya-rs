@@ -760,7 +760,7 @@ mod tests {
 
     mod files {
         pub fn recipe_unspecified_version_file<'a>() -> &'a str {
-            r##"------------- Recipe Extracted from Meal-Master (tm) Database --------------
+            r"------------- Recipe Extracted from Meal-Master (tm) Database --------------
 
      Title: West Haven Chocolate Cake
 Categories: Chocolate Cakes Fruits Desserts
@@ -788,11 +788,12 @@ Categories: Chocolate Cakes Fruits Desserts
   Cool in pan on rack.  Cut into squares and serve with a scoop of vanilla
   ice cream on top.
 
------------------------------------------------------------------------------"##
+-----------------------------------------------------------------------------"
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn recipes_unspecified_version_file<'a>() -> &'a str {
-            r##"
+            r"
 ----- Meal-Master -----------------------
 
 Title: Apfelkuchen
@@ -1059,11 +1060,11 @@ Yield: 4
     3/4 ts Italian seasoning;add more if needed
 
 Place vinegar, lemon juice, sugar, mustard, salt, red pepper flakes, black pepper, and garlic in the jar of a blender and blend until smooth. While the blender is running, add the oil in a steady stream. Remove the blender jar from the blender and mix in the cheese and Italian seasoning by hand. Transfer to a storage or serving container and refrigerate for at least 1 hour before serving.
------"##
+-----"
         }
 
         pub fn recipe_v6_14_file<'a>() -> &'a str {
-            r##"------------- Recipe Extracted from Meal-Master (tm) v6.14 ------------------
+            r"------------- Recipe Extracted from Meal-Master (tm) v6.14 ------------------
 
      Title: Poppin' Fresh Barbe Cups
 Categories: Breads Cheese Main dish Meats Sandwiches
@@ -1095,11 +1096,11 @@ Categories: Breads Cheese Main dish Meats Sandwiches
   pieces) in place of the meat mixture.  You can also add green bell pepper
   or a hot pepper to the above recipe with good results.
 
------------------------------------------------------------------------------"##
+-----------------------------------------------------------------------------"
         }
 
         pub fn recipe_v6_20_file<'a>() -> &'a str {
-            r##"----- Recipe in Meal-Master v6.2 Importable Format
+            r"----- Recipe in Meal-Master v6.2 Importable Format
 
      Title: Magic Pan Orange Almond Salad
 Categories: Salads
@@ -1125,11 +1126,11 @@ Categories: Salads
   add in thin stream and process till well blended. MAKES : 1 cup
   Just before serving, toss well. Leftover dressing keeps up to 1 week
   in fridge. from Best Recipes Under the Sun
------"##
+-----"
         }
 
         pub fn recipe_v7_01_file<'a>() -> &'a str {
-            r##"MMMMM----- Recipe via Meal-Master (tm) v7.01
+            r#"MMMMM----- Recipe via Meal-Master (tm) v7.01
 
      Title: Old Style Enchiladas
 Categories: Chili
@@ -1153,11 +1154,11 @@ Categories: Chili
   cheese on sauce. Put on another tortilla and repeat untill large enough for
   you. Stop with layer of onion and cheese.
 
-MMMMM"##
+MMMMM"#
         }
 
         pub fn recipe_v7_04_file<'a>() -> &'a str {
-            r##"---------- Recipe via Meal-Master (tm) v7.04
+            r#"---------- Recipe via Meal-Master (tm) v7.04
 
       Title: Apple Pork Chops
  Categories: Meats, French can, Benoit
@@ -1185,11 +1186,11 @@ MMMMM"##
   Source" _The Canadiana Cookbook_ by Mme. Jehane Benoit
 
 -----
-"##
+"#
         }
 
         pub fn recipe_v7_07_file<'a>() -> &'a str {
-            r##"MMMMM----- Recipe via Meal-Master (tm) v7.07
+            r"MMMMM----- Recipe via Meal-Master (tm) v7.07
 
       Title: Zucchini Date Cake
  Categories: Cakes
@@ -1247,11 +1248,11 @@ MMMMM"##
   Bert Greene.
 
 MMMMM
- "##
+ "
         }
 
         pub fn recipe_v8_00_file<'a>() -> &'a str {
-            r##"---------- Recipe via Meal-Master (tm) v8.00
+            r"---------- Recipe via Meal-Master (tm) v8.00
 
       Title: Chicken Avocado Melt
  Categories: Poultry, Main dish
@@ -1287,11 +1288,11 @@ MMMMM
   with chopped green onion and red pepper.
 
 -----
- "##
+ "
         }
 
         pub fn recipe_v8_01_file<'a>() -> &'a str {
-            r##"---------- Recipe via Meal-Master (tm) v8.01
+            r"---------- Recipe via Meal-Master (tm) v8.01
 
       Title: Cannoli
  Categories: Italian, Desserts
@@ -1345,11 +1346,11 @@ MMMMM
   This recipe from CIAO ITALIA by Mary Ann Esposito
 
 -----
-"##
+"
         }
 
         pub fn recipe_v8_02_file<'a>() -> &'a str {
-            r##"---------- Recipe via Meal-Master (tm) v8.02
+            r#"---------- Recipe via Meal-Master (tm) v8.02
 
       Title: Ziti with Asparagus Peas & Lemon Cream
  Categories: Vegetables
@@ -1403,11 +1404,11 @@ MMMMM
   179 milligrams cholesterol; 230.5 milligrams sodium.
 
 -----
-"##
+"#
         }
 
         pub fn recipe_v8_05_file<'a>() -> &'a str {
-            r##"---------- Recipe via Meal-Master (tm) v8.05
+            r"---------- Recipe via Meal-Master (tm) v8.05
 
       Title: South of the Border Stew
  Categories: Main dish, Stew, Beef
@@ -1428,11 +1429,11 @@ MMMMM
   cilantro and serve.  Serves 6
 
 -----
- "##
+ "
         }
 
         pub fn recipe_v8_06_file<'a>() -> &'a str {
-            r##"MMMMM----- Recipe via Meal-Master (tm) v8.06
+            r"MMMMM----- Recipe via Meal-Master (tm) v8.06
 
       Title: Yellow Rice & Shrimp Casserole
  Categories: Seafood, Casseroles, Ethnic, Vegetables
@@ -1488,11 +1489,11 @@ MMMMM
   Typos provided by: Karen Mintzias
 
 MMMMM
- "##
+ "
         }
 
         pub fn recipe_cookmate_file<'a>() -> &'a str {
-            r##"----- Recipe via Cookmate [Meal-Master Export Format] -----
+            r#"----- Recipe via Cookmate [Meal-Master Export Format] -----
 
       Title: Baklava with Cooky Filling
 Categories: Greek, Desserts
@@ -1543,7 +1544,7 @@ Typed for you by Karen Mintzias
 
 
 -----
-"##
+"#
         }
     }
 
@@ -1579,6 +1580,7 @@ Typed for you by Karen Mintzias
             }
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn recipes_unspecified_version() -> Vec<Recipe> {
             vec![
                 Recipe {
@@ -2277,7 +2279,7 @@ Typed for you by Karen Mintzias
         }
 
         pub fn now_youre_cooking_v4_72_file<'a>() -> &'a str {
-            r##"----- Now You're Cooking! v4.72 [Meal-Master Export Format]
+            r"----- Now You're Cooking! v4.72 [Meal-Master Export Format]
 
       Title: Biscotti Di Greve ( Orange Almond Biscotti)
  Categories: cookies, italian
@@ -2320,7 +2322,7 @@ MAKES:    about 48 BISCOTTI
 SOURCE: Gourmet, December 1992
 
 -----
-"##
+"
         }
 
         pub fn now_youre_cooking_v4_72() -> Recipe {

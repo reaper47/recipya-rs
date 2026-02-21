@@ -23,6 +23,22 @@ pub fn auto_convert_to_utf8(buffer: &[u8]) -> String {
     String::from_utf8_lossy(buffer).to_string()
 }
 
+pub fn calc_seconds_from_parts(s: &str) -> i32 {
+    let parts: Vec<&str> = s.split(':').collect();
+    if parts.len() == 3 {
+        let [hours, minutes, seconds]: [i32; 3] = parts
+            .iter()
+            .map(|&part| part.parse::<i32>().unwrap_or(0))
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap_or([0, 0, 0]);
+
+        hours * 60 * 60 + minutes * 60 + seconds
+    } else {
+        0
+    }
+}
+
 /// Extracts a number from a string, if it exists.
 pub fn extract_number<T>(s: &str) -> Result<T>
 where
@@ -149,7 +165,7 @@ mod tests {
         #[test]
         fn test_utf8_with_bom() {
             let mut bom_bytes = vec![0xEF, 0xBB, 0xBF]; // UTF-8 BOM
-            bom_bytes.extend_from_slice("Hello".as_bytes());
+            bom_bytes.extend_from_slice(b"Hello");
 
             let result = auto_convert_to_utf8(&bom_bytes);
 
@@ -208,11 +224,10 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_no_number_err() -> Result<()> {
+        fn test_no_number_err() {
             let res = extract_number::<i16>("");
 
             assert!(res.is_err());
-            Ok(())
         }
 
         #[test]

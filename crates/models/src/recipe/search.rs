@@ -435,6 +435,8 @@ mod tests {
     }
 
     mod tests_search {
+        use chrono::NaiveDateTime;
+
         use crate::recipe::structs::{
             media::Video,
             nutrition::NutritionDetails,
@@ -458,20 +460,20 @@ mod tests {
                     id,
                     name: recipe_c.name,
                     description: recipe_c.description,
-                    image: if !recipe_c.images.is_empty() {
-                        Some(recipe_c.images[0])
-                    } else {
+                    image: if recipe_c.images.is_empty() {
                         None
+                    } else {
+                        Some(recipe_c.images[0])
                     },
-                    yield_: recipe_c.r#yield.unwrap_or_default(),
+                    r#yield: recipe_c.r#yield.unwrap_or_default(),
                     language: "eng".to_string(),
                     measurement_system_id: 2,
                     notes: recipe_c.notes,
                     source: recipe_c.source,
                     is_favourite: false,
                     rating: recipe_c.rating,
-                    created_at: Default::default(),
-                    updated_at: Default::default(),
+                    created_at: NaiveDateTime::default(),
+                    updated_at: NaiveDateTime::default(),
                     user_id,
                 },
                 additional_images: if recipe_c.images.len() > 1 {
@@ -499,7 +501,7 @@ mod tests {
                     .map(|(i, t)| ToolRecipe {
                         name: t.name,
                         quantity: t.quantity,
-                        tool_order: (i as i16) + 1,
+                        tool_order: i16::try_from(i).unwrap_or_default() + 1,
                     })
                     .collect(),
                 videos: recipe_c
@@ -510,7 +512,7 @@ mod tests {
                         duration: v.duration,
                         content_url: v.content_url,
                         embed_url: v.embed_url,
-                        created_at: Default::default(),
+                        created_at: NaiveDateTime::default(),
                     })
                     .collect(),
             }
@@ -521,7 +523,7 @@ mod tests {
                 let other_n = other_recipe.nutrition.per_100g.unwrap();
                 n.id = other_n.id;
                 n.is_precalculated_by_source = other_n.is_precalculated_by_source;
-            };
+            }
             if let Some(n) = recipe.nutrition.per_serving.as_mut() {
                 let other_n = other_recipe.nutrition.per_serving.unwrap().nutrition;
                 n.nutrition.id = other_n.id;
@@ -529,7 +531,7 @@ mod tests {
             }
             recipe.recipe.created_at = other_recipe.recipe.created_at;
             recipe.recipe.updated_at = other_recipe.recipe.updated_at;
-            recipe.videos = other_recipe.videos.clone();
+            recipe.videos = other_recipe.videos;
             recipe
         }
 

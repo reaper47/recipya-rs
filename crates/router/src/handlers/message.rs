@@ -212,8 +212,7 @@ pub fn add_hx_message(res: &mut Response<Body>, message: &MessageHtmx) {
     if let Ok(toast) = serde_json::to_string(&message)
         && let Ok(value) = HeaderValue::from_str(&toast)
     {
-        res.headers_mut()
-            .insert(axum_htmx::headers::HX_TRIGGER, value);
+        res.headers_mut().insert(axum_htmx::HX_TRIGGER, value);
     }
 }
 
