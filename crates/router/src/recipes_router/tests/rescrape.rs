@@ -144,7 +144,7 @@ mod tests {
                     // Media
                     r#"<input type="hidden" name="media-source" value="old">"#,
                     &format!(
-                        r#"<input type="hidden" name="media-old" value="/data/images/{}.webp">"#,
+                        r#"<input type="hidden" name="media-old-image" value="/data/images/{}.webp">"#,
                         recipe.all_images()[0]
                     ),
                     // Notes
@@ -309,7 +309,7 @@ mod tests {
                     // Media
                     r#"<input type="hidden" name="media-source" value="old">"#,
                     &format!(
-                        r#"<input type="hidden" name="media-old" value="/data/images/{}.webp">"#,
+                        r#"<input type="hidden" name="media-old-image" value="/data/images/{}.webp">"#,
                         recipe.all_images()[0]
                     ),
                     // Notes
@@ -384,6 +384,7 @@ mod tests {
             time::Times,
             tool::ToolRecipe,
         };
+        use uuid::Uuid;
 
         use super::*;
 
@@ -447,9 +448,18 @@ mod tests {
                 .put(&base_uri(1))
                 .form(&vec![
                     ("media-source", "new"),
-                    ("media-new-image", "https://example.com/fish.webp"),
-                    ("media-new-image", "https://example.com/giraffe.webp"),
-                    ("media-new-video", "https://example.com/potatoes.webm"),
+                    (
+                        "media-new-image",
+                        &format!("/example.com/{}.webp", Uuid::new_v4()),
+                    ),
+                    (
+                        "media-new-image",
+                        &format!("/example.com/{}.webp", Uuid::new_v4()),
+                    ),
+                    (
+                        "media-new-video",
+                        &format!("/example.com/{}.webm", Uuid::new_v4()),
+                    ),
                 ])
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
