@@ -211,6 +211,7 @@ diesel::table! {
         ingredient_id -> Int8,
         recipe_id -> Int8,
         section_id -> Int8,
+        section_order -> Int2,
         item_order -> Int2,
     }
 }
@@ -235,6 +236,7 @@ diesel::table! {
         instruction_id -> Int8,
         recipe_id -> Int8,
         section_id -> Int8,
+        section_order -> Int2,
         item_order -> Int2,
     }
 }

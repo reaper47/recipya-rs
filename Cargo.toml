@@ -19,7 +19,7 @@ app = { path = "./crates/app" }
 async-stream = "0.3.6"
 async-trait = "0.1.89"
 auth = { path = "./crates/auth", default-features = false }
-axum = { version = "0.8.8", features = ["multipart", "ws"] }
+axum = { version = "0.8.8", features = ["macros", "multipart", "ws"] }
 axum-test = { version = "18.1.0", features = ["ws"] }
 base64 = "0.22.1"
 chrono = "0.4.43"
@@ -58,6 +58,7 @@ support = { path = "./crates/support" }
 templates = { path = "./crates/templates" }
 testing = { path = "./crates/testing" }
 time = { version = "0.3.47", features = ["serde"] }
+tracing-test = "0.2.5"
 tokio = { version = "1.49.0", features = ["full"] }
 tower-cookies = "0.11.0"
 tower-http = { version = "0.6.8", features = ["fs"] }

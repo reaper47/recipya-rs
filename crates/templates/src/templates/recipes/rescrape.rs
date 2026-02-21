@@ -77,7 +77,7 @@ fn render_rescrape(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body.contents style="padding: 0" enctype="multipart/form-data" hx-put=(&format!("/recipes/{recipe_id}/rescrape")) hx-indicator="#fullscreen-loader" {
+                    form .card-body.contents style="padding: 0" hx-put=(&format!("/recipes/{recipe_id}/rescrape")) hx-indicator="#fullscreen-loader" {
                         (render_title(&old_recipe_c.name, &new_recipe_c.name, changes))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
@@ -632,7 +632,8 @@ fn render_media(
 ) -> Markup {
     const MEDIA_SOURCE: &str = "media-source";
     const MEDIA_OLD: &str = "media-old";
-    const MEDIA_NEW: &str = "media-new";
+    const MEDIA_NEW_IMAGE: &str = "media-new-image";
+    const MEDIA_NEW_VIDEO: &str = "media-new-video";
 
     const EXT_IMAGE: &str = ".webp";
     const EXT_VIDEO: &str = ".webm";
@@ -666,7 +667,7 @@ fn render_media(
                                     @if image_src.is_empty() { " hidden" }
                                 } {
                                     img src=(image_src) alt=(format!("Image #{} of the recipe", idx+1)) class="block w-full h-full object-contain";
-                                    input type="hidden" name=(MEDIA_NEW) value=(image_src);
+                                    input type="hidden" name=(MEDIA_NEW_IMAGE) value=(image_src);
                                 }
                             }
                         }
@@ -680,7 +681,7 @@ fn render_media(
                                 img src="" alt="" class="mb-2";
                                 @if video_exists {
                                     video controls class="mb-2" src=(video_url) type="video/webm" {}
-                                    input type="hidden" name=(MEDIA_NEW) value=(video_url);
+                                    input type="hidden" name=(MEDIA_NEW_VIDEO) value=(video_url);
                                 }
                             }
                         }

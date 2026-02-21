@@ -305,7 +305,7 @@ impl From<&RecipeForm> for RecipeForCreate {
             name: form.title.clone(),
             description: form.description.clone(),
             images: Vec::new(),
-            r#yield: form.yield_,
+            r#yield: form.r#yield,
             source: Source::from(form.source.clone()),
             is_favourite: false,
             rating: form.rating,
@@ -483,6 +483,7 @@ pub(crate) struct IngredientRecipeForInsert {
     pub ingredient_id: i64,
     pub recipe_id: i64,
     pub section_id: i64,
+    pub section_order: i16,
     pub item_order: i16,
 }
 
@@ -504,6 +505,7 @@ pub(crate) struct InstructionRecipeForInsert {
     pub instruction_id: i64,
     pub recipe_id: i64,
     pub section_id: i64,
+    pub section_order: i16,
     pub item_order: i16,
 }
 

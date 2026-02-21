@@ -5,6 +5,7 @@ use std::str::FromStr;
 
 use axum::extract::multipart::{Field, InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
+use support::strings::calc_seconds_from_parts;
 use tracing::error;
 use uuid::Uuid;
 
@@ -33,7 +34,7 @@ pub struct RecipeForm {
     pub title: String,
     pub tools: Vec<ToolForCreate>,
     pub videos: HashMap<String, PathBuf>,
-    pub yield_: Option<i16>,
+    pub r#yield: Option<i16>,
 }
 
 impl<S> FromRequest<S> for RecipeForm
@@ -65,7 +66,7 @@ where
         let mut title: Option<String> = None;
         let mut tools: Vec<ToolForCreate> = Vec::new();
         let mut videos: HashMap<String, PathBuf> = HashMap::new();
-        let mut yield_: Option<i16> = None;
+        let mut r#yield: Option<i16> = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
             error!("Failed to read multipart field in recipe: {err:?}");
@@ -120,8 +121,18 @@ where
                 "notes" => notes = text_trim(field).await,
                 "rating" => rating = parse_i16(field).await,
                 "source" => source = text_trim(field).await,
-                "time-prep" => times.prep_seconds = calc_time_from_field(field).await,
-                "time-cook" => times.cook_seconds = calc_time_from_field(field).await,
+                "time-prep" => {
+                    times.prep_seconds = field
+                        .text()
+                        .await
+                        .map_or(0, |s| calc_seconds_from_parts(&s));
+                }
+                "time-cook" => {
+                    times.cook_seconds = field
+                        .text()
+                        .await
+                        .map_or(0, |s| calc_seconds_from_parts(&s));
+                }
                 "title" => {
                     title = text_trim(field)
                         .await
@@ -140,7 +151,7 @@ where
                         tools.push(ToolForCreate { name, quantity });
                     }
                 }),
-                "yield" => yield_ = parse_i16(field).await,
+                "yield" => r#yield = parse_i16(field).await,
 
                 "calories-per-100g" => nutrition_per_100g.calories_kcal = parse_i16(field).await,
                 "cholesterol-per-100g" => {
@@ -225,7 +236,7 @@ where
             times: (times.prep_seconds > 0 && times.cook_seconds > 0).then_some(times),
             tools,
             videos,
-            yield_,
+            r#yield,
         })
     }
 }
@@ -241,22 +252,4 @@ where
     T: FromStr + Default + Sum,
 {
     text_trim(field).await.and_then(|s| s.parse::<T>().ok())
-}
-
-async fn calc_time_from_field(field: Field<'_>) -> i32 {
-    field.text().await.map_or(0, |text| {
-        let parts: Vec<&str> = text.split(':').collect();
-        if parts.len() == 3 {
-            let [hours, minutes, seconds]: [i32; 3] = parts
-                .iter()
-                .map(|&part| part.parse::<i32>().unwrap_or(0))
-                .collect::<Vec<_>>()
-                .try_into()
-                .unwrap_or([0, 0, 0]);
-
-            hours * 60 * 60 + minutes * 60 + seconds
-        } else {
-            0
-        }
-    })
 }

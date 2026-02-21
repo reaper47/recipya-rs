@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Write;
+use std::ops::Not;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -9,7 +10,7 @@ use axum::extract::ws::Message;
 use axum::extract::{OriginalUri, Path, Query, State};
 use axum::http::{HeaderMap, HeaderValue, Uri};
 use axum::response::{Html, IntoResponse};
-use axum_htmx::HX_REDIRECT;
+use axum_htmx::{HX_LOCATION, HX_REDIRECT};
 use chrono::NaiveDateTime;
 use futures_util::future::join_all;
 use futures_util::pin_mut;
@@ -17,10 +18,10 @@ use futures_util::stream::{self, StreamExt};
 use integrations::api::Credentials;
 use iso8601::DateTime;
 use itertools::izip;
-use models::recipe::structs::types::Source;
 use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
 use serde::Deserialize;
+use support::strings::calc_seconds_from_parts;
 use tokio::fs;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::Instant;
@@ -36,8 +37,13 @@ use models::data::{AboutData, Data, PaginationData, SearchbarData, ShareData, Vi
 use models::params::SearchParams;
 use models::recipe::RecipeForm;
 use models::recipe::structs::media::VideoForCreate;
+use models::recipe::structs::nutrition::{
+    NutritionDetailsForCreate, NutritionForCreate, NutritionPerServingDetailsForCreate,
+};
 use models::recipe::structs::recipe::{Category, Keyword, RecipeForCreate};
-use models::recipe::structs::section::{Item, SectionComponents};
+use models::recipe::structs::section::{Item, SectionComponents, SectionItem};
+use models::recipe::structs::tool::ToolForCreate;
+use models::recipe::structs::types::Source;
 use models::recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate};
 use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
 use models::settings::UserSettingDetails;
@@ -498,7 +504,380 @@ pub async fn recrape_recipe_handler(
 }
 
 /// Handles saving the rescraped recipe.
-pub async fn recrape_recipe_post_handler(RequireAuth(user): RequireAuth) -> impl IntoResponse {}
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::cast_possible_truncation)]
+pub async fn recrape_recipe_put_handler(
+    header_map: HeaderMap,
+    RequireAuth(user): RequireAuth,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+    Form(form): Form<Vec<(String, String)>>,
+) -> Result<impl IntoResponse> {
+    let mut recipe = match Recipe::get(&state.mm, user.id, recipe_id).await {
+        Ok(r) => RecipeForCreate::from(r),
+        Err(err) => {
+            error!(
+                "Error fetching recipe '{recipe_id}' for user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Recipe not found.").await;
+            return Err(Error::Model(EntityNotFound {
+                id: recipe_id.to_string(),
+                entity: "recipe",
+            }));
+        }
+    };
+
+    let mut map: HashMap<String, Vec<String>> = HashMap::new();
+    let mut ingredients_section_order: Vec<String> = Vec::new();
+    let mut instructions_section_order: Vec<String> = Vec::new();
+
+    for (name, value) in form {
+        match name.as_ref() {
+            "category-new" => {
+                recipe.category = value.is_empty().not().then_some(value);
+            }
+            "cook-new" => {
+                if let Some(t) = recipe.times.as_mut() {
+                    t.cook_seconds = calc_seconds_from_parts(&value);
+                }
+            }
+            "cuisine-new" => {
+                recipe.cuisine = value.is_empty().not().then_some(value);
+            }
+            "description-new" => {
+                recipe.description = value.is_empty().not().then_some(value);
+            }
+            "keywords-old" => {
+                map.entry("keywords-source".into())
+                    .or_insert_with(|| vec!["old".into()]);
+            }
+            "keywords-new" => {
+                map.entry("keywords-source".into())
+                    .or_insert_with(|| vec!["new".into()]);
+                map.entry("keywords".into())
+                    .and_modify(|v| v.push(value.clone()))
+                    .or_insert_with(|| vec![value]);
+            }
+            "media-source" => {
+                recipe.images.clear();
+                recipe.videos.clear();
+            }
+            "media-new-image" => match state.scraper.fetch_and_upload_to_temp(&value).await {
+                Ok(path) => {
+                    let fs_support = Arc::clone(&state.fs_support);
+                    let file_name = Uuid::new_v4();
+
+                    fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
+
+                    let res = if fs_support.is_file_exists(
+                        file_name,
+                        &state.data_dir.images.root,
+                        ".webp",
+                    ) {
+                        Some(file_name)
+                    } else {
+                        None
+                    };
+
+                    let thumbnails_dir = state.data_dir.images.thumbnails.clone();
+                    tokio::spawn(async move {
+                        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                    });
+
+                    if let Some(u) = res {
+                        recipe.images.push(u);
+                    }
+                }
+                Err(err) => {
+                    error!("Failed to fetch and upload image '{value}' to temp: {err}");
+                }
+            },
+            "media-new-video" => match state.scraper.fetch_and_upload_to_temp(&value).await {
+                Ok(path) => {
+                    let fs_support = Arc::clone(&state.fs_support);
+                    let file_name = Uuid::new_v4();
+
+                    fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
+
+                    let res = if fs_support.is_file_exists(
+                        file_name,
+                        &state.data_dir.images.root,
+                        ".webp",
+                    ) {
+                        Some(file_name)
+                    } else {
+                        None
+                    };
+
+                    let thumbnails_dir = state.data_dir.images.thumbnails.clone();
+                    tokio::spawn(async move {
+                        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                    });
+
+                    if let Some(u) = res {
+                        recipe.videos.push(VideoForCreate {
+                            video: u,
+                            duration: None,
+                            content_url: Some(value.clone()),
+                            embed_url: Some(value),
+                        });
+                    }
+                }
+                Err(err) => {
+                    error!("Failed to fetch and upload image '{value}' to temp: {err}");
+                }
+            },
+            "ingredients-old" => {
+                map.entry("ingredients-source".into())
+                    .or_insert_with(|| vec!["old".into()]);
+            }
+            name if name.starts_with("ingredients-new") => {
+                map.entry("ingredients-source".into())
+                    .or_insert_with(|| vec!["new".into()]);
+
+                if let Some((_, section_title)) = name.split_once("<>") {
+                    if !ingredients_section_order.contains(&section_title.to_string()) {
+                        ingredients_section_order.push(section_title.to_string()); // ← track order
+                    }
+                    map.entry(format!("ingredients-section<>{section_title}"))
+                        .and_modify(|v| v.push(value.clone()))
+                        .or_insert_with(|| vec![value]);
+                } else {
+                    map.entry("ingredients".into())
+                        .and_modify(|v| v.push(value.clone()))
+                        .or_insert_with(|| vec![value]);
+                }
+            }
+            "instructions-old" => {
+                map.entry("instructionss-source".into())
+                    .or_insert_with(|| vec!["old".into()]);
+            }
+            name if name.starts_with("instructions-new") => {
+                map.entry("instructions-source".into())
+                    .or_insert_with(|| vec!["new".into()]);
+
+                if let Some((_, section_title)) = name.split_once("<>") {
+                    if !instructions_section_order.contains(&section_title.to_string()) {
+                        instructions_section_order.push(section_title.to_string()); // ← track order
+                    }
+                    map.entry(format!("instructions-section<>{section_title}"))
+                        .and_modify(|v| v.push(value.clone()))
+                        .or_insert_with(|| vec![value]);
+                } else {
+                    map.entry("instructions".into())
+                        .and_modify(|v| v.push(value.clone()))
+                        .or_insert_with(|| vec![value]);
+                }
+            }
+            "notes-new" => {
+                recipe.notes = value.is_empty().not().then_some(value);
+            }
+            "nutrition-source" => {
+                map.entry("nutrition-source".into())
+                    .or_insert_with(|| vec![value]);
+            }
+            name if name.starts_with("nutrition-new-") => {
+                map.entry(name.to_string()).or_insert_with(|| vec![value]);
+            }
+            "prep-new" => {
+                if let Some(t) = recipe.times.as_mut() {
+                    t.prep_seconds = calc_seconds_from_parts(&value);
+                }
+            }
+            "rating-new" => {
+                recipe.r#rating = value.parse::<i16>().ok();
+            }
+            "title-new" => {
+                recipe.name = value;
+            }
+            "tools-old" => {
+                map.entry("tools-source".into())
+                    .or_insert_with(|| vec!["old".into()]);
+            }
+            "tools-new" => {
+                map.entry("tools-source".into())
+                    .or_insert_with(|| vec!["new".into()]);
+                map.entry("tools".into())
+                    .and_modify(|v| v.push(value.clone()))
+                    .or_insert_with(|| vec![value]);
+            }
+            "yield-new" => {
+                recipe.r#yield = value.parse().ok();
+            }
+            _ => {}
+        }
+    }
+
+    if let Some(sources) = map.get("keywords-source")
+        && let Some(source) = sources.first()
+        && source == "new"
+    {
+        recipe.keywords = map.get("keywords").cloned().unwrap_or_default();
+    }
+
+    if map
+        .get("ingredients-source")
+        .and_then(|v| v.first())
+        .map(String::as_str)
+        == Some("new")
+    {
+        recipe.ingredients = if ingredients_section_order.is_empty() {
+            SectionComponents::Flat(
+                map.get("ingredients")
+                    .cloned()
+                    .unwrap_or_default()
+                    .iter()
+                    .map(Item::new)
+                    .collect(),
+            )
+        } else {
+            SectionComponents::Grouped(
+                ingredients_section_order
+                    .iter()
+                    .filter_map(|title| {
+                        map.get(&format!("ingredients-section<>{title}"))
+                            .map(|items| SectionItem {
+                                title: title.clone(),
+                                items: items.iter().map(Item::new).collect(),
+                            })
+                    })
+                    .collect(),
+            )
+        };
+    }
+
+    if map
+        .get("instructions-source")
+        .and_then(|v| v.first())
+        .map(String::as_str)
+        == Some("new")
+    {
+        recipe.instructions = if instructions_section_order.is_empty() {
+            SectionComponents::Flat(
+                map.get("instructions")
+                    .cloned()
+                    .unwrap_or_default()
+                    .iter()
+                    .map(Item::new)
+                    .collect(),
+            )
+        } else {
+            SectionComponents::Grouped(
+                instructions_section_order
+                    .iter()
+                    .filter_map(|title| {
+                        map.get(&format!("instructions-section<>{title}"))
+                            .map(|items| SectionItem {
+                                title: title.clone(),
+                                items: items.iter().map(Item::new).collect(),
+                            })
+                    })
+                    .collect(),
+            )
+        };
+    }
+
+    if let Some(sources) = map.get("tools-source")
+        && let Some(source) = sources.first()
+        && source == "new"
+    {
+        recipe.tools = map
+            .get("tools")
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|t| ToolForCreate {
+                name: t,
+                quantity: 0,
+            })
+            .collect();
+    }
+
+    if map
+        .get("nutrition-source")
+        .and_then(|v| v.first())
+        .map(String::as_str)
+        == Some("new")
+    {
+        let get = |key: &str| -> Option<f64> {
+            map.get(key).and_then(|v| v.first()).and_then(|s| {
+                s.chars()
+                    .take_while(|c| c.is_ascii_digit() || *c == '.')
+                    .collect::<String>()
+                    .parse::<f64>()
+                    .ok()
+            })
+        };
+
+        let per_100g = NutritionForCreate {
+            calories_kcal: get("nutrition-new-calories-per-100g").map(|v| v as i16),
+            total_carbohydrates: get("nutrition-new-total-carbohydrates-per-100g"),
+            sugars_g: get("nutrition-new-sugars-per-100g"),
+            protein_g: get("nutrition-new-protein-per-100g"),
+            total_fat_g: get("nutrition-new-total-fat-per-100g"),
+            saturated_fat_g: get("nutrition-new-saturated-fat-per-100g"),
+            unsaturated_fat_g: get("nutrition-new-unsaturated-fat-per-100g"),
+            trans_fat_g: get("nutrition-new-trans-fat-per-100g"),
+            cholesterol_mg: get("nutrition-new-cholesterol-per-100g"),
+            sodium_mg: get("nutrition-new-sodium-per-100g"),
+            fiber_g: get("nutrition-new-fiber-per-100g"),
+        };
+
+        let per_serving = NutritionForCreate {
+            calories_kcal: get("nutrition-new-calories-per-serving").map(|v| v as i16),
+            total_carbohydrates: get("nutrition-new-total-carbohydrates-per-serving"),
+            sugars_g: get("nutrition-new-sugars-per-serving"),
+            protein_g: get("nutrition-new-protein-per-serving"),
+            total_fat_g: get("nutrition-new-total-fat-per-serving"),
+            saturated_fat_g: get("nutrition-new-saturated-fat-per-serving"),
+            unsaturated_fat_g: get("nutrition-new-unsaturated-fat-per-serving"),
+            trans_fat_g: get("nutrition-new-trans-fat-per-serving"),
+            cholesterol_mg: get("nutrition-new-cholesterol-per-serving"),
+            sodium_mg: get("nutrition-new-sodium-per-serving"),
+            fiber_g: get("nutrition-new-fiber-per-serving"),
+        };
+
+        let serving_size = map
+            .get("serving-size")
+            .and_then(|v| v.first())
+            .cloned()
+            .unwrap_or_default();
+
+        recipe.nutrition = NutritionDetailsForCreate {
+            per_100g: Some(per_100g),
+            per_serving: Some(NutritionPerServingDetailsForCreate {
+                nutrition: per_serving,
+                serving_size,
+            }),
+        };
+    }
+
+    match Recipe::update(&state.mm, user.id, recipe_id, &mut recipe).await {
+        Ok(()) => {
+            state.remove_cached_recipe((user.id, recipe_id)).await;
+        }
+        Err(err) => {
+            error!(
+                "Failed to update recipe '{recipe_id}' user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
+            return Err(Error::Database);
+        }
+    }
+
+    let mut res = (StatusCode::SEE_OTHER, "").into_response();
+    if header_map.get(HX_LOCATION).is_some()
+        && let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}"))
+    {
+        res.headers_mut().insert(HX_LOCATION, value);
+    }
+    if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
+        res.headers_mut().insert(HX_REDIRECT, value);
+    }
+    Ok(res)
+}
 
 /// Handles scaling the recipe's yield.
 pub async fn scale_recipe_handler(
@@ -1423,7 +1802,7 @@ pub async fn add_manual_recipe_post_handler(
             description: form.description,
             images,
             measurement_system_id,
-            r#yield: form.yield_,
+            r#yield: form.r#yield,
             source: Source::from(form.source),
             is_favourite: false,
             rating: form.rating,

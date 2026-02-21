@@ -23,6 +23,22 @@ pub fn auto_convert_to_utf8(buffer: &[u8]) -> String {
     String::from_utf8_lossy(buffer).to_string()
 }
 
+pub fn calc_seconds_from_parts(s: &str) -> i32 {
+    let parts: Vec<&str> = s.split(':').collect();
+    if parts.len() == 3 {
+        let [hours, minutes, seconds]: [i32; 3] = parts
+            .iter()
+            .map(|&part| part.parse::<i32>().unwrap_or(0))
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap_or([0, 0, 0]);
+
+        hours * 60 * 60 + minutes * 60 + seconds
+    } else {
+        0
+    }
+}
+
 /// Extracts a number from a string, if it exists.
 pub fn extract_number<T>(s: &str) -> Result<T>
 where

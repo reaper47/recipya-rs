@@ -1,8 +1,9 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use itertools::Itertools;
 use repository::{ModelManager, PgPooledConn, schema};
 use tracing::error;
 use url::Url;
@@ -283,40 +284,40 @@ pub async fn fetch_recipe_details(
             .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
             .inner_join(schema::ingredients::table)
             .inner_join(schema::sections::table)
-            .order(schema::ingredients_recipes::item_order)
+            .order((
+                schema::ingredients_recipes::section_order,
+                schema::ingredients_recipes::item_order,
+            ))
             .select((
                 schema::ingredients::name,
                 schema::sections::name,
-                schema::ingredients_recipes::section_id,
+                schema::ingredients_recipes::section_order,
+                schema::ingredients_recipes::item_order,
             ))
-            .load::<(String, String, i64)>(conn)
+            .load::<(String, String, i16, i16)>(conn)
             .await?
             .into_iter()
+            .sorted_by_key(|(_, _, section_order, item_order)| (*section_order, *item_order))
             .fold(
-                BTreeMap::new(),
-                |mut acc: BTreeMap<i64, (String, Vec<Item>)>, (ingredient, section, section_id)| {
-                    acc.entry(section_id)
-                        .and_modify(|(_, items)| {
-                            items.push(Item {
-                                text: ingredient.clone(),
-                                duration_seconds: None,
-                            });
-                        })
-                        .or_insert_with(|| {
-                            (
-                                section,
-                                vec![Item {
-                                    text: ingredient,
-                                    duration_seconds: None,
-                                }],
-                            )
+                Vec::<SectionItem>::new(),
+                |mut acc, (ingredient, section, _, _)| {
+                    if let Some(existing) = acc.iter_mut().find(|s| s.title == section) {
+                        existing.items.push(Item {
+                            text: ingredient,
+                            duration_seconds: None,
                         });
+                    } else {
+                        acc.push(SectionItem {
+                            title: section,
+                            items: vec![Item {
+                                text: ingredient,
+                                duration_seconds: None,
+                            }],
+                        });
+                    }
                     acc
                 },
-            )
-            .into_values()
-            .map(|(title, items)| SectionItem { title, items })
-            .collect::<Vec<_>>(),
+            ),
     )
     .inspect_err(|err| {
         error!("Failed to load ingredients: {err}");
@@ -328,42 +329,41 @@ pub async fn fetch_recipe_details(
             .filter(schema::instructions_recipes::recipe_id.eq(recipe_id))
             .inner_join(schema::instructions::table)
             .inner_join(schema::sections::table)
-            .order(schema::instructions_recipes::item_order)
+            .order((
+                schema::instructions_recipes::section_order,
+                schema::instructions_recipes::item_order,
+            ))
             .select((
                 schema::instructions::name,
                 schema::sections::name,
-                schema::instructions_recipes::section_id,
+                schema::instructions_recipes::section_order,
+                schema::instructions_recipes::item_order,
                 schema::instructions::duration_seconds,
             ))
-            .load::<(String, String, i64, Option<i32>)>(conn)
+            .load::<(String, String, i16, i16, Option<i32>)>(conn)
             .await?
             .into_iter()
+            .sorted_by_key(|(_, _, section_order, item_order, _)| (*section_order, *item_order))
             .fold(
-                BTreeMap::new(),
-                |mut acc: BTreeMap<i64, (String, Vec<Item>)>,
-                 (instruction, section, section_id, duration_seconds)| {
-                    acc.entry(section_id)
-                        .and_modify(|(_, items)| {
-                            items.push(Item {
-                                text: instruction.clone(),
-                                duration_seconds,
-                            });
-                        })
-                        .or_insert_with(|| {
-                            (
-                                section,
-                                vec![Item {
-                                    text: instruction,
-                                    duration_seconds,
-                                }],
-                            )
+                Vec::<SectionItem>::new(),
+                |mut acc, (instruction, section, _, _, duration_seconds)| {
+                    if let Some(existing) = acc.iter_mut().find(|s| s.title == section) {
+                        existing.items.push(Item {
+                            text: instruction,
+                            duration_seconds,
                         });
+                    } else {
+                        acc.push(SectionItem {
+                            title: section,
+                            items: vec![Item {
+                                text: instruction,
+                                duration_seconds,
+                            }],
+                        });
+                    }
                     acc
                 },
-            )
-            .into_values()
-            .map(|(title, items)| SectionItem { title, items })
-            .collect::<Vec<_>>(),
+            ),
     )
     .inspect_err(|err| {
         error!("Failed to load instructions: {err}");
