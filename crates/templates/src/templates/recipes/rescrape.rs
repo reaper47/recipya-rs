@@ -631,9 +631,10 @@ fn render_media(
     changes: RecipeField,
 ) -> Markup {
     const MEDIA_SOURCE: &str = "media-source";
-    const MEDIA_OLD: &str = "media-old";
     const MEDIA_NEW_IMAGE: &str = "media-new-image";
     const MEDIA_NEW_VIDEO: &str = "media-new-video";
+    const MEDIA_OLD_IMAGE: &str = "media-old-image";
+    const MEDIA_OLD_VIDEO: &str = "media-old-video";
 
     const EXT_IMAGE: &str = ".webp";
     const EXT_VIDEO: &str = ".webm";
@@ -648,9 +649,73 @@ fn render_media(
 
                 div #media-old class="col-span-6 my-2" {
                     @if diff.old.is_empty() {
-                        p { "No images" }
+                        p .text-center { "No images" }
                     } @else {
                         @for (idx, &image) in diff.old.images.iter().enumerate() {
+                            @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
+                            @let image_src = if image_exists {
+                                &format!("/data/images/{image}{EXT_IMAGE}")
+                            } else {
+                                ""
+                            };
+
+                            label id=(format!("media-{}", idx+1)) class={
+                                "block"
+                                @if (idx+1) > 1 { " hidden" }
+                            } {
+                                div class={
+                                    "cropper-wrap mb-2 w-full min-h-[20rem] relative overflow-hidden"
+                                    @if image_src.is_empty() { " hidden" }
+                                } {
+                                    img src=(image_src) alt=(format!("Image #{} of the recipe", idx+1)) class="block w-full h-full object-contain";
+                                    input type="hidden" name=(MEDIA_OLD_IMAGE) value=(image_src);
+                                }
+                            }
+                        }
+                        @for (idx, video) in diff.old.videos.iter().enumerate() {
+                            @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
+                            @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
+
+                            label id=(format!("media-{}", idx+1+old_num_images)) class={
+                                @if old_num_images > 0 || idx > 0 { "hidden" }
+                            } {
+                                img src="" alt="" class="mb-2";
+                                @if video_exists {
+                                    video controls class="mb-2" src=(video_url) type="video/webm" {}
+                                    input type="hidden" name=(MEDIA_OLD_VIDEO) value=(video_url);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @if !diff.old.is_empty() {
+                    div class="buttons-container-old flex flex-col gap-1 p-1" {
+                        @if diff.old.videos.is_empty() && diff.old.images.is_empty() {
+                            button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
+                                "Media 1"
+                            }
+                        } @else {
+                            @for i in 0..(diff.old.videos.len() + diff.old.images.len()) {
+                                button id=(format!("media-button-{}", i+1)) type="button" class={
+                                    "btn btn-sm btn-ghost"
+                                    @if i == 0 { " btn-active" }
+                                } onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
+                                    (format!("Media {}", i + 1))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            label class="w-full py-2 diff-plus" {
+                input type="radio" name=(MEDIA_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
+
+                div #media-new class="col-span-6 my-2" {
+                    @if diff.new.is_empty() {
+                        p .text-center { "No images" }
+                    } @else {
+                        @for (idx, &image) in diff.new.images.iter().enumerate() {
                             @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
                             @let image_src = if image_exists {
                                 &format!("/data/images/{image}{EXT_IMAGE}")
@@ -671,12 +736,12 @@ fn render_media(
                                 }
                             }
                         }
-                        @for (idx, video) in diff.old.videos.iter().enumerate() {
+                        @for (idx, video) in diff.new.videos.iter().enumerate() {
                             @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
                             @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
 
-                            label id=(format!("media-{}", idx+1+old_num_images)) class={
-                                @if old_num_images > 0 || idx > 0 { "hidden" }
+                            label id=(format!("media-{}", idx+1+new_num_images)) class={
+                                @if new_num_images > 0 || idx > 0 { "hidden" }
                             } {
                                 img src="" alt="" class="mb-2";
                                 @if video_exists {
@@ -688,80 +753,20 @@ fn render_media(
                     }
                 }
 
-                div class="buttons-container-old flex flex-col gap-1 p-1" {
-                    @if diff.old.videos.is_empty() && diff.old.images.is_empty() {
-                        button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
-                            "Media 1"
-                        }
-                    } @else {
-                        @for i in 0..(diff.old.videos.len() + diff.old.images.len()) {
-                            button id=(format!("media-button-{}", i+1)) type="button" class={
-                                "btn btn-sm btn-ghost"
-                                @if i == 0 { " btn-active" }
-                            } onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
-                                (format!("Media {}", i + 1))
+                @if !diff.new.is_empty() {
+                    div class="buttons-container-new flex flex-col gap-1 p-1" {
+                        @if diff.new.videos.is_empty() && diff.new.images.is_empty() {
+                            button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
+                                "Media 1"
                             }
-                        }
-                    }
-                }
-            }
-            label class="w-full py-2 diff-plus" {
-                input type="radio" name=(MEDIA_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
-
-                div #media-new class="col-span-6 my-2" {
-                    @if diff.new.is_empty() {
-                        p { "No images" }
-                    } @else {
-                        @for (idx, &image) in diff.new.images.iter().enumerate() {
-                            @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
-                            @let image_src = if image_exists {
-                                &format!("/data/images/{image}{EXT_IMAGE}")
-                            } else {
-                                ""
-                            };
-
-                            label id=(format!("media-{}", idx+1)) class={
-                                "block"
-                                @if (idx+1) > 1 { " hidden" }
-                            } {
-                                div class={
-                                    "cropper-wrap mb-2 w-full min-h-[20rem] relative overflow-hidden"
-                                    @if image_src.is_empty() { " hidden" }
-                                } {
-                                    img src=(image_src) alt=(format!("Image #{} of the recipe", idx+1)) class="block w-full h-full object-contain";
-                                    input type="hidden" name=(MEDIA_OLD) value=(image_src);
+                        } @else {
+                            @for i in 0..(diff.new.videos.len() + diff.new.images.len()) {
+                                button id=(format!("media-button-{}", i+1)) type="button" class={
+                                    "btn btn-sm btn-ghost"
+                                    @if i == 0 { " btn-active" }
+                                } onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
+                                    (format!("Media {}", i + 1))
                                 }
-                            }
-                        }
-                        @for (idx, video) in diff.new.videos.iter().enumerate() {
-                            @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
-                            @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
-
-                            label id=(format!("media-{}", idx+1+new_num_images)) class={
-                                @if new_num_images > 0 || idx > 0 { "hidden" }
-                            } {
-                                img src="" alt="" class="mb-2";
-                                @if video_exists {
-                                    video controls class="mb-2" src=(video_url) type="video/webm" {}
-                                    input type="hidden" name=(MEDIA_OLD) value=(video_url);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                div class="buttons-container-new flex flex-col gap-1 p-1" {
-                    @if diff.new.videos.is_empty() && diff.new.images.is_empty() {
-                        button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
-                            "Media 1"
-                        }
-                    } @else {
-                        @for i in 0..(diff.new.videos.len() + diff.new.images.len()) {
-                            button id=(format!("media-button-{}", i+1)) type="button" class={
-                                "btn btn-sm btn-ghost"
-                                @if i == 0 { " btn-active" }
-                            } onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
-                                (format!("Media {}", i + 1))
                             }
                         }
                     }
@@ -870,10 +875,10 @@ fn render_media(
 
             input type="hidden" name=(MEDIA_SOURCE) value=(OLD);
             @for image in diff.old.images {
-                input type="hidden" name=(MEDIA_OLD) value=(format!("/data/images/{image}{EXT_IMAGE}"));
+                input type="hidden" name=(MEDIA_OLD_IMAGE) value=(format!("/data/images/{image}{EXT_IMAGE}"));
             }
             @for video in diff.old.videos {
-                input type="hidden" name=(MEDIA_OLD) value=(format!("/data/videos/{}{EXT_VIDEO}", video.video));
+                input type="hidden" name=(MEDIA_OLD_VIDEO) value=(format!("/data/videos/{}{EXT_VIDEO}", video.video));
             }
         }
     }

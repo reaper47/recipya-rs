@@ -559,75 +559,41 @@ pub async fn recrape_recipe_put_handler(
                     .and_modify(|v| v.push(value.clone()))
                     .or_insert_with(|| vec![value]);
             }
-            "media-source" => {
+            "media-source" if value == "new" => {
                 recipe.images.clear();
                 recipe.videos.clear();
             }
-            "media-new-image" => match state.scraper.fetch_and_upload_to_temp(&value).await {
-                Ok(path) => {
+            "media-new-image" => {
+                if let Ok(file_name) = Uuid::parse_str(
+                    &PathBuf::from(value)
+                        .file_stem()
+                        .unwrap_or_default()
+                        .to_string_lossy(),
+                ) {
                     let fs_support = Arc::clone(&state.fs_support);
-                    let file_name = Uuid::new_v4();
-
-                    fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
-
-                    let res = if fs_support.is_file_exists(
-                        file_name,
-                        &state.data_dir.images.root,
-                        ".webp",
-                    ) {
-                        Some(file_name)
-                    } else {
-                        None
-                    };
-
                     let thumbnails_dir = state.data_dir.images.thumbnails.clone();
+                    let path = state.data_dir.images.root.join(format!("{file_name}.webp"));
                     tokio::spawn(async move {
                         fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
                     });
-
-                    if let Some(u) = res {
-                        recipe.images.push(u);
-                    }
+                    recipe.images.push(file_name);
                 }
-                Err(err) => {
-                    error!("Failed to fetch and upload image '{value}' to temp: {err}");
-                }
-            },
-            "media-new-video" => match state.scraper.fetch_and_upload_to_temp(&value).await {
-                Ok(path) => {
-                    let fs_support = Arc::clone(&state.fs_support);
-                    let file_name = Uuid::new_v4();
-
-                    fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
-
-                    let res = if fs_support.is_file_exists(
-                        file_name,
-                        &state.data_dir.images.root,
-                        ".webp",
-                    ) {
-                        Some(file_name)
-                    } else {
-                        None
-                    };
-
-                    let thumbnails_dir = state.data_dir.images.thumbnails.clone();
-                    tokio::spawn(async move {
-                        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+            }
+            "media-new-video" => {
+                if let Ok(video) = Uuid::parse_str(
+                    &PathBuf::from(value.clone())
+                        .file_stem()
+                        .unwrap_or_default()
+                        .to_string_lossy(),
+                ) {
+                    recipe.videos.push(VideoForCreate {
+                        video,
+                        duration: None,
+                        content_url: Some(value.clone()),
+                        embed_url: Some(value),
                     });
-
-                    if let Some(u) = res {
-                        recipe.videos.push(VideoForCreate {
-                            video: u,
-                            duration: None,
-                            content_url: Some(value.clone()),
-                            embed_url: Some(value),
-                        });
-                    }
                 }
-                Err(err) => {
-                    error!("Failed to fetch and upload image '{value}' to temp: {err}");
-                }
-            },
+            }
             "ingredients-old" => {
                 map.entry("ingredients-source".into())
                     .or_insert_with(|| vec!["old".into()]);
