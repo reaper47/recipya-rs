@@ -272,7 +272,6 @@ impl FsSupport for AppFs {
             }
 
             let _ = fs::remove_file(&tmp_out);
-            let _ = fs::remove_file(path);
 
             Ok(())
         })();
