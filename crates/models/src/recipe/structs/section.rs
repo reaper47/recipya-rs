@@ -19,7 +19,10 @@ pub enum SectionComponents {
 
 impl SectionComponents {
     pub fn from_map(map: IndexMap<String, Vec<String>>) -> Self {
-        if map.len() == 1 && map.keys().next().unwrap().is_empty() {
+        if map.len() == 1
+            && let Some(k) = map.keys().next()
+            && k.is_empty()
+        {
             map.into_iter()
                 .next()
                 .map(|(_, values)| Self::new(values))

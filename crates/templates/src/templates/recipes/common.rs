@@ -61,7 +61,8 @@ pub(super) fn add_ingredient(name: &str) -> Markup {
 }
 
 pub(super) fn add_ingredient_without_section(name: &str, section: Option<&str>) -> Markup {
-    let input_name = section.map_or("ingredient".to_string(), |s| format!("ingredient<>{s}"));
+    let input_name =
+        section.map_or_else(|| "ingredient".to_string(), |s| format!("ingredient<>{s}"));
 
     html! {
         li .pb-2 {
@@ -95,7 +96,10 @@ pub(super) fn add_instruction(name: &str) -> Markup {
 }
 
 pub(super) fn add_instruction_without_section(name: &str, section: Option<&str>) -> Markup {
-    let textarea_name = section.map_or("instruction".to_string(), |s| format!("instruction<>{s}"));
+    let textarea_name = section.map_or_else(
+        || "instruction".to_string(),
+        |s| format!("instruction<>{s}"),
+    );
 
     html! {
         li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium" {
