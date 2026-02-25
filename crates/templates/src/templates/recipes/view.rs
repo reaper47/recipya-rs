@@ -440,7 +440,7 @@ fn render_right_controls(
                     (icon_timeline())
                 }
             }
-            div class="dropdown" {
+            div class="dropdown dropdown-end" {
                 div tabindex="0" role="button" class="btn btn-xs btn-ghost" {
                     (icon_ellipsis_vertical())
                 }

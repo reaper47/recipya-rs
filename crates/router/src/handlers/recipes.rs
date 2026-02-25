@@ -15,6 +15,7 @@ use chrono::NaiveDateTime;
 use futures_util::future::join_all;
 use futures_util::pin_mut;
 use futures_util::stream::{self, StreamExt};
+use indexmap::IndexMap;
 use integrations::api::Credentials;
 use iso8601::DateTime;
 use itertools::izip;
@@ -529,8 +530,8 @@ pub async fn recrape_recipe_put_handler(
     };
 
     let mut map: HashMap<String, Vec<String>> = HashMap::new();
-    let mut ingredients_section_order: Vec<String> = Vec::new();
-    let mut instructions_section_order: Vec<String> = Vec::new();
+    let mut ingredients: IndexMap<String, Vec<String>> = IndexMap::new();
+    let mut instructions: IndexMap<String, Vec<String>> = IndexMap::new();
 
     for (name, value) in form {
         match name.as_ref() {
@@ -594,47 +595,48 @@ pub async fn recrape_recipe_put_handler(
                     });
                 }
             }
-            "ingredients-old" => {
+            "ingredients-source" => {
                 map.entry("ingredients-source".into())
-                    .or_insert_with(|| vec!["old".into()]);
+                    .or_insert_with(|| vec![value]);
             }
             name if name.starts_with("ingredients-new") => {
+                if map
+                    .get("ingredients-source")
+                    .and_then(|v| v.first())
+                    .map(String::as_str)
+                    == Some("old")
+                {
+                    continue;
+                }
+
                 map.entry("ingredients-source".into())
                     .or_insert_with(|| vec!["new".into()]);
 
-                if let Some((_, section_title)) = name.split_once("<>") {
-                    if !ingredients_section_order.contains(&section_title.to_string()) {
-                        ingredients_section_order.push(section_title.to_string()); // ← track order
-                    }
-                    map.entry(format!("ingredients-section<>{section_title}"))
-                        .and_modify(|v| v.push(value.clone()))
-                        .or_insert_with(|| vec![value]);
-                } else {
-                    map.entry("ingredients".into())
-                        .and_modify(|v| v.push(value.clone()))
-                        .or_insert_with(|| vec![value]);
-                }
+                let section = name.split_once("<>").map_or("", |(_, s)| s);
+                ingredients
+                    .entry(section.to_string())
+                    .or_default()
+                    .push(value);
             }
-            "instructions-old" => {
-                map.entry("instructionss-source".into())
-                    .or_insert_with(|| vec!["old".into()]);
+            "instructions-source" => {
+                map.entry("instructions-source".into())
+                    .or_insert_with(|| vec![value]);
             }
             name if name.starts_with("instructions-new") => {
-                map.entry("instructions-source".into())
-                    .or_insert_with(|| vec!["new".into()]);
-
-                if let Some((_, section_title)) = name.split_once("<>") {
-                    if !instructions_section_order.contains(&section_title.to_string()) {
-                        instructions_section_order.push(section_title.to_string()); // ← track order
-                    }
-                    map.entry(format!("instructions-section<>{section_title}"))
-                        .and_modify(|v| v.push(value.clone()))
-                        .or_insert_with(|| vec![value]);
-                } else {
-                    map.entry("instructions".into())
-                        .and_modify(|v| v.push(value.clone()))
-                        .or_insert_with(|| vec![value]);
+                if map
+                    .get("instructions-source")
+                    .and_then(|v| v.first())
+                    .map(String::as_str)
+                    == Some("old")
+                {
+                    continue;
                 }
+
+                let section = name.split_once("<>").map_or("", |(_, s)| s);
+                instructions
+                    .entry(section.to_string())
+                    .or_default()
+                    .push(value);
             }
             "notes-new" => {
                 recipe.notes = value.is_empty().not().then_some(value);
@@ -652,7 +654,7 @@ pub async fn recrape_recipe_put_handler(
                 }
             }
             "rating-new" => {
-                recipe.r#rating = value.parse::<i16>().ok();
+                recipe.r#rating = value.parse::<i16>().ok().filter(|&r| (1..=5).contains(&r));
             }
             "title-new" => {
                 recipe.name = value;
@@ -688,25 +690,26 @@ pub async fn recrape_recipe_put_handler(
         .map(String::as_str)
         == Some("new")
     {
-        recipe.ingredients = if ingredients_section_order.is_empty() {
+        recipe.ingredients = if ingredients.len() == 1 && ingredients.contains_key("") {
             SectionComponents::Flat(
-                map.get("ingredients")
-                    .cloned()
-                    .unwrap_or_default()
+                ingredients[""]
                     .iter()
+                    .filter(|s| !s.trim().is_empty())
                     .map(Item::new)
                     .collect(),
             )
         } else {
             SectionComponents::Grouped(
-                ingredients_section_order
+                ingredients
                     .iter()
-                    .filter_map(|title| {
-                        map.get(&format!("ingredients-section<>{title}"))
-                            .map(|items| SectionItem {
-                                title: title.clone(),
-                                items: items.iter().map(Item::new).collect(),
-                            })
+                    .filter(|(title, _)| !title.is_empty())
+                    .map(|(title, items)| SectionItem {
+                        title: title.clone(),
+                        items: items
+                            .iter()
+                            .filter(|s| !s.trim().is_empty())
+                            .map(Item::new)
+                            .collect(),
                     })
                     .collect(),
             )
@@ -719,25 +722,26 @@ pub async fn recrape_recipe_put_handler(
         .map(String::as_str)
         == Some("new")
     {
-        recipe.instructions = if instructions_section_order.is_empty() {
+        recipe.instructions = if instructions.len() == 1 && instructions.contains_key("") {
             SectionComponents::Flat(
-                map.get("instructions")
-                    .cloned()
-                    .unwrap_or_default()
+                instructions[""]
                     .iter()
+                    .filter(|s| !s.trim().is_empty())
                     .map(Item::new)
                     .collect(),
             )
         } else {
             SectionComponents::Grouped(
-                instructions_section_order
+                instructions
                     .iter()
-                    .filter_map(|title| {
-                        map.get(&format!("instructions-section<>{title}"))
-                            .map(|items| SectionItem {
-                                title: title.clone(),
-                                items: items.iter().map(Item::new).collect(),
-                            })
+                    .filter(|(title, _)| !title.is_empty())
+                    .map(|(title, items)| SectionItem {
+                        title: title.clone(),
+                        items: items
+                            .iter()
+                            .filter(|s| !s.trim().is_empty())
+                            .map(Item::new)
+                            .collect(),
                     })
                     .collect(),
             )
@@ -2060,6 +2064,7 @@ async fn schema_to_recipe_for_create(
     recipe_c.images = extract_images(&schema, state, fs_support.clone()).await;
     recipe_c.videos = extract_videos(&schema, state, fs_support).await;
 
+    recipe_c.adjust_instructions_duration();
     recipe_c
 }
 

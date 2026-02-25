@@ -4255,6 +4255,7 @@ dependencies = [
  "futures-util",
  "humantime",
  "image",
+ "indexmap",
  "infer",
  "integrations",
  "iso8601",

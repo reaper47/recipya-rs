@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use diesel::prelude::*;
 use schema_org::ToIso8601;
+use support::regexp::time::TimeParser;
 use tracing::error;
 use uuid::Uuid;
 use whatlang::Lang;
@@ -275,11 +276,11 @@ impl RecipeForCreate {
         changes.set(RecipeField::CUISINE, self.cuisine != other.cuisine);
         changes.set(
             RecipeField::INGREDIENTS,
-            self.ingredients.items_as_text() != other.ingredients.items_as_text(),
+            self.ingredients != other.ingredients,
         );
         changes.set(
             RecipeField::INSTRUCTIONS,
-            self.instructions.items_as_text() != other.instructions.items_as_text(),
+            self.instructions != other.instructions,
         );
         changes.set(RecipeField::KEYWORDS, self.keywords != other.keywords);
         changes.set(
@@ -290,6 +291,15 @@ impl RecipeForCreate {
         changes.set(RecipeField::TOOLS, self.tools != other.tools);
 
         changes
+    }
+
+    /// Calculates the instructions duration in seconds.
+    pub fn adjust_instructions_duration(&mut self) {
+        let time_parser = TimeParser::new();
+
+        self.instructions.iter_mut().for_each(|item| {
+            item.duration_seconds = time_parser.parse_max_time_seconds(&item.text);
+        });
     }
 }
 
