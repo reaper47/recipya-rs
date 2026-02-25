@@ -2976,6 +2976,7 @@ dependencies = [
  "diesel-async",
  "diesel_full_text_search",
  "humantime",
+ "indexmap",
  "infer",
  "ingredient",
  "iso8601",

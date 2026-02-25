@@ -1,17 +1,45 @@
 use axum_test::multipart::{MultipartForm, Part};
 
-use models::recipe::structs::recipe::RecipeForCreate;
+use models::recipe::structs::{recipe::RecipeForCreate, section::SectionComponents};
 
 #[allow(clippy::too_many_lines)]
 pub(super) fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
     let mut form = MultipartForm::new().add_part("title", Part::text(&recipe.name));
 
-    for ingredient in &recipe.ingredients.items_as_text() {
-        form = form.add_part("ingredient", Part::text(ingredient));
+    match &recipe.ingredients {
+        SectionComponents::Grouped(sections) => {
+            for section in sections {
+                for item in &section.items {
+                    form = form.add_part(
+                        format!("ingredient<>{}", section.title),
+                        Part::text(item.text.clone()),
+                    );
+                }
+            }
+        }
+        SectionComponents::Flat(items) => {
+            for ing in items {
+                form = form.add_part("ingredient", Part::text(ing.text.clone()));
+            }
+        }
     }
 
-    for instruction in &recipe.instructions.items_as_text() {
-        form = form.add_part("instruction", Part::text(instruction));
+    match &recipe.instructions {
+        SectionComponents::Grouped(sections) => {
+            for section in sections {
+                for item in &section.items {
+                    form = form.add_part(
+                        format!("instruction<>{}", section.title),
+                        Part::text(item.text.clone()),
+                    );
+                }
+            }
+        }
+        SectionComponents::Flat(items) => {
+            for ing in items {
+                form = form.add_part("instruction", Part::text(ing.text.clone()));
+            }
+        }
     }
 
     for tool in &recipe.tools {

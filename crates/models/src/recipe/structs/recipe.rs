@@ -296,10 +296,8 @@ impl RecipeForCreate {
 impl From<&RecipeForm> for RecipeForCreate {
     fn from(form: &RecipeForm) -> Self {
         let ingredients = &form.ingredients;
-        let measurement_system_id = system::MeasurementSystem::from(
-            ingredients.iter().map(String::as_str).collect::<Vec<_>>(),
-        )
-        .id();
+        let measurement_system_id =
+            system::MeasurementSystem::from(ingredients.items_as_text()).id();
 
         Self {
             name: form.title.clone(),
@@ -315,8 +313,8 @@ impl From<&RecipeForm> for RecipeForCreate {
                 .clone()
                 .or_else(|| Some("uncategorized".into())),
             cuisine: form.cuisine.clone(),
-            ingredients: SectionComponents::new(ingredients.clone()),
-            instructions: SectionComponents::new(form.instructions.clone()),
+            ingredients: ingredients.clone(),
+            instructions: form.instructions.clone(),
             keywords: form.keywords.clone(),
             measurement_system_id,
             nutrition: form.nutrition.clone(),

@@ -40,363 +40,255 @@ mod tests {
         assert_must_be_logged_in(Method::POST, BASE_URI).await
     }
 
-    #[tokio::test]
-    async fn test_get_logged_in_htmx_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let mut server = build_server_logged_in(config).await?;
-        server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
+    mod tests_get {
+        use super::*;
 
-        let res = server.get(BASE_URI).await;
+        #[tokio::test]
+        async fn test_logged_in_htmx_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let mut server = build_server_logged_in(config).await?;
+            server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
 
-        res.assert_status_ok();
-        assert_recipe_form(&res);
-        Ok(())
+            let res = server.get(BASE_URI).await;
+
+            res.assert_status_ok();
+            assert_recipe_form(&res);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_logged_in_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(BASE_URI).await;
+
+            res.assert_status_ok();
+            assert_recipe_form(&res);
+            Ok(())
+        }
     }
 
-    #[tokio::test]
-    async fn test_get_logged_in_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
+    mod tests_post {
+        use reqwest::StatusCode;
 
-        let res = server.get(BASE_URI).await;
+        use super::*;
 
-        res.assert_status_ok();
-        assert_recipe_form(&res);
-        Ok(())
-    }
+        #[tokio::test]
+        async fn test_missing_required_title_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let recipe = RecipeForCreate {
+                ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
 
-    #[tokio::test]
-    async fn test_post_missing_required_title_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
-        let recipe = RecipeForCreate {
-            ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ..Default::default()
-        };
-        let form = create_form(&recipe);
+            let res = server.post(BASE_URI).multipart(form).await;
 
-        let res = server.post(BASE_URI).multipart(form).await;
+            res.assert_status_bad_request();
+            Ok(())
+        }
 
-        res.assert_status_bad_request();
-        Ok(())
-    }
+        #[tokio::test]
+        async fn test_missing_required_ingredients_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
 
-    #[tokio::test]
-    async fn test_post_missing_required_ingredients_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ..Default::default()
-        };
-        let form = create_form(&recipe);
+            let res = server.post(BASE_URI).multipart(form).await;
 
-        let res = server.post(BASE_URI).multipart(form).await;
+            res.assert_status_bad_request();
+            Ok(())
+        }
 
-        res.assert_status_bad_request();
-        Ok(())
-    }
+        #[tokio::test]
+        async fn test_missing_required_instructions_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
 
-    #[tokio::test]
-    async fn test_post_missing_required_instructions_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
-            ..Default::default()
-        };
-        let form = create_form(&recipe);
+            let res = server.post(BASE_URI).multipart(form).await;
 
-        let res = server.post(BASE_URI).multipart(form).await;
+            res.assert_status_bad_request();
+            Ok(())
+        }
 
-        res.assert_status_bad_request();
-        Ok(())
-    }
+        #[tokio::test]
+        async fn test_missing_fields_defaults_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
 
-    #[tokio::test]
-    async fn test_post_missing_fields_defaults_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
-            ..Default::default()
-        };
-        let form = create_form(&recipe);
+            let res = server.post(BASE_URI).multipart(form).await;
 
-        let res = server.post(BASE_URI).multipart(form).await;
+            res.assert_status(StatusCode::CREATED);
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(got.category, "uncategorized");
+            pretty_assertions::assert_eq!(got.recipe.r#yield, 1);
+            Ok(())
+        }
 
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        pretty_assertions::assert_eq!(got.category, "uncategorized");
-        pretty_assertions::assert_eq!(got.recipe.r#yield, 1);
-        Ok(())
-    }
+        #[tokio::test]
+        async fn test_can_only_be_one_category_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
+                category: Some("breakfast,dinner".into()),
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
 
-    #[tokio::test]
-    async fn test_post_can_only_be_one_category_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
-            category: Some("breakfast,dinner".into()),
-            ..Default::default()
-        };
-        let form = create_form(&recipe);
+            let res = server.post(BASE_URI).multipart(form).await;
 
-        let res = server.post(BASE_URI).multipart(form).await;
+            res.assert_status(StatusCode::CREATED);
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(got.category, "breakfast");
+            Ok(())
+        }
 
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        pretty_assertions::assert_eq!(got.category, "breakfast");
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_post_duplicates_are_removed_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            instructions: SectionComponents::Flat(vec![
-                Item::new("Mix the apples"),
-                Item::new("Eat"),
-                Item::new("Mix the apples"),
-            ]),
-            ingredients: SectionComponents::Flat(vec![
-                Item::new("8 apples"),
-                Item::new("4 oranges"),
-                Item::new("8 apples"),
-            ]),
-            keywords: vec!["drinks".into(), "vodka".into(), "drinks".into()],
-            tools: vec![
-                ToolForCreate {
-                    quantity: 1,
-                    name: "1 wok".into(),
-                },
-                ToolForCreate {
-                    quantity: 1,
-                    name: "1 wok".into(),
-                },
-            ],
-            ..Default::default()
-        };
-        let form = create_form(&recipe);
-
-        let res = server.post(BASE_URI).multipart(form).await;
-
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        pretty_assertions::assert_eq!(
-            got.keywords,
-            vec!["drinks".to_string(), "vodka".to_string()]
-        );
-        pretty_assertions::assert_eq!(
-            got.ingredients,
-            SectionComponents::Flat(vec![Item::new("8 apples"), Item::new("4 oranges")]),
-        );
-        pretty_assertions::assert_eq!(
-            got.instructions,
-            SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")]),
-        );
-        pretty_assertions::assert_eq!(
-            got.tools,
-            vec![ToolRecipe {
-                name: "wok".into(),
-                tool_order: 1,
-                quantity: 1,
-            }]
-        );
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_post_subcategories_are_possible() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
-            category: Some("drinks:vodka".into()),
-            ..Default::default()
-        };
-        let form = create_form(&recipe);
-
-        let res = server.post(BASE_URI).multipart(form).await;
-
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        pretty_assertions::assert_eq!(got.category, "drinks:vodka");
-        Ok(())
-    }
-
-    #[tokio::test]
-    #[allow(clippy::too_many_lines)]
-    async fn test_post_submit_recipe_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".into(),
-            description: Some("Your mouth will drool like never before".into()),
-            images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
-            measurement_system_id: 2,
-            r#yield: Some(6),
-            source: Source::new("My mother's maple syrup recipes cookbook"),
-            is_favourite: false,
-            rating: Some(4),
-            videos: vec![VideoForCreate {
-                video: Uuid::new_v4(),
-                duration: Some(Duration::hours(1)),
-                content_url: Some("https://www.youtube.com/watch?v=1".into()),
-                embed_url: Some("https://www.youtube.com/embed/embed".into()),
-            }],
-            category: Some("dinner".into()),
-            instructions: SectionComponents::Grouped(vec![
-                SectionItem::new(
-                    "Prepare",
-                    vec![
-                        Item::new("Mix the apples"),
-                        Item::new("Mix the blueberries"),
-                    ],
-                ),
-                SectionItem::new(
-                    "Execution",
-                    vec![Item::new(
-                        "Add whip cream and whisk the fruits until smooth",
-                    )],
-                ),
-            ]),
-            keywords: vec!["fruits".into(), "strawberries".into(), "healthy".into()],
-            notes: Some("# Test\n\nSome notes".into()),
-            nutrition: NutritionDetailsForCreate {
-                per_100g: Some(NutritionForCreate {
-                    calories_kcal: Some(1),
-                    total_carbohydrates: Some(2.),
-                    sugars_g: Some(3.),
-                    protein_g: Some(4.),
-                    total_fat_g: Some(5.),
-                    saturated_fat_g: Some(6.),
-                    unsaturated_fat_g: Some(7.),
-                    cholesterol_mg: Some(8.),
-                    sodium_mg: Some(9.),
-                    fiber_g: Some(10.),
-                    trans_fat_g: Some(11.),
-                }),
-                per_serving: Some(NutritionPerServingDetailsForCreate {
-                    nutrition: NutritionForCreate {
-                        calories_kcal: Some(1),
-                        total_carbohydrates: Some(2.),
-                        sugars_g: Some(3.),
-                        protein_g: Some(4.),
-                        total_fat_g: Some(5.),
-                        saturated_fat_g: Some(6.),
-                        unsaturated_fat_g: Some(7.),
-                        cholesterol_mg: Some(8.),
-                        sodium_mg: Some(9.),
-                        fiber_g: Some(10.),
-                        trans_fat_g: Some(11.),
+        #[tokio::test]
+        async fn test_duplicates_are_removed_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                instructions: SectionComponents::Flat(vec![
+                    Item::new("Mix the apples"),
+                    Item::new("Eat"),
+                    Item::new("Mix the apples"),
+                ]),
+                ingredients: SectionComponents::Flat(vec![
+                    Item::new("8 apples"),
+                    Item::new("4 oranges"),
+                    Item::new("8 apples"),
+                ]),
+                keywords: vec!["drinks".into(), "vodka".into(), "drinks".into()],
+                tools: vec![
+                    ToolForCreate {
+                        quantity: 1,
+                        name: "1 wok".into(),
                     },
-                    serving_size: "4 cups".into(),
-                }),
-            },
-            times: Some(TimesForCreate {
-                prep_seconds: 3600,
-                cook_seconds: 72000,
-            }),
-            ingredients: SectionComponents::Grouped(vec![
-                SectionItem::new(
-                    "Prepare",
-                    vec![Item::new("8 apples"), Item::new("5 lbs blueberries")],
-                ),
-                SectionItem::new("Execution", vec![Item::new("200g 30% whip cream")]),
-            ]),
-            cuisine: Some("japanese".into()),
-            tools: vec![
-                ToolForCreate {
-                    name: "large bowl".into(),
+                    ToolForCreate {
+                        quantity: 1,
+                        name: "1 wok".into(),
+                    },
+                ],
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
+
+            let res = server.post(BASE_URI).multipart(form).await;
+
+            res.assert_status(StatusCode::CREATED);
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(
+                got.keywords,
+                vec!["drinks".to_string(), "vodka".to_string()]
+            );
+            pretty_assertions::assert_eq!(
+                got.ingredients,
+                SectionComponents::Flat(vec![Item::new("8 apples"), Item::new("4 oranges")]),
+            );
+            pretty_assertions::assert_eq!(
+                got.instructions,
+                SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")]),
+            );
+            pretty_assertions::assert_eq!(
+                got.tools,
+                vec![ToolRecipe {
+                    name: "wok".into(),
+                    tool_order: 1,
                     quantity: 1,
-                },
-                ToolForCreate {
-                    name: "whisk".into(),
-                    quantity: 2,
-                },
-            ],
-        };
-        let form = create_form(&recipe);
+                }]
+            );
+            Ok(())
+        }
 
-        let res = server.post(BASE_URI).multipart(form).await;
+        #[tokio::test]
+        async fn test_subcategories_are_possible() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
+                category: Some("drinks:vodka".into()),
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
 
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        let times = recipe.times.expect("Should have times");
-        pretty_assertions::assert_eq!(
-            got,
-            RecipeDetails {
-                recipe: Recipe {
-                    id: 1,
-                    name: recipe.name,
-                    description: recipe.description,
-                    image: Some(got.recipe.image.expect("A main image")),
-                    r#yield: 6,
-                    language: "eng".into(),
-                    measurement_system_id: 2,
-                    notes: Some("# Test\n\nSome notes".into()),
-                    source: recipe.source,
-                    is_favourite: false,
-                    rating: Some(4),
-                    created_at: got.recipe.created_at,
-                    updated_at: got.recipe.updated_at,
-                    user_id,
-                },
-                additional_images: got.additional_images.clone(),
-                category: recipe.category.expect("Should have category"),
-                cuisine: recipe.cuisine,
-                ingredients: match recipe.ingredients {
-                    SectionComponents::Grouped(section_items) => SectionComponents::Flat(
-                        section_items
-                            .into_iter()
-                            .flat_map(|item| item.items)
-                            .collect()
-                    ),
-                    SectionComponents::Flat(items) => SectionComponents::Flat(items),
-                },
-                instructions: match recipe.instructions {
-                    SectionComponents::Grouped(section_items) => SectionComponents::Flat(
-                        section_items
-                            .into_iter()
-                            .flat_map(|item| item.items)
-                            .collect()
-                    ),
-                    SectionComponents::Flat(items) => SectionComponents::Flat(items),
-                },
-                keywords: vec!["fruits".into(), "healthy".into(), "strawberries".into()],
-                nutrition: NutritionDetails {
-                    per_100g: Some(Nutrition {
-                        id: 1,
+            let res = server.post(BASE_URI).multipart(form).await;
+
+            res.assert_status(StatusCode::CREATED);
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(got.category, "drinks:vodka");
+            Ok(())
+        }
+
+        #[tokio::test]
+        #[allow(clippy::too_many_lines)]
+        async fn test_submit_recipe_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".into(),
+                description: Some("Your mouth will drool like never before".into()),
+                images: vec![Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4()],
+                measurement_system_id: 2,
+                r#yield: Some(6),
+                source: Source::new("My mother's maple syrup recipes cookbook"),
+                is_favourite: false,
+                rating: Some(4),
+                videos: vec![VideoForCreate {
+                    video: Uuid::new_v4(),
+                    duration: Some(Duration::hours(1)),
+                    content_url: Some("https://www.youtube.com/watch?v=1".into()),
+                    embed_url: Some("https://www.youtube.com/embed/embed".into()),
+                }],
+                category: Some("dinner".into()),
+                instructions: SectionComponents::Flat(vec![
+                    Item::new("Mix the apples"),
+                    Item::new("Mix the blueberries"),
+                    Item::new("Add whip cream and whisk the fruits until smooth"),
+                ]),
+                keywords: vec!["fruits".into(), "strawberries".into(), "healthy".into()],
+                notes: Some("# Test\n\nSome notes".into()),
+                nutrition: NutritionDetailsForCreate {
+                    per_100g: Some(NutritionForCreate {
                         calories_kcal: Some(1),
-                        is_precalculated_by_source: true,
                         total_carbohydrates: Some(2.),
                         sugars_g: Some(3.),
                         protein_g: Some(4.),
@@ -408,11 +300,9 @@ mod tests {
                         fiber_g: Some(10.),
                         trans_fat_g: Some(11.),
                     }),
-                    per_serving: Some(NutritionPerServingDetails {
-                        nutrition: Nutrition {
-                            id: 2,
+                    per_serving: Some(NutritionPerServingDetailsForCreate {
+                        nutrition: NutritionForCreate {
                             calories_kcal: Some(1),
-                            is_precalculated_by_source: true,
                             total_carbohydrates: Some(2.),
                             sugars_g: Some(3.),
                             protein_g: Some(4.),
@@ -427,30 +317,217 @@ mod tests {
                         serving_size: "4 cups".into(),
                     }),
                 },
-                times: Times {
-                    id: 1,
-                    recipe_id: 1,
-                    prep_seconds: times.prep_seconds,
-                    cook_seconds: times.cook_seconds,
-                    total_seconds: times.prep_seconds + times.cook_seconds,
-                },
-                tools: recipe
-                    .tools
-                    .into_iter()
-                    .enumerate()
-                    .map(|(idx, tool_c)| ToolRecipe {
-                        name: tool_c.name,
-                        quantity: tool_c.quantity,
-                        tool_order: i16::try_from(idx + 1).unwrap_or_default(),
-                    })
-                    .collect(),
-                videos: vec![],
-            }
-        );
-        Ok(())
+                times: Some(TimesForCreate {
+                    prep_seconds: 3600,
+                    cook_seconds: 72000,
+                }),
+                ingredients: SectionComponents::Grouped(vec![
+                    SectionItem::new(
+                        "Prepare",
+                        vec![Item::new("8 apples"), Item::new("5 lbs blueberries")],
+                    ),
+                    SectionItem::new("Execution", vec![Item::new("200g 30% whip cream")]),
+                ]),
+                cuisine: Some("japanese".into()),
+                tools: vec![
+                    ToolForCreate {
+                        name: "large bowl".into(),
+                        quantity: 1,
+                    },
+                    ToolForCreate {
+                        name: "whisk".into(),
+                        quantity: 2,
+                    },
+                ],
+            };
+            let form = create_form(&recipe);
+
+            let res = server.post(BASE_URI).multipart(form).await;
+
+            res.assert_status(StatusCode::CREATED);
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let times = recipe.times.expect("Should have times");
+            pretty_assertions::assert_eq!(
+                got,
+                RecipeDetails {
+                    recipe: Recipe {
+                        id: 1,
+                        name: recipe.name,
+                        description: recipe.description,
+                        image: Some(got.recipe.image.expect("A main image")),
+                        r#yield: 6,
+                        language: "eng".into(),
+                        measurement_system_id: 2,
+                        notes: Some("# Test\n\nSome notes".into()),
+                        source: recipe.source,
+                        is_favourite: false,
+                        rating: Some(4),
+                        created_at: got.recipe.created_at,
+                        updated_at: got.recipe.updated_at,
+                        user_id,
+                    },
+                    additional_images: got.additional_images.clone(),
+                    category: recipe.category.expect("Should have category"),
+                    cuisine: recipe.cuisine,
+                    ingredients: match recipe.ingredients {
+                        SectionComponents::Grouped(section_items) =>
+                            SectionComponents::Grouped(section_items),
+                        SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                    },
+                    instructions: match recipe.instructions {
+                        SectionComponents::Grouped(section_items) =>
+                            SectionComponents::Grouped(section_items),
+                        SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                    },
+                    keywords: vec!["fruits".into(), "healthy".into(), "strawberries".into()],
+                    nutrition: NutritionDetails {
+                        per_100g: Some(Nutrition {
+                            id: 1,
+                            calories_kcal: Some(1),
+                            is_precalculated_by_source: true,
+                            total_carbohydrates: Some(2.),
+                            sugars_g: Some(3.),
+                            protein_g: Some(4.),
+                            total_fat_g: Some(5.),
+                            saturated_fat_g: Some(6.),
+                            unsaturated_fat_g: Some(7.),
+                            cholesterol_mg: Some(8.),
+                            sodium_mg: Some(9.),
+                            fiber_g: Some(10.),
+                            trans_fat_g: Some(11.),
+                        }),
+                        per_serving: Some(NutritionPerServingDetails {
+                            nutrition: Nutrition {
+                                id: 2,
+                                calories_kcal: Some(1),
+                                is_precalculated_by_source: true,
+                                total_carbohydrates: Some(2.),
+                                sugars_g: Some(3.),
+                                protein_g: Some(4.),
+                                total_fat_g: Some(5.),
+                                saturated_fat_g: Some(6.),
+                                unsaturated_fat_g: Some(7.),
+                                cholesterol_mg: Some(8.),
+                                sodium_mg: Some(9.),
+                                fiber_g: Some(10.),
+                                trans_fat_g: Some(11.),
+                            },
+                            serving_size: "4 cups".into(),
+                        }),
+                    },
+                    times: Times {
+                        id: 1,
+                        recipe_id: 1,
+                        prep_seconds: times.prep_seconds,
+                        cook_seconds: times.cook_seconds,
+                        total_seconds: times.prep_seconds + times.cook_seconds,
+                    },
+                    tools: recipe
+                        .tools
+                        .into_iter()
+                        .enumerate()
+                        .map(|(idx, tool_c)| ToolRecipe {
+                            name: tool_c.name,
+                            quantity: tool_c.quantity,
+                            tool_order: i16::try_from(idx + 1).unwrap_or_default(),
+                        })
+                        .collect(),
+                    videos: vec![],
+                }
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_submit_ingredients_instructions_sections_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".into(),
+                measurement_system_id: 2,
+                category: Some("dinner".into()),
+                instructions: SectionComponents::Grouped(vec![
+                    SectionItem::new(
+                        "Prepare",
+                        vec![
+                            Item::new("Mix the apples"),
+                            Item::new("Mix the blueberries"),
+                        ],
+                    ),
+                    SectionItem::new(
+                        "Execution",
+                        vec![Item::new(
+                            "Add whip cream and whisk the fruits until smooth",
+                        )],
+                    ),
+                ]),
+                ingredients: SectionComponents::Grouped(vec![
+                    SectionItem::new(
+                        "Prepare",
+                        vec![Item::new("8 apples"), Item::new("5 lbs blueberries")],
+                    ),
+                    SectionItem::new("Execution", vec![Item::new("200g 30% whip cream")]),
+                ]),
+                ..Default::default()
+            };
+            let form = create_form(&recipe);
+
+            let res = server.post(BASE_URI).multipart(form).await;
+
+            res.assert_status(StatusCode::CREATED);
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(
+                got,
+                RecipeDetails {
+                    recipe: Recipe {
+                        id: 1,
+                        name: recipe.name,
+                        description: recipe.description,
+                        r#yield: 1,
+                        language: "eng".into(),
+                        measurement_system_id: 2,
+                        source: recipe.source,
+                        is_favourite: false,
+                        created_at: got.recipe.created_at,
+                        updated_at: got.recipe.updated_at,
+                        user_id,
+                        ..Default::default()
+                    },
+                    category: recipe.category.expect("Should have category"),
+                    ingredients: match recipe.ingredients {
+                        SectionComponents::Grouped(section_items) =>
+                            SectionComponents::Grouped(section_items),
+                        SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                    },
+                    instructions: match recipe.instructions {
+                        SectionComponents::Grouped(section_items) =>
+                            SectionComponents::Grouped(section_items),
+                        SectionComponents::Flat(items) => SectionComponents::Flat(items),
+                    },
+                    times: Times {
+                        id: 1,
+                        recipe_id: 1,
+                        prep_seconds: 900,
+                        cook_seconds: 1800,
+                        total_seconds: 2700,
+                    },
+                    ..Default::default()
+                }
+            );
+            Ok(())
+        }
     }
 
     fn assert_recipe_form(res: &TestResponse) {
+        let body = res.text();
+        let normalized = body.split_whitespace().collect::<Vec<_>>().join(" ");
+
         let expected = [
             r#"<title hx-swap-oob="true">Add Recipe Manually | Recipya</title>"#,
             r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-encoding="multipart/form-data" hx-post="/recipes/add/manual" hx-indicator="#fullscreen-loader">"##,
@@ -465,14 +542,17 @@ mod tests {
             r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Tools</span></h2>"#,
             r#"<ol id="tools-list" class="pl-4"><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full" value="" _="on keydown if event.key is 'Enter' halt the event then call addItem(event)"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
             r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Ingredients</span><sup class="text-red-600">*</sup></h2>"#,
-            r#"<ol id="ingredients-list" class="pl-4"><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient" value="" placeholder="1 cup of chopped onions" class="input input-bordered input-sm w-full" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
+            r#"<ol id="ingredients-list" class="pl-4"><li><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><btn class="btn btn-xs btn-outline" _="on click make an &lt;input/&gt; called newInput set newInput.type to 'text' set newInput.name to 'section-ingredient' set newInput.placeholder to 'Section name' set newInput.className to 'input input-sm' set list to closest &lt;ol/&gt; set sectionName to 'ingredient' put newInput before me remove me js(newInput, list, sectionName) newInput.addEventListener('focusout', function() { renumberSections(list, sectionName) }) end newInput.focus()">Add section</btn><btn class="btn btn-xs btn-square" _="on click set list to closest &lt;ol/&gt; set sectionName to 'ingredient' remove closest &lt;li/&gt; call renumberSections(list, sectionName)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient" value="" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li></ol>"#,
             r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Instructions</span><sup class="text-red-600">*</sup></h2>"#,
-            r#"<ol id="instructions-list" class="grid list-decimal"><li class="pt-2 md:pl-0"><div class="flex"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
+            r#"<ol id="instructions-list" class="grid [counter-reset:steps] list-none"><li><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><btn class="btn btn-xs btn-outline" _="on click make an &lt;input/&gt; called newInput set newInput.type to 'text' set newInput.name to 'section-instruction' set newInput.placeholder to 'Section name' set newInput.className to 'input input-sm' set list to closest &lt;ol/&gt; set sectionName to 'instruction' put newInput before me remove me js(newInput, list, sectionName) newInput.addEventListener('focusout', function() { renumberSections(list, sectionName) }) end newInput.focus()">Add section</btn><btn class="btn btn-xs btn-square" _="on click set list to closest &lt;ol/&gt; set sectionName to 'instruction' remove closest &lt;li/&gt; call renumberSections(list, sectionName)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium"><div class="flex w-full"><label class="w-11/12"><textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'instruction')">-</button><div class="h-4 cursor-move handle grid place-content-center"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div></div></div></li></ol>"#,
             r#"<div class="rating"><input type="radio" name="rating" class="rating-hidden" value="" aria-label="clear"><input type="radio" name="rating" class="mask mask-star-2" value="1" aria-label="1 star"><input type="radio" name="rating" class="mask mask-star-2" value="2" aria-label="2 star"><input type="radio" name="rating" class="mask mask-star-2" value="3" aria-label="3 star" checked><input type="radio" name="rating" class="mask mask-star-2" value="4" aria-label="4 star"><input type="radio" name="rating" class="mask mask-star-2" value="5" aria-label="5 star"></div>"#,
             r#"<button class="btn btn-primary btn-block btn-sm">Submit</button>"#,
         ];
         for want in expected {
-            res.assert_text_contains(want);
+            assert!(
+                normalized.contains(want),
+                "Expected to find:\n{want}\n\nIn:\n{normalized}"
+            );
         }
     }
 }

@@ -7,8 +7,8 @@ use models::recipe::structs::types::Source;
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, init_recipe_form_js, nutrition_table_header,
-    recipe_keyword_empty, render_media_editor, render_rating,
+    add_ingredient, add_instruction, add_section, add_tool, init_recipe_form_js,
+    nutrition_table_header, recipe_keyword_empty, render_media_editor, render_rating,
 };
 use crate::templates::icons::{
     icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
@@ -165,6 +165,7 @@ fn render_description(view: Option<&ViewRecipe>) -> Markup {
 
 fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
     html! {
+        (add_section("ingredient", Some("section-base-ingredient"), Some("hidden")))
         h2 class="font-semibold text-center pb-2" {
             span .underline { "Ingredients" }
             sup .text-red-600 { "*" }
@@ -199,11 +200,12 @@ fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
 
 fn render_instructions(view: Option<&ViewRecipe>) -> Markup {
     html! {
+        (add_section("instruction", Some("section-base-instruction"), Some("hidden")))
         h2 class="font-semibold text-center pb-2" {
             span .underline { "Instructions" }
             sup .text-red-600 { "*" }
         }
-        ol #instructions-list class="grid list-decimal" {
+        ol #instructions-list class="grid [counter-reset:steps] list-none" {
             @if let Some(v) = view {
                 @let instructions = &v.recipe_details.instructions;
                  @if !instructions.is_empty() {

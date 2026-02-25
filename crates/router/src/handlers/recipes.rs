@@ -1661,7 +1661,6 @@ pub async fn add_recipe_import_raw_handler(
                     Error::EntityExists { entity: "recipe" }.into_response()
                 }
                 Err(err) => {
-                    println!("Error saving recipe '{}': {err}", recipe_c.name);
                     error!("Error saving recipe '{}': {err}", recipe_c.name);
                     broadcast_error(&state, user.id, "Failed to insert recipe.").await;
                     Error::Database.into_response()
@@ -1756,9 +1755,7 @@ pub async fn add_manual_recipe_post_handler(
     };
 
     let ingredients = form.ingredients;
-    let measurement_system_id =
-        system::MeasurementSystem::from(ingredients.iter().map(String::as_str).collect::<Vec<_>>())
-            .id();
+    let measurement_system_id = system::MeasurementSystem::from(ingredients.items_as_text()).id();
 
     let recipe_id = match Recipe::create(
         &state.mm,
@@ -1775,10 +1772,8 @@ pub async fn add_manual_recipe_post_handler(
             videos,
             category: form.category.or_else(|| Some("uncategorized".into())),
             cuisine: form.cuisine,
-            ingredients: SectionComponents::Flat(ingredients.iter().map(Item::new).collect()),
-            instructions: SectionComponents::Flat(
-                form.instructions.iter().map(Item::new).collect(),
-            ),
+            ingredients,
+            instructions: form.instructions,
             keywords: form.keywords,
             notes: form.notes,
             nutrition: form.nutrition,
@@ -1799,11 +1794,11 @@ pub async fn add_manual_recipe_post_handler(
         }
     };
 
-    let mut res = (StatusCode::SEE_OTHER, "").into_response();
-    if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
-        res.headers_mut().insert(HX_REDIRECT, value);
-    }
-    res
+    (
+        StatusCode::CREATED,
+        [(HX_REDIRECT, format!("/recipes/{recipe_id}"))],
+    )
+        .into_response()
 }
 
 /// Fetches the user's categories and keywords from the database.

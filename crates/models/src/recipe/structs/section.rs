@@ -2,7 +2,9 @@ use std::{iter::FlatMap, slice::IterMut, vec};
 
 use diesel::prelude::*;
 
+use indexmap::IndexMap;
 use itertools::Either;
+
 use repository::schema;
 use schema_org::field::{
     ItemListItemListElementFieldEnum, PropertyValueValueFieldEnum, RecipeRecipeIngredientFieldEnum,
@@ -13,6 +15,25 @@ use schema_org::field::{
 pub enum SectionComponents {
     Grouped(Vec<SectionItem>),
     Flat(Vec<Item>),
+}
+
+impl SectionComponents {
+    pub fn from_map(map: IndexMap<String, Vec<String>>) -> Self {
+        if map.len() == 1 {
+            map.into_iter()
+                .next()
+                .map(|(_, values)| Self::new(values))
+                .unwrap_or_default()
+        } else {
+            Self::Grouped(
+                map.into_iter()
+                    .map(|(title, values)| {
+                        SectionItem::new(title, values.into_iter().map(Item::new).collect())
+                    })
+                    .collect(),
+            )
+        }
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
