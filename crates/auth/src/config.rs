@@ -70,7 +70,6 @@ impl AuthConfig {
             Error::ConfigFileWriteFailed
         })?;
 
-        // Atomic rename — if it fails another process won the race, read theirs
         if let Err(err) = fs::rename(&tmp_path, &config_path) {
             error!("Failed to rename auth config (race condition): {err:?}");
             let s = fs::read_to_string(&config_path).map_err(|_| Error::ConfigFileWriteFailed)?;
