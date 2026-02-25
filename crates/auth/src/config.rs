@@ -45,52 +45,69 @@ impl AuthConfig {
         let data_dir = get_base_dir()?;
         let config_path = data_dir.join("auth_config.json");
 
-        match fs::read_to_string(&config_path) {
-            Ok(config_str) => {
-                info!("Loading auth config from file");
-                let mut auth: Self = serde_json::from_str(&config_str)?;
-                auth.decoded_password_key = URL_SAFE_NO_PAD
-                    .decode(&auth.password_key)
-                    .expect("Invalid auth config password key");
-                auth.decoded_token_key = URL_SAFE_NO_PAD
-                    .decode(&auth.token_key)
-                    .expect("Invalid auth config token key");
-                Ok(auth)
-            }
-            Err(err) => {
-                warn!("Failed to read auth config: {err}");
-                info!("Creating auth config");
-
-                if let Err(err) = fs::create_dir_all(data_dir) {
-                    error!("Failed to create parent directories for auth config: {err:?}");
-                    return Err(Error::ConfigFileWriteFailed);
-                }
-
-                let password_key = URL_SAFE_NO_PAD.encode(generate_key());
-                let token_key = URL_SAFE_NO_PAD.encode(generate_key());
-
-                let config = Self {
-                    jwt_secret: URL_SAFE_NO_PAD.encode(generate_key()),
-                    password_key: password_key.clone(),
-                    token_key: token_key.clone(),
-                    token_duration_sec: 1800.0,
-                    decoded_password_key: URL_SAFE_NO_PAD
-                        .decode(password_key)
-                        .expect("Valid auth config password key"),
-                    decoded_token_key: URL_SAFE_NO_PAD
-                        .decode(token_key)
-                        .expect("Valid auth config token key"),
-                };
-
-                match fs::write(config_path, serde_json::to_string_pretty(&config)?) {
-                    Ok(()) => Ok(config),
-                    Err(err) => {
-                        error!("Failed to write auth config to file: {err:?}");
-                        Err(Error::ConfigFileWriteFailed)
-                    }
-                }
-            }
+        if let Ok(s) = fs::read_to_string(&config_path) {
+            info!("Loading auth config from file");
+            return Self::from_str(&s);
         }
+
+        warn!("Auth config not found, generating a new one");
+        fs::create_dir_all(&data_dir).map_err(|err| {
+            error!("Failed to create auth config directory: {err:?}");
+            Error::ConfigFileWriteFailed
+        })?;
+
+        if let Ok(s) = fs::read_to_string(&config_path) {
+            info!("Auth config was created by another process, loading it");
+            return Self::from_str(&s);
+        }
+
+        let config = Self::generate()?;
+        let json = serde_json::to_string_pretty(&config)?;
+        let tmp_path = config_path.with_extension("tmp");
+
+        fs::write(&tmp_path, &json).map_err(|err| {
+            error!("Failed to write auth config: {err}");
+            Error::ConfigFileWriteFailed
+        })?;
+
+        // Atomic rename — if it fails another process won the race, read theirs
+        if let Err(err) = fs::rename(&tmp_path, &config_path) {
+            error!("Failed to rename auth config (race condition): {err:?}");
+            let s = fs::read_to_string(&config_path).map_err(|_| Error::ConfigFileWriteFailed)?;
+            return Self::from_str(&s);
+        }
+
+        Ok(config)
+    }
+
+    fn from_str(s: &str) -> Result<Self> {
+        let auth: Self = serde_json::from_str(s)?;
+        Ok(auth.decode_keys())
+    }
+
+    fn decode_keys(mut self) -> Self {
+        self.decoded_password_key = URL_SAFE_NO_PAD
+            .decode(&self.password_key)
+            .expect("Invalid auth config password key");
+        self.decoded_token_key = URL_SAFE_NO_PAD
+            .decode(&self.token_key)
+            .expect("Invalid auth config token key");
+        self
+    }
+
+    fn generate() -> Result<Self> {
+        let password_key = URL_SAFE_NO_PAD.encode(generate_key());
+        let token_key = URL_SAFE_NO_PAD.encode(generate_key());
+        Ok(Self {
+            jwt_secret: URL_SAFE_NO_PAD.encode(generate_key()),
+            decoded_password_key: URL_SAFE_NO_PAD
+                .decode(&password_key)
+                .expect("Valid password key"),
+            decoded_token_key: URL_SAFE_NO_PAD.decode(&token_key).expect("Valid token key"),
+            password_key,
+            token_key,
+            token_duration_sec: 1800.0,
+        })
     }
 }
 
