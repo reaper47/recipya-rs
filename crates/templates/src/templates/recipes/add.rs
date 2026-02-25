@@ -163,7 +163,7 @@ fn render_description(view: Option<&ViewRecipe>) -> Markup {
     }
 }
 
-fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
+pub(super) fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
     html! {
         (add_section("ingredient", Some("section-base-ingredient"), Some("hidden")))
         h2 class="font-semibold text-center pb-2" {

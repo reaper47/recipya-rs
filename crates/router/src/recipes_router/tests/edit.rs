@@ -42,269 +42,262 @@ mod tests {
         assert_must_be_logged_in(Method::PUT, &base_uri(1)).await
     }
 
-    #[tokio::test]
-    async fn test_get_recipe_not_exist_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config).await?;
+    mod tests_get {
+        use super::*;
 
-        let res = server.get(&base_uri(1)).await;
+        #[tokio::test]
+        async fn test_recipe_not_exist_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config).await?;
 
-        res.assert_status_not_found();
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
-        Ok(())
+            let res = server.get(&base_uri(1)).await;
+
+            res.assert_status_not_found();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_recipe_exists_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+
+            let res = server.get(&base_uri(1)).await;
+
+            assert_recipe_form(&res);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_recipe_exists_htmx_request_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let mut server = build_server_logged_in(config.clone()).await?;
+            server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
+            let state = create_app_state(config).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+
+            let res = server.get(&base_uri(1)).await;
+
+            assert_recipe_form(&res);
+            Ok(())
+        }
     }
 
-    #[tokio::test]
-    async fn test_get_recipe_exists_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+    mod tests_put {
+        use super::*;
 
-        let res = server.get(&base_uri(1)).await;
+        #[tokio::test]
+        async fn test_missing_required_title_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let recipe = RecipeForCreate {
+                ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ..Default::default()
+            };
 
-        assert_recipe_form(&res);
-        Ok(())
-    }
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-    #[tokio::test]
-    async fn test_get_recipe_exists_htmx_request_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let mut server = build_server_logged_in(config.clone()).await?;
-        server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
-        let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+            res.assert_status_bad_request();
+            Ok(())
+        }
 
-        let res = server.get(&base_uri(1)).await;
+        #[tokio::test]
+        async fn test_missing_required_ingredients_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ..Default::default()
+            };
 
-        assert_recipe_form(&res);
-        Ok(())
-    }
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-    #[tokio::test]
-    async fn test_put_missing_required_title_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
-        let recipe = RecipeForCreate {
-            ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ..Default::default()
-        };
+            res.assert_status_bad_request();
+            Ok(())
+        }
 
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
+        #[tokio::test]
+        async fn test_missing_required_instructions_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+            let recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
+                ..Default::default()
+            };
 
-        res.assert_status_bad_request();
-        Ok(())
-    }
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-    #[tokio::test]
-    async fn test_put_missing_required_ingredients_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ..Default::default()
-        };
+            res.assert_status_bad_request();
+            Ok(())
+        }
 
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
+        #[tokio::test]
+        async fn test_update_image_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let mut recipe = a_complete_recipe_for_create();
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            recipe.images = Vec::new();
+            recipe.videos = Vec::new();
 
-        res.assert_status_bad_request();
-        Ok(())
-    }
+            let res = server
+                .put(&base_uri(recipe_id))
+                .multipart(create_form(&recipe))
+                .await;
 
-    #[tokio::test]
-    async fn test_put_missing_required_instructions_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
-        let recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
-            ..Default::default()
-        };
+            res.assert_status_see_other();
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+            let mut expected = recipe_for_create_to_details(recipe, &got, user_id);
+            expected.ingredients = got.ingredients.clone();
+            expected.instructions = got.instructions.clone();
+            pretty_assertions::assert_eq!(got, expected);
+            assert!(got.recipe.image.is_none());
+            pretty_assertions::assert_eq!(got.additional_images.len(), 0);
+            Ok(())
+        }
 
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
+        #[tokio::test]
+        async fn test_missing_fields_defaults_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let mut recipe = a_complete_recipe_for_create();
+            Recipe::create(&state.mm, user_id, &recipe).await?;
+            recipe.name = "Maple Syrup Korean Chicken".into();
+            recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
+            recipe.instructions = SectionComponents::Flat(vec![Item::new("Drink juice")]);
 
-        res.assert_status_bad_request();
-        Ok(())
-    }
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-    #[tokio::test]
-    async fn test_put_update_image_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let mut recipe = a_complete_recipe_for_create();
-        let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
-        recipe.images = Vec::new();
-        recipe.videos = Vec::new();
+            res.assert_status_see_other();
+            let state = create_app_state(config.clone()).await;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let expected = recipe_for_create_to_details(recipe, &got, user_id);
+            pretty_assertions::assert_eq!(got, expected);
+            assert!(got.recipe.image.is_some());
+            pretty_assertions::assert_eq!(
+                got.additional_images.len(),
+                expected.additional_images.len()
+            );
+            Ok(())
+        }
 
-        let res = server
-            .put(&base_uri(recipe_id))
-            .multipart(create_form(&recipe))
-            .await;
+        #[tokio::test]
+        async fn test_can_only_be_one_category_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let mut recipe = a_complete_recipe_for_create();
+            Recipe::create(&state.mm, user_id, &recipe).await?;
+            recipe.category = Some("breakfast,dinner".into());
 
-        res.assert_status_see_other();
-        let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
-        let mut expected = recipe_for_create_to_details(recipe, &got, user_id);
-        expected.ingredients = got.ingredients.clone();
-        expected.instructions = got.instructions.clone();
-        pretty_assertions::assert_eq!(got, expected);
-        assert!(got.recipe.image.is_none());
-        pretty_assertions::assert_eq!(got.additional_images.len(), 0);
-        Ok(())
-    }
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-    #[tokio::test]
-    async fn test_put_missing_fields_defaults_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, user_id, &recipe).await?;
-        recipe.name = "Maple Syrup Korean Chicken".into();
-        recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
-        recipe.instructions = SectionComponents::Flat(vec![Item::new("Drink juice")]);
+            res.assert_status_see_other();
+            let state = create_app_state(config.clone()).await;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(got.category, "breakfast");
+            Ok(())
+        }
 
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
+        #[tokio::test]
+        async fn test_subcategories_are_possible() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let mut recipe = RecipeForCreate {
+                name: "Best Chinese Kale".to_string(),
+                instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
+                ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
+                ..Default::default()
+            };
+            Recipe::create(&state.mm, user_id, &recipe).await?;
+            recipe.category = Some("drinks:vodka".into());
 
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        let expected = recipe_for_create_to_details(recipe, &got, user_id);
-        pretty_assertions::assert_eq!(got, expected);
-        assert!(got.recipe.image.is_some());
-        pretty_assertions::assert_eq!(
-            got.additional_images.len(),
-            expected.additional_images.len()
-        );
-        Ok(())
-    }
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-    #[tokio::test]
-    async fn test_put_can_only_be_one_category_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, user_id, &recipe).await?;
-        recipe.category = Some("breakfast,dinner".into());
+            res.assert_status_see_other();
+            let state = create_app_state(config.clone()).await;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(got.category, "drinks:vodka");
+            Ok(())
+        }
 
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
-
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        pretty_assertions::assert_eq!(got.category, "breakfast");
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_put_subcategories_are_possible() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let mut recipe = RecipeForCreate {
-            name: "Best Chinese Kale".to_string(),
-            instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
-            ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
-            ..Default::default()
-        };
-        Recipe::create(&state.mm, user_id, &recipe).await?;
-        recipe.category = Some("drinks:vodka".into());
-
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
-
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        pretty_assertions::assert_eq!(got.category, "drinks:vodka");
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_put_submit_recipe_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, user_id, &recipe).await?;
-        recipe = RecipeForCreate {
-            name: "Crepes".into(),
-            description: Some("Trust me. They're delicious.".into()),
-            images: vec![Uuid::new_v4(), Uuid::new_v4()],
-            measurement_system_id: 2,
-            r#yield: Some(12),
-            source: Source::new("My father's maple syrup recipes cookbook"),
-            is_favourite: false,
-            rating: Some(4),
-            videos: vec![VideoForCreate {
-                video: Uuid::new_v4(),
-                duration: Some(Duration::minutes(30)),
-                content_url: Some("https://www.youtube.com/watch?v=2".into()),
-                embed_url: Some("https://www.youtube.com/embed/embeded".into()),
-            }],
-            category: Some("breakfast".into()),
-            instructions: SectionComponents::Grouped(vec![
-                SectionItem::new(
-                    "",
-                    vec![
-                        Item::new("Mix the blueberries"),
-                        Item::new("Mix the strawberries"),
-                    ],
-                ),
-                SectionItem::new("Finalize", vec![Item::new("Whisk the fruits until smooth")]),
-            ]),
-            keywords: vec!["blueberries".into(), "vegan".into()],
-            notes: Some("# Ze notes\n\nbip bop".into()),
-            nutrition: NutritionDetailsForCreate {
-                per_100g: Some(NutritionForCreate {
-                    calories_kcal: Some(100),
-                    total_carbohydrates: Some(20.),
-                    sugars_g: Some(30.),
-                    protein_g: Some(40.),
-                    total_fat_g: Some(50.),
-                    saturated_fat_g: Some(60.),
-                    unsaturated_fat_g: Some(70.),
-                    cholesterol_mg: Some(80.),
-                    sodium_mg: Some(90.),
-                    fiber_g: Some(100.),
-                    trans_fat_g: Some(110.),
-                }),
-                per_serving: Some(NutritionPerServingDetailsForCreate {
-                    nutrition: NutritionForCreate {
+        #[tokio::test]
+        async fn test_submit_recipe_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let mut recipe = a_complete_recipe_for_create();
+            Recipe::create(&state.mm, user_id, &recipe).await?;
+            recipe = RecipeForCreate {
+                name: "Crepes".into(),
+                description: Some("Trust me. They're delicious.".into()),
+                images: vec![Uuid::new_v4(), Uuid::new_v4()],
+                measurement_system_id: 2,
+                r#yield: Some(12),
+                source: Source::new("My father's maple syrup recipes cookbook"),
+                is_favourite: false,
+                rating: Some(4),
+                videos: vec![VideoForCreate {
+                    video: Uuid::new_v4(),
+                    duration: Some(Duration::minutes(30)),
+                    content_url: Some("https://www.youtube.com/watch?v=2".into()),
+                    embed_url: Some("https://www.youtube.com/embed/embeded".into()),
+                }],
+                category: Some("breakfast".into()),
+                instructions: SectionComponents::Grouped(vec![
+                    SectionItem::new(
+                        "",
+                        vec![
+                            Item::new("Mix the blueberries"),
+                            Item::new("Mix the strawberries"),
+                        ],
+                    ),
+                    SectionItem::new("Finalize", vec![Item::new("Whisk the fruits until smooth")]),
+                ]),
+                keywords: vec!["blueberries".into(), "vegan".into()],
+                notes: Some("# Ze notes\n\nbip bop".into()),
+                nutrition: NutritionDetailsForCreate {
+                    per_100g: Some(NutritionForCreate {
                         calories_kcal: Some(100),
                         total_carbohydrates: Some(20.),
                         sugars_g: Some(30.),
@@ -316,99 +309,188 @@ mod tests {
                         sodium_mg: Some(90.),
                         fiber_g: Some(100.),
                         trans_fat_g: Some(110.),
-                    },
-                    serving_size: "2 buns".into(),
+                    }),
+                    per_serving: Some(NutritionPerServingDetailsForCreate {
+                        nutrition: NutritionForCreate {
+                            calories_kcal: Some(100),
+                            total_carbohydrates: Some(20.),
+                            sugars_g: Some(30.),
+                            protein_g: Some(40.),
+                            total_fat_g: Some(50.),
+                            saturated_fat_g: Some(60.),
+                            unsaturated_fat_g: Some(70.),
+                            cholesterol_mg: Some(80.),
+                            sodium_mg: Some(90.),
+                            fiber_g: Some(100.),
+                            trans_fat_g: Some(110.),
+                        },
+                        serving_size: "2 buns".into(),
+                    }),
+                },
+                times: Some(TimesForCreate {
+                    prep_seconds: 2000,
+                    cook_seconds: 800,
                 }),
-            },
-            times: Some(TimesForCreate {
-                prep_seconds: 2000,
-                cook_seconds: 800,
-            }),
-            ingredients: SectionComponents::Flat(vec![
-                Item::new("8 lbs blueberries"),
-                Item::new("12 lbs strawberries"),
-            ]),
-            cuisine: Some("quebec".into()),
-            tools: vec![ToolForCreate {
-                name: "medium bowl".into(),
-                quantity: 1,
-            }],
-        };
+                ingredients: SectionComponents::Flat(vec![
+                    Item::new("8 lbs blueberries"),
+                    Item::new("12 lbs strawberries"),
+                ]),
+                cuisine: Some("quebec".into()),
+                tools: vec![ToolForCreate {
+                    name: "medium bowl".into(),
+                    quantity: 1,
+                }],
+            };
 
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-        res.assert_status_see_other();
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        let mut expected = recipe_for_create_to_details(recipe, &got, user_id);
-        expected.ingredients = got.ingredients.clone();
-        expected.instructions = got.instructions.clone();
-        pretty_assertions::assert_eq!(got, expected);
-        Ok(())
-    }
+            res.assert_status_see_other();
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let mut expected = recipe_for_create_to_details(recipe, &got, user_id);
+            expected.ingredients = got.ingredients.clone();
+            expected.instructions = got.instructions.clone();
+            pretty_assertions::assert_eq!(got, expected);
+            Ok(())
+        }
 
-    #[tokio::test]
-    async fn test_put_duplicates_are_removed_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
-        let mut recipe = a_complete_recipe_for_create();
-        Recipe::create(&state.mm, user_id, &recipe).await?;
-        recipe.instructions = SectionComponents::Flat(vec![
-            Item::new("Mix the apples"),
-            Item::new("Eat"),
-            Item::new("Mix the apples"),
-        ]);
-        recipe.ingredients = SectionComponents::Flat(vec![
-            Item::new("8 apples"),
-            Item::new("4 oranges"),
-            Item::new("8 apples"),
-        ]);
-        recipe.keywords = vec!["drinks".into(), "vodka".into(), "drinks".into()];
-        recipe.tools = vec![
-            ToolForCreate {
-                quantity: 1,
-                name: "1 wok".into(),
-            },
-            ToolForCreate {
-                quantity: 1,
-                name: "1 wok".into(),
-            },
-        ];
+        #[tokio::test]
+        async fn test_submit_recipe_groups_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let mut recipe = a_complete_recipe_for_create();
+            Recipe::create(&state.mm, user_id, &recipe).await?;
+            recipe = RecipeForCreate {
+                name: "Crepes".into(),
+                measurement_system_id: 2,
+                category: Some("breakfast".into()),
+                instructions: SectionComponents::Flat(vec![
+                    Item::new("Mix the blueberries"),
+                    Item::new("Mix the strawberries"),
+                ]),
+                ingredients: SectionComponents::Grouped(vec![
+                    SectionItem::new(
+                        "Prepare",
+                        vec![
+                            Item::new("8 pints of strawberries"),
+                            Item::new("4 pounds blueberries"),
+                        ],
+                    ),
+                    SectionItem::new("Finalize", vec![Item::new("1 cup of sugar")]),
+                ]),
+                nutrition: NutritionDetailsForCreate {
+                    per_100g: Some(NutritionForCreate {
+                        calories_kcal: Some(100),
+                        total_carbohydrates: Some(20.),
+                        sugars_g: Some(30.),
+                        protein_g: Some(40.),
+                        total_fat_g: Some(50.),
+                        saturated_fat_g: Some(60.),
+                        unsaturated_fat_g: Some(70.),
+                        cholesterol_mg: Some(80.),
+                        sodium_mg: Some(90.),
+                        fiber_g: Some(100.),
+                        trans_fat_g: Some(110.),
+                    }),
+                    per_serving: Some(NutritionPerServingDetailsForCreate {
+                        nutrition: NutritionForCreate {
+                            calories_kcal: Some(100),
+                            total_carbohydrates: Some(20.),
+                            sugars_g: Some(30.),
+                            protein_g: Some(40.),
+                            total_fat_g: Some(50.),
+                            saturated_fat_g: Some(60.),
+                            unsaturated_fat_g: Some(70.),
+                            cholesterol_mg: Some(80.),
+                            sodium_mg: Some(90.),
+                            fiber_g: Some(100.),
+                            trans_fat_g: Some(110.),
+                        },
+                        serving_size: "2 buns".into(),
+                    }),
+                },
+                ..Default::default()
+            };
 
-        let res = server
-            .put(&base_uri(1))
-            .multipart(create_form(&recipe))
-            .await;
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
 
-        res.assert_status_see_other();
-        let state = create_app_state(config.clone()).await;
-        let got = Recipe::get(&state.mm, user_id, 1).await?;
-        pretty_assertions::assert_eq!(
-            got.keywords,
-            vec!["drinks".to_string(), "vodka".to_string()]
-        );
-        pretty_assertions::assert_eq!(
-            got.ingredients,
-            SectionComponents::Flat(vec![Item::new("8 apples"), Item::new("4 oranges")])
-        );
-        pretty_assertions::assert_eq!(
-            got.instructions,
-            SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")])
-        );
-        pretty_assertions::assert_eq!(
-            got.tools,
-            vec![ToolRecipe {
-                name: "wok".into(),
-                tool_order: 1,
-                quantity: 1,
-            }]
-        );
-        Ok(())
+            res.assert_status_see_other();
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let expected = recipe_for_create_to_details(recipe, &got, user_id);
+            pretty_assertions::assert_eq!(got.ingredients, expected.ingredients);
+            pretty_assertions::assert_eq!(got.instructions, expected.instructions);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_duplicates_are_removed_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let users = User::all(&state.mm).await?;
+            let user_id = users[0].id;
+            let mut recipe = a_complete_recipe_for_create();
+            Recipe::create(&state.mm, user_id, &recipe).await?;
+            recipe.instructions = SectionComponents::Flat(vec![
+                Item::new("Mix the apples"),
+                Item::new("Eat"),
+                Item::new("Mix the apples"),
+            ]);
+            recipe.ingredients = SectionComponents::Flat(vec![
+                Item::new("8 apples"),
+                Item::new("4 oranges"),
+                Item::new("8 apples"),
+            ]);
+            recipe.keywords = vec!["drinks".into(), "vodka".into(), "drinks".into()];
+            recipe.tools = vec![
+                ToolForCreate {
+                    quantity: 1,
+                    name: "1 wok".into(),
+                },
+                ToolForCreate {
+                    quantity: 1,
+                    name: "1 wok".into(),
+                },
+            ];
+
+            let res = server
+                .put(&base_uri(1))
+                .multipart(create_form(&recipe))
+                .await;
+
+            res.assert_status_see_other();
+            let state = create_app_state(config.clone()).await;
+            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            pretty_assertions::assert_eq!(
+                got.keywords,
+                vec!["drinks".to_string(), "vodka".to_string()]
+            );
+            pretty_assertions::assert_eq!(
+                got.ingredients,
+                SectionComponents::Flat(vec![Item::new("8 apples"), Item::new("4 oranges")])
+            );
+            pretty_assertions::assert_eq!(
+                got.instructions,
+                SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")])
+            );
+            pretty_assertions::assert_eq!(
+                got.tools,
+                vec![ToolRecipe {
+                    name: "wok".into(),
+                    tool_order: 1,
+                    quantity: 1,
+                }]
+            );
+            Ok(())
+        }
     }
 
     fn assert_recipe_form(res: &TestResponse) {
@@ -432,15 +514,15 @@ mod tests {
             r#"<ol id="tools-list" class="pl-4"><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full" value="1 wok" _="on keydown if event.key is 'Enter' halt the event then call addItem(event)"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
             r#"<input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full" value="1 frying pan" _="on keydown if event.key is 'Enter' halt the event then call addItem(event)">"#,
             r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Ingredients</span><sup class="text-red-600">*</sup></h2>"#,
-            r#"<ol id="ingredients-list" class="pl-4"><li><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><btn class="btn btn-xs btn-outline" _="on click make an &lt;input/&gt; called newInput set newInput.type to 'text' set newInput.name to 'section-ingredient' set newInput.placeholder to 'Section name' set newInput.className to 'input input-sm' set list to closest &lt;ol/&gt; set sectionName to 'ingredient' put newInput before me remove me js(newInput, list, sectionName) newInput.addEventListener('focusout', function() { renumberSections(list, sectionName) }) end newInput.focus()">Add section</btn><btn class="btn btn-xs btn-square" _="on click set list to closest &lt;ol/&gt; set sectionName to 'ingredient' remove closest &lt;li/&gt; call renumberSections(list, sectionName)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient" value="1 cup blue spinach" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li><li><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><btn class="btn btn-xs btn-outline" _="on click make an &lt;input/&gt; called newInput set newInput.type to 'text' set newInput.name to 'section-ingredient' set newInput.placeholder to 'Section name' set newInput.className to 'input input-sm' set list to closest &lt;ol/&gt; set sectionName to 'ingredient' put newInput before me remove me js(newInput, list, sectionName) newInput.addEventListener('focusout', function() { renumberSections(list, sectionName) }) end newInput.focus()">Add section</btn><btn class="btn btn-xs btn-square" _="on click set list to closest &lt;ol/&gt; set sectionName to 'ingredient' remove closest &lt;li/&gt; call renumberSections(list, sectionName)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient" value="1/2 tbsp cinnamon" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li><li><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><btn class="btn btn-xs btn-outline" _="on click make an &lt;input/&gt; called newInput set newInput.type to 'text' set newInput.name to 'section-ingredient' set newInput.placeholder to 'Section name' set newInput.className to 'input input-sm' set list to closest &lt;ol/&gt; set sectionName to 'ingredient' put newInput before me remove me js(newInput, list, sectionName) newInput.addEventListener('focusout', function() { renumberSections(list, sectionName) }) end newInput.focus()">Add section</btn><btn class="btn btn-xs btn-square" _="on click set list to closest &lt;ol/&gt; set sectionName to 'ingredient' remove closest &lt;li/&gt; call renumberSections(list, sectionName)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li><li><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><btn class="btn btn-xs btn-outline" _="on click make an &lt;input/&gt; called newInput set newInput.type to 'text' set newInput.name to 'section-ingredient' set newInput.placeholder to 'Section name' set newInput.className to 'input input-sm' set list to closest &lt;ol/&gt; set sectionName to 'ingredient' put newInput before me remove me js(newInput, list, sectionName) newInput.addEventListener('focusout', function() { renumberSections(list, sectionName) }) end newInput.focus()">Add section</btn><btn class="btn btn-xs btn-square" _="on click set list to closest &lt;ol/&gt; set sectionName to 'ingredient' remove closest &lt;li/&gt; call renumberSections(list, sectionName)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li></ol>"#,
-            r#"<input required type="text" name="ingredient" value="1/2 tbsp cinnamon" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
-            r#"<input required type="text" name="ingredient" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
-            r#"<input required type="text" name="ingredient" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
+            r#"<ol id="ingredients-list" class="pl-4"><li class="list-none"><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><input type="text" name="section-ingredient" placeholder="Section name" class="input input-sm" value="Sauce" onfocusout="renumberSections(this.closest('ol'), 'ingredient')"><btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'ingredient')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient&lt;&gt;Sauce" value="1 cup blue spinach" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient&lt;&gt;Sauce" value="1/2 tbsp cinnamon" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li><li class="list-none"><div class="divider"><div class="grid grid-flow-col gap-2 w-full"><input type="text" name="section-ingredient" placeholder="Section name" class="input input-sm" value="Main" onfocusout="renumberSections(this.closest('ol'), 'ingredient')"><btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'ingredient')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg></btn></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient&lt;&gt;Main" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li><li class="pb-2"><div class="grid grid-flow-col items-center"><label class="flex gap-1"><div class="inline-block h-4 cursor-move handle mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div><input required type="text" name="ingredient&lt;&gt;Main" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))"></label><div class="ml-2 flex gap-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'ingredient')">-</button></div></div></li></ol>"#,
+            r#"<input required type="text" name="ingredient&lt;&gt;Sauce" value="1/2 tbsp cinnamon" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
+            r#"<input required type="text" name="ingredient&lt;&gt;Main" value="4 pounds top quality chicken filet" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
+            r#"<input required type="text" name="ingredient&lt;&gt;Main" value="1/8 cup lemon juice" placeholder="1 cup of chopped onions" class="input input-sm" _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">"#,
             r#"<h2 class="font-semibold text-center pb-2"><span class="underline">Instructions</span><sup class="text-red-600">*</sup></h2>"#,
-            r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error""#,
-            r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea>"#,
-            r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea>"#,
-            r#"<textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,
+            r#"<textarea required name="instruction&lt;&gt;Sauce" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Mix all these ingredients</textarea>"#,
+            r#"<textarea required name="instruction&lt;&gt;Chicken" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Turn the oven at 300 F</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'instruction')">-</button><div class="h-4 cursor-move handle grid place-content-center"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div></div></div></li><li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium"><div class="flex w-full"><label class="w-11/12">"#,
+            r#"<textarea required name="instruction&lt;&gt;Chicken" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Soak the chicken in the lemon juice</textarea></label><div class="grid gap-2 ml-2"><button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)">+</button><button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error" onclick="deleteItem(this, 'instruction')">-</button><div class="h-4 cursor-move handle grid place-content-center"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path></svg></div></div></div></li><li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium"><div class="flex w-full"><label class="w-11/12">"#,
+            r#"<textarea required name="instruction&lt;&gt;Chicken" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Bake for 35 minutes</textarea>"#,
             r#"<div class="rating"><input type="radio" name="rating" class="rating-hidden" value="" aria-label="clear"><input type="radio" name="rating" class="mask mask-star-2" value="1" aria-label="1 star"><input type="radio" name="rating" class="mask mask-star-2" value="2" aria-label="2 star"><input type="radio" name="rating" class="mask mask-star-2" value="3" aria-label="3 star"><input type="radio" name="rating" class="mask mask-star-2" value="4" aria-label="4 star" checked><input type="radio" name="rating" class="mask mask-star-2" value="5" aria-label="5 star"></div></div>"#,
             r#"<button class="btn btn-primary btn-block btn-sm">Submit</button>"#,
         ];

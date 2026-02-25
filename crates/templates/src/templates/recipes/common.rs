@@ -56,13 +56,21 @@ pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
 pub(super) fn add_ingredient(name: &str) -> Markup {
     html! {
         (add_section("ingredient", None, None))
+        (add_ingredient_without_section(name, None))
+    }
+}
+
+pub(super) fn add_ingredient_without_section(name: &str, section: Option<&str>) -> Markup {
+    let input_name = section.map_or("ingredient".to_string(), |s| format!("ingredient<>{s}"));
+
+    html! {
         li .pb-2 {
             div class="grid grid-flow-col items-center" {
                 label class="flex gap-1" {
                     div class="inline-block h-4 cursor-move handle mt-1" {
                         (icon_bars_3())
                     }
-                    input required type="text" name="ingredient" value=(name)
+                    input required type="text" name=(input_name) value=(name)
                             placeholder="1 cup of chopped onions"
                             class="input input-sm"
                             _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))";
@@ -82,10 +90,18 @@ pub(super) fn add_ingredient(name: &str) -> Markup {
 pub(super) fn add_instruction(name: &str) -> Markup {
     html! {
         (add_section("instruction", None, None))
+        (add_instruction_without_section(name, None))
+    }
+}
+
+pub(super) fn add_instruction_without_section(name: &str, section: Option<&str>) -> Markup {
+    let textarea_name = section.map_or("instruction".to_string(), |s| format!("instruction<>{s}"));
+
+    html! {
         li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium" {
             div .flex.w-full {
                 label class="w-11/12" {
-                    textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full"
+                    textarea required name=(textarea_name) rows="4" class="textarea textarea-bordered rounded-none w-full"
                         placeholder="Mix all ingredients together"
                         _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))" {
                         (name)
@@ -273,7 +289,14 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
 
 pub(super) fn init_recipe_form_js() -> Markup {
     html! {
-        (PreEscaped(r#"<script defer>document.addEventListener("DOMContentLoaded", () => initRecipeFormJS())</script>"#))
+        (PreEscaped(r##"<script>
+            document.addEventListener("htmx:afterSettle", function handler() {
+                if (document.querySelector("#ingredients-list")) {
+                    initRecipeFormJS();
+                    document.removeEventListener("htmx:afterSettle", handler);
+                }
+            });
+        </script>"##))
     }
 }
 

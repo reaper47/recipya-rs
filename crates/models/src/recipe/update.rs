@@ -128,8 +128,8 @@ impl Recipe {
                     let sections_map = insert_sections(conn, new_recipe).await?;
 
                     // Ingredients
-                    let old_ingredients = old_recipe.ingredients.items_as_text();
-                    let new_ingredients = new_recipe.ingredients.items_as_text();
+                    let old_ingredients = &old_recipe.ingredients;
+                    let new_ingredients = &new_recipe.ingredients;
                     let is_ingredients_changed = old_ingredients != new_ingredients;
                     if is_ingredients_changed {
                         diesel::delete(
@@ -144,8 +144,8 @@ impl Recipe {
                     }
 
                     // Instructions
-                    let old_instructions = old_recipe.instructions.items_as_text();
-                    let new_instructions = new_recipe.instructions.items_as_text();
+                    let old_instructions = &old_recipe.instructions;
+                    let new_instructions = &new_recipe.instructions;
                     if old_instructions != new_instructions {
                         diesel::delete(
                             schema::instructions_recipes::table
@@ -180,7 +180,8 @@ impl Recipe {
                     }
 
                     // Nutrition
-                    let new_ingredients_slice = new_ingredients.as_slice();
+                    let all_new_ingredients = new_ingredients.items_as_text();
+                    let new_ingredients_slice = &all_new_ingredients.as_slice();
 
                     if is_ingredients_changed {
                         insert_nutrition(
@@ -200,7 +201,7 @@ impl Recipe {
                                 conn,
                                 recipe_id,
                                 &new_recipe.nutrition,
-                                new_ingredients.as_slice(),
+                                all_new_ingredients.as_slice(),
                                 user_settings.nutrition_source,
                                 new_recipe.r#yield.unwrap_or(1),
                             )

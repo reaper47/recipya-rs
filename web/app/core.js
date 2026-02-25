@@ -91,6 +91,11 @@ function initRecipeFormJS() {
   inputs.forEach(({ name, type }) => {
     const list = document.querySelector(`#${name}s-list`);
     if (list) {
+      const existing = Sortable.get(list);
+      if (existing) {
+        existing.destroy();
+      }
+
       new Sortable.create(list, {
         handle: ".handle",
         animation: 150,
@@ -285,10 +290,16 @@ function renumberSections(list, component) {
   }
 }
 
+function deleteSection(button, component) {
+  const list = button.closest("ol");
+  button.closest("li").remove();
+  renumberSections(list, component);
+}
+
 function deleteItem(button, component) {
   const list = button.closest("ol");
   const item = button.closest("li");
-  const selector = `textarea[name="${component}"], input[name="${component}"]`;
+  const selector = `textarea[name^="${component}"], input[name^="${component}"]`;
 
   if (list.querySelectorAll(selector).length > 1) {
     const previousItem = item.previousElementSibling;

@@ -82,9 +82,6 @@ function deleteMedia(event) {
   span.children[0].classList.remove("hidden");
   span.querySelector(".image-actions")?.classList.add("hidden");
   label.querySelector("cropper-canvas")?.remove();
-  console.log(
-    label.parentElement.querySelector("input[name='media-existing-image']"),
-  );
   label.querySelector("input[name='media-existing-image']")?.remove();
 }
 

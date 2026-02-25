@@ -523,9 +523,9 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
             b { "Ingredients" }
         }
         @match ingredients {
-            SectionComponents::Grouped(section) => {
+            SectionComponents::Grouped(sections) => {
                 div {
-                    @for section in section.iter() {
+                    @for section in sections {
                         h3 class="font-bold py-2" {
                             (section.title)
                         }

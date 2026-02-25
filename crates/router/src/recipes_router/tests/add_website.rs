@@ -147,17 +147,17 @@ mod tests {
         res.assert_status(StatusCode::ACCEPTED);
         let messages = collect_ws_messages(&mut ws_server, 5).await;
         assert_eq!(messages.len(), 5);
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             messages[0],
             r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
         );
-        assert_eq!(
+        pretty_assertions::assert_eq!(
             messages[1],
             r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
         );
-        assert_eq!(messages[2], HIDDEN_WS_NOTIFICATION);
-        assert_eq!(messages[3], HIDDEN_WS_NOTIFICATION);
-        assert_eq!(
+        pretty_assertions::assert_eq!(messages[2], HIDDEN_WS_NOTIFICATION);
+        pretty_assertions::assert_eq!(messages[3], HIDDEN_WS_NOTIFICATION);
+        pretty_assertions::assert_eq!(
             messages[4],
             r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#
         );
