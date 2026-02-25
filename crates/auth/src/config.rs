@@ -61,7 +61,7 @@ impl AuthConfig {
             return Self::from_str(&s);
         }
 
-        let config = Self::generate()?;
+        let config = Self::generate();
         let json = serde_json::to_string_pretty(&config)?;
         let tmp_path = config_path.with_extension("tmp");
 
@@ -94,10 +94,10 @@ impl AuthConfig {
         self
     }
 
-    fn generate() -> Result<Self> {
+    fn generate() -> Self {
         let password_key = URL_SAFE_NO_PAD.encode(generate_key());
         let token_key = URL_SAFE_NO_PAD.encode(generate_key());
-        Ok(Self {
+        Self {
             jwt_secret: URL_SAFE_NO_PAD.encode(generate_key()),
             decoded_password_key: URL_SAFE_NO_PAD
                 .decode(&password_key)
@@ -106,7 +106,7 @@ impl AuthConfig {
             password_key,
             token_key,
             token_duration_sec: 1800.0,
-        })
+        }
     }
 }
 
