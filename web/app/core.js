@@ -91,6 +91,11 @@ function initRecipeFormJS() {
   inputs.forEach(({ name, type }) => {
     const list = document.querySelector(`#${name}s-list`);
     if (list) {
+      const existing = Sortable.get(list);
+      if (existing) {
+        existing.destroy();
+      }
+
       new Sortable.create(list, {
         handle: ".handle",
         animation: 150,
@@ -101,8 +106,9 @@ function initRecipeFormJS() {
         onStart(_event) {
           document.body.classList.add("dragging");
         },
-        onEnd(_event) {
+        onEnd(event) {
           document.body.classList.remove("dragging");
+          renumberSections(event.target, event.target.id.replace("s-list", ""));
         },
       });
     }
@@ -218,12 +224,24 @@ function addItem(event, isPastedText = false) {
     let input = items[i].querySelector("input");
     if (!input) {
       input = items[i].querySelector("textarea");
+      if (!input) {
+        continue;
+      }
     }
 
+    input.value = input.value.trim();
     if (input.value === "") {
+      input.focus();
       return;
     }
   }
+
+  const component = event.target.closest("ol").id.replace("s-list", "");
+  const sectionClone = document
+    .getElementById(`section-base-${component}`)
+    .cloneNode(true);
+  sectionClone.id = "";
+  sectionClone.classList.remove("hidden");
 
   const clone = event.target.closest("li").cloneNode(true);
   let el = "input";
@@ -235,37 +253,80 @@ function addItem(event, isPastedText = false) {
     clone.querySelector(el).value = "";
   }
 
+  _hyperscript.processNode(sectionClone);
   _hyperscript.processNode(clone);
+  htmx.process(sectionClone);
   htmx.process(clone);
+  ol.appendChild(sectionClone);
   ol.appendChild(clone);
 
   clone.querySelector(el).focus();
 }
 
-// Secure UUID v4 generator using window.crypto.getRandomValues
-function secureUuidV4() {
-  const bytes = new Uint8Array(16);
-  window.crypto.getRandomValues(bytes);
-  // Per RFC4122 v4 UUID variant and version bits
-  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
-  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(
-    "",
-  );
-  return [
-    hex.substring(0, 8),
-    hex.substring(8, 12),
-    hex.substring(12, 16),
-    hex.substring(16, 20),
-    hex.substring(20, 32),
-  ].join("-");
+function renumberSections(list, component) {
+  const sectionInputSel = `textarea[name^="section-${component}"], input[name^="section-${component}"]`;
+
+  const sections = list.querySelectorAll(sectionInputSel);
+  sections.forEach((section, index) => {
+    section.name = `section-${component}-${index + 1}`;
+  });
+
+  let sectionName = null;
+  for (const li of list.children) {
+    const sectionInput = li.querySelector(sectionInputSel);
+    if (sectionInput) {
+      sectionName = sectionInput.value;
+      continue;
+    }
+
+    const input = li.querySelector("input, textarea");
+    if (input) {
+      if (sectionName) {
+        input.name = `${component}<>${sectionName}`;
+      } else {
+        input.name = component;
+      }
+    }
+  }
+}
+
+function deleteSection(button, component) {
+  const list = button.closest("ol");
+  button.closest("li").remove();
+  renumberSections(list, component);
+}
+
+function deleteItem(button, component) {
+  const list = button.closest("ol");
+  const item = button.closest("li");
+  const selector = `textarea[name^="${component}"], input[name^="${component}"]`;
+
+  if (list.querySelectorAll(selector).length > 1) {
+    const previousItem = item.previousElementSibling;
+    item.remove();
+    if (
+      previousItem &&
+      previousItem.querySelector(".divider") &&
+      !previousItem.querySelector("input, textarea")
+    ) {
+      previousItem.remove();
+    }
+    renumberSections(list, component);
+  } else {
+    const sel = component === "ingredient" ? "input" : "textarea";
+    const input = item.querySelector(selector) ?? item.querySelector(sel);
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+  }
 }
 
 async function pasteImage(event) {
   try {
     const clipboardItems = await navigator.clipboard.read();
     clipboardItems.forEach(async (item) => {
-      const uuid = secureUuidV4();
+      const uuid = crypto.randomUUID();
 
       const blob = await item.getType(
         item.types.find((t) => t.startsWith("image/")),

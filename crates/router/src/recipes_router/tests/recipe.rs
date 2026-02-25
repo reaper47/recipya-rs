@@ -24,23 +24,24 @@ mod tests {
     }
 
     mod tests_get {
+        use models::recipe::structs::section::{Item, SectionComponents};
+
         use super::*;
 
         #[tokio::test]
-        async fn test_get_must_be_logged_in_ok() -> Result<()> {
+        async fn test_must_be_logged_in_ok() -> Result<()> {
             assert_must_be_logged_in(Method::GET, &base_uri(1)).await
         }
 
         #[tokio::test]
-        async fn test_get_recipe_exists_ok() -> Result<()> {
+        async fn test_recipe_exists_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let recipe = a_complete_recipe_for_create();
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -50,16 +51,42 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_exists_from_htmx_ok() -> Result<()> {
+        async fn test_recipe_exists_flat_ingredients_instructions_ok() -> Result<()> {
+            let config = Some(Config::default());
+            let (_test_db, config) = TestDb::new(config).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let mut recipe = a_complete_recipe_for_create();
+            recipe.ingredients =
+                SectionComponents::Flat(vec![Item::new("ing1"), Item::new("ing2")]);
+            recipe.instructions =
+                SectionComponents::Flat(vec![Item::new("ins1"), Item::new("ins2")]);
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+
+            let res = server.get(&base_uri(1)).await;
+
+            res.assert_status_ok();
+            assert_html(
+                &res,
+                vec![
+                    r#"<div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden"><h2 class="font-semibold text-center underline pb-1">Instructions</h2><ol class="grid list-decimal"><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">ins1</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">ins2</div></div></li></ol></div>"#,
+                    r#"<h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><ul class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">ing1</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">ing2</span></li></ul></div>"#,
+                ],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_recipe_exists_from_htmx_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let mut server = build_server_logged_in(config.clone()).await?;
             server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let recipe = a_complete_recipe_for_create();
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -69,7 +96,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_not_exist_ok() -> Result<()> {
+        async fn test_recipe_not_exist_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config).await?;
@@ -89,17 +116,16 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_no_media_ok() -> Result<()> {
+        async fn test_recipe_no_media_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = vec![];
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -114,18 +140,17 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_1_image_0_video_ok() -> Result<()> {
+        async fn test_recipe_1_image_0_video_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             let img1 = Uuid::new_v4();
             recipe.images = vec![img1];
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -140,17 +165,16 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_2_images_0_video_ok() -> Result<()> {
+        async fn test_recipe_2_images_0_video_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = vec![Uuid::nil(), Uuid::nil()];
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -166,13 +190,12 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_0_images_1_video_ok() -> Result<()> {
+        async fn test_recipe_0_images_1_video_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![VideoForCreate {
                 video: Uuid::new_v4(),
@@ -181,7 +204,7 @@ mod tests {
                 embed_url: None,
             }];
             recipe.images = vec![];
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -196,13 +219,12 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_0_images_2_videos_ok() -> Result<()> {
+        async fn test_recipe_0_images_2_videos_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
@@ -219,7 +241,7 @@ mod tests {
                 },
             ];
             recipe.images = vec![];
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -235,13 +257,12 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_get_recipe_2_images_2_videos_ok() -> Result<()> {
+        async fn test_recipe_2_images_2_videos_ok() -> Result<()> {
             let config = Some(Config::default());
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let mut recipe = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
@@ -258,7 +279,7 @@ mod tests {
                 },
             ];
             recipe.images = vec![Uuid::nil(), Uuid::nil()];
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -284,7 +305,7 @@ mod tests {
             let user_id = User::all(&state.mm).await?[0].id;
             let mut recipe = a_complete_recipe_for_create();
             recipe.source = Source::new("My mom's recipe cookbook");
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -326,8 +347,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(config).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let _recipe_id =
                 Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
 
@@ -369,8 +389,8 @@ mod tests {
                 r#"<div class="grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:row-span-1 print:border-none md:grid-cols-4"><div class="contents grid grid-flow-col md:col-span-6"><div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time">"#,
                 r#"<table class="table table-zebra table-xs print:hidden"><thead><tr><select class="select select-sm" onchange="filterNutritionRows(this, this.value)"><option value="per-100g">Nutrition (per 100g)</option><option value="per-serving">Nutrition (per serving)</option></select></tr></thead><tbody><tr data-nutrition-type="per-100g"><td>Calories:</td><td>300 kcal</td></tr><tr data-nutrition-type="per-100g"><td>Total carbs:</td><td>55g</td></tr><tr data-nutrition-type="per-100g"><td>Sugars:</td><td>43g</td></tr><tr data-nutrition-type="per-100g"><td>Protein:</td><td>7g</td></tr><tr data-nutrition-type="per-100g"><td>Total fat:</td><td>6g</td></tr><tr data-nutrition-type="per-100g"><td>Saturated fat:</td><td>1g</td></tr><tr data-nutrition-type="per-100g"><td>Unsaturated fat:</td><td>2g</td></tr><tr data-nutrition-type="per-100g"><td>Trans fat:</td><td>3g</td></tr><tr data-nutrition-type="per-100g"><td>Cholesterol:</td><td>5mg</td></tr><tr data-nutrition-type="per-100g"><td>Sodium:</td><td>12mg</td></tr><tr data-nutrition-type="per-100g"><td>Fiber:</td><td>10g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Serving size:</td><td></td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Calories:</td><td>240 kcal</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Total carbs:</td><td>30g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Sugars:</td><td>24g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Protein:</td><td>4g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Total fat:</td><td>6g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Saturated fat:</td><td>2g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Unsaturated fat:</td><td>7g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Trans fat:</td><td>2g</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Cholesterol:</td><td>12mg</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Sodium:</td><td>100mg</td></tr><tr class="hidden" data-nutrition-type="per-serving"><td>Fiber:</td><td>18g</td></tr></tbody></table>"#,
                 r#"<h1 class="text-sm print:mb-1"><b>Tools</b></h1><ol class="col-span-6 w-full mb-4" style="column-count: 1"><li class="text-sm"><label class="flex items-center w-full"><input type="checkbox"></label><span class="pl-2">1wok</span></li><li class="text-sm"><label class="flex items-center w-full"><input type="checkbox"></label><span class="pl-2">1frying pan</span></li></ol>"#,
-                r#"<div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden"><h2 class="font-semibold text-center underline pb-1">Instructions</h2><ol class="grid list-decimal"><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Mix all these ingredients</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Turn the oven at 300 F</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Soak the chicken in the lemon juice</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Bake for 35 minutes</div><div id="timer-container-2" class="timer-container"><button class="timer btn btn-sm btn-circle btn-ghost" title="Start 35m timer" _="on click add .hidden to me"#,
-                r#"<h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><ol class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">"#,
+                r#"<div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden"><h2 class="font-semibold text-center underline pb-1">Instructions</h2><div><h3 class="font-bold py-2">Sauce</h3><ol class="grid list-decimal"><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Mix all these ingredients</div></div></li></ol></div><div><h3 class="font-bold py-2">Chicken</h3><ol class="grid list-decimal"><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Turn the oven at 300 F</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Soak the chicken in the lemon juice</div></div></li><li class="min-w-full py-2 select-none hover:bg-base-300"><div class="flex"><div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through">Bake for 35 minutes</div><div id="timer-container-2" class="timer-container"><button class="timer btn btn-sm btn-circle btn-ghost" title="Start 35m timer" _="on click add .hidden to me"#,
+                r#"<h1 class="text-sm print:mb-1"><b>Ingredients</b></h1><div><h3 class="font-bold py-2">Sauce</h3><ul class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1 cup blue spinach</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1/2 tbsp cinnamon</span></li></ul><h3 class="font-bold py-2">Main</h3><ul class="col-span-6 w-full print:mb-2" style="column-count: 1"><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">4 pounds top quality chicken filet</span></li><li class="text-sm"><label><input type="checkbox"></label><span class="pl-2">1/8 cup lemon juice</span></li></ul></div></div><div class="hidden col-span-5 overflow-visible print:inline">"#,
             ],
         );
     }

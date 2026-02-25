@@ -339,33 +339,7 @@ fn render_ingredients(
                         h1 class="text-sm font-bold" {
                             "Ingredients"
                         }
-                        ol class="col-span-6 w-full list-disc list-inside"
-                            style=(if old_ingredients.len() > 10 {
-                                "column-count: 2"
-                            } else {
-                                "column-count: 1"
-                            }) {
-                                @match old_ingredients {
-                                    SectionComponents::Grouped(section) => {
-                                        @for section in section.iter() {
-                                            @for ing in section.items.iter() {
-                                                li class="text-sm" {
-                                                    (ing.text)
-                                                }
-                                                input type="hidden" name=(format!("{INGREDIENTS_OLD}<>{}", section.title)) value=(ing.text);
-                                            }
-                                        }
-                                    },
-                                    SectionComponents::Flat(items) => {
-                                        @for ing in items.iter() {
-                                            li class="text-sm" {
-                                                (ing.text)
-                                            }
-                                            input type="hidden" name=(INGREDIENTS_OLD) value=(ing.text);
-                                        }
-                                    },
-                                }
-                        }
+                        (render_section(old_ingredients, INGREDIENTS_OLD))
                     }
                 }
                 label class="w-full diff-plus" {
@@ -374,33 +348,7 @@ fn render_ingredients(
                         h1 class="text-sm font-bold" {
                             "Ingredients"
                         }
-                        ol class="col-span-6 w-full list-disc list-inside"
-                            style=(if new_ingredients.len() > 10 {
-                                "column-count: 2"
-                            } else {
-                                "column-count: 1"
-                            }) {
-                                @match new_ingredients {
-                                    SectionComponents::Grouped(section) => {
-                                        @for section in section.iter() {
-                                            @for ing in section.items.iter() {
-                                                li class="text-sm" {
-                                                    (ing.text)
-                                                }
-                                                input type="hidden" name=(format!("{INGREDIENTS_NEW}<>{}", section.title)) value=(ing.text);
-                                            }
-                                        }
-                                    },
-                                    SectionComponents::Flat(items) => {
-                                        @for ing in items.iter() {
-                                            li class="text-sm" {
-                                                (ing.text)
-                                            }
-                                            input type="hidden" name=(INGREDIENTS_NEW) value=(ing.text);
-                                        }
-                                    },
-                                }
-                        }
+                        (render_section(new_ingredients, INGREDIENTS_NEW))
                     }
                 }
             }
@@ -411,33 +359,7 @@ fn render_ingredients(
                 h1 class="text-sm" {
                     b { "Ingredients" }
                 }
-                ol class="col-span-6 w-full list-disc list-inside"
-                    style=(if old_ingredients.len() > 10 {
-                        "column-count: 2"
-                    } else {
-                        "column-count: 1"
-                    }) {
-                        @match old_ingredients {
-                            SectionComponents::Grouped(section) => {
-                                @for section in section.iter() {
-                                    @for ing in section.items.iter() {
-                                        li class="text-sm" {
-                                            (ing.text)
-                                        }
-                                        input type="hidden" name=(format!("{INGREDIENTS_OLD}<>{}", section.title)) value=(ing.text);
-                                    }
-                                }
-                            },
-                            SectionComponents::Flat(items) => {
-                                @for ing in items.iter() {
-                                    li class="text-sm" {
-                                        (ing.text)
-                                    }
-                                    input type="hidden" name=(INGREDIENTS_OLD) value=(ing.text);
-                                }
-                            },
-                        }
-                }
+                (render_section(old_ingredients, INGREDIENTS_OLD))
             }
             input type="hidden" name=(INGREDIENTS_SOURCE) value=(OLD);
         }
@@ -462,28 +384,7 @@ fn render_instructions(
                         h1 class="text-sm font-bold" {
                             "Instructions"
                         }
-                        ol class="col-span-6 list-decimal ml-6" {
-                            @match old_instructions {
-                                SectionComponents::Grouped(section) => {
-                                    @for section in section.iter() {
-                                        @for ins in section.items.iter() {
-                                            li class="text-sm whitespace-pre-line" {
-                                                (ins.text)
-                                            }
-                                            input type="hidden" name=(format!("{INSTRUCTIONS_OLD}<>{}", section.title)) value=(ins.text);
-                                        }
-                                    }
-                                },
-                                SectionComponents::Flat(items) => {
-                                    @for ins in items.iter() {
-                                        li class="text-sm whitespace-pre-line" {
-                                            (ins.text)
-                                        }
-                                        input type="hidden" name=(INSTRUCTIONS_OLD) value=(ins.text);
-                                    }
-                                },
-                            }
-                        }
+                        (render_section(old_instructions, INSTRUCTIONS_OLD))
                     }
                 }
                 label class="w-full diff-plus" {
@@ -492,28 +393,7 @@ fn render_instructions(
                         h1 class="text-sm font-bold" {
                             "Instructions"
                         }
-                        ol class="col-span-6 list-decimal ml-6" {
-                            @match new_instructions {
-                                SectionComponents::Grouped(section) => {
-                                    @for section in section.iter() {
-                                        @for ins in section.items.iter() {
-                                            li class="text-sm whitespace-pre-line" {
-                                                (ins.text)
-                                            }
-                                            input type="hidden" name=(format!("{INSTRUCTIONS_NEW}<>{}", section.title)) value=(ins.text);
-                                        }
-                                    }
-                                },
-                                SectionComponents::Flat(items) => {
-                                    @for ins in items.iter() {
-                                        li class="text-sm whitespace-pre-line" {
-                                            (ins.text)
-                                        }
-                                        input type="hidden" name=(INSTRUCTIONS_NEW) value=(ins.text);
-                                    }
-                                },
-                            }
-                        }
+                        (render_section(new_instructions, INSTRUCTIONS_NEW))
                     }
                 }
             }
@@ -523,29 +403,52 @@ fn render_instructions(
             h1 class="text-sm font-bold" {
                 "Instructions"
             }
-            ol class="col-span-6 list-decimal w-full ml-6" {
-                @match old_instructions {
-                    SectionComponents::Grouped(section) => {
-                        @for section in section.iter() {
-                            @for ins in section.items.iter() {
-                                li class="text-sm whitespace-pre-line" {
-                                    (ins.text)
-                                }
-                                input type="hidden" name=(format!("{INSTRUCTIONS_OLD}<>{}", section.title)) value=(ins.text);
-                            }
-                        }
-                    },
-                    SectionComponents::Flat(items) => {
-                        @for ins in items.iter() {
-                            li class="text-sm whitespace-pre-line" {
-                                (ins.text)
-                            }
-                            input type="hidden" name=(INSTRUCTIONS_OLD) value=(ins.text);
-                        }
-                    },
-                }
-            }
+            (render_section(old_instructions, INSTRUCTIONS_OLD))
             input type="hidden" name=(INSTRUCTIONS_SOURCE) value=(OLD);
+        }
+    }
+}
+
+fn render_section(components: &SectionComponents, input_name_base: &str) -> Markup {
+    html! {
+        @match components {
+            SectionComponents::Grouped(sections) => {
+                div {
+                    @for section in sections {
+                        h3 class="font-bold py-2" {
+                            (section.title)
+                        }
+                        ol class="col-span-6 w-full list-disc list-inside"
+                            style=(if components.len() > 10 {
+                                "column-count: 2"
+                            } else {
+                                "column-count: 1"
+                            }) {
+                                @for ing in section.items.iter() {
+                                    li class="text-sm" {
+                                        (ing.text)
+                                    }
+                                    input type="hidden" name=(format!("{input_name_base}<>{}", section.title)) value=(ing.text);
+                                }
+                        }
+                    }
+                }
+            },
+            SectionComponents::Flat(items) => {
+                ol class="col-span-6 w-full list-disc list-inside"
+                    style=(if components.len() > 10 {
+                        "column-count: 2"
+                    } else {
+                        "column-count: 1"
+                    }) {
+                        @for ing in items.iter() {
+                            li class="text-sm" {
+                                (ing.text)
+                            }
+                            input type="hidden" name=(format!("{input_name_base}")) value=(ing.text);
+                        }
+                }
+            },
         }
     }
 }

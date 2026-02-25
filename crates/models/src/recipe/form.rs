@@ -5,6 +5,7 @@ use std::str::FromStr;
 
 use axum::extract::multipart::{Field, InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
+use indexmap::IndexMap;
 use support::strings::calc_seconds_from_parts;
 use tracing::error;
 use uuid::Uuid;
@@ -14,6 +15,7 @@ use crate::recipe::save_media_field;
 use crate::recipe::structs::nutrition::{
     NutritionDetailsForCreate, NutritionForCreate, NutritionPerServingDetailsForCreate,
 };
+use crate::recipe::structs::section::SectionComponents;
 use crate::recipe::structs::time::TimesForCreate;
 use crate::recipe::structs::tool::ToolForCreate;
 
@@ -23,8 +25,8 @@ pub struct RecipeForm {
     pub cuisine: Option<String>,
     pub description: Option<String>,
     pub images: HashMap<String, PathBuf>,
-    pub ingredients: Vec<String>,
-    pub instructions: Vec<String>,
+    pub ingredients: SectionComponents,
+    pub instructions: SectionComponents,
     pub keywords: Vec<String>,
     pub notes: Option<String>,
     pub nutrition: NutritionDetailsForCreate,
@@ -51,8 +53,8 @@ where
         let mut cuisine: Option<String> = None;
         let mut description: Option<String> = None;
         let mut images: HashMap<String, PathBuf> = HashMap::new();
-        let mut ingredients: Vec<String> = Vec::new();
-        let mut instructions: Vec<String> = Vec::new();
+        let mut ingredients: IndexMap<String, Vec<String>> = IndexMap::new();
+        let mut instructions: IndexMap<String, Vec<String>> = IndexMap::new();
         let mut keywords: Vec<String> = Vec::new();
         let mut notes: Option<String> = None;
         let mut nutrition_per_100g = NutritionForCreate::default();
@@ -72,14 +74,24 @@ where
             error!("Failed to read multipart field in recipe: {err:?}");
             InvalidBoundary::default()
         })? {
-            let name = field.name().unwrap_or("");
+            let name = field.name().unwrap_or_default().to_string();
 
-            match name {
+            match name.as_str() {
                 "category" => category = text_trim(field).await,
                 "cuisine" => cuisine = text_trim(field).await,
                 "description" => description = text_trim(field).await,
-                "ingredient" => push_non_empty(field, &mut ingredients).await,
-                "instruction" => push_non_empty(field, &mut instructions).await,
+                "ingredient" => {
+                    push_into_index_map(field, &name, "ingredient", &mut ingredients).await;
+                }
+                name if name.starts_with("ingredient<>") => {
+                    push_into_index_map(field, name, "ingredient", &mut ingredients).await;
+                }
+                "instruction" => {
+                    push_into_index_map(field, &name, "instruction", &mut instructions).await;
+                }
+                name if name.starts_with("instruction<>") => {
+                    push_into_index_map(field, name, "instruction", &mut instructions).await;
+                }
                 "keyword" => push_non_empty(field, &mut keywords).await,
                 "media" => {
                     if let Err(err) = save_media_field(field, &mut images, &mut videos).await {
@@ -226,8 +238,8 @@ where
             cuisine,
             description,
             images,
-            ingredients,
-            instructions,
+            ingredients: SectionComponents::from_map(ingredients),
+            instructions: SectionComponents::from_map(instructions),
             keywords,
             notes,
             nutrition: NutritionDetailsForCreate::new(nutrition_per_100g, nutrition_per_serving),
@@ -238,6 +250,35 @@ where
             videos,
             r#yield,
         })
+    }
+}
+
+async fn push_into_index_map(
+    field: Field<'_>,
+    name: &str,
+    component_name: &str,
+    components: &mut IndexMap<String, Vec<String>>,
+) {
+    if let Some(s) = text_trim(field).await {
+        match name.split_once(&format!("{component_name}<>")) {
+            Some((_, section_name)) => {
+                if let Some((_, v)) = components
+                    .iter_mut()
+                    .find(|(name, _)| name.as_str() == section_name)
+                {
+                    v.push(s);
+                } else {
+                    components.insert(section_name.to_string(), vec![s]);
+                }
+            }
+            None => {
+                if let Some((_, v)) = components.iter_mut().find(|(name, _)| name.is_empty()) {
+                    v.push(s);
+                } else {
+                    components.insert(String::new(), vec![s]);
+                }
+            }
+        }
     }
 }
 

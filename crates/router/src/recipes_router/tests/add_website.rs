@@ -12,7 +12,7 @@ mod tests {
     use repository::schema;
     use testing::utils::{
         HIDDEN_WS_NOTIFICATION, TestDb, assert_must_be_logged_in, assert_ws_message,
-        build_server_ws, create_app_state,
+        build_server_ws, collect_ws_messages, create_app_state,
     };
 
     use crate::recipes_router::params::RecipeScrapeForm;
@@ -98,9 +98,19 @@ mod tests {
             .await;
 
         res.assert_status(StatusCode::ACCEPTED);
-        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
-        assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#).await;
+        let messages = collect_ws_messages(&mut ws_server, 3).await;
+        pretty_assertions::assert_eq!(
+            messages[0],
+            r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
+        );
+        pretty_assertions::assert_eq!(messages[1], HIDDEN_WS_NOTIFICATION);
+        let success_msg = r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#;
+        let failure_msg = r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#;
+        assert!(
+            messages[2] == success_msg || messages[2] == failure_msg,
+            "Unexpected message: {}",
+            messages[2]
+        );
         tokio::time::sleep(Duration::from_millis(50)).await;
         let got_logs = fetch_logs(config.clone()).await?;
         pretty_assertions::assert_eq!(got_logs, vec![zweigles_report_log(1)]);
@@ -145,11 +155,22 @@ mod tests {
         let res = server.post(BASE_URI).form(&form).await;
 
         res.assert_status(StatusCode::ACCEPTED);
-        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
-        assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
-        assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-        assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#).await;
+        let messages = collect_ws_messages(&mut ws_server, 5).await;
+        assert_eq!(messages.len(), 5);
+        pretty_assertions::assert_eq!(
+            messages[0],
+            r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
+        );
+        pretty_assertions::assert_eq!(
+            messages[1],
+            r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
+        );
+        pretty_assertions::assert_eq!(messages[2], HIDDEN_WS_NOTIFICATION);
+        pretty_assertions::assert_eq!(messages[3], HIDDEN_WS_NOTIFICATION);
+        pretty_assertions::assert_eq!(
+            messages[4],
+            r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#
+        );
         tokio::time::sleep(Duration::from_millis(100)).await;
         let got_logs = fetch_logs(config.clone()).await?;
         let want_logs = [

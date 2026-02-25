@@ -76,7 +76,10 @@ CREATE TABLE recipes (
   notes text,
   source text NOT NULL DEFAULT '',
   is_favourite bool NOT NULL DEFAULT FALSE,
-  rating int2 CHECK (rating BETWEEN 1 AND 5),
+  rating int2 CHECK (
+    rating IS NULL
+    OR rating BETWEEN 1 AND 5
+  ),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   user_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -227,7 +230,10 @@ CREATE TABLE recipe_timelines (
   user_id uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   title text NOT NULL,
   comment text,
-  rating int2 CHECK (rating BETWEEN 1 AND 5),
+  rating int2 CHECK (
+    rating IS NULL
+    OR rating BETWEEN 1 AND 5
+  ),
   image uuid,
   created_at timestamptz NOT NULL DEFAULT now()
 );

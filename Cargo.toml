@@ -33,6 +33,7 @@ email = { path = "./crates/email" }
 futures-core = "0.3.31"
 futures-util = "0.3.31"
 humantime = "2.3.0"
+indexmap = "2.13.0"
 infer = "0.19.0"
 integrations = { path = "./crates/integrations" }
 iso8601 = { version = "0.6.3", features = ["serde"] }

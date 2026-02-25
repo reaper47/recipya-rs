@@ -15,7 +15,7 @@ use crate::templates::helpers::cut_string;
 use crate::templates::icons::{
     icon_arrow_uturn_left, icon_arrow_uturn_right, icon_arrows_right_left, icon_arrows_up_down,
     icon_bars_3, icon_check, icon_crop, icon_magnifying_glass_minus, icon_magnifying_glass_plus,
-    icon_move_thin, icon_pencil, icon_trash, icon_x_mark,
+    icon_move_thin, icon_pencil, icon_trash, icon_x_circle, icon_x_mark,
 };
 
 pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
@@ -55,15 +55,25 @@ pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
 
 pub(super) fn add_ingredient(name: &str) -> Markup {
     html! {
+        (add_section("ingredient", None, None))
+        (add_ingredient_without_section(name, None))
+    }
+}
+
+pub(super) fn add_ingredient_without_section(name: &str, section: Option<&str>) -> Markup {
+    let input_name =
+        section.map_or_else(|| "ingredient".to_string(), |s| format!("ingredient<>{s}"));
+
+    html! {
         li .pb-2 {
             div class="grid grid-flow-col items-center" {
                 label class="flex gap-1" {
                     div class="inline-block h-4 cursor-move handle mt-1" {
                         (icon_bars_3())
                     }
-                    input required type="text" name="ingredient" value=(name)
+                    input required type="text" name=(input_name) value=(name)
                             placeholder="1 cup of chopped onions"
-                            class="input input-bordered input-sm w-full"
+                            class="input input-sm"
                             _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))";
                 }
                 div class="ml-2 flex gap-2" {
@@ -71,13 +81,7 @@ pub(super) fn add_ingredient(name: &str) -> Markup {
                         "+"
                     }
                     button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
-                        _=(PreEscaped("on click
-                            if (closest <ol/>).childElementCount > 1
-                                remove closest <li/>
-                            else
-                                set input to (closest <li/>).querySelector('input') then
-                                set input.value to '' then
-                                input.focus()")) { "-" }
+                        onclick="deleteItem(this, 'ingredient')" { "-" }
                 }
             }
         }
@@ -86,10 +90,22 @@ pub(super) fn add_ingredient(name: &str) -> Markup {
 
 pub(super) fn add_instruction(name: &str) -> Markup {
     html! {
-        li class="pt-2 md:pl-0" {
-            div .flex {
+        (add_section("instruction", None, None))
+        (add_instruction_without_section(name, None))
+    }
+}
+
+pub(super) fn add_instruction_without_section(name: &str, section: Option<&str>) -> Markup {
+    let textarea_name = section.map_or_else(
+        || "instruction".to_string(),
+        |s| format!("instruction<>{s}"),
+    );
+
+    html! {
+        li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium" {
+            div .flex.w-full {
                 label class="w-11/12" {
-                    textarea required name="instruction" rows="4" class="textarea textarea-bordered rounded-none w-full"
+                    textarea required name=(textarea_name) rows="4" class="textarea textarea-bordered rounded-none w-full"
                         placeholder="Mix all ingredients together"
                         _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))" {
                         (name)
@@ -100,15 +116,45 @@ pub(super) fn add_instruction(name: &str) -> Markup {
                         "+"
                     }
                     button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
-                        _=(PreEscaped("on click
-                            if (closest <ol/>).childElementCount > 1
-                                remove closest <li/>
-                            else
-                                set input to (closest <li/>).querySelector('textarea') then
-                                set input.value to '' then
-                                input.focus()")) { "-" }
+                        onclick="deleteItem(this, 'instruction')" { "-" }
                     div class="h-4 cursor-move handle grid place-content-center" {
                         (icon_bars_3())
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub(super) fn add_section(section: &str, id: Option<&str>, base_class: Option<&str>) -> Markup {
+    html! {
+        li id=[id] class=[base_class] {
+            div .divider {
+                div class="grid grid-flow-col gap-2 w-full" {
+                    btn class="btn btn-xs btn-outline"
+                        _=(format!("on click
+                            make an <input/> called newInput
+                            set newInput.type to 'text'
+                            set newInput.name to 'section-{section}'
+                            set newInput.placeholder to 'Section name'
+                            set newInput.className to 'input input-sm'
+                            set list to closest <ol/>
+                            set sectionName to '{section}'
+                            put newInput before me
+                            remove me
+                            js(newInput, list, sectionName)
+                                newInput.addEventListener('focusout', function() {{ renumberSections(list, sectionName) }})
+                            end
+                            newInput.focus()")) {
+                        "Add section"
+                    }
+                    btn class="btn btn-xs btn-square"
+                        _=(format!("on click
+                            set list to closest <ol/>
+                            set sectionName to '{section}'
+                            remove closest <li/>
+                            call renumberSections(list, sectionName)")) {
+                        (icon_x_circle())
                     }
                 }
             }
@@ -247,7 +293,14 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
 
 pub(super) fn init_recipe_form_js() -> Markup {
     html! {
-        (PreEscaped(r#"<script defer>document.addEventListener("DOMContentLoaded", () => initRecipeFormJS())</script>"#))
+        (PreEscaped(r##"<script>
+            document.addEventListener("htmx:afterSettle", function handler() {
+                if (document.querySelector("#ingredients-list")) {
+                    initRecipeFormJS();
+                    document.removeEventListener("htmx:afterSettle", handler);
+                }
+            });
+        </script>"##))
     }
 }
 

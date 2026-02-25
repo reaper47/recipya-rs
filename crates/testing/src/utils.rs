@@ -348,6 +348,15 @@ pub async fn assert_ws_message(server: &mut TestWebSocket, want: &str) {
     server.assert_receive_text_contains(want).await;
 }
 
+pub async fn collect_ws_messages(server: &mut TestWebSocket, count: usize) -> Vec<String> {
+    let mut messages = Vec::with_capacity(count);
+    for _ in 0..count {
+        let _ = server.receive_message().await;
+        messages.push(server.receive_text().await);
+    }
+    messages
+}
+
 /// Asserts that the user cannot access the specified URI.
 pub async fn assert_must_be_logged_in(method: axum::http::Method, uri: &str) -> Result<()> {
     let (_test_db, config) = TestDb::new(None).await?;

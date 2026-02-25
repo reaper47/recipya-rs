@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use diesel::prelude::*;
 use schema_org::ToIso8601;
+use support::regexp::time::TimeParser;
 use tracing::error;
 use uuid::Uuid;
 use whatlang::Lang;
@@ -275,11 +276,11 @@ impl RecipeForCreate {
         changes.set(RecipeField::CUISINE, self.cuisine != other.cuisine);
         changes.set(
             RecipeField::INGREDIENTS,
-            self.ingredients.items_as_text() != other.ingredients.items_as_text(),
+            self.ingredients != other.ingredients,
         );
         changes.set(
             RecipeField::INSTRUCTIONS,
-            self.instructions.items_as_text() != other.instructions.items_as_text(),
+            self.instructions != other.instructions,
         );
         changes.set(RecipeField::KEYWORDS, self.keywords != other.keywords);
         changes.set(
@@ -291,15 +292,22 @@ impl RecipeForCreate {
 
         changes
     }
+
+    /// Calculates the instructions duration in seconds.
+    pub fn adjust_instructions_duration(&mut self) {
+        let time_parser = TimeParser::new();
+
+        self.instructions.iter_mut().for_each(|item| {
+            item.duration_seconds = time_parser.parse_max_time_seconds(&item.text);
+        });
+    }
 }
 
 impl From<&RecipeForm> for RecipeForCreate {
     fn from(form: &RecipeForm) -> Self {
         let ingredients = &form.ingredients;
-        let measurement_system_id = system::MeasurementSystem::from(
-            ingredients.iter().map(String::as_str).collect::<Vec<_>>(),
-        )
-        .id();
+        let measurement_system_id =
+            system::MeasurementSystem::from(ingredients.items_as_text()).id();
 
         Self {
             name: form.title.clone(),
@@ -315,8 +323,8 @@ impl From<&RecipeForm> for RecipeForCreate {
                 .clone()
                 .or_else(|| Some("uncategorized".into())),
             cuisine: form.cuisine.clone(),
-            ingredients: SectionComponents::new(ingredients.clone()),
-            instructions: SectionComponents::new(form.instructions.clone()),
+            ingredients: ingredients.clone(),
+            instructions: form.instructions.clone(),
             keywords: form.keywords.clone(),
             measurement_system_id,
             nutrition: form.nutrition.clone(),

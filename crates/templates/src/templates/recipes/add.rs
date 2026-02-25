@@ -7,11 +7,12 @@ use models::recipe::structs::types::Source;
 use models::settings::UserSettingDetails;
 
 use crate::recipes::common::{
-    add_ingredient, add_instruction, add_tool, init_recipe_form_js, nutrition_table_header,
-    recipe_keyword_empty, render_media_editor, render_rating,
+    add_ingredient, add_ingredient_without_section, add_instruction,
+    add_instruction_without_section, add_section, add_tool, init_recipe_form_js,
+    nutrition_table_header, recipe_keyword_empty, render_media_editor, render_rating,
 };
 use crate::templates::icons::{
-    icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle,
+    icon_cooking_pot, icon_cutting_board, icon_information_circle, icon_plus_circle, icon_x_circle,
 };
 use crate::templates::layouts;
 
@@ -163,8 +164,9 @@ fn render_description(view: Option<&ViewRecipe>) -> Markup {
     }
 }
 
-fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
+pub(super) fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
     html! {
+        (add_section("ingredient", Some("section-base-ingredient"), Some("hidden")))
         h2 class="font-semibold text-center pb-2" {
             span .underline { "Ingredients" }
             sup .text-red-600 { "*" }
@@ -176,8 +178,23 @@ fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
                      @match ingredients {
                         SectionComponents::Grouped(section_items) => {
                             @for section in section_items.iter() {
+                                li .list-none {
+                                    div .divider {
+                                        div class="grid grid-flow-col gap-2 w-full" {
+                                            input type="text"
+                                                name="section-ingredient"
+                                                placeholder="Section name"
+                                                class="input input-sm"
+                                                value=(format!("{}", section.title))
+                                                onfocusout="renumberSections(this.closest('ol'), 'ingredient')";
+                                            btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'ingredient')" {
+                                                (icon_x_circle())
+                                            }
+                                        }
+                                    }
+                                }
                                 @for ing in section.items.iter() {
-                                    (add_ingredient(&ing.text))
+                                    (add_ingredient_without_section(&ing.text, Some(&section.title)))
                                 }
                             }
                         },
@@ -199,19 +216,35 @@ fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
 
 fn render_instructions(view: Option<&ViewRecipe>) -> Markup {
     html! {
+        (add_section("instruction", Some("section-base-instruction"), Some("hidden")))
         h2 class="font-semibold text-center pb-2" {
             span .underline { "Instructions" }
             sup .text-red-600 { "*" }
         }
-        ol #instructions-list class="grid list-decimal" {
+        ol #instructions-list class="grid [counter-reset:steps] list-none" {
             @if let Some(v) = view {
                 @let instructions = &v.recipe_details.instructions;
                  @if !instructions.is_empty() {
                      @match instructions {
                         SectionComponents::Grouped(section_items) => {
                             @for section in section_items.iter() {
+                                li .list-none {
+                                    div .divider {
+                                        div class="grid grid-flow-col gap-2 w-full" {
+                                            input type="text"
+                                                name="section-instruction"
+                                                placeholder="Section name"
+                                                class="input input-sm"
+                                                value=(format!("{}", section.title))
+                                                onfocusout="renumberSections(this.closest('ol'), 'instruction')";
+                                            btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'instruction')" {
+                                                (icon_x_circle())
+                                            }
+                                        }
+                                    }
+                                }
                                 @for ins in section.items.iter() {
-                                    (add_instruction(&ins.text))
+                                    (add_instruction_without_section(&ins.text, Some(&section.title)))
                                 }
                             }
                         },

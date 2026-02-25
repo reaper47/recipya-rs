@@ -24,6 +24,7 @@ derive_more.workspace = true
 email.workspace = true
 futures-util.workspace = true
 humantime.workspace = true
+indexmap.workspace = true
 infer.workspace = true
 integrations.workspace = true
 iso8601.workspace = true
