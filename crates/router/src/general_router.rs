@@ -60,7 +60,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config).await?;
 
-            let res = server.get(&url("https://www.example.com")).await;
+            let res = server.get(&url("")).await;
 
             res.assert_status_bad_request();
             Ok(())
