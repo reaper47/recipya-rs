@@ -345,10 +345,8 @@ fn render_media(
                                             add .hidden to the parentElement of me"));
                                 div .divider { "OR" }
                                 span class="hidden input-error" {}
-                                div .flex.join {
-                                    div .w-full {
-                                        input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
-                                    }
+                                div class="justify-center flex join" {
+                                    input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
                                     button type="button" class="btn btn-sm join-item"
                                         hx-get="/fetch"
                                         hx-vals="js:{url: event.target.previousElementSibling.value}"
@@ -357,6 +355,7 @@ fn render_media(
                                             if event.detail.successful then
                                                 set a to first in event.target.parentElement.parentElement.children then
                                                 call updateMediaFromFetch(a, event.detail.xhr.responseURL)
+                                                set the value of the previous <input/> to ''
                                             end" { "Fetch" }
                                 }
                                 div _="on load if not navigator.clipboard hide me" {

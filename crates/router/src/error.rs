@@ -55,6 +55,11 @@ pub enum Error {
     NoUser,
     NoRecipe,
 
+    // Network
+    DNSResolution,
+    ForbiddenIP,
+    MissingHost,
+
     // Modules
     #[from]
     Config(config::Error),

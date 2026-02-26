@@ -5,13 +5,15 @@ use axum::{Router, middleware};
 use app::state::AppState;
 
 use crate::handlers::general::{
-    index_handler, search_suggestions_handler, upload_note_image, user_initials_handler, ws_handler,
+    fetch_handler, index_handler, search_suggestions_handler, upload_note_image,
+    user_initials_handler, ws_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
 
 /// Defines the routes for general endpoints of the web application.
 pub fn general_routes(state: &AppState) -> Router<AppState> {
     let protected = Router::new()
+        .route("/fetch", get(fetch_handler))
         .route("/search-suggestions", get(search_suggestions_handler))
         .route(
             "/upload/note-image",
@@ -40,6 +42,131 @@ mod tests {
     use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod tests_fetch {
+        use super::*;
+
+        fn url(target: &str) -> String {
+            format!("/fetch?url={target}")
+        }
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, &url("https://www.example.com")).await
+        }
+
+        #[tokio::test]
+        async fn test_missing_url_param_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("https://www.example.com")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_invalid_url_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("not-a-url")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_non_http_scheme_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("ftp://example.com/file.txt")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_file_scheme_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("file:///etc/passwd")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_loopback_ip_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("http://127.0.0.1/admin")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_private_ip_10_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("http://10.0.0.1/internal")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_private_ip_172_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("http://172.16.0.1/internal")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_private_ip_192_168_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("http://192.168.1.1/internal")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_cloud_metadata_ip_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server
+                .get(&url("http://169.254.169.254/latest/meta-data"))
+                .await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_unreachable_url_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url("http://192.0.2.1/")).await;
+
+            res.assert_status_bad_request();
+            Ok(())
+        }
+    }
 
     mod tests_index {
         use super::*;
