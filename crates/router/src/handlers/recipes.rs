@@ -19,6 +19,7 @@ use indexmap::IndexMap;
 use integrations::api::Credentials;
 use iso8601::DateTime;
 use itertools::izip;
+use models::reports::report::ReportForCreate;
 use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -46,7 +47,6 @@ use models::recipe::structs::section::{Item, SectionComponents, SectionItem};
 use models::recipe::structs::tool::ToolForCreate;
 use models::recipe::structs::types::Source;
 use models::recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate};
-use models::report::{ReportForCreate, ReportLogForCreate, ReportTypes};
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;
@@ -168,6 +168,7 @@ pub async fn recipes_handler(
             searchbar: Some(SearchbarData::from_params(search_params)),
             share: None,
             recipes,
+            reports: vec![],
         },
         &state.data_dir,
         &settings,
@@ -1247,7 +1248,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
     tokio::spawn(async move {
         let app = form.app.to_string();
         let state = state.clone();
-        let start_time = Instant::now();
+        // let start_time = Instant::now();
 
         let recipes = match parse_recipes(&state, form, user_id).await {
             Ok(r) => r,
@@ -1274,17 +1275,17 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
             .unwrap_or(i64::MAX);
 
-        let (mut report, recipe_ids) = push_recipes_to_db(&state, recipes, user_id).await;
-        report.exec_time_ms = i64::try_from(start_time.elapsed().as_millis())
-            .inspect_err(|err| {
-                error!(
-                    "Failed to cast parsed recipes exec time ms '{}': {err}",
-                    start_time.elapsed().as_millis()
-                );
-            })
-            .unwrap_or_default();
+        let (_report, recipe_ids) = push_recipes_to_db(&state, recipes, user_id).await;
+        // report.total_exec_time_ms = i64::try_from(start_time.elapsed().as_millis())
+        //     .inspect_err(|err| {
+        //         error!(
+        //             "Failed to cast parsed recipes exec time ms '{}': {err}",
+        //             start_time.elapsed().as_millis()
+        //         );
+        //     })
+        //     .unwrap_or_default();
 
-        broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
+        broadcast_import_done_toast(&state, recipe_ids, num_recipes, None, app, user_id).await;
     });
 }
 
@@ -1326,8 +1327,8 @@ async fn push_recipes_to_db(
     state: &AppState,
     recipes: Vec<schema_org::Recipe>,
     user_id: Uuid,
-) -> (ReportForCreate, Vec<i64>) {
-    let mut report = ReportForCreate::new(&ReportTypes::Import, user_id);
+) -> (Option<ReportForCreate>, Vec<i64>) {
+    // let mut report = ReportForCreate::new(&PrimaryReportType::Import, user_id);
     let mut curr = 0;
     let mut recipe_ids = Vec::new();
     let num_recipes = recipes
@@ -1346,28 +1347,28 @@ async fn push_recipes_to_db(
 
         match Recipe::create(&state.mm, user_id, &recipe).await {
             Ok(recipe_id) => {
-                report
-                    .report_logs
-                    .push(ReportLogForCreate::new_success(recipe.name));
+                // report
+                //     .report_logs
+                //     .push(ReportLogForCreate::new_success(recipe.name));
                 recipe_ids.push(recipe_id);
             }
             Err(DuplicateEntity) => {
                 warn!("Recipe exists: {}", recipe.name);
-                report.report_logs.push(ReportLogForCreate::new_warning(
-                    recipe.name,
-                    "Recipe exists".into(),
-                ));
+                // report.report_logs.push(ReportLogForCreate::new_warning(
+                //     recipe.name,
+                //     "Recipe exists".into(),
+                // ));
             }
             Err(err) => {
                 error!("Error saving recipe '{}': {err}", recipe.name);
-                report
-                    .report_logs
-                    .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
+                // report
+                //     .report_logs
+                //     .push(ReportLogForCreate::new_error(recipe.name, err.to_string()));
             }
         }
     }
 
-    (report, recipe_ids)
+    (None, recipe_ids)
 }
 
 /// Handles the importing recipes from an API endpoint.
@@ -1386,7 +1387,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
     tokio::spawn(async move {
         let api = form.api.to_string();
         let state = state.clone();
-        let start_time = Instant::now();
+        // let start_time = Instant::now();
 
         state
             .broadcast_progress("Preparing import...", 0, 100, true, user_id)
@@ -1429,7 +1430,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
         let mut total = -1;
         let mut processed = 0;
         let mut successes = Vec::new();
-        let mut report = ReportForCreate::new(&ReportTypes::Import, user_id);
+        // let mut report = ReportForCreate::new(&PrimaryReportType::Import, user_id);
 
         let mut last_progress_time = Instant::now();
         let progress_interval = std::time::Duration::from_millis(500);
@@ -1437,14 +1438,14 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
 
         while let Some(res) = db_stream.next().await {
             match res {
-                Ok((recipe_id, recipe_name, num_recipes)) => {
+                Ok((recipe_id, _recipe_name, num_recipes)) => {
                     if total == -1 {
                         total = num_recipes;
                     }
 
-                    report
-                        .report_logs
-                        .push(ReportLogForCreate::new_success(recipe_name));
+                    // report
+                    //     .report_logs
+                    //     .push(ReportLogForCreate::new_success(recipe_name));
 
                     successes.push(recipe_id);
                 }
@@ -1455,22 +1456,22 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
 
                     match err {
                         Error::Model(DuplicateEntity) if recipe_name.is_some() => {
-                            report.report_logs.push(ReportLogForCreate::new_warning(
-                                recipe_name.unwrap_or_default(),
-                                "Recipe exists".into(),
-                            ));
+                            // report.report_logs.push(ReportLogForCreate::new_warning(
+                            //     recipe_name.unwrap_or_default(),
+                            //     "Recipe exists".into(),
+                            // ));
                         }
                         Error::Model(..) if recipe_name.is_some() => {
-                            report.report_logs.push(ReportLogForCreate::new_error(
-                                recipe_name.unwrap_or_default(),
-                                err.to_string(),
-                            ));
+                            // report.report_logs.push(ReportLogForCreate::new_error(
+                            //     recipe_name.unwrap_or_default(),
+                            //     err.to_string(),
+                            // ));
                         }
                         _ => {
-                            report.report_logs.push(ReportLogForCreate::new_error(
-                                "Fetch Failure".into(),
-                                err.to_string(),
-                            ));
+                            // report.report_logs.push(ReportLogForCreate::new_error(
+                            //     "Fetch Failure".into(),
+                            //     err.to_string(),
+                            // ));
                         }
                     }
                 }
@@ -1493,15 +1494,15 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
             .broadcast_progress("Fetching recipes...", processed, total, true, user_id)
             .await;
 
-        report.exec_time_ms = i64::try_from(start_time.elapsed().as_millis())
-            .inspect_err(|err| {
-                error!(
-                    "Failed to cast exec_time_ms '{:?}': {err}",
-                    start_time.elapsed()
-                );
-            })
-            .unwrap_or_default();
-        broadcast_import_done_toast(&state, successes, processed, report, api, user_id).await;
+        // report.exec_time_ms = i64::try_from(start_time.elapsed().as_millis())
+        //     .inspect_err(|err| {
+        //         error!(
+        //             "Failed to cast exec_time_ms '{:?}': {err}",
+        //             start_time.elapsed()
+        //         );
+        //     })
+        //     .unwrap_or_default();
+        broadcast_import_done_toast(&state, successes, processed, None, api, user_id).await;
     });
 }
 
@@ -1529,7 +1530,7 @@ async fn broadcast_import_done_toast(
     state: &AppState,
     recipe_ids: Vec<i64>,
     num_recipes: i64,
-    report: ReportForCreate,
+    _report: Option<ReportForCreate>,
     import_source: String,
     user_id: Uuid,
 ) {
@@ -1562,9 +1563,9 @@ async fn broadcast_import_done_toast(
         state.broadcast(user_id, Message::Text(json.into())).await;
     }
 
-    if let Err(err) = report.insert(&state.mm).await {
-        error!("Error inserting report into the database: {err}");
-    }
+    // if let Err(err) = report.insert(&state.mm).await {
+    //     error!("Error inserting report into the database: {err}");
+    // }
 }
 
 /// Handles generating a preview of the recipe based on the input JSON recipe schema.
@@ -1614,6 +1615,7 @@ pub async fn add_recipe_import_preview_handler(
                         is_shared: false,
                     }),
                     recipes: vec![view_recipe],
+                    reports: vec![],
                 },
             ) {
                 Ok(res) => Ok(res.into_response()),
@@ -1838,22 +1840,23 @@ struct FetchWebsiteContext {
     count_warning: Arc<AtomicI64>,
     count_error: Arc<AtomicI64>,
     recipe_ids: Arc<Mutex<Vec<i64>>>,
-    report: Arc<Mutex<ReportForCreate>>,
+    report: Option<Arc<Mutex<ReportForCreate>>>,
     started_at: Instant,
     total: i64,
 }
 
 impl FetchWebsiteContext {
-    fn new(num_websites: usize, user_id: Uuid) -> Self {
+    fn new(num_websites: usize, _user_id: Uuid) -> Self {
         Self {
             count_success: Arc::new(AtomicI64::default()),
             count_warning: Arc::new(AtomicI64::default()),
             count_error: Arc::new(AtomicI64::default()),
             recipe_ids: Arc::new(Mutex::new(Vec::with_capacity(num_websites))),
-            report: Arc::new(Mutex::new(ReportForCreate::new(
-                &ReportTypes::Import,
-                user_id,
-            ))),
+            report: None,
+            // report: Arc::new(Mutex::new(ReportForCreate::new(
+            //     &PrimaryReportType::Import,
+            //     user_id,
+            // ))),
             started_at: Instant::now(),
             total: num_websites
                 .try_into()
@@ -1946,7 +1949,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let num_websites = urls.len();
         let (tx, mut rx) = mpsc::channel::<()>(num_websites);
         let fetch_ctx = FetchWebsiteContext::new(num_websites, user_id);
-        let start_time = Instant::now();
+        // let start_time = Instant::now();
         let num_recipes = urls.len();
 
         for url in urls {
@@ -1963,12 +1966,12 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
                             Ok(recipe_id) => {
                                 fetch_ctx.count_success.fetch_add(1, Ordering::SeqCst);
                                 fetch_ctx.recipe_ids.lock().await.push(recipe_id);
-                                fetch_ctx
-                                    .report
-                                    .lock()
-                                    .await
-                                    .report_logs
-                                    .push(ReportLogForCreate::new_success(url.into()));
+                                // fetch_ctx
+                                //     .report
+                                //     .lock()
+                                //     .await
+                                //     .report_logs
+                                //     .push(ReportLogForCreate::new_success(url.into()));
                             }
                             Err(err) => {
                                 fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
@@ -1976,20 +1979,20 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
                                 match err {
                                     models::Error::DuplicateEntityWithID(id) => {
                                         fetch_ctx.recipe_ids.lock().await.push(id);
-                                        fetch_ctx.report.lock().await.report_logs.push(
-                                            ReportLogForCreate::new_warning(
-                                                url.into(),
-                                                "Recipe exists".into(),
-                                            ),
-                                        );
+                                        // fetch_ctx.report.lock().await.report_logs.push(
+                                        //     ReportLogForCreate::new_warning(
+                                        //         url.into(),
+                                        //         "Recipe exists".into(),
+                                        //     ),
+                                        // );
                                     }
                                     _ => {
-                                        fetch_ctx.report.lock().await.report_logs.push(
-                                            ReportLogForCreate::new_error(
-                                                url.into(),
-                                                err.to_string(),
-                                            ),
-                                        );
+                                        // fetch_ctx.report.lock().await.report_logs.push(
+                                        //     ReportLogForCreate::new_error(
+                                        //         url.into(),
+                                        //         err.to_string(),
+                                        //     ),
+                                        // );
                                     }
                                 }
                             }
@@ -1998,12 +2001,12 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
                     Err(err) => {
                         fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
                         error!("Error fetching recipe '{url}': {err}");
-                        fetch_ctx
-                            .report
-                            .lock()
-                            .await
-                            .report_logs
-                            .push(ReportLogForCreate::new_error(url.into(), err.to_string()));
+                        // fetch_ctx
+                        //     .report
+                        //     .lock()
+                        //     .await
+                        //     .report_logs
+                        //     .push(ReportLogForCreate::new_error(url.into(), err.to_string()));
                     }
                 }
 
@@ -2035,18 +2038,18 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
 
         state.hide_broadcast(user_id).await;
 
-        fetch_ctx.report.lock().await.exec_time_ms =
-            i64::try_from(start_time.elapsed().as_millis())
-                .inspect_err(|err| {
-                    error!(
-                        "Failed to caststart time '{:?}': {err}",
-                        start_time.elapsed()
-                    );
-                })
-                .unwrap_or_default();
-        if let Err(err) = fetch_ctx.report.lock().await.insert(&state.mm).await {
-            error!("Error inserting report into the database: {err}");
-        }
+        // fetch_ctx.report.lock().await.total_exec_time_ms =
+        //     i64::try_from(start_time.elapsed().as_millis())
+        //         .inspect_err(|err| {
+        //             error!(
+        //                 "Failed to caststart time '{:?}': {err}",
+        //                 start_time.elapsed()
+        //             );
+        //         })
+        //         .unwrap_or_default();
+        // if let Err(err) = fetch_ctx.report.lock().await.insert(&state.mm).await {
+        //     error!("Error inserting report into the database: {err}");
+        // }
 
         fetch_ctx.send_toast_after_processing(&state, user_id).await;
     });
@@ -2293,6 +2296,7 @@ pub async fn view_recipe_handler(
                 is_shared: false,
             }),
             recipes: vec![view_recipe],
+            reports: vec![],
         },
         &user_settings,
     ) {
@@ -2382,6 +2386,7 @@ pub async fn search_recipes_handler(
             searchbar: Some(SearchbarData::from_params(search_params)),
             share: None,
             recipes,
+            reports: vec![],
         },
         &state.data_dir,
         &settings,

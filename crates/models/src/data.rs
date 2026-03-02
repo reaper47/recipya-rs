@@ -4,6 +4,7 @@ use repository::extensions::pagination::DEFAULT_PER_PAGE;
 
 use crate::RecipeDetails;
 use crate::params::SearchParams;
+use crate::reports::ViewReport;
 use crate::time::FormattedTimes;
 
 /// Data holds data to pass on to the templates.
@@ -21,6 +22,7 @@ pub struct Data {
     pub searchbar: Option<SearchbarData>,
     pub share: Option<ShareData>,
     pub recipes: Vec<ViewRecipe>,
+    pub reports: Vec<ViewReport>,
 }
 
 /// Creates a new instance of `AboutData`.

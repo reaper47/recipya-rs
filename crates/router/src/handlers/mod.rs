@@ -5,6 +5,7 @@ pub mod admin;
 pub mod auth;
 pub mod general;
 pub mod recipes;
+pub mod reports;
 pub mod settings;
 pub mod shared;
 

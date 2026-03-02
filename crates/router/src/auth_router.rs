@@ -11,7 +11,7 @@ use crate::handlers::auth::{
 };
 use crate::middleware::mw_auth::mw_refresh_token;
 
-/// Defines the authentication-related routes for the web application.
+/// Defines the authentication-related routes.
 pub fn auth_routes(state: &AppState) -> Router<AppState> {
     let protected = Router::new()
         .route("/change-password", post(change_password_post_handler))

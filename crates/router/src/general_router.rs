@@ -1,6 +1,7 @@
+use axum::Router;
 use axum::extract::DefaultBodyLimit;
+use axum::middleware::from_fn_with_state;
 use axum::routing::{get, post};
-use axum::{Router, middleware};
 
 use app::state::AppState;
 
@@ -21,10 +22,7 @@ pub fn general_routes(state: &AppState) -> Router<AppState> {
         )
         .route("/user-initials", get(user_initials_handler))
         .route("/ws", get(ws_handler))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            mw_refresh_token,
-        ));
+        .layer(from_fn_with_state(state.clone(), mw_refresh_token));
 
     Router::new()
         .route("/", get(index_handler))

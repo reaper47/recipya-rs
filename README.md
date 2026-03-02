@@ -152,6 +152,7 @@ This project was mainly coded to blasting the following albums:
 - [Atavistia - Cosmic Warfare](https://www.youtube.com/watch?v=VjJ_zb4RF2E)
 - [Beast In Black - Dark Connection](https://www.youtube.com/watch?v=7NyON-NzBr4)
 - [Cattle Decapitation - Terrasite](https://www.youtube.com/watch?v=x6rEDMqM36I)
+- [Desoration - NON](https://www.youtube.com/watch?v=QGagHu8EvyY)
 - [Ensiferum - From Afar](https://www.youtube.com/watch?v=6r8OPu3SRSM)
 - [Fires in the Distance - Echoes From Deep November](https://www.youtube.com/watch?v=dnOE5nm6rfo)
 - [Kalmah - Swamplord](https://www.youtube.com/watch?v=FhMsOB88dfo&list=PLkROH3Eqs0T9b5E2WDDOS0JgYLf24_dNs)

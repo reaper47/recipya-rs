@@ -90,18 +90,16 @@ fn render_import_apps_card() -> Markup {
         div class="card-body" {
             h2 class="card-title" { "Import" }
             p {
-                "Import exported recipes from "
+                "Import recipes via API from Mealie, Tandoor, and Nextcloud, as well as from "
                 button class="underline cursor-pointer"
                     hx-get="/recipes/supported-applications"
                     hx-target="#application-results"
                     onclick="document.querySelector('#supported-apps-import-dialog').showModal()" {
                     "various apps,"
                 }
-                " plain text files or files that adhere to the "
+                " and raw JSON files adhering to the "
                 a href="https://schema.org/Recipe" target="_blank" class="link" { "recipe schema" }
-                " standard. You may import all your Mealie or Tandoor recipes from the "
-                b { "Data" }
-                " tab in the settings."
+                " standard."
             }
             p {
                 "You may also download recipe schema files directly using the "
