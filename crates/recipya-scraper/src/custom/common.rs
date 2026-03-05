@@ -1,9 +1,8 @@
-use reqwest::Url;
 use schema_org::{
-    AtType, DurationOrText,
+    AtType,
     field::{
-        RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
-        RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeYieldFieldEnum,
+        RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum,
+        RecipeRecipeIngredientFieldEnum, RecipeRecipeYieldFieldEnum,
     },
 };
 use scraper::{ElementRef, Html, Selector};
@@ -25,27 +24,6 @@ pub fn extract_author(
     )
 }
 
-pub fn extract_category(fragment: &ElementRef, css_selector: &str) -> Result<Vec<String>> {
-    text_list(fragment, css_selector, ",")?
-        .first()
-        .map_or_else(|| Ok(vec![]), |category| Ok(vec![category.clone()]))
-}
-
-pub fn extract_cuisines(
-    fragment: &ElementRef,
-    css_selector: &str,
-    default_cuisine: Option<&str>,
-) -> Result<Vec<String>> {
-    let cuisines = text_list(fragment, css_selector, ",")?;
-    if cuisines.is_empty() {
-        default_cuisine.map_or(Err(Error::DomainNotImplemented), |cuisine| {
-            Ok(vec![cuisine.to_string()])
-        })
-    } else {
-        Ok(cuisines)
-    }
-}
-
 pub fn extract_description(
     fragment: &ElementRef,
     css_selector: &str,
@@ -54,26 +32,6 @@ pub fn extract_description(
         || Ok(vec![]),
         |s| Ok(vec![RecipeDescriptionFieldEnum::Text(s.trim().into())]),
     )
-}
-
-pub fn extract_duration(fragment: &ElementRef, css_selector: &str) -> Result<Vec<DurationOrText>> {
-    Ok(optional_text(fragment, css_selector)?
-        .map(|s| vec![DurationOrText::Text(s)])
-        .unwrap_or_default())
-}
-
-pub fn extract_image_urls(
-    fragment: &ElementRef,
-    css_selector: &str,
-) -> Result<Vec<RecipeImageFieldEnum>> {
-    Ok(fragment
-        .select(&Selector::parse(css_selector)?)
-        .filter_map(|el| {
-            let src = el.attr("src")?;
-            let url = Url::parse(src).ok()?;
-            matches!(url.scheme(), "http" | "https").then(|| RecipeImageFieldEnum::URL(url.into()))
-        })
-        .collect())
 }
 
 pub fn extract_ingredients(content: &ElementRef) -> Result<Vec<RecipeRecipeIngredientFieldEnum>> {

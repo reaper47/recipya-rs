@@ -47,7 +47,10 @@ fn render_index(data: &ReportsData) -> Markup {
 
 fn render_reports_list(data: &ReportsData) -> Markup {
     html! {
-        ul #report-menu class="menu block bg-base-100 w-full overflow-y-auto max-h-[89vh]" {
+        ul #report-menu class={
+            "menu block bg-base-100 w-full overflow-y-auto max-h-[89vh]"
+            @if data.reports.len() < 10 { " h-full" }
+        } {
             @for (idx, report) in data.reports.iter().enumerate() {
                 li class=[if idx == 0 { Some("bg-base-300") } else { None }]
                     hx-get=(format!("/reports/{}", report.id))

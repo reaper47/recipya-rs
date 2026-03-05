@@ -19,11 +19,6 @@ use indexmap::IndexMap;
 use integrations::api::Credentials;
 use iso8601::DateTime;
 use itertools::izip;
-use models::reports::report::{Items, ReportForCreate};
-use models::reports::report_log::ReportLogForCreate;
-use models::reports::report_types::{
-    Import, PrimaryReportType, ReportTypeFull, TertiaryReportType,
-};
 use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -51,6 +46,11 @@ use models::recipe::structs::section::{Item, SectionComponents, SectionItem};
 use models::recipe::structs::tool::ToolForCreate;
 use models::recipe::structs::types::Source;
 use models::recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate};
+use models::reports::report::{Items, ReportForCreate};
+use models::reports::report_log::ReportLogForCreate;
+use models::reports::report_types::{
+    Import, PrimaryReportType, ReportTypeFull, TertiaryReportType,
+};
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::time::FormattedTimes;
@@ -125,16 +125,16 @@ pub async fn recipes_handler(
                         })
                         .map_err(async |err| {
                             error!("Error formatting times for recipe: {err}");
-                            broadcast_error(&state, user.id, "Error formatting recipe times.")
-                                .await;
                             Error::Database
                         })
                 })
                 .collect();
 
-            match mapped_recipes {
-                Ok(mapped) => mapped,
-                Err(_) => return Err(Error::Database),
+            if let Ok(mapped) = mapped_recipes {
+                mapped
+            } else {
+                broadcast_error(&state, user.id, "Error formatting recipe times.").await;
+                return Err(Error::Database);
             }
         }
         Err(err) => {
@@ -2115,25 +2115,27 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
 
         state.hide_broadcast(user_id).await;
 
+        let items = Items {
+            total: i32::try_from(fetch_ctx.total).unwrap_or(0),
+            success: i32::try_from(fetch_ctx.count_success.load(Ordering::SeqCst)).unwrap_or(0),
+            skipped: i32::try_from(fetch_ctx.count_warning.load(Ordering::SeqCst)).unwrap_or(0),
+            failed: i32::try_from(fetch_ctx.count_error.load(Ordering::SeqCst)).unwrap_or(0),
+        };
+
+        fetch_ctx.send_toast_after_processing(&state, user_id).await;
+
         let report = ReportForCreate::new(
             ReportTypeFull::website(),
-            Arc::try_unwrap(fetch_ctx.clone().report_logs)
+            Arc::try_unwrap(fetch_ctx.report_logs)
                 .expect("Report logs arc still has multiple owners")
                 .into_inner(),
-            Items {
-                total: i32::try_from(fetch_ctx.total).unwrap_or(0),
-                success: i32::try_from(fetch_ctx.count_success.load(Ordering::SeqCst)).unwrap_or(0),
-                skipped: i32::try_from(fetch_ctx.count_warning.load(Ordering::SeqCst)).unwrap_or(0),
-                failed: i32::try_from(fetch_ctx.count_error.load(Ordering::SeqCst)).unwrap_or(0),
-            },
+            items,
             user_id,
         );
 
         if let Err(err) = report.insert(&state.mm).await {
             error!("Error inserting website report into the database: {err}");
         }
-
-        fetch_ctx.send_toast_after_processing(&state, user_id).await;
     });
 }
 
@@ -2413,16 +2415,16 @@ pub async fn search_recipes_handler(
                         })
                         .map_err(async |err| {
                             error!("Error formatting times for recipe: {err}");
-                            broadcast_error(&state, user.id, "Error formatting recipe times.")
-                                .await;
                             Error::Database
                         })
                 })
                 .collect();
 
-            match mapped_recipes {
-                Ok(mapped) => mapped,
-                Err(_) => return Err(Error::Database),
+            if let Ok(mapped) = mapped_recipes {
+                mapped
+            } else {
+                broadcast_error(&state, user.id, "Error formatting recipe times.").await;
+                return Err(Error::Database);
             }
         }
         Err(err) => {
