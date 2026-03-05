@@ -78,7 +78,7 @@ pub async fn share_recipe_handler(
                         recipe_details: recipe,
                         formatted_times,
                     }],
-                    reports: vec![],
+                    reports: None,
                 },
                 &settings,
             )
@@ -111,7 +111,7 @@ pub async fn share_recipe_handler(
                     recipe_details: recipe,
                     formatted_times,
                 }],
-                reports: vec![],
+                reports: None,
             },
             &UserSettingDetails::default(),
         ),

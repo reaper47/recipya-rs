@@ -222,3 +222,12 @@ body.dragging #ingredients-list {
     border: 1px solid var(--color-base-300) !important;
     border-left: 1px solid rebeccapurple !important;
 }
+
+#report-menu li.active {
+    background-color: color-mix(
+        in oklch,
+        var(--color-primary) 15%,
+        transparent
+    );
+    border-radius: var(--rounded-btn, 0.5rem);
+}

@@ -93,12 +93,27 @@ pub struct ReportForCreate {
 }
 
 /// Holds information about the items processed in a report.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Items {
     pub total: i32,
     pub success: i32,
     pub skipped: i32,
     pub failed: i32,
+}
+
+impl From<&[ReportLogForCreate]> for Items {
+    fn from(logs: &[ReportLogForCreate]) -> Self {
+        logs.iter().fold(Self::default(), |mut acc, log| {
+            acc.total += 1;
+            match log.level_id {
+                2 => acc.success += 1,
+                3 => acc.skipped += 1,
+                4 => acc.failed += 1,
+                _ => {}
+            }
+            acc
+        })
+    }
 }
 
 impl ReportForCreate {
@@ -144,6 +159,7 @@ impl ReportForCreate {
                         report_id,
                         seq_num: log.seq_num,
                         entity_name: log.entity_name.clone(),
+                        recipe_id: log.recipe_id,
                         level_id: log.level_id,
                         error_code: log.error_code.clone(),
                         error_reason: log.error_reason.clone(),

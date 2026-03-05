@@ -615,9 +615,11 @@ function syncLayout() {
   const isAside =
     layoutElement.attributes.getNamedItem("data-layout").value === "with-aside";
 
-  ["desktop-nav", "mobile-nav", "add-recipe", "pagination"].forEach((id) => {
-    document.getElementById(id)?.classList.toggle("hidden", !isAside);
-  });
+  ["desktop-nav", "mobile-nav", "add-recipe", "pagination-recipes"].forEach(
+    (id) => {
+      document.getElementById(id)?.classList.toggle("hidden", !isAside);
+    },
+  );
 }
 
 async function loadURLToInputField(url, containerId) {

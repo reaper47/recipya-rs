@@ -3,17 +3,20 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use repository::extensions::pagination::Paginate;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
 
-use crate::Result;
 use crate::reports::report::{Items, ReportWithTypes};
 use crate::reports::report_log::{Level, ReportLog, ReportLogWithLevel};
 use crate::reports::report_types::{ReportTypePrimary, ReportTypeSecondary, ReportTypeTertiary};
+use crate::{Error, Result};
+
+pub const DEFAULT_REPORTS_PER_PAGE: i64 = 50;
 
 /// Represents a report to be presented to the user.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ViewReport {
     pub id: i64,
     pub report_type: ViewReportType,
@@ -25,11 +28,12 @@ pub struct ViewReport {
 }
 
 /// Represents a log entry for a report to be presented to the user.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ViewReportLog {
     pub id: i64,
     pub seq_num: i32,
     pub entity_name: String,
+    pub recipe_id: Option<i64>,
     pub level: Level,
     pub error_code: Option<String>,
     pub error_reason: Option<String>,
@@ -37,7 +41,7 @@ pub struct ViewReportLog {
 }
 
 /// Represents a report type to be presented to the user.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ViewReportType {
     pub primary: ReportTypePrimary,
     pub secondary: Option<ReportTypeSecondary>,
@@ -46,7 +50,7 @@ pub struct ViewReportType {
 
 impl ViewReport {
     /// Fetches all reports for a user.
-    pub async fn fetch_all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
+    pub async fn fetch_all(mm: &ModelManager, page: i64, user_id: Uuid) -> Result<Vec<Self>> {
         let mut conn = mm.pool.get().await?;
 
         let reports = schema::reports::table
@@ -55,6 +59,8 @@ impl ViewReport {
             .left_join(schema::report_types_secondary::table)
             .left_join(schema::report_types_tertiary::table)
             .select(ReportWithTypes::as_select())
+            .order(schema::reports::created_at.desc())
+            .paginate(page.max(1), DEFAULT_REPORTS_PER_PAGE)
             .load::<ReportWithTypes>(&mut conn)
             .await?;
 
@@ -91,6 +97,7 @@ impl ViewReport {
                             id: l.report_log.id,
                             seq_num: l.report_log.seq_num,
                             entity_name: l.report_log.entity_name,
+                            recipe_id: l.report_log.recipe_id,
                             level: l.level,
                             error_code: l.report_log.error_code,
                             error_reason: l.report_log.error_reason,
@@ -111,6 +118,77 @@ impl ViewReport {
             .collect::<Vec<_>>();
 
         Ok(grouped)
+    }
+
+    /// Fetch a report by its ID.
+    pub async fn fetch(mm: &ModelManager, report_id: i64, user_id: Uuid) -> Result<Self> {
+        let mut conn = mm.pool.get().await?;
+
+        let r = schema::reports::table
+            .filter(schema::reports::user_id.eq(user_id))
+            .filter(schema::reports::id.eq(report_id))
+            .inner_join(schema::report_types_primary::table)
+            .left_join(schema::report_types_secondary::table)
+            .left_join(schema::report_types_tertiary::table)
+            .select(ReportWithTypes::as_select())
+            .first::<ReportWithTypes>(&mut conn)
+            .await
+            .map_err(|_| Error::EntityNotFound {
+                entity: "report",
+                id: report_id.to_string(),
+            })?;
+
+        let logs = ReportLog::belonging_to(&r.report)
+            .inner_join(schema::levels::table)
+            .select(ReportLogWithLevel::as_select())
+            .load::<ReportLogWithLevel>(&mut conn)
+            .await?;
+
+        Ok(Self {
+            id: r.report.id,
+            report_type: ViewReportType {
+                primary: r.report_type_primary,
+                secondary: r.report_type_secondary,
+                tertiary: r.report_type_tertiary,
+            },
+            report_logs: logs
+                .into_iter()
+                .map(|l| ViewReportLog {
+                    id: l.report_log.id,
+                    seq_num: l.report_log.seq_num,
+                    entity_name: l.report_log.entity_name,
+                    recipe_id: l.report_log.recipe_id,
+                    level: l.level,
+                    error_code: l.report_log.error_code,
+                    error_reason: l.report_log.error_reason,
+                    exec_time_ms: l.report_log.exec_time_ms,
+                })
+                .collect(),
+            items: Items {
+                total: r.report.items_total,
+                success: r.report.items_success,
+                skipped: r.report.items_skipped,
+                failed: r.report.items_failed,
+            },
+            user_id,
+            total_exec_time_ms: r.report.total_exec_time_ms,
+            created_at: r.report.created_at,
+        })
+    }
+}
+
+impl ViewReportLog {
+    /// Formats the execution time in milliseconds as a human-readable duration string.
+    #[allow(clippy::cast_precision_loss)]
+    pub fn format_duration(&self) -> String {
+        let ms = self.exec_time_ms;
+        match ms {
+            0 => "0ms".to_string(),
+            ms if ms < 1_000 => format!("{ms}ms"),
+            ms if ms < 60_000 => format!("{:.1}s", ms as f64 / 1_000.0),
+            ms if ms < 3_600_000 => format!("{:.1}m", ms as f64 / 60_000.0),
+            _ => format!("{:.1}h", ms as f64 / 3_600_000.0),
+        }
     }
 }
 
@@ -143,9 +221,9 @@ mod tests {
                     tertiary: Some(TertiaryReportType::<Import, API>::mealie()),
                 },
                 vec![
-                    ReportLogForCreate::success(1, "Raspberry Pi", 167),
-                    ReportLogForCreate::success(2, "Orange Pi", 544),
-                    ReportLogForCreate::success(3, "Pink Pi", 78),
+                    ReportLogForCreate::success(1, "Raspberry Pi", None, 167),
+                    ReportLogForCreate::success(2, "Orange Pi", None, 544),
+                    ReportLogForCreate::success(3, "Pink Pi", None, 78),
                 ],
                 Items {
                     total: 3,
@@ -161,17 +239,20 @@ mod tests {
                     ReportLogForCreate::success(
                         1,
                         "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
+                        None,
                         243,
                     ),
                     ReportLogForCreate::warning(
                         2,
                         "https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741",
+                        None,
                         "The recipe exists in your collection.",
                         124,
                     ),
                     ReportLogForCreate::error(
                         3,
                         "https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741",
+                        None,
                         "NetworkFailure",
                         "Failed to connect to the website.",
                         124,
@@ -179,9 +260,9 @@ mod tests {
                 ],
                 Items {
                     total: 3,
-                    success: 3,
-                    skipped: 0,
-                    failed: 0,
+                    success: 1,
+                    skipped: 1,
+                    failed: 1,
                 },
                 user.id,
             ),
@@ -189,7 +270,7 @@ mod tests {
         reports[0].insert(&state.mm).await?;
         reports[1].insert(&state.mm).await?;
 
-        let got = ViewReport::fetch_all(&state.mm, user.id).await?;
+        let got = ViewReport::fetch_all(&state.mm, 1, user.id).await?;
 
         pretty_assertions::assert_eq!(
             got,
@@ -219,6 +300,7 @@ mod tests {
                             id: 1,
                             seq_num: 1,
                             entity_name: "Raspberry Pi".into(),
+                            recipe_id: None,
                             level: Level {
                                 id: 2,
                                 name: "success".into(),
@@ -231,6 +313,7 @@ mod tests {
                             id: 2,
                             seq_num: 2,
                             entity_name: "Orange Pi".into(),
+                            recipe_id: None,
                             level: Level {
                                 id: 2,
                                 name: "success".into(),
@@ -243,6 +326,7 @@ mod tests {
                             id: 3,
                             seq_num: 3,
                             entity_name: "Pink Pi".into(),
+                            recipe_id: None,
                             level: Level {
                                 id: 2,
                                 name: "success".into(),
@@ -277,6 +361,7 @@ mod tests {
                             id: 4,
                             seq_num: 1,
                             entity_name: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
+                            recipe_id: None,
                             level: Level {
                                 id: 2,
                                 name: "success".into(),
@@ -289,6 +374,7 @@ mod tests {
                             id: 5,
                             seq_num: 2,
                             entity_name: "https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741".into(),
+                            recipe_id: None,
                             level: Level {
                                 id: 3,
                                 name: "warning".into(),
@@ -303,6 +389,7 @@ mod tests {
                             id: 6,
                             seq_num: 3,
                             entity_name: "https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741".into(),
+                            recipe_id: None,
                             level: Level {
                                 id: 4,
                                 name: "error".into(),
@@ -318,9 +405,9 @@ mod tests {
                     ],
                     items: Items {
                         total: 3,
-                        success: 3,
-                        skipped: 0,
-                        failed: 0,
+                        success: 1,
+                        skipped: 1,
+                        failed: 1,
                     },
                     user_id: user.id,
                     total_exec_time_ms: 491,

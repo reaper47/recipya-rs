@@ -475,6 +475,7 @@ diesel::table! {
         seq_num -> Int4,
         report_id -> Int8,
         entity_name -> Text,
+        recipe_id -> Nullable<Int8>,
         level_id -> Int2,
         error_code -> Nullable<Text>,
         error_reason -> Nullable<Text>,
@@ -686,6 +687,7 @@ diesel::joinable!(reports -> report_types_secondary (report_type_secondary_id));
 diesel::joinable!(reports -> report_types_tertiary (report_type_tertiary_id));
 diesel::joinable!(reports -> users (user_id));
 diesel::joinable!(reports_logs -> levels (level_id));
+diesel::joinable!(reports_logs -> recipes (recipe_id));
 diesel::joinable!(reports_logs -> reports (report_id));
 diesel::joinable!(shares_cookbooks -> cookbooks (cookbook_id));
 diesel::joinable!(shares_cookbooks -> users (user_id));

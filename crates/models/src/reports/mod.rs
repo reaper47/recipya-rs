@@ -4,4 +4,5 @@ pub mod report_types;
 
 mod view;
 
-pub use view::ViewReport;
+// TODO: Remove viewreporttype once ui designed
+pub use view::{ViewReport, ViewReportLog, ViewReportType};

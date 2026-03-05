@@ -40,12 +40,19 @@ CREATE TABLE reports_logs (
   seq_num int4 NOT NULL,
   report_id int8 NOT NULL REFERENCES reports (id) ON DELETE CASCADE,
   entity_name text NOT NULL,
+  recipe_id int8 REFERENCES recipes (id) ON DELETE CASCADE,
   level_id int2 NOT NULL REFERENCES levels (id) ON DELETE RESTRICT,
   error_code text,
   error_reason text,
   exec_time_ms int8 NOT NULL,
   UNIQUE (report_id, seq_num)
 );
+
+CREATE INDEX idx_reports_user_id ON reports (user_id);
+
+CREATE INDEX idx_reports_logs_report_id ON reports_logs (report_id);
+
+CREATE INDEX idx_reports_user_created ON reports (user_id, created_at DESC);
 
 ---
 --- Inserts

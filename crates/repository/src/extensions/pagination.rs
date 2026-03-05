@@ -4,21 +4,19 @@ use diesel::sql_types::BigInt;
 use diesel::{QueryId, QueryResult};
 
 pub trait Paginate: Sized {
-    fn paginate(self, page: i64) -> Paginated<Self>;
+    fn paginate(self, page: i64, results_per_page: i64) -> Paginated<Self>;
 }
 
 impl<T> Paginate for T {
-    fn paginate(self, page: i64) -> Paginated<Self> {
+    fn paginate(self, page: i64, results_per_page: i64) -> Paginated<Self> {
         Paginated {
             query: self,
             page,
-            per_page: DEFAULT_PER_PAGE,
-            offset: (page - 1) * DEFAULT_PER_PAGE,
+            per_page: results_per_page,
+            offset: (page - 1) * results_per_page,
         }
     }
 }
-
-pub const DEFAULT_PER_PAGE: i64 = 15;
 
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct Paginated<T> {

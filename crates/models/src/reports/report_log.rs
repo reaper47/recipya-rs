@@ -13,6 +13,7 @@ pub struct ReportLog {
     pub seq_num: i32,
     pub report_id: i64,
     pub entity_name: String,
+    pub recipe_id: Option<i64>,
     pub level_id: i16,
     pub error_code: Option<String>,
     pub error_reason: Option<String>,
@@ -20,10 +21,11 @@ pub struct ReportLog {
 }
 
 /// Represents the details of a report to create in the database.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ReportLogForCreate {
     pub seq_num: i32,
     pub entity_name: String,
+    pub recipe_id: Option<i64>,
     pub level_id: i16,
     pub error_code: Option<String>,
     pub error_reason: Option<String>,
@@ -36,6 +38,7 @@ pub struct ReportLogForInsert {
     pub seq_num: i32,
     pub report_id: i64,
     pub entity_name: String,
+    pub recipe_id: Option<i64>,
     pub level_id: i16,
     pub error_code: Option<String>,
     pub error_reason: Option<String>,
@@ -44,9 +47,15 @@ pub struct ReportLogForInsert {
 
 impl ReportLogForCreate {
     /// Creates a new success report log.
-    pub fn success(seq_num: i32, entity_name: &str, exec_time_ms: i64) -> Self {
+    pub fn success(
+        seq_num: i32,
+        entity_name: &str,
+        recipe_id: Option<i64>,
+        exec_time_ms: i64,
+    ) -> Self {
         Self {
             entity_name: entity_name.into(),
+            recipe_id,
             level_id: 2,
             seq_num,
             exec_time_ms,
@@ -55,9 +64,16 @@ impl ReportLogForCreate {
     }
 
     /// Creates a new warning report log.
-    pub fn warning(seq_num: i32, entity_name: &str, error_reason: &str, exec_time_ms: i64) -> Self {
+    pub fn warning(
+        seq_num: i32,
+        entity_name: &str,
+        recipe_id: Option<i64>,
+        error_reason: &str,
+        exec_time_ms: i64,
+    ) -> Self {
         Self {
             entity_name: entity_name.into(),
+            recipe_id,
             level_id: 3,
             error_reason: Some(error_reason.into()),
             seq_num,
@@ -70,12 +86,14 @@ impl ReportLogForCreate {
     pub fn error(
         seq_num: i32,
         entity_name: &str,
+        recipe_id: Option<i64>,
         error_code: &str,
         error_reason: &str,
         exec_time_ms: i64,
     ) -> Self {
         Self {
             entity_name: entity_name.into(),
+            recipe_id,
             level_id: 4,
             error_code: Some(error_code.into()),
             error_reason: Some(error_reason.into()),
@@ -86,7 +104,7 @@ impl ReportLogForCreate {
 }
 
 /// Represents a log level.
-#[derive(Debug, Eq, PartialEq, Identifiable, Queryable, Selectable)]
+#[derive(Clone, Debug, Eq, PartialEq, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = schema::levels)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Level {
