@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use itertools::Itertools;
 use repository::extensions::pagination::Paginate;
 use uuid::Uuid;
 
@@ -69,6 +70,7 @@ impl ViewReport {
         let logs = ReportLog::belonging_to(&inner_reports)
             .inner_join(schema::levels::table)
             .select(ReportLogWithLevel::as_select())
+            .order(schema::reports_logs::seq_num.asc())
             .load::<ReportLogWithLevel>(&mut conn)
             .await?;
 
@@ -141,6 +143,7 @@ impl ViewReport {
         let logs = ReportLog::belonging_to(&r.report)
             .inner_join(schema::levels::table)
             .select(ReportLogWithLevel::as_select())
+            .order(schema::reports_logs::seq_num.asc())
             .load::<ReportLogWithLevel>(&mut conn)
             .await?;
 
@@ -175,20 +178,51 @@ impl ViewReport {
             created_at: r.report.created_at,
         })
     }
+
+    /// Formats the execution time in milliseconds as a human-readable duration string.
+    #[allow(clippy::cast_precision_loss)]
+    pub fn format_duration(&self) -> String {
+        format_duration_ms(self.total_exec_time_ms)
+    }
 }
 
 impl ViewReportLog {
     /// Formats the execution time in milliseconds as a human-readable duration string.
     #[allow(clippy::cast_precision_loss)]
     pub fn format_duration(&self) -> String {
-        let ms = self.exec_time_ms;
-        match ms {
-            0 => "0ms".to_string(),
-            ms if ms < 1_000 => format!("{ms}ms"),
-            ms if ms < 60_000 => format!("{:.1}s", ms as f64 / 1_000.0),
-            ms if ms < 3_600_000 => format!("{:.1}m", ms as f64 / 60_000.0),
-            _ => format!("{:.1}h", ms as f64 / 3_600_000.0),
-        }
+        format_duration_ms(self.exec_time_ms)
+    }
+}
+
+/// Trait for types that can have multiple errors.
+pub trait ReportErrors {
+    /// Returns `true` if more than one log has an error level.
+    fn has_multiple_errors(&self) -> bool;
+    /// Collects all error logs into a newline-delimited string.
+    fn collect_errors(&self) -> String;
+}
+
+impl ReportErrors for &[ViewReportLog] {
+    fn has_multiple_errors(&self) -> bool {
+        self.iter().filter(|l| l.level.id == 4).count() > 1
+    }
+
+    fn collect_errors(&self) -> String {
+        self.iter()
+            .filter(|l| l.level.id == 4)
+            .map(|l| l.entity_name.as_str())
+            .join("\\n")
+    }
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn format_duration_ms(ms: i64) -> String {
+    match ms {
+        0 => "0ms".to_string(),
+        ms if ms < 1_000 => format!("{ms}ms"),
+        ms if ms < 60_000 => format!("{:.1}s", ms as f64 / 1_000.0),
+        ms if ms < 3_600_000 => format!("{:.1}m", ms as f64 / 60_000.0),
+        _ => format!("{:.1}h", ms as f64 / 3_600_000.0),
     }
 }
 
@@ -232,6 +266,7 @@ mod tests {
                     skipped: 0,
                     failed: 0,
                 },
+                789,
                 user.id,
             ),
             ReportForCreate::new(
@@ -265,6 +300,7 @@ mod tests {
                     skipped: 1,
                     failed: 1,
                 },
+                491,
                 user.id,
             ),
         ];
@@ -286,14 +322,14 @@ mod tests {
                         },
                         secondary: Some(
                             ReportTypeSecondary {
-                                id: 3,
-                                name: "software".into(),
+                                id: 1,
+                                name: "api".into(),
                             },
                         ),
                         tertiary: Some(
                             ReportTypeTertiary {
-                                id: 6,
-                                name: "bigoven".into(),
+                                id: 1,
+                                name: "mealie".into(),
                             },
                         ),
                     },

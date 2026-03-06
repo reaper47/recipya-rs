@@ -122,6 +122,7 @@ impl ReportForCreate {
         report_type: ReportTypeFull<P, S>,
         report_logs: Vec<ReportLogForCreate>,
         items: Items,
+        total_exec_time_ms: i64,
         user_id: Uuid,
     ) -> Self
     where
@@ -133,9 +134,7 @@ impl ReportForCreate {
             report_type_tertiary_id: report_type.tertiary.map(|t| t.to_id()),
             user_id,
             items,
-            total_exec_time_ms: report_logs
-                .iter()
-                .fold(0, |acc, log| acc + log.exec_time_ms),
+            total_exec_time_ms,
             report_logs,
         }
     }

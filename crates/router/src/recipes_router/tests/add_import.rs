@@ -100,7 +100,7 @@ mod tests {
     }
 
     mod tests_import_app {
-        use models::user::User;
+        use models::{reports::ViewReport, user::User};
 
         use super::*;
 
@@ -136,8 +136,7 @@ mod tests {
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred while parsing the recipes. Please check the logs.","status":"alert-error","title":"Operation Failed"}}"#).await;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             pretty_assertions::assert_eq!(Recipe::count(&state.mm, user_id).await?, 0);
             Ok(())
         }
@@ -170,9 +169,10 @@ mod tests {
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Imported 3 recipes. Skipped 0.","status":"alert-info","title":"Operation Successful"}}"#).await;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             pretty_assertions::assert_eq!(Recipe::count(&state.mm, user_id).await?, 3);
+            let reports = ViewReport::fetch_all(&state.mm, 1, user_id).await?;
+            assert_eq!(reports.len(), 1);
             Ok(())
         }
 
@@ -297,6 +297,8 @@ mod tests {
     }
 
     mod tests_recipe_add_import_raw_json {
+        use models::{reports::ViewReport, user::User};
+
         use super::*;
 
         const BASE_URI: &str = "/recipes/add/import/raw-json";
@@ -326,12 +328,16 @@ mod tests {
         #[tokio::test]
         async fn test_post_payload_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let server = build_server_logged_in(config.clone()).await?;
 
             let res = server.post(BASE_URI).form(&valid_preview_form()).await;
 
             res.assert_status_ok();
             res.assert_header(axum_htmx::HX_REDIRECT, "/recipes/1");
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let reports = ViewReport::fetch_all(&state.mm, 1, user_id).await?;
+            assert_eq!(reports.len(), 1);
             Ok(())
         }
 
@@ -344,6 +350,11 @@ mod tests {
             let res = server.post(BASE_URI).form(&valid_preview_form()).await;
 
             res.assert_status_conflict();
+            assert_ws_message(
+                &mut ws_server,
+                r#"{"headers": {"HX-Trigger": "refreshReports"}}"#,
+            )
+            .await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe exists.","status":"alert-error","title":"Operation Failed"}}"#).await;
             Ok(())
         }

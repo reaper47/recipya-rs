@@ -140,9 +140,9 @@ impl SecondaryReportType<Import, Software> {
 impl<P, S> ReportTypeId for SecondaryReportType<P, S> {
     fn to_id(&self) -> i16 {
         match self.inner {
-            SecondaryInner::Api => 3,
-            SecondaryInner::Raw => 4,
-            SecondaryInner::Software => 5,
+            SecondaryInner::Api => 1,
+            SecondaryInner::Raw => 2,
+            SecondaryInner::Software => 3,
         }
     }
 }
@@ -279,24 +279,24 @@ impl TertiaryReportType<Import, Software> {
 impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
     fn to_id(&self) -> i16 {
         match self.inner {
-            TertiaryInner::Mealie => 6,
-            TertiaryInner::Nextcloud => 7,
-            TertiaryInner::Tandoor => 8,
-            TertiaryInner::Json => 9,
-            TertiaryInner::AccuChef => 10,
-            TertiaryInner::BigOven => 11,
-            TertiaryInner::ChefTap => 12,
-            TertiaryInner::Cooklang => 13,
-            TertiaryInner::CookMate => 14,
-            TertiaryInner::Crouton => 15,
-            TertiaryInner::Kalorio => 16,
-            TertiaryInner::MasterCook => 17,
-            TertiaryInner::MealMaster => 18,
-            TertiaryInner::Paprika => 19,
-            TertiaryInner::RecipeMD => 20,
-            TertiaryInner::RecipeSage => 21,
-            TertiaryInner::Rezkonv => 22,
-            TertiaryInner::Saffron => 23,
+            TertiaryInner::Mealie => 1,
+            TertiaryInner::Nextcloud => 2,
+            TertiaryInner::Tandoor => 3,
+            TertiaryInner::Json => 4,
+            TertiaryInner::AccuChef => 5,
+            TertiaryInner::BigOven => 6,
+            TertiaryInner::ChefTap => 7,
+            TertiaryInner::Cooklang => 8,
+            TertiaryInner::CookMate => 9,
+            TertiaryInner::Crouton => 10,
+            TertiaryInner::Kalorio => 11,
+            TertiaryInner::MasterCook => 12,
+            TertiaryInner::MealMaster => 13,
+            TertiaryInner::Paprika => 14,
+            TertiaryInner::RecipeMD => 15,
+            TertiaryInner::RecipeSage => 16,
+            TertiaryInner::Rezkonv => 17,
+            TertiaryInner::Saffron => 18,
         }
     }
 }
@@ -306,6 +306,17 @@ pub struct ReportTypeFull<Primary, Secondary> {
     pub primary: PrimaryReportType<Primary>,
     pub secondary: Option<SecondaryReportType<Primary, Secondary>>,
     pub tertiary: Option<TertiaryReportType<Primary, Secondary>>,
+}
+
+impl ReportTypeFull<Import, Raw> {
+    /// Creates a new raw import report type.
+    pub const fn raw(tertiary: TertiaryReportType<Import, Raw>) -> Self {
+        Self {
+            primary: PrimaryReportType::<Import>::new(),
+            secondary: Some(SecondaryReportType::<Import, Raw>::new()),
+            tertiary: Some(tertiary),
+        }
+    }
 }
 
 impl ReportTypeFull<Website, ()> {

@@ -1305,7 +1305,13 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
         };
 
         let items = Items::from(report_logs.as_slice());
-        let report = ReportForCreate::new(report_type, report_logs, items, user_id);
+        let report = ReportForCreate::new(
+            report_type,
+            report_logs,
+            items,
+            i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
+            user_id,
+        );
         broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
     });
 }
@@ -1563,7 +1569,13 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
         };
 
         let items = Items::from(report_logs.as_slice());
-        let report = ReportForCreate::new(report_type, report_logs, items, user_id);
+        let report = ReportForCreate::new(
+            report_type,
+            report_logs,
+            items,
+            i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
+            user_id,
+        );
         broadcast_import_done_toast(&state, successes, processed, report, api, user_id).await;
     });
 }
@@ -1622,7 +1634,7 @@ async fn broadcast_import_done_toast(
     .build();
 
     if let Ok(json) = serde_json::to_string(&toast) {
-        state.broadcast(user_id, Message::Text(json.into())).await;
+        state.broadcast(Message::Text(json.into()), user_id).await;
     }
 
     if let Err(err) = report.insert(&state.mm).await {
@@ -1710,37 +1722,100 @@ pub async fn add_recipe_import_raw_handler(
     State(state): State<AppState>,
     Form(form): Form<PreviewForm>,
 ) -> impl IntoResponse {
-    match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
+    let start_time = Instant::now();
+    let mut items = Items::default();
+
+    let (res, report_log) = match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
         Ok(schema) => {
             let recipe_c = RecipeForCreate::from(&schema);
+            let create_res = Recipe::create(&state.mm, user.id, &recipe_c).await;
+            let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default();
 
-            match Recipe::create(&state.mm, user.id, &recipe_c).await {
+            match create_res {
                 Ok(recipe_id) => {
                     let url = format!("/recipes/{recipe_id}");
+                    items.success += 1;
 
-                    HeaderValue::from_str(&url).map_or_else(
-                        |_| (StatusCode::BAD_REQUEST, "invalid redirect url").into_response(),
-                        |hv| (StatusCode::OK, [(HX_REDIRECT, hv)]).into_response(),
+                    (
+                        HeaderValue::from_str(&url).map_or_else(
+                            |_| (StatusCode::BAD_REQUEST, "invalid redirect url").into_response(),
+                            |hv| (StatusCode::OK, [(HX_REDIRECT, hv)]).into_response(),
+                        ),
+                        ReportLogForCreate::success(
+                            1,
+                            &recipe_c.name,
+                            Some(recipe_id),
+                            exec_time_ms,
+                        ),
                     )
                 }
-                Err(models::Error::DuplicateEntityWithID(_)) => {
+                Err(models::Error::DuplicateEntityWithID(id)) => {
+                    items.skipped += 1;
                     warn!("Recipe exists: {}", recipe_c.name);
                     broadcast_error(&state, user.id, "Recipe exists.").await;
-                    Error::EntityExists { entity: "recipe" }.into_response()
+                    (
+                        Error::EntityExists { entity: "recipe" }.into_response(),
+                        ReportLogForCreate::warning(
+                            1,
+                            &recipe_c.name,
+                            Some(id),
+                            "Recipe exists.",
+                            exec_time_ms,
+                        ),
+                    )
                 }
                 Err(err) => {
+                    items.failed += 1;
                     error!("Error saving recipe '{}': {err}", recipe_c.name);
                     broadcast_error(&state, user.id, "Failed to insert recipe.").await;
-                    Error::Database.into_response()
+                    (
+                        Error::Database.into_response(),
+                        ReportLogForCreate::error(
+                            1,
+                            &recipe_c.name,
+                            None,
+                            "ImportRawFail",
+                            "Failed to insert in database.",
+                            exec_time_ms,
+                        ),
+                    )
                 }
             }
         }
         Err(err) => {
+            items.failed += 1;
             error!("Error parsing recipe schema JSON: {err}");
             broadcast_error(&state, user.id, "Error parsing recipe schema JSON.").await;
-            Error::InvalidPayload.into_response()
+            (
+                Error::InvalidPayload.into_response(),
+                ReportLogForCreate::error(
+                    1,
+                    "Raw JSON",
+                    None,
+                    "ImportRawFail",
+                    "Failed to create a recipe from the JSON.",
+                    i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
+                ),
+            )
+        }
+    };
+
+    let report = ReportForCreate::new(
+        ReportTypeFull::raw(TertiaryReportType::json()),
+        vec![report_log],
+        items,
+        i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
+        user.id,
+    );
+
+    match report.insert(&state.mm).await {
+        Ok(()) => state.broadcast_trigger("refreshReports", user.id).await,
+        Err(err) => {
+            error!("Error inserting website report into the database: {err}");
         }
     }
+
+    res
 }
 
 /// Handles rendering the form to add a recipe manually.
@@ -1971,7 +2046,7 @@ impl FetchWebsiteContext {
         };
 
         if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(user_id, Message::Text(json.into())).await;
+            state.broadcast(Message::Text(json.into()), user_id).await;
         }
     }
 }
@@ -2007,6 +2082,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let (tx, mut rx) = mpsc::channel::<()>(num_websites);
         let fetch_ctx = FetchWebsiteContext::new(num_websites, user_id);
         let num_recipes = urls.len();
+        let total_exec_time = Instant::now();
 
         for (idx, url) in urls.into_iter().enumerate() {
             let tx = tx.clone();
@@ -2130,11 +2206,15 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
                 .expect("Report logs arc still has multiple owners")
                 .into_inner(),
             items,
+            i64::try_from(total_exec_time.elapsed().as_millis()).unwrap_or_default(),
             user_id,
         );
 
-        if let Err(err) = report.insert(&state.mm).await {
-            error!("Error inserting website report into the database: {err}");
+        match report.insert(&state.mm).await {
+            Ok(()) => state.broadcast_trigger("refreshReports", user_id).await,
+            Err(err) => {
+                error!("Error inserting website report into the database: {err}");
+            }
         }
     });
 }

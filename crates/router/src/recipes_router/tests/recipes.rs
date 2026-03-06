@@ -39,8 +39,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
         for i in 0..3 {
             let mut recipe = a_complete_recipe_for_create();
             recipe.name.push_str(i.to_string().as_str());
@@ -71,8 +70,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
         let mut recipe = a_complete_recipe_for_create();
         recipe.rating = None;
         let _ = Recipe::create(&state.mm, user_id, &recipe).await?;

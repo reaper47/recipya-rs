@@ -58,7 +58,7 @@ pub async fn change_password_post_handler(
             let toast = MessageWs::success("Your password has been updated.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(user.id, Message::Text(json.into())).await;
+                state.broadcast(Message::Text(json.into()), user.id).await;
             }
 
             (StatusCode::NO_CONTENT, "").into_response()
