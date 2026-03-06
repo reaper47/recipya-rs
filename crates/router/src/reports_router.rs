@@ -45,7 +45,7 @@ mod tests {
             assert_html(
                 &res,
                 vec![
-                    r#"<ul class="menu bg-base-100 w-full"></ul>"#,
+                    r#"<ul id="report-menu" class="menu block bg-base-100 w-full overflow-y-auto max-h-[89vh] h-full"></ul>"#,
                     r#"<p class="p-4">No reports found.</p>"#,
                 ],
             );

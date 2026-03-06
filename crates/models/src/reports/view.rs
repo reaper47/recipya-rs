@@ -209,6 +209,7 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     #[tokio::test]
+    #[allow(clippy::too_many_lines)]
     async fn test_fetch_reports_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
@@ -270,8 +271,9 @@ mod tests {
         reports[0].insert(&state.mm).await?;
         reports[1].insert(&state.mm).await?;
 
-        let got = ViewReport::fetch_all(&state.mm, 1, user.id).await?;
+        let mut got = ViewReport::fetch_all(&state.mm, 1, user.id).await?;
 
+        got.sort_by(|a, b| a.id.cmp(&b.id));
         pretty_assertions::assert_eq!(
             got,
             vec![

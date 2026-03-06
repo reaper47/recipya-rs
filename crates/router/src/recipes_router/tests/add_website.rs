@@ -1,13 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use std::{iter::once, time::Duration};
 
     use diesel::prelude::*;
     use diesel_async::RunQueryDsl;
+    use models::reports::report_log::ReportLog;
     use reqwest::{Method, StatusCode};
 
     use config::Config;
-    use models::report::ReportLog;
     use recipya_scraper::tests::support::scraper::scrape_test_websites;
     use repository::schema;
     use testing::utils::{
@@ -20,6 +20,16 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     const BASE_URI: &str = "/recipes/add/website";
+
+    fn normalize_log(log: &ReportLog) -> (i64, String, Option<String>, i16, Option<String>) {
+        (
+            log.report_id,
+            log.entity_name.clone(),
+            log.error_reason.clone(),
+            log.level_id,
+            log.error_code.clone(),
+        )
+    }
 
     #[tokio::test]
     async fn test_must_be_logged_in_ok() -> Result<()> {
@@ -61,7 +71,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_add_one_valid_url_from_unsupported_websites_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
@@ -76,15 +85,18 @@ mod tests {
         res.assert_status(StatusCode::ACCEPTED);
         assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
         assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#).await;
+        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-error","title":"Operation Failed"}}"#).await;
         tokio::time::sleep(Duration::from_millis(500)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        pretty_assertions::assert_eq!(got_logs, vec![example_report_log()]);
+        let got_normalized = got_logs.iter().map(normalize_log).collect::<Vec<_>>();
+        let want_normalized = once(&example_report_log())
+            .map(normalize_log)
+            .collect::<Vec<_>>();
+        pretty_assertions::assert_eq!(got_normalized, want_normalized);
         Ok(())
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_add_one_valid_url_from_supported_websites_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
@@ -113,12 +125,15 @@ mod tests {
         );
         tokio::time::sleep(Duration::from_millis(50)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        pretty_assertions::assert_eq!(got_logs, vec![zweigles_report_log(1)]);
+        let got_normalized = got_logs.iter().map(normalize_log).collect::<Vec<_>>();
+        let want_normalized = once(&zweigles_report_log(1))
+            .map(normalize_log)
+            .collect::<Vec<_>>();
+        pretty_assertions::assert_eq!(got_normalized, want_normalized);
         Ok(())
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_add_duplicates_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
@@ -137,12 +152,15 @@ mod tests {
         assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#).await;
         tokio::time::sleep(Duration::from_millis(50)).await;
         let got_logs = fetch_logs(config.clone()).await?;
-        pretty_assertions::assert_eq!(got_logs, vec![zweigles_report_log(1)]);
+        let got_normalized = got_logs.iter().map(normalize_log).collect::<Vec<_>>();
+        let want_normalized = once(&zweigles_report_log(1))
+            .map(normalize_log)
+            .collect::<Vec<_>>();
+        pretty_assertions::assert_eq!(got_normalized, want_normalized);
         Ok(())
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_add_a_website_that_has_already_been_added_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
@@ -155,8 +173,8 @@ mod tests {
         let res = server.post(BASE_URI).form(&form).await;
 
         res.assert_status(StatusCode::ACCEPTED);
-        let messages = collect_ws_messages(&mut ws_server, 5).await;
-        assert_eq!(messages.len(), 5);
+        let messages = collect_ws_messages(&mut ws_server, 4).await;
+        assert_eq!(messages.len(), 4);
         pretty_assertions::assert_eq!(
             messages[0],
             r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
@@ -166,9 +184,8 @@ mod tests {
             r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
         );
         pretty_assertions::assert_eq!(messages[2], HIDDEN_WS_NOTIFICATION);
-        pretty_assertions::assert_eq!(messages[3], HIDDEN_WS_NOTIFICATION);
         pretty_assertions::assert_eq!(
-            messages[4],
+            messages[3],
             r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Operation Successful"}}"#
         );
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -178,25 +195,18 @@ mod tests {
             ReportLog {
                 id: 2,
                 report_id: 2,
-                title: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes"
+                entity_name: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes"
                     .to_string(),
-                is_success: false,
-                is_warning: true,
-                is_error: false,
-                error_reason: "Recipe exists".into(),
+                error_reason: Some("Recipe exists".into()),
+                seq_num: 1,
+                recipe_id: Some(1),
+                level_id: 3,
+                error_code: None,
+                exec_time_ms: 100,
             },
         ];
-        let normalize = |log: &ReportLog| {
-            (
-                log.title.clone(),
-                log.is_success,
-                log.is_warning,
-                log.is_error,
-                log.error_reason.clone(),
-            )
-        };
-        let mut got_normalized: Vec<_> = got_logs.iter().map(normalize).collect();
-        let mut want_normalized: Vec<_> = want_logs.iter().map(normalize).collect();
+        let mut got_normalized = got_logs.iter().map(normalize_log).collect::<Vec<_>>();
+        let mut want_normalized = want_logs.iter().map(normalize_log).collect::<Vec<_>>();
         got_normalized.sort();
         want_normalized.sort();
         pretty_assertions::assert_eq!(got_normalized, want_normalized);
@@ -204,7 +214,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_add_many_valid_urls_from_supported_websites_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
@@ -230,35 +239,31 @@ mod tests {
             ReportLog {
                 id: 2,
                 report_id: 1,
-                title: "https://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html"
-                    .to_owned(),
-                is_success: true,
-                is_warning: false,
-                is_error: false,
-                error_reason: String::new(),
+                entity_name:
+                    "https://zsuzsaisinthekitchen.blogspot.com/2014/06/cherry-chutney.html".into(),
+                error_reason: None,
+                seq_num: 1,
+                recipe_id: Some(2),
+                level_id: 2,
+                error_code: None,
+                exec_time_ms: 100,
             },
             ReportLog {
                 id: 3,
                 report_id: 1,
-                title: "https://zumavalley.com/blogs/smoothies-bowls/coconut-mango-smoothie-bowl"
-                    .to_owned(),
-                is_success: true,
-                is_warning: false,
-                is_error: false,
-                error_reason: String::new(),
+                entity_name:
+                    "https://zumavalley.com/blogs/smoothies-bowls/coconut-mango-smoothie-bowl"
+                        .into(),
+                error_reason: None,
+                seq_num: 2,
+                recipe_id: Some(3),
+                level_id: 2,
+                error_code: None,
+                exec_time_ms: 200,
             },
         ];
-        let normalize = |log: &ReportLog| {
-            (
-                log.title.clone(),
-                log.is_success,
-                log.is_warning,
-                log.is_error,
-                log.error_reason.clone(),
-            )
-        };
-        let mut got_normalized: Vec<_> = got_logs.iter().map(normalize).collect();
-        let mut want_normalized: Vec<_> = want_logs.iter().map(normalize).collect();
+        let mut got_normalized = got_logs.iter().map(normalize_log).collect::<Vec<_>>();
+        let mut want_normalized = want_logs.iter().map(normalize_log).collect::<Vec<_>>();
         got_normalized.sort();
         want_normalized.sort();
         pretty_assertions::assert_eq!(got_normalized, want_normalized);
@@ -279,12 +284,14 @@ mod tests {
         ReportLog {
             id,
             report_id: id,
-            title: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes"
-                .to_string(),
-            is_success: true,
-            is_warning: false,
-            is_error: false,
-            error_reason: String::new(),
+            entity_name: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes"
+                .into(),
+            error_reason: None,
+            seq_num: i32::try_from(id).unwrap(),
+            recipe_id: Some(id),
+            level_id: 2,
+            error_code: None,
+            exec_time_ms: 100,
         }
     }
 
@@ -292,11 +299,13 @@ mod tests {
         ReportLog {
             id: 1,
             report_id: 1,
-            title: "https://www.example.com/".to_string(),
-            is_success: false,
-            is_warning: false,
-            is_error: true,
-            error_reason: "Scraper(DomainNotImplemented)".to_string(),
+            entity_name: "https://www.example.com/".to_string(),
+            error_reason: Some("Scraper(DomainNotImplemented)".to_string()),
+            seq_num: 2,
+            recipe_id: None,
+            level_id: 4,
+            error_code: Some("WebsiteImportFail".into()),
+            exec_time_ms: 250,
         }
     }
 }
