@@ -3,7 +3,7 @@ use std::path::Path;
 use tracing::warn;
 
 /// Represents the supported file formats for some applications.
-#[derive(Debug, Default, strum_macros::Display, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, strum_macros::Display, Eq, PartialEq)]
 pub enum FileFormat {
     Json,
     MCB,

@@ -265,6 +265,16 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    levels (id) {
+        id -> Int2,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     measurement_systems (id) {
         id -> Int2,
         name -> Text,
@@ -411,7 +421,27 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    report_types (id) {
+    report_types_primary (id) {
+        id -> Int2,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    report_types_secondary (id) {
+        id -> Int2,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    report_types_tertiary (id) {
         id -> Int2,
         name -> Text,
     }
@@ -423,9 +453,15 @@ diesel::table! {
 
     reports (id) {
         id -> Int8,
-        report_type_id -> Int2,
+        report_type_primary_id -> Int2,
+        report_type_secondary_id -> Nullable<Int2>,
+        report_type_tertiary_id -> Nullable<Int2>,
+        items_total -> Int4,
+        items_success -> Int4,
+        items_skipped -> Int4,
+        items_failed -> Int4,
         user_id -> Uuid,
-        exec_time_ms -> Int8,
+        total_exec_time_ms -> Int8,
         created_at -> Timestamptz,
     }
 }
@@ -436,12 +472,14 @@ diesel::table! {
 
     reports_logs (id) {
         id -> Int8,
+        seq_num -> Int4,
         report_id -> Int8,
-        title -> Text,
-        is_success -> Bool,
-        is_warning -> Bool,
-        is_error -> Bool,
-        error_reason -> Text,
+        entity_name -> Text,
+        recipe_id -> Nullable<Int8>,
+        level_id -> Int2,
+        error_code -> Nullable<Text>,
+        error_reason -> Nullable<Text>,
+        exec_time_ms -> Int8,
     }
 }
 
@@ -644,8 +682,12 @@ diesel::joinable!(recipe_timelines -> users (user_id));
 diesel::joinable!(recipes -> measurement_systems (measurement_system_id));
 diesel::joinable!(recipes -> users (user_id));
 diesel::joinable!(refresh_tokens -> users (user_id));
-diesel::joinable!(reports -> report_types (report_type_id));
+diesel::joinable!(reports -> report_types_primary (report_type_primary_id));
+diesel::joinable!(reports -> report_types_secondary (report_type_secondary_id));
+diesel::joinable!(reports -> report_types_tertiary (report_type_tertiary_id));
 diesel::joinable!(reports -> users (user_id));
+diesel::joinable!(reports_logs -> levels (level_id));
+diesel::joinable!(reports_logs -> recipes (recipe_id));
 diesel::joinable!(reports_logs -> reports (report_id));
 diesel::joinable!(shares_cookbooks -> cookbooks (cookbook_id));
 diesel::joinable!(shares_cookbooks -> users (user_id));
@@ -689,6 +731,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     instructions_recipes,
     keywords,
     keywords_recipes,
+    levels,
     measurement_systems,
     nutrition,
     nutrition_per_100g,
@@ -698,7 +741,9 @@ diesel::allow_tables_to_appear_in_same_query!(
     recipe_timelines,
     recipes,
     refresh_tokens,
-    report_types,
+    report_types_primary,
+    report_types_secondary,
+    report_types_tertiary,
     reports,
     reports_logs,
     sections,

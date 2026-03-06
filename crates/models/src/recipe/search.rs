@@ -15,6 +15,8 @@ use crate::recipe::get::fetch_recipe_details;
 use crate::recipe::structs::time::Times;
 use crate::{Error, Recipe, RecipeDetails, Result};
 
+const DEFAULT_RECIPES_PER_PAGE: i64 = 15;
+
 pub struct RecipeSearch {
     filters: SearchFilters,
     page: i64,
@@ -117,10 +119,8 @@ impl RecipeSearch {
                 .order_by((id, ts_rank(fts_combined, ts_query).desc()));
         }
 
-        let page = if self.page < 1 { 1 } else { self.page };
-
         let fetched_recipes = query
-            .paginate(page)
+            .paginate(self.page.max(1), DEFAULT_RECIPES_PER_PAGE)
             .load::<(Recipe, String, Option<String>, Option<String>, Times)>(&mut conn)
             .await?;
 

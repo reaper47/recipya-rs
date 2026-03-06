@@ -66,6 +66,12 @@ impl AppState {
         self.broadcast_progress("", -1, -1, false, user_id).await;
     }
 
+    /// Sends an HX-Trigger event over the websocket.
+    pub async fn broadcast_trigger(&self, event: &str, user_id: Uuid) {
+        let message = format!(r#"{{"headers": {{"HX-Trigger": "{event}"}}}}"#);
+        self.broadcast(Message::Text(message.into()), user_id).await;
+    }
+
     /// Broadcasts a progress notification.
     #[allow(clippy::cast_precision_loss)]
     pub async fn broadcast_progress(
@@ -101,11 +107,11 @@ impl AppState {
             if is_notification_visible { "" } else { "hidden" }
         ).lines().map(str::trim).collect::<Vec<_>>().join("");
 
-        self.broadcast(user_id, Message::Text(content.into())).await;
+        self.broadcast(Message::Text(content.into()), user_id).await;
     }
 
     /// Broadcasts a message to all active WebSocket subscribers of a given user.
-    pub async fn broadcast(&self, user_id: Uuid, message: Message) {
+    pub async fn broadcast(&self, message: Message, user_id: Uuid) {
         use std::time::Duration;
         use tokio::time::timeout;
 

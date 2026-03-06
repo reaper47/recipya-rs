@@ -1,9 +1,8 @@
 use iso8601::DateTime;
 
-use repository::extensions::pagination::DEFAULT_PER_PAGE;
-
 use crate::RecipeDetails;
 use crate::params::SearchParams;
+use crate::reports::ViewReport;
 use crate::time::FormattedTimes;
 
 /// Data holds data to pass on to the templates.
@@ -21,6 +20,7 @@ pub struct Data {
     pub searchbar: Option<SearchbarData>,
     pub share: Option<ShareData>,
     pub recipes: Vec<ViewRecipe>,
+    pub reports: Option<ReportsData>,
 }
 
 /// Creates a new instance of `AboutData`.
@@ -56,6 +56,9 @@ pub struct PaginationData {
     pub results_per_page: u64,
     pub url: String,
     pub url_queries: String,
+
+    pub id: String,
+    pub additional_css: Option<String>,
 }
 
 impl PaginationData {
@@ -103,17 +106,31 @@ impl PaginationData {
             page = 1;
         }
 
-        Self::new("/recipes", queries, page, num_recipes.cast_unsigned(), htmx)
+        Self::new(
+            "pagination-recipes",
+            "/recipes",
+            queries,
+            page,
+            num_recipes.cast_unsigned(),
+            15,
+            htmx,
+            None,
+        )
     }
 
-    fn new(
+    /// Creates a struct with calculated pagination data.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        id: &str,
         base_url: &str,
         url_queries: String,
         current_page: u64,
         num_results: u64,
+        results_per_page: u64,
         htmx: PaginationHtmxData,
+        additional_css: Option<&str>,
     ) -> Self {
-        let num_pages = std::cmp::max(1, num_results.div_ceil(DEFAULT_PER_PAGE as u64));
+        let num_pages = std::cmp::max(1, num_results.div_ceil(results_per_page));
 
         let selected = if num_results < (current_page - 1) * 15 {
             1
@@ -138,6 +155,8 @@ impl PaginationData {
             results_per_page: 15,
             url: base_url.to_string(),
             url_queries,
+            id: id.to_string(),
+            additional_css: additional_css.map(ToString::to_string),
         }
     }
 }
@@ -172,6 +191,14 @@ fn page_slots(curr: u64, total: u64) -> Vec<PageSlot> {
     }
 
     slots
+}
+
+/// Holds data related to the reports.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct ReportsData {
+    pub reports: Vec<ViewReport>,
+    pub selected: Option<ViewReport>,
+    pub page: i64,
 }
 
 /// Holds data related to the searchbar.
@@ -319,17 +346,23 @@ mod tests {
     mod tests_pagination {
         use crate::data::{PageSlot, PaginationData, PaginationHtmxData, PaginationSearchData};
 
+        const RESULTS_PER_PAGE: u64 = 15;
+        const ID: &str = "pagination-recipes";
+
         #[test]
         fn test_pagination_new_some_results_ok() {
             let got = PaginationData::new(
+                ID,
                 "/recipes",
                 String::new(),
                 1,
                 20,
+                RESULTS_PER_PAGE,
                 PaginationHtmxData {
                     is_swap: false,
                     target: "#content".into(),
                 },
+                None,
             );
 
             pretty_assertions::assert_eq!(
@@ -349,7 +382,9 @@ mod tests {
                     num_results: 20,
                     results_per_page: 15,
                     url: "/recipes".into(),
-                    url_queries: String::new()
+                    url_queries: String::new(),
+                    id: ID.to_string(),
+                    additional_css: None,
                 }
             );
         }
@@ -357,14 +392,17 @@ mod tests {
         #[test]
         fn test_pagination_new_no_results_ok() {
             let got = PaginationData::new(
+                ID,
                 "/recipes",
                 String::new(),
                 2,
                 12,
+                RESULTS_PER_PAGE,
                 PaginationHtmxData {
                     is_swap: false,
                     target: "#content".into(),
                 },
+                None,
             );
 
             pretty_assertions::assert_eq!(
@@ -384,7 +422,9 @@ mod tests {
                     num_results: 12,
                     results_per_page: 15,
                     url: "/recipes".into(),
-                    url_queries: String::new()
+                    url_queries: String::new(),
+                    id: ID.to_string(),
+                    additional_css: None,
                 }
             );
         }
@@ -392,14 +432,17 @@ mod tests {
         #[test]
         fn test_pagination_new_hundreds_results_left_ok() {
             let got = PaginationData::new(
+                ID,
                 "/recipes",
                 String::new(),
                 4,
                 258,
+                RESULTS_PER_PAGE,
                 PaginationHtmxData {
                     is_swap: false,
                     target: "#content".into(),
                 },
+                None,
             );
 
             pretty_assertions::assert_eq!(
@@ -427,7 +470,9 @@ mod tests {
                     num_results: 258,
                     results_per_page: 15,
                     url: "/recipes".into(),
-                    url_queries: String::new()
+                    url_queries: String::new(),
+                    id: ID.to_string(),
+                    additional_css: None,
                 }
             );
         }
@@ -435,14 +480,17 @@ mod tests {
         #[test]
         fn test_pagination_new_hundreds_results_middle_ok() {
             let got = PaginationData::new(
+                ID,
                 "/recipes",
                 String::new(),
                 11,
                 258,
+                RESULTS_PER_PAGE,
                 PaginationHtmxData {
                     is_swap: false,
                     target: "#content".into(),
                 },
+                None,
             );
 
             pretty_assertions::assert_eq!(
@@ -470,7 +518,9 @@ mod tests {
                     num_results: 258,
                     results_per_page: 15,
                     url: "/recipes".into(),
-                    url_queries: String::new()
+                    url_queries: String::new(),
+                    id: ID.to_string(),
+                    additional_css: None,
                 }
             );
         }
@@ -478,14 +528,17 @@ mod tests {
         #[test]
         fn test_pagination_new_hundreds_results_right_ok() {
             let got = PaginationData::new(
+                ID,
                 "/recipes",
                 String::new(),
                 16,
                 258,
+                RESULTS_PER_PAGE,
                 PaginationHtmxData {
                     is_swap: false,
                     target: "#content".into(),
                 },
+                None,
             );
 
             pretty_assertions::assert_eq!(
@@ -513,7 +566,9 @@ mod tests {
                     num_results: 258,
                     results_per_page: 15,
                     url: "/recipes".into(),
-                    url_queries: String::new()
+                    url_queries: String::new(),
+                    id: ID.to_string(),
+                    additional_css: None,
                 }
             );
         }
@@ -521,14 +576,17 @@ mod tests {
         #[test]
         fn test_pagination_new_hundreds_results_last_page_ok() {
             let got = PaginationData::new(
+                ID,
                 "/recipes",
                 String::new(),
                 18,
                 258,
+                RESULTS_PER_PAGE,
                 PaginationHtmxData {
                     is_swap: false,
                     target: "#content".into(),
                 },
+                None,
             );
 
             pretty_assertions::assert_eq!(
@@ -556,7 +614,9 @@ mod tests {
                     num_results: 258,
                     results_per_page: 15,
                     url: "/recipes".into(),
-                    url_queries: String::new()
+                    url_queries: String::new(),
+                    id: ID.to_string(),
+                    additional_css: None,
                 }
             );
         }
@@ -564,14 +624,17 @@ mod tests {
         #[test]
         fn test_pagination_thousands_results_last_page_ok() {
             let got = PaginationData::new(
+                ID,
                 "/recipes",
                 String::new(),
                 193,
                 2888,
+                RESULTS_PER_PAGE,
                 PaginationHtmxData {
                     is_swap: false,
                     target: "#content".into(),
                 },
+                None,
             );
 
             pretty_assertions::assert_eq!(
@@ -599,7 +662,9 @@ mod tests {
                     num_results: 2888,
                     results_per_page: 15,
                     url: "/recipes".into(),
-                    url_queries: String::new()
+                    url_queries: String::new(),
+                    id: ID.to_string(),
+                    additional_css: None,
                 }
             );
         }

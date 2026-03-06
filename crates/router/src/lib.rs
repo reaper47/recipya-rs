@@ -6,6 +6,7 @@ mod error;
 mod general_router;
 mod handlers;
 mod recipes_router;
+mod reports_router;
 mod schemas;
 mod settings_router;
 mod shared_router;
@@ -24,6 +25,7 @@ use crate::admin_router::admin_routes;
 use crate::auth_router::auth_routes;
 use crate::general_router::general_routes;
 use crate::recipes_router::recipes_routes;
+use crate::reports_router::reports_router;
 use crate::shared_router::shared_routes;
 use crate::static_files_router::static_files_routes;
 
@@ -32,7 +34,8 @@ pub fn router(state: AppState) -> Result<Router<AppState>> {
     let router = Router::new()
         .nest("/admin", admin_routes(&state))
         .nest("/auth", auth_routes(&state))
-        .nest("/recipes", recipes_routes(state.clone()))
+        .nest("/recipes", recipes_routes(&state))
+        .nest("/reports", reports_router(&state))
         .nest("/settings", settings_router::settings_routes(&state))
         .nest("/shared", shared_routes())
         .merge(general_routes(&state))

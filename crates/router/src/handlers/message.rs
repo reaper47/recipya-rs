@@ -220,7 +220,7 @@ pub fn add_hx_message(res: &mut Response<Body>, message: &MessageHtmx) {
 pub async fn broadcast_success(state: &AppState, user_id: Uuid, message: &str) {
     let toast = MessageHtmx::success(message);
     if let Ok(json) = serde_json::to_string(&toast) {
-        state.broadcast(user_id, Message::Text(json.into())).await;
+        state.broadcast(Message::Text(json.into()), user_id).await;
     }
 }
 
@@ -228,7 +228,7 @@ pub async fn broadcast_success(state: &AppState, user_id: Uuid, message: &str) {
 pub async fn broadcast_error(state: &AppState, user_id: Uuid, message: &str) {
     let toast = MessageHtmx::error(message);
     if let Ok(json) = serde_json::to_string(&toast) {
-        state.broadcast(user_id, Message::Text(json.into())).await;
+        state.broadcast(Message::Text(json.into()), user_id).await;
     }
 }
 
@@ -236,6 +236,6 @@ pub async fn broadcast_error(state: &AppState, user_id: Uuid, message: &str) {
 pub async fn broadcast_warning(state: &AppState, user_id: Uuid, message: &str) {
     let toast = MessageHtmx::warning(message);
     if let Ok(json) = serde_json::to_string(&toast) {
-        state.broadcast(user_id, Message::Text(json.into())).await;
+        state.broadcast(Message::Text(json.into()), user_id).await;
     }
 }

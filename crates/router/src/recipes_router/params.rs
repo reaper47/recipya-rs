@@ -6,17 +6,17 @@ use std::str::FromStr;
 use axum::extract::multipart::{InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
 use chrono::{NaiveDate, NaiveDateTime};
-use integrations::api::Api;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 use uuid::Uuid;
 
+use integrations::api::Api;
 use integrations::{App, FileFormat, parse_recipe};
 use models::recipe::{save_media_field, text_trim};
 use schema_org::Recipe;
 
 /// Represents the content of the "Add Recipe -> Import -> Software" form.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct ImportFromAppForm {
     pub file_data: Vec<u8>,
     pub file_name: String,

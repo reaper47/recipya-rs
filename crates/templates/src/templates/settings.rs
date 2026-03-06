@@ -982,7 +982,7 @@ fn render_shortcuts_table(title: &str, shortcuts: Vec<(Vec<&str>, &str)>) -> Mar
                     tbody {
                         @for (keys, description) in shortcuts {
                             tr {
-                                td {
+                                td class="w-48" {
                                     @for (idx, key) in keys.iter().enumerate() {
                                         kbd class="kbd" { (key) }
                                         @if idx != keys.len() - 1 {

@@ -434,14 +434,13 @@ pub(super) fn render_media_editor(image_num: usize, image_src: &str) -> Markup {
 
                     div class="divider" { "OR" }
                     span class="hidden input-error" {}
-                    div class="flex join" {
-                       div class="w-full" {
-                            input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
-                       }
-                       button type="button" class="btn btn-sm join-item" hx-get="/fetch" hx-vals="js:{url: event.target.previousElementSibling.value}" hx-swap="none" _="on htmx:afterRequest
+                    div class="justify-center flex join" {
+                        input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
+                        button type="button" class="btn btn-sm join-item" hx-get="/fetch" hx-vals="js:{url: event.target.previousElementSibling.value}" hx-swap="none" _="on htmx:afterRequest
                           if event.detail.successful then
-                          set a to first in event.target.parentElement.parentElement.children then
-                          call updateMediaFromFetch(a, event.detail.xhr.responseURL)
+                            set a to first in event.target.parentElement.parentElement.children then
+                            call updateMediaFromFetch(a, event.detail.xhr.responseURL)
+                            set the value of the previous <input/> to ''
                           end" { "Fetch" }
                     }
                     div _="on load if not navigator.clipboard hide me" {

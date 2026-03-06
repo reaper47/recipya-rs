@@ -59,7 +59,6 @@ diesel-async.workspace = true
 image = "0.25.9"
 jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
-serial_test = "3.3.1"
 testing.workspace = true
 time.workspace = true
 tokio.workspace = true
