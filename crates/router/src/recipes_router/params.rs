@@ -66,7 +66,7 @@ where
                         .file_name()
                         .map(ToString::to_string)
                         .ok_or_else(InvalidBoundary::default)?;
-                    form.file_name = filename.clone();
+                    form.file_name.clone_from(&filename);
 
                     form.file_data = field
                         .bytes()

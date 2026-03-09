@@ -2962,7 +2962,7 @@ dependencies = [
 
 [[package]]
 name = "models"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "app",
  "async-trait",
@@ -5082,7 +5082,7 @@ dependencies = [
 
 [[package]]
 name = "templates"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "config",
  "humantime",

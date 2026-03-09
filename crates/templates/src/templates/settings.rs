@@ -896,7 +896,7 @@ fn settings_about(data: &Data) -> Markup {
                             "Recipya Version"
                         }
                         p class="text-sm mt-2" {
-                            "v" (data.about.version)
+                            "v" (env!("CARGO_PKG_VERSION"))
                             @if data.about.is_update_available {
                                 " (update available)"
                             } @else {

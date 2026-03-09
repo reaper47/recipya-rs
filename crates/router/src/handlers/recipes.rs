@@ -157,13 +157,7 @@ pub async fn recipes_handler(
             is_hx_request: is_hx_request(&headers),
             // TODO: Populate AboutData with good values.
             is_preview: false,
-            about: AboutData {
-                is_update_available: false,
-                is_check_update: false,
-                last_checked_update_at: DateTime::default(),
-                last_updated_at: DateTime::default(),
-                version: String::new(),
-            },
+            about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
                 num_recipes,
@@ -1676,7 +1670,6 @@ pub async fn add_recipe_import_preview_handler(
                         is_check_update: false,
                         last_checked_update_at: DateTime::default(),
                         last_updated_at: DateTime::default(),
-                        version: String::new(),
                     },
                     pagination: Some(PaginationData::hidden()),
                     searchbar: Some(SearchbarData {
@@ -2442,13 +2435,7 @@ pub async fn view_recipe_handler(
             is_autologin,
             is_hx_request: is_hx_request(&header_map),
             is_preview: false,
-            about: AboutData {
-                is_update_available: false,
-                is_check_update: false,
-                last_checked_update_at: DateTime::default(),
-                last_updated_at: DateTime::default(),
-                version: String::new(),
-            },
+            about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::hidden()),
             searchbar: Some(SearchbarData {
                 is_favourites: false,
@@ -2535,13 +2522,7 @@ pub async fn search_recipes_handler(
             is_hx_request: is_hx_request(&headers),
             // TODO: Populate AboutData with good values.
             is_preview: false,
-            about: AboutData {
-                is_update_available: false,
-                is_check_update: false,
-                last_checked_update_at: DateTime::default(),
-                last_updated_at: DateTime::default(),
-                version: String::new(),
-            },
+            about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
                 recipes.len().try_into().unwrap_or(i64::MAX),

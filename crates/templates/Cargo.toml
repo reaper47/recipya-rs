@@ -1,6 +1,6 @@
 [package]
 name = "templates"
-version = "0.0.0"
+version.workspace = true
 authors.workspace = true
 categories.workspace = true
 description.workspace = true
