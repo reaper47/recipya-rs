@@ -3,7 +3,7 @@ services:
     container_name: recipya
     restart: unless-stopped
     image: reaper99/recipya-rs:nightly
-    env_file: ../.env
+    env_file: ./.env
     ports:
       - "8078:8078"
     volumes:

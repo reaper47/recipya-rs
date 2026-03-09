@@ -34,7 +34,7 @@ pub struct AboutData {
 
 impl AboutData {
     /// Creates a new instance of `AboutData`.
-    pub fn new(
+    pub const fn new(
         is_update_available: bool,
         is_check_update: bool,
         last_checked_update_at: DateTime,
