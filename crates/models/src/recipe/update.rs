@@ -33,16 +33,16 @@ impl Recipe {
 
         let mut recipe = old_recipe.recipe;
         if recipe.name != new_recipe.name {
-            recipe.name = new_recipe.name.clone();
+            recipe.name.clone_from(&new_recipe.name);
         }
         if recipe.description != new_recipe.description {
-            recipe.description = new_recipe.description.clone();
+            recipe.description.clone_from(&new_recipe.description);
         }
         if recipe.image != main_image {
             recipe.image = main_image;
         }
         if recipe.notes != new_recipe.notes {
-            recipe.notes = new_recipe.notes.clone();
+            recipe.notes.clone_from(&new_recipe.notes);
         }
         if let Some(n) = new_recipe.r#yield
             && recipe.r#yield != n
