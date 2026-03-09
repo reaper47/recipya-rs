@@ -1,6 +1,6 @@
 [package]
 name = "recipya-cli"
-version = "0.1.0"
+version.workspace = true
 publish = true
 
 authors.workspace = true

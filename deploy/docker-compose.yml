@@ -2,13 +2,12 @@ services:
   recipya-app:
     container_name: recipya
     restart: unless-stopped
-    image: reaper99/recipya-rs
-    environment:
-      - RUST_LOG="debug,tokio_cron_scheduler=off,reqwest=warn,hyper=warn"
-      - DATABASE_URL=postgres://postgres:postgres@recipya-db:5432
-      - RECIPYA_BASE_URL=http://0.0.0.0:8078
+    image: reaper99/recipya-rs:nightly
+    env_file: ../.env
     ports:
       - "8078:8078"
+    volumes:
+      - recipya-data:/home/nonroot/.local/share/Recipya
     depends_on:
       recipya-db:
         condition: service_healthy
@@ -16,13 +15,13 @@ services:
   recipya-db:
     container_name: recipya-rs-db
     restart: unless-stopped
-    image: recipya-rs-db
+    image: reaper99/recipya-rs-db:nightly
     environment:
       POSTGRES_DB: recipya
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - recipya-rs-db:/var/lib/postgresql/data
+      - recipya-rs-db:/var/lib/postgresql
     ports:
       - "9000:5432"
     healthcheck:
@@ -33,3 +32,4 @@ services:
 
 volumes:
   recipya-rs-db:
+  recipya-data:

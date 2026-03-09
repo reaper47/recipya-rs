@@ -79,13 +79,7 @@ pub async fn settings_handler(
             is_autologin: config.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             // TODO: Populate AboutData with good values.
-            about: AboutData {
-                is_update_available: false,
-                is_check_update: false,
-                last_checked_update_at: DateTime::default(),
-                last_updated_at: DateTime::default(),
-                version: String::new(),
-            },
+            about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             ..Default::default()
         },
         users,

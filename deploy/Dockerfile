@@ -1,5 +1,5 @@
 # ---------------------------------------------------
-# 1 - Build Stage
+# 1. Build Stage
 # ---------------------------------------------------
 FROM rust:1.93 AS builder
 
@@ -18,48 +18,37 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/recipya
-
 ENV CC=clang
 ENV CXX=clang++
 ENV OPENSSL_NO_VENDOR=1
 
 COPY . .
-
 RUN cargo build -r --locked
-
-RUN mkdir -p /runtime-deps/usr/bin /runtime-deps/usr/lib /runtime-deps/lib
-
-RUN cp /usr/bin/ffmpeg /usr/bin/ffprobe /runtime-deps/usr/bin/ && \
-    lddtree -l /usr/bin/ffmpeg /usr/bin/ffprobe | \
-    grep -v '^(' | \
-    xargs -I '{}' cp -L --parents '{}' /runtime-deps/ 2>/dev/null || true
-
-RUN find /usr/lib/${ARCH}-linux-gnu /lib/${ARCH}-linux-gnu -name "libpq.so*" -o \
-    -name "libssl.so*" -o -name "libcrypto.so*" -o -name "libgssapi_krb5.so*" -o \
-    -name "libldap*.so*" -o -name "libkrb5*.so*" -o -name "libk5crypto.so*" -o \
-    -name "libsasl2.so*" -o -name "libgnutls.so*" -o -name "libcom_err.so*" -o \
-    -name "libkeyutils.so*" | \
-    xargs -I '{}' cp -L '{}' /runtime-deps/usr/lib/ 2>/dev/null || true
-
 RUN cp /usr/src/recipya/target/release/recipya-cli /usr/local/bin/recipya-cli
 
 # ---------------------------------------------------
-# 2 - Deploy Stage
+# 2. Deploy Stage
 # ---------------------------------------------------
-FROM gcr.io/distroless/cc-debian12
+FROM debian:trixie-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    libssl3 \
+    libpq5 \
+    libgssapi-krb5-2 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 LABEL org.opencontainers.image.source="https://github.com/reaper47/recipya-rs" \
     org.opencontainers.image.description="A clean, simple and powerful recipe manager your whole family will enjoy." \
     org.opencontainers.image.licenses="AGPL-3.0"
 
-# Copy runtime dependencies
-COPY --from=builder /runtime-deps/usr /usr
-COPY --from=builder /runtime-deps/lib /lib
-
-# Copy application files
 COPY --from=builder /usr/local/bin/recipya-cli /usr/local/bin/recipya
 
-USER nonroot:nonroot
-EXPOSE 8078
+RUN useradd -r -u 65532 -s /bin/false recipya && \
+    mkdir -p /home/recipya/.local/share/Recipya && \
+    chown -R recipya:recipya /home/recipya
+USER recipya:recipya
 
+EXPOSE 8078
 CMD ["/usr/local/bin/recipya", "server"]

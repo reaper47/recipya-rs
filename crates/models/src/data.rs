@@ -30,7 +30,23 @@ pub struct AboutData {
     pub is_check_update: bool,
     pub last_checked_update_at: DateTime,
     pub last_updated_at: DateTime,
-    pub version: String,
+}
+
+impl AboutData {
+    /// Creates a new instance of `AboutData`.
+    pub fn new(
+        is_update_available: bool,
+        is_check_update: bool,
+        last_checked_update_at: DateTime,
+        last_updated_at: DateTime,
+    ) -> Self {
+        Self {
+            is_update_available,
+            is_check_update,
+            last_checked_update_at,
+            last_updated_at,
+        }
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
