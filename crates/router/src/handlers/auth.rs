@@ -457,8 +457,8 @@ pub async fn register_post_handler(
                 .field_errors()
                 .values()
                 .flat_map(|errors| errors.iter())
-                .filter_map(|e| e.message.as_ref())
-                .map(|m| m.to_string())
+                .filter_map(|err| err.message.as_ref())
+                .map(ToString::to_string)
                 .next()
                 .unwrap_or_else(|| "Validation error".to_string());
 
