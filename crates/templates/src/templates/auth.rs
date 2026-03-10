@@ -70,10 +70,18 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
     layouts::auth(
         "Login",
         &html! {
-            form class="card w-80 sm:w-96 bg-base-100 shadow-xl" method="post" action="/auth/login" {
+            form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login" {
                 div class="card-body" {
-                    h2 class="card-title underline self-center" {
-                        "Log In"
+                    div class="chat chat-end" {
+                      div class="chat-image avatar" {
+                        div class="w-10 rounded-full" {
+                          img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png";
+                        }
+                      }
+                      div class="chat-bubble" { "The stove is hot. Shall we cook?" }
+                    }
+                    h2 class="card-title self-center underline" {
+                        "Log in to Recipya"
                     }
                     fieldset class="fieldset" {
                         label class="label" for="email" { "Email" }
@@ -86,25 +94,23 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                                 "Forgot your password?"
                             }
                         }
-                        input #password type="password" required placeholder="Enter your password" class="input" name="password" value=@if is_demo { "demo" };
+                        input #password type="password" required placeholder="Enter your password" class="input" name="password" value=@if is_demo { "demodemo" };
                     }
                     label class="fieldset-label py-2" {
-                      input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked";
-                      "Remember me"
+                        input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked";
+                        "Remember me"
                     }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {
-                            "Log In"
+                            "Login"
                         }
                     }
-                    div class="grid place-content-center text-center gap-2" {
+                    div class="grid text-center gap-2" {
                         @if !is_no_signups {
                             div {
-                                p class="text-center" {
-                                    "Don't have an account?"
-                                }
+                                div class="divider" { "OR" }
                                 a class="btn btn-sm btn-block btn-outline" href="/auth/register" {
-                                    "Sign Up"
+                                    "Create an account"
                                 }
                             }
                         }
@@ -120,10 +126,18 @@ pub fn register() -> Markup {
     layouts::auth(
         "Register",
         &html! {
-             form class="card w-80 sm:w-96 bg-base-100 shadow-xl" action="/auth/register" method="post" {
+             form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/register" {
                 div class="card-body" {
+                    div class="chat chat-end" {
+                      div class="chat-image avatar" {
+                        div class="w-10 rounded-full" {
+                          img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png";
+                        }
+                      }
+                      div class="chat-bubble" { "Your culinary journey starts here!" }
+                    }
                     h2 class="card-title underline self-center" {
-                        "Create your Account"
+                        "Create your account"
                     }
                     fieldset class="fieldset" {
                         label class="label" for="email" { "Email" }
@@ -142,13 +156,13 @@ pub fn register() -> Markup {
                             "Sign Up"
                         }
                     }
-                    div class="grid place-content-center text-center gap-2" {
+                    div class="grid place-content-center text-center gap-2 pt-1" {
                         div {
                             p class="text-center" {
                                 "Already have an account?"
                             }
                             a class="btn btn-sm btn-block btn-outline" href="/auth/login" {
-                                "Log In"
+                                "Log in"
                             }
                         }
                     }
