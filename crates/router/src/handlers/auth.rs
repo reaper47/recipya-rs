@@ -394,7 +394,11 @@ pub async fn login_post_handler(
         state.config.read().await.is_production,
     );
 
-    (StatusCode::OK, [("HX-Redirect", "/recipes")]).into_response()
+    (
+        StatusCode::SEE_OTHER,
+        [("HX-Redirect", "/recipes"), ("Location", "/recipes")],
+    )
+        .into_response()
 }
 
 /// Handles a user logging out.
