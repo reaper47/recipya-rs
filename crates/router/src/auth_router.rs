@@ -530,12 +530,13 @@ mod tests {
             assert_html(
                 &res,
                 vec![
-                    r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" method="post" action="/auth/login"><div class="card-body">"#,
-                    r#"<h2 class="card-title underline self-center">Log In</h2>"#,
+                    r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login">"#,
+                    r#"<div class="card-body"><div class="chat chat-end"><div class="chat-image avatar"><div class="w-10 rounded-full"><img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png"></div></div><div class="chat-bubble">The stove is hot. Shall we cook?</div></div>"#,
+                    r#"<h2 class="card-title self-center underline">Log in to Recipya</h2>"#,
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value=""></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value=""></fieldset>"#,
                     r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
-                    r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log In</button></div><div class="grid place-content-center text-center gap-2"><div><p class="text-center">Don't have an account?</p><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a></div></div>"#,
+                    r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Login</button></div><div class="grid text-center gap-2"><div><div class="divider">OR</div><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Create an account</a></div></div>"#,
                 ],
             );
             Ok(())
@@ -557,7 +558,7 @@ mod tests {
                 &res,
                 vec![
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value="demo@demo.com"></fieldset>"#,
-                    r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demo"></fieldset>"#,
+                    r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demodemo"></fieldset>"#,
                     r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
                 ],
             );
@@ -628,7 +629,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("Location", "/");
+            res.assert_header("Location", "/recipes");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
             let now =
@@ -710,7 +711,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("Location", "/");
+            res.assert_header("Location", "/recipes");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
             let now =

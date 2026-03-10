@@ -52,7 +52,7 @@ impl Config {
             database_url,
             is_autologin: get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true",
             is_demo: get_env_on_load("RECIPYA_IS_DEMO")? == "true",
-            is_no_signups: get_env_on_load("RECIPYA_IS_ALLOW_SIGNUPS")? == "true",
+            is_no_signups: get_env_on_load("RECIPYA_IS_ALLOW_SIGNUPS")? == "false",
             is_production: get_env_on_load("RECIPYA_IS_PRODUCTION")? == "true",
         })
     }

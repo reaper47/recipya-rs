@@ -33,7 +33,9 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv().ok();
+    if let Err(err) = dotenv() {
+        panic!("Failed to load .env: {err:?}")
+    }
     init_crypto();
     init_tracing()?;
 

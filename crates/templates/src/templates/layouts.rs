@@ -1,24 +1,30 @@
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 
+use models::data::Data;
+use models::settings::UserSettingDetails;
+
 use super::core::{head, toast, toast_ws};
 use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
 };
 use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
-use models::data::Data;
-use models::settings::UserSettingDetails;
 
 /// Renders the authentication layout template.
 pub fn auth(title: &str, content: &Markup) -> Markup {
     html! {
         (DOCTYPE)
-        html lang="en" class="h-full bg-indigo-100 dark:bg-gray-800" {
+        html lang="en" class="h-full dark:bg-gray-900" {
             (head(title))
             body .h-full.grid.place-content-center {
                 (content)
             }
             (toast())
+            script {
+                "window.addEventListener('load', function() {
+                    initTheme('system', 'system');
+                });"
+            }
         }
     }
 }

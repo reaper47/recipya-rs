@@ -7,7 +7,7 @@ services:
     ports:
       - "8078:8078"
     volumes:
-      - recipya-data:/home/nonroot/.local/share/Recipya
+      - recipya-data:/home/recipya/.local/share/Recipya
     depends_on:
       recipya-db:
         condition: service_healthy
@@ -23,7 +23,7 @@ services:
     volumes:
       - recipya-rs-db:/var/lib/postgresql
     ports:
-      - "9000:5432"
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s

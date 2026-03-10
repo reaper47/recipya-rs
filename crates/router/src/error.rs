@@ -97,9 +97,8 @@ impl Error {
             // Auth
             ConfirmForbidden => (StatusCode::FORBIDDEN, ClientError::ConfirmFail),
             ConfirmInvalidToken => (StatusCode::BAD_REQUEST, ClientError::ConfirmFail),
-            LoginFailUsernameNotFound | PwdNotMatching { .. } => {
-                (StatusCode::FORBIDDEN, ClientError::LoginFail)
-            }
+            LoginFailUsernameNotFound => (StatusCode::FORBIDDEN, ClientError::LoginFail),
+            PwdNotMatching { .. } => (StatusCode::UNPROCESSABLE_ENTITY, ClientError::InvalidInput),
             LogoutFail => (StatusCode::BAD_REQUEST, ClientError::LogoutFail),
             LogoutForbidden => (StatusCode::FORBIDDEN, ClientError::LogoutFail),
             NoToken => (StatusCode::BAD_REQUEST, ClientError::MissingParams),
@@ -181,6 +180,7 @@ pub enum ClientError {
     ForbiddenRequest,
     FormError,
     Gone,
+    InvalidInput,
     InvalidPayload,
     InvalidQuery,
     LoginFail,

@@ -394,7 +394,11 @@ pub async fn login_post_handler(
         state.config.read().await.is_production,
     );
 
-    Redirect::to("/").into_response()
+    (
+        StatusCode::SEE_OTHER,
+        [("HX-Redirect", "/recipes"), ("Location", "/recipes")],
+    )
+        .into_response()
 }
 
 /// Handles a user logging out.
@@ -448,12 +452,18 @@ pub async fn register_post_handler(
             return Redirect::to("/auth/login").into_response();
         }
 
-        if form.validate().is_err() {
-            let mut res = Error::PwdNotMatching {
-                user_id: Uuid::nil(),
-            }
-            .into_response();
-            add_hx_message(&mut res, &MessageHtmx::error("Passwords do not match."));
+        if let Err(err) = form.validate() {
+            let message = err
+                .field_errors()
+                .values()
+                .flat_map(|errors| errors.iter())
+                .filter_map(|err| err.message.as_ref())
+                .map(ToString::to_string)
+                .next()
+                .unwrap_or_else(|| "Validation error".to_string());
+
+            let mut res = StatusCode::UNPROCESSABLE_ENTITY.into_response();
+            add_hx_message(&mut res, &MessageHtmx::error(&message));
             return res;
         }
 

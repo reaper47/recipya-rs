@@ -600,9 +600,16 @@ function initGlobalKeyboardShortcuts() {
   });
 }
 
-function initTheme(themeDefault, themeSelected) {
+function initTheme(themeDefault, themeSelected, save = true) {
   let theme = themeSelected === "default" ? themeDefault : themeSelected;
-  localStorage.setItem("theme", theme);
+  if (save) {
+    localStorage.setItem("theme", theme);
+  }
+  if (theme === "system") {
+    theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
   document.documentElement.setAttribute("data-theme", theme);
 }
 
