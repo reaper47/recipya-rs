@@ -5,8 +5,7 @@ mod sponsors;
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 use rustls::crypto::ring;
-use tracing::info;
-use tracing::log::warn;
+use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
 
 use repository::create_database_if_not_exists;
@@ -34,7 +33,7 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<()> {
     if let Err(err) = dotenv() {
-        panic!("Failed to load .env: {err:?}")
+        warn!("Could not load .env file ({err:?}). This is expected when environment variables are injected by the host");
     }
     init_crypto();
     init_tracing()?;
