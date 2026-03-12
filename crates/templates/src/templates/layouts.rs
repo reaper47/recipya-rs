@@ -190,11 +190,11 @@ pub fn main(
                     }
                 }
                 div #fullscreen-loader class="htmx-indicator" {}
-                main class="flex w-full flex-1 min-h-0" {
+                main class="flex w-full flex-1 min-h-0 overflow-hidden" {
                     @if data.is_authenticated {
                         (render_nav(path, data_layout))
                     }
-                    div #content class="flex-1 min-h-0" {
+                    div #content class="flex-1 pb-16 md:pb-0" {
                         (content)
                     }
                 }
@@ -213,7 +213,7 @@ pub(super) fn render_recipe_button() -> Markup {
     html! {
         button
             #add-recipe
-            class="btn btn-primary btn-sm hover:btn-accent"
+            class="btn btn-primary btn-sm sm:btn-sm hover:btn-accent"
             hx-get="/recipes/add"
             hx-target="#content"
             hx-trigger="mousedown"
@@ -248,7 +248,8 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
                    hx-target="#content"
                    hx-trigger="mousedown"
                    hx-push-url="true"
-                   hx-swap="innerHTML transition:true" {
+                   hx-swap="innerHTML transition:true"
+                  _="on click call alert('Not implemented yet')" {
                      a class="tooltip tooltip-right" data-tip="Cookbooks" {
                         (icon_book_open())
                         "Cookbooks"

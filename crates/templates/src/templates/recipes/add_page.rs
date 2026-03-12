@@ -25,7 +25,6 @@ pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> M
         }
     }
 }
-
 fn render_add_page() -> Markup {
     html! {
         div class="grid w-full h-full grid-cols-1 gap-4 p-4 md:grid-cols-2 md:grid-rows-[auto_1fr] xl:m-auto xl:max-w-6xl md:grid-flow-col" {
@@ -41,12 +40,12 @@ fn render_add_page() -> Markup {
             div class="card card-border bg-base-200 h-96 shadow-sm rounded-xl" {
                 (render_import_apps_card())
             }
-            (add_ocr_dialog())
-            (import_recipes_dialog())
-            (supported_websites_dialog())
-            (supported_apps_import_dialog())
-            (websites_dialog())
         }
+        (add_ocr_dialog())
+        (import_recipes_dialog())
+        (supported_websites_dialog())
+        (supported_apps_import_dialog())
+        (websites_dialog())
     }
 }
 
@@ -175,7 +174,9 @@ fn render_ocr_card() -> Markup {
             h2 class="card-title" { "Scan" }
             p { "Upload the image files or PDF of the recipe you want to add or take a picture using your device's camera." }
             div class="card-actions" {
-                button class="btn btn-outline btn-sm btn-block" type="button" onclick="document.querySelector('#add-ocr-dialog').showModal()" {
+                button type="button" class="btn btn-outline btn-sm btn-block"
+                // onclick="document.querySelector('#add-ocr-dialog').showModal()"
+                _="on click call alert('Not implemented yet')" {
                     "Upload"
                 }
             }
@@ -212,24 +213,24 @@ fn add_ocr_dialog() -> Markup {
 fn import_recipes_dialog() -> Markup {
     html! {
         dialog #import-recipes-dialog .modal {
-            div #import-recipes-dialog-container class="modal-box w-[min(96vw,1100px)] max-h-[92vh] p-4 flex flex-col" {
+            div #import-recipes-dialog-container class="modal-box max-w-none w-96 max-h-[92vh] p-4 flex flex-col" {
                 form method="dialog" {
                     button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
                 }
                 h3 class="font-bold text-lg" { "Import Recipes" }
                 div class="tabs tabs-lift pt-4" {
-                    // Tab #1: Import from applications
+                    // Tab #1: Software
                     label class="tab" {
-                        input type="radio" name="import-recipe-tab" checked _="on click remove .max-w-none from #import-recipes-dialog-container";
+                        input type="radio" name="import-recipe-tab" checked _="on click set #import-recipes-dialog-container.style.width to ''";
                         "Software"
                     }
                     div class="tab-content bg-base-100 border-base-300 p-3" {
-                        form class="space-y-4 w-fit max-w-md" enctype="multipart/form-data"
+                        form class="space-y-4" enctype="multipart/form-data"
                                 hx-post="/recipes/add/import/app"
                                 hx-indicator="#fullscreen-loader"
                                 hx-swap="none"
                                 hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()" {
-                            div .w-fit {
+                            div {
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Choose an application" }
                                     select #app-select name="app" .select {
@@ -241,10 +242,10 @@ fn import_recipes_dialog() -> Markup {
                                 }
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Select a file" }
-                                    input #import-dialog-file type="file" name="file" required class="file-input" accept=(FileFormat::extensions().join(","));
+                                    input #import-dialog-file type="file" name="file" required class="file-input w-full" accept=(FileFormat::extensions().join(","));
                                 }
                             }
-                            button type="submit" class="btn btn-block btn-sm btn-primary" {
+                            button type="submit" class="btn btn-block btn-sm btn-primary w-full" {
                                 "Submit"
                             }
                         }
@@ -252,16 +253,16 @@ fn import_recipes_dialog() -> Markup {
 
                     // Tab #2: Import from an application using the app's API
                     label .tab {
-                        input type="radio" name="import-recipe-tab" _="on click remove .max-w-none from #import-recipes-dialog-container";
+                        input type="radio" name="import-recipe-tab" _="on click set #import-recipes-dialog-container.style.width to ''";
                         "API"
                     }
                     div class="tab-content bg-base-100 border-base-300 p-3" {
-                        form class="space-y-4 w-fit max-w-md"
+                        form class="space-y-4"
                                 hx-post="/recipes/add/import/api"
                                 hx-indicator="#fullscreen-loader"
                                 hx-swap="none"
                                 hx-on:htmx:before-request="if(!this.checkValidity()) return false; document.querySelector('#import-recipes-dialog').close()" {
-                            div .w-fit {
+                            div {
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Choose an API" }
                                     select #api-select name="api" .select required {
@@ -284,14 +285,15 @@ fn import_recipes_dialog() -> Markup {
                                     input type="password" name="password" required class="input" placeholder="Enter your password";
                                 }
                             }
-                            button type="submit" class="btn btn-block btn-sm btn-primary" {
+                            button type="submit" class="btn btn-block btn-sm btn-primary w-full" {
                                 "Submit"
                             }
                         }
                     }
 
+                    // Tab #3: Raw
                     label .tab {
-                        input type="radio" name="import-recipe-tab" _="on click add .max-w-none to #import-recipes-dialog-container then call initJSONHighlighter('import-recipes-json')";
+                        input type="radio" name="import-recipe-tab" _="on click set #import-recipes-dialog-container.style.width to 'min(96vw, 1100px)' then call initJSONHighlighter('import-recipes-json')";
                         "JSON"
                     }
                     div #import-recipes-json class="tab-content bg-base-100 border-base-300 p-3" {
@@ -315,7 +317,7 @@ fn import_recipes_dialog() -> Markup {
                                 }
                             }
 
-                            div class="min-h-[60vh] max-h-[70vh] flex flex-col overflow-hidden" {
+                            div class="min-h-[40vh] md:min-h-[60vh] max-h-[70vh] flex flex-col overflow-hidden" {
                                 div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch flex-1 min-h-0" {
                                     div class="flex flex-col min-h-0" {
                                         label for="json-input" class="floating-label text-sm font-semibold mb-1" {
@@ -355,7 +357,7 @@ fn import_recipes_dialog() -> Markup {
                                             }
                                         }
                                         div class="flex-1 overflow-auto border border-base-300 rounded text-sm " {
-                                            div #preview-output class="min-h-screen" {
+                                            div #preview-output class="min-h-0" {
                                                 div class="p-4" {
                                                     p {
                                                         "Paste JSON on the left to render a preview here. For example, try:"
@@ -399,8 +401,8 @@ fn import_recipes_dialog() -> Markup {
                                                     }
                                                 }
                                             }
-                                            div #schema-output class="hidden min-h-screen" {
-                                                div class="rounded relative min-h-screen border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600" {
+                                            div #schema-output class="hidden min-h-0" {
+                                                div class="rounded relative min-h-0 border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600" {
                                                     div #highlighted-content2 class="highlighted-content text-gray-300 bg-neutral-900 pointer-events-none z-1 overflow-auto" {}
                                                     textarea #json-schema readonly name="json-schema" placeholder="Fetching schema..."
                                                         class="h-full w-full editor-textarea bg-transparent text-transparent caret-[#d4d4d4] z-2 overflow-auto [-webkit-text-fill-color:transparent]"
@@ -490,25 +492,23 @@ fn supported_websites_dialog() -> Markup {
 fn websites_dialog() -> Markup {
     html! {
         dialog #websites-dialog class="modal" {
-            div class="modal-box" {
+            div class="modal-box max-w-md" {
                 form method="dialog" {
                     button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
                 }
-                h3 class="font-bold text-lg" { "Fetch recipes from websites" }
-                form class="py-4" hx-post="/recipes/add/website" hx-swap="none" _=(PreEscaped("on submit call #websites-dialog.close() then set me.querySelector('textarea').value to ''")) {
-                    div class="grid mb-4" {
-                        // TODO: Validate whether we need floating-label.
-                        label class="floating-label" {
-                            span { "Enter one or more URLs, each on a new line." }
-                            // TODO: Validate whether we can inline the placeholder line breaks.
-                            textarea class="textarea w-full whitespace-pre-line" name="urls" rows="5" placeholder="URL 1
-URL 2
-URL 3
-URL 4
-etc..." {}
+                h3 class="font-bold text-lg mb-1" { "Fetch recipes from websites" }
+                p class="text-sm mb-4" { "Enter one or more URLs, each on a new line." }
+                form class="flex flex-col gap-3"
+                    hx-post="/recipes/add/website"
+                    hx-swap="none"
+                    _=(PreEscaped("on submit call #websites-dialog.close() then set me.querySelector('textarea').value to ''")) {
+                    textarea class="textarea w-full text-sm" name="urls" rows="10" placeholder="https://example.com/recipe-1\nhttps://example.com/recipe-2\nhttps://example.com/recipe-3" {}
+                    div class="flex justify-end gap-2" {
+                        button type="button" class="btn btn-ghost btn-sm"
+                            _="on click set #websites-dialog's querySelector('textarea').value to '' then call #websites-dialog.close()" {                            "Cancel"
                         }
+                        button class="btn btn-primary btn-sm" { "Fetch recipes" }
                     }
-                    button class="btn btn-block btn-primary btn-sm" { "Submit" }
                 }
             }
         }

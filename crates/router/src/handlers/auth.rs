@@ -394,11 +394,7 @@ pub async fn login_post_handler(
         state.config.read().await.is_production,
     );
 
-    (
-        StatusCode::SEE_OTHER,
-        [("HX-Redirect", "/recipes"), ("Location", "/recipes")],
-    )
-        .into_response()
+    (StatusCode::SEE_OTHER, [("HX-Redirect", "/recipes")]).into_response()
 }
 
 /// Handles a user logging out.
@@ -520,7 +516,7 @@ pub async fn register_post_handler(
                     });
                 }
 
-                Redirect::to("/auth/login").into_response()
+                (StatusCode::SEE_OTHER, [("HX-Redirect", "/auth/login")]).into_response()
             }
             Err(err) => {
                 error!("Failed to fetch user from database: {err}");

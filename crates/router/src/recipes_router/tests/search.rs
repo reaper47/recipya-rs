@@ -68,7 +68,7 @@ mod tests {
             vec![
                 r#"<h2 class="font-semibold line-clamp-2">Lovely Ukraine</h2>"#,
                 r#"<h2 class="font-semibold line-clamp-2">Lovely Canada</h2>"#,
-                r#"<button class="join-item btn btn-disabled w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled w-12" title="Next page" aria-label="Next page">›</button>"#,
+                r#"<button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button>"#,
             ],
         );
         Ok(())
@@ -95,7 +95,7 @@ mod tests {
                 r#"<h2 class="font-semibold line-clamp-2">Chinese Firmware</h2>"#,
                 r#"<h2 class="font-semibold line-clamp-2">Lovely Ukraine</h2>"#,
                 r#"<h2 class="font-semibold line-clamp-2">Lovely Canada</h2>"#,
-                r#"<button class="join-item btn btn-disabled w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled w-12" title="Next page" aria-label="Next page">›</button>"#,
+                r#"<button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button>"#,
             ],
         );
 

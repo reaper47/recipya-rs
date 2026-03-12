@@ -650,7 +650,7 @@ fn settings_data(_data: &Data) -> Markup {
                         "Download your data in the selected file format."
                     }
                 }
-                form class="grid gap-1 grid-flow-col" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" {
+                form class="grid gap-1 grid-flow-col" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" _="on submit halt the event then call alert('Not implemented yet')" {
                     fieldset class="fieldset" {
                         select required #file-type name="type" class="select select-sm" {
                             optgroup label="Recipes" {
@@ -870,7 +870,7 @@ fn render_theme_button_content(theme_name: &Theme) -> Markup {
                     svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="invisible h-3 w-3 shrink-0" {
                         path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z" {}
                     }
-                    span class="flex-grow text-sm" { (theme_name) }
+                    span class="flex-grow text-sm text-white" { (theme_name) }
                     span class="flex h-full shrink-0 flex-wrap gap-1" {
                         span class="bg-primary rounded-badge w-2" {}
                         span class="bg-secondary rounded-badge w-2" {}
