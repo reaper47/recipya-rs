@@ -621,12 +621,18 @@ function syncLayout() {
 
   const isAside =
     layoutElement.attributes.getNamedItem("data-layout").value === "with-aside";
+  const isMobile = window.innerWidth < 768;
 
-  ["desktop-nav", "mobile-nav", "add-recipe", "pagination-recipes"].forEach(
-    (id) => {
-      document.getElementById(id)?.classList.toggle("hidden", !isAside);
-    },
-  );
+  document
+    .getElementById("desktop-nav")
+    ?.classList.toggle("hidden", !isAside || isMobile);
+  document
+    .getElementById("mobile-nav")
+    ?.classList.toggle("hidden", isAside && !isMobile);
+
+  ["add-recipe", "pagination-recipes"].forEach((id) => {
+    document.getElementById(id)?.classList.toggle("hidden", !isAside);
+  });
 }
 
 async function loadURLToInputField(url, containerId) {

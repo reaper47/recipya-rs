@@ -500,6 +500,7 @@ mod tests {
 
         use super::*;
 
+        use axum_htmx::HX_REDIRECT;
         use std::default::Default;
         use time::OffsetDateTime;
 
@@ -629,7 +630,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("Location", "/recipes");
+            res.assert_header(HX_REDIRECT, "/recipes");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
             let now =
@@ -711,7 +712,7 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("Location", "/recipes");
+            res.assert_header(HX_REDIRECT, "/recipes");
             let token = res.cookie(AUTH_TOKEN).value().to_string();
             let claims = validate_token(&token)?;
             let now =

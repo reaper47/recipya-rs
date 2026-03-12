@@ -14,7 +14,7 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
         html! {
             footer id=(p.id)
                 class={
-                    "footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0"
+                    "footer footer-center bg-base-200 p-2 gap-2 pb-16 md:pb-2 mt-auto shrink-0"
                     @if let Some(css) = p.additional_css.as_ref() { (format!(" {css}")) }
                 }
                 style="grid-auto-flow: row;"
@@ -23,12 +23,11 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                 div class="join gap-0" {
                     // Previous page button
                     @if p.selected == 1 {
-                        button class="join-item btn btn-disabled w-12" title="Previous page" aria-label="Previous page" { "‹" }
+                        button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page" { "‹" }
                     } @else {
                         @let prev_url = format!("{}?page={}{}", p.url, p.prev, p.url_queries);
-
                         button
-                            class="join-item btn w-12"
+                            class="join-item btn btn-xs md:btn-sm w-8 md:w-12"
                             title="Previous page"
                             aria-label="Previous page"
                             hx-get=(prev_url)
@@ -42,14 +41,13 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                         @match slot {
                             PageSlot::Page(page_num) => {
                                 @if p.selected == *page_num {
-                                    button class="join-item btn btn-active w-12"
+                                    button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12"
                                         aria-current="page"
                                         aria-label=(format!("Page {page_num}, current page")) { (page_num) }
                                 } @else {
                                     @let goto_page = format!("Go to page {page_num}");
                                     @let get_page = format!("{}?page={page_num}{}", p.url, p.url_queries);
-
-                                    button class="join-item btn w-12"
+                                    button class="join-item btn btn-xs md:btn-sm w-8 md:w-12"
                                         title=(goto_page)
                                         aria-label=(goto_page)
                                         hx-get=(get_page)
@@ -60,7 +58,7 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                                 }
                             }
                             PageSlot::Ellipsis => {
-                                button class="join-item btn btn-disabled w-12"
+                                button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12"
                                     aria-hidden="true" { "⋯" }
                             }
                         }
@@ -68,13 +66,12 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
 
                     // Next button
                     @if p.selected == p.num_pages {
-                       button class="join-item btn btn-disabled w-12"
+                        button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12"
                             title="Next page"
                             aria-label="Next page" { "›" }
                     } @else {
                         @let next_url = format!("{}?page={}{}", p.url, p.next, p.url_queries);
-
-                        button class="join-item btn w-12"
+                        button class="join-item btn btn-xs md:btn-sm w-8 md:w-12"
                             title="Next page"
                             aria-label="Next page"
                             hx-get=(next_url)
@@ -85,20 +82,23 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                     }
                 }
 
-                div class="text-center" {
-                    p class="text-sm text-base-content/70" {
-                        "Showing "
-                        span class="font-semibold text-base-content" {
-                            (format_number(calc_start_result(p.selected, p.results_per_page)))
+                // Hide the count row when there are no results
+                @if p.num_results > 0 {
+                    div class="text-center" {
+                        p class="text-xs md:text-sm" {
+                            "Showing "
+                            span class="font-semibold text-base-content" {
+                                (format_number(calc_start_result(p.selected, p.results_per_page)))
+                            }
+                            "-"
+                            span class="font-semibold text-base-content" {
+                                (format_number(calc_end_result(p.selected, p.results_per_page, p.num_results)))
+                            }
+                            " of " span #search-count class="font-medium" {
+                                (format_number(p.num_results))
+                            }
+                            " results"
                         }
-                        "-"
-                        span class="font-semibold text-base-content" {
-                            (format_number(calc_end_result(p.selected, p.results_per_page, p.num_results)))
-                        }
-                        " of " span #search-count class="font-medium" {
-                            (format_number(p.num_results))
-                        }
-                        " results"
                     }
                 }
             }
