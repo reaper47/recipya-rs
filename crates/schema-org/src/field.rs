@@ -1773,6 +1773,30 @@ impl RecipeRecipeInstructionsFieldEnum {
             *i += 1;
         }
     }
+
+    /// Creates a new `CreativeWork` field with the given text and optional image.
+    pub fn new_creative_work(text: &str, image: Option<&str>) -> Self {
+        Self::CreativeWork(
+            CreativeWork {
+                r#type: AtType::HowToStep.to_opt(),
+                text: vec![text.into()],
+                image: image
+                    .map(|u| {
+                        vec![CreativeWorkImageFieldEnum::ImageObject(
+                            ImageObject {
+                                r#type: AtType::ImageObject.to_opt(),
+                                url: vec![u.into()],
+                                ..Default::default()
+                            }
+                            .into(),
+                        )]
+                    })
+                    .unwrap_or_default(),
+                ..Default::default()
+            }
+            .into(),
+        )
+    }
 }
 
 ///<https://schema.org/steps>

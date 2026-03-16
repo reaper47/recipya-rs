@@ -14,7 +14,7 @@ use crate::field::{
     RecipeSupplyFieldEnum, RecipeToolFieldEnum, RecipeTranslatorFieldEnum, RecipeVideoFieldEnum,
     RecipeYieldFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{deserialize_type, one_or_many};
 use crate::{
     AggregateRating, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
     InteractionCounter, NutritionInformation, Person, Review, Thing,
@@ -62,7 +62,7 @@ impl Default for GraphObject {
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Recipe {
-    #[serde(rename = "@type")]
+    #[serde(rename = "@type", deserialize_with = "deserialize_type")]
     pub r#type: Option<String>,
     #[serde(rename = "@graph")]
     pub graph: Option<Vec<GraphObject>>,

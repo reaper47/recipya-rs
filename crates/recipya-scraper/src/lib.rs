@@ -19,6 +19,9 @@ use tracing::error;
 use scraper::{Html, Selector};
 use support::fs::FsSupport;
 
+pub(crate) const ENABLE_JS: &str =
+    r#"<span id="challenge-error-text">Enable JavaScript and cookies to continue</span>"#;
+
 /// Represents the object responsible for scraping recipes from websites.
 #[derive(Clone)]
 pub struct Scraper {
@@ -66,13 +69,17 @@ impl Scraper {
                     .join(" ");
 
                 let value: serde_json::Value = serde_json::from_str(json).ok()?;
+                let object = value.as_array().and_then(|arr| arr.first()).cloned().unwrap_or(value);
+                let r#type = object.get("@type");
 
-                if value.get("@type").and_then(|v| v.as_str()).is_some() { serde_json::from_str::<Recipe>(json)
-                .inspect_err(|err| {
-                    error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
-                })
-                .ok() } else {
-                    if let Some(graph) = value.get("@graph").and_then(|g| g.as_array()) {
+                if r#type.and_then(|v| v.as_array()).is_some() || r#type.and_then(|v| v.as_str()).is_some() {
+                    serde_json::from_value::<Recipe>(object)
+                        .inspect_err(|err| {
+                            error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
+                        })
+                        .ok()
+                } else {
+                    if let Some(graph) = object.get("@graph").and_then(|g| g.as_array()) {
                         for item in graph {
                             if item.get("@type").and_then(|t| t.as_str()) == Some("Recipe") {
                                 return serde_json::from_value::<Recipe>(item.clone())

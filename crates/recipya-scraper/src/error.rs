@@ -9,6 +9,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     DomainNotImplemented,
     LdJsonNotFound,
+    Fetch(String),
     Filesystem,
     MissingElement(String),
     NoHost,
@@ -22,6 +23,8 @@ pub enum Error {
     Deserialize,
     #[from(reqwest::Error)]
     Request,
+    #[from(wreq::Error)]
+    Wreq,
 }
 
 impl_display_as_debug!(Error);
