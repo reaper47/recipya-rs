@@ -21,7 +21,7 @@ mod tests {
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
     #[allow(clippy::too_many_lines)]
-    async fn test_allrecipes_dot_com() -> Result<()> {
+    async fn test_allrecipes_ok() -> Result<()> {
         let got = scrape(Website::AllRecipes, 0).await?;
 
         let want = Recipe {
@@ -155,38 +155,47 @@ mod tests {
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
                     Some("https://www.allrecipes.com/thmb/ikAh8YlzsTfWmVA6G6MRHlq7xtU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-ddmfs-3188-4x3-step-01-61fd6c03b33f40e0a8bd756cb56ecac1.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar in a large bowl with an electric mixer until smooth and creamy.",
                     Some("https://www.allrecipes.com/thmb/HZVO7UCA4f6YjwRUxMm2bo5Wz2U=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-2-1191-1b57f642a52849ce84a25c48363c4013.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Beat in eggs, one at a time, then stir in vanilla.",
                     Some("https://www.allrecipes.com/thmb/vb_CS6Q-CEf0cZySd5HgkUV-T_Y=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-3-121-f73dc5abc3454dfab534d8efc0e966e6.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Dissolve baking soda in hot water; add to batter along with salt and mix until combined.",
                     Some("https://www.allrecipes.com/thmb/EHPMpRCIHiCbzy9a3hGDZn0Tgyc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-4-123-abd5290df87f47668cbc8eef6587c292.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Stir in flour, chocolate chips, and walnuts until a soft dough forms.",
                     Some("https://www.allrecipes.com/thmb/4cwC_GLPXQVWlqI2KH0GUbC1-V4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-5-125-b755dee648e949129ad022d8b019b405.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Drop rounded spoonfuls of cookie dough 2 inches apart onto ungreased baking sheets.",
                     Some("https://www.allrecipes.com/thmb/A63M4EgkpKCDtqT1qWgMciQ3-hI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-6-128-44e1d4355a6a4441a3ba993e2a2b74fa.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Bake in the preheated oven until edges are lightly browned, about 10 minutes.",
                     Some("https://www.allrecipes.com/thmb/NFy1pucQzBWKkvRGRvcQgFcmu9E=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-7-134-e0952f5171a2434dbb2b3bb53b18648a.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
                     Some("https://www.allrecipes.com/thmb/5tMxJUaTaqQNYD3O-56aG4L9t00=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-8-138-d4f25b55db5c417b9d6ece8cf98700f3.jpg"),
+                    None, None,
                 ),
                 RecipeRecipeInstructionsFieldEnum::new_creative_work(
                     "Store in an airtight container or serve immediately and enjoy!",
                     Some("https://www.allrecipes.com/thmb/8xwaWAHtl_QLij6D-G0Z4B1HDVA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-146-4x3-b108aceffa6043a1ac81c3c5a9b034c8.jpg"),
+                    None, None,
                 ),
             ],
             review: vec![
@@ -610,6 +619,611 @@ mod tests {
                    }.into(),
                ),
            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    async fn test_allroadsleadtothekitchen_ok() -> Result<()> {
+        let got = scrape(Website::AllRoadsLeadToTheKitchen, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            author: vec![RecipeAuthorFieldEnum::new_person(
+                "Heather Schmitt-Gonzalez",
+            )],
+            cook_time: vec![DurationOrText::Text("PT1H".into())],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Chicken wings smothered in a garlicky parmesan sauce are the perfect non-spicy wing offering (and sure to become a fast favorite).".into(),
+                ),
+            ],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhlrKfVQ_aQexgyJj2db3Ue3T0HJtkkeFee0l3jsYgxo9rHLtBtL4MHLKicvKGFnW18Dzq-UblnVXn0-J7cO2hz6RXILi_QeG4lGSLU4S3ileFQER8g1UZVkaec1Q52r7X_Y1uai7vezV6F/s1600/Garlic+Parmesan+Wings+recipe.jpg".into(),
+                ),
+            ],
+            name: vec!["Garlic Parmesan Wings".into()],
+            prep_time: vec![DurationOrText::Text("PT15M".into())],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("2 to 2.5 pounds chicken wings (see here for ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("how to break down a chicken wing".into()),
+                RecipeRecipeIngredientFieldEnum::Text(")".into()),
+                RecipeRecipeIngredientFieldEnum::Text("vegetable oil, to coat".into()),
+                RecipeRecipeIngredientFieldEnum::Text("sea salt, to taste".into()),
+                RecipeRecipeIngredientFieldEnum::Text("garlic powder, to taste".into()),
+                RecipeRecipeIngredientFieldEnum::Text("freshly ground black pepper, to taste".into()),
+                RecipeRecipeIngredientFieldEnum::Text("4 ounces salted butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("4 fat cloves minced garlic".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon Italian seasoning".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup grated Parmesan cheese".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Preheat oven to 400° F. Line a baking sheet with foil, then set a wire rack on top.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Place the broken down chicken wings in a gallon-sized ziploc baggie. Drizzle them with a light coating of vegetable oil, then season them with salt, garlic powder, and pepper (use enough to flavor them well). Zip the baggie shut and smoosh everything around so the wings are evenly coated.\u{a0}".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Tip them out onto the prepared baking sheet. Slide into the hot oven and bake for 50-60 minutes, or until the wings register 165° F on an instant-read thermometer and are as crispy as you like them on the outside. (Alternately, you could fry them.)".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "While the wings are in the oven, melt the butter, garlic cloves, and Italian seasoning together on the stovetop or in the microwave. Once melted, stir in the Parmesan cheese. Transfer to a bowl large enough to hold the wings.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "When the wings come out of the oven, carefully add them to the bowl with the sauce. Place another bowl upside down over that bowl, hold them together tightly with potholders, and shake to coat them in sauce.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Serve immediately.".into(),
+                ),
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("4".into())],
+            total_time: vec![DurationOrText::Text("PT1H15M".into())],
+            url: vec![
+                "https://www.allroadsleadtothe.kitchen/2019/12/garlic-parmesan-wings.html<number>0"
+                    .into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_allthingsmamma_ok() -> Result<()> {
+        let got = scrape(Website::AllThingsMamma, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            aggregate_rating: vec![
+                AggregateRating {
+                    r#type: AtType::AggregateRating.to_opt(),
+                    review_count: vec![
+                        3,
+                    ],
+                    rating_count: vec![
+                        39,
+                    ],
+                    rating_value: vec![
+                        AggregateRatingRatingValueFieldEnum::Text(
+                            "3.49".into(),
+                        ),
+                    ],
+                    ..Default::default()
+                },
+            ],
+            date_published: vec![
+                "2020-12-16T00:00:00+00:00".into(),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Million Dollar Dip is made with only 5 ingredients - mayonaise, cheddar cheese, bacon, green onions, and almonds.".into(),
+                ),
+            ],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://www.allthingsmamma.com/wp-content/uploads/2020/12/million-dollar-dip.jpg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://www.allthingsmamma.com/wp-content/uploads/2020/12/million-dollar-dip-500x500.jpg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://www.allthingsmamma.com/wp-content/uploads/2020/12/million-dollar-dip-500x375.jpg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://www.allthingsmamma.com/wp-content/uploads/2020/12/million-dollar-dip-480x270.jpg".into(),
+                ),
+            ],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "cheese, dip recipe, easy appetizer".into(),
+                ),
+            ],
+            name: vec!["Million Dollar Dip".into()],
+            nutrition: vec![NutritionInformation {
+                calories: vec![Energy::new("526 kcal")],
+                carbohydrate_content: vec![Mass::new("2 g")],
+                cholesterol_content: vec![Mass::new("58 mg")],
+                context: None,
+                fat_content: vec![Mass::new("53 g")],
+                fiber_content: vec![Mass::new("0.4 g")],
+                protein_content: vec![Mass::new("10 g")],
+                saturated_fat_content: vec![Mass::new("13 g")],
+                serving_size: vec!["1 serving".into()],
+                sodium_content: vec![Mass::new("587 mg")],
+                sugar_content: vec![Mass::new("1 g")],
+                r#type: AtType::NutritionInformation.to_opt(),
+                trans_fat_content: vec![Mass::new("0.1 g")],
+                unsaturated_fat_content: vec![Mass::new("38 g")],
+            }],
+            prep_time: vec![
+                DurationOrText::Text(
+                    "PT5M".into(),
+                ),
+            ],
+            recipe_category: vec![
+                "Appetizer".into(),
+            ],
+            recipe_cuisine: vec![
+                "American".into(),
+            ],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 3/4 cup mayonnaise".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2 cups cheddar cheese (shredded)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "5 green onions (diced)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "5 slices bacon (cooked and chopped)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1/4 cup almonds (slivered or sliced)".into(),
+                ),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Combine all of the ingredients into a bowl and mix until fully combined.",
+                    None,
+                    Some("Combine"),
+                    Some("https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-36586-step-0-0"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Refrigerate for at least 2 hours and enjoy with your favorite crackers.",
+                    None,
+                    Some("Chill"),
+                    Some("https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-36586-step-0-1"),
+                ),
+            ],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text(
+                    "8".into(),
+                ),
+                RecipeRecipeYieldFieldEnum::Text(
+                    "8 servings".into(),
+                ),
+            ],
+            review: vec![
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Looks good. Something like I would do for Thanksgiving and Christmas.".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2021-11-05".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Tammie Ann Weaver")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Looks good. Something like I would do for Thanksgiving and Christmas.".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2021-11-05".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Tammie Weaver")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Way to much mayo. I would start with 3/4 cup and add more if needed. Otherwise awesome dip.\r\nI put it on tortillas and rolled them and put in fridge until cold then sliced them in 1 inch rounds and severed with salsa. Very good.".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("4".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2021-10-30".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Vicky")],
+                    ..Default::default()
+                },
+            ],
+            total_time: vec![
+                DurationOrText::Text(
+                    "PT125M".into(),
+                ),
+            ],
+            url: vec![
+                "https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-container-36586"
+                    .into(),
+            ],
+            video: vec![
+                RecipeVideoFieldEnum::Clip(
+                    Clip {
+                        r#type: AtType::VideoObject.to_opt(),
+                        thumbnail_url: vec![
+                            "https://i.ytimg.com/vi/nwjs0Y6BMHo/hqdefault.jpg".into(),
+                        ],
+                        description: vec![
+                            ClipDescriptionFieldEnum::Text(
+                                "This Million Dollar Dip is made with just 5 simple ingredients: mayonnaise, cheddar cheese, bacon, green onions, and almonds. It’s the ultimate game-day or holiday appetizer that tastes amazing with crackers, pretzels, or fresh veggies.\n\nIngredients:\n1 3/4 cup mayonnaise\n2 cups cheddar cheese – shredded\n5 Green Onions – diced\n5 slices bacon – cooked and chopped\n1/4 cup Almonds – Slivered or sliced\n\nGet the full recipe: https://www.allthingsmamma.com/million-dollar-dip/".into(),
+                            ),
+                        ],
+                        name: vec![
+                            "Million Dollar Dip #diprecipe #appetizerideas #gamedayfood".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    async fn test_almanac_ok() -> Result<()> {
+        let got = scrape(Website::Almanac, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            author: vec![RecipeAuthorFieldEnum::Organization(Organization {
+                r#type: AtType::Person.to_opt(),
+                name: vec!["Ken Haedrich".to_string()],
+                url: vec!["https://www.almanac.com/user/585856".into()],
+                ..Default::default()
+            })],
+            date_published: vec![
+                "2026-01-26T15:30:58-0500".into(),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "These Ginger Bran Muffins by Ken Haedrich are hearty, warmly spiced, and just sweet enough to feel like a treat. Moist, tender, and deeply flavorful, they’re ideal for breakfast, snacking, or a cozy afternoon with&nbsp;tea.Made with wheat bran, applesauce, molasses, and both ground and crystallized ginger, they strike a perfect balance between wholesome and&nbsp;indulgent.&nbsp;".into(),
+                ),
+            ],
+            image: vec![
+                RecipeImageFieldEnum::ImageObject(ImageObject {
+                    r#type: AtType::ImageObject.to_opt(),
+                    representative_of_page: vec!["True".into()],
+                    height: vec![ImageObjectHeightFieldEnum::Integer(800)],
+                    width: vec![ImageObjectWidthFieldEnum::Integer(1200)],
+                    url: vec!["https://www.almanac.com/sites/default/files/styles/large/public/recipe-ginger_bran_muffins.jpg?itok=NcHGn24x".into()],
+                    ..Default::default()
+                }.into()),
+            ],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "Bread".into(),
+                ),
+            ],
+            name: vec![
+                "Ginger Bran Muffins".into(),
+            ],
+            recipe_category: vec![
+                "Bread".into(),
+            ],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1-1⁄2 cups all-purpose flour".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "3⁄4 cup plain oat bran or wheat bran (not packaged bran cereal)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2-1⁄2 teaspoons baking powder".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "3⁄4 teaspoon salt".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1⁄2 teaspoon ground ginger".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1⁄3 cup chopped crystallized ginger".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 large egg".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 cup sweetened or unsweetened applesauce".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1⁄2 cup packed light-brown sugar".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1⁄3 cup vegetable oil".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1⁄4 cup milk".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2 tablespoons molasses".into(),
+                ),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::new_creative_work("Preheat the oven to 375°F.", None, None, None),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work("Butter 10 muffin cups (or 12, for slightly smaller muffins) or line with paper liners.Combine the flour, bran, baking powder, salt, and ground ginger in a large bowl and whisk to blend.", None, None, None),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work("Add the crystallized ginger, mix, and make a well.In a separate bowl, whisk the egg until frothy.", None, None, None),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work("Add the applesauce, brown sugar, oil, milk, and molasses and whisk to blend.", None, None, None),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work("Pour into the well and stir with a wooden spoon until evenly blended.Divide the batter evenly among the prepared cups.Bake for 23 to 25 minutes, or until the muffins form domes that spring back when touched.Transfer the pan to a cooling rack for 5 minutes, then remove the muffins from the pan and place on the rack until ready to serve.", None, None, None),
+            ],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text(
+                    "Makes 10 to 12 muffins.".into(),
+                ),
+            ],
+            url: vec!["https://www.almanac.com/recipe/ginger-bran-muffins".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    // #[ignore = "needs manual testing"]
+    async fn test_almondandfig_ok() -> Result<()> {
+        let got = scrape(Website::AlmondAndFig, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Golden, crisp, and filled with spinach and feta — these phyllo cigars are a beloved staple in my kitchen. Our mothers and grandmothers always keep a stash of ma‘ajanat (savory pastries) in the freezer, ready to bake when guests arrive unexpectedly. Some are made with cheese, meat or savory vegetable fillings. Spinach, a winter crop in Palestine, finds its way into comforting stews, fresh salads, and flaky pastries like this — a simple gesture of warmth and hospitality shared around the table.".into(),
+                ),
+            ],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://images.squarespace-cdn.com/content/v1/65a8c83ff8fd7a06122db371/7e12b7ad-e42a-44b2-b961-8ec4f0f461b5/dc207f_33e0a2f9eac34fcbb9d9d15d7d35d5ea%7Emv2.jpg".into(),
+                ),
+            ],
+            name: vec!["Baked Spinach and feta phyllo cigars".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::new_section("", &[
+                        "1 package frozen phyllo dough thawed For the filling",
+                        "1 bag frozen spinach thawed",
+                        "1 cup crumbled feta",
+                        "1 red onion minced (you can sautée it or leave it raw)",
+                        "Salt and pepper to taste",
+                        "A few grates of fresh nutmeg",
+                        "Zest of one Lemon",
+                        "2 tsp sumac",
+                        "2 tbls pine nuts Nigella seeds or sesame seeds and flaky salt (optional)",
+                        "Olive oil for brushing",
+                ]),
+                RecipeRecipeIngredientFieldEnum::new_section("Dipping Sauce", &[
+                        "1 cup Greek yogurt",
+                        "1/4 cup crumbled feta",
+                        "Juice and zest of one Lemon",
+                        "A drizzle of olive oil",
+                       "Whirl all ingredients in a blender or a mixer until smooth and fluffy",
+                ])
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Filling: Squeeze the spinach until all the water comes out you can do that using a couple of paper towels. Add salt, pepper, nutmeg, sumac, feta, pine nuts, onions, lemon zest.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Take 1 sheet of filo dough (make sure to cover the remaining sheets with a clean kitchen towel to prevent them from drying)".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Cut the sheet of phyllo into 3 even strips and brush with olive oil.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Fold each strip in half creating a double layer.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Place one teaspoon of the filling along the short side of the rectangle and roll creating a cigar ha!".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Brush the top with olive oil and add a sprinkle of nigella seeds and flaky salt on top if you want to be fancy u know.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Brush, fill, roll and repeat until you are done it goes by so fast.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Line the cigars in a parchment lined baking sheet and bake in a 350 oven for about 20 min until golden and crisp.".into(),
+                ),
+            ],
+            url: vec![
+                "https://www.almondandfig.com/baked-spinach-and-feta-phyllo-cigars<number>0".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_arbuz_ok() -> Result<()> {
+        let got = scrape(Website::Arbuz, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            author: vec![RecipeAuthorFieldEnum::new_org("Lola Elise")],
+            cook_time: vec![
+                DurationOrText::Text("PT40M".into()),
+            ],
+            date_published: vec![
+                "2019-04-06T18:37:24+00:00".into(),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "This layered bread is something you have to absolutely try. It is called Qatlama Patir in the Uzbek language, which means Layered flatbread. Its crispy and buttery texture will have you craving for more in no time.".into(),
+                ),
+            ],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://arbuz.com/wp-content/uploads/2019/04/Flaky-Layered-Flatbread-47.jpg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://arbuz.com/wp-content/uploads/2019/04/Flaky-Layered-Flatbread-47-500x500.jpg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://arbuz.com/wp-content/uploads/2019/04/Flaky-Layered-Flatbread-47-500x375.jpg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://arbuz.com/wp-content/uploads/2019/04/Flaky-Layered-Flatbread-47-480x270.jpg".into(),
+                ),
+            ],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "Bread, Paratha, Layered Bread, Qatlama Patir".into(),
+                ),
+            ],
+            name: vec!["Layered Bread - Qatlama Patir".into()],
+            recipe_category: vec![
+                "Bread".into(),
+            ],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1 cup hot water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup cold milk".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 Tbsp salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("4 cups (loosely measured all-purpose flour)".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 egg (for egg wash (optional))".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup melted (clarified butter (substitute with either butter or ghee))".into()),
+                RecipeRecipeIngredientFieldEnum::Text("sesame seeds (optional)".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "In a medium bowl place hot water, cold milk, salt, and mix well. Add pre-measured flour and mix until all of the flour is moistened.",
+                    None,
+                    Some("In a medium bowl place hot water, cold milk, salt, and mix well. Add pre-measured flour and mix until all of the flour is moistened."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-0"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Start kneading the dough until smooth. At most you may need an extra tablespoon of flour in order to scrape the sides of the bowl, clean the dough off of your hands and to finish of kneading. This process can also be done in a stand mixer.",
+                    None,
+                    Some("Start kneading the dough until smooth. At most you may need an extra tablespoon of flour in order to scrape the sides of the bowl, clean the dough off of your hands and to finish of kneading. This process can also be done in a stand mixer."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-1"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "The final dough will not be very soft, but it will be pliable and easily manageable. Divide it into two and cover it with a plastic wrap (or lately my favorite – reusable silicone pouches). Let the dough rest for about 15 minutes.",
+                    None,
+                    Some("The final dough will not be very soft, but it will be pliable and easily manageable. Divide it into two and cover it with a plastic wrap (or lately my favorite – reusable silicone pouches). Let the dough rest for about 15 minutes."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-2"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Once the dough has rested, take one dough out and place it on a flat surface where you will be rolling it. Sprinkle some flour on it. Using your knuckles press the dough into a thinner disk. This way you will create a big enough disk for you to be able to roll it into a rolling pin. Latch one section of the dough onto the rolling pin until the entire dough is wrapped around the pin somewhat tightly. Begin expanding the dough by performing front and back repetitive motion with your palms against the rolling pin for a few seconds. As the dough gets bigger, it will feel loose around the rolling pin. Unroll the dough and grab the next section to roll around the rolling pin. Repeat the same process until you have a large, thin disc. You can also use a smaller rolling pin to roll out the thicker sides of the dough in order to create some sort of uniformity.",
+                    None,
+                    Some("Once the dough has rested, take one dough out and place it on a flat surface where you will be rolling it. Sprinkle some flour on it. Using your knuckles press the dough into a thinner disk. This way you will create a big enough disk for you to be able to roll it into a rolling pin. Latch one section of the dough onto the rolling pin until the entire dough is wrapped around the pin somewhat tightly. Begin expanding the dough by performing front and back repetitive motion with your palms against the rolling pin for a few seconds. As the dough gets bigger, it will feel loose around the rolling pin. Unroll the dough and grab the next section to roll around the rolling pin. Repeat the same process until you have a large, thin disc. You can also use a smaller rolling pin to roll out the thicker sides of the dough in order to create some sort of uniformity."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-3"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "You may also stretch the dough out a bit with your hands if you wish to have thinner and much crispier layers. Totally your call. Once the desired size of the dough is reached, you may stop rolling the dough and proceed to the next step.",
+                    None,
+                    Some("You may also stretch the dough out a bit with your hands if you wish to have thinner and much crispier layers. Totally your call. Once the desired size of the dough is reached, you may stop rolling the dough and proceed to the next step."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-4"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "With a tablespoon randomly pour half of the melted, clarified butter all over the dough. Using your hand spread out the butter evenly all over the dough. Let the clarified butter rest for 2 minutes before you roll it onto the pin. When the time is up, wrap the dough around the rolling tightly. Yes, the pin will get a little butter on it. No problem there.",
+                    None,
+                    Some("With a tablespoon randomly pour half of the melted, clarified butter all over the dough. Using your hand spread out the butter evenly all over the dough. Let the clarified butter rest for 2 minutes before you roll it onto the pin. When the time is up, wrap the dough around the rolling tightly. Yes, the pin will get a little butter on it. No problem there."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-5"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Using a sharp knife slice through the middle of the rolling pin. Now you have a big layered strip of dough. Remove the rolling pin and again cut through the middle of the dough creating two thinner strips of stacks of dough.",
+                    None,
+                    Some("Using a sharp knife slice through the middle of the rolling pin. Now you have a big layered strip of dough. Remove the rolling pin and again cut through the middle of the dough creating two thinner strips of stacks of dough."),
+                        Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-6"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Take one strip of stacked dough and gently place it over the other strip. Starting from the long edge of the strips start rolling them towards the other end, creating one chubby roll.",
+                    None,
+                    Some("Take one strip of stacked dough and gently place it over the other strip. Starting from the long edge of the strips start rolling them towards the other end, creating one chubby roll."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-7"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Tuck the edge of the dough under itself, place the dough on the work surface and gently press on it to create yet another disk.",
+                    None,
+                    Some("Tuck the edge of the dough under itself, place the dough on the work surface and gently press on it to create yet another disk."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-8"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Use a small rolling pin to roll out a large pancake measuring about 1/2 an inch thick. Don’t make it too thick and don’t make it too thin either.",
+                    None,
+                    Some("Use a small rolling pin to roll out a large pancake measuring about 1/2 an inch thick. Don’t make it too thick and don’t make it too thin either."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-9"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Using either a chakich (indentation maker in the Uzbek language) or a fork, stab the pancakes creating many indentations. If you would like to use an egg wash to give a nice shin to your bread, do so now. Simply mix 1 egg with 1 tbsp of water and whisk well. Spread the egg wash on the qatlama and decorate it with sesame seeds.",
+                    None,
+                    Some("Using either a chakich (indentation maker in the Uzbek language) or a fork, stab the pancakes creating many indentations. If you would like to use an egg wash to give a nice shin to your bread, do so now. Simply mix 1 egg with 1 tbsp of water and whisk well. Spread the egg wash on the qatlama and decorate it with sesame seeds."),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-10"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Repeat the process for the second dough because one qatlama patir is just not enough!",
+                    None,
+                    Some("Repeat the process for the second dough because one qatlama patir is just not enough!"),
+                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-11"),
+                ),
+            ],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text("2".into()),
+                RecipeRecipeYieldFieldEnum::Text("2 large breads".into()),
+            ],
+            prep_time: vec![DurationOrText::Text("PT35M".into())],
+            total_time: vec![DurationOrText::Text("PT75M".into())],
+            url: vec!["https://arbuz.com/recipes/layered-bread/".into()],
             ..Default::default()
         };
         pretty_assertions::assert_eq!(got, want);

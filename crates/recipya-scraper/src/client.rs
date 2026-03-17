@@ -6,7 +6,7 @@ use flate2::read::GzDecoder;
 use wreq_util::Emulation;
 
 use crate::websites::Website;
-use crate::{ENABLE_JS, Result};
+use crate::{ENABLE_JS, FORBIDDEN, Result};
 
 /// A trait defining HTTP client functionality for synchronous and asynchronous requests.
 #[async_trait]
@@ -48,7 +48,7 @@ impl HttpClient for AppHttpClient {
 
         let text = {
             let intial = String::from_utf8_lossy(&bytes_vec);
-            if intial.contains(ENABLE_JS) {
+            if intial.contains(ENABLE_JS) || intial.contains(FORBIDDEN) {
                 self.client_wreq.get(url).send().await?.text().await?
             } else {
                 intial.into_owned()

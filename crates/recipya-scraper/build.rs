@@ -66,39 +66,39 @@ impl FileContent {
     /// Enumeration of all supported recipe websites.
     #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub enum Website {{
-    {}}}
+{}    }}
 
     impl Website {{
         /// Returns the domain name of the website.
         pub const fn domain(&self) -> &'static str {{
             match self {{
-    {domain_arms}        }}
+{domain_arms}            }}
         }}
 
         /// Creates a `Website` instance from a domain string.
         /// Strips "www." prefix automatically.
         pub fn from_domain(domain: &str) -> Option<Self> {{
             match domain.trim_start_matches("www.") {{
-    {from_domain_arms}            _ => None,
+{from_domain_arms}                _ => None,
             }}
         }}
 
         /// Returns test URLs for this website (used in unit tests).
         pub fn test_urls(&self) -> Vec<&'static str> {{
             match self {{
-    {test_urls_arms}        }}
+{test_urls_arms}            }}
         }}
 
         /// Returns an iterator over all website variants.
         pub fn all<'a>() -> Vec<WebsiteMetadata<'a>> {{
             vec![
-    {}
+{}
             ]
         }}
     }}
         "#,
             enum_variants.into_iter().fold(String::new(), |mut acc, v| {
-                writeln!(acc, "\t{v},").unwrap();
+                writeln!(acc, "\t\t{v},").unwrap();
                 acc
             }),
             metadata.into_iter().enumerate().fold(
@@ -109,7 +109,7 @@ impl FileContent {
                     }
                     write!(
                         acc,
-                        "\t\t\tWebsiteMetadata::new(\"{name}\", \"https://{variant}\", {cuisine:?})"
+                        "\t\t\t\tWebsiteMetadata::new(\"{name}\", \"https://{variant}\", {cuisine:?})"
                     )
                     .unwrap();
                     acc
@@ -168,19 +168,19 @@ fn main() {
         file_content.enum_variants.push(website.variant.clone());
         writeln!(
             file_content.from_domain_arms,
-            "            \"{}\" => Some(Self::{}),",
+            "\t\t\t\t\"{}\" => Some(Self::{}),",
             website.domain, website.variant
         )
         .unwrap();
         writeln!(
             file_content.domain_arms,
-            "            Self::{} => \"{}\",",
+            "\t\t\t\tSelf::{} => \"{}\",",
             website.variant, website.domain
         )
         .unwrap();
         writeln!(
             file_content.test_urls_arms,
-            "            Self::{} => vec![{}],",
+            "\t\t\t\tSelf::{} => vec![{}],",
             website.variant,
             website
                 .test

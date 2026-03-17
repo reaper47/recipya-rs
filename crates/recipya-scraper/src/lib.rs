@@ -22,6 +22,8 @@ use support::fs::FsSupport;
 pub(crate) const ENABLE_JS: &str =
     r#"<span id="challenge-error-text">Enable JavaScript and cookies to continue</span>"#;
 
+pub(crate) const FORBIDDEN: &str = "403 Forbidden";
+
 /// Represents the object responsible for scraping recipes from websites.
 #[derive(Clone)]
 pub struct Scraper {

@@ -14,8 +14,8 @@ use wreq_util::Emulation;
 
 use support::fs::MockFs;
 
-use crate::websites::Website;
 use crate::{ENABLE_JS, client::HttpClient};
+use crate::{FORBIDDEN, websites::Website};
 use crate::{Result, Scraper};
 
 /// A mock HTTP client for use in tests to avoid sending real HTTP requests.
@@ -96,7 +96,7 @@ async fn fetch_html(url: &str) -> Result<Bytes> {
     let bytes_vec = bytes.to_vec();
     let text = String::from_utf8_lossy(&bytes_vec);
 
-    if text.contains(ENABLE_JS) {
+    if text.contains(ENABLE_JS) || text.contains(FORBIDDEN) {
         let client = Client::builder().emulation(Emulation::Chrome145).build()?;
         let resp = client.get(url).send().await?;
         Ok(resp.bytes().await?)
@@ -106,9 +106,10 @@ async fn fetch_html(url: &str) -> Result<Bytes> {
 }
 
 fn get_html_file_path(website: Website, number: usize) -> PathBuf {
-    let path = std::env::current_dir()
-        .unwrap()
-        .join(format!("{BASE_HTML_DIR}/{website}_{number}.html"));
+    let path = std::env::current_dir().unwrap().join(format!(
+        "{BASE_HTML_DIR}/{}_{number}.html",
+        website.to_string().trim_end_matches('/')
+    ));
 
     let path_str = path
         .to_string_lossy()
