@@ -1015,7 +1015,7 @@ mod tests {
 
     #[tokio::test]
     #[tracing_test::traced_test]
-    // #[ignore = "needs manual testing"]
+    #[ignore = "needs manual testing"]
     async fn test_almondandfig_ok() -> Result<()> {
         let got = scrape(Website::AlmondAndFig, 0).await?;
 
@@ -1082,6 +1082,568 @@ mod tests {
             ],
             url: vec![
                 "https://www.almondandfig.com/baked-spinach-and-feta-phyllo-cigars<number>0".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_alphafoodie_ok() -> Result<()> {
+        let got = scrape(Website::AlphaFoodie, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            aggregate_rating: vec![
+                AggregateRating {
+                    r#type: AtType::AggregateRating.to_opt(),
+                    review_count: vec![
+                        1,
+                    ],
+                    rating_count: vec![
+                        1,
+                    ],
+                    rating_value: vec![
+                        AggregateRatingRatingValueFieldEnum::Text(
+                            "5".into(),
+                        ),
+                    ],
+                    ..Default::default()
+                },
+            ],
+            author: vec![RecipeAuthorFieldEnum::new_org("Samira")],
+            cook_time: vec![
+                DurationOrText::Text(
+                    "PT25M".into(),
+                ),
+            ],
+            date_published: vec![
+                "2026-02-12T15:54:25+00:00".into(),
+            ],
+            description: vec![RecipeDescriptionFieldEnum::Text(
+                "These sheet pan chicken fajitas are bright, juicy, and perfect for weeknights. Toss, roast, and finish with lime for that fajita punch.".into(),
+            )],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://www.alphafoodie.com/wp-content/uploads/2026/02/sheet-pan-chicken-fajitas-1-of-1-2.jpeg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://www.alphafoodie.com/wp-content/uploads/2026/02/sheet-pan-chicken-fajitas-1-of-1-2-500x500.jpeg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://www.alphafoodie.com/wp-content/uploads/2026/02/sheet-pan-chicken-fajitas-1-of-1-2-500x375.jpeg".into(),
+                ),
+                RecipeImageFieldEnum::URL(
+                    "https://www.alphafoodie.com/wp-content/uploads/2026/02/sheet-pan-chicken-fajitas-1-of-1-2-480x270.jpeg".into(),
+                ),
+            ],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "baked fajitas, one pan fajitas, oven fajitas, sheet pan fajitas".into(),
+                ),
+            ],
+            name: vec!["Easy Sheet Pan Chicken Fajitas".into()],
+            nutrition: vec![NutritionInformation {
+                calories: vec![Energy::new("228 kcal")],
+                carbohydrate_content: vec![Mass::new("22 g")],
+                cholesterol_content: vec![Mass::new("36 mg")],
+                context: None,
+                fat_content: vec![Mass::new("9 g")],
+                fiber_content: vec![Mass::new("3 g")],
+                protein_content: vec![Mass::new("16 g")],
+                saturated_fat_content: vec![Mass::new("2 g")],
+                serving_size: vec!["1 serving".into()],
+                sodium_content: vec![Mass::new("493 mg")],
+                sugar_content: vec![Mass::new("5 g")],
+                r#type: AtType::NutritionInformation.to_opt(),
+                trans_fat_content: vec![Mass::new("0.01 g")],
+                unsaturated_fat_content: vec![Mass::new("6 g")],
+            }],
+            prep_time: vec![
+                DurationOrText::Text(
+                    "PT5M".into(),
+                ),
+            ],
+            recipe_category: vec![
+                "Dinner".into(),
+            ],
+            recipe_cuisine: vec![
+                "Mexican".into(),
+            ],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text(
+                    "6".into(),
+                ),
+            ],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "3 chicken breasts (boneless skinless, cut into thin strips)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "3 bell peppers (mixed colors, cored and sliced)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 yellow onion (large, thinly sliced)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2 tablespoons olive oil".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2 tablespoons fajita seasoning (see homemade blend below or store‑bought)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "6-8 flour tortillas (small, warmed)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 lime (cut into wedges (plus more for serving))".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "¼ cup cilantro (chopped (plus more for serving))".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 cup Guacamole (for serving)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 cup pico de gallo (for serving)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1 teaspoon chili powder".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "½ teaspoon smoked paprika".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "½ teaspoon ground cumin".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "½ teaspoon garlic powder".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "½ teaspoon onion powder".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "½ teaspoon fine sea salt".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "¼ teaspoon black pepper".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "¼ teaspoon dried oregano (optional)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "¼ teaspoon Cayenne pepper (optional)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "½ teaspoon sugar (optional)".into(),
+                ),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Preheat the oven to 425°F and lightly oil a large rimmed sheet pan. Pat the chicken dry and slice against the grain. Slice the peppers and onion into similar thickness for even cooking.",
+                    None,
+                    Some("Preheat the oven to 425°F and lightly oil a large rimmed sheet pan. Pat the chicken dry and slice against the grain. Slice the peppers and onion into similar thickness for even cooking."),
+                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-0"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Add the chicken, peppers, and onion to the pan. Drizzle with olive oil and sprinkle with the fajita seasoning. Toss to coat, then spread into a roomy single layer.",
+                    None,
+                    Some("Add the chicken, peppers, and onion to the pan. Drizzle with olive oil and sprinkle with the fajita seasoning. Toss to coat, then spread into a roomy single layer."),
+                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-1"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Bake on the top rack for 20 to 25 minutes until the chicken is opaque and the vegetables are tender with caramelized edges. For more char, broil for 1 to 2 minutes at the end.",
+                    None,
+                    Some("Bake on the top rack for 20 to 25 minutes until the chicken is opaque and the vegetables are tender with caramelized edges. For more char, broil for 1 to 2 minutes at the end."),
+                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-2"),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Wrap the tortillas in foil and warm them in the oven during the last few minutes. Squeeze fresh lime over the fajitas, sprinkle with cilantro, and serve hot with guacamole and pico de gallo.",
+                    None,
+                    Some("Wrap the tortillas in foil and warm them in the oven during the last few minutes. Squeeze fresh lime over the fajitas, sprinkle with cilantro, and serve hot with guacamole and pico de gallo."),
+                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-3"),
+                ),
+            ],
+            review: vec![
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Looks delicious!".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("josh")],
+                    date_published: vec![
+                        "2026-02-17".into(),
+                    ],
+                    ..Default::default()
+                },
+            ],
+            total_time: vec![
+                DurationOrText::Text(
+                    "PT30M".into(),
+                ),
+            ],
+            url: vec!["https://www.alphafoodie.com/sheet-pan-chicken-fajitas/".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_alsothecrumbsplease_ok() -> Result<()> {
+        let got = scrape(Website::AlsoTheCrumbsPlease, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            aggregate_rating: vec![
+                AggregateRating {
+                    r#type: AtType::AggregateRating.to_opt(),
+                    review_count: vec![
+                        4,
+                    ],
+                    rating_count: vec![
+                        14,
+                    ],
+                    rating_value: vec![
+                        AggregateRatingRatingValueFieldEnum::Text("5".into()),
+                    ],
+                    ..Default::default()
+                },
+            ],
+            cook_time: vec![DurationOrText::Text("PT40M".into())],
+            date_published: vec![
+                 "2021-12-06T06:00:00+00:00".into(),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "These brownies are ultra-fudgy and have the most delicious peanut butter filling. Even if you are a novice home baker, you will love how simple and easy this recipe is. All you need are a few basic ingredients to make this chocolaty treat from scratch.".into(),
+                ),
+            ],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://www.alsothecrumbsplease.com/wp-content/uploads/2021/11/Peanut-Butter-Brownies-13.jpg".into(),
+                ),
+            ],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "chocolate peanut butter brownie recipe, pb brownies, peanut butter brownies, peanut butter filled brownies, peanut butter swirl brownies".into(),
+                ),
+            ],
+            name: vec!["The Best Chocolate Peanut Butter Brownies".into()],
+            nutrition: vec![NutritionInformation {
+                calories: vec![Energy::new("348 kcal")],
+                carbohydrate_content: vec![Mass::new("32 g")],
+                cholesterol_content: vec![Mass::new("47 mg")],
+                context: None,
+                fat_content: vec![Mass::new("23 g")],
+                fiber_content: vec![Mass::new("3 g")],
+                protein_content: vec![Mass::new("7 g")],
+                saturated_fat_content: vec![Mass::new("11 g")],
+                serving_size: vec!["1 serving".into()],
+                sodium_content: vec![Mass::new("159 mg")],
+                sugar_content: vec![Mass::new("23 g")],
+                r#type: AtType::NutritionInformation.to_opt(),
+                trans_fat_content: vec![Mass::new("1 g")],
+                unsaturated_fat_content: vec![Mass::new("11 g")],
+            }],
+            prep_time: vec![DurationOrText::Text("PT15M".into())],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text("16".into()),
+                RecipeRecipeYieldFieldEnum::Text("16 servings".into()),
+            ],
+            recipe_category: vec![
+                "Dessert".into(),
+            ],
+            recipe_cuisine: vec!["American".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1 cup creamy peanut butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup powdered sugar, sifted".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 cup unsalted butter, melted".into()),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "8 oz semi-sweet chocolate bars, roughly chopped".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1/2 cup unsalted butter, cut into a few pieces".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "1/4 cup unsweetened cocoa powder, spooned and leveled".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text("2 large eggs".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup granulated sugar".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 tsp vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2/3 cup all-purpose flour, spooned and leveled".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 tsp salt".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Preheat the oven to 350°F (177°C) and line a 9x9-inch (23x23cm) brownie pan with parchment paper. Set aside.",
+                    None,
+                    Some(
+                        "Preheat the oven to 350°F (177°C) and line a 9x9-inch (23x23cm) brownie pan with parchment paper. Set aside.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-0",
+                    ),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "In a large mixing bowl, whisk the peanut butter, powdered sugar, and melted butter until smooth and combined. Set aside.",
+                    None,
+                    Some(
+                        "In a large mixing bowl, whisk the peanut butter, powdered sugar, and melted butter until smooth and combined. Set aside.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-1",
+                    ),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Place the chocolate and butter in a microwave-safe bowl and heat until melted. Stir every 15-20 seconds to prevent the chocolate from overheating and burning. Remove the bowl from the microwave, add the cocoa powder and stir until combined. Let rest for 5 minutes.",
+                    None,
+                    Some(
+                        "Place the chocolate and butter in a microwave-safe bowl and heat until melted. Stir every 15-20 seconds to prevent the chocolate from overheating and burning. Remove the bowl from the microwave, add the cocoa powder and stir until combined. Let rest for 5 minutes.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-2",
+                    ),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "In a large mixing bowl, beat the eggs, sugar and vanilla for about 2-3 minutes until frothy. Add the chocolate mixture and whisk to combine. Then add the flour and salt and stir just to combine.",
+                    None,
+                    Some(
+                        "In a large mixing bowl, beat the eggs, sugar and vanilla for about 2-3 minutes until frothy. Add the chocolate mixture and whisk to combine. Then add the flour and salt and stir just to combine.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-3",
+                    ),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "You can assemble the brownie batter and peanut butter filling in two ways, filled or swirled. Either pour half of the brownie batter into the pan and cover the bottom, then add the peanut butter filling and top with the remaining brownie batter. Or you can alternate spoon dollops of peanut butter filling and chocolate brownie batter into the pan and draw a swirl.",
+                    None,
+                    Some(
+                        "You can assemble the brownie batter and peanut butter filling in two ways, filled or swirled. Either pour half of the brownie batter into the pan and cover the bottom, then add the peanut butter filling and top with the remaining brownie batter. Or you can alternate spoon dollops of peanut butter filling and chocolate brownie batter into the pan and draw a swirl.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-4",
+                    ),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Bake for 15 minutes. Then, remove the brownies from the oven and let them cool for 10 minutes. Turn the pan around, return to the oven, and bake for another 15-20 minutes, or until a toothpick comes out slightly dirty with a few crumbs attached.",
+                    None,
+                    Some(
+                        "Bake for 15 minutes. Then, remove the brownies from the oven and let them cool for 10 minutes. Turn the pan around, return to the oven, and bake for another 15-20 minutes, or until a toothpick comes out slightly dirty with a few crumbs attached.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-5",
+                    ),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Remove from the oven and let cool in the pan until firm enough to lift them out of the pan without breaking them, about 45-60 minutes. Then transfer to a cooling rack and let cool completely.",
+                    None,
+                    Some(
+                        "Remove from the oven and let cool in the pan until firm enough to lift them out of the pan without breaking them, about 45-60 minutes. Then transfer to a cooling rack and let cool completely.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-6",
+                    ),
+                ),
+                RecipeRecipeInstructionsFieldEnum::new_creative_work(
+                    "Cut into squares and serve. Store leftovers in an airtight container for up to 4 days or freeze for up to 3 months.",
+                    None,
+                    Some(
+                        "Cut into squares and serve. Store leftovers in an airtight container for up to 4 days or freeze for up to 3 months.",
+                    ),
+                    Some(
+                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-7",
+                    ),
+                ),
+            ],
+            review: vec![
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Delicious! I used semi-sweet chocolate chips because that's what I had and brown sugar instead of white. Also used Kirkland creamy peanut butter (only peanuts and water). Followed recipe other than that (including taking them out of the oven for 10 mins) and they turned out perfect. Left them in for a total of 40 mins. Thank you for sharing! Will make again for sure.".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Viv")],
+                    date_published: vec![
+                        "2025-06-22".into(),
+                    ],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "These are incredible!! My friends seemed unsure of the peanut butter at first but then went back for FOURTHS. These are definitely my new favourite, oh and they're so fudgy in the middle!!".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Sian")],
+                    date_published: vec![
+                        "2020-06-08".into(),
+                    ],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Thx fir that revipe. Found it on Pinterest and had to give it a try. I appreciate the leasurement were also in metric (i'm in france). And, most if all, the result is really TASTY ! Will def do it again. Thumbs up !".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Nou Ga")],
+                    date_published: vec![
+                        "2019-06-21".into(),
+                    ],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "These are amazing!do you know if these will keep any longer? I can usually keep brownies for a couple of weeks, although normally baked with melted chocolate in the mix so don't know if this makes a difference?".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Brinda")],
+                    date_published: vec![
+                        "2019-06-10".into(),
+                    ],
+                    ..Default::default()
+                },
+            ],
+            total_time: vec![DurationOrText::Text("PT55M".into())],
+            url: vec![
+                "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/"
+                    .into(),
+            ],
+            video: vec![
+                RecipeVideoFieldEnum::Clip(
+                    Clip {
+                        r#type: AtType::VideoObject.to_opt(),
+                        thumbnail_url: vec![
+                            "https://content.jwplatform.com/thumbs/HGYEZsWh-720.jpg".into(),
+                        ],
+                        description: vec![
+                            ClipDescriptionFieldEnum::Text(
+                                "Who doesn't love to sink their teeth into gooey peanut butter brownies? These brownies are ultra-fudgy and have the most delicious peanut butter filling. Even if you are a novice home baker, you will love how simple and easy this recipe is. All you need are a few basic ingredients to make this chocolaty treat from scratch.".into(),
+                            ),
+                        ],
+                        name: vec![
+                            "Chocolate Peanut Butter Brownies".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_alvaradostreetbakery_ok() -> Result<()> {
+        let got = scrape(Website::AlvaradoStreetBakery, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Grilled cheese grew up. Sweet fig butter, crisp green apple, and creamy brie - toasted on bread that can actually hold its own against bold flavors. Fancy enough for company, easy enough for a weeknight.".into(),
+                ),
+                RecipeDescriptionFieldEnum::Text(
+                    "How To: Fig Butter".into(),
+                ),
+                RecipeDescriptionFieldEnum::Text(
+                    "Add ½ cup dried turkish figs to a small blender with 2 tablespoons water and ¼ cup coconut\u{a0}sugar; blend until smooth.".into(),
+                ),
+            ],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://www.alvaradostreetbakery.com/cdn/shop/articles/ALV-RecipeImages-Apple-Fig_4d3ee45a-249a-4ff7-95d8-497e7a5cb957.jpg?v=1772121623".into(),
+                ),
+            ],
+            name: vec![
+                "Apple & Fig Butter Grilled Brie".into(),
+            ],
+            prep_time: vec![
+                DurationOrText::Text("10 minutes".into()),
+            ],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2 slices of your favorite Alvarado Street Bakery Bread".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "2 tablespoons fig butter (store bought or home\u{ad}made)".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "¼ green apple sliced thin".into(),
+                ),
+                RecipeRecipeIngredientFieldEnum::Text(
+                    "3 slices brie cheese (look for vegan/dairy\u{ad}free brie cheese if preferred)".into(),
+                ),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Coat one side of each slice of bread with a small amount of cooking oil.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("On the opposite side of one slice, spread on the fig butter, layer with apple and brie slices.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Top with the other slice of bread and toast in a large skillet over medium heat for 3\u{ad}-5 minutes on each side. Enjoy!".into()),
+            ],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text("1 Serving".into()),
+            ],
+            url: vec![
+                "https://www.alvaradostreetbakery.com/blogs/recipes/apple-fig-butter-grilled-brie<number>0"
+                    .into(),
             ],
             ..Default::default()
         };

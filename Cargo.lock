@@ -4231,6 +4231,7 @@ dependencies = [
  "toml 0.8.23",
  "tracing",
  "tracing-test",
+ "unicode-normalization",
  "wreq",
  "wreq-util",
 ]

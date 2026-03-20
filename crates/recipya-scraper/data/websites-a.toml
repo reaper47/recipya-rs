@@ -48,6 +48,27 @@ test = "https://www.almondandfig.com/baked-spinach-and-feta-phyllo-cigars"
 cuisine = "palestinian"
 
 [[website]]
+name = "Alpha Foodie"
+domain = "alphafoodie.com"
+variant = "AlphaFoodie"
+url = "https://www.alphafoodie.com"
+test = "https://www.alphafoodie.com/sheet-pan-chicken-fajitas/"
+
+[[website]]
+name = "Also the Crumbs Please"
+domain = "alsothecrumbsplease.com"
+variant = "AlsoTheCrumbsPlease"
+url = "https://www.alsothecrumbsplease.com"
+test = "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/"
+
+[[website]]
+name = "Alvarado Street Bakery"
+domain = "alvaradostreetbakery.com"
+variant = "AlvaradoStreetBakery"
+url = "https://www.alvaradostreetbakery.com/blogs/recipes"
+test = "https://www.alvaradostreetbakery.com/blogs/recipes/apple-fig-butter-grilled-brie"
+
+[[website]]
 name = "Arbuz"
 domain = "arbuz.com"
 variant = "Arbuz"
