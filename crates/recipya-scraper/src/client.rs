@@ -3,6 +3,7 @@ use std::io::Read;
 use async_trait::async_trait;
 use axum::body::Bytes;
 use flate2::read::GzDecoder;
+use wreq::header::LOCATION;
 use wreq_util::Emulation;
 
 use crate::websites::Website;
@@ -47,11 +48,23 @@ impl HttpClient for AppHttpClient {
         let bytes_vec = bytes.to_vec();
 
         let text = {
-            let intial = String::from_utf8_lossy(&bytes_vec);
-            if intial.contains(ENABLE_JS) || intial.contains(FORBIDDEN) {
-                self.client_wreq.get(url).send().await?.text().await?
+            let initial = String::from_utf8_lossy(&bytes_vec);
+
+            if initial.contains(ENABLE_JS) || initial.contains(FORBIDDEN) {
+                let res = self.client_wreq.get(url).send().await?;
+                if res.status().is_redirection() {
+                    let location = res
+                        .headers()
+                        .get(LOCATION)
+                        .and_then(|v| v.to_str().ok())
+                        .unwrap_or("");
+
+                    self.client_wreq.get(location).send().await?.text().await?
+                } else {
+                    res.text().await?
+                }
             } else {
-                intial.into_owned()
+                initial.into_owned()
             }
         };
 
