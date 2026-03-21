@@ -15,7 +15,7 @@ impl Website {
     pub fn from(url: &str) -> Result<Self> {
         let url = Url::parse(url).map_err(|err| Error::Parse(err.to_string()))?;
         let domain = url.domain().ok_or(Error::UnknownWebsite)?;
-        Self::from_domain(domain).ok_or(Error::DomainNotImplemented)
+        Ok(Self::from_domain(domain))
     }
 
     /// Parses the given HTML document manually.
