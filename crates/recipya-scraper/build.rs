@@ -66,27 +66,30 @@ impl FileContent {
     /// Enumeration of all supported recipe websites.
     #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub enum Website {{
-{}    }}
+{}        Unknown,
+    }}
 
     impl Website {{
         /// Returns the domain name of the website.
         pub const fn domain(&self) -> &'static str {{
             match self {{
-{domain_arms}            }}
+{domain_arms}                Self::Unknown => "",
+            }}
         }}
 
         /// Creates a `Website` instance from a domain string.
         /// Strips "www." prefix automatically.
-        pub fn from_domain(domain: &str) -> Option<Self> {{
+        pub fn from_domain(domain: &str) -> Self {{
             match domain.trim_start_matches("www.") {{
-{from_domain_arms}                _ => None,
+{from_domain_arms}                _ => Self::Unknown,
             }}
         }}
 
         /// Returns test URLs for this website (used in unit tests).
         pub fn test_urls(&self) -> Vec<&'static str> {{
             match self {{
-{test_urls_arms}            }}
+{test_urls_arms}                Self::Unknown => vec![],
+            }}
         }}
 
         /// Returns an iterator over all website variants.
@@ -168,7 +171,7 @@ fn main() {
         file_content.enum_variants.push(website.variant.clone());
         writeln!(
             file_content.from_domain_arms,
-            "\t\t\t\t\"{}\" => Some(Self::{}),",
+            "\t\t\t\t\"{}\" => Self::{},",
             website.domain, website.variant
         )
         .unwrap();
