@@ -9,11 +9,13 @@ use axum::body::Bytes;
 use flate2::read::GzDecoder;
 use schema_org::Recipe;
 use tracing::error;
+use wreq::Client;
+use wreq_util::Emulation;
 
 use support::fs::MockFs;
 
-use crate::client::HttpClient;
-use crate::websites::Website;
+use crate::{ENABLE_JS, client::HttpClient};
+use crate::{FORBIDDEN, websites::Website};
 use crate::{Result, Scraper};
 
 /// A mock HTTP client for use in tests to avoid sending real HTTP requests.
@@ -76,27 +78,38 @@ pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
     let path = get_html_file_path(website, number);
 
     if !path.exists() {
-        let client = reqwest::Client::new();
-        match client.get(*url).send().await {
-            Ok(res) => {
-                fs::File::create(path)
-                    .unwrap()
-                    .write(&res.bytes().await?)
-                    .inspect_err(|err| error!("Could not write {website}: {err}"))
-                    .unwrap();
-            }
-            Err(err) => error!("Could not fetch {website}: {err}"),
-        }
+        fs::File::create(path)
+            .unwrap()
+            .write(&fetch_html(url).await?)
+            .inspect_err(|err| error!("Could not write {website}: {err}"))
+            .unwrap();
     }
 
     let url = format!("{url}<number>{number}");
     mock_scraper().scrape(&url).await
 }
 
+async fn fetch_html(url: &str) -> Result<Bytes> {
+    let client = reqwest::Client::new();
+    let res = client.get(url).send().await?;
+    let bytes = res.bytes().await?;
+    let bytes_vec = bytes.to_vec();
+    let text = String::from_utf8_lossy(&bytes_vec);
+
+    if text.contains(ENABLE_JS) || text.contains(FORBIDDEN) {
+        let client = Client::builder().emulation(Emulation::Chrome145).build()?;
+        let resp = client.get(url).send().await?;
+        Ok(resp.bytes().await?)
+    } else {
+        Ok(bytes)
+    }
+}
+
 fn get_html_file_path(website: Website, number: usize) -> PathBuf {
-    let path = std::env::current_dir()
-        .unwrap()
-        .join(format!("{BASE_HTML_DIR}/{website}_{number}.html"));
+    let path = std::env::current_dir().unwrap().join(format!(
+        "{BASE_HTML_DIR}/{}_{number}.html",
+        website.to_string().trim_end_matches('/')
+    ));
 
     let path_str = path
         .to_string_lossy()

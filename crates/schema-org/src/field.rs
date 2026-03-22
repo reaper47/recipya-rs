@@ -1295,9 +1295,8 @@ impl Default for FieldEnum44 {
 ///<https://schema.org/inDefinedTermSet>
 pub type DefinedTermInDefinedTermSetFieldEnum = FieldEnum44;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
-#[serde(untagged)]
 pub enum FieldEnum48 {
     ///<https://schema.org/Distance>
     Distance(Distance),
@@ -1308,6 +1307,44 @@ pub enum FieldEnum48 {
 impl Default for FieldEnum48 {
     fn default() -> Self {
         Self::Distance(Distance::default())
+    }
+}
+impl<'de> Deserialize<'de> for FieldEnum48 {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = Value::deserialize(deserializer)?;
+        match &value {
+            Value::String(s) => {
+                if let Ok(n) = s.trim().parse::<i32>() {
+                    return Ok(Self::Integer(n));
+                }
+
+                Err(serde::de::Error::custom(format!(
+                    "cannot parse into i32: {s}"
+                )))
+            }
+            Value::Number(n) => {
+                if let Some(i) = n.as_i64().and_then(|i| i32::try_from(i).ok()) {
+                    return Ok(Self::Integer(i));
+                }
+
+                Err(serde::de::Error::custom(format!(
+                    "number out of i32 range: {n}"
+                )))
+            }
+            _ => {
+                if let Ok(v) = serde_json::from_value::<Distance>(value.clone()) {
+                    return Ok(Self::Distance(v));
+                }
+
+                if let Ok(v) = serde_json::from_value::<QuantitativeValue>(value.clone()) {
+                    return Ok(Self::QuantitativeValue(v));
+                }
+
+                Err(serde::de::Error::custom(format!(
+                    "cannot deserialize FieldEnum48 from {value}"
+                )))
+            }
+        }
     }
 }
 ///<https://schema.org/height>
@@ -1772,6 +1809,37 @@ impl RecipeRecipeInstructionsFieldEnum {
         {
             *i += 1;
         }
+    }
+
+    /// Creates a new `CreativeWork` field with the given text and optional image.
+    pub fn new_creative_work(
+        text: &str,
+        image: Option<&str>,
+        name: Option<&str>,
+        url: Option<&str>,
+    ) -> Self {
+        Self::CreativeWork(
+            CreativeWork {
+                r#type: AtType::HowToStep.to_opt(),
+                text: vec![text.into()],
+                image: image
+                    .map(|u| {
+                        vec![CreativeWorkImageFieldEnum::ImageObject(
+                            ImageObject {
+                                r#type: AtType::ImageObject.to_opt(),
+                                url: vec![u.into()],
+                                ..Default::default()
+                            }
+                            .into(),
+                        )]
+                    })
+                    .unwrap_or_default(),
+                name: name.map(|n| vec![n.into()]).unwrap_or_default(),
+                url: url.map(|u| vec![u.into()]).unwrap_or_default(),
+                ..Default::default()
+            }
+            .into(),
+        )
     }
 }
 

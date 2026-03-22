@@ -15,12 +15,15 @@ impl Website {
     pub fn from(url: &str) -> Result<Self> {
         let url = Url::parse(url).map_err(|err| Error::Parse(err.to_string()))?;
         let domain = url.domain().ok_or(Error::UnknownWebsite)?;
-        Self::from_domain(domain).ok_or(Error::DomainNotImplemented)
+        Ok(Self::from_domain(domain))
     }
 
     /// Parses the given HTML document manually.
     pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe> {
         match self {
+            Self::AllRoadsLeadToTheKitchen => custom::a::allroadsleadtothekitchen::parse(doc, url),
+            Self::AlmondAndFig => custom::a::almondandfig::parse(doc, url),
+            Self::AlvaradoStreetBakery => custom::a::alvaradostreetbakery::parse(doc, url),
             Self::Zeezest => custom::z::zeezest::parse(doc, url),
             Self::ZiaHatchChileCompany => custom::z::ziahatchchilecompany::parse(doc, url),
             Self::ZibaKitchen => custom::z::zibakitchen::parse(doc, url),

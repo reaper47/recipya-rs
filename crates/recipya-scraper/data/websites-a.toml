@@ -17,3 +17,60 @@ domain = "allrecipes.com"
 variant = "AllRecipes"
 url = "https://www.allrecipes.com/"
 test = "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"
+
+[[website]]
+name = "All Roads Lead To The Kitchen"
+domain = "allroadsleadtothe.kitchen"
+variant = "AllRoadsLeadToTheKitchen"
+url = "https://www.allroadsleadtothe.kitchen"
+test = "https://www.allroadsleadtothe.kitchen/2019/12/garlic-parmesan-wings.html"
+
+[[website]]
+name = "All Things Mamma"
+domain = "allthingsmamma.com"
+variant = "AllThingsMamma"
+url = "https://www.allthingsmamma.com"
+test = "https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-container-36586"
+
+[[website]]
+name = "Almanac"
+domain = "almanac.com"
+variant = "Almanac"
+url = "https://www.almanac.com/cooking"
+test = "https://www.almanac.com/recipe/ginger-bran-muffins"
+
+[[website]]
+name = "Almond & Fig"
+domain = "almondandfig.com"
+variant = "AlmondAndFig"
+url = "https://www.almondandfig.com/"
+test = "https://www.almondandfig.com/baked-spinach-and-feta-phyllo-cigars"
+cuisine = "palestinian"
+
+[[website]]
+name = "Alpha Foodie"
+domain = "alphafoodie.com"
+variant = "AlphaFoodie"
+url = "https://www.alphafoodie.com"
+test = "https://www.alphafoodie.com/sheet-pan-chicken-fajitas/"
+
+[[website]]
+name = "Also the Crumbs Please"
+domain = "alsothecrumbsplease.com"
+variant = "AlsoTheCrumbsPlease"
+url = "https://www.alsothecrumbsplease.com"
+test = "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/"
+
+[[website]]
+name = "Alvarado Street Bakery"
+domain = "alvaradostreetbakery.com"
+variant = "AlvaradoStreetBakery"
+url = "https://www.alvaradostreetbakery.com/blogs/recipes"
+test = "https://www.alvaradostreetbakery.com/blogs/recipes/apple-fig-butter-grilled-brie"
+
+[[website]]
+name = "Arbuz"
+domain = "arbuz.com"
+variant = "Arbuz"
+url = "https://arbuz.com/"
+test = "https://arbuz.com/recipes/layered-bread/"
