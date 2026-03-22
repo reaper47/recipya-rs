@@ -61,6 +61,31 @@ where
     }
 }
 
+/// Deserializes the recipe @type.
+pub fn deserialize_type<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = <Option<Value> as serde::Deserialize>::deserialize(deserializer)?;
+    Ok(value.and_then(|v| match v {
+        Value::String(s) => Some(s),
+        Value::Array(arr) => {
+            let strings: Vec<String> = arr
+                .into_iter()
+                .filter_map(|v| v.as_str().map(str::to_owned))
+                .collect();
+
+            let first = strings.first().cloned();
+
+            strings
+                .into_iter()
+                .find(|s| s.to_lowercase() == "recipe")
+                .or(first)
+        }
+        _ => None,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
@@ -71,6 +96,12 @@ mod tests {
     struct TestStruct {
         #[serde(deserialize_with = "one_or_many")]
         values: Vec<String>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct TestStructTypeOption {
+        #[serde(deserialize_with = "deserialize_type")]
+        r#type: Option<String>,
     }
 
     #[derive(Debug, Deserialize, PartialEq)]
@@ -131,5 +162,41 @@ mod tests {
         let result: Result<TestStruct, _> = serde_json::from_str(json);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deserialize_type_string() {
+        let json = r#"{"type": "Recipe"}"#;
+
+        let got: TestStructTypeOption = serde_json::from_str(json).unwrap();
+
+        assert_eq!(got.r#type, Some("Recipe".to_string()));
+    }
+
+    #[test]
+    fn test_deserialize_type_array_prefers_recipe() {
+        let json = r#"{"type": ["Article", "Recipe", "WebPage"]}"#;
+
+        let got: TestStructTypeOption = serde_json::from_str(json).unwrap();
+
+        assert_eq!(got.r#type, Some("Recipe".to_string()));
+    }
+
+    #[test]
+    fn test_deserialize_type_array_falls_back_to_first() {
+        let json = r#"{"type": ["Article", "WebPage"]}"#;
+
+        let got: TestStructTypeOption = serde_json::from_str(json).unwrap();
+
+        assert_eq!(got.r#type, Some("Article".to_string()));
+    }
+
+    #[test]
+    fn test_deserialize_type_null() {
+        let json = r#"{"type": null}"#;
+
+        let got: TestStructTypeOption = serde_json::from_str(json).unwrap();
+
+        assert_eq!(got.r#type, None);
     }
 }

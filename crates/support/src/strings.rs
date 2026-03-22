@@ -44,7 +44,8 @@ pub fn extract_number<T>(s: &str) -> Result<T>
 where
     T: FromStr + std::fmt::Debug,
 {
-    s.split_whitespace()
+    s.replace('-', " ")
+        .split_whitespace()
         .find(|&part| part.chars().all(|c| c.is_ascii_digit()))
         .ok_or(Error::NoNumberFound)?
         .parse::<T>()

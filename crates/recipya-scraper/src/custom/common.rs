@@ -1,8 +1,9 @@
 use schema_org::{
-    AtType,
+    AtType, DurationOrText,
     field::{
         RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum,
-        RecipeRecipeIngredientFieldEnum, RecipeRecipeYieldFieldEnum,
+        RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+        RecipeRecipeYieldFieldEnum,
     },
 };
 use scraper::{ElementRef, Html, Selector};
@@ -229,5 +230,49 @@ pub fn extract_text_from_elements(
                 Some(text.trim_end_matches(',').trim().to_string())
             }
         })
+        .collect::<Vec<_>>())
+}
+
+/// Extracts the name of the recipe.
+pub fn extract_vec_string(fragment: &ElementRef, css_selector: &str) -> Vec<String> {
+    required_text(fragment, css_selector)
+        .ok()
+        .map(|s| vec![s.trim().into()])
+        .unwrap_or_default()
+}
+
+/// Extracts a duration from a meta tag.
+pub fn extract_duration(
+    fragment: &ElementRef,
+    css_selector: &str,
+    attr: &str,
+) -> Vec<DurationOrText> {
+    extract_attr(fragment, css_selector, attr)
+        .unwrap_or_default()
+        .map(|s| vec![DurationOrText::Text(s.into())])
+        .unwrap_or_default()
+}
+
+/// Extracts the ingredients from a list of elements.
+pub fn extract_ingredients_list(
+    fragment: &ElementRef,
+    css_selector: &str,
+) -> Result<Vec<RecipeRecipeIngredientFieldEnum>> {
+    Ok(fragment
+        .select(&Selector::parse(css_selector)?)
+        .flat_map(|el| el.text())
+        .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.into()))
+        .collect::<Vec<_>>())
+}
+
+/// Extracts the instructions from a list of elements.
+pub fn extract_instructions_list(
+    fragment: &ElementRef,
+    css_selector: &str,
+) -> Result<Vec<RecipeRecipeInstructionsFieldEnum>> {
+    Ok(fragment
+        .select(&Selector::parse(css_selector)?)
+        .flat_map(|el| el.text())
+        .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
         .collect::<Vec<_>>())
 }

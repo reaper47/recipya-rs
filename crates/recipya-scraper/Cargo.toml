@@ -25,6 +25,9 @@ scraper.workspace = true
 serde_json.workspace = true
 support.workspace = true
 tracing.workspace = true
+unicode-normalization = "0.1.25"
+wreq = { version = "6.0.0-rc.28", features = ["prefix-symbols"] }
+wreq-util = "3.0.0-rc.10"
 
 [dev-dependencies]
 pretty_assertions.workspace = true
