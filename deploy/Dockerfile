@@ -15,12 +15,15 @@ RUN apt-get update && \
     perl \
     perl-base \
     clang \
+    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/recipya
+
 ENV CC=clang
 ENV CXX=clang++
-ENV OPENSSL_NO_VENDOR=1
+ENV OPENSSL_NO_VENDOR=0
+ENV PQ_LIB_STATIC=1
 
 COPY . .
 RUN cargo build -r --locked
