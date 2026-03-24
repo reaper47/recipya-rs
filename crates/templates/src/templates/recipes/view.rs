@@ -108,7 +108,7 @@ pub fn view_recipe_helper(
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
                                 div class="grid grid-flow-col border-gray-700 col-span-6 md:border-t md:row-span-1 print:border-none" {
                                     div class={
-                                        "flex justify-center items-center"
+                                        "py-2 flex justify-center items-center border-b border-gray-700 md:border-b-0"
                                         @if data.is_preview { " md:hidden" }
                                     } {
                                         (render_rating("rating", recipe.rating, None, true, None))
@@ -123,7 +123,7 @@ pub fn view_recipe_helper(
                                             (view.recipe_details.category)
                                         }
                                     }
-                                    div class="grid col-span-2 border-gray-700 place-items-center text-sm border-x md:col-span-1 print:hidden" {
+                                    div class="grid col-span-2 border-gray-700 place-items-center text-sm border-x p-2 md:p-0 md:col-span-1 print:hidden" {
                                         @if data.is_authenticated && !data.is_preview {
                                             form autocomplete="off" _="on submit halt the event" class="print:hidden" {
                                                 fieldset class="fieldset" {
@@ -137,7 +137,7 @@ pub fn view_recipe_helper(
                                                         } else {
                                                             recipe.r#yield.to_string()
                                                         })
-                                                        class="input md:max-w-24"
+                                                        class="input max-w-18 md:max-w-24"
                                                         hx-get=(format!("/recipes/{recipe_id}/scale"))
                                                         hx-trigger="input"
                                                         hx-target="#ingredients-instructions-container";
@@ -204,7 +204,7 @@ pub fn view_recipe_helper(
                                     @if recipe_details.nutrition.per_100g.is_none() { " print:hidden" }
                                 } {
                                     div class={
-                                        "col-span-3 md:h-full md:border-r md:row-span-1 print:hidden"
+                                        "col-span-3 md:h-full md:border-r dark:md:border-gray-700 md:row-span-1 print:hidden"
                                         @if data.is_preview { " border-b" } @else { " min-h-40" }
                                     } {
                                         textarea readonly class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {
@@ -344,10 +344,7 @@ fn render_right_controls(
     data: &Data,
 ) -> Markup {
     html! {
-        span class="md:hidden" {
-            button title="Open recipe options menu" popovertarget="recipe_menu" popovertargetaction="toggle" {
-                (icon_ellipsis_vertical())
-            }
+        span class="hidden md:hidden" {
             div #recipe-menu
                 popover
                 style="inset: unset; top: 3.5rem; right: 0.5rem;"
@@ -432,7 +429,7 @@ fn render_right_controls(
                 }
             } @else {
                 (render_favourite_button(recipe_id, is_favourite, false, true))
-                button type="button" title="Open timeline" aria-label="Open timeline" class="btn btn-xs btn-ghost"
+                button type="button" title="Open timeline" aria-label="Open timeline" class="hidden btn btn-xs btn-ghost md:block"
                         hx-get=(format!("/recipes/{recipe_id}/timeline"))
                         hx-target="#timeline-dialog-result"
                         hx-push-url="false"
@@ -441,7 +438,7 @@ fn render_right_controls(
                 }
             }
             div class="dropdown dropdown-end" {
-                div tabindex="0" role="button" class="btn btn-xs btn-ghost" {
+                div tabindex="0" role="button" class="btn btn-xs btn-ghost" title="Open recipe options menu" {
                     (icon_ellipsis_vertical())
                 }
                 ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-40 p-2 shadow-sm" {
@@ -450,6 +447,17 @@ fn render_right_controls(
                             button _="on click call #timeline-new-event-dialog.showModal()" {
                                 (icon_fire())
                                 "Recipe made"
+                            }
+                        }
+                        li class="block md:hidden" _="on click document.activeElement.blur()" {
+                            a title="Open timeline"
+                                aria-label="Open timeline"
+                                hx-get=(format!("/recipes/{recipe_id}/timeline"))
+                                hx-target="#timeline-dialog-result"
+                                hx-push-url="false"
+                                _="on htmx:afterRequest from me call #timeline-dialog.showModal()" {
+                                (icon_timeline())
+                                "Timeline"
                             }
                         }
                         @if matches!(recipe_source, Source::Url(_)) {

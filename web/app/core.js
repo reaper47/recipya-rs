@@ -626,9 +626,7 @@ function syncLayout() {
   document
     .getElementById("desktop-nav")
     ?.classList.toggle("hidden", !isAside || isMobile);
-  document
-    .getElementById("mobile-nav")
-    ?.classList.toggle("hidden", isAside && !isMobile);
+  document.getElementById("mobile-nav")?.classList.toggle("hidden", !isAside);
 
   ["add-recipe", "pagination-recipes"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("hidden", !isAside);

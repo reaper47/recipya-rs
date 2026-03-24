@@ -652,7 +652,7 @@ fn settings_data(_data: &Data) -> Markup {
                         "Download your data in the selected file format."
                     }
                 }
-                form class="grid gap-1 grid-flow-col" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" _="on submit halt the event then call alert('Not implemented yet')" {
+                form class="gap-1 grid-flow-col [display:-webkit-box] md:[display:grid]" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" _="on submit halt the event then call alert('Not implemented yet')" {
                     fieldset class="fieldset" {
                         select required #file-type name="type" class="select select-sm" {
                             optgroup label="Recipes" {
