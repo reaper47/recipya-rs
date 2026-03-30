@@ -1,0 +1,25 @@
+[Unit]
+Description=Recipya PostgreSQL Database
+
+[Container]
+ContainerName=recipya-rs-db
+Image=docker.io/reaper99/recipya-rs-db:nightly
+Network=recipya-rs-net
+
+EnvironmentFile=%h/.config/containers/systemd/recipya-rs-db.env
+
+Volume=recipya-rs-db:/var/lib/postgresql:z
+PublishPort=5432:5432
+
+HealthCmd=pg_isread -U postgres
+HealthInterval=3s
+HealthTimeout=5s
+HealthRetries=10
+
+AutoUpdate=registry
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
