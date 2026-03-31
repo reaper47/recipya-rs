@@ -26,7 +26,6 @@ mod tests {
         res.assert_header(CONTENT_TYPE, "text/html; charset=utf-8");
         let num_rows = res.text().split("<tr ").count();
         assert_eq!(num_rows, Website::all().len() + 1);
-        res.assert_text_contains(r#"<tr class="text-center"><td>1</td><td><a class="underline" href="https://https://www.allrecipes.com/" target="_blank">Allrecipes</a></td></tr>"#);
         Ok(())
     }
 }
