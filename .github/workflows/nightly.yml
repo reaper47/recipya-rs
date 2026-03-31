@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
       - name: Get new commits
         id: numCommits
-        run: echo "commits=$(git log --oneline --since '24 hours ago' | wc -l)" >> "$GITHUB_OUTPUT"
+        run: echo "commits=$(git log --oneline --since '24 hours ago' | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
 
   binaries:
     timeout-minutes: 120
@@ -68,7 +68,7 @@ jobs:
           # Windows builds (use native)
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: recipya-nightly-x86_64-pc-windows-msvc.exe
+            artifact: recipya-nightly-x86_64-pc-windows-msvc
             use_docker: false
 
           #- os: windows-latest
@@ -210,9 +210,8 @@ jobs:
             downloads/recipya-nightly-x86_64-unknown-linux-musl/*
             downloads/recipya-nightly-x86_64-unknown-linux-gnu/*
             downloads/recipya-nightly-aarch64-unknown-linux-gnu/*
-            downloads/recipya-nightly-x86_64-apple-darwin/*
             downloads/recipya-nightly-aarch64-apple-darwin/*
-            downloads/recipya-nightly-x86_64-pc-windows-msvc.exe/*
+            downloads/recipya-nightly-x86_64-pc-windows-msvc/*
 
   build-push-db:
     runs-on: ubuntu-latest

@@ -1,0 +1,24 @@
+[Unit]
+Description=Recipya Rust Application
+After=recipya-rs-db.service
+Requires=recipya-rs-db.service
+
+[Container]
+ContainerName=recipya-rs
+Image=docker.io/reaper99/recipya-rs:nightly
+Network=recipya-rs-net
+
+EnvironmentFile=%h/.config/containers/systemd/recipya-rs.env
+
+PublishPort=8085:8078
+Volume=recipya-rs-data:/home/recipya/.local/share/Recipya:z
+
+PodmanArgs=--requires=recipya-rs-db
+AutoUpdate=registry
+
+[Service]
+Restart=always
+ExecStartPre=/bin/sleep 5
+
+[Install]
+WantedBy=default.target
