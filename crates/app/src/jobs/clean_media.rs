@@ -78,6 +78,11 @@ async fn fetch_images(
         .select(schema::recipes::image)
         .distinct()
         .union(
+            schema::additional_images_recipe::table
+                .select(schema::additional_images_recipe::image.nullable())
+                .distinct(),
+        )
+        .union(
             schema::cookbooks::table
                 .select(schema::cookbooks::image)
                 .distinct(),

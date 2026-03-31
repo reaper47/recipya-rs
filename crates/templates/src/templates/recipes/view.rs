@@ -443,6 +443,16 @@ fn render_right_controls(
                 }
                 ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-40 p-2 shadow-sm" {
                     @if matches!(&data.share, Some(share) if !share.is_shared) {
+                        li .md:hidden {
+                            a #edit-recipe title="Edit recipe"
+                                hx-get=(format!("/recipes/{recipe_id}/edit"))
+                                hx-push-url="true"
+                                hx-target="#content"
+                                hx-swap="innerHTML transition:true" {
+                                (icon_pencil(false))
+                                "Edit"
+                            }
+                        }
                         li _="on click document.activeElement.blur()" {
                             button _="on click call #timeline-new-event-dialog.showModal()" {
                                 (icon_fire())
