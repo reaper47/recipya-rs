@@ -323,7 +323,7 @@ where
         .map(str::trim)
         .collect::<Vec<_>>();
 
-    keywords.sort();
+    keywords.sort_unstable();
     keywords.dedup();
 
     let keyword_ids: Vec<i64> = diesel::insert_into(schema::keywords::table)

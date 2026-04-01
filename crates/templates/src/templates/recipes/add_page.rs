@@ -233,7 +233,7 @@ fn import_recipes_dialog() -> Markup {
                             div {
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Choose an application" }
-                                    select #app-select name="app" .select {
+                                    select #app-select name="app" .select.block {
                                         option disabled selected { "Pick an application" }
                                         @for app in all_apps() {
                                             option value=(app.to_string()) { (format!("{app:?}")) }
@@ -265,7 +265,7 @@ fn import_recipes_dialog() -> Markup {
                             div {
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Choose an API" }
-                                    select #api-select name="api" .select required {
+                                    select #api-select name="api" .select.block required {
                                         option value="" disabled selected { "Pick an API" }
                                         @for api in all_apis() {
                                             option value=(api.to_string()) { (format!("{api:?}")) }

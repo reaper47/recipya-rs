@@ -1,4 +1,5 @@
 use std::io::{Read, Seek};
+use std::path::Path;
 
 use humantime::parse_duration;
 use serde::Deserialize;
@@ -112,8 +113,8 @@ impl From<CookmateRecipe> for Recipe {
             },
             image: vec![r.imageurl, r.imagepath]
                 .into_iter()
-                .filter_map(|image| Url::parse(&image).ok())
-                .map(|u| RecipeImageFieldEnum::URL(u.to_string()))
+                .filter(|image| !image.trim().is_empty())
+                .map(RecipeImageFieldEnum::URL)
                 .collect::<Vec<_>>(),
             is_based_on: if r.source.is_empty() {
                 to_is_based_on(&r.url)
@@ -200,6 +201,18 @@ where
 {
     let archive = zip::ZipArchive::new(r)?;
     let (mut recipes, images) = extract_archive_contents(archive)?;
+
+    for recipe in &mut recipes {
+        for image in &mut recipe.image {
+            if let RecipeImageFieldEnum::URL(u) = image
+                && let Some(file_name) = Path::new(u.as_str()).file_name()
+                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
+            {
+                *u = path.to_string_lossy().into_owned();
+            }
+        }
+    }
+
     update_recipe_image_paths(&mut recipes, &images);
     Ok(recipes)
 }
@@ -233,6 +246,10 @@ mod tests {
             let mut got = parse_backup(buf)?;
 
             let want = results::xml_recipes();
+            assert!(match got[4].image[0].clone() {
+                schema_org::field::FieldEnum22::ImageObject(_) => false,
+                schema_org::field::FieldEnum22::URL(u) => u.starts_with("/tmp"),
+            });
             got[4].image = want[4].image.clone();
             pretty_assertions::assert_eq!(got[..5], want);
             Ok(())
@@ -774,6 +791,11 @@ mod tests {
                         RecipeKeywordsFieldEnum::TextOrURL("Poultry".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Fish/sea".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Spanish".into()),
+                    ],
+                    image: vec![
+                        RecipeImageFieldEnum::URL(
+                            "/storage/emulated/0/Android/data/fr.cookbook/files/Pictures/Aunt_Julias_Paella.jpg".into(),
+                        ),
                     ],
                     name: vec!["Aunt Julia's Paella".into()],
                     recipe_category: vec!["Pork/ham".into()],

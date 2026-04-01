@@ -45,7 +45,10 @@ impl Default for AppHttpClient {
 impl HttpClient for AppHttpClient {
     async fn get_async<'a>(&'a self, _host: Website, url: &str) -> Result<String> {
         let res = self.client.get(url).send().await?;
-        let bytes_vec = if !res.status().is_success() {
+        let bytes_vec = if res.status().is_success() {
+            let bytes = res.bytes().await?;
+            bytes.to_vec()
+        } else {
             let wres = self.client_wreq.get(url).send().await?;
             if !wres.status().is_success() {
                 let status = wres.status();
@@ -54,9 +57,6 @@ impl HttpClient for AppHttpClient {
                 return Err(Error::Fetch(format!("HTTP error: {status}")));
             }
             let bytes = wres.bytes().await?;
-            bytes.to_vec()
-        } else {
-            let bytes = res.bytes().await?;
             bytes.to_vec()
         };
 
