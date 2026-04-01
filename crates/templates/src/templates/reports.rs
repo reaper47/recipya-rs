@@ -134,6 +134,7 @@ pub fn render_reports_list(data: &ReportsData) -> Markup {
 }
 
 /// Renders the logs of a report.
+#[allow(clippy::too_many_lines)]
 pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReportLog]) -> Markup {
     html! {
         // Desktop table
