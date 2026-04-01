@@ -3,11 +3,12 @@ use std::io::Read;
 use async_trait::async_trait;
 use axum::body::Bytes;
 use flate2::read::GzDecoder;
+use tracing::error;
 use wreq::header::LOCATION;
 use wreq_util::Emulation;
 
 use crate::websites::Website;
-use crate::{ENABLE_JS, FORBIDDEN, Result};
+use crate::{ENABLE_JS, Error, FORBIDDEN, Result};
 
 /// A trait defining HTTP client functionality for synchronous and asynchronous requests.
 #[async_trait]
@@ -44,8 +45,20 @@ impl Default for AppHttpClient {
 impl HttpClient for AppHttpClient {
     async fn get_async<'a>(&'a self, _host: Website, url: &str) -> Result<String> {
         let res = self.client.get(url).send().await?;
-        let bytes = res.bytes().await?;
-        let bytes_vec = bytes.to_vec();
+        let bytes_vec = if !res.status().is_success() {
+            let wres = self.client_wreq.get(url).send().await?;
+            if !wres.status().is_success() {
+                let status = wres.status();
+                let bytes = wres.bytes().await?;
+                error!("Failed to scrape '{url}' - HTTP error: {status} (body: {bytes:?})");
+                return Err(Error::Fetch(format!("HTTP error: {status}")));
+            }
+            let bytes = wres.bytes().await?;
+            bytes.to_vec()
+        } else {
+            let bytes = res.bytes().await?;
+            bytes.to_vec()
+        };
 
         let text = {
             let initial = String::from_utf8_lossy(&bytes_vec);

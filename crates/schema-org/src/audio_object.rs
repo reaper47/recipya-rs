@@ -8,7 +8,7 @@ use crate::field::{
     AudioObjectIsBasedOnUrlFieldEnum, AudioObjectIsPartOfFieldEnum, AudioObjectKeywordsFieldEnum,
     AudioObjectSdPublisherFieldEnum, AudioObjectSubjectOfFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{one_or_many, one_or_many_string_or_num};
 use crate::{
     AggregateRating, Comment, Country, CreativeWork, Event, ImageObject, InteractionCounter,
     MediaObject, Review, Thing,
@@ -241,7 +241,7 @@ pub struct AudioObject {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub thumbnail_url: Vec<String>,
     ///<https://schema.org/copyrightYear>
-    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(default, deserialize_with = "one_or_many_string_or_num")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub copyright_year: Vec<f32>,
     ///<https://schema.org/citation>

@@ -10,3 +10,10 @@
 #
 # Optional fields (add when needed):
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
+#
+[[website]]
+name = "The Modern Proper"
+domain = "themodernproper.com"
+variant = "TheModernProper"
+url = "https://www.themodernproper.com/"
+test = "https://themodernproper.com/grilled-honey-mustard-chicken-with-peach-salad"

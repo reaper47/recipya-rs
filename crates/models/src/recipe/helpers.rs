@@ -317,7 +317,12 @@ where
         return Ok(());
     }
 
-    let mut keywords = Vec::from(keywords);
+    let mut keywords = keywords
+        .iter()
+        .flat_map(|k| k.split(','))
+        .map(str::trim)
+        .collect::<Vec<_>>();
+
     keywords.sort();
     keywords.dedup();
 

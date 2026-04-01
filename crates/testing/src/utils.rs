@@ -155,7 +155,7 @@ pub async fn build_server_anonymous(app_config: Config) -> Result<TestServer> {
         ..TestServerConfig::default()
     };
 
-    Ok(TestServer::new_with_config(routes, config)?)
+    Ok(TestServer::new_with_config(routes, config))
 }
 
 /// Builds a test server with a logged-in user.
@@ -185,7 +185,7 @@ pub async fn build_server_logged_in(app_config: Config) -> Result<TestServer> {
     cookie.set_http_only(true);
     cookie.set_path("/");
 
-    let mut server = TestServer::new_with_config(routes, config)?;
+    let mut server = TestServer::new_with_config(routes, config);
     server.add_cookie(cookie);
     Ok(server)
 }
@@ -220,7 +220,7 @@ async fn build_server_ws_helper(
         .await?
         .expect("User should be in database");
 
-    let mut server = TestServer::new_with_config(routes, config)?;
+    let mut server = TestServer::new_with_config(routes, config);
 
     let token = generate_access_token(&user.id)?;
     let mut cookie = Cookie::new(AUTH_TOKEN, token.clone());

@@ -2,7 +2,7 @@ use std::fs;
 use std::sync::OnceLock;
 
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 
 use support::fs::get_base_dir;
