@@ -209,7 +209,7 @@ mod tests {
                 let res = server.delete(&base_uri(user2.id)).await;
 
                 res.assert_status_ok();
-                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User deleted.","status":"alert-info","title":"Operation Successful"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User deleted.","status":"alert-info","title":"Success"}}"# ).await;
                 let state = create_app_state(config.clone()).await;
                 let user = User::get_user_by_id(&state.mm, user2.id).await;
                 assert!(
@@ -293,7 +293,7 @@ mod tests {
                     .await;
 
                 res.assert_status_ok();
-                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User password updated.","status":"alert-info","title":"Operation Successful"}}"# ).await;
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User password updated.","status":"alert-info","title":"Success"}}"# ).await;
                 assert_html(
                     &res,
                     vec![&format!(

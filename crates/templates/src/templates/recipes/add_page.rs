@@ -324,7 +324,7 @@ fn import_recipes_dialog() -> Markup {
                                             "Paste JSON"
                                         }
 
-                                        div class="rounded relative h-full border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600" {
+                                        div class="rounded relative h-full border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600 min-h-48" {
                                             div #highlighted-content class="highlighted-content text-gray-300 bg-neutral-900 pointer-events-none z-1 overflow-auto" {}
                                             textarea #json-input name="json-input" required
                                                 class="h-full w-full editor-textarea bg-transparent text-transparent caret-[#d4d4d4] z-2 overflow-auto [-webkit-text-fill-color:transparent]"
@@ -402,7 +402,7 @@ fn import_recipes_dialog() -> Markup {
                                                 }
                                             }
                                             div #schema-output class="hidden min-h-0" {
-                                                div class="rounded relative min-h-0 border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600" {
+                                                div class="rounded relative min-h-0 border-2 border-solid border border-gray-300 overflow-hidden bg-neutral-900 focus-within:border-sky-600 min-h-48" {
                                                     div #highlighted-content2 class="highlighted-content text-gray-300 bg-neutral-900 pointer-events-none z-1 overflow-auto" {}
                                                     textarea #json-schema readonly name="json-schema" placeholder="Fetching schema..."
                                                         class="h-full w-full editor-textarea bg-transparent text-transparent caret-[#d4d4d4] z-2 overflow-auto [-webkit-text-fill-color:transparent]"

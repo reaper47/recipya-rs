@@ -140,7 +140,7 @@ mod tests {
             .await;
 
         res.assert_status(StatusCode::CREATED);
-        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Timeline event created.","status":"alert-info","title":"Operation Successful"}}"# ).await;
+        assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Timeline event created.","status":"alert-info","title":"Success"}}"# ).await;
         Ok(())
     }
 

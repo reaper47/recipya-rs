@@ -14,7 +14,7 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
         html! {
             footer id=(p.id)
                 class={
-                    "footer footer-center bg-base-200 p-2 gap-2 pb-16 md:pb-2 mt-auto shrink-0"
+                    "footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0"
                     @if let Some(css) = p.additional_css.as_ref() { (format!(" {css}")) }
                 }
                 style="grid-auto-flow: row;"

@@ -26,7 +26,7 @@ pub fn index(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Mark
 
 fn render_index(data: &ReportsData) -> Markup {
     html! {
-        div #report-index class="flex flex-col md:flex-row h-full" {
+        div #report-index class="flex flex-col-reverse md:flex-row h-full" {
             aside class="relative max-h-full"
                 hx-get="/reports/list"
                 hx-trigger="refreshReports from:body"
@@ -38,7 +38,7 @@ fn render_index(data: &ReportsData) -> Markup {
                 }
             }
             div class="order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
-            div class="order-0 flex-1 overflow-y-auto md:order-3" {
+            div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3" {
                 div #report-view-pane {
                     @if data.reports.is_empty() {
                         p class="p-4" { "No reports found." }
@@ -68,37 +68,37 @@ fn render_index(data: &ReportsData) -> Markup {
 pub fn render_reports_list(data: &ReportsData) -> Markup {
     html! {
         ul #report-menu class={
-            "menu block bg-base-100 w-full overflow-y-auto max-h-[89vh]"
+            "menu block bg-base-100 w-full overflow-y-auto max-h-[40vh] md:max-h-[89vh] pb-16 md:pb-0"
             @if data.reports.len() < 10 { " h-full" }
         } {
             @for (idx, report) in data.reports.iter().enumerate() {
                 li class=[data.selected.as_ref().map_or(idx == 0, |r| r.id == report.id).then_some("bg-base-300")]
                     hx-get=(format!("/reports/{}", report.id))
                     hx-target="#report-view-pane"
-                    hx-push-url="true"
+                    hx-push-url="false"
                     hx-trigger="mousedown"
                     hx-on:mousedown=(format!(
                         "document.querySelectorAll('#report-menu li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-report-id').value = '{}';",                        report.id
                     )) {
-                    div class="grid" {
-                        div class="grid place-self-start" {
-                            p class="font-bold" {
+                    div class="flex justify-between items-center gap-2 w-full" {
+                        div class="min-w-0" {
+                            p class="font-bold text-sm truncate" {
                                 (report.created_at.format("%b %e, %Y · %I:%M %p %Z"))
                             }
                             p class="text-sm" {
                                 "Execution time: " (report.format_duration())
                             }
                         }
-                        div class="grid gap-2" {
+                        div class="flex flex-col items-end gap-1 shrink-0" {
                             div class="badge badge-xs badge-primary" {
                                 (report.report_type.primary.name)
                             }
-                            div class="grid grid-flow-col gap-1 place-items-center" {
+                            div class="flex gap-1 items-center" {
                                 div class="tooltip tooltip-bottom" data-tip="total" {
                                     span class="badge badge-xs badge-info" { (report.items.total) }
                                 }
 
-                                div class="grid grid-flow-col gap-1 p-1 border-1 border-solid rounded-lg" {
+                                div class="flex gap-1 p-1 border border-solid rounded-lg" {
                                     div class="tooltip tooltip-bottom" data-tip="success" {
                                         span class="badge badge-xs badge-success" { (report.items.success) }
                                     }
@@ -136,7 +136,8 @@ pub fn render_reports_list(data: &ReportsData) -> Markup {
 /// Renders the logs of a report.
 pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReportLog]) -> Markup {
     html! {
-        div class="overflow-x-auto" {
+        // Desktop table
+        div class="hidden md:block overflow-x-auto" {
             table class="table table-sm" {
                 thead {
                     tr {
@@ -190,9 +191,7 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                                                 "Retry"
                                             }
                                         }
-                                        _ => {
-                                            ""
-                                        }
+                                        _ => { "" }
                                     }
                                 } @else {
                                     @match log.level.name.as_ref() {
@@ -206,10 +205,79 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                                                 "View"
                                             }
                                         }
-                                        _ => {
-                                            ""
+                                        _ => { "" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Mobile card view
+        div class="md:hidden flex flex-col gap-2 p-2 h-[50vh] overflow-y-auto" {
+            @for (idx, log) in logs.iter().enumerate() {
+                div class="bg-base-200 rounded-lg p-3 flex flex-col gap-2 text-sm" {
+                    div class="flex justify-between items-center" {
+                        span class="font-semibold text-base-content/60" { (idx + 1) }
+                        span class=(format!("badge badge-xs {}", match log.level.name.as_ref() {
+                            "success" => "badge-success",
+                            "warning" => "badge-warning",
+                            "error"   => "badge-error",
+                            _         => "badge-info",
+                        })) { (log.level.name) }
+                    }
+                    @if &primary_report_type.name == "website" {
+                        a class="link text-xs break-all leading-relaxed" href=(log.entity_name) target="_blank" {
+                            (log.entity_name)
+                        }
+                    } @else {
+                        span class="text-xs break-all" { (log.entity_name) }
+                    }
+                    div class="flex justify-between items-center gap-2" {
+                        div class="flex flex-col gap-1 text-xs text-base-content/60" {
+                            span { "Reason: " (log.error_reason.clone().unwrap_or_else(|| "-".into())) }
+                            span {
+                                "Duration: " (log.format_duration())
+                                @if log.error_code.is_some() {
+                                    " · Code: " (log.error_code.clone().unwrap_or_else(|| "-".into()))
+                                }
+                            }
+                        }
+                        div class="shrink-0" {
+                            @if &primary_report_type.name == "website" {
+                                @match log.level.name.as_ref() {
+                                    "success" if log.recipe_id.is_some() => {
+                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
+                                            "View"
                                         }
                                     }
+                                    "warning" if log.recipe_id.is_some() => {
+                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
+                                            "View"
+                                        }
+                                    }
+                                    "error" => {
+                                        button class="btn btn-xs" hx-post="/recipes/add/website" hx-swap="none" hx-vals=(format!("{{\"urls\": \"{}\"}}", log.entity_name)) {
+                                            "Retry"
+                                        }
+                                    }
+                                    _ => { "" }
+                                }
+                            } @else {
+                                @match log.level.name.as_ref() {
+                                    "success" if log.recipe_id.is_some() => {
+                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
+                                            "View"
+                                        }
+                                    }
+                                    "warning" if log.recipe_id.is_some() => {
+                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
+                                            "View"
+                                        }
+                                    }
+                                    _ => { "" }
                                 }
                             }
                         }

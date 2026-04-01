@@ -13,7 +13,7 @@ pub(super) fn icon_alarm_clock() -> Markup {
 /// Renders the 'arrow-down-tray' hero icon.
 pub(super) fn icon_arrow_down_tray() -> Markup {
     html! {
-        svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-1" fill="black" viewBox="0 0 24 24" stroke="currentColor" {
+        svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="black" viewBox="0 0 24 24" stroke="currentColor" {
             path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z" {}
             path d="m9 14 5-6h-4V0H8v8H4z" {}
         }

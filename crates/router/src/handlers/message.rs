@@ -143,7 +143,7 @@ impl IMessage for MessageHtmx {
             content: Content {
                 _type: MessageType::Toast,
                 message: message.into(),
-                title: "Operation Successful".into(),
+                title: "Success".into(),
                 ..Default::default()
             },
         }
@@ -190,7 +190,7 @@ impl IMessage for MessageWs {
         Self {
             content: Content {
                 message: message.into(),
-                title: "Operation Successful".to_string(),
+                title: "Success".to_string(),
                 ..Default::default()
             },
         }
