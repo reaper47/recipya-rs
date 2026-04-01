@@ -133,7 +133,7 @@ mod tests {
             let res = server.post(BASE_URI).form(&a_change_password_form()).await;
 
             res.assert_status(StatusCode::NO_CONTENT);
-            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageWs":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Success"}}"#).await;
             Ok(())
         }
     }
@@ -456,7 +456,7 @@ mod tests {
             res.assert_status_bad_request();
             res.assert_header(
                 axum_htmx::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Operation Successful"}}"#,
+                r#"{"showMessageHtmx":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Success"}}"#,
             );
             Ok(())
         }
@@ -483,7 +483,7 @@ mod tests {
             res.assert_status_see_other();
             res.assert_header(
                 axum_htmx::HX_TRIGGER,
-                r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Operation Successful"}}"#,
+                r#"{"showMessageHtmx":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Success"}}"#,
             );
             res.assert_header(axum_htmx::HX_REDIRECT, "/auth/login");
             assert!(

@@ -1621,7 +1621,7 @@ async fn broadcast_import_done_toast(
 
     let toast = MessageHtmx::builder(
         MessageType::Toast,
-        "Operation Successful",
+        "Success",
         format!("Imported {num_success} recipes. Skipped {num_skipped}."),
     )
     .action(Some(&redirect))
@@ -1998,30 +1998,22 @@ impl FetchWebsiteContext {
                 let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
                 let view_recipe_link = format!("View /recipes/{recipe_id}");
 
-                MessageHtmx::builder(
-                    MessageType::Toast,
-                    "Operation Warning",
-                    "The recipe exists.",
-                )
-                .status(MessageStatus::Warning)
-                .action(Some(&view_recipe_link))
-                .build()
+                MessageHtmx::builder(MessageType::Toast, "Warning", "The recipe exists.")
+                    .status(MessageStatus::Warning)
+                    .action(Some(&view_recipe_link))
+                    .build()
             } else if count_error == 1 {
-                MessageHtmx::builder(
-                    MessageType::Toast,
-                    "Operation Failed",
-                    "Fetching the recipe failed.",
-                )
-                .status(MessageStatus::Error)
-                .action(Some("View /reports?view=latest"))
-                .build()
+                MessageHtmx::builder(MessageType::Toast, "Error", "Fetching the recipe failed.")
+                    .status(MessageStatus::Error)
+                    .action(Some("View /reports?view=latest"))
+                    .build()
             } else if count_success == 1 {
                 let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
                 let view_recipe_link = format!("View /recipes/{recipe_id}");
 
                 MessageHtmx::builder(
                     MessageType::Toast,
-                    "Operation Successful",
+                    "Success",
                     "Recipe has been added to your collection.",
                 )
                 .action(Some(&view_recipe_link))
@@ -2033,7 +2025,7 @@ impl FetchWebsiteContext {
             let num_skipped = self.total - (count_success + count_warning);
 
             let message = format!("Fetched: {count_success}. Skipped: {num_skipped}");
-            MessageHtmx::builder(MessageType::Toast, "Operation Successful", &message)
+            MessageHtmx::builder(MessageType::Toast, "Success", &message)
                 .action(Some("View /reports?view=latest"))
                 .build()
         };

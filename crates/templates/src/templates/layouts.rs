@@ -194,7 +194,7 @@ pub fn main(
                     @if data.is_authenticated {
                         (render_nav(path, data_layout))
                     }
-                    div #content class="flex-1 pb-16 md:pb-0" {
+                    div #content class="flex-1 pb-0" {
                         (content)
                     }
                 }

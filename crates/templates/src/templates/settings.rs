@@ -174,7 +174,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                 label for="settings-recipes-measurement-system" class="font-semibold" {
                     "Measurement system"
                 }
-                select #settings-recipes-measurement-system name="system" class="w-fit select select-bordered select-sm" hx-post="/settings/measurement-system" hx-swap="none" {
+                select #settings-recipes-measurement-system name="system" class="block w-fit select select-bordered select-sm" hx-post="/settings/measurement-system" hx-swap="none" {
                     @for system in MeasurementSystem::iter() {
                         option value=(system)
                                selected[system == settings.measurement_system] {
@@ -212,7 +212,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                         "View sources"
                     }
                 }
-                select #settings-recipes-nutrition-source name="nutrition-source" class="w-fit select select-bordered select-sm" hx-post="/settings/nutrition/source" hx-swap="none" {
+                select #settings-recipes-nutrition-source name="nutrition-source" class="block w-fit select select-bordered select-sm" hx-post="/settings/nutrition/source" hx-swap="none" {
                     optgroup label="United States of America" {
                         option value=(NutritionDataSource::USDAFoodDataCentral) selected[NutritionDataSource::USDAFoodDataCentral == settings.nutrition_source] {
                             (NutritionDataSource::USDAFoodDataCentral)
@@ -652,16 +652,16 @@ fn settings_data(_data: &Data) -> Markup {
                         "Download your data in the selected file format."
                     }
                 }
-                form class="grid gap-1 grid-flow-col" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" _="on submit halt the event then call alert('Not implemented yet')" {
-                    fieldset class="fieldset" {
-                        select required #file-type name="type" class="select select-sm" {
+                form class="flex items-center gap-1" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" _="on submit halt the event then call alert('Not implemented yet')" {
+                    fieldset class="w-20 fieldset" {
+                        select required #file-type name="type" class="[display:ruby] md:block select select-sm" {
                             optgroup label="Recipes" {
                                 option value="json" selected { "JSON" }
                                 option value="pdf" { "PDF" }
                             }
                         }
                     }
-                    button class="btn btn-soft btn-sm mt-1" {
+                    button class="btn btn-soft btn-sm" {
                         (icon_arrow_down_tray())
                     }
                 }
