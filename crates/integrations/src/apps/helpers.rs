@@ -265,8 +265,6 @@ fn rewrite_image_id(img: &mut RecipeImageFieldEnum, images: &HashMap<String, Pat
             let Some(_) = images.get(name) else {
                 return;
             };
-
-            // obj.at_id = Some(path.to_string_lossy().into_owned());
         }
     }
 }

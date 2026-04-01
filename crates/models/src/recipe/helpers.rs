@@ -317,8 +317,13 @@ where
         return Ok(());
     }
 
-    let mut keywords = Vec::from(keywords);
-    keywords.sort();
+    let mut keywords = keywords
+        .iter()
+        .flat_map(|k| k.split(','))
+        .map(str::trim)
+        .collect::<Vec<_>>();
+
+    keywords.sort_unstable();
     keywords.dedup();
 
     let keyword_ids: Vec<i64> = diesel::insert_into(schema::keywords::table)

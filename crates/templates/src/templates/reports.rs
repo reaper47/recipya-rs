@@ -38,7 +38,7 @@ fn render_index(data: &ReportsData) -> Markup {
                 }
             }
             div class="order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
-            div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3" {
+            div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3 max-h-[94vh]" {
                 div #report-view-pane {
                     @if data.reports.is_empty() {
                         p class="p-4" { "No reports found." }

@@ -9,7 +9,7 @@ use crate::field::{
     MusicRecordingIsBasedOnFieldEnum, MusicRecordingKeywordsFieldEnum,
     MusicRecordingSdPublisherFieldEnum, MusicRecordingSubjectOfFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{one_or_many, one_or_many_string_or_num};
 use crate::{
     AggregateRating, Country, Duration, Event, ImageObject, InteractionCounter, MediaObject,
     MusicAlbum, MusicComposition, MusicPlaylist, Place, Review,
@@ -210,9 +210,9 @@ pub struct MusicRecording {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub thumbnail_url: Vec<String>,
     ///<https://schema.org/copyrightYear>
-    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(default, deserialize_with = "one_or_many_string_or_num")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub copyright_year: Vec<f32>,
+    pub copyright_year: Vec<i32>,
     ///<https://schema.org/awards>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

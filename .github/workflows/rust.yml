@@ -1,82 +1,82 @@
 name: Rust
 permissions:
-  contents: read
+    contents: read
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
 
 env:
-  CARGO_INCREMENTAL: 0
-  CARGO_PROFILE_TEST_DEBUG: 0
-  CARGO_TERM_COLOR: always
-  CARGO_PROFILE_RELEASE_LTO: true
-  CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
+    CARGO_INCREMENTAL: 0
+    CARGO_PROFILE_TEST_DEBUG: 0
+    CARGO_TERM_COLOR: always
+    CARGO_PROFILE_RELEASE_LTO: true
+    CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: 1.93.0
-          components: clippy
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                  toolchain: 1.94.0
+                  components: clippy
 
-      - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@nextest
+            - uses: Swatinem/rust-cache@v2
+            - uses: taiki-e/install-action@nextest
 
-      - uses: ikalnytskyi/action-setup-postgres@v7
-        with:
-          username: postgres
-          password: postgres
-          database: recipya_test
-          port: 5432
-          postgres-version: "17"
-          ssl: "false"
-        id: postgres
+            - uses: ikalnytskyi/action-setup-postgres@v7
+              with:
+                  username: postgres
+                  password: postgres
+                  database: recipya_test
+                  port: 5432
+                  postgres-version: "17"
+                  ssl: "false"
+              id: postgres
 
-      - name: Check for diesel CLI
-        id: diesel_check
-        run: |
-          if command -v diesel >/dev/null 2>&1; then
-            echo "Diesel already installed."
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "Diesel not installed."
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+            - name: Check for diesel CLI
+              id: diesel_check
+              run: |
+                  if command -v diesel >/dev/null 2>&1; then
+                    echo "Diesel already installed."
+                    echo "exists=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "Diesel not installed."
+                    echo "exists=false" >> $GITHUB_OUTPUT
+                  fi
 
-      - name: Install diesel_cli
-        if: steps.diesel_check.outputs.exists == 'false'
-        run: cargo install diesel_cli --no-default-features --features postgres
+            - name: Install diesel_cli
+              if: steps.diesel_check.outputs.exists == 'false'
+              run: cargo install diesel_cli --no-default-features --features postgres
 
-      - run: diesel migration run
-        env:
-          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+            - run: diesel migration run
+              env:
+                  DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: latest
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: latest
 
-      - name: Clippy production code
-        run: cargo clippy
+            - name: Clippy production code
+              run: cargo clippy
 
-      - name: Clippy tests
-        run: cargo clippy --tests
+            - name: Clippy tests
+              run: cargo clippy --tests
 
-      - name: Test
-        run: cargo nextest run
-        env:
-          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
-          RECIPYA_BASE_URL: "http://localhost:8078"
-          RECIPYA_IS_AUTOLOGIN: "false"
-          RECIPYA_IS_DEMO: "false"
-          RECIPYA_IS_ALLOW_SIGNUPS: "false"
-          SMTP_FROM_EMAIL: "example@gmail.com"
-          SMTP_HOST: "smtp.gmail.com"
-          SMTP_USERNAME: "example@gmail.com"
-          SMTP_PASSWORD: "abcd abcd bcd abcd"
+            - name: Test
+              run: cargo nextest run
+              env:
+                  DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+                  RECIPYA_BASE_URL: "http://localhost:8078"
+                  RECIPYA_IS_AUTOLOGIN: "false"
+                  RECIPYA_IS_DEMO: "false"
+                  RECIPYA_IS_ALLOW_SIGNUPS: "false"
+                  SMTP_FROM_EMAIL: "example@gmail.com"
+                  SMTP_HOST: "smtp.gmail.com"
+                  SMTP_USERNAME: "example@gmail.com"
+                  SMTP_PASSWORD: "abcd abcd bcd abcd"

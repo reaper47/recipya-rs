@@ -28,7 +28,7 @@ impl HttpClient for MockHttpClient {
     async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String> {
         let path = get_html_file_path(
             host,
-            url.rsplit_once("<Number>")
+            url.rsplit_once("<number>")
                 .unwrap_or(("0", "0"))
                 .1
                 .parse()

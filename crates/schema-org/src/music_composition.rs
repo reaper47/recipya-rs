@@ -10,7 +10,7 @@ use crate::field::{
     MusicCompositionSdPublisherFieldEnum, MusicCompositionSizeFieldEnum,
     MusicCompositionSubjectOfFieldEnum, MusicCompositionUsageInfoFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{one_or_many, one_or_many_string_or_num};
 use crate::{Comment, Country, CreativeWork, InteractionCounter, Person, Thing};
 
 ///<https://schema.org/dateCreated>
@@ -172,9 +172,9 @@ pub struct MusicComposition {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub alternative_headline: Vec<String>,
     ///<https://schema.org/copyrightYear>
-    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(default, deserialize_with = "one_or_many_string_or_num")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub copyright_year: Vec<f32>,
+    pub copyright_year: Vec<i32>,
     ///<https://schema.org/author>
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]

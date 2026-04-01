@@ -14,7 +14,7 @@ use crate::field::{
     RecipeSupplyFieldEnum, RecipeToolFieldEnum, RecipeTranslatorFieldEnum, RecipeVideoFieldEnum,
     RecipeYieldFieldEnum,
 };
-use crate::helpers::{deserialize_type, one_or_many};
+use crate::helpers::{deserialize_type, one_or_many, one_or_many_string_or_num};
 use crate::{
     AggregateRating, Comment, Country, CreativeWork, Duration, DurationOrText, ImageObject,
     InteractionCounter, NutritionInformation, Person, Review, Thing,
@@ -321,8 +321,8 @@ pub struct Recipe {
     pub thumbnail_url: Vec<String>,
     ///<https://schema.org/copyrightYear>
     #[serde(rename = "copyrightYear")]
-    #[serde(default, deserialize_with = "one_or_many")]
-    pub copyright_year: Vec<f32>,
+    #[serde(default, deserialize_with = "one_or_many_string_or_num")]
+    pub copyright_year: Vec<i32>,
     ///<https://schema.org/workExample>
     #[serde(rename = "workExample")]
     #[serde(default, deserialize_with = "one_or_many")]

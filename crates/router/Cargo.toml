@@ -32,6 +32,7 @@ itertools.workspace = true
 math.workspace = true
 mime_guess = "2.0.5"
 models = { workspace = true, features = ["test-utils"] }
+rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
@@ -56,7 +57,7 @@ auth = { workspace = true, features = ["test-helpers"] }
 axum-test.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
-image = "0.25.9"
+image = "0.25.10"
 jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
 testing.workspace = true

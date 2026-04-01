@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use rand::Rng;
-use rand::distr::Alphanumeric;
+use rand::{RngExt, distr::Alphanumeric};
 use tokio::net::TcpListener;
 use tokio::signal;
 use tokio_cron_scheduler::{Job, JobScheduler};

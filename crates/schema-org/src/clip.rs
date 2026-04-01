@@ -6,7 +6,7 @@ use crate::field::{
     ClipIsBasedOnFieldEnum, ClipIsBasedOnUrlFieldEnum, ClipKeywordsFieldEnum,
     ClipSubjectOfFieldEnum, ClipVideoFieldEnum,
 };
-use crate::helpers::one_or_many;
+use crate::helpers::{one_or_many, one_or_many_string_or_num};
 use crate::{Comment, Country, Duration, ImageObject, MediaObject, Person, Place, Thing};
 
 ///<https://schema.org/dateCreated>
@@ -156,7 +156,7 @@ pub struct Clip {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub thumbnail_url: Vec<String>,
     ///<https://schema.org/copyrightYear>
-    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(default, deserialize_with = "one_or_many_string_or_num")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub copyright_year: Vec<f32>,
     ///<https://schema.org/video>

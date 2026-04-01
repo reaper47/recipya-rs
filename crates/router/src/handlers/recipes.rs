@@ -4,6 +4,7 @@ use std::ops::Not;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
+use std::time::Duration;
 
 use axum::Form;
 use axum::extract::ws::Message;
@@ -19,6 +20,7 @@ use indexmap::IndexMap;
 use integrations::api::Credentials;
 use iso8601::DateTime;
 use itertools::izip;
+use rand::RngExt;
 use recipya_scraper::{ToHtmlTable, Website};
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -2063,113 +2065,62 @@ pub async fn add_website_post_handler(
 #[allow(clippy::too_many_lines)]
 fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
     tokio::spawn(async move {
-        let num_websites = urls.len();
-        let (tx, mut rx) = mpsc::channel::<()>(num_websites);
-        let fetch_ctx = FetchWebsiteContext::new(num_websites, user_id);
-        let num_recipes = urls.len();
+        let num_urls = urls.len();
+        let (tx, mut rx) = mpsc::channel::<()>(num_urls);
+        let fetch_ctx = FetchWebsiteContext::new(num_urls, user_id);
         let total_exec_time = Instant::now();
 
+        let mut by_host: HashMap<String, Vec<(usize, Url)>> = HashMap::new();
         for (idx, url) in urls.into_iter().enumerate() {
+            let host = url.host_str().unwrap_or("unknown").to_string();
+            by_host.entry(host).or_default().push((idx, url));
+        }
+
+        for (_host, host_urls) in by_host {
             let tx = tx.clone();
             let fetch_ctx = fetch_ctx.clone();
             let state = state.clone();
 
             tokio::spawn(async move {
-                let seq_num = i32::try_from(idx + 1).unwrap_or(1);
-                let start_time = Instant::now();
+                let mut host_urls = host_urls.into_iter().peekable();
 
-                match state.scrape(url.clone()).await {
-                    Ok(schema) => {
-                        let recipe_c = schema_to_recipe_for_create(&state, schema).await;
-                        let created_result = Recipe::create(&state.mm, user_id, &recipe_c).await;
-                        let exec_time_ms =
-                            i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
+                while let Some((idx, url)) = host_urls.next() {
+                    process_recipe_url(&state, &fetch_ctx, idx, url, user_id).await;
 
-                        match created_result {
-                            Ok(recipe_id) => {
-                                fetch_ctx.count_success.fetch_add(1, Ordering::SeqCst);
-                                fetch_ctx.recipe_ids.lock().await.push(recipe_id);
-                                fetch_ctx.report_logs.lock().await.push(
-                                    ReportLogForCreate::success(
-                                        seq_num,
-                                        url.as_str(),
-                                        Some(recipe_id),
-                                        exec_time_ms,
-                                    ),
-                                );
-                            }
-                            Err(err) => {
-                                fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
-                                error!("Error inserting recipe into database '{url}': {err}");
-                                match err {
-                                    models::Error::DuplicateEntityWithID(id) => {
-                                        fetch_ctx.recipe_ids.lock().await.push(id);
-                                        fetch_ctx.report_logs.lock().await.push(
-                                            ReportLogForCreate::warning(
-                                                seq_num,
-                                                url.as_str(),
-                                                Some(id),
-                                                "Recipe exists",
-                                                exec_time_ms,
-                                            ),
-                                        );
-                                    }
-                                    _ => {
-                                        fetch_ctx.report_logs.lock().await.push(
-                                            ReportLogForCreate::error(
-                                                seq_num,
-                                                url.as_str(),
-                                                None,
-                                                "DBInsertFail",
-                                                &err.to_string(),
-                                                exec_time_ms,
-                                            ),
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Err(err) => {
-                        fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
-                        error!("Error fetching recipe '{url}': {err}");
-                        fetch_ctx
-                            .report_logs
-                            .lock()
-                            .await
-                            .push(ReportLogForCreate::error(
-                                seq_num,
-                                url.as_str(),
-                                None,
-                                "WebsiteImportFail",
-                                &err.to_string(),
-                                i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0),
-                            ));
+                    let _ = tx.send(()).await;
+
+                    if host_urls.peek().is_some() {
+                        let jitter = rand::rng().random_range(0..500);
+                        tokio::time::sleep(Duration::from_millis(jitter)).await;
                     }
                 }
-
-                let _ = tx.send(()).await;
             });
         }
         drop(tx);
 
-        let num_recipes = num_recipes
+        let num_urls = num_urls
             .try_into()
             .inspect_err(|err| {
-                error!("Failed to convert num_recipes '{num_recipes}' to i64: {err}");
+                error!("Failed to convert num_urls '{num_urls}' to i64: {err}");
             })
             .unwrap_or(i64::MAX);
+
         state
-            .broadcast_progress("Fetching recipes", 0, num_recipes, true, user_id)
+            .broadcast_progress("Fetching recipes", 0, num_urls, true, user_id)
             .await;
 
         let mut processed = 0;
         while rx.recv().await.is_some() {
             processed += 1;
             if fetch_ctx.total > 1 {
-                let title = format!("Fetched {processed}/{}", fetch_ctx.total);
                 state
-                    .broadcast_progress(&title, processed, fetch_ctx.total, true, user_id)
+                    .broadcast_progress(
+                        "Fetching recipes",
+                        processed,
+                        fetch_ctx.total,
+                        true,
+                        user_id,
+                    )
                     .await;
             }
         }
@@ -2202,6 +2153,92 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             }
         }
     });
+}
+
+async fn process_recipe_url(
+    state: &AppState,
+    fetch_ctx: &FetchWebsiteContext,
+    idx: usize,
+    url: Url,
+    user_id: Uuid,
+) {
+    let seq_num = i32::try_from(idx + 1).unwrap_or(1);
+    let start_time = Instant::now();
+
+    match state.scrape(url.clone()).await {
+        Ok(schema) => {
+            let recipe_c = schema_to_recipe_for_create(state, schema).await;
+            let created_result = Recipe::create(&state.mm, user_id, &recipe_c).await;
+            let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
+
+            match created_result {
+                Ok(recipe_id) => {
+                    fetch_ctx.count_success.fetch_add(1, Ordering::SeqCst);
+                    fetch_ctx.recipe_ids.lock().await.push(recipe_id);
+                    fetch_ctx
+                        .report_logs
+                        .lock()
+                        .await
+                        .push(ReportLogForCreate::success(
+                            seq_num,
+                            url.as_str(),
+                            Some(recipe_id),
+                            exec_time_ms,
+                        ));
+                }
+                Err(err) => {
+                    fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
+                    error!("Error inserting recipe into database '{url}': {err}");
+                    match err {
+                        models::Error::DuplicateEntityWithID(id) => {
+                            fetch_ctx.recipe_ids.lock().await.push(id);
+                            fetch_ctx
+                                .report_logs
+                                .lock()
+                                .await
+                                .push(ReportLogForCreate::warning(
+                                    seq_num,
+                                    url.as_str(),
+                                    Some(id),
+                                    "Recipe exists",
+                                    exec_time_ms,
+                                ));
+                        }
+                        _ => {
+                            fetch_ctx
+                                .report_logs
+                                .lock()
+                                .await
+                                .push(ReportLogForCreate::error(
+                                    seq_num,
+                                    url.as_str(),
+                                    None,
+                                    "DBInsertFail",
+                                    &err.to_string(),
+                                    exec_time_ms,
+                                ));
+                        }
+                    }
+                }
+            }
+        }
+        Err(err) => {
+            fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
+            error!("Error fetching recipe '{url}': {err}");
+            fetch_ctx
+                .report_logs
+                .lock()
+                .await
+                .push(ReportLogForCreate::error(
+                    seq_num,
+                    url.as_str(),
+                    None,
+                    "WebsiteImportFail",
+                    &err.to_string(),
+                    i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0),
+                ));
+        }
+    }
 }
 
 async fn schema_to_recipe_for_create(
