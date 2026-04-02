@@ -262,7 +262,7 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
                 hx-push-url="true"
                 hx-swap="innerHTML show:window:top transition:true"
                 hx-vals=(json!({
-                    "q": format!(r#"cat:{category}"#)
+                    "q": format!("cat:{category}")
                 }))
                 _=(format!("on click put \"cat:{category}\" into #search-recipes.value")) {
                 (category)
