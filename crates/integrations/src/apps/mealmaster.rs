@@ -18,10 +18,11 @@ use std::borrow::Cow;
 use std::io::{Read, Seek};
 
 use url::Url;
+use winnow::ModalResult;
+use winnow::Parser;
 use winnow::ascii::{Caseless, line_ending, multispace0, multispace1, space0, space1};
 use winnow::combinator::{alt, delimited, opt, peek, preceded, repeat, separated, seq, terminated};
-use winnow::error::ContextError;
-use winnow::{Parser, Result as WResult};
+use winnow::error::{ContextError, ErrMode};
 
 use schema_org::Recipe;
 use schema_org::field::{
@@ -171,7 +172,7 @@ fn parse_meal_master_recipe(input: &mut &str) -> Result<Vec<MealMasterRecipe>> {
     Ok(res)
 }
 
-fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+fn parse_recipe<'s>(input: &mut &'s str) -> ModalResult<RecipeComponents<'s>> {
     seq! {RecipeComponents {
         _: repeat(0.., line_ending).fold(|| (), |(), _| ()),
         header: parse_header,
@@ -188,7 +189,7 @@ fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
     .parse_next(input)
 }
 
-fn parse_header<'s>(input: &mut &'s str) -> WResult<(&'s str, &'s str)> {
+fn parse_header<'s>(input: &mut &'s str) -> ModalResult<(&'s str, &'s str)> {
     let meal_master = "Meal-Master";
     let now_youre_cooking = "Now You're Cooking!";
     let cookmate = "Cookmate";
@@ -212,7 +213,7 @@ fn parse_header<'s>(input: &mut &'s str) -> WResult<(&'s str, &'s str)> {
         .parse_next(input)
 }
 
-fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_title<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     (
         opt(one_of(' ')),
         opt((line_ending, one_of(' '))),
@@ -225,7 +226,7 @@ fn parse_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
         .parse_next(input)
 }
 
-fn parse_categories<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+fn parse_categories<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
     alt((
         preceded(
             (
@@ -253,7 +254,7 @@ fn parse_categories<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     .parse_next(input)
 }
 
-fn parse_tags<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+fn parse_tags<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
     alt((
         preceded(
             (literal("Tags:"), alt((space0, line_ending))),
@@ -272,7 +273,7 @@ fn parse_tags<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     .parse_next(input)
 }
 
-fn parse_categlist<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+fn parse_categlist<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
     separated(
         1..,
         preceded(
@@ -284,7 +285,7 @@ fn parse_categlist<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     .parse_next(input)
 }
 
-fn parse_categlist_spaces<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+fn parse_categlist_spaces<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
     separated(
         1..,
         preceded(
@@ -296,7 +297,7 @@ fn parse_categlist_spaces<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     .parse_next(input)
 }
 
-fn parse_servings(input: &mut &str) -> WResult<i16> {
+fn parse_servings(input: &mut &str) -> ModalResult<i16> {
     alt((
         (
             space0,
@@ -319,7 +320,7 @@ fn parse_servings(input: &mut &str) -> WResult<i16> {
     .parse_next(input)
 }
 
-fn parse_author<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_author<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     (
         space0,
         literal("Contributor: "),
@@ -330,11 +331,11 @@ fn parse_author<'s>(input: &mut &'s str) -> WResult<&'s str> {
         .parse_next(input)
 }
 
-fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+fn parse_ingredients<'s>(input: &mut &'s str) -> ModalResult<Vec<Ingredient<'s>>> {
     alt((parse_twocolumn, parse_onecolumn)).parse_next(input)
 }
 
-fn parse_onecolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+fn parse_onecolumn<'s>(input: &mut &'s str) -> ModalResult<Vec<Ingredient<'s>>> {
     repeat(
         0..,
         alt((
@@ -346,7 +347,7 @@ fn parse_onecolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
     .parse_next(input)
 }
 
-fn parse_twocolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+fn parse_twocolumn<'s>(input: &mut &'s str) -> ModalResult<Vec<Ingredient<'s>>> {
     repeat(
         1..,
         alt((
@@ -366,7 +367,7 @@ fn parse_twocolumn<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
     .parse_next(input)
 }
 
-fn ingredone<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+fn ingredone<'s>(input: &mut &'s str) -> ModalResult<Ingredient<'s>> {
     (
         parse_amount,
         one_of(' '),
@@ -379,7 +380,7 @@ fn ingredone<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
         .parse_next(input)
 }
 
-fn ingredtwo<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+fn ingredtwo<'s>(input: &mut &'s str) -> ModalResult<Ingredient<'s>> {
     (
         parse_amount,
         one_of(' '),
@@ -392,87 +393,103 @@ fn ingredtwo<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
         .parse_next(input)
 }
 
-fn parse_amount<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_amount<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     take_while(1..=7, |c: char| {
         is_vchar_or_space(c) || c == '.' || c == '/'
     })
     .parse_next(input)
 }
 
-fn parse_unit<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_unit<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     alt((parse_units1, parse_units2, parse_units3, parse_units4)).parse_next(input)
 }
 
-fn parse_units1<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_units1<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     alt((
-        Caseless("x "),
-        Caseless("sm"),
-        Caseless("md"),
-        Caseless("lg"),
-        Caseless("cn"),
-        Caseless("pk"),
-        Caseless("pn"),
-        Caseless("dr"),
-        Caseless("ds"),
-        Caseless("ct"),
-        Caseless("bn"),
+        alt((
+            Caseless("x "),
+            Caseless("sm"),
+            Caseless("md"),
+            Caseless("lg"),
+            Caseless("cn"),
+            Caseless("pk"),
+        )),
+        alt((
+            Caseless("pn"),
+            Caseless("dr"),
+            Caseless("ds"),
+            Caseless("ct"),
+            Caseless("bn"),
+        )),
     ))
     .parse_next(input)
 }
 
-fn parse_units2<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_units2<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     alt((
-        Caseless("ea"),
-        Caseless("t "),
-        Caseless("ts"),
-        Caseless("T "),
-        Caseless("tb"),
-        Caseless("fl"),
-        Caseless("c "),
-        Caseless("pt"),
-        Caseless("qt"),
-        Caseless("ga"),
-        Caseless("oz"),
-        Caseless("lb"),
+        alt((
+            Caseless("ea"),
+            Caseless("t "),
+            Caseless("ts"),
+            Caseless("T "),
+            Caseless("tb"),
+            Caseless("fl"),
+        )),
+        alt((
+            Caseless("c "),
+            Caseless("pt"),
+            Caseless("qt"),
+            Caseless("ga"),
+            Caseless("oz"),
+            Caseless("lb"),
+        )),
     ))
     .parse_next(input)
 }
 
-fn parse_units3<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_units3<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     alt((
-        Caseless("ml"),
-        Caseless("cb"),
-        Caseless("cl"),
-        Caseless("dl"),
-        Caseless("l "),
-        Caseless("mg"),
-        Caseless("cg"),
-        Caseless("dg"),
-        Caseless("g "),
-        Caseless("kg"),
+        alt((
+            Caseless("ml"),
+            Caseless("cb"),
+            Caseless("cl"),
+            Caseless("dl"),
+            Caseless("l "),
+        )),
+        alt((
+            Caseless("mg"),
+            Caseless("cg"),
+            Caseless("dg"),
+            Caseless("g "),
+            Caseless("kg"),
+        )),
     ))
     .parse_next(input)
 }
 
-fn parse_units4<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_units4<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     alt((
-        Caseless("st"),
-        Caseless("cv"),
-        Caseless("sp"),
-        Caseless("sl"),
-        Caseless("sk"),
-        Caseless("sks"),
-        Caseless("ta"),
-        Caseless("lh"),
-        Caseless("hd"),
-        Caseless("bx"),
-        Caseless("lf"),
-        Caseless("  "),
+        alt((
+            Caseless("st"),
+            Caseless("cv"),
+            Caseless("sp"),
+            Caseless("sl"),
+            Caseless("sk"),
+            Caseless("sks"),
+        )),
+        alt((
+            Caseless("ta"),
+            Caseless("lh"),
+            Caseless("hd"),
+            Caseless("bx"),
+            Caseless("lf"),
+            Caseless("  "),
+        )),
     ))
     .parse_next(input)
 }
 
-fn parse_ingredient_notes<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
+fn parse_ingredient_notes<'s>(input: &mut &'s str) -> ModalResult<Ingredient<'s>> {
     let delim = "*----------------------------------------------------------------------*";
     let delim2 = "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
     let take_until_either = alt((take_until(0.., delim), take_until(0.., delim2)));
@@ -499,7 +516,7 @@ fn parse_ingredient_notes<'s>(input: &mut &'s str) -> WResult<Ingredient<'s>> {
     .parse_next(input)
 }
 
-fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
+fn parse_instructions<'s>(input: &mut &'s str) -> ModalResult<Vec<Instruction<'s>>> {
     repeat(
         0..,
         alt((
@@ -510,7 +527,7 @@ fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> 
     .parse_next(input)
 }
 
-fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_instruction<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     terminated(
         take_until_earliest_of(&["\n-----", "\n\n"]).verify(|line: &str| {
             !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
@@ -522,7 +539,7 @@ fn parse_instruction<'s>(input: &mut &'s str) -> WResult<&'s str> {
 
 fn take_until_earliest_of<'a>(
     patterns: &'a [&'a str],
-) -> impl Parser<&'a str, &'a str, ContextError> + 'a {
+) -> impl Parser<&'a str, &'a str, ErrMode<ContextError>> + 'a {
     move |input: &mut &'a str| {
         let original = *input;
         let mut earliest_pos = original.len();
@@ -539,11 +556,11 @@ fn take_until_earliest_of<'a>(
             *input = &original[earliest_pos..];
             Ok(&original[..earliest_pos])
         } else {
-            Err(ContextError::new())
+            Err(ErrMode::Backtrack(ContextError::new()))
         }
     }
 }
-fn parse_section<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_section<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     preceded(
         parse_separator,
         terminated(
@@ -554,18 +571,18 @@ fn parse_section<'s>(input: &mut &'s str) -> WResult<&'s str> {
     .parse_next(input)
 }
 
-fn parse_dashes<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_dashes<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     take_while(1.., '-').parse_next(input)
 }
 
-fn parse_not_dash<'s>(input: &mut &'s str) -> WResult<&'s str> {
-    take_while(1.., |c: char| c != '-').parse_next(input) // Take until we hit a dash again
+fn parse_not_dash<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
+    take_while(1.., |c: char| c != '-').parse_next(input)
 }
-fn parse_footer<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_footer<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     terminated(parse_separator, multispace0).parse_next(input)
 }
 
-fn parse_separator<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_separator<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     alt((
         literal("MMMMM"),
         literal("-----"),

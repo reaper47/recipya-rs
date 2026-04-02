@@ -70,7 +70,7 @@ url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.23.0", features = ["fast-rng", "serde", "v4"] }
 validator = { version = "0.20.0", features = ["derive"] }
 whatlang = "0.16.4"
-winnow = "0.7.15"
+winnow = "1.0.1"
 zip = "8.4.0"
 
 [workspace.metadata.tasks]
