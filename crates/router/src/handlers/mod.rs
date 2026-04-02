@@ -8,7 +8,6 @@ pub mod recipes;
 pub mod reports;
 pub mod settings;
 pub mod shared;
-
 pub mod static_files;
 
 use tracing::error;

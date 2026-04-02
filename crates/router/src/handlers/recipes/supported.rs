@@ -1,0 +1,73 @@
+use std::fmt::Write;
+
+use axum::response::{Html, IntoResponse};
+
+use recipya_scraper::{ToHtmlTable, Website};
+
+use crate::middleware::mw_auth::RequireAuth;
+
+/// Handles the supported applications endpoint.
+pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
+    let applications = [
+        ("AccuChef", "https://www.accuchef.com", vec![]),
+        ("BigOven", "https://www.bigoven.com", vec![".txt"]),
+        ("ChefTap", "https://cheftap.com", vec![".txt"]),
+        ("Cooklang", "https://cooklang.org/", vec![".cook"]),
+        (
+            "COOKmate",
+            "https://cooklang.org/",
+            vec![".mcb", ".mmf", ".rk", ".xml"],
+        ),
+        ("Crouton", "https://crouton.app", vec![".crumb"]),
+        (
+            "Easy Recipe Deluxe",
+            "https://easy-recipe-deluxe.software.informer.com",
+            vec![],
+        ),
+        ("Kalorio", "https://www.kalorio.de", vec![".txt", ".xml"]),
+        (
+            "MasterCook",
+            "https://www.mastercook.com",
+            vec![".mx2", ".mxp", ".mz2", ".txt"],
+        ),
+        (
+            "Meal-Master",
+            "https://web.archive.org/web/20081221021301/http://episoft.home.comcast.net/~episoft/mmdown.htm",
+            vec![".mx2", ".mxp", ".mz2", ".txt"],
+        ),
+        (
+            "Paprika",
+            "https://www.paprikaapp.com",
+            vec![".paprikarecipes"],
+        ),
+        ("Recipe Keeper", "https://recipekeeperonline.com", vec![]),
+        ("RecipeMD", "https://recipemd.org/", vec![".md"]),
+        (
+            "RecipeSage",
+            "https://recipesage.com",
+            vec![".json", ".txt", ".xml"],
+        ),
+        ("Rezkonv", "https://www.rezkonv.de/", vec![".rk"]),
+        ("Saffron", "https://www.mysaffronapp.com", vec![".txt"]),
+    ];
+
+    let mut html = String::new();
+
+    for (i, (name, url, formats)) in applications.into_iter().enumerate() {
+        html.push_str(r#"<tr class="text-center">"#);
+        let _ = write!(html, "<td>{}</td>", i + 1);
+        let _ = write!(
+            html,
+            r#"<td><a class="underline" href="{url}" target="_blank">{name}</a></td>"#
+        );
+        let _ = write!(html, "<td>{}</td>", formats.join(", "));
+        html.push_str("</tr>");
+    }
+
+    Html(html)
+}
+
+/// Handles the supported websites endpoint.
+pub async fn supported_websites_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
+    Html(Website::all().to_html_table_rows()).into_response()
+}

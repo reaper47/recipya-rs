@@ -169,6 +169,7 @@ mod tests {
         };
         scrape_test_websites(1).await?;
         let _ = server.post(BASE_URI).form(&form).await;
+        let _ = collect_ws_messages(&mut ws_server, 4).await;
 
         let res = server.post(BASE_URI).form(&form).await;
 
@@ -181,12 +182,15 @@ mod tests {
         );
         pretty_assertions::assert_eq!(
             messages[1],
-            r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
+            r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
         );
-        pretty_assertions::assert_eq!(messages[2], HIDDEN_WS_NOTIFICATION);
+        pretty_assertions::assert_eq!(
+            messages[2],
+            r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"The recipe exists.","status":"alert-warning","title":"Warning"}}"#
+        );
         pretty_assertions::assert_eq!(
             messages[3],
-            r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Success"}}"#
+            r#"{"headers": {"HX-Trigger": "refreshReports"}}"#
         );
         tokio::time::sleep(Duration::from_millis(100)).await;
         let got_logs = fetch_logs(config.clone()).await?;

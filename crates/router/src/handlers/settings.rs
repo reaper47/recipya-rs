@@ -3,21 +3,21 @@ use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use iso8601::DateTime;
-use models::nutrition::NutritionDataSource;
 use tracing::error;
+use uuid::Uuid;
 
 use app::state::AppState;
 use models::data::{AboutData, Data};
+use models::nutrition::NutritionDataSource;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
 use repository::ModelManager;
 use templates::settings::{EmailSettingsForView, SettingsForView};
-use uuid::Uuid;
 
 use crate::Error;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::broadcast_error;
-use crate::handlers::recipes::fetch_categories_keywords;
+use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
 use crate::schemas::settings::{NutritionSourcePayload, ThemePayload};
 
