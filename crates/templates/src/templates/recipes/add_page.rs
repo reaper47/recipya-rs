@@ -1,10 +1,12 @@
+use maud::{Markup, PreEscaped, html};
+
 use integrations::api::all_apis;
 use integrations::{FileFormat, all_apps};
-use maud::{Markup, PreEscaped, html};
-use models::data::Data;
+use models::data::{Data, PaginationData};
 use models::settings::UserSettingDetails;
 
 use crate::templates::layouts;
+use crate::templates::pagination::pagination;
 
 /// Renders the add recipe page.
 pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Markup {
@@ -23,6 +25,7 @@ pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> M
                 true
             ))
         }
+        (pagination(&PaginationData::hidden()))
     }
 }
 fn render_add_page() -> Markup {
@@ -278,11 +281,11 @@ fn import_recipes_dialog() -> Markup {
                                 }
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Username or email" }
-                                    input type="text" name="username" required class="input" placeholder="Enter your username";
+                                    input type="text" name="username" required class="input" placeholder="Enter your username" autocomplete="username";
                                 }
                                 fieldset .fieldset {
                                     legend class="fieldset-legend" { "Password" }
-                                    input type="password" name="password" required class="input" placeholder="Enter your password";
+                                    input type="password" name="password" required class="input" placeholder="Enter your password" autocomplete="current-password";
                                 }
                             }
                             button type="submit" class="btn btn-block btn-sm btn-primary w-full" {

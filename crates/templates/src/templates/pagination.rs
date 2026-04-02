@@ -6,9 +6,15 @@ use models::data::{PageSlot, PaginationData};
 
 /// Renders the pagination strip.
 pub(super) fn pagination(p: &PaginationData) -> Markup {
+    let oob_attr = if p.htmx.is_swap {
+        Some("innerHTML:#pagination-anchor")
+    } else {
+        None
+    };
+
     if p.is_hidden {
         html! {
-            footer #pagination .hidden hx-swap-oob=[if p.htmx.is_swap { Some("outerHTML:#pagination") } else { None }] {}
+            footer id=(p.id) .hidden hx-swap-oob=[oob_attr] {}
         }
     } else {
         html! {
@@ -19,7 +25,7 @@ pub(super) fn pagination(p: &PaginationData) -> Markup {
                 }
                 style="grid-auto-flow: row;"
                 onload=(format!("updateAddCookbookUrl({})", p.selected))
-                hx-swap-oob=[if p.htmx.is_swap { Some("outerHTML:#pagination") } else { None }] {
+                hx-swap-oob=[oob_attr] {
                 div class="join gap-0" {
                     // Previous page button
                     @if p.selected == 1 {

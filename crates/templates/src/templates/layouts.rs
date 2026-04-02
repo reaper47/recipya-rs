@@ -198,8 +198,10 @@ pub fn main(
                         (content)
                     }
                 }
-                @if let Some(p) = &data.pagination {
-                    (pagination(p))
+                footer #pagination-anchor class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 pb-16 md:pb-0" style="grid-auto-flow: row;" {
+                    @if let Some(p) = &data.pagination {
+                        (pagination(p))
+                    }
                 }
                 (toast())
                 (toast_ws("", "", false))
