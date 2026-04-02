@@ -1655,6 +1655,56 @@ mod tests {
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
     #[allow(clippy::too_many_lines)]
+    async fn test_alwadi_ok() -> Result<()> {
+        let got = scrape(Website::Alwadi, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            cook_time: vec![DurationOrText::Text("20 min".into())],
+            description: vec![RecipeDescriptionFieldEnum::Text("Delicious and delightful vegan Falafel balls especially with the tartor sauce.".into())],
+            image: vec![RecipeImageFieldEnum::URL("https://www.alwadi.com/ContentFiles/1315Image.jpg".into())],
+            name: vec!["Falafel With Tarator Sauce".into()],
+            recipe_category: vec!["Side Dish".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1 Box / 200g Al Wadi Al Akhdar Falafel".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 Cup water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Cooking oil".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup pickled cucumbers, sliced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup pickled turnips, chunks".into()),
+                RecipeRecipeIngredientFieldEnum::Text("¼ Cup fresh parsley, chopped".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 Tomato, cut into wedges".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Pita bread (or Lebanese bread)".into()),
+                RecipeRecipeIngredientFieldEnum::Text("¼ Cup tarator sauce".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Mint leaves, to decorate".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Tarator Sauce".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 Cup water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup lemon juice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup Al Wadi Al Akhdar Tahina".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Salt to Taste".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Mix each envelope of Falafel mix with 120ml / ½ cup of water. Let it stand for 10 minutes.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Use a spoon (or a Falafel spoon) to form the falafel paste into flattened balls.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Heat oil over medium-high heat. Fry few falafel at a time until golden brown.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("To test the temperature is right, each ball should sink and rise to the surface and float. Gently remove from oil and drain on paper towels.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Serve Falafel balls with Tarator sauce accompanied by pickles, parsley, tomato, mint, and pita bread.".into()),
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("2".into())],
+            url: vec![
+                "https://www.alwadi.com/english/recipes/falafel-with-tarator-sauce?filterIdCategory=&filterIdCollection=&searchKeyword=&source=collection&sourceId=1773<number>0"
+                    .into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_arbuz_ok() -> Result<()> {
         let got = scrape(Website::Arbuz, 0).await?;
 

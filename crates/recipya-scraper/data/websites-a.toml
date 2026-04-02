@@ -69,6 +69,14 @@ url = "https://www.alvaradostreetbakery.com/blogs/recipes"
 test = "https://www.alvaradostreetbakery.com/blogs/recipes/apple-fig-butter-grilled-brie"
 
 [[website]]
+name = "Alwadi"
+domain = "alwadi.com"
+variant = "Alwadi"
+url = "https://www.alwadi.com/english/recipes"
+test = "https://www.alwadi.com/english/recipes/falafel-with-tarator-sauce?filterIdCategory=&filterIdCollection=&searchKeyword=&source=collection&sourceId=1773"
+cuisine = "lebanese"
+
+[[website]]
 name = "Arbuz"
 domain = "arbuz.com"
 variant = "Arbuz"

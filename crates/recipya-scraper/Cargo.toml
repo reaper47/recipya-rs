@@ -19,6 +19,7 @@ async-trait.workspace = true
 axum.workspace = true
 derive_more.workspace = true
 flate2 = "1.1.9"
+itertools.workspace = true
 reqwest.workspace = true
 schema-org.workspace = true
 scraper.workspace = true

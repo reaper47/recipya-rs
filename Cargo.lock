@@ -4304,6 +4304,7 @@ dependencies = [
  "axum",
  "derive_more",
  "flate2",
+ "itertools 0.14.0",
  "pretty_assertions",
  "reqwest",
  "schema-org",
