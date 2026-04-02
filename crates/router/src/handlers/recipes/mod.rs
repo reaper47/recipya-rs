@@ -1,5 +1,6 @@
 pub mod add;
 pub mod categories;
+pub mod common;
 pub mod delete;
 pub mod duplicate;
 pub mod edit;
@@ -12,5 +13,3 @@ pub mod share;
 pub mod supported;
 pub mod timeline;
 pub mod view;
-
-pub(crate) mod common;
