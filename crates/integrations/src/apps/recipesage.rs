@@ -370,7 +370,7 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    Ok(parse_text_file(&mut content.as_str())?
+    Ok(parse_text_file(content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect())
@@ -402,7 +402,7 @@ where
     Ok(res.into_iter().collect())
 }
 
-fn parse_text_file(input: &mut &str) -> Result<Vec<RecipeSage>> {
+fn parse_text_file(input: &str) -> Result<Vec<RecipeSage>> {
     preceded(
         (literal("==== Recipes ===="), line_ending, line_ending),
         repeat(1.., parse_recipe.map(RecipeSage::from)),
