@@ -5,12 +5,13 @@ use iso8601::DateTime;
 use serde::Deserialize;
 use tracing::error;
 use url::Url;
+use winnow::ModalResult;
+use winnow::Parser;
 use winnow::ascii::line_ending;
 use winnow::combinator::{
     alt, delimited, opt, preceded, repeat, repeat_till, separated, terminated,
 };
-use winnow::error::ContextError;
-use winnow::{Parser, Result as WResult};
+use winnow::error::{ContextError, ErrMode};
 
 use schema_org::field::{
     CreativeWorkIsBasedOnFieldEnum, QuantitativeValueValueFieldEnum, RecipeAuthorFieldEnum,
@@ -369,7 +370,7 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    Ok(parse_text_file(&mut content.as_str())?
+    Ok(parse_text_file(content.as_str())?
         .into_iter()
         .map(Recipe::from)
         .collect())
@@ -401,116 +402,93 @@ where
     Ok(res.into_iter().collect())
 }
 
-fn parse_text_file(input: &mut &str) -> Result<Vec<RecipeSage>> {
+fn parse_text_file(input: &str) -> Result<Vec<RecipeSage>> {
     preceded(
         (literal("==== Recipes ===="), line_ending, line_ending),
         repeat(1.., parse_recipe.map(RecipeSage::from)),
     )
-    .parse_next(input)
+    .parse(input)
     .map_err(|err| Error::Parse(err.to_string()))
 }
 
-fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
-    (
-        (parse_id, opt(line_ending)),
-        parse_title,
-        parse_description,
-        parse_servings,
-        parse_active_time,
-        parse_total_time,
-        parse_source,
-        parse_url,
-        parse_notes,
-        parse_ingredients,
-        parse_instructions,
-        (
-            parse_folder,
-            parse_created_at,
-            parse_updated_at,
-            parse_user_id,
-        ),
-        parse_labels,
-        parse_images,
-        opt(line_ending),
-    )
-        .map(
-            |(
-                _,
-                title,
-                description,
-                servings,
-                _,
-                _,
-                source,
-                url,
-                notes,
-                ingredients,
-                instructions,
-                _,
-                labels,
-                image,
-                _,
-            )| {
-                let items = labels.split_first();
+fn parse_recipe<'s>(input: &mut &'s str) -> ModalResult<RecipeComponents<'s>> {
+    let _ = parse_id(input)?;
+    let _ = opt(line_ending).parse_next(input)?;
+    let title = parse_title(input)?;
+    let description = parse_description(input)?;
+    let servings = parse_servings(input)?;
+    let _ = parse_active_time(input)?;
+    let _ = parse_total_time(input)?;
+    let source = parse_source(input)?;
+    let url = parse_url(input)?;
+    let notes = parse_notes(input)?;
+    let ingredients = parse_ingredients(input)?;
+    let instructions = parse_instructions(input)?;
+    let _ = parse_folder(input)?;
+    let _ = parse_created_at(input)?;
+    let _ = parse_updated_at(input)?;
+    let _ = parse_user_id(input)?;
+    let labels = parse_labels(input)?;
+    let image = parse_images(input)?;
+    let _ = opt(line_ending).parse_next(input)?;
 
-                RecipeComponents {
-                    title: title.unwrap_or(""),
-                    description: description.filter(|s| !s.is_empty()),
-                    servings: servings
-                        .filter(|s| !s.is_empty())
-                        .map(|s| extract_number(s).unwrap_or_default()),
-                    source: source
-                        .filter(|s| !s.is_empty())
-                        .or_else(|| url.filter(|s| !s.is_empty())),
-                    notes,
-                    ingredients,
-                    instructions,
-                    category: items.map(|(&a, _b)| a),
-                    keywords: items.map(|(_a, b)| b.to_vec()).unwrap_or_default(),
-                    image,
-                }
-            },
-        )
-        .parse_next(input)
+    let items = labels.split_first();
+
+    Ok(RecipeComponents {
+        title: title.unwrap_or(""),
+        description: description.filter(|s| !s.is_empty()),
+        servings: servings
+            .filter(|s| !s.is_empty())
+            .map(|s| extract_number(s).unwrap_or_default()),
+        source: source
+            .filter(|s| !s.is_empty())
+            .or_else(|| url.filter(|s| !s.is_empty())),
+        notes,
+        ingredients,
+        instructions,
+        category: items.map(|(&a, _b)| a),
+        keywords: items.map(|(_a, b)| b.to_vec()).unwrap_or_default(),
+        image,
+    })
 }
 
-fn parse_id<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_id<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("id").parse_next(input)
 }
 
-fn parse_title<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_title<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("title").parse_next(input)
 }
 
-fn parse_description<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_description<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("description").parse_next(input)
 }
 
-fn parse_servings<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_servings<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("yield").parse_next(input)
 }
 
-fn parse_active_time<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_active_time<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("activeTime").parse_next(input)
 }
 
-fn parse_total_time<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_total_time<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("totalTime").parse_next(input)
 }
 
-fn parse_source<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_source<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("source").parse_next(input)
 }
 
-fn parse_url<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_url<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("url").parse_next(input)
 }
 
-fn parse_notes<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_notes<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("notes").parse_next(input)
 }
 
-fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+fn parse_ingredients<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
     preceded(
         literal("ingredients: "),
         repeat_till(
@@ -523,27 +501,27 @@ fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     .parse_next(input)
 }
 
-fn parse_instructions<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_instructions<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     preceded(literal(" "), take_until(0.., "folder:")).parse_next(input)
 }
 
-fn parse_folder<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_folder<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("folder").parse_next(input)
 }
 
-fn parse_created_at<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_created_at<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("createdAt").parse_next(input)
 }
 
-fn parse_updated_at<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_updated_at<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("updatedAt").parse_next(input)
 }
 
-fn parse_user_id<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_user_id<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("userId").parse_next(input)
 }
 
-fn parse_labels<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+fn parse_labels<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
     preceded(
         literal("labels: "),
         (
@@ -555,11 +533,13 @@ fn parse_labels<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
     .parse_next(input)
 }
 
-fn parse_images<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
+fn parse_images<'s>(input: &mut &'s str) -> ModalResult<Option<&'s str>> {
     parse_tag("images").parse_next(input)
 }
 
-fn parse_tag<'a>(prefix: &'a str) -> impl Parser<&'a str, Option<&'a str>, ContextError> + 'a {
+fn parse_tag<'a>(
+    prefix: &'a str,
+) -> impl Parser<&'a str, Option<&'a str>, ErrMode<ContextError>> + 'a {
     move |input: &mut &'a str| {
         preceded(
             literal(prefix),
