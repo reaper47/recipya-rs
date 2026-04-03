@@ -21,6 +21,7 @@ impl Website {
     /// Parses the given HTML document manually.
     pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe> {
         match self {
+            Self::AdultBar => custom::a::adultbar::parse(doc, url),
             Self::AllRoadsLeadToTheKitchen => custom::a::allroadsleadtothekitchen::parse(doc, url),
             Self::AlmondAndFig => custom::a::almondandfig::parse(doc, url),
             Self::AlvaradoStreetBakery => custom::a::alvaradostreetbakery::parse(doc, url),

@@ -21,6 +21,135 @@ mod tests {
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
     #[allow(clippy::too_many_lines)]
+    async fn test_adayinthelifeonthefarm_ok() -> Result<()> {
+        let got = scrape(Website::ADayInTheLifeOnTheFarm, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            nutrition: vec![
+                NutritionInformation {
+                    calories: vec![Energy::new("527.84")],
+                    carbohydrate_content: vec![Mass::new("40.45")],
+                    cholesterol_content: vec![Mass::new("202.5")],
+                    context: None,
+                    fat_content: vec![Mass::new("10.84")],
+                    fiber_content: vec![Mass::new("7.26")],
+                    protein_content: vec![Mass::new("62.25")],
+                    saturated_fat_content: vec![Mass::new("2.48")],
+                    sodium_content: vec![Mass::new("1120.72")],
+                    sugar_content: vec![Mass::new("12.34")],
+                    r#type: AtType::NutritionInformation.to_opt(),
+                    ..Default::default()
+                },
+            ],
+            recipe_cuisine: vec!["Italian".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1 rabbit".into()),
+                RecipeRecipeIngredientFieldEnum::Text("olive oil".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 c. red wine".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 (14 oz) can diced tomatoes".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 (14 oz) can tomato sauce".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 T. garlic".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 t. crushed red pepper".into()),
+                RecipeRecipeIngredientFieldEnum::Text("salt and pepper, to taste".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 T. Italian Herb Blend".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 t. sugar, if desired".into()),
+                RecipeRecipeIngredientFieldEnum::Text("8 oz. dried pasta, cooked per package directions".into()),
+            ],
+            cook_time: vec![DurationOrText::Text("PT1H45M".into())],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Cut the rabbit into 6 portions, season with salt and pepper.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Heat some olive oil in the bottom of a dutch oven. Add the chicken and sear on both sides. Add the garlic and crushed red pepper. Cook until fragrant and garlic begins to turn golden, about 30 seconds".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the wine and bring to a boil, scraping up any browned bits stuck to the bottl of the pan, until wine is reduced by half.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the tomatoes and tomato sauce. Stir in the herbs, cover, reduce heat to low and simmer for about an hour, until the rabbit is very tender.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Remove the rabbit from the stew, if desired, and remove the meat from the bones. Return the meat to the sauce, taste and add a bit of sugar if the sauce is too acidic.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Cook uncovered for about 45 minutes until sauce is thickened to desired consistency.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Serve over cooked pasta. I like egg noodles as they hold up well to the sauce.".into()),
+            ],
+            recipe_category: vec!["Entrees, Pasta".into()],
+            r#yield: vec![RecipeRecipeYieldFieldEnum::Text("4 large servings".into())],
+            prep_time: vec![DurationOrText::Text("PT15M".into())],
+            total_time: vec![DurationOrText::Text("PT2H".into())],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "Pasta, Rabbit, Stew, Game meat,".into(),
+                ),
+            ],
+            author: vec![RecipeAuthorFieldEnum::new_org("Wendy Klik")],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9yNxDT-TQM8LHVf297TWsSJGHP3fs1ANIfI2P-PQ6iavfmIxqJ61AmzbLs9dob7bjwynn5YTIZERLjzzXMWyQxqMF5r4Y_nCEEYenZufGpkhK1xiv9oW9KDgpo0UskjT_BhMkQyv0VdUYRfvKkSEPaEqbU1QfDn257_BCBxAlfS9kD8aOllSrhoo8aw/w400-h266/4.jpg".into(),
+                ),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "This recipe is inspired by one served at Il Focolore in Ishchia, Campania that was featured on Searching for Italy starring Stanly Tucci. It is rich and delicious. Well worth the time it takes to braise the rabbit and make the \"gravy\".".into(),
+                ),
+            ],
+            name: vec![
+                "Coniglio All'Ischitana (Rabbit Stew)".into(),
+            ],
+            url: vec![
+                "https://adayinthelifeonthefarm.blogspot.com/2023/05/coniglio-allischitana-rabbit-stew-and.html".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_adultbar_ok() -> Result<()> {
+        let got = scrape(Website::AdultBar, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            description: vec![RecipeDescriptionFieldEnum::Text("Copy Cat Cocktail shake licorice liqueur bottega apricot liqueur drillaud apricot juice ice licorice sticks black and served cold in a old fashioned glass.".into())],
+            keywords: vec![
+               RecipeKeywordsFieldEnum::TextOrURL(
+                   "copy cat cocktail, licorice liqueur bottega, apricot liqueur drillaud, apricot juice, ice, licorice sticks black, 15% alcohol by volume, making cocktail".into(),
+               ),
+            ],
+            image: vec![RecipeImageFieldEnum::URL("http://AdultBar.com.au/cocktails/images/cocktails/cocktails-old-fashioned-brown.png".into())],
+            name: vec!["Copy Cat Cocktail".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("30 ml Licorice Liqueur Bottega".into()),
+                RecipeRecipeIngredientFieldEnum::Text("30 ml Apricot Liqueur Drillaud".into()),
+                RecipeRecipeIngredientFieldEnum::Text("30 ml Apricot Juice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("100 ml Ice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Licorice Sticks Black".into()),
+                RecipeRecipeIngredientFieldEnum::Text("15% Alcohol By Volume".into()),
+                RecipeRecipeIngredientFieldEnum::Text("30 Proof".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1.1 Standard Drinks".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Place half the ice into shaker.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Place all the ingredients into shaker.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Shake ingredients together until mixed.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Pour all into glass.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Top glass with ice.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Drop in a licorice stick.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Bewitching".into()),
+            ],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text("190".into()),
+            ],
+            url: vec!["http://adultbar.com.au/cocktails/How-To-Make-A/Elvin<number>0".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_allrecipes_ok() -> Result<()> {
         let got = scrape(Website::AllRecipes, 0).await?;
 

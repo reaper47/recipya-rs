@@ -12,6 +12,20 @@
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
 
 [[website]]
+name = "A Day in the Life on the Farm"
+domain = "adayinthelifeonthefarm.blogspot.com"
+variant = "ADayInTheLifeOnTheFarm"
+url = "https://adayinthelifeonthefarm.blogspot.com/p/recipe-index.html"
+test = "https://adayinthelifeonthefarm.blogspot.com/2023/05/coniglio-allischitana-rabbit-stew-and.html"
+
+[[website]]
+name = "Adult Bar"
+domain = "adultbar.com.au"
+variant = "AdultBar"
+url = "http://adultbar.com.au"
+test = "http://adultbar.com.au/cocktails/How-To-Make-A/Elvin"
+
+[[website]]
 name = "Allrecipes"
 domain = "allrecipes.com"
 variant = "AllRecipes"

@@ -28,7 +28,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
     {
         extract_number(text_node)
             .ok()
-            .map_or_else(|| Vec::new(), |n| vec![RecipeRecipeYieldFieldEnum::Text(n)])
+            .map_or_else(Vec::new, |n| vec![RecipeRecipeYieldFieldEnum::Text(n)])
     } else {
         vec![]
     };
