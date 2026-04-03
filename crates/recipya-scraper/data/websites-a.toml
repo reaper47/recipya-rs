@@ -91,8 +91,24 @@ test = "https://www.alwadi.com/english/recipes/falafel-with-tarator-sauce?filter
 cuisine = "lebanese"
 
 [[website]]
+name = "Annams Recipes"
+domain = "annamsrecipes.wordpress.com"
+variant = "AnnamsRecipes"
+url = "http://annamsrecipes.com"
+test = "https://annamsrecipes.wordpress.com/2014/10/13/porivilangai-urundai/"
+cuisine = "indian"
+
+[[website]]
 name = "Arbuz"
 domain = "arbuz.com"
 variant = "Arbuz"
 url = "https://arbuz.com/"
 test = "https://arbuz.com/recipes/layered-bread/"
+
+[[website]]
+name = "Argiro Barbarigou"
+domain = "argirobarbarigou.com"
+variant = "ArgiroBarbarigou"
+url = "https://argirobarbarigou.com/recipes/"
+test = "https://argirobarbarigou.com/recipes/shrimp-and-saffron-pilaf/"
+cuisine = "greek"

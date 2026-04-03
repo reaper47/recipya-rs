@@ -26,6 +26,8 @@ impl Website {
             Self::AlmondAndFig => custom::a::almondandfig::parse(doc, url),
             Self::AlvaradoStreetBakery => custom::a::alvaradostreetbakery::parse(doc, url),
             Self::Alwadi => custom::a::alwadi::parse(doc, url),
+            Self::AnnamsRecipes => custom::a::annamsrecipes::parse(doc, url),
+            Self::ArgiroBarbarigou => custom::a::argirobarbarigou::parse(doc, url),
             Self::Zeezest => custom::z::zeezest::parse(doc, url),
             Self::ZiaHatchChileCompany => custom::z::ziahatchchilecompany::parse(doc, url),
             Self::ZibaKitchen => custom::z::zibakitchen::parse(doc, url),

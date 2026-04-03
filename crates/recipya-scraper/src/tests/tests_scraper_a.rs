@@ -1834,6 +1834,50 @@ mod tests {
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
     #[allow(clippy::too_many_lines)]
+    async fn test_annamsrecipes_ok() -> Result<()> {
+        let got = scrape(Website::AnnamsRecipes, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            date_published: vec!["2014-10-13T17:32:00+00:00".into()],
+            date_modified: vec!["2014-10-13T17:32:00+00:00".into()],
+            description: vec![RecipeDescriptionFieldEnum::Text("Chettinad\u{a0}Porivilangai Urundai\u{a0} In my childhood my mom used to make Porivilangai urundai. We don’t like it at that time. Now I asked my mom to make Porivilangai urundai. She is a good cook and she …".into())],
+            image: vec![RecipeImageFieldEnum::URL("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEixUyfI3-Q_fkN7lFOT9wwq53zX_-i-X5ySoa_u3GWNVX_DGTz3KJm8k6xmidDL3P5M4xCfQMfuhmIfK1sH88zDSj_Hn4ZOiHvnNTMeVt9deDzEZsizdYklOqLGAZSnqcW9P6QuSjjLcCSf/s1600/Porivilangai-Urundai-1.gif".into())],
+            name: vec!["Porivilangai Urundai".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("Dry roast and grind:".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Boiled rice (Idli rice) – 1 cup".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Green gram dal – ½ cup".into()),
+                RecipeRecipeIngredientFieldEnum::Text("For urundai:".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Ground flour – 3 cups".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Jaggery – 250 grams".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Coconut – 3 tsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Fried gram – 3 tsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Cardamom powder – ¼ tsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Ghee – 2 tblsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Water – ¼ cup".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Dry roast rice and dal seperately till nice aroma comes. Mix together and grind it in the rice mill. Take 3 cups of flour. Cut coconut in to tiny bits.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Melt jaggery in water and strain it. Heat ghee in a pan and fry cashew and fried gram.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add jaggery syrup, cardamom powder and flour and mix well and knead into a smooth dough.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Grease palm with little ghee and make balls.".into()),
+            ],
+            url: vec![
+                "https://annamsrecipes.wordpress.com/2014/10/13/porivilangai-urundai/<number>0"
+                    .into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_arbuz_ok() -> Result<()> {
         let got = scrape(Website::Arbuz, 0).await?;
 
@@ -1965,6 +2009,58 @@ mod tests {
             prep_time: vec![DurationOrText::Text("PT35M".into())],
             total_time: vec![DurationOrText::Text("PT75M".into())],
             url: vec!["https://arbuz.com/recipes/layered-bread/".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_argirobarbarigou_ok() -> Result<()> {
+        let got = scrape(Website::ArgiroBarbarigou, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            cook_time: vec![DurationOrText::Text("PT15M".into())],
+            prep_time: vec![DurationOrText::Text("PT5M".into())],
+            description: vec![RecipeDescriptionFieldEnum::Text("Shrimp and saffron pilaf, one of the easiest Greek meals for fasting, an incredible dish worth trying | Argiro Barbarigou English Recipes".into())],
+            image: vec![RecipeImageFieldEnum::URL("https://argirobarbarigou.com/wp-content/uploads/2018/05/Shrimp-and-saffron-pilaf.jpg".into())],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL("Dairy Free".into()),
+                RecipeKeywordsFieldEnum::TextOrURL("Gluten Free".into()),
+                RecipeKeywordsFieldEnum::TextOrURL("Pescetarian".into()),
+            ],
+            name: vec!["Shrimp and saffron pilaf".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("¼ cup extra-virgin olive oil".into()),
+                RecipeRecipeIngredientFieldEnum::Text("12 shelled prawns".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 clove of garlic".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 onion, diced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 red bell pepper, diced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 yellow red pepper, diced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 cups long grain pilaf rice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tomatoes, chopped".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp. fresh parsley, chopped".into()),
+                RecipeRecipeIngredientFieldEnum::Text("4 cups water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 pinches of saffron powder or 3 threads".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Salt, freshly ground pepper".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Heat the olive oil in a deep skillet and sauté the onion, garlic and peppers for 3-4 minutes.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Careful they do not begin to turn brown.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the rice and stir until shiny.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Finish with the tomatoes and water.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Season to taste, lower heat, partially cover and simmer for 10 -12 minutes on a low heat, until the rice begins to soften.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Stir in the shrimp, parsley, and saffron, and simmer for a further 5 minutes.".into()),
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("4".into())],
+            url: vec![
+                "https://argirobarbarigou.com/recipes/shrimp-and-saffron-pilaf/<number>0".into(),
+            ],
             ..Default::default()
         };
         pretty_assertions::assert_eq!(got, want);

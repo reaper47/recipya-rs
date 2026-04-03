@@ -92,11 +92,13 @@ pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
 async fn fetch_html(url: &str) -> Result<Bytes> {
     let client = reqwest::Client::new();
     let res = client.get(url).send().await?;
+    let is_client_error = res.status().is_client_error();
+
     let bytes = res.bytes().await?;
     let bytes_vec = bytes.to_vec();
     let text = String::from_utf8_lossy(&bytes_vec);
 
-    if text.contains(ENABLE_JS) || text.contains(FORBIDDEN) {
+    if is_client_error || text.contains(ENABLE_JS) || text.contains(FORBIDDEN) {
         let client = Client::builder().emulation(Emulation::Chrome145).build()?;
         let resp = client.get(url).send().await?;
         Ok(resp.bytes().await?)
