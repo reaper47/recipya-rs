@@ -2066,4 +2066,61 @@ mod tests {
         pretty_assertions::assert_eq!(got, want);
         Ok(())
     }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_asicilianpeasantstable_ok() -> Result<()> {
+        let got = scrape(Website::ASicilianPeasantsTable, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            date_created: vec!["March 24, 2022".into()],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Although this recipe is not traditional Italian cuisine; this family favorite is a quick pasta dish that I created and wanted to share with you.\u{a0} It has a deep, earthy mushroom flavor that I like, and it is easy to prepare. \u{a0}Best of all it can be prepared in 30 minutes or less.\u{a0} Serve as a main course or as a side dish with grilled and roasted meats.\u{a0}".into(),
+                ),
+            ],
+            image: vec![RecipeImageFieldEnum::URL("https://asicilianpeasantstable.com/wp-content/uploads/2022/03/Orzo-scaled-1-1920x1302.jpg".into())],
+            keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Pasta".into())],
+            name: vec!["Orzo with Mushrooms".into()],
+            recipe_category: vec!["Side Dishes".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1/2-ounce dried Porcini mushrooms".into()),
+                RecipeRecipeIngredientFieldEnum::Text("8 ounces fresh Cremini (Baby Bella) mushrooms, cleaned and quartered".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup finely diced onion".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 tablespoons extra-virgin olive oil, divided".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tablespoons butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("16 ounces dried orzo pasta".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 to 3 ½ cups beef or chicken stock".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/3 cup chopped flat-leaf parsley".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Pepper".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Place the dried porcini in a small bowl and cover with 1 cup boiling water.\u{a0} Let sit 1 hour.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Strain the porcinis reserving the soaking the liquid.\u{a0} Coarsely chop the porcinis and set aside.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Melt the butter with 2 tablespoons of the olive oil in a large deep skillet over medium heat.\u{a0} Add the fresh mushrooms and onion until vegetables are soft, about 4 minutes.\u{a0} Transfer to a bowl.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Add the remaining oil into the same skillet.\u{a0} Add the orzo, stirring continuously until the pasta is lightly toasted.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Stir in 2 cups of the stock and the porcini soaking liquid.\u{a0} Add the porcinis, mushroom mixture, and half of the parsley.\u{a0} Bring to a boil, reduce heat to low and cover with a lid.\u{a0} Season with salt and pepper to taste.\u{a0} Add additional stock as needed throughout cooking to keep the pasta from drying out.\u{a0} Cook for approximately 15 minutes or to al dente depending on the pasta size which can vary. \u{a0}Stir in the remaining parsley.\u{a0} Serve with grated parmesan cheese if desired.".into(),
+                ),
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("8".into())],
+            url: vec!["https://asicilianpeasantstable.com/2022/03/24/orzo-with-mushrooms/<number>0".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 }

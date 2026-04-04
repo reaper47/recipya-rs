@@ -112,3 +112,10 @@ variant = "ArgiroBarbarigou"
 url = "https://argirobarbarigou.com/recipes/"
 test = "https://argirobarbarigou.com/recipes/shrimp-and-saffron-pilaf/"
 cuisine = "greek"
+
+[[website]]
+name = "A Sicilian Peasant's Table"
+domain = "asicilianpeasantstable.com"
+variant = "ASicilianPeasantsTable"
+url = "https://asicilianpeasantstable.com/recipes/"
+test = "https://asicilianpeasantstable.com/2022/03/24/orzo-with-mushrooms/"

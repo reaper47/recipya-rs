@@ -1,3 +1,5 @@
+use scraper::{Html, Selector};
+
 use schema_org::{
     Recipe, at_context,
     field::{
@@ -5,7 +7,6 @@ use schema_org::{
         RecipeRecipeInstructionsFieldEnum,
     },
 };
-use scraper::{Html, Selector};
 
 use crate::{
     Result,
