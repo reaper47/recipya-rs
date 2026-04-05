@@ -21,6 +21,7 @@ impl Website {
     /// Parses the given HTML document manually.
     pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe> {
         match self {
+            Self::AceCanning => custom::a::acecanning::parse(doc, url),
             Self::AdultBar => custom::a::adultbar::parse(doc, url),
             Self::AllRoadsLeadToTheKitchen => custom::a::allroadsleadtothekitchen::parse(doc, url),
             Self::AlmondAndFig => custom::a::almondandfig::parse(doc, url),
@@ -43,6 +44,7 @@ impl Website {
     /// Some sites have incomplete or incorrect LD+JSON that needs fixing.
     pub(crate) fn augment_ld_json(self, doc: &Html, recipe: Recipe) -> Recipe {
         match self {
+            Self::ATreatsAffair => custom::a::atreatsaffair::add_info(doc, recipe),
             Self::ZaatarAndZaytoun => custom::z::zaatarandzaytoun::add_info(doc, recipe),
             Self::ZabihaHalal => custom::z::zabihahalal::add_info(doc, recipe),
             Self::ZagLeft => custom::z::zagleft::add_info(doc, recipe),

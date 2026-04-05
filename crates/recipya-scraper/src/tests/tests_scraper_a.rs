@@ -1,11 +1,12 @@
 #[cfg(test)]
 mod tests {
     use schema_org::{
-        AggregateRating, AtType, Clip, DurationOrText, Energy, ImageObject, Mass,
+        AggregateRating, AtType, Clip, DurationOrText, Energy, ImageObject, ItemList, Mass,
         NutritionInformation, Organization, Rating, Recipe, Review, at_context,
         field::{
             AggregateRatingRatingValueFieldEnum, ClipDescriptionFieldEnum,
-            ImageObjectHeightFieldEnum, ImageObjectWidthFieldEnum, OrganizationLogoFieldEnum,
+            ImageObjectHeightFieldEnum, ImageObjectWidthFieldEnum,
+            ItemListItemListElementFieldEnum, OrganizationLogoFieldEnum,
             RatingRatingValueFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
             RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipePublisherFieldEnum,
             RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
@@ -16,6 +17,84 @@ mod tests {
     use crate::{tests::support::scraper::scrape, websites::Website};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_acecanning_ok() -> Result<()> {
+        let got = scrape(Website::AceCanning, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            image: vec![RecipeImageFieldEnum::URL(
+                "http://www.acecanning.com/web/wp-content/uploads/2019/12/Puff.jpg".into(),
+            )],
+            name: vec!["HOMESOY Raspberry Cream Puff".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                    r#type: AtType::ItemList.to_string(),
+                    item_list_element: vec![
+                        ItemListItemListElementFieldEnum::Text("Daisy Margarine 75gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Brown Sugar 95gm".into()),
+                        ItemListItemListElementFieldEnum::Text("All Purpose Flour 95gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Red Colouring".into()),
+                    ],
+                    name: vec!["For Topping".into()],
+                    number_of_items: vec![4],
+                    ..Default::default()
+                }),
+                RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                    r#type: AtType::ItemList.to_string(),
+                    item_list_element: vec![
+                        ItemListItemListElementFieldEnum::Text(
+                            "HOMESOY No Sugar Added 250ml".into(),
+                        ),
+                        ItemListItemListElementFieldEnum::Text("Daisy Margarine 125gm".into()),
+                        ItemListItemListElementFieldEnum::Text("All Purpose Flour 180gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Eggs 225gm".into()),
+                        ItemListItemListElementFieldEnum::Text(
+                            "HOMESOY No Sugar Added 1800ml".into(),
+                        ),
+                        ItemListItemListElementFieldEnum::Text("Egg Yolk 440gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Sugar 360gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Custard Powder 160gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Unsalted Butter 100gm".into()),
+                        ItemListItemListElementFieldEnum::Text(
+                            "Raspberry Puree (optional) 200gm".into(),
+                        ),
+                    ],
+                    name: vec!["For Choux Pastry".into()],
+                    number_of_items: vec![10],
+                    ..Default::default()
+                }),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::ItemList(ItemList {
+                    item_list_element: vec![
+                        ItemListItemListElementFieldEnum::Text("Mix all ingredients until uniform.".into()),
+                        ItemListItemListElementFieldEnum::Text("Roll dough to 2mm thickness, put in chiller until harden.".into()),
+                        ItemListItemListElementFieldEnum::Text("Cut dough into 3cm round shapes and keep in the freezer for later use.".into()),
+                    ],
+                    name: vec!["For Topping".into()],
+                    number_of_items: vec![3],
+                    ..Default::default()
+                }.into()),
+                RecipeRecipeInstructionsFieldEnum::ItemList(ItemList {
+                    name: vec!["For Choux Pastry".into()],
+                    number_of_items: vec![0],
+                    ..Default::default()
+                }.into()),
+            ],
+            url: vec![
+                "http://www.acecanning.com/web/recipe_post/raspberry-cream-puff/<number>0".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 
     #[tokio::test]
     #[tracing_test::traced_test]
@@ -2118,6 +2197,104 @@ mod tests {
             ],
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("8".into())],
             url: vec!["https://asicilianpeasantstable.com/2022/03/24/orzo-with-mushrooms/<number>0".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_atreatsaffair_ok() -> Result<()> {
+        let got = scrape(Website::ATreatsAffair, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            nutrition: vec![
+                NutritionInformation {
+                    calories: vec![Energy::new("4785")],
+                    fat_content: vec![Mass::new("104")],
+                    r#type: AtType::NutritionInformation.to_opt(),
+                    ..Default::default()
+                },
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("12 cupcakes".into())],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup butter, room temperature".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 1/2 cup sugar".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 eggs, room temperature".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup pumpkin puree (I used store bought) ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 cup International Delight Pumpkin Pie Spice Coffee Creamer".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 3/4 cup all purpose flour".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon baking powder".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon pumpkin pie spice ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("pinch of salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("!Caramel frosting".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup dark brown sugar".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 cup milk (whole or 2%) ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 1/2 cups powdered sugar".into()),
+            ],
+            cook_time: vec![
+                DurationOrText::Text("PT25M".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Preheat the oven to 350 degrees. Line a cupcake pan with 12 cupcake liners. Set aside".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("In a bowl mix the butter and sugar. Add the eggs, pumpkin spice, baking powder, and vanilla and mix until incorporated. Mix in the flour.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the pumpkin puree and the International Delight® Pumpkin Pie Spice Coffee Creamer and mix until there are no lumps left. Set aside.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Pour the pumpkin batter into the cupcake liners, Add 1 tbsp of cream cheese mix on top and with the help of a toothpick swirl it.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Take to the oven and bake for 25 minutes or until done.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Take out of the oven and let them cool until they are no longer hot to the touch.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("!Caramel frosting".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("In a medium size saucepan, melt 1 cup butter over low flame. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the brown sugar and continue to cook until it reaches boiling point, stirring constantly. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Stir in the milk and continue to cook until it boils again. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Remove from heat. Add the vanilla extract. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Let the mixture cool until lukewarm, about 30-40 minutes.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Once cooled, gradually stir in powdered sugar. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Frost the cupcakes. ".into()),
+            ],
+            prep_time: vec![
+                DurationOrText::Text("PT30M".into()),
+            ],
+            aggregate_rating: vec![
+                AggregateRating {
+                    r#type: AtType::AggregateRating.to_opt(),
+                    rating_count: vec![0],
+                    ..Default::default()
+                },
+            ],
+            date_published: vec![
+                "2017-10-06 01:49:03".into(),
+            ],
+            author: vec![RecipeAuthorFieldEnum::new_org("Roxana Yawgel")],
+            image: vec![
+                RecipeImageFieldEnum::ImageObject(
+                    ImageObject {
+                        r#type: AtType::ImageObject.to_opt(),
+                        url: vec![
+                            "http://atreatsaffair.com/wp-content/uploads/2017/10/pumpkin-cupcakes-with-caramel-frosting-recipe-2.jpg".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Perfect for all pumpkin lovers, these moist and sweet pumpkin cupcakes topped with an easy to make caramel frosting are a fall favorite dessert!".into(),
+                ),
+            ],
+            name: vec![
+                "Pumpkin cupcakes with caramel frosting recipe".into(),
+            ],
+            url: vec![
+                "https://atreatsaffair.com/pumpkin-cupcakes-with-caramel-frosting-recipe/".into(),
+            ],
             ..Default::default()
         };
         pretty_assertions::assert_eq!(got, want);

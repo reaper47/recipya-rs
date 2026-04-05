@@ -12,6 +12,13 @@
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
 
 [[website]]
+name = "Ace Canning"
+domain = "acecanning.com"
+variant = "AceCanning"
+url = "http://www.acecanning.com/web/recipes/"
+test = "http://www.acecanning.com/web/recipe_post/raspberry-cream-puff/"
+
+[[website]]
 name = "A Day in the Life on the Farm"
 domain = "adayinthelifeonthefarm.blogspot.com"
 variant = "ADayInTheLifeOnTheFarm"
@@ -119,3 +126,10 @@ domain = "asicilianpeasantstable.com"
 variant = "ASicilianPeasantsTable"
 url = "https://asicilianpeasantstable.com/recipes/"
 test = "https://asicilianpeasantstable.com/2022/03/24/orzo-with-mushrooms/"
+
+[[website]]
+name = "A Treat's Affair"
+domain = "atreatsaffair.com"
+variant = "ATreatsAffair"
+url = "https://atreatsaffair.com/"
+test = "https://atreatsaffair.com/pumpkin-cupcakes-with-caramel-frosting-recipe/"
