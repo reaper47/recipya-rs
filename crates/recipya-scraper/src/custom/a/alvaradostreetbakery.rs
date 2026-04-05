@@ -1,3 +1,6 @@
+use scraper::{ElementRef, Html, Selector};
+use unicode_normalization::UnicodeNormalization;
+
 use schema_org::{
     DurationOrText, Recipe, at_context,
     field::{
@@ -5,8 +8,6 @@ use schema_org::{
         RecipeRecipeYieldFieldEnum,
     },
 };
-use scraper::{ElementRef, Html, Selector};
-use unicode_normalization::UnicodeNormalization;
 
 use crate::{
     Result,

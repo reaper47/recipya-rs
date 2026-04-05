@@ -1,11 +1,12 @@
 #[cfg(test)]
 mod tests {
     use schema_org::{
-        AggregateRating, AtType, Clip, DurationOrText, Energy, ImageObject, Mass,
+        AggregateRating, AtType, Clip, DurationOrText, Energy, ImageObject, ItemList, Mass,
         NutritionInformation, Organization, Rating, Recipe, Review, at_context,
         field::{
             AggregateRatingRatingValueFieldEnum, ClipDescriptionFieldEnum,
-            ImageObjectHeightFieldEnum, ImageObjectWidthFieldEnum, OrganizationLogoFieldEnum,
+            ImageObjectHeightFieldEnum, ImageObjectWidthFieldEnum,
+            ItemListItemListElementFieldEnum, OrganizationLogoFieldEnum,
             RatingRatingValueFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
             RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipePublisherFieldEnum,
             RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
@@ -16,6 +17,213 @@ mod tests {
     use crate::{tests::support::scraper::scrape, websites::Website};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_acecanning_ok() -> Result<()> {
+        let got = scrape(Website::AceCanning, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            image: vec![RecipeImageFieldEnum::URL(
+                "http://www.acecanning.com/web/wp-content/uploads/2019/12/Puff.jpg".into(),
+            )],
+            name: vec!["HOMESOY Raspberry Cream Puff".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                    r#type: AtType::ItemList.to_string(),
+                    item_list_element: vec![
+                        ItemListItemListElementFieldEnum::Text("Daisy Margarine 75gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Brown Sugar 95gm".into()),
+                        ItemListItemListElementFieldEnum::Text("All Purpose Flour 95gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Red Colouring".into()),
+                    ],
+                    name: vec!["For Topping".into()],
+                    number_of_items: vec![4],
+                    ..Default::default()
+                }),
+                RecipeRecipeIngredientFieldEnum::ItemList(ItemList {
+                    r#type: AtType::ItemList.to_string(),
+                    item_list_element: vec![
+                        ItemListItemListElementFieldEnum::Text(
+                            "HOMESOY No Sugar Added 250ml".into(),
+                        ),
+                        ItemListItemListElementFieldEnum::Text("Daisy Margarine 125gm".into()),
+                        ItemListItemListElementFieldEnum::Text("All Purpose Flour 180gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Eggs 225gm".into()),
+                        ItemListItemListElementFieldEnum::Text(
+                            "HOMESOY No Sugar Added 1800ml".into(),
+                        ),
+                        ItemListItemListElementFieldEnum::Text("Egg Yolk 440gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Sugar 360gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Custard Powder 160gm".into()),
+                        ItemListItemListElementFieldEnum::Text("Unsalted Butter 100gm".into()),
+                        ItemListItemListElementFieldEnum::Text(
+                            "Raspberry Puree (optional) 200gm".into(),
+                        ),
+                    ],
+                    name: vec!["For Choux Pastry".into()],
+                    number_of_items: vec![10],
+                    ..Default::default()
+                }),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::ItemList(ItemList {
+                    item_list_element: vec![
+                        ItemListItemListElementFieldEnum::Text("Mix all ingredients until uniform.".into()),
+                        ItemListItemListElementFieldEnum::Text("Roll dough to 2mm thickness, put in chiller until harden.".into()),
+                        ItemListItemListElementFieldEnum::Text("Cut dough into 3cm round shapes and keep in the freezer for later use.".into()),
+                    ],
+                    name: vec!["For Topping".into()],
+                    number_of_items: vec![3],
+                    ..Default::default()
+                }.into()),
+                RecipeRecipeInstructionsFieldEnum::ItemList(ItemList {
+                    name: vec!["For Choux Pastry".into()],
+                    number_of_items: vec![0],
+                    ..Default::default()
+                }.into()),
+            ],
+            url: vec![
+                "http://www.acecanning.com/web/recipe_post/raspberry-cream-puff/<number>0".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_adayinthelifeonthefarm_ok() -> Result<()> {
+        let got = scrape(Website::ADayInTheLifeOnTheFarm, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            nutrition: vec![
+                NutritionInformation {
+                    calories: vec![Energy::new("527.84")],
+                    carbohydrate_content: vec![Mass::new("40.45")],
+                    cholesterol_content: vec![Mass::new("202.5")],
+                    context: None,
+                    fat_content: vec![Mass::new("10.84")],
+                    fiber_content: vec![Mass::new("7.26")],
+                    protein_content: vec![Mass::new("62.25")],
+                    saturated_fat_content: vec![Mass::new("2.48")],
+                    sodium_content: vec![Mass::new("1120.72")],
+                    sugar_content: vec![Mass::new("12.34")],
+                    r#type: AtType::NutritionInformation.to_opt(),
+                    ..Default::default()
+                },
+            ],
+            recipe_cuisine: vec!["Italian".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1 rabbit".into()),
+                RecipeRecipeIngredientFieldEnum::Text("olive oil".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 c. red wine".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 (14 oz) can diced tomatoes".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 (14 oz) can tomato sauce".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 T. garlic".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 t. crushed red pepper".into()),
+                RecipeRecipeIngredientFieldEnum::Text("salt and pepper, to taste".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 T. Italian Herb Blend".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 t. sugar, if desired".into()),
+                RecipeRecipeIngredientFieldEnum::Text("8 oz. dried pasta, cooked per package directions".into()),
+            ],
+            cook_time: vec![DurationOrText::Text("PT1H45M".into())],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Cut the rabbit into 6 portions, season with salt and pepper.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Heat some olive oil in the bottom of a dutch oven. Add the chicken and sear on both sides. Add the garlic and crushed red pepper. Cook until fragrant and garlic begins to turn golden, about 30 seconds".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the wine and bring to a boil, scraping up any browned bits stuck to the bottl of the pan, until wine is reduced by half.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the tomatoes and tomato sauce. Stir in the herbs, cover, reduce heat to low and simmer for about an hour, until the rabbit is very tender.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Remove the rabbit from the stew, if desired, and remove the meat from the bones. Return the meat to the sauce, taste and add a bit of sugar if the sauce is too acidic.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Cook uncovered for about 45 minutes until sauce is thickened to desired consistency.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Serve over cooked pasta. I like egg noodles as they hold up well to the sauce.".into()),
+            ],
+            recipe_category: vec!["Entrees, Pasta".into()],
+            r#yield: vec![RecipeRecipeYieldFieldEnum::Text("4 large servings".into())],
+            prep_time: vec![DurationOrText::Text("PT15M".into())],
+            total_time: vec![DurationOrText::Text("PT2H".into())],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "Pasta, Rabbit, Stew, Game meat,".into(),
+                ),
+            ],
+            author: vec![RecipeAuthorFieldEnum::new_org("Wendy Klik")],
+            image: vec![
+                RecipeImageFieldEnum::URL(
+                    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9yNxDT-TQM8LHVf297TWsSJGHP3fs1ANIfI2P-PQ6iavfmIxqJ61AmzbLs9dob7bjwynn5YTIZERLjzzXMWyQxqMF5r4Y_nCEEYenZufGpkhK1xiv9oW9KDgpo0UskjT_BhMkQyv0VdUYRfvKkSEPaEqbU1QfDn257_BCBxAlfS9kD8aOllSrhoo8aw/w400-h266/4.jpg".into(),
+                ),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "This recipe is inspired by one served at Il Focolore in Ishchia, Campania that was featured on Searching for Italy starring Stanly Tucci. It is rich and delicious. Well worth the time it takes to braise the rabbit and make the \"gravy\".".into(),
+                ),
+            ],
+            name: vec![
+                "Coniglio All'Ischitana (Rabbit Stew)".into(),
+            ],
+            url: vec![
+                "https://adayinthelifeonthefarm.blogspot.com/2023/05/coniglio-allischitana-rabbit-stew-and.html".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_adultbar_ok() -> Result<()> {
+        let got = scrape(Website::AdultBar, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            description: vec![RecipeDescriptionFieldEnum::Text("Copy Cat Cocktail shake licorice liqueur bottega apricot liqueur drillaud apricot juice ice licorice sticks black and served cold in a old fashioned glass.".into())],
+            keywords: vec![
+               RecipeKeywordsFieldEnum::TextOrURL(
+                   "copy cat cocktail, licorice liqueur bottega, apricot liqueur drillaud, apricot juice, ice, licorice sticks black, 15% alcohol by volume, making cocktail".into(),
+               ),
+            ],
+            image: vec![RecipeImageFieldEnum::URL("http://AdultBar.com.au/cocktails/images/cocktails/cocktails-old-fashioned-brown.png".into())],
+            name: vec!["Copy Cat Cocktail".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("30 ml Licorice Liqueur Bottega".into()),
+                RecipeRecipeIngredientFieldEnum::Text("30 ml Apricot Liqueur Drillaud".into()),
+                RecipeRecipeIngredientFieldEnum::Text("30 ml Apricot Juice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("100 ml Ice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Licorice Sticks Black".into()),
+                RecipeRecipeIngredientFieldEnum::Text("15% Alcohol By Volume".into()),
+                RecipeRecipeIngredientFieldEnum::Text("30 Proof".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1.1 Standard Drinks".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Place half the ice into shaker.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Place all the ingredients into shaker.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Shake ingredients together until mixed.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Pour all into glass.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Top glass with ice.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Drop in a licorice stick.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Bewitching".into()),
+            ],
+            recipe_yield: vec![
+                RecipeRecipeYieldFieldEnum::Text("190".into()),
+            ],
+            url: vec!["http://adultbar.com.au/cocktails/How-To-Make-A/Elvin<number>0".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
 
     #[tokio::test]
     #[tracing_test::traced_test]
@@ -1655,6 +1863,100 @@ mod tests {
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
     #[allow(clippy::too_many_lines)]
+    async fn test_alwadi_ok() -> Result<()> {
+        let got = scrape(Website::Alwadi, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            cook_time: vec![DurationOrText::Text("20 min".into())],
+            description: vec![RecipeDescriptionFieldEnum::Text("Delicious and delightful vegan Falafel balls especially with the tartor sauce.".into())],
+            image: vec![RecipeImageFieldEnum::URL("https://www.alwadi.com/ContentFiles/1315Image.jpg".into())],
+            name: vec!["Falafel With Tarator Sauce".into()],
+            recipe_category: vec!["Side Dish".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1 Box / 200g Al Wadi Al Akhdar Falafel".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 Cup water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Cooking oil".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup pickled cucumbers, sliced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup pickled turnips, chunks".into()),
+                RecipeRecipeIngredientFieldEnum::Text("¼ Cup fresh parsley, chopped".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 Tomato, cut into wedges".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Pita bread (or Lebanese bread)".into()),
+                RecipeRecipeIngredientFieldEnum::Text("¼ Cup tarator sauce".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Mint leaves, to decorate".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Tarator Sauce".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 Cup water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup lemon juice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ Cup Al Wadi Al Akhdar Tahina".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Salt to Taste".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Mix each envelope of Falafel mix with 120ml / ½ cup of water. Let it stand for 10 minutes.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Use a spoon (or a Falafel spoon) to form the falafel paste into flattened balls.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Heat oil over medium-high heat. Fry few falafel at a time until golden brown.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("To test the temperature is right, each ball should sink and rise to the surface and float. Gently remove from oil and drain on paper towels.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Serve Falafel balls with Tarator sauce accompanied by pickles, parsley, tomato, mint, and pita bread.".into()),
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("2".into())],
+            url: vec![
+                "https://www.alwadi.com/english/recipes/falafel-with-tarator-sauce?filterIdCategory=&filterIdCollection=&searchKeyword=&source=collection&sourceId=1773<number>0"
+                    .into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_annamsrecipes_ok() -> Result<()> {
+        let got = scrape(Website::AnnamsRecipes, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            date_published: vec!["2014-10-13T17:32:00+00:00".into()],
+            date_modified: vec!["2014-10-13T17:32:00+00:00".into()],
+            description: vec![RecipeDescriptionFieldEnum::Text("Chettinad\u{a0}Porivilangai Urundai\u{a0} In my childhood my mom used to make Porivilangai urundai. We don’t like it at that time. Now I asked my mom to make Porivilangai urundai. She is a good cook and she …".into())],
+            image: vec![RecipeImageFieldEnum::URL("https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEixUyfI3-Q_fkN7lFOT9wwq53zX_-i-X5ySoa_u3GWNVX_DGTz3KJm8k6xmidDL3P5M4xCfQMfuhmIfK1sH88zDSj_Hn4ZOiHvnNTMeVt9deDzEZsizdYklOqLGAZSnqcW9P6QuSjjLcCSf/s1600/Porivilangai-Urundai-1.gif".into())],
+            name: vec!["Porivilangai Urundai".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("Dry roast and grind:".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Boiled rice (Idli rice) – 1 cup".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Green gram dal – ½ cup".into()),
+                RecipeRecipeIngredientFieldEnum::Text("For urundai:".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Ground flour – 3 cups".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Jaggery – 250 grams".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Coconut – 3 tsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Fried gram – 3 tsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Cardamom powder – ¼ tsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Ghee – 2 tblsp".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Water – ¼ cup".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Dry roast rice and dal seperately till nice aroma comes. Mix together and grind it in the rice mill. Take 3 cups of flour. Cut coconut in to tiny bits.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Melt jaggery in water and strain it. Heat ghee in a pan and fry cashew and fried gram.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add jaggery syrup, cardamom powder and flour and mix well and knead into a smooth dough.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Grease palm with little ghee and make balls.".into()),
+            ],
+            url: vec![
+                "https://annamsrecipes.wordpress.com/2014/10/13/porivilangai-urundai/<number>0"
+                    .into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_arbuz_ok() -> Result<()> {
         let got = scrape(Website::Arbuz, 0).await?;
 
@@ -1786,6 +2088,213 @@ mod tests {
             prep_time: vec![DurationOrText::Text("PT35M".into())],
             total_time: vec![DurationOrText::Text("PT75M".into())],
             url: vec!["https://arbuz.com/recipes/layered-bread/".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_argirobarbarigou_ok() -> Result<()> {
+        let got = scrape(Website::ArgiroBarbarigou, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            cook_time: vec![DurationOrText::Text("PT15M".into())],
+            prep_time: vec![DurationOrText::Text("PT5M".into())],
+            description: vec![RecipeDescriptionFieldEnum::Text("Shrimp and saffron pilaf, one of the easiest Greek meals for fasting, an incredible dish worth trying | Argiro Barbarigou English Recipes".into())],
+            image: vec![RecipeImageFieldEnum::URL("https://argirobarbarigou.com/wp-content/uploads/2018/05/Shrimp-and-saffron-pilaf.jpg".into())],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL("Dairy Free".into()),
+                RecipeKeywordsFieldEnum::TextOrURL("Gluten Free".into()),
+                RecipeKeywordsFieldEnum::TextOrURL("Pescetarian".into()),
+            ],
+            name: vec!["Shrimp and saffron pilaf".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("¼ cup extra-virgin olive oil".into()),
+                RecipeRecipeIngredientFieldEnum::Text("12 shelled prawns".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 clove of garlic".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 onion, diced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 red bell pepper, diced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 yellow red pepper, diced".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 cups long grain pilaf rice".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tomatoes, chopped".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp. fresh parsley, chopped".into()),
+                RecipeRecipeIngredientFieldEnum::Text("4 cups water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 pinches of saffron powder or 3 threads".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Salt, freshly ground pepper".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Heat the olive oil in a deep skillet and sauté the onion, garlic and peppers for 3-4 minutes.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Careful they do not begin to turn brown.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the rice and stir until shiny.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Finish with the tomatoes and water.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Season to taste, lower heat, partially cover and simmer for 10 -12 minutes on a low heat, until the rice begins to soften.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Stir in the shrimp, parsley, and saffron, and simmer for a further 5 minutes.".into()),
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("4".into())],
+            url: vec![
+                "https://argirobarbarigou.com/recipes/shrimp-and-saffron-pilaf/<number>0".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_asicilianpeasantstable_ok() -> Result<()> {
+        let got = scrape(Website::ASicilianPeasantsTable, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            date_created: vec!["March 24, 2022".into()],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Although this recipe is not traditional Italian cuisine; this family favorite is a quick pasta dish that I created and wanted to share with you.\u{a0} It has a deep, earthy mushroom flavor that I like, and it is easy to prepare. \u{a0}Best of all it can be prepared in 30 minutes or less.\u{a0} Serve as a main course or as a side dish with grilled and roasted meats.\u{a0}".into(),
+                ),
+            ],
+            image: vec![RecipeImageFieldEnum::URL("https://asicilianpeasantstable.com/wp-content/uploads/2022/03/Orzo-scaled-1-1920x1302.jpg".into())],
+            keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Pasta".into())],
+            name: vec!["Orzo with Mushrooms".into()],
+            recipe_category: vec!["Side Dishes".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1/2-ounce dried Porcini mushrooms".into()),
+                RecipeRecipeIngredientFieldEnum::Text("8 ounces fresh Cremini (Baby Bella) mushrooms, cleaned and quartered".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup finely diced onion".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 tablespoons extra-virgin olive oil, divided".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tablespoons butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("16 ounces dried orzo pasta".into()),
+                RecipeRecipeIngredientFieldEnum::Text("3 to 3 ½ cups beef or chicken stock".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/3 cup chopped flat-leaf parsley".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("Pepper".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Place the dried porcini in a small bowl and cover with 1 cup boiling water.\u{a0} Let sit 1 hour.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Strain the porcinis reserving the soaking the liquid.\u{a0} Coarsely chop the porcinis and set aside.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Melt the butter with 2 tablespoons of the olive oil in a large deep skillet over medium heat.\u{a0} Add the fresh mushrooms and onion until vegetables are soft, about 4 minutes.\u{a0} Transfer to a bowl.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Add the remaining oil into the same skillet.\u{a0} Add the orzo, stirring continuously until the pasta is lightly toasted.".into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::Text(
+                    "Stir in 2 cups of the stock and the porcini soaking liquid.\u{a0} Add the porcinis, mushroom mixture, and half of the parsley.\u{a0} Bring to a boil, reduce heat to low and cover with a lid.\u{a0} Season with salt and pepper to taste.\u{a0} Add additional stock as needed throughout cooking to keep the pasta from drying out.\u{a0} Cook for approximately 15 minutes or to al dente depending on the pasta size which can vary. \u{a0}Stir in the remaining parsley.\u{a0} Serve with grated parmesan cheese if desired.".into(),
+                ),
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("8".into())],
+            url: vec!["https://asicilianpeasantstable.com/2022/03/24/orzo-with-mushrooms/<number>0".into()],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
+    async fn test_atreatsaffair_ok() -> Result<()> {
+        let got = scrape(Website::ATreatsAffair, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            nutrition: vec![
+                NutritionInformation {
+                    calories: vec![Energy::new("4785")],
+                    fat_content: vec![Mass::new("104")],
+                    r#type: AtType::NutritionInformation.to_opt(),
+                    ..Default::default()
+                },
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("12 cupcakes".into())],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup butter, room temperature".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 1/2 cup sugar".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 eggs, room temperature".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup pumpkin puree (I used store bought) ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 cup International Delight Pumpkin Pie Spice Coffee Creamer".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 3/4 cup all purpose flour".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon baking powder".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon pumpkin pie spice ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("pinch of salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("!Caramel frosting".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup butter".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 cup dark brown sugar".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 cup milk (whole or 2%) ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 teaspoon vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 1/2 cups powdered sugar".into()),
+            ],
+            cook_time: vec![
+                DurationOrText::Text("PT25M".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Preheat the oven to 350 degrees. Line a cupcake pan with 12 cupcake liners. Set aside".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("In a bowl mix the butter and sugar. Add the eggs, pumpkin spice, baking powder, and vanilla and mix until incorporated. Mix in the flour.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the pumpkin puree and the International Delight® Pumpkin Pie Spice Coffee Creamer and mix until there are no lumps left. Set aside.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Pour the pumpkin batter into the cupcake liners, Add 1 tbsp of cream cheese mix on top and with the help of a toothpick swirl it.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Take to the oven and bake for 25 minutes or until done.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Take out of the oven and let them cool until they are no longer hot to the touch.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("!Caramel frosting".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("In a medium size saucepan, melt 1 cup butter over low flame. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Add the brown sugar and continue to cook until it reaches boiling point, stirring constantly. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Stir in the milk and continue to cook until it boils again. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Remove from heat. Add the vanilla extract. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Let the mixture cool until lukewarm, about 30-40 minutes.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Once cooled, gradually stir in powdered sugar. ".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Frost the cupcakes. ".into()),
+            ],
+            prep_time: vec![
+                DurationOrText::Text("PT30M".into()),
+            ],
+            aggregate_rating: vec![
+                AggregateRating {
+                    r#type: AtType::AggregateRating.to_opt(),
+                    rating_count: vec![0],
+                    ..Default::default()
+                },
+            ],
+            date_published: vec![
+                "2017-10-06 01:49:03".into(),
+            ],
+            author: vec![RecipeAuthorFieldEnum::new_org("Roxana Yawgel")],
+            image: vec![
+                RecipeImageFieldEnum::ImageObject(
+                    ImageObject {
+                        r#type: AtType::ImageObject.to_opt(),
+                        url: vec![
+                            "http://atreatsaffair.com/wp-content/uploads/2017/10/pumpkin-cupcakes-with-caramel-frosting-recipe-2.jpg".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+            ],
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Perfect for all pumpkin lovers, these moist and sweet pumpkin cupcakes topped with an easy to make caramel frosting are a fall favorite dessert!".into(),
+                ),
+            ],
+            name: vec![
+                "Pumpkin cupcakes with caramel frosting recipe".into(),
+            ],
+            url: vec![
+                "https://atreatsaffair.com/pumpkin-cupcakes-with-caramel-frosting-recipe/".into(),
+            ],
             ..Default::default()
         };
         pretty_assertions::assert_eq!(got, want);

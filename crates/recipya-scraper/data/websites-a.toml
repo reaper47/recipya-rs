@@ -12,6 +12,27 @@
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
 
 [[website]]
+name = "Ace Canning"
+domain = "acecanning.com"
+variant = "AceCanning"
+url = "http://www.acecanning.com/web/recipes/"
+test = "http://www.acecanning.com/web/recipe_post/raspberry-cream-puff/"
+
+[[website]]
+name = "A Day in the Life on the Farm"
+domain = "adayinthelifeonthefarm.blogspot.com"
+variant = "ADayInTheLifeOnTheFarm"
+url = "https://adayinthelifeonthefarm.blogspot.com/p/recipe-index.html"
+test = "https://adayinthelifeonthefarm.blogspot.com/2023/05/coniglio-allischitana-rabbit-stew-and.html"
+
+[[website]]
+name = "Adult Bar"
+domain = "adultbar.com.au"
+variant = "AdultBar"
+url = "http://adultbar.com.au"
+test = "http://adultbar.com.au/cocktails/How-To-Make-A/Elvin"
+
+[[website]]
 name = "Allrecipes"
 domain = "allrecipes.com"
 variant = "AllRecipes"
@@ -69,8 +90,46 @@ url = "https://www.alvaradostreetbakery.com/blogs/recipes"
 test = "https://www.alvaradostreetbakery.com/blogs/recipes/apple-fig-butter-grilled-brie"
 
 [[website]]
+name = "Alwadi"
+domain = "alwadi.com"
+variant = "Alwadi"
+url = "https://www.alwadi.com/english/recipes"
+test = "https://www.alwadi.com/english/recipes/falafel-with-tarator-sauce?filterIdCategory=&filterIdCollection=&searchKeyword=&source=collection&sourceId=1773"
+cuisine = "lebanese"
+
+[[website]]
+name = "Annams Recipes"
+domain = "annamsrecipes.wordpress.com"
+variant = "AnnamsRecipes"
+url = "http://annamsrecipes.com"
+test = "https://annamsrecipes.wordpress.com/2014/10/13/porivilangai-urundai/"
+cuisine = "indian"
+
+[[website]]
 name = "Arbuz"
 domain = "arbuz.com"
 variant = "Arbuz"
 url = "https://arbuz.com/"
 test = "https://arbuz.com/recipes/layered-bread/"
+
+[[website]]
+name = "Argiro Barbarigou"
+domain = "argirobarbarigou.com"
+variant = "ArgiroBarbarigou"
+url = "https://argirobarbarigou.com/recipes/"
+test = "https://argirobarbarigou.com/recipes/shrimp-and-saffron-pilaf/"
+cuisine = "greek"
+
+[[website]]
+name = "A Sicilian Peasant's Table"
+domain = "asicilianpeasantstable.com"
+variant = "ASicilianPeasantsTable"
+url = "https://asicilianpeasantstable.com/recipes/"
+test = "https://asicilianpeasantstable.com/2022/03/24/orzo-with-mushrooms/"
+
+[[website]]
+name = "A Treat's Affair"
+domain = "atreatsaffair.com"
+variant = "ATreatsAffair"
+url = "https://atreatsaffair.com/"
+test = "https://atreatsaffair.com/pumpkin-cupcakes-with-caramel-frosting-recipe/"

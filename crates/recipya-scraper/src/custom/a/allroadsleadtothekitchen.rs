@@ -1,8 +1,9 @@
+use scraper::{Html, Selector};
+
 use schema_org::{
     Recipe, at_context,
     field::{RecipeAuthorFieldEnum, RecipeImageFieldEnum},
 };
-use scraper::{Html, Selector};
 
 use crate::{
     Error, Result,

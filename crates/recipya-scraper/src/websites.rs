@@ -21,9 +21,15 @@ impl Website {
     /// Parses the given HTML document manually.
     pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe> {
         match self {
+            Self::AceCanning => custom::a::acecanning::parse(doc, url),
+            Self::AdultBar => custom::a::adultbar::parse(doc, url),
             Self::AllRoadsLeadToTheKitchen => custom::a::allroadsleadtothekitchen::parse(doc, url),
             Self::AlmondAndFig => custom::a::almondandfig::parse(doc, url),
             Self::AlvaradoStreetBakery => custom::a::alvaradostreetbakery::parse(doc, url),
+            Self::Alwadi => custom::a::alwadi::parse(doc, url),
+            Self::AnnamsRecipes => custom::a::annamsrecipes::parse(doc, url),
+            Self::ArgiroBarbarigou => custom::a::argirobarbarigou::parse(doc, url),
+            Self::ASicilianPeasantsTable => custom::a::asicilianpeasantstable::parse(doc, url),
             Self::Zeezest => custom::z::zeezest::parse(doc, url),
             Self::ZiaHatchChileCompany => custom::z::ziahatchchilecompany::parse(doc, url),
             Self::ZibaKitchen => custom::z::zibakitchen::parse(doc, url),
@@ -38,6 +44,7 @@ impl Website {
     /// Some sites have incomplete or incorrect LD+JSON that needs fixing.
     pub(crate) fn augment_ld_json(self, doc: &Html, recipe: Recipe) -> Recipe {
         match self {
+            Self::ATreatsAffair => custom::a::atreatsaffair::add_info(doc, recipe),
             Self::ZaatarAndZaytoun => custom::z::zaatarandzaytoun::add_info(doc, recipe),
             Self::ZabihaHalal => custom::z::zabihahalal::add_info(doc, recipe),
             Self::ZagLeft => custom::z::zagleft::add_info(doc, recipe),

@@ -69,5 +69,7 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
 
 /// Handles the supported websites endpoint.
 pub async fn supported_websites_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
-    Html(Website::all().to_html_table_rows()).into_response()
+    let mut websites = Website::all();
+    websites.sort_by_key(|w| w.host);
+    Html(websites.to_html_table_rows()).into_response()
 }
