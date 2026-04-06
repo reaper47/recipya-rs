@@ -20,6 +20,20 @@ use crate::recipe::structs::tool::ToolRecipe;
 use crate::{Error, Recipe, Result};
 
 impl Recipe {
+    /// Retrieves all recipes belonging to the user.
+    pub async fn all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
+        let mut conn = mm.pool.get().await?;
+
+        let recipes = schema::recipes::table
+            .filter(schema::recipes::user_id.eq(user_id))
+            .select(Self::as_select())
+            .order_by(schema::recipes::name.asc())
+            .load(&mut conn)
+            .await?;
+
+        Ok(recipes)
+    }
+
     /// Retrieves the total number of recipes that belong to a given user.
     pub async fn count(mm: &ModelManager, user_id: Uuid) -> Result<i64> {
         let mut conn = mm.pool.get().await?;
@@ -477,6 +491,34 @@ mod tests {
     use crate::user::User;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    mod tests_all {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_all_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let _ = build_server_anonymous(config.clone()).await?;
+            let all_users = User::all(&state.mm).await?;
+            let user1_id = all_users[0].id;
+            let user2_id = all_users[1].id;
+            for i in 0..5 {
+                let mut recipe = a_complete_recipe_for_create();
+                recipe.name.push_str(i.to_string().as_str());
+                let _ = Recipe::create(
+                    &state.mm,
+                    if i % 2 == 0 { user1_id } else { user2_id },
+                    &recipe,
+                )
+                .await?;
+            }
+
+            let recipes = Recipe::all(&state.mm, user1_id).await?;
+            assert_eq!(recipes.len(), 3);
+            Ok(())
+        }
+    }
 
     mod tests_count {
         use super::*;

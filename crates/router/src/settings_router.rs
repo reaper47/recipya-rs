@@ -4,8 +4,8 @@ use axum::{Router, middleware};
 use app::state::AppState;
 
 use crate::handlers::settings::{
-    set_default_theme_handler, set_nutrition_source_handler, set_selected_theme_handler,
-    settings_handler,
+    export_data_handler, export_data_post_handler, set_default_theme_handler,
+    set_nutrition_source_handler, set_selected_theme_handler, settings_handler,
 };
 use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
@@ -13,6 +13,10 @@ use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 pub fn settings_routes(state: &AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
+        .route(
+            "/export-data",
+            get(export_data_handler).post(export_data_post_handler),
+        )
         .route("/nutrition/source", post(set_nutrition_source_handler))
         .route(
             "/theme-default",
@@ -31,8 +35,9 @@ mod tests {
     use axum::http::{Method, StatusCode};
 
     use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, build_server_logged_in,
-        build_server_ws_other_user, create_app_state, insert_other_user,
+        TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, assert_ws_message,
+        build_server_logged_in, build_server_ws, build_server_ws_other_user, create_app_state,
+        insert_other_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -147,6 +152,66 @@ mod tests {
                 ],
             );
             Ok(())
+        }
+    }
+
+    mod tests_export {
+        use models::{
+            Recipe, recipe::structs::test_utils::a_complete_recipe_for_create, user::User,
+        };
+
+        use super::*;
+
+        const BASE_URI: &str = "/settings/export-data";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, BASE_URI).await?;
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        mod tests_get {
+            use super::*;
+
+            #[tokio::test]
+            async fn test_no_recipes_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config).await?;
+
+                let res = server.get(BASE_URI).await;
+
+                res.assert_status_not_found();
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"No recipes found for export.","status":"alert-warning","title":"Attention"}}"# ).await;
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_with_recipes_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let server = build_server_logged_in(config.clone()).await?;
+                let recipe1 = a_complete_recipe_for_create();
+                let mut recipe2 = a_complete_recipe_for_create();
+                recipe2.name = "Taco Tuesday".to_string();
+                recipe2.category = Some("Meat".to_string());
+                let state = create_app_state(config).await;
+                let user_id = User::all(&state.mm).await?[0].id;
+                let _ = Recipe::create(&state.mm, user_id, &recipe1).await?;
+                let _ = Recipe::create(&state.mm, user_id, &recipe2).await?;
+
+                let res = server.get(BASE_URI).await;
+
+                res.assert_status_ok();
+                assert_html(
+                    &res,
+                    vec![
+                        r#"<form class="card bg-base-100 shadow-sm min-w-[50vw]" hx-post="/settings/export-data" hx-swap="none"><div class="card-body"><h3 class="mb-1 grid grid-flow-col"><label class="input input-sm"><svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg><input type="search" placeholder="Search a recipe" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label><select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end"><optgroup label="Recipes"><option value="json" selected>JSON</option><option value="pdf">PDF</option></optgroup></select></h3>"#,
+                        r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" name="recipe-ids" class="checkbox" value="0" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked"></label></th><th class="py-1 text-left">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-result"#,
+                        r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="1"></label></td><td class="py-1">Best Chinese Kale</td><td class="py-1 text-center"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/1" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
+                        r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="2"></label></td><td class="py-1">Taco Tuesday</td><td class="py-1 text-center"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/2" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr></tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><button type="submit" class="btn btn-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></form>"#,
+                    ],
+                );
+                Ok(())
+            }
         }
     }
 

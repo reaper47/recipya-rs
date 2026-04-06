@@ -40,6 +40,7 @@ rust-embed = { version = "8.11.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
+serde_qs = "1.1.1"
 strum_macros.workspace = true
 support.workspace = true
 templates.workspace = true

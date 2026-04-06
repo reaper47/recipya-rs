@@ -4533,6 +4533,7 @@ dependencies = [
  "schema-org",
  "serde",
  "serde_json",
+ "serde_qs",
  "strum_macros 0.28.0",
  "support",
  "templates",
@@ -4956,6 +4957,18 @@ dependencies = [
  "itoa",
  "serde",
  "serde_core",
+]
+
+[[package]]
+name = "serde_qs"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2316d01592c3382277c5062105510e35e0a6bfb2851e30028485f7af8cf1240"
+dependencies = [
+ "itoa",
+ "percent-encoding",
+ "ryu",
+ "serde",
 ]
 
 [[package]]

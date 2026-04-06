@@ -1,12 +1,15 @@
 use axum::Form;
-use axum::extract::State;
+use axum::extract::{RawForm, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
+use axum_htmx::HX_CURRENT_URL;
 use iso8601::DateTime;
 use tracing::error;
+use url::Url;
 use uuid::Uuid;
 
 use app::state::AppState;
+use models::Recipe;
 use models::data::{AboutData, Data};
 use models::nutrition::NutritionDataSource;
 use models::settings::{Theme, UserSettingDetails};
@@ -16,10 +19,10 @@ use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::Error;
 use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::broadcast_error;
+use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
-use crate::schemas::settings::{NutritionSourcePayload, ThemePayload};
+use crate::schemas::settings::{ExportDataPayload, NutritionSourcePayload, ThemePayload};
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
@@ -100,6 +103,68 @@ pub async fn settings_handler(
         },
     )
     .into_response()
+}
+
+/// Handles exporting data for the target user.
+pub async fn export_data_handler(
+    RequireAuth(user): RequireAuth,
+    headers: HeaderMap,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let recipes = match Recipe::all(&state.mm, user.id).await {
+        Ok(recipes) => recipes,
+        Err(err) => {
+            error!("Failed to retrieve recipes for user {}: {err}", user.id);
+            broadcast_error(&state, user.id, "Failed to retrieve recipes.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    if recipes.is_empty() {
+        broadcast_warning(&state, user.id, "No recipes found for export.").await;
+        return StatusCode::NOT_FOUND.into_response();
+    }
+
+    let current_url = headers
+        .get(HX_CURRENT_URL)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| Url::parse(s).ok())
+        .map_or_else(
+            || "/".into(),
+            |u| {
+                format!(
+                    "{}://{}{}",
+                    u.scheme(),
+                    u.host_str().unwrap_or(""),
+                    u.port().map(|p| format!(":{p}")).unwrap_or_default()
+                )
+            },
+        );
+
+    templates::settings::render_export_data_dialog_recipes(&current_url, recipes).into_response()
+}
+
+/// Handles exporting data for the target user.
+pub async fn export_data_post_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    RawForm(bytes): RawForm,
+) -> impl IntoResponse {
+    let payload: ExportDataPayload =
+        match serde_qs::from_bytes(&bytes).map_err(|e| (StatusCode::BAD_REQUEST, e.to_string())) {
+            Ok(payload) => payload,
+            Err(err) => {
+                error!(
+                    "Failed to parse export form '{bytes:?}' user {}: {err:?}",
+                    user.id
+                );
+                broadcast_error(&state, user.id, "Failed to parse export form.").await;
+                return Error::Database.into_response();
+            }
+        };
+
+    dbg!(payload);
+    StatusCode::OK.into_response()
 }
 
 /// Handles setting the nutrition source for the target user.
