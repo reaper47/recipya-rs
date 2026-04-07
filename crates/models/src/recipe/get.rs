@@ -66,22 +66,7 @@ impl Recipe {
             .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
             .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
             .select((
-                (
-                    schema::recipes::id,
-                    schema::recipes::name,
-                    schema::recipes::description,
-                    schema::recipes::image,
-                    schema::recipes::yield_,
-                    schema::recipes::language,
-                    schema::recipes::measurement_system_id,
-                    schema::recipes::notes,
-                    schema::recipes::source,
-                    schema::recipes::is_favourite,
-                    schema::recipes::rating,
-                    schema::recipes::created_at,
-                    schema::recipes::updated_at,
-                    schema::recipes::user_id,
-                ),
+                Self::as_select(),
                 schema::categories::name,
                 schema::cuisines::name.nullable(),
                 schema::keywords::name.nullable(),
@@ -96,6 +81,52 @@ impl Recipe {
             })?;
 
         fetch_recipe_details(&mut conn, recipe, category, cuisine, keywords, times).await
+    }
+
+    pub async fn get_many(
+        mm: &ModelManager,
+        user_id: Uuid,
+        recipe_ids: &[i64],
+    ) -> Result<Vec<RecipeDetails>> {
+        let mut conn = mm.pool.get().await?;
+
+        let rows = schema::recipes::table
+            .inner_join(
+                schema::users_recipes::table
+                    .on(schema::users_recipes::recipe_id.eq(schema::recipes::id)),
+            )
+            .filter(
+                schema::users_recipes::user_id
+                    .eq(user_id)
+                    .and(schema::users_recipes::recipe_id.eq_any(recipe_ids)),
+            )
+            .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
+            .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
+            .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
+            .inner_join(schema::times::table.on(schema::times::recipe_id.eq(schema::recipes::id)))
+            .select((
+                Self::as_select(),
+                schema::categories::name,
+                schema::cuisines::name.nullable(),
+                schema::keywords::name.nullable(),
+                schema::times::all_columns,
+            ))
+            .distinct_on(schema::recipes::id)
+            .load::<(Self, String, Option<String>, Option<String>, Times)>(&mut conn)
+            .await?;
+
+        let futures = rows
+            .into_iter()
+            .map(|(recipe, category, cuisine, keywords, times)| {
+                let mm = mm.clone();
+                async move {
+                    let mut conn = mm.pool.get().await?;
+                    fetch_recipe_details(&mut conn, recipe, category, cuisine, keywords, times)
+                        .await
+                }
+            });
+
+        futures::future::try_join_all(futures).await
     }
 
     /// Gets the recipe only.

@@ -711,7 +711,10 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
     html! {
         form class="card bg-base-100 shadow-sm min-w-[50vw]"
             hx-post="/settings/export-data"
-            hx-swap="none" {
+            hx-on:download-ready="
+                    document.querySelector('#export-data-dialog').close();
+                    window.location.href = event.detail.url;
+                " {
             div class="card-body" {
                 h3 class="mb-1 grid grid-flow-col" {
                     label class="input input-sm" {
@@ -736,11 +739,7 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                             tr class="text-center" {
                                 th class="py-1 text-left" {
                                     label {
-                                        input type="checkbox"
-                                            name="recipe-ids"
-                                            class="checkbox"
-                                            value="0"
-                                            _="on change set <input.checkbox-recipe-id/>'s checked to my checked";
+                                        input type="checkbox" class="checkbox" _="on change set <input.checkbox-recipe-id/>'s checked to my checked then call checkExportDataSubmit()";
                                     }
                                 }
                                 th class="py-1 text-left" { "Name" }
@@ -755,11 +754,11 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                                 tr {
                                     td class="py-1" {
                                         label {
-                                            input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value=(recipe.id);
+                                            input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value=(recipe.id) _="on change call checkExportDataSubmit()";
                                         }
                                     }
                                     td class="py-1" { (recipe.name) }
-                                    td class="py-1 text-center" {
+                                    td class="py-1 text-center select-none" {
                                         @if recipe.is_favourite {
                                             span aria-label="Favorite" { "♥" }
                                         }
@@ -787,8 +786,10 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
             }
             div class="card-actions justify-end" {
                 button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()" { "Cancel" }
-                button type="submit" class="btn btn-sm" {
-                    (icon_arrow_down_tray())
+                div .cursor-not-allowed {
+                    button #export-data-submit-button type="submit" class="btn btn-sm" disabled {
+                        (icon_arrow_down_tray())
+                    }
                 }
             }
           }

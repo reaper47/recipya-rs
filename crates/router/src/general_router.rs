@@ -6,7 +6,7 @@ use axum::routing::{get, post};
 use app::state::AppState;
 
 use crate::handlers::general::{
-    fetch_handler, index_handler, search_suggestions_handler, upload_note_image,
+    download_handler, fetch_handler, index_handler, search_suggestions_handler, upload_note_image,
     user_initials_handler, ws_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
@@ -14,6 +14,7 @@ use crate::middleware::mw_auth::mw_refresh_token;
 /// Defines the routes for general endpoints of the web application.
 pub fn general_routes(state: &AppState) -> Router<AppState> {
     let protected = Router::new()
+        .route("/download", get(download_handler))
         .route("/fetch", get(fetch_handler))
         .route("/search-suggestions", get(search_suggestions_handler))
         .route(

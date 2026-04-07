@@ -1,16 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+use models::export::ExportType;
+
 /// Represents the payload for setting themes.
 #[derive(Deserialize, Serialize)]
 pub struct ThemePayload {
     pub theme: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ExportType {
-    Json,
-    Pdf,
 }
 
 /// Represents the payload for exporting data.

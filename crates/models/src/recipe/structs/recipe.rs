@@ -1,6 +1,5 @@
 use bitflags::bitflags;
 use diesel::prelude::*;
-use schema_org::ToIso8601;
 use support::regexp::time::TimeParser;
 use tracing::error;
 use uuid::Uuid;
@@ -8,7 +7,10 @@ use whatlang::Lang;
 
 use math::cooking::units::system;
 use repository::schema;
-use schema_org::field::{FieldEnum20, RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum};
+use schema_org::{
+    AtType, ToIso8601,
+    field::{FieldEnum20, RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum},
+};
 use support::name_entity_with_relations;
 use support::strings::extract_number;
 
@@ -161,6 +163,97 @@ impl RecipeDetails {
             Lang::from_code(&self.recipe.language).unwrap_or(Lang::Eng),
             Lang::Ara | Lang::Heb | Lang::Yid | Lang::Urd | Lang::Pes
         )
+    }
+}
+
+impl From<&RecipeDetails> for schema_org::Recipe {
+    fn from(schema: &RecipeDetails) -> Self {
+        Self {
+            r#type: AtType::Recipe.to_opt(),
+            graph: todo!(),
+            context: todo!(),
+            nutrition: todo!(),
+            cooking_method: todo!(),
+            recipe_yield: todo!(),
+            recipe_cuisine: todo!(),
+            ingredients: todo!(),
+            recipe_ingredient: todo!(),
+            suitable_for_diet: todo!(),
+            cook_time: todo!(),
+            recipe_instructions: todo!(),
+            recipe_category: todo!(),
+            steps: todo!(),
+            r#yield: todo!(),
+            tool: todo!(),
+            step: todo!(),
+            prep_time: todo!(),
+            estimated_cost: todo!(),
+            total_time: todo!(),
+            perform_time: todo!(),
+            supply: todo!(),
+            comment: todo!(),
+            is_based_on_url: todo!(),
+            translation_of_work: todo!(),
+            work_translation: todo!(),
+            mentions: todo!(),
+            date_created: todo!(),
+            word_count: todo!(),
+            size: todo!(),
+            maintainer: todo!(),
+            license: todo!(),
+            expires: todo!(),
+            comment_count: todo!(),
+            time_required: todo!(),
+            review: todo!(),
+            contributor: todo!(),
+            interaction_statistic: todo!(),
+            publisher: todo!(),
+            credit_text: todo!(),
+            headline: todo!(),
+            editor: todo!(),
+            date_modified: todo!(),
+            is_accessible_for_free: todo!(),
+            keywords: todo!(),
+            provider: todo!(),
+            creator: todo!(),
+            sd_date_published: todo!(),
+            content_reference_time: todo!(),
+            archived_at: todo!(),
+            discussion_url: todo!(),
+            content_rating: todo!(),
+            country_of_origin: todo!(),
+            text: todo!(),
+            award: todo!(),
+            is_based_on: todo!(),
+            aggregate_rating: todo!(),
+            in_language: todo!(),
+            date_published: todo!(),
+            sd_publisher: todo!(),
+            audio: todo!(),
+            alternative_headline: todo!(),
+            about: todo!(),
+            is_part_of: todo!(),
+            thumbnail: todo!(),
+            thumbnail_url: todo!(),
+            copyright_year: todo!(),
+            work_example: todo!(),
+            citation: todo!(),
+            video: todo!(),
+            awards: todo!(),
+            producer: todo!(),
+            schema_version: todo!(),
+            author: todo!(),
+            translator: todo!(),
+            reviews: todo!(),
+            disambiguating_description: todo!(),
+            image: todo!(),
+            same_as: todo!(),
+            description: todo!(),
+            alternate_name: todo!(),
+            url: todo!(),
+            subject_of: todo!(),
+            name: todo!(),
+        }
     }
 }
 

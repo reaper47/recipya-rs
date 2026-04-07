@@ -14,6 +14,7 @@ pub enum Error {
         entity: &'static str,
         id: String,
     },
+    File(String),
     InvalidCssSelector,
     InvalidZipArchive,
     NoFileInZip,
@@ -53,6 +54,8 @@ pub enum Error {
     Run(diesel_async::pooled_connection::bb8::RunError),
     #[from]
     SerdeJson(serde_json::Error),
+    #[from]
+    Zip(zip::result::ZipError),
 }
 
 impl From<diesel::result::Error> for Error {
