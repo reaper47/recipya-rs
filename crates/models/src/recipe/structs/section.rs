@@ -441,6 +441,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                             items: std::mem::take(&mut current_items),
                         });
                     }
+
                     let items = list
                         .item_list_element
                         .into_iter()
@@ -449,9 +450,14 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                                 text,
                                 duration_seconds: None,
                             }),
+                            ItemListItemListElementFieldEnum::ListItem(item) => Some(Item {
+                                text: item.text.first().cloned().unwrap_or_default(),
+                                duration_seconds: None,
+                            }),
                             _ => None,
                         })
                         .collect();
+
                     sections.push(SectionItem {
                         title: list.name.first().cloned().unwrap_or_default(),
                         items,

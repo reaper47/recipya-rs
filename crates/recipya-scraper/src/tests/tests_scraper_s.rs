@@ -122,7 +122,7 @@ mod tests {
                     Clip {
                         r#type: AtType::VideoObject.to_opt(),
                         thumbnail_url: vec![
-                            "https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/7d823d1cb0d746c08940e57844808e09_1696327654~tplv-tiktokx-origin.image?dr=10395&x-expires=1776002400&x-signature=Nqi%2FSEcfnqaKSzDwHDoBw5rzWOQ%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a".into(),
+                            "https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/7d823d1cb0d746c08940e57844808e09_1696327654~tplv-tiktokx-origin.image?dr=10395&x-expires=1776009600&x-signature=k4IiX2QhoEh9HOHARTkpturrK9g%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a".into(),
                         ],
                         description: vec![
                             ClipDescriptionFieldEnum::Text(
