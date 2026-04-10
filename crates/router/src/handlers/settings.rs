@@ -154,18 +154,20 @@ pub async fn export_data_post_handler(
     State(state): State<AppState>,
     RawForm(bytes): RawForm,
 ) -> impl IntoResponse {
-    let payload: ExportDataPayload =
-        match serde_qs::from_bytes(&bytes).map_err(|e| (StatusCode::BAD_REQUEST, e.to_string())) {
-            Ok(payload) => payload,
-            Err(err) => {
-                error!(
-                    "Failed to parse export form '{bytes:?}' user {}: {err:?}",
-                    user.id
-                );
-                broadcast_error(&state, user.id, "Failed to parse export form.").await;
-                return Error::Database.into_response();
-            }
-        };
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    let payload: ExportDataPayload = match serde_qs::from_bytes(&bytes)
+        .map_err(|err| (StatusCode::BAD_REQUEST, err.to_string()))
+    {
+        Ok(payload) => payload,
+        Err(err) => {
+            error!(
+                "Failed to parse export form '{bytes:?}' user {}: {err:?}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to parse export form.").await;
+            return Error::Database.into_response();
+        }
+    };
 
     if payload.recipe_ids.is_empty() {
         broadcast_warning(&state, user.id, "No recipes selected for export.").await;
@@ -184,7 +186,15 @@ pub async fn export_data_post_handler(
         }
     };
 
-    let file_path = match ExportData::new(payload.r#type, recipes).export().await {
+    if recipes.is_empty() {
+        broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
+    let file_path = match ExportData::new(payload.r#type, recipes, &state.data_dir.images.root)
+        .export()
+        .await
+    {
         Ok(file) => file,
         Err(err) => {
             error!("Failed to export recipes for user {}: {err:?}", user.id);

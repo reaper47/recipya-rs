@@ -32,7 +32,7 @@ iso8601.workspace = true
 itertools.workspace = true
 math.workspace = true
 mime_guess = "2.0.5"
-models = { workspace = true, features = ["test-utils"] }
+models = { workspace = true }
 rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
@@ -63,8 +63,11 @@ diesel-async.workspace = true
 image = "0.25.10"
 jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
-testing.workspace = true
+test-utils.workspace = true
 time.workspace = true
 tokio.workspace = true
 tower = "0.5.3"
 tracing-test.workspace = true
+test-db = { path = "../test-db" }
+test-fixtures = { path = "../test-fixtures" }
+test-models = { path = "../test-models" }

@@ -10,11 +10,12 @@ mod tests {
     use models::Recipe;
     use models::recipe::structs::media::VideoForCreate;
     use models::recipe::structs::recipe::RecipeForCreate;
-    use models::recipe::structs::test_utils::a_complete_recipe_for_create;
     use models::recipe::structs::types::Source;
-    use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, assert_ws_message,
-        build_server_logged_in, build_server_ws, create_app_state,
+    use test_db::TestDb;
+    use test_fixtures::{RecipeImages, assert_html, assert_not_in_html, assert_ws_message};
+    use test_models::a_complete_recipe_for_create;
+    use test_utils::{
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -40,13 +41,13 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let recipe = a_complete_recipe_for_create();
+            let (recipe, images) = a_complete_recipe_for_create();
             let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
             res.assert_status_ok();
-            assert_complete_recipe(&res, &recipe);
+            assert_complete_recipe(&res, &recipe, &images);
             Ok(())
         }
 
@@ -57,7 +58,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.ingredients =
                 SectionComponents::Flat(vec![Item::new("ing1"), Item::new("ing2")]);
             recipe.instructions =
@@ -85,13 +86,13 @@ mod tests {
             server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let recipe = a_complete_recipe_for_create();
+            let (recipe, images) = a_complete_recipe_for_create();
             let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
             res.assert_status_ok();
-            assert_complete_recipe(&res, &recipe);
+            assert_complete_recipe(&res, &recipe, &images);
             Ok(())
         }
 
@@ -122,7 +123,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = vec![];
             let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
@@ -146,7 +147,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos.clear();
             let img1 = Uuid::new_v4();
             recipe.images = vec![img1];
@@ -171,9 +172,9 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, images) = a_complete_recipe_for_create();
             recipe.videos.clear();
-            recipe.images = vec![Uuid::nil(), Uuid::nil()];
+            recipe.images = vec![images.main, images.additional];
             let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -182,8 +183,14 @@ mod tests {
             assert_html(
                 &res,
                 vec![
-                    r##"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-1">❮</a><a class="btn btn-soft btn-sm" href="#media-1">❯</a></div></div><div id="media-1" class="carousel-item relative w-full">"##,
-                    r##"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-0">❮</a><a class="btn btn-soft btn-sm" href="#media-0">❯</a></div></div></div>"##,
+                    &format!(
+                        r##"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-1">❮</a><a class="btn btn-soft btn-sm" href="#media-1">❯</a></div></div><div id="media-1" class="carousel-item relative w-full">"##,
+                        images.main
+                    ),
+                    &format!(
+                        r##"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-0">❮</a><a class="btn btn-soft btn-sm" href="#media-0">❯</a></div>"##,
+                        images.additional
+                    ),
                 ],
             );
             Ok(())
@@ -196,7 +203,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos = vec![VideoForCreate {
                 video: Uuid::new_v4(),
                 duration: None,
@@ -225,7 +232,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
                     video: Uuid::new_v4(),
@@ -263,12 +270,12 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, images) = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
-                    video: Uuid::nil(),
+                    video: images.video,
                     duration: None,
-                    content_url: Some("https://example.com/embed/yg8FG4".into()),
+                    content_url: None,
                     embed_url: None,
                 },
                 VideoForCreate {
@@ -278,7 +285,6 @@ mod tests {
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            recipe.images = vec![Uuid::nil(), Uuid::nil()];
             let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
@@ -287,9 +293,18 @@ mod tests {
             assert_html(
                 &res,
                 vec![
-                    r##"<div class="carousel w-full"><div id="media-0" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-3">❮</a><a class="btn btn-soft btn-sm" href="#media-1">❯</a></div></div>"##,
-                    r##"<div id="media-1" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-0">❮</a><a class="btn btn-soft btn-sm" href="#media-2">❯</a></div></div>"##,
-                    r##"<div id="media-2" class="carousel-item relative w-full"><video controls preload="metadata" src="https://example.com/embed/yg8FG4"></video><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-1">❮</a><a class="btn btn-soft btn-sm" href="#media-3">❯</a></div></div>"##,
+                    &format!(
+                        r##"<div class="carousel w-full"><div id="media-0" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-3">❮</a><a class="btn btn-soft btn-sm" href="#media-1">❯</a></div></div>"##,
+                        images.main
+                    ),
+                    &format!(
+                        r##"<div id="media-1" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp"><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-0">❮</a><a class="btn btn-soft btn-sm" href="#media-2">❯</a></div></div>"##,
+                        images.additional
+                    ),
+                    &format!(
+                        r##"<div id="media-2" class="carousel-item relative w-full"><video controls preload="metadata" src="/data/videos/{}.webm" type="video/webm"></video><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-1">❮</a><a class="btn btn-soft btn-sm" href="#media-3">❯</a></div>"##,
+                        images.video
+                    ),
                     r##"<div id="media-3" class="carousel-item relative w-full"><iframe src="https://example.com/embed/yg8FG4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;"></iframe><div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0"><a class="btn btn-soft btn-sm" href="#media-2">❮</a><a class="btn btn-soft btn-sm" href="#media-0">❯</a></div></div>"##,
                 ],
             );
@@ -303,7 +318,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.source = Source::new("My mom's recipe cookbook");
             let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
@@ -321,6 +336,7 @@ mod tests {
     }
 
     mod tests_delete {
+
         use super::*;
 
         #[tokio::test]
@@ -348,8 +364,8 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let _recipe_id =
-                Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+            let (recipe, _) = a_complete_recipe_for_create();
+            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.delete(&base_uri(1)).await;
 
@@ -359,7 +375,7 @@ mod tests {
         }
     }
 
-    fn assert_complete_recipe(res: &TestResponse, recipe: &RecipeForCreate) {
+    fn assert_complete_recipe(res: &TestResponse, recipe: &RecipeForCreate, images: &RecipeImages) {
         assert_html(
             res,
             vec![
@@ -378,8 +394,14 @@ mod tests {
                 r#"<li title="Print recipe" _="on click print()">"#,
                 r##"<a title="Delete recipe" hx-delete="/recipes/1" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##,
                 r#"<iframe src="https://example.com/embed/j43yfe3.mp4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;"></iframe>"#,
-                r#"<div id="media-0" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp">"#,
-                r#"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp">"#,
+                &format!(
+                    r#"<div id="media-0" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp">"#,
+                    images.main,
+                ),
+                &format!(
+                    r#"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp">"#,
+                    images.main,
+                ),
                 r#"<div class="badge badge-primary badge-outline">dinner</div>"#,
                 r#"<div class="badge badge-sm badge-neutral m-1 flex-auto">tofu</div><div class="badge badge-sm badge-neutral m-1 flex-auto">vegetarian</div>"#,
                 r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input max-w-18 md:max-w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,

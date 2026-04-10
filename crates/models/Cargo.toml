@@ -14,9 +14,6 @@ readme.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-[features]
-test-utils = []
-
 [dependencies]
 async-trait.workspace = true
 auth.workspace = true
@@ -62,4 +59,6 @@ zip.workspace = true
 [dev-dependencies]
 app.workspace = true
 pretty_assertions.workspace = true
-testing = { path = "../testing" }
+test-utils.workspace = true
+test-db = { path = "../test-db" }
+test-fixtures = { path = "../test-fixtures" }

@@ -167,7 +167,8 @@ impl NutritionSource {
 #[cfg(test)]
 mod tests {
     use chrono::Utc;
-    use testing::utils::{TestDb, create_app_state};
+    use test_db::TestDb;
+    use test_utils::create_app_state;
 
     use super::*;
 

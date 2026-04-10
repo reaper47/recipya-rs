@@ -33,10 +33,11 @@ mod tests {
     use axum::http::Method;
     use models::user::User;
     use reqwest::StatusCode;
-    use testing::utils::{
-        TEST_USER_EMAIL, TestDb, assert_html, assert_must_be_logged_in, assert_ws_message,
-        build_server_logged_in, build_server_ws, build_server_ws_other_user, create_app_state,
-        insert_other_user,
+    use test_db::TestDb;
+    use test_fixtures::{assert_html, assert_ws_message};
+    use test_utils::{
+        TEST_USER_EMAIL, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
+        build_server_ws_other_user, create_app_state, insert_other_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;

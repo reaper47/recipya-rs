@@ -1,0 +1,21 @@
+[package]
+name = "test-db"
+version = "0.0.0"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+config.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
+dotenvy.workspace = true
+repository.workspace = true
+uuid.workspace = true

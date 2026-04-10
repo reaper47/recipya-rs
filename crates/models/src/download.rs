@@ -105,7 +105,8 @@ impl Download {
 
 #[cfg(test)]
 mod tests {
-    use testing::utils::{TestDb, build_server_anonymous, create_app_state};
+    use test_db::TestDb;
+    use test_utils::{build_server_anonymous, create_app_state};
 
     use super::*;
     use crate::user::User;

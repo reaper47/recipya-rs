@@ -6,9 +6,13 @@ use indexmap::IndexMap;
 use itertools::Either;
 
 use repository::schema;
-use schema_org::field::{
-    ItemListItemListElementFieldEnum, PropertyValueValueFieldEnum, RecipeRecipeIngredientFieldEnum,
-    RecipeRecipeInstructionsFieldEnum,
+use schema_org::{
+    AtType, ItemList, at_context,
+    field::{
+        ItemListItemListElementFieldEnum, ItemListItemListOrderFieldEnum,
+        PropertyValueValueFieldEnum, RecipeRecipeIngredientFieldEnum,
+        RecipeRecipeInstructionsFieldEnum,
+    },
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -365,6 +369,60 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                 .ok_or("Failed to extract section")
         } else {
             Ok(Self::Grouped(sections))
+        }
+    }
+}
+
+impl From<SectionComponents> for Vec<RecipeRecipeInstructionsFieldEnum> {
+    fn from(components: SectionComponents) -> Self {
+        match components {
+            SectionComponents::Flat(items) => items
+                .into_iter()
+                .map(|item| RecipeRecipeInstructionsFieldEnum::Text(item.text))
+                .collect(),
+            SectionComponents::Grouped(sections) => sections
+                .into_iter()
+                .map(|section| {
+                    RecipeRecipeInstructionsFieldEnum::ItemList(Box::new(section.into()))
+                })
+                .collect(),
+        }
+    }
+}
+
+impl From<SectionComponents> for Vec<RecipeRecipeIngredientFieldEnum> {
+    fn from(components: SectionComponents) -> Self {
+        match components {
+            SectionComponents::Flat(items) => items
+                .into_iter()
+                .map(|item| RecipeRecipeIngredientFieldEnum::Text(item.text))
+                .collect(),
+            SectionComponents::Grouped(sections) => sections
+                .into_iter()
+                .map(|section| RecipeRecipeIngredientFieldEnum::ItemList(section.into()))
+                .collect(),
+        }
+    }
+}
+
+impl From<SectionItem> for ItemList {
+    fn from(item: SectionItem) -> Self {
+        let num_items = i32::try_from(item.items.len()).unwrap_or_default();
+
+        Self {
+            r#type: AtType::ItemList.to_string(),
+            context: at_context(),
+            item_list_element: item
+                .items
+                .into_iter()
+                .map(|item| ItemListItemListElementFieldEnum::Text(item.text))
+                .collect(),
+            item_list_order: vec![ItemListItemListOrderFieldEnum::Text(
+                "Ascending".to_string(),
+            )],
+            name: vec![item.title],
+            number_of_items: vec![num_items],
+            ..Default::default()
         }
     }
 }

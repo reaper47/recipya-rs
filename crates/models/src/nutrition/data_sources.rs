@@ -361,7 +361,8 @@ impl From<i16> for NutritionDataSource {
 
 #[cfg(test)]
 mod tests {
-    use testing::utils::{TestDb, create_app_state};
+    use test_db::TestDb;
+    use test_utils::create_app_state;
 
     use crate::nutrition::{NutritionDataSource, all_nutrition_sources};
 

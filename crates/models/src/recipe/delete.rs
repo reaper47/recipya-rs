@@ -97,7 +97,8 @@ mod tests {
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
-    use testing::utils::{TestDb, create_app_state, insert_user};
+    use test_db::TestDb;
+    use test_utils::{create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -110,8 +111,8 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let recipe_id =
-                Recipe::create(&state.mm, user.id, &a_complete_recipe_for_create()).await?;
+            let (recipe, _) = a_complete_recipe_for_create();
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
             Recipe::delete(&state.mm, recipe_id, user.id).await?;
 
@@ -289,7 +290,7 @@ mod tests {
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
             Recipe::add_category(&state.mm, A_CATEGORY, user.id).await?;
-            let mut a_recipe = a_complete_recipe_for_create();
+            let (mut a_recipe, _) = a_complete_recipe_for_create();
             a_recipe.category = Some(A_CATEGORY.to_string());
             let recipe_id = Recipe::create(&state.mm, user.id, &a_recipe).await?;
 

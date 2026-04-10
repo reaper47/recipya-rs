@@ -711,10 +711,8 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
     html! {
         form class="card bg-base-100 shadow-sm min-w-[50vw]"
             hx-post="/settings/export-data"
-            hx-on:download-ready="
-                    document.querySelector('#export-data-dialog').close();
-                    window.location.href = event.detail.url;
-                " {
+            hx-indicator="#export-data-spinner"
+            hx-on:download-ready="document.querySelector('#export-data-dialog').close(); window.location.href = event.detail.url;" {
             div class="card-body" {
                 h3 class="mb-1 grid grid-flow-col" {
                     label class="input input-sm" {
@@ -727,10 +725,8 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                         input type="search" placeholder="Search a recipe" _=(PreEscaped(SEARCH_INPUT_JS));
                     }
                     select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end" {
-                        optgroup label="Recipes" {
-                            option value="json" selected { "JSON" }
-                            option value="pdf" { "PDF" }
-                        }
+                        option value="json" selected { "JSON" }
+                        option value="pdf" { "PDF" }
                     }
                 }
                 div class="overflow-auto h-[50vh]" {
@@ -788,6 +784,7 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                 button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()" { "Cancel" }
                 div .cursor-not-allowed {
                     button #export-data-submit-button type="submit" class="btn btn-sm" disabled {
+                        img #export-data-spinner class="htmx-indicator" src="/public/img/bars.svg" alt="Loading...";
                         (icon_arrow_down_tray())
                     }
                 }

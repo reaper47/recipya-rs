@@ -6,10 +6,12 @@ pub mod time;
 pub mod tool;
 pub mod types;
 
-#[cfg(feature = "test-utils")]
+#[cfg(test)]
 pub mod test_utils {
     use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use uuid::Uuid;
+
+    use test_fixtures::RecipeImages;
 
     use crate::{
         Recipe, RecipeDetails,
@@ -32,13 +34,13 @@ pub mod test_utils {
     /// # Panics
     ///
     /// Panics if:
-    /// - The date 2012-12-31 or 2022-02-24 cannot be constructed (invalid calendar date)
-    /// - The time 00:00:00 cannot be constructed (invalid time)
-    /// - The recipe yield is not present in the source data
-    /// - The recipe category is not present in the source data
-    /// - Converting the tool index to `i16` fails (if there are more than 32,767 tools)
-    pub fn a_complete_recipe() -> RecipeDetails {
-        let recipe_c = a_complete_recipe_for_create();
+    /// - The date 2012-12-31 or 2022-02-24 cannot be constructed
+    /// - The time 00:00:00 cannot be constructed
+    /// - The recipe yield is not present
+    /// - The recipe category is not present
+    /// - Converting the tool index to `i16` fails
+    pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
+        let (recipe_c, all_images) = a_complete_recipe_for_create();
 
         let images = recipe_c.images;
         let additional_images = images.last().iter().copied().copied().collect::<Vec<_>>();
@@ -47,177 +49,181 @@ pub mod test_utils {
         let updated_date = NaiveDate::from_ymd_opt(2022, 2, 24).expect("russia invaded Ukraine");
         let time = NaiveTime::from_hms_opt(0, 0, 0).expect("invalid time");
 
-        RecipeDetails {
-            recipe: Recipe {
-                id: 1,
-                name: recipe_c.name,
-                description: recipe_c.description,
-                image: images.first().copied().or(None),
-                r#yield: recipe_c.r#yield.ok_or(4).expect("a yield found"),
-                language: "en".into(),
-                measurement_system_id: 2,
-                notes: Some("# Notes\n\nHere are some notes".into()),
-                source: recipe_c.source,
-                is_favourite: false,
-                rating: None,
-                created_at: NaiveDateTime::new(created_date, time),
-                updated_at: NaiveDateTime::new(updated_date, time),
-                user_id: Uuid::new_v4(),
-            },
-            additional_images,
-            category: recipe_c.category.expect("a category"),
-            cuisine: recipe_c.cuisine,
-            ingredients: recipe_c.ingredients,
-            instructions: recipe_c.instructions,
-            keywords: recipe_c.keywords,
-            nutrition: NutritionDetails {
-                per_100g: recipe_c.nutrition.per_100g.map(|n| Nutrition {
+        (
+            RecipeDetails {
+                recipe: Recipe {
                     id: 1,
-                    is_precalculated_by_source: !n.is_empty(),
-                    calories_kcal: n.calories_kcal,
-                    total_carbohydrates: n.total_carbohydrates,
-                    sugars_g: n.sugars_g,
-                    protein_g: n.protein_g,
-                    total_fat_g: n.total_fat_g,
-                    saturated_fat_g: n.saturated_fat_g,
-                    unsaturated_fat_g: n.unsaturated_fat_g,
-                    cholesterol_mg: n.cholesterol_mg,
-                    sodium_mg: n.sodium_mg,
-                    fiber_g: n.fiber_g,
-                    trans_fat_g: n.trans_fat_g,
-                }),
-                per_serving: recipe_c
-                    .nutrition
-                    .per_serving
-                    .map(|n| NutritionPerServingDetails {
-                        nutrition: Nutrition::from(&n.nutrition),
-                        serving_size: "100g".into(),
+                    name: recipe_c.name,
+                    description: recipe_c.description,
+                    image: images.first().copied().or(None),
+                    r#yield: recipe_c.r#yield.ok_or(4).expect("a yield found"),
+                    language: "en".into(),
+                    measurement_system_id: 2,
+                    notes: Some("# Notes\n\nHere are some notes".into()),
+                    source: recipe_c.source,
+                    is_favourite: false,
+                    rating: None,
+                    created_at: NaiveDateTime::new(created_date, time),
+                    updated_at: NaiveDateTime::new(updated_date, time),
+                    user_id: Uuid::new_v4(),
+                },
+                additional_images,
+                category: recipe_c.category.expect("a category"),
+                cuisine: recipe_c.cuisine,
+                ingredients: recipe_c.ingredients,
+                instructions: recipe_c.instructions,
+                keywords: recipe_c.keywords,
+                nutrition: NutritionDetails {
+                    per_100g: recipe_c.nutrition.per_100g.map(|n| Nutrition {
+                        id: 1,
+                        is_precalculated_by_source: !n.is_empty(),
+                        calories_kcal: n.calories_kcal,
+                        total_carbohydrates: n.total_carbohydrates,
+                        sugars_g: n.sugars_g,
+                        protein_g: n.protein_g,
+                        total_fat_g: n.total_fat_g,
+                        saturated_fat_g: n.saturated_fat_g,
+                        unsaturated_fat_g: n.unsaturated_fat_g,
+                        cholesterol_mg: n.cholesterol_mg,
+                        sodium_mg: n.sodium_mg,
+                        fiber_g: n.fiber_g,
+                        trans_fat_g: n.trans_fat_g,
                     }),
+                    per_serving: recipe_c.nutrition.per_serving.map(|n| {
+                        NutritionPerServingDetails {
+                            nutrition: Nutrition::from(&n.nutrition),
+                            serving_size: "100g".into(),
+                        }
+                    }),
+                },
+                times: Times {
+                    id: 1,
+                    recipe_id: 1,
+                    prep_seconds: 3600,
+                    cook_seconds: 900,
+                    total_seconds: 4500,
+                },
+                tools: recipe_c
+                    .tools
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| ToolRecipe {
+                        name: t.name.clone(),
+                        quantity: t.quantity,
+                        tool_order: i16::try_from(i).unwrap_or_default(),
+                    })
+                    .collect(),
+                videos: vec![],
             },
-            times: Times {
-                id: 1,
-                recipe_id: 1,
-                prep_seconds: 3600,
-                cook_seconds: 900,
-                total_seconds: 4500,
-            },
-            tools: recipe_c
-                .tools
-                .iter()
-                .enumerate()
-                .map(|(i, t)| ToolRecipe {
-                    name: t.name.clone(),
-                    quantity: t.quantity,
-                    tool_order: i16::try_from(i).unwrap_or_default(),
-                })
-                .collect(),
-            videos: vec![],
-        }
+            all_images,
+        )
     }
 
     /// Constructs a `RecipeForCreate` instance with all components populated, preparing
     /// it for database insertion.
-    pub fn a_complete_recipe_for_create() -> RecipeForCreate {
-        let main_image = Uuid::nil();
-        let secondary_image = Uuid::nil();
-        let video = Uuid::nil();
+    #[allow(clippy::too_many_lines)]
+    pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
+        let images = RecipeImages::default();
 
-        RecipeForCreate {
-            name: "Best Chinese Kale".into(),
-            description: Some("This is the most delicious recipe!".into()),
-            images: vec![main_image, secondary_image],
-            measurement_system_id: 2,
-            r#yield: Some(4),
-            source: Source::new(
-                "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
-            ),
-            is_favourite: false,
-            rating: Some(4),
-            videos: vec![VideoForCreate {
-                video,
-                duration: Some(chrono::Duration::minutes(7)),
-                content_url: Some("https://example.com/best-food.mp4".into()),
-                embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
-            }],
-            category: Some("dinner".into()),
-            cuisine: Some("thai".into()),
-            ingredients: SectionComponents::Grouped(vec![
-                SectionItem::new(
-                    "Sauce",
-                    vec![
-                        Item::new("1 cup blue spinach"),
-                        Item::new("1/2 tbsp cinnamon"),
-                    ],
+        (
+            RecipeForCreate {
+                name: "Best Chinese Kale".into(),
+                description: Some("This is the most delicious recipe!".into()),
+                images: vec![images.main, images.additional],
+                measurement_system_id: 2,
+                r#yield: Some(4),
+                source: Source::new(
+                    "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
                 ),
-                SectionItem::new(
-                    "Main",
-                    vec![
-                        Item::new("4 pounds top quality chicken filet"),
-                        Item::new("1/8 cup lemon juice"),
-                    ],
-                ),
-            ]),
-            instructions: SectionComponents::Grouped(vec![
-                SectionItem::new("Sauce", vec![Item::new("Mix all these ingredients")]),
-                SectionItem::new(
-                    "Chicken",
-                    vec![
-                        Item::new("Turn the oven at 300 F"),
-                        Item::new("Soak the chicken in the lemon juice"),
-                        Item {
-                            text: "Bake for 35 minutes".into(),
-                            duration_seconds: Some(2100),
-                        },
-                    ],
-                ),
-            ]),
-            keywords: Vec::<String>::from(["vegetarian".into(), "tofu".into()]),
-            notes: Some("# My Recipe Notes\n\nThis dish should be served medium-cold".into()),
-            nutrition: NutritionDetailsForCreate {
-                per_100g: Some(NutritionForCreate {
-                    calories_kcal: Some(300),
-                    total_carbohydrates: Some(55.),
-                    sugars_g: Some(43.),
-                    protein_g: Some(7.),
-                    total_fat_g: Some(6.),
-                    saturated_fat_g: Some(1.),
-                    unsaturated_fat_g: Some(2.),
-                    cholesterol_mg: Some(5.),
-                    sodium_mg: Some(12.),
-                    fiber_g: Some(10.),
-                    trans_fat_g: Some(3.),
-                }),
-                per_serving: Some(NutritionPerServingDetailsForCreate {
-                    nutrition: NutritionForCreate {
-                        calories_kcal: Some(240),
-                        total_carbohydrates: Some(30.),
-                        sugars_g: Some(24.),
-                        protein_g: Some(4.),
+                is_favourite: false,
+                rating: Some(4),
+                videos: vec![VideoForCreate {
+                    video: images.video,
+                    duration: Some(chrono::Duration::minutes(7)),
+                    content_url: Some("https://example.com/best-food.mp4".into()),
+                    embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
+                }],
+                category: Some("dinner".into()),
+                cuisine: Some("thai".into()),
+                ingredients: SectionComponents::Grouped(vec![
+                    SectionItem::new(
+                        "Sauce",
+                        vec![
+                            Item::new("1 cup blue spinach"),
+                            Item::new("1/2 tbsp cinnamon"),
+                        ],
+                    ),
+                    SectionItem::new(
+                        "Main",
+                        vec![
+                            Item::new("4 pounds top quality chicken filet"),
+                            Item::new("1/8 cup lemon juice"),
+                        ],
+                    ),
+                ]),
+                instructions: SectionComponents::Grouped(vec![
+                    SectionItem::new("Sauce", vec![Item::new("Mix all these ingredients")]),
+                    SectionItem::new(
+                        "Chicken",
+                        vec![
+                            Item::new("Turn the oven at 300 F"),
+                            Item::new("Soak the chicken in the lemon juice"),
+                            Item {
+                                text: "Bake for 35 minutes".into(),
+                                duration_seconds: Some(2100),
+                            },
+                        ],
+                    ),
+                ]),
+                keywords: Vec::<String>::from(["vegetarian".into(), "tofu".into()]),
+                notes: Some("# My Recipe Notes\n\nThis dish should be served medium-cold".into()),
+                nutrition: NutritionDetailsForCreate {
+                    per_100g: Some(NutritionForCreate {
+                        calories_kcal: Some(300),
+                        total_carbohydrates: Some(55.),
+                        sugars_g: Some(43.),
+                        protein_g: Some(7.),
                         total_fat_g: Some(6.),
-                        saturated_fat_g: Some(2.),
-                        unsaturated_fat_g: Some(7.),
-                        cholesterol_mg: Some(12.),
-                        sodium_mg: Some(100.),
-                        fiber_g: Some(18.),
-                        trans_fat_g: Some(2.),
-                    },
-                    serving_size: "2 buns".into(),
+                        saturated_fat_g: Some(1.),
+                        unsaturated_fat_g: Some(2.),
+                        cholesterol_mg: Some(5.),
+                        sodium_mg: Some(12.),
+                        fiber_g: Some(10.),
+                        trans_fat_g: Some(3.),
+                    }),
+                    per_serving: Some(NutritionPerServingDetailsForCreate {
+                        nutrition: NutritionForCreate {
+                            calories_kcal: Some(240),
+                            total_carbohydrates: Some(30.),
+                            sugars_g: Some(24.),
+                            protein_g: Some(4.),
+                            total_fat_g: Some(6.),
+                            saturated_fat_g: Some(2.),
+                            unsaturated_fat_g: Some(7.),
+                            cholesterol_mg: Some(12.),
+                            sodium_mg: Some(100.),
+                            fiber_g: Some(18.),
+                            trans_fat_g: Some(2.),
+                        },
+                        serving_size: "2 buns".into(),
+                    }),
+                },
+                times: Some(TimesForCreate {
+                    prep_seconds: 120,
+                    cook_seconds: 3600,
                 }),
+                tools: vec![
+                    ToolForCreate {
+                        name: "wok".into(),
+                        quantity: 1,
+                    },
+                    ToolForCreate {
+                        name: "frying pan".into(),
+                        quantity: 1,
+                    },
+                ],
             },
-            times: Some(TimesForCreate {
-                prep_seconds: 120,
-                cook_seconds: 3600,
-            }),
-            tools: vec![
-                ToolForCreate {
-                    name: "wok".into(),
-                    quantity: 1,
-                },
-                ToolForCreate {
-                    name: "frying pan".into(),
-                    quantity: 1,
-                },
-            ],
-        }
+            images,
+        )
     }
 }

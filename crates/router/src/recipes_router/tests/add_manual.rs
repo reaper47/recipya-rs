@@ -24,9 +24,8 @@ mod tests {
     use models::recipe::structs::tool::ToolForCreate;
     use models::recipe::structs::tool::ToolRecipe;
     use models::{Recipe, RecipeDetails};
-    use testing::utils::{
-        TestDb, assert_must_be_logged_in, build_server_logged_in, create_app_state,
-    };
+    use test_db::TestDb;
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
 
     use crate::recipes_router::tests::helpers::create_form;
 

@@ -45,6 +45,8 @@ pub fn auth_routes(state: &AppState) -> Router<AppState> {
 mod tests {
     use axum::http::{Method, StatusCode};
     use config::Config;
+    use test_db::TestDb;
+    use test_fixtures::{assert_html, assert_ws_message};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -52,10 +54,7 @@ mod tests {
         use super::*;
         use crate::schemas::auth::ChangePasswordForm;
 
-        use testing::utils::{
-            TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
-            build_server_ws,
-        };
+        use test_utils::{assert_must_be_logged_in, build_server_logged_in, build_server_ws};
 
         const BASE_URI: &str = "/auth/change-password";
 
@@ -143,7 +142,7 @@ mod tests {
             tokens::{EmailVerificationToken, EmailVerificationTokenForCreate},
             user::User,
         };
-        use testing::utils::{TestDb, assert_html, build_server_anonymous, create_app_state};
+        use test_utils::{build_server_anonymous, create_app_state};
 
         use super::*;
 
@@ -214,9 +213,9 @@ mod tests {
 
         use axum::http::StatusCode;
         use models::user::User;
-        use testing::utils::{
-            TEST_USER_EMAIL, TestDb, assert_must_be_logged_in, assert_ws_message,
-            build_server_logged_in, build_server_ws, build_server_ws_other_user, create_app_state,
+        use test_utils::{
+            TEST_USER_EMAIL, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
+            build_server_ws_other_user, create_app_state,
         };
 
         const BASE_URI: &str = "/auth/user";
@@ -284,9 +283,7 @@ mod tests {
             tokens::{PasswordResetToken, PasswordResetTokenForCreate},
             user::User,
         };
-        use testing::utils::{
-            TestDb, assert_html, build_server_anonymous, build_server_logged_in, create_app_state,
-        };
+        use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
 
         use super::*;
         use crate::schemas::auth::{ForgotPasswordForm, ForgotPasswordResetForm};
@@ -502,12 +499,12 @@ mod tests {
 
         use axum_htmx::HX_REDIRECT;
         use std::default::Default;
+        use test_fixtures::assert_not_in_html;
         use time::OffsetDateTime;
 
         use auth::token::{http::AUTH_TOKEN, jwt::validate_token};
-        use testing::utils::{
-            TEST_USER_EMAIL, TEST_USER_PASSWORD, TestDb, assert_html, assert_not_in_html,
-            build_server_anonymous, build_server_logged_in,
+        use test_utils::{
+            TEST_USER_EMAIL, TEST_USER_PASSWORD, build_server_anonymous, build_server_logged_in,
         };
 
         const BASE_URI: &str = "/auth/login";
@@ -730,7 +727,7 @@ mod tests {
 
         use auth::token::http::REFRESH_TOKEN;
         use models::user::User;
-        use testing::utils::{TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state};
+        use test_utils::{TEST_USER_EMAIL, build_server_logged_in, create_app_state};
 
         const BASE_URI: &str = "/auth/logout";
 
@@ -794,9 +791,7 @@ mod tests {
         use super::*;
         use models::user::User;
 
-        use testing::utils::{
-            TestDb, build_server_anonymous, build_server_logged_in, create_app_state,
-        };
+        use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
 
         const BASE_URI: &str = "/auth/register";
 

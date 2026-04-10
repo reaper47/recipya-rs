@@ -2657,7 +2657,8 @@ dependencies = [
  "strum 0.28.0",
  "strum_macros 0.28.0",
  "support",
- "testing",
+ "test-fixtures",
+ "test-utils",
  "tokio",
  "tracing",
  "url",
@@ -3256,7 +3257,9 @@ dependencies = [
  "strum_macros 0.28.0",
  "support",
  "tempfile",
- "testing",
+ "test-db",
+ "test-fixtures",
+ "test-utils",
  "time",
  "tokio",
  "tracing",
@@ -4546,7 +4549,10 @@ dependencies = [
  "strum_macros 0.28.0",
  "support",
  "templates",
- "testing",
+ "test-db",
+ "test-fixtures",
+ "test-models",
+ "test-utils",
  "time",
  "tokio",
  "tokio-util",
@@ -5450,7 +5456,37 @@ dependencies = [
 ]
 
 [[package]]
-name = "testing"
+name = "test-db"
+version = "0.0.0"
+dependencies = [
+ "config",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "repository",
+ "uuid",
+]
+
+[[package]]
+name = "test-fixtures"
+version = "0.0.0"
+dependencies = [
+ "axum-test",
+ "uuid",
+]
+
+[[package]]
+name = "test-models"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "models",
+ "test-fixtures",
+ "uuid",
+]
+
+[[package]]
+name = "test-utils"
 version = "0.0.0"
 dependencies = [
  "app",
@@ -5458,17 +5494,14 @@ dependencies = [
  "axum",
  "axum-test",
  "config",
- "diesel",
- "diesel-async",
- "dotenvy",
  "models",
  "recipya-scraper",
  "repository",
  "router",
  "support",
+ "test-db",
  "tower-cookies",
  "tracing",
- "uuid",
 ]
 
 [[package]]

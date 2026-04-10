@@ -302,7 +302,8 @@ impl RefreshToken {
 
 #[cfg(test)]
 mod tests {
-    use testing::utils::{TestDb, create_app_state, insert_user};
+    use test_db::TestDb;
+    use test_utils::{create_app_state, insert_user};
 
     use super::*;
 

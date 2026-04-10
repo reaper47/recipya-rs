@@ -85,6 +85,15 @@ dialog::backdrop,
     background: rgba(0, 122, 204, 0.3);
 }
 
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-indicator.htmx-request {
+    display: inline-block;
+}
+
 /* JSON Syntax Highlighting Colors */
 .json-key {
     color: #9cdcfe;

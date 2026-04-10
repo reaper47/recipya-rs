@@ -195,7 +195,8 @@ impl UserSettingDetails {
 mod tests {
     use strum::IntoEnumIterator;
 
-    use testing::utils::{TestDb, create_app_state, insert_user};
+    use test_db::TestDb;
+    use test_utils::{create_app_state, insert_user};
 
     use super::*;
 
