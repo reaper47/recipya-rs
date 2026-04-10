@@ -154,7 +154,6 @@ pub async fn export_data_post_handler(
     State(state): State<AppState>,
     RawForm(bytes): RawForm,
 ) -> impl IntoResponse {
-    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     let payload: ExportDataPayload = match serde_qs::from_bytes(&bytes)
         .map_err(|err| (StatusCode::BAD_REQUEST, err.to_string()))
     {
