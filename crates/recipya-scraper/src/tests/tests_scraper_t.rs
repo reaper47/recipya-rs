@@ -1,16 +1,16 @@
 #[cfg(test)]
 mod tests {
     use schema_org::{
-        AggregateRating, AtType, CreativeWork, DurationOrText, Energy, Mass, NutritionInformation,
+        AggregateRating, AtType, DurationOrText, Energy, HowToStep, Mass, NutritionInformation,
         Organization, Rating, Recipe, Review, at_context,
         field::{
             AggregateRatingBestRatingFieldEnum, AggregateRatingRatingValueFieldEnum,
-            CreativeWorkImageFieldEnum, OrganizationDescriptionFieldEnum,
-            OrganizationImageFieldEnum, RatingRatingValueFieldEnum, RatingWorstRatingFieldEnum,
-            RecipeAuthorFieldEnum, RecipeCreatorFieldEnum, RecipeDescriptionFieldEnum,
-            RecipeImageFieldEnum, RecipeInLanguageFieldEnum, RecipeKeywordsFieldEnum,
-            RecipePublisherFieldEnum, RecipeRecipeIngredientFieldEnum,
-            RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum,
+            HowToStepImageFieldEnum, OrganizationDescriptionFieldEnum, OrganizationImageFieldEnum,
+            RatingRatingValueFieldEnum, RatingWorstRatingFieldEnum, RecipeAuthorFieldEnum,
+            RecipeCreatorFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
+            RecipeInLanguageFieldEnum, RecipeKeywordsFieldEnum, RecipePublisherFieldEnum,
+            RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+            RecipeRecipeYieldFieldEnum,
         },
     };
 
@@ -66,14 +66,11 @@ mod tests {
             ],
             cook_time: vec![DurationOrText::Text("PT20M".into())],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Make the chicken. In a large bowl, whisk together the honey, mustard, olive oil, lemon juice, cilantro, garlic, curry powder, salt, pepper, and red pepper until smooth. Reserve ¼ cup of marinade. Add the chicken to the bowl and turn to coat. Cover and let marinate refrigerated for at least 30 minutes.".into(),
-                        ],
                         image: vec![
-                            CreativeWorkImageFieldEnum::URL(
+                            HowToStepImageFieldEnum::URL(
                                 "https://images.themodernproper.com/production/posts/GrilledHoneyMustardChickenwithPeachSalad_3.jpg?w=960&amp;h=960&amp;q=82&amp;fm=jpg&amp;fit=crop&amp;dm=1721145248&amp;s=035076842c0f91ce4ec83a8aa4e50352".into(),
                             ),
                         ],
@@ -83,17 +80,17 @@ mod tests {
                         name: vec![
                             "marinate the chicken".into(),
                         ],
+                        text: vec![
+                            "Make the chicken. In a large bowl, whisk together the honey, mustard, olive oil, lemon juice, cilantro, garlic, curry powder, salt, pepper, and red pepper until smooth. Reserve ¼ cup of marinade. Add the chicken to the bowl and turn to coat. Cover and let marinate refrigerated for at least 30 minutes.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Preheat the grill on medium-low. Remove the chicken from the marinade, allowing any excess to drip off. Place the chicken on the grill and cook until the chicken begins to char, about 4 minutes per side. Brush the chicken with the marinade remaining in the bowl and continue cooking, turning occasionally, until the internal temperature of the chicken reaches 165°F on an instant-read thermometer, about 10 minutes more.".into(),
-                        ],
                         image: vec![
-                            CreativeWorkImageFieldEnum::URL(
+                            HowToStepImageFieldEnum::URL(
                                 "https://images.themodernproper.com/production/posts/GrilledHoneyMustardChickenwithPeachSalad_4.jpg?w=960&amp;h=960&amp;q=82&amp;fm=jpg&amp;fit=crop&amp;dm=1721145274&amp;s=455999835138bf004eec5e43cb352c6c".into(),
                             ),
                         ],
@@ -103,17 +100,17 @@ mod tests {
                         name: vec![
                             "grill the chicken".into(),
                         ],
+                        text: vec![
+                            "Preheat the grill on medium-low. Remove the chicken from the marinade, allowing any excess to drip off. Place the chicken on the grill and cook until the chicken begins to char, about 4 minutes per side. Brush the chicken with the marinade remaining in the bowl and continue cooking, turning occasionally, until the internal temperature of the chicken reaches 165°F on an instant-read thermometer, about 10 minutes more.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Meanwhile, make the salad. In a medium bowl, toss the cucumbers, peaches, cilantro, and mint with the lemon juice, ¼ cup reserved honey mustard marinade, and salt. Let marinate at room temperature for about 10 minutes.".into(),
-                        ],
                         image: vec![
-                            CreativeWorkImageFieldEnum::URL(
+                            HowToStepImageFieldEnum::URL(
                                 "https://images.themodernproper.com/production/posts/GrilledHoneyMustardChickenwithPeachSalad_5.jpg?w=960&amp;h=960&amp;q=82&amp;fm=jpg&amp;fit=crop&amp;dm=1721145303&amp;s=e99721a3d9ebb0bb79b5dcba27a68a0e".into(),
                             ),
                         ],
@@ -123,17 +120,17 @@ mod tests {
                         name: vec![
                             "make the salad".into(),
                         ],
+                        text: vec![
+                            "Meanwhile, make the salad. In a medium bowl, toss the cucumbers, peaches, cilantro, and mint with the lemon juice, ¼ cup reserved honey mustard marinade, and salt. Let marinate at room temperature for about 10 minutes.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Arrange the chicken on a large platter and top with the peach salad. Garnish with cilantro and mint and serve family-style.".into(),
-                        ],
                         image: vec![
-                            CreativeWorkImageFieldEnum::URL(
+                            HowToStepImageFieldEnum::URL(
                                 "https://images.themodernproper.com/production/posts/GrilledHoneyMustardChickenwithPeachSalad_9.jpg?w=960&amp;h=960&amp;q=82&amp;fm=jpg&amp;fit=crop&amp;dm=1721145354&amp;s=2c5686198da1538102a27c71034f8843".into(),
                             ),
                         ],
@@ -142,6 +139,9 @@ mod tests {
                         ],
                         name: vec![
                             "serve".into(),
+                        ],
+                        text: vec![
+                            "Arrange the chicken on a large platter and top with the peach salad. Garnish with cilantro and mint and serve family-style.".into(),
                         ],
                         ..Default::default()
                     }.into(),

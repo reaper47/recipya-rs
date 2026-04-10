@@ -10,3 +10,10 @@
 #
 # Optional fields (add when needed):
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
+
+[[website]]
+name = "Samsung Food"
+domain = "app.samsungfood.com"
+variant = "SamsungFood"
+url = "https://app.samsungfood.com/recipes"
+test = "https://app.samsungfood.com/recipes/107018afe8e54d07e9689b87dd6f857b15f"

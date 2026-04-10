@@ -1,16 +1,16 @@
 #[cfg(test)]
 mod tests {
     use schema_org::{
-        AggregateRating, AtType, Clip, CreativeWork, DurationOrText, Energy, ImageObject, Mass,
+        AggregateRating, AtType, Clip, DurationOrText, Energy, HowToStep, ImageObject, Mass,
         NutritionInformation, Organization, Rating, Recipe, Review, at_context,
         enums::RestrictedDietEnum,
         field::{
-            AggregateRatingRatingValueFieldEnum, ClipDescriptionFieldEnum,
-            CreativeWorkImageFieldEnum, ImageObjectCaptionFieldEnum, ImageObjectHeightFieldEnum,
-            ImageObjectWidthFieldEnum, RatingRatingValueFieldEnum, RecipeAuthorFieldEnum,
-            RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeKeywordsFieldEnum,
-            RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
-            RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum, ReviewAuthorFieldEnum,
+            AggregateRatingRatingValueFieldEnum, ClipDescriptionFieldEnum, HowToStepImageFieldEnum,
+            ImageObjectCaptionFieldEnum, ImageObjectHeightFieldEnum, ImageObjectWidthFieldEnum,
+            RatingRatingValueFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
+            RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
+            RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum,
+            ReviewAuthorFieldEnum,
         },
     };
 
@@ -136,6 +136,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zabihahalal_ok() -> Result<()> {
         let got = scrape(Website::ZabihaHalal, 0).await?;
 
@@ -177,16 +178,96 @@ mod tests {
                     RecipeRecipeIngredientFieldEnum::Text("2 cups shredded Colby-Monterey Jack cheese".into()),
                 ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "1. Grilled Chicken"))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "2. Mix together all seasonings in mixing bowl."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "3. Add seasonings to both sides of the raw Zabiha Halal Boneless, Skinless Chicken Breasts"))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "4. Spray grill pan with cooking spray, and preheat on the stovetop over medium high heat for about one minute."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "5.Place the chicken breasts on the hot grill pan."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "6. Cook 6 minutes on each side or until done."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "7. Pizza- Preheat oven to 350 degrees F"))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "8. Cut pre cooked chicken, red bell peppers and onions. Grate cheese."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "9.Place pizza crust on a medium baking sheet. Spread barbecue sauce over the crust and top with cheese, chicken, onion and red bell peppers."))),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(Box::new(CreativeWork::new(&AtType::HowToStep, "10.Bake in the preheated oven for 10 minutes or until cheese looks well melted."))),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "1. Grilled Chicken".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "2. Mix together all seasonings in mixing bowl.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "3. Add seasonings to both sides of the raw Zabiha Halal Boneless, Skinless Chicken Breasts".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "4. Spray grill pan with cooking spray, and preheat on the stovetop over medium high heat for about one minute.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "5.Place the chicken breasts on the hot grill pan.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "6. Cook 6 minutes on each side or until done.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "7. Pizza- Preheat oven to 350 degrees F".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "8. Cut pre cooked chicken, red bell peppers and onions. Grate cheese.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "9.Place pizza crust on a medium baking sheet. Spread barbecue sauce over the crust and top with cheese, chicken, onion and red bell peppers.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "10.Bake in the preheated oven for 10 minutes or until cheese looks well melted.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
             ],
             suitable_for_diet: vec![RestrictedDietEnum::HalalDiet],
             url: vec!["https://zabihahalal.com/recipes/bbq-chicken-pizza/".into()],
@@ -346,107 +427,123 @@ mod tests {
                 RecipeRecipeIngredientFieldEnum::Text("8 oz rice vermicelli noodles, optional".into()),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "When making a soup, I like to pre-chop all my vegetables for less stress during cooking time, but that’s just a tip.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-1".into(),
                         ],
-                        name: vec!["Prep".into()],
+                        name: vec![
+                            "Prep".into(),
+                        ],
+                        text: vec![
+                            "When making a soup, I like to pre-chop all my vegetables for less stress during cooking time, but that’s just a tip.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Add the white onion, grated ginger, minced garlic, fresh lemongrass if you have it, and minced Thai chilies to a large nonstick pot. If you cook with oil you could certainly use that. I just add a little water from a small cup any time something starts to stick. Saute over medium high heat, stirring constantly, for 1-2 minutes until fragrant. Add the Thai red curry paste&nbsp;and, if you couldn’t find fresh lemongrass, the lemongrass paste. Stir constantly for another 1-2 minutes.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-2".into(),
                         ],
-                        name: vec!["Saute aromatics".into()],
+                        name: vec![
+                            "Saute aromatics".into(),
+                        ],
+                        text: vec![
+                            "Add the white onion, grated ginger, minced garlic, fresh lemongrass if you have it, and minced Thai chilies to a large nonstick pot. If you cook with oil you could certainly use that. I just add a little water from a small cup any time something starts to stick. Saute over medium high heat, stirring constantly, for 1-2 minutes until fragrant. Add the Thai red curry paste&nbsp;and, if you couldn’t find fresh lemongrass, the lemongrass paste. Stir constantly for another 1-2 minutes.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Now add the chopped mushrooms and red bell pepper, and saute for 5 minutes, stirring frequently and adding a splash of water when needed.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-3".into(),
                         ],
-                        name: vec!["Add mushrooms and bell pepper".into()],
+                        name: vec![
+                            "Add mushrooms and bell pepper".into(),
+                        ],
+                        text: vec![
+                            "Now add the chopped mushrooms and red bell pepper, and saute for 5 minutes, stirring frequently and adding a splash of water when needed.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Add the vegan chicken broth or vegetable broth and coconut milk, turn the heat down to medium, and bring to a high simmer. Add the cubed tofu and let cook for about 6-8 minutes.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-4".into(),
                         ],
-                        name: vec!["Add broth".into()],
+                        name: vec![
+                            "Add broth".into(),
+                        ],
+                        text: vec![
+                            "Add the vegan chicken broth or vegetable broth and coconut milk, turn the heat down to medium, and bring to a high simmer. Add the cubed tofu and let cook for about 6-8 minutes.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Meanwhile, if using, soak or cook your rice vermicelli noodles&nbsp;in a different pot.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-5".into(),
                         ],
-                        name: vec!["Make the noodles".into()],
+                        name: vec![
+                            "Make the noodles".into(),
+                        ],
+                        text: vec![
+                            "Meanwhile, if using, soak or cook your rice vermicelli noodles&nbsp;in a different pot.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Add the coconut sugar (if using), and juice of 2ish limes (to taste). Let warm for a minute or two, then remove from heat.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-6".into(),
                         ],
-                        name: vec!["Finish up".into()],
+                        name: vec![
+                            "Finish up".into(),
+                        ],
+                        text: vec![
+                            "Add the coconut sugar (if using), and juice of 2ish limes (to taste). Let warm for a minute or two, then remove from heat.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Ladle the soup into bowls and add noodles to each bowl (if using). Garnish with thinly sliced green onions and lots of cilantro (if you like) and a few lime wedges.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-7".into(),
                         ],
-                        name: vec!["Serve".into()],
+                        name: vec![
+                            "Serve".into(),
+                        ],
+                        text: vec![
+                            "Ladle the soup into bowls and add noodles to each bowl (if using). Garnish with thinly sliced green onions and lots of cilantro (if you like) and a few lime wedges.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Store leftover soup separately from the noodles. They’ll each keep in the fridge for up to 5 days in airtight containers. The noodles tend to soak up the broth, so I recommend storing separately when you can. This is a GREAT dish to take to work or school though. I often will make it the night before I go to work and take it for lunch the next day. I pack a lime wedge and some cilantro in a reusable stasher bag&nbsp;to add at work.".into(),
-                        ],
                         url: vec![
                             "https://zardyplants.com/recipes/vegan-tom-kha-soup-thai-inspired/#instruction-step-8".into(),
                         ],
-                        name: vec!["Store".into()],
+                        name: vec![
+                            "Store".into(),
+                        ],
+                        text: vec![
+                            "Store leftover soup separately from the noodles. They’ll each keep in the fridge for up to 5 days in airtight containers. The noodles tend to soak up the broth, so I recommend storing separately when you can. This is a GREAT dish to take to work or school though. I often will make it the night before I go to work and take it for lunch the next day. I pack a lime wedge and some cilantro in a reusable stasher bag&nbsp;to add at work.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
@@ -797,98 +894,190 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zeezest_ok() -> Result<()> {
         let got = scrape(Website::Zeezest, 0).await?;
 
         let want = Recipe {
             context: at_context(),
             r#type: AtType::Recipe.to_opt(),
-            author: vec![RecipeAuthorFieldEnum::new_person("Team ZZ")],
-            cook_time: vec![DurationOrText::Text("12-15 Min".into())],
-            description: vec![
-                RecipeDescriptionFieldEnum::Text("Multigrain Onion Dosa is a type of thin and crispy crepe that is made with a fermented batter of rice and lentils.".into()),
+            nutrition: vec![
+                NutritionInformation {
+                    r#type: AtType::NutritionInformation.to_opt(),
+                    ..Default::default()
+                },
+            ],
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::Number(4.0)],
+            recipe_cuisine: vec!["Indian".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("¾ cup par boiled rice (Ukhad) ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp chana dal".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp urad dal ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp yellow moong dal ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp tur dal ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp split green moong dal ".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp rajgira".into()),
+            ],
+            cook_time: vec![DurationOrText::Text("PT12M".into())],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Take a bowl and add rice, chana dal, urad dal, yellow moong dal, green moong dal, tur dal, masoor dal, rajgira. Wash it with water and soak it for 4-5 hours.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "In a blender jar, add soaked lentils and rice and grind it into fine paste.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Add water in it and let it rest for 2-3 hours.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Heat oil in a pan, add urad dal, onion, ginger, garlic, tomato and saute it for 1 minute.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Add red chilli, tamarind paste, salt and mix well.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Grind it into a fine paste.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Add salt in the batter before spreading over the pan.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Heat oil in a griddle pan, pour the batter.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Spread the ladleful of batter into a circle.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Add butter and spread it, add onion, green chilli, gunpowder and spread it . Sprinkle coriander leaves fold and serve hot.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Heat oil in a small non-stick pan, add mustard seeds, curry leaves and sauté.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        text: vec![
+                            "Pour the tadka over the chutney.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+            ],
+            recipe_category: vec!["veg".into()],
+            prep_time: vec![DurationOrText::Text("PT18M".into())],
+            total_time: vec![DurationOrText::Text("PT30M".into())],
+            keywords: vec![
+                RecipeKeywordsFieldEnum::TextOrURL(
+                    "Multigrain Onion Dosa with Chutney recipe, Multigrain Onion Dosa with Chutney By Chef Team ZZ".into(),
+                ),
+            ],
+            aggregate_rating: vec![
+                AggregateRating {
+                    r#type: AtType::AggregateRating.to_opt(),
+                    rating_count: vec![1],
+                    rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("5".into())],
+                    ..Default::default()
+                },
+            ],
+            date_published: vec![
+                "2023-04-22".into(),
+            ],
+            author: vec![
+                RecipeAuthorFieldEnum::Organization(
+                    Organization {
+                        r#type: AtType::Person.to_opt(),
+                        url: vec![
+                            "https://zeezest.com/users/team-zz-114063".into(),
+                        ],
+                        name: vec![
+                            "Chef Team ZZ".into(),
+                        ],
+                        ..Default::default()
+                    },
+                ),
             ],
             image: vec![
                 RecipeImageFieldEnum::URL(
                     "https://assets.zeezest.com/recipes/PROD_Multigrain Onion Dosa with Chutney_SEO_1682270069564_thumb_500.jpeg".into(),
                 ),
             ],
-            name: vec!["Multigrain Onion Dosa with Chutney" .into()],
-            prep_time: vec![DurationOrText::Text("18-20 Min".into())],
-            recipe_category: vec!["breakfast".into()],
-            recipe_ingredient: vec![
-                RecipeRecipeIngredientFieldEnum::new_section("For soaking", &[
-                    "¾ cup par boiled rice (Ukhad)",
-                    "2 tbsp chana dal",
-                    "2 tbsp urad dal",
-                    "2 tbsp yellow moong dal",
-                    "2 tbsp tur dal",
-                    "2 tbsp split green moong dal",
-                    "2 tbsp rajgira",
-                ]),
-                RecipeRecipeIngredientFieldEnum::new_section("For cooking", &[
-                    "2 tbsp butter",
-                    "gun powder",
-                    "2 tbsp chopped onion",
-                    "½ tsp chopped green chilli",
-                    "1 tsp chopped coriander leaves",
-                ]),
-                RecipeRecipeIngredientFieldEnum::new_section("For Onion tomato chutney", &[
-                    "1 tbsp oil",
-                    "1 tsp urad dal",
-                    "1 cup diced onion",
-                    "1 cup diced tomato",
-                    "1 tbsp Kashmiri red powder",
-                    "½ inch ginger",
-                    "2-3 garlic cloves",
-                    "1 tsp tamarind pulp",
-                    "salt to taste",
-                ]),
-                RecipeRecipeIngredientFieldEnum::new_section("For tadka", &[
-                    "2 tsp oil",
-                    "1 tsp mustard seeds",
-                    "few curry leaves",
-                ]),
+            description: vec![
+                RecipeDescriptionFieldEnum::Text(
+                    "Multigrain Onion Dosa is a type of thin and crispy crepe that is made with a fermented batter of rice and lentils.".into(),
+                ),
             ],
-            recipe_instructions: vec![
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Take a bowl and add rice, chana dal, urad dal, yellow moong dal, green moong dal, tur dal, masoor dal, rajgira. Wash it with water and soak it for 4-5 hours.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "In a blender jar, add soaked lentils and rice and grind it into fine paste.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Add water in it and let it rest for 2-3 hours.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Heat oil in a pan, add urad dal, onion, ginger, garlic, tomato and saute it for 1 minute.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Add red chilli, tamarind paste, salt and mix well.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Grind it into a fine paste.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Add salt in the batter before spreading over the pan.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Heat oil in a griddle pan, pour the batter.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Spread the ladleful of batter into a circle.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Add butter and spread it, add onion, green chilli, gunpowder and spread it . Sprinkle coriander leaves fold and serve hot.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Heat oil in a small non-stick pan, add mustard seeds, curry leaves and sauté.".into(),
-                    ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Pour the tadka over the chutney.".into(),
-                    ),
+            url: vec![
+                "https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302".into(),
             ],
-            url: vec!["https://zeezest.com/recipes/watch-multigrain-onion-dosa-with-chutney-recipe-by-zee-zest-1302<number>0".into()],
+            name: vec![
+                "Multigrain Onion Dosa with Chutney Recipe".into(),
+            ],
             ..Default::default()
         };
         pretty_assertions::assert_eq!(got, want);
@@ -957,50 +1146,50 @@ mod tests {
                 ),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Heat the oven to 425ºF and line a rimmed baking sheet with parchment paper.".into(),
-                        ],
                         url: vec![
                             "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-1".into(),
                         ],
+                        text: vec![
+                            "Heat the oven to 425ºF and line a rimmed baking sheet with parchment paper.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Drain the chickpeas, reserving the liquid from the jar and 10-12 chickpeas if you’d like to use it for vegan mayo. Shake off as much water from the chickpeas as you can, and then transfer to a clean kitchen towel. Roll them around to loosen the skins, and discard any that come off. You can peel each chickpea if you’d like, but you don’t have to. (I started doing it and couldn’t stop and found it to be somewhat cathartic) Get the chickpeas as dry as possible, using paper towels or another kitchen towel.".into(),
-                        ],
                         url: vec![
                             "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-2".into(),
                         ],
+                        text: vec![
+                            "Drain the chickpeas, reserving the liquid from the jar and 10-12 chickpeas if you’d like to use it for vegan mayo. Shake off as much water from the chickpeas as you can, and then transfer to a clean kitchen towel. Roll them around to loosen the skins, and discard any that come off. You can peel each chickpea if you’d like, but you don’t have to. (I started doing it and couldn’t stop and found it to be somewhat cathartic) Get the chickpeas as dry as possible, using paper towels or another kitchen towel.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Transfer the chickpeas to the parchment lined baking sheet and drizzle with enough oil to coat. Sprinkle with salt and toss to coat. Roast for 15 minutes, shaking the pan about halfway through. Turn the heat down to 400 and roast another 10 minutes, or until they’re golden brown and crisp. If they are as brown as you want but could use some mire drying out, turn off the oven and leave them in there with a wooden spoon propping the door ajar.".into(),
-                        ],
                         url: vec![
                             "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-3".into(),
                         ],
+                        text: vec![
+                            "Transfer the chickpeas to the parchment lined baking sheet and drizzle with enough oil to coat. Sprinkle with salt and toss to coat. Roast for 15 minutes, shaking the pan about halfway through. Turn the heat down to 400 and roast another 10 minutes, or until they’re golden brown and crisp. If they are as brown as you want but could use some mire drying out, turn off the oven and leave them in there with a wooden spoon propping the door ajar.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Allow to cool completely and store in an airtight jar. If you get them completely dried out during the cooking process, they should stay crispy, but if they lose their crunch &amp;#8211; pop them in a 350 oven for 5 minutes.".into(),
-                        ],
                         url: vec![
                             "https://www.zenbelly.com/crispy-chickpeas/#instruction-step-4".into(),
+                        ],
+                        text: vec![
+                            "Allow to cool completely and store in an airtight jar. If you get them completely dried out during the cooking process, they should stay crispy, but if they lose their crunch &amp;#8211; pop them in a 350 oven for 5 minutes.".into(),
                         ],
                         ..Default::default()
                     }.into(),
@@ -1037,7 +1226,7 @@ mod tests {
                         r#type:AtType::VideoObject.to_opt(),
                         context: Some("http://schema.org".into()),
                         thumbnail_url: vec![
-                            "https://mediavine-res.cloudinary.com/image/upload/s--kypZQCXB--/c_limit,f_auto,fl_lossy,h_1080,q_auto,w_1920/v1675556534/ihysxtd1aghzz78cv8s7.jpg".into(),
+                            "https://thumbnails.scriptwrapper.com/1488/ihysxtd1aghzz78cv8s7".into(),
                         ],
                         description: vec![
                             RecipeDescriptionFieldEnum::Text(
@@ -1106,51 +1295,91 @@ mod tests {
                 RecipeRecipeIngredientFieldEnum::Text("sweetener of choice ((optional))".into()),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
-                    r#type: AtType::HowToStep.to_opt(),
-                    text: vec![
-                        "Remove the outermost skin of the stalk. Wash the lemongrass. Fold the grass onto itself.".into(),
-                    ],
-                    url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-0".into()],
-                    name: vec![
-                        "Remove the outermost skin of the stalk. Wash the lemongrass. Fold the grass onto itself.".into(),
-                    ],
-                    ..Default::default()
-                }.into()),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
-                    r#type: AtType::HowToStep.to_opt(),
-                    text: vec!["Place a small pot on medium heat. Add water and bring to a boil.".into()],
-                    url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-1".into()],
-                    name: vec!["Place a small pot on medium heat. Add water and bring to a boil.".into()],
-                    ..Default::default()
-                }.into()),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
-                    r#type: AtType::HowToStep.to_opt(),
-                    text: vec!["Add folded lemongrass stalk. Boil for 15 minutes.".into()],
-                    image: vec![CreativeWorkImageFieldEnum::URL(
-                        "https://zenhealth.net/wp-content/uploads/lemongrass-tea-ingredients.jpg".into(),
-                    )],
-                    url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-2".into()],
-                    name: vec!["Add folded lemongrass stalk. Boil for 15 minutes.".into()],
-                    ..Default::default()
-                }.into()),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
-                    r#type: AtType::HowToStep.to_opt(),
-                    text: vec!["Turn off heat. Steep for 10 minutes.".into()],
-                    image: vec![CreativeWorkImageFieldEnum::URL(
-                        "https://zenhealth.net/wp-content/uploads/lemongrass-tea-after-boiling.jpg".into(),
-                    )],
-                    url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-3".into()],
-                    name: vec!["Turn off heat. Steep for 10 minutes.".into()],
-                    ..Default::default()
-                }.into()),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(CreativeWork {
-                    r#type: AtType::HowToStep.to_opt(),
-                    text: vec!["Add your favorite sweetener (optional) and serve hot or chilled.".into()],
-                    url: vec!["https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-4".into()],
-                    name: vec!["Add your favorite sweetener (optional) and serve hot or chilled.".into()],
-                    ..Default::default()
-                }.into()),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-0".into(),
+                        ],
+                        name: vec![
+                            "Remove the outermost skin of the stalk. Wash the lemongrass. Fold the grass onto itself.".into(),
+                        ],
+                        text: vec![
+                            "Remove the outermost skin of the stalk. Wash the lemongrass. Fold the grass onto itself.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-1".into(),
+                        ],
+                        name: vec![
+                            "Place a small pot on medium heat. Add water and bring to a boil.".into(),
+                        ],
+                        text: vec![
+                            "Place a small pot on medium heat. Add water and bring to a boil.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            HowToStepImageFieldEnum::URL(
+                                "https://zenhealth.net/wp-content/uploads/lemongrass-tea-ingredients.jpg".into(),
+                            ),
+                        ],
+                        url: vec![
+                            "https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-2".into(),
+                        ],
+                        name: vec![
+                            "Add folded lemongrass stalk. Boil for 15 minutes.".into(),
+                        ],
+                        text: vec![
+                            "Add folded lemongrass stalk. Boil for 15 minutes.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            HowToStepImageFieldEnum::URL(
+                                "https://zenhealth.net/wp-content/uploads/lemongrass-tea-after-boiling.jpg".into(),
+                            ),
+                        ],
+                        url: vec![
+                            "https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-3".into(),
+                        ],
+                        name: vec![
+                            "Turn off heat. Steep for 10 minutes.".into(),
+                        ],
+                        text: vec![
+                            "Turn off heat. Steep for 10 minutes.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://zenhealth.net/lemongrass-tea-recipe/#wprm-recipe-2125-step-0-4".into(),
+                        ],
+                        name: vec![
+                            "Add your favorite sweetener (optional) and serve hot or chilled.".into(),
+                        ],
+                        text: vec![
+                            "Add your favorite sweetener (optional) and serve hot or chilled.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
             ],
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("2".into())],
             review: vec![
@@ -1465,166 +1694,166 @@ mod tests {
                 RecipeRecipeIngredientFieldEnum::Text("4 slices American cheese, (such as Kraft Singles)".into()),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "For burger sauce, mix together mustards and mayonnaise; set aside.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-0".into(),
                         ],
                         name: vec![
                             "For burger sauce, mix together mustards and mayonnaise; set aside.".into(),
                         ],
+                        text: vec![
+                            "For burger sauce, mix together mustards and mayonnaise; set aside.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Divide meat into quarters (about 4 ounces each) and roll into balls. Transfer to a plate or small baking sheet.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-1".into(),
                         ],
                         name: vec![
                             "Divide meat into quarters (about 4 ounces each) and roll into balls. Transfer to a plate or small baking sheet.".into(),
                         ],
+                        text: vec![
+                            "Divide meat into quarters (about 4 ounces each) and roll into balls. Transfer to a plate or small baking sheet.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Heat a large (12-inch) cast-iron, stainless steel, or carbon steel skillet over medium-high heat until ripping hot and smoking, about 5 minutes.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-2".into(),
                         ],
                         name: vec![
                             "Heat a large (12-inch) cast-iron, stainless steel, or carbon steel skillet over medium-high heat until ripping hot and smoking, about 5 minutes.".into(),
                         ],
+                        text: vec![
+                            "Heat a large (12-inch) cast-iron, stainless steel, or carbon steel skillet over medium-high heat until ripping hot and smoking, about 5 minutes.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Toast half of the buns, cut side down, in skillet until lightly golden, about 1 minute. Repeat with remaining buns.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-3".into(),
                         ],
                         name: vec![
                             "Toast half of the buns, cut side down, in skillet until lightly golden, about 1 minute. Repeat with remaining buns.".into(),
                         ],
+                        text: vec![
+                            "Toast half of the buns, cut side down, in skillet until lightly golden, about 1 minute. Repeat with remaining buns.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Increase heat to high.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-4".into(),
                         ],
                         name: vec![
                             "Increase heat to high.".into(),
                         ],
+                        text: vec![
+                            "Increase heat to high.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Add two beef balls to skillet; season generously with kosher salt. Smash beef balls down with a heavy duty spatula, using a potato masher to press down on top of the spatula for extra leverage, until very thin, about ½-inch thick. Cook, without moving, until bottom sides are crisp and browned, about 1 ½ minutes.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-5".into(),
                         ],
                         name: vec![
                             "Add two beef balls to skillet; season generously with kosher salt. Smash beef balls down with a heavy duty spatula, using a potato masher to press down on top of the spatula for extra leverage, until very thin, about ½-inch thick. Cook, without moving, until bottom sides are crisp and browned, about 1 ½ minutes.".into(),
                         ],
+                        text: vec![
+                            "Add two beef balls to skillet; season generously with kosher salt. Smash beef balls down with a heavy duty spatula, using a potato masher to press down on top of the spatula for extra leverage, until very thin, about ½-inch thick. Cook, without moving, until bottom sides are crisp and browned, about 1 ½ minutes.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Press a few onion slices into burger patties with spatula. Scrape up and flip patty.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-6".into(),
                         ],
                         name: vec![
                             "Press a few onion slices into burger patties with spatula. Scrape up and flip patty.".into(),
                         ],
+                        text: vec![
+                            "Press a few onion slices into burger patties with spatula. Scrape up and flip patty.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Place a slice of cheese over burger and continue to cook until cheese is melted and onions on bottom are griddled and golden, 30–60 seconds. Remove from griddle.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-7".into(),
                         ],
                         name: vec![
                             "Place a slice of cheese over burger and continue to cook until cheese is melted and onions on bottom are griddled and golden, 30–60 seconds. Remove from griddle.".into(),
                         ],
+                        text: vec![
+                            "Place a slice of cheese over burger and continue to cook until cheese is melted and onions on bottom are griddled and golden, 30–60 seconds. Remove from griddle.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "To assemble, spread 1 tablespoon burger sauce on cuts sides of buns (tops and bottoms). Cover bottom buns with pickle slices then top with burger patty. Add a few slices of raw onion, a couple of folded sheets of iceberg lettuce followed by the top bun.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-8".into(),
                         ],
                         name: vec![
                             "To assemble, spread 1 tablespoon burger sauce on cuts sides of buns (tops and bottoms). Cover bottom buns with pickle slices then top with burger patty. Add a few slices of raw onion, a couple of folded sheets of iceberg lettuce followed by the top bun.".into(),
                         ],
+                        text: vec![
+                            "To assemble, spread 1 tablespoon burger sauce on cuts sides of buns (tops and bottoms). Cover bottom buns with pickle slices then top with burger patty. Add a few slices of raw onion, a couple of folded sheets of iceberg lettuce followed by the top bun.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Wipe out skillet with paper towels before repeating smashing and cooking process with remaining beef balls, onions and cheese.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-9".into(),
                         ],
                         name: vec![
                             "Wipe out skillet with paper towels before repeating smashing and cooking process with remaining beef balls, onions and cheese.".into(),
                         ],
+                        text: vec![
+                            "Wipe out skillet with paper towels before repeating smashing and cooking process with remaining beef balls, onions and cheese.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Serve burgers with pickle spears.".into(),
-                        ],
                         url: vec![
                             "https://zestfulkitchen.com/smash-burger-recipe/#wprm-recipe-24914-step-0-10".into(),
                         ],
                         name: vec![
+                            "Serve burgers with pickle spears.".into(),
+                        ],
+                        text: vec![
                             "Serve burgers with pickle spears.".into(),
                         ],
                         ..Default::default()
@@ -1772,121 +2001,121 @@ mod tests {
             recipe_category: vec!["Appetizer".into()],
             recipe_cuisine: vec!["American".into()],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Preheat the oven to 425 F . Line two baking sheets with parchment paper.".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-0".into(),
                         ],
                         name: vec![
                             "Preheat the oven to 425 F . Line two baking sheets with parchment paper.".into(),
                         ],
+                        text: vec![
+                            "Preheat the oven to 425 F . Line two baking sheets with parchment paper.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Thinly slice the zucchini with a knife or mandolin.".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-1".into(),
                         ],
                         name: vec![
                             "Thinly slice the zucchini with a knife or mandolin.".into(),
                         ],
+                        text: vec![
+                            "Thinly slice the zucchini with a knife or mandolin.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "In a large bowl add zucchini, combine the oil, salt, pepper, cumin powder, and cayenne pepper. Stir to combine.".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-2".into(),
                         ],
                         name: vec![
                             "In a large bowl add zucchini, combine the oil, salt, pepper, cumin powder, and cayenne pepper. Stir to combine.".into(),
                         ],
+                        text: vec![
+                            "In a large bowl add zucchini, combine the oil, salt, pepper, cumin powder, and cayenne pepper. Stir to combine.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Toss well so that each slice is coated with the seasoned oil.".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-3".into(),
                         ],
                         name: vec![
                             "Toss well so that each slice is coated with the seasoned oil.".into(),
                         ],
+                        text: vec![
+                            "Toss well so that each slice is coated with the seasoned oil.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Place the zucchini slices on the prepared baking sheets.".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-4".into(),
                         ],
                         name: vec![
                             "Place the zucchini slices on the prepared baking sheets.".into(),
                         ],
+                        text: vec![
+                            "Place the zucchini slices on the prepared baking sheets.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Bake for 20 minutes watching very closely. When the zucchini starts to show some brown spots remove from the oven and set aside.".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-5".into(),
                         ],
                         name: vec![
                             "Bake for 20 minutes watching very closely. When the zucchini starts to show some brown spots remove from the oven and set aside.".into(),
                         ],
+                        text: vec![
+                            "Bake for 20 minutes watching very closely. When the zucchini starts to show some brown spots remove from the oven and set aside.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Reduce the oven temperature to 180-200 degrees. Return the zucchini to the oven and cook for an additional 20 minutes or until the slices are crispy.".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-6".into(),
                         ],
                         name: vec![
                             "Reduce the oven temperature to 180-200 degrees. Return the zucchini to the oven and cook for an additional 20 minutes or until the slices are crispy.".into(),
                         ],
+                        text: vec![
+                            "Reduce the oven temperature to 180-200 degrees. Return the zucchini to the oven and cook for an additional 20 minutes or until the slices are crispy.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Remove from the oven and cool and enjoy".into(),
-                        ],
                         url: vec![
                             "https://zestysouthindiankitchen.com/spicy-baked-zucchini-chips/#wprm-recipe-16521-step-0-7".into(),
                         ],
                         name: vec![
+                            "Remove from the oven and cool and enjoy".into(),
+                        ],
+                        text: vec![
                             "Remove from the oven and cool and enjoy".into(),
                         ],
                         ..Default::default()
@@ -2248,19 +2477,19 @@ mod tests {
                 RecipeRecipeIngredientFieldEnum::Text("ground pistachios".into()),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Macaron Shells In a medium sized bowl sieve the almond meal and powdered sugar together If there are large chunks of almond meal remaining in the sieve dispose of them In a large clean bowl add the egg whites, and using an electric mixer beat until foamy Slowly add the sugar and beat until stiff peaks Fold the sieved almond meal and powdered sugar into the meringue in 2 additions, scraping around the bowl and down the centre Continue until you notice that the lines that form when the batter falls back into the bowl slowly start to disappear Transfer to a piping bag fitted with a round tip and pipe out 1.5inch circles Allow to dry for 1-2 hours, or until the surface is matte and dry Bake in a preheated oven at 140°C for 13-15 minutes (I find that it’s usually done at 13, but it depends on your oven so make sure to check! If you give your macarons a wiggle they shouldn’t be moving, that’s when they’re ready) Remove from oven and let cool Pistachio Buttercream Combine pistachios and sugar in a food processor and blitz until a smooth paste (this will take some time) Beat the butter and cream cheese together with an electric mixer or stand mixer, until light and fluffy Add the pistachio paste and whisk until smooth Transfer to a piping bag fitted with a round tip Match similar sized macaron shells with each other On the flat side of one shell pipe a large dollop of buttercream Top with a matching shell Place in airtight container in the fridge for a day to mature (gives deeper flavour and chewy texture!)".into(),
-                        ],
                         image: vec![
-                            RecipeImageFieldEnum::URL(
+                            HowToStepImageFieldEnum::URL(
                                 "https://zhangcatherine.com/wp-content/uploads/2022/06/P5230461.jpg".into(),
                             ),
                         ],
                         name: vec![
                             "How to make Pistachio Macaron Recipe?".into(),
+                            ],
+                        text: vec![
+                            "Macaron Shells In a medium sized bowl sieve the almond meal and powdered sugar together If there are large chunks of almond meal remaining in the sieve dispose of them In a large clean bowl add the egg whites, and using an electric mixer beat until foamy Slowly add the sugar and beat until stiff peaks Fold the sieved almond meal and powdered sugar into the meringue in 2 additions, scraping around the bowl and down the centre Continue until you notice that the lines that form when the batter falls back into the bowl slowly start to disappear Transfer to a piping bag fitted with a round tip and pipe out 1.5inch circles Allow to dry for 1-2 hours, or until the surface is matte and dry Bake in a preheated oven at 140°C for 13-15 minutes (I find that it’s usually done at 13, but it depends on your oven so make sure to check! If you give your macarons a wiggle they shouldn’t be moving, that’s when they’re ready) Remove from oven and let cool Pistachio Buttercream Combine pistachios and sugar in a food processor and blitz until a smooth paste (this will take some time) Beat the butter and cream cheese together with an electric mixer or stand mixer, until light and fluffy Add the pistachio paste and whisk until smooth Transfer to a piping bag fitted with a round tip Match similar sized macaron shells with each other On the flat side of one shell pipe a large dollop of buttercream Top with a matching shell Place in airtight container in the fridge for a day to mature (gives deeper flavour and chewy texture!)".into(),
                         ],
                         ..Default::default()
                     }.into(),
@@ -2596,121 +2825,121 @@ mod tests {
                 ),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Give the dough 3 or 4 turns to help bind the gluten and give the rolls great texture. Rest the dough for 15-20 minutes.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-0".into(),
                         ],
                         name: vec![
                             "Give the dough 3 or 4 turns to help bind the gluten and give the rolls great texture. Rest the dough for 15-20 minutes.".into(),
                         ],
+                        text: vec![
+                            "Give the dough 3 or 4 turns to help bind the gluten and give the rolls great texture. Rest the dough for 15-20 minutes.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Once the dough is ready, roll it to 1/4-inch thick rectangle. Brush the entire surface with the melted butter. In a small bowl mix together the sugars, cinnamon and zest.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-1".into(),
                         ],
                         name: vec![
                             "Once the dough is ready, roll it to 1/4-inch thick rectangle. Brush the entire surface with the melted butter. In a small bowl mix together the sugars, cinnamon and zest.".into(),
                         ],
+                        text: vec![
+                            "Once the dough is ready, roll it to 1/4-inch thick rectangle. Brush the entire surface with the melted butter. In a small bowl mix together the sugars, cinnamon and zest.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Spread the mixture over the butter topped dough. Use your hands to make sure you have an even coat of the sugar. Then roll the dough up, starting at the short end.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-2".into(),
                         ],
                         name: vec![
                             "Spread the mixture over the butter topped dough. Use your hands to make sure you have an even coat of the sugar. Then roll the dough up, starting at the short end.".into(),
                         ],
+                        text: vec![
+                            "Spread the mixture over the butter topped dough. Use your hands to make sure you have an even coat of the sugar. Then roll the dough up, starting at the short end.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Use a&nbsp;Bread Knife,&nbsp;Kitchen Scissors&nbsp;or floss to cut the log into 8,10, or 12 equal pieces.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-3".into(),
                         ],
                         name: vec![
                             "Use a&nbsp;Bread Knife,&nbsp;Kitchen Scissors&nbsp;or floss to cut the log into 8,10, or 12 equal pieces.".into(),
                         ],
+                        text: vec![
+                            "Use a&nbsp;Bread Knife,&nbsp;Kitchen Scissors&nbsp;or floss to cut the log into 8,10, or 12 equal pieces.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Set the buns on a parchment lined&nbsp;Sheet Pan&nbsp;or in a buttered baking dish. Give them about 1 1/2 to 2-inches between them. It is okay if they rise together in the oven.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-4".into(),
                         ],
                         name: vec![
                             "Set the buns on a parchment lined&nbsp;Sheet Pan&nbsp;or in a buttered baking dish. Give them about 1 1/2 to 2-inches between them. It is okay if they rise together in the oven.".into(),
                         ],
+                        text: vec![
+                            "Set the buns on a parchment lined&nbsp;Sheet Pan&nbsp;or in a buttered baking dish. Give them about 1 1/2 to 2-inches between them. It is okay if they rise together in the oven.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Loosely cover the buns and let them rest between 1 1/2 to 2 hours. The long rest will insure that you have a fluffy bun. (You can set these up the night before&nbsp;and let them rest overnight in the refrigerator. In the morning take them out and let them sit on the counter for about 45 minutes to an hour.)&nbsp;You may get away with slightly shorter rise, but the buns will not be quite as soft.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-5".into(),
                         ],
                         name: vec![
                             "Loosely cover the buns and let them rest between 1 1/2 to 2 hours. The long rest will insure that you have a fluffy bun. (You can set these up the night before&nbsp;and let them rest overnight in the refrigerator. In the morning take them out and let them sit on the counter for about 45 minutes to an hour.)&nbsp;You may get away with slightly shorter rise, but the buns will not be quite as soft.".into(),
                         ],
+                        text: vec![
+                            "Loosely cover the buns and let them rest between 1 1/2 to 2 hours. The long rest will insure that you have a fluffy bun. (You can set these up the night before&nbsp;and let them rest overnight in the refrigerator. In the morning take them out and let them sit on the counter for about 45 minutes to an hour.)&nbsp;You may get away with slightly shorter rise, but the buns will not be quite as soft.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Preheat the oven to 350°F and place the rack in the middle of the oven.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-6".into(),
                         ],
                         name: vec![
                             "Preheat the oven to 350°F and place the rack in the middle of the oven.".into(),
                         ],
+                        text: vec![
+                            "Preheat the oven to 350°F and place the rack in the middle of the oven.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Bake for about 25 to 30 minutes, just until the centers are set when poked with your finger (they should be caramel colored). Let them cool for about 10 minutes.".into(),
-                        ],
                         url: vec![
                             "https://www.zoebakes.com/2019/02/13/valentines-day-cinnamon-rolls/#wprm-recipe-14807-step-0-7".into(),
                         ],
                         name: vec![
+                            "Bake for about 25 to 30 minutes, just until the centers are set when poked with your finger (they should be caramel colored). Let them cool for about 10 minutes.".into(),
+                        ],
+                        text: vec![
                             "Bake for about 25 to 30 minutes, just until the centers are set when poked with your finger (they should be caramel colored). Let them cool for about 10 minutes.".into(),
                         ],
                         ..Default::default()
@@ -2849,121 +3078,121 @@ mod tests {
                 ),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Preheat the oven to 425℉ and prepare either a jumbo or standard muffin tin with liners. If not using liners, lightly grease each well.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-0".into(),
                         ],
                         name: vec![
                             "Preheat the oven to 425℉ and prepare either a jumbo or standard muffin tin with liners. If not using liners, lightly grease each well.".into(),
                         ],
+                        text: vec![
+                            "Preheat the oven to 425℉ and prepare either a jumbo or standard muffin tin with liners. If not using liners, lightly grease each well.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "In a large bowl, whisk together the flour, salt, baking powder and cinnamon.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-1".into(),
                         ],
                         name: vec![
                             "In a large bowl, whisk together the flour, salt, baking powder and cinnamon.".into(),
                         ],
+                        text: vec![
+                            "In a large bowl, whisk together the flour, salt, baking powder and cinnamon.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Add the blueberries to another bowl and toss with 1/2 tablespoon of the flour mixture and set aside.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-2".into(),
                         ],
                         name: vec![
                             "Add the blueberries to another bowl and toss with 1/2 tablespoon of the flour mixture and set aside.".into(),
                         ],
+                        text: vec![
+                            "Add the blueberries to another bowl and toss with 1/2 tablespoon of the flour mixture and set aside.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "In a third bowl, whisk together the sugar, egg, oil, melted butter, sour cream, whole milk, and vanilla.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-3".into(),
                         ],
                         name: vec![
                             "In a third bowl, whisk together the sugar, egg, oil, melted butter, sour cream, whole milk, and vanilla.".into(),
                         ],
+                        text: vec![
+                            "In a third bowl, whisk together the sugar, egg, oil, melted butter, sour cream, whole milk, and vanilla.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Add the wet mixture to the dry mixture and use a rubber spatula to gently combine.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-4".into(),
                         ],
                         name: vec![
                             "Add the wet mixture to the dry mixture and use a rubber spatula to gently combine.".into(),
                         ],
+                        text: vec![
+                            "Add the wet mixture to the dry mixture and use a rubber spatula to gently combine.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Once combined, fold in the blueberries. Then, fill each well or liner with batter, mostly to the top, and sprinkle generously with the coarse turbinado sugar.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-5".into(),
                         ],
                         name: vec![
                             "Once combined, fold in the blueberries. Then, fill each well or liner with batter, mostly to the top, and sprinkle generously with the coarse turbinado sugar.".into(),
                         ],
+                        text: vec![
+                            "Once combined, fold in the blueberries. Then, fill each well or liner with batter, mostly to the top, and sprinkle generously with the coarse turbinado sugar.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Bake the muffins for 5 minutes at 425℉, then reduce the temperature to 400℉. Bake jumbo muffins for an additional 25 minutes, and regular muffins for an additional 20 minutes. For either, a toothpick inserted into the center should come out with moist crumbs and no wet batter.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-6".into(),
                         ],
                         name: vec![
                             "Bake the muffins for 5 minutes at 425℉, then reduce the temperature to 400℉. Bake jumbo muffins for an additional 25 minutes, and regular muffins for an additional 20 minutes. For either, a toothpick inserted into the center should come out with moist crumbs and no wet batter.".into(),
                         ],
+                        text: vec![
+                            "Bake the muffins for 5 minutes at 425℉, then reduce the temperature to 400℉. Bake jumbo muffins for an additional 25 minutes, and regular muffins for an additional 20 minutes. For either, a toothpick inserted into the center should come out with moist crumbs and no wet batter.".into(),
+                        ],
                         ..Default::default()
                     }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::CreativeWork(
-                    CreativeWork {
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
                         r#type: AtType::HowToStep.to_opt(),
-                        text: vec![
-                            "Remove the pan to a wire rack to cool for 5 minutes, then remove each muffin from the well to continue cooling.".into(),
-                        ],
                         url: vec![
                             "https://zonacooks.com/jumbo-blueberry-muffins/#wprm-recipe-37028-step-0-7".into(),
                         ],
                         name: vec![
+                            "Remove the pan to a wire rack to cool for 5 minutes, then remove each muffin from the well to continue cooling.".into(),
+                        ],
+                        text: vec![
                             "Remove the pan to a wire rack to cool for 5 minutes, then remove each muffin from the well to continue cooling.".into(),
                         ],
                         ..Default::default()
@@ -3120,18 +3349,18 @@ mod tests {
             )],
             name: vec!["Delicious Coconut Berries Smoothie".into()],
             recipe_ingredient: vec![
-                RecipeRecipeIngredientFieldEnum::Text("½ cup (1 pack) Zuma Valley Coconut Meat".into()),
+                RecipeRecipeIngredientFieldEnum::Text("½ cup (1 pack) Zuma\n                                                        Valley Coconut Meat".into()),
                 RecipeRecipeIngredientFieldEnum::Text(
-                    "⅜ cup (1 pack) Zuma Valley Cold-Pressed Coconut Cream".into(),
+                    "⅜\n                                                        cup (1 pack) Zuma Valley\n                                                        Cold-Pressed Coconut\n                                                        Cream".into(),
                 ),
-                RecipeRecipeIngredientFieldEnum::Text("⅜ cup coconut water".into()),
-                RecipeRecipeIngredientFieldEnum::Text("⅝ cup frozen raspberries".into()),
-                RecipeRecipeIngredientFieldEnum::Text("¼ cup frozen blueberries".into()),
+                RecipeRecipeIngredientFieldEnum::Text("⅜ cup coconut\n                                                        water".into()),
+                RecipeRecipeIngredientFieldEnum::Text("⅝ cup frozen\n                                                        raspberries".into()),
+                RecipeRecipeIngredientFieldEnum::Text("¼ cup\n                                                        frozen blueberries".into()),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::Text("Blend it all ingredients.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("\n                                                            Blend it all\n                                                            ingredients.\n                                                        ".into()),
                 RecipeRecipeInstructionsFieldEnum::Text(
-                    "Top with extra berries, Zuma Valley Coconut Meat, and a drizzle of Zuma Valley Coconut Cream on top!".into(),
+                    "\n                                                            Top with extra\n                                                            berries, Zuma Valley\n                                                            Coconut Meat, and a\n                                                            drizzle of Zuma\n                                                            Valley Coconut Cream\n                                                            on top!\n                                                        ".into(),
                 ),
             ],
             url: vec![

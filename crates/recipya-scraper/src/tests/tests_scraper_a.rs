@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests {
     use schema_org::{
-        AggregateRating, AtType, Clip, DurationOrText, Energy, ImageObject, ItemList, Mass,
-        NutritionInformation, Organization, Rating, Recipe, Review, at_context,
+        AggregateRating, AtType, Clip, DurationOrText, Energy, HowToStep, ImageObject, ItemList,
+        Mass, NutritionInformation, Organization, Rating, Recipe, Review, at_context,
         field::{
             AggregateRatingRatingValueFieldEnum, ClipDescriptionFieldEnum,
-            ImageObjectHeightFieldEnum, ImageObjectWidthFieldEnum,
+            HowToStepPositionFieldEnum, ImageObjectHeightFieldEnum, ImageObjectWidthFieldEnum,
             ItemListItemListElementFieldEnum, OrganizationLogoFieldEnum,
             RatingRatingValueFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
             RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipePublisherFieldEnum,
@@ -238,14 +238,14 @@ mod tests {
             aggregate_rating: vec![
                 AggregateRating {
                     r#type: AtType::AggregateRating.to_opt(),
-                    rating_count: vec![19403],
+                    rating_count: vec![19409],
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Text("4.6".into())],
                     ..Default::default()
                 },
             ],
             author: vec![RecipeAuthorFieldEnum::new_org("Dora")],
             cook_time: vec![DurationOrText::Text("PT10M".into())],
-            date_modified: vec!["2026-02-27T14:12:51-05:00".into()],
+            date_modified: vec!["2026-03-23T19:52:45-04:00".into()],
             date_published: vec!["1998-04-18T16:10:32-04:00".into()],
             description: vec![RecipeDescriptionFieldEnum::Text("This classic chocolate chip cookie recipe makes deliciously buttery cookies with crisp edges, chewy middles, and gooey chocolate chips in every bite.".into())],
             headline: vec!["Best Chocolate Chip Cookies".into()],
@@ -319,7 +319,7 @@ mod tests {
             total_time: vec![DurationOrText::Text("PT30M".into())],
             recipe_yield: vec![
                 RecipeRecipeYieldFieldEnum::Text("48".into()),
-                RecipeRecipeYieldFieldEnum::Text("48 cookies".into()),
+                RecipeRecipeYieldFieldEnum::Text("4 dozen cookies".into()),
 
             ],
             recipe_category: vec!["Dessert".into()],
@@ -360,50 +360,185 @@ mod tests {
                 ),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
-                    Some("https://www.allrecipes.com/thmb/ikAh8YlzsTfWmVA6G6MRHlq7xtU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-ddmfs-3188-4x3-step-01-61fd6c03b33f40e0a8bd756cb56ecac1.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/ikAh8YlzsTfWmVA6G6MRHlq7xtU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-ddmfs-3188-4x3-step-01-61fd6c03b33f40e0a8bd756cb56ecac1.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar in a large bowl with an electric mixer until smooth and creamy.",
-                    Some("https://www.allrecipes.com/thmb/HZVO7UCA4f6YjwRUxMm2bo5Wz2U=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-2-1191-1b57f642a52849ce84a25c48363c4013.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/HZVO7UCA4f6YjwRUxMm2bo5Wz2U=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-2-1191-1b57f642a52849ce84a25c48363c4013.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar together in a large bowl with an electric mixer until smooth and creamy.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Beat in eggs, one at a time, then stir in vanilla.",
-                    Some("https://www.allrecipes.com/thmb/vb_CS6Q-CEf0cZySd5HgkUV-T_Y=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-3-121-f73dc5abc3454dfab534d8efc0e966e6.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/vb_CS6Q-CEf0cZySd5HgkUV-T_Y=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-3-121-f73dc5abc3454dfab534d8efc0e966e6.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Beat in eggs, one at a time, then stir in vanilla.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Dissolve baking soda in hot water; add to batter along with salt and mix until combined.",
-                    Some("https://www.allrecipes.com/thmb/EHPMpRCIHiCbzy9a3hGDZn0Tgyc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-4-123-abd5290df87f47668cbc8eef6587c292.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/EHPMpRCIHiCbzy9a3hGDZn0Tgyc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-4-123-abd5290df87f47668cbc8eef6587c292.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Dissolve baking soda in hot water; add to batter along with salt and mix until combined.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Stir in flour, chocolate chips, and walnuts until a soft dough forms.",
-                    Some("https://www.allrecipes.com/thmb/4cwC_GLPXQVWlqI2KH0GUbC1-V4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-5-125-b755dee648e949129ad022d8b019b405.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/4cwC_GLPXQVWlqI2KH0GUbC1-V4=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-5-125-b755dee648e949129ad022d8b019b405.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Stir in flour, chocolate chips, and walnuts until a soft dough forms.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Drop rounded spoonfuls of cookie dough 2 inches apart onto ungreased baking sheets.",
-                    Some("https://www.allrecipes.com/thmb/A63M4EgkpKCDtqT1qWgMciQ3-hI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-6-128-44e1d4355a6a4441a3ba993e2a2b74fa.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/A63M4EgkpKCDtqT1qWgMciQ3-hI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-6-128-44e1d4355a6a4441a3ba993e2a2b74fa.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Drop rounded spoonfuls of cookie dough 2 inches apart onto ungreased baking sheets.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Bake in the preheated oven until edges are lightly browned, about 10 minutes.",
-                    Some("https://www.allrecipes.com/thmb/NFy1pucQzBWKkvRGRvcQgFcmu9E=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-7-134-e0952f5171a2434dbb2b3bb53b18648a.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/NFy1pucQzBWKkvRGRvcQgFcmu9E=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-7-134-e0952f5171a2434dbb2b3bb53b18648a.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Bake in the preheated oven until edges are lightly browned, about 10 minutes.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
-                    Some("https://www.allrecipes.com/thmb/5tMxJUaTaqQNYD3O-56aG4L9t00=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-8-138-d4f25b55db5c417b9d6ece8cf98700f3.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/5tMxJUaTaqQNYD3O-56aG4L9t00=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-step-8-138-d4f25b55db5c417b9d6ece8cf98700f3.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Cool on the baking sheets briefly before transferring to a wire rack to cool completely.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Store in an airtight container or serve immediately and enjoy!",
-                    Some("https://www.allrecipes.com/thmb/8xwaWAHtl_QLij6D-G0Z4B1HDVA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-146-4x3-b108aceffa6043a1ac81c3c5a9b034c8.jpg"),
-                    None, None,
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        image: vec![
+                            RecipeImageFieldEnum::ImageObject(
+                                ImageObject {
+                                    r#type: AtType::ImageObject.to_opt(),
+                                    url: vec![
+                                        "https://www.allrecipes.com/thmb/8xwaWAHtl_QLij6D-G0Z4B1HDVA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/10813-best-chocolate-chip-cookies-mfs-146-4x3-b108aceffa6043a1ac81c3c5a9b034c8.jpg".into(),
+                                    ],
+                                    ..Default::default()
+                                }.into(),
+                            ),
+                        ],
+                        text: vec![
+                            "Store in an airtight container or serve immediately and enjoy!".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
             ],
             review: vec![
@@ -627,6 +762,126 @@ mod tests {
                 Review {
                     r#type: AtType::Review.to_opt(),
                     review_body: vec![
+                        "I use a little less sugar. 3/4 cup of each".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2026-04-06T02:09:46.904Z".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Natasha")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "I use maple syrup instead of sugar and cut it in half. I use the no sugar morsels as well.".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2026-04-02T20:01:01.087Z".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Regina")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Best cookies🍪 😊".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2026-04-01T18:42:11.842Z".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("DS")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "These are the best chocolate chip cookies I've ever tasted! I make a gluten-free recipe using gluten-free, ancient grains oats from Trader Joe's. I also use a all-purpose gluten-free flour! I add raisins, chocolate chips and walnuts to this recipe! Delicious!".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2026-03-29T19:01:38.866Z".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("ledfootlynn")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "These cookies are excellent. I’ve made them about a dozen times. They always turn out excellent, it’s a must to kill the dough Thanks".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("5".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2026-03-26T21:49:59.602Z".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("Carrie")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
+                        "Cookies did not cook like the picture, edges did not brown , cookies did not lay flat, burnt bottom".into(),
+                    ],
+                    review_rating: vec![
+                        Rating {
+                            r#type: AtType::Rating.to_opt(),
+                            rating_value: vec![
+                                RatingRatingValueFieldEnum::Text("1".into()),
+                            ],
+                            ..Default::default()
+                        },
+                    ],
+                    date_published: vec![
+                        "2026-03-16T22:33:55.554Z".into(),
+                    ],
+                    author: vec![ReviewAuthorFieldEnum::new_org("keiichi")],
+                    ..Default::default()
+                },
+                Review {
+                    r#type: AtType::Review.to_opt(),
+                    review_body: vec![
                         "I made them as the recipes stated.. but added semi sweet &amp;amp; white chocolate chips and chopped pecans. The cookies came out perfect and are SO good!!!!".into(),
                     ],
                     review_rating: vec![
@@ -682,126 +937,6 @@ mod tests {
                         "2026-03-10T08:42:26.474Z".into(),
                     ],
                     author: vec![ReviewAuthorFieldEnum::new_org("parchment pro7")],
-                    ..Default::default()
-                },
-                Review {
-                    r#type: AtType::Review.to_opt(),
-                    review_body: vec![
-                        "Totally worked like a charm; now the big question: Does the water trick work with peanut butter cookies?".into(),
-                    ],
-                    review_rating: vec![
-                        Rating {
-                            r#type: AtType::Rating.to_opt(),
-                            rating_value: vec![
-                                RatingRatingValueFieldEnum::Text("5".into()),
-                            ],
-                            ..Default::default()
-                        },
-                    ],
-                    date_published: vec![
-                        "2026-03-08T16:26:32.016Z".into(),
-                    ],
-                    author: vec![ReviewAuthorFieldEnum::new_org("Paleface")],
-                    ..Default::default()
-                },
-                Review {
-                    r#type: AtType::Review.to_opt(),
-                    review_body: vec![
-                        "Turned into a soupy goopy mess, recipe doesn’t work at all".into(),
-                    ],
-                    review_rating: vec![
-                        Rating {
-                            r#type: AtType::Rating.to_opt(),
-                            rating_value: vec![
-                                RatingRatingValueFieldEnum::Text("1".into()),
-                            ],
-                            ..Default::default()
-                        },
-                    ],
-                    date_published: vec![
-                        "2026-02-26T18:33:52.844Z".into(),
-                    ],
-                    author: vec![ReviewAuthorFieldEnum::new_org("alex")],
-                    ..Default::default()
-                },
-                Review {
-                    r#type: AtType::Review.to_opt(),
-                    review_body: vec![
-                        "Great Recipe that works well. The flavor isn't quite as rich as i would like, so I'm going to experiment with using dark brown sugar or perhaps a bit more salt.".into(),
-                    ],
-                    review_rating: vec![
-                        Rating {
-                            r#type: AtType::Rating.to_opt(),
-                            rating_value: vec![
-                                RatingRatingValueFieldEnum::Text("5".into()),
-                            ],
-                            ..Default::default()
-                        },
-                    ],
-                    date_published: vec![
-                        "2026-02-23T18:58:53.043Z".into(),
-                    ],
-                    author: vec![ReviewAuthorFieldEnum::new_org("Kevin")],
-                    ..Default::default()
-                },
-                Review {
-                    r#type: AtType::Review.to_opt(),
-                    review_body: vec![
-                        "This is my go to cookie!! I've been making this recipe for a few years now and it gets better every time. Sometimes I add extras, but I always get compliments on this recipe. Depending if I want them chewy or more crunchy, I'll add another cup of flour and i add milk chocolate chips instead of semi sweet. Must try recipe!".into(),
-                    ],
-                    review_rating: vec![
-                        Rating {
-                            r#type: AtType::Rating.to_opt(),
-                            rating_value: vec![
-                                RatingRatingValueFieldEnum::Text("5".into()),
-                            ],
-                            ..Default::default()
-                        },
-                    ],
-                    date_published: vec![
-                        "2026-02-21T04:46:14.787Z".into(),
-                    ],
-                    author: vec![ReviewAuthorFieldEnum::new_org("JazzyCress5311")],
-                    ..Default::default()
-                },
-                Review {
-                    r#type: AtType::Review.to_opt(),
-                    review_body: vec![
-                        "This is my first time i actually attempt to make cookies and the recipe genuinely works out 😭😭 im so happy its so good i added coco powder to the dough sooo.. it might look a lil different".into(),
-                    ],
-                    review_rating: vec![
-                        Rating {
-                            r#type: AtType::Rating.to_opt(),
-                            rating_value: vec![
-                                RatingRatingValueFieldEnum::Text("5".into()),
-                            ],
-                            ..Default::default()
-                        },
-                    ],
-                    date_published: vec![
-                        "2026-02-18T19:06:16.977Z".into(),
-                    ],
-                    author: vec![ReviewAuthorFieldEnum::new_org("yakozawa")],
-                    ..Default::default()
-                },
-                Review {
-                    r#type: AtType::Review.to_opt(),
-                    review_body: vec![
-                        "I only made half of a batch, froze some of the dough, and used a pinch of lemon extract for part of the flavor instead of all vanilla. They are delicious!".into(),
-                    ],
-                    review_rating: vec![
-                        Rating {
-                            r#type: AtType::Rating.to_opt(),
-                            rating_value: vec![
-                                RatingRatingValueFieldEnum::Text("5".into()),
-                            ],
-                            ..Default::default()
-                        },
-                    ],
-                    date_published: vec![
-                        "2026-02-18T06:03:53.072Z".into(),
-                    ],
-                    author: vec![ReviewAuthorFieldEnum::new_org("Just Desserts")],
                     ..Default::default()
                 },
             ],
@@ -920,11 +1055,11 @@ mod tests {
                         3,
                     ],
                     rating_count: vec![
-                        39,
+                        38,
                     ],
                     rating_value: vec![
                         AggregateRatingRatingValueFieldEnum::Text(
-                            "3.49".into(),
+                            "3.53".into(),
                         ),
                     ],
                     ..Default::default()
@@ -1003,17 +1138,31 @@ mod tests {
                 ),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Combine all of the ingredients into a bowl and mix until fully combined.",
-                    None,
-                    Some("Combine"),
-                    Some("https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-36586-step-0-0"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec!["https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-36586-step-0-0".into()],
+                        name: vec!["Combine".into()],
+                        text: vec![
+                            "Combine all of the ingredients into a bowl and mix until fully combined.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Refrigerate for at least 2 hours and enjoy with your favorite crackers.",
-                    None,
-                    Some("Chill"),
-                    Some("https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-36586-step-0-1"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.allthingsmamma.com/million-dollar-dip/#wprm-recipe-36586-step-0-1".into(),
+                        ],
+                        name: vec![
+                            "Chill".into(),
+                        ],
+                        text: vec![
+                            "Refrigerate for at least 2 hours and enjoy with your favorite crackers.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
             ],
             recipe_yield: vec![
@@ -1123,6 +1272,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_almanac_ok() -> Result<()> {
         let got = scrape(Website::Almanac, 0).await?;
 
@@ -1203,11 +1353,56 @@ mod tests {
                 ),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::new_creative_work("Preheat the oven to 375°F.", None, None, None),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work("Butter 10 muffin cups (or 12, for slightly smaller muffins) or line with paper liners.Combine the flour, bran, baking powder, salt, and ground ginger in a large bowl and whisk to blend.", None, None, None),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work("Add the crystallized ginger, mix, and make a well.In a separate bowl, whisk the egg until frothy.", None, None, None),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work("Add the applesauce, brown sugar, oil, milk, and molasses and whisk to blend.", None, None, None),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work("Pour into the well and stir with a wooden spoon until evenly blended.Divide the batter evenly among the prepared cups.Bake for 23 to 25 minutes, or until the muffins form domes that spring back when touched.Transfer the pan to a cooling rack for 5 minutes, then remove the muffins from the pan and place on the rack until ready to serve.", None, None, None),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        position: vec![HowToStepPositionFieldEnum::Integer(1)],
+                        text: vec![
+                            "Preheat the oven to 375°F.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        position: vec![HowToStepPositionFieldEnum::Integer(2)],
+                        text: vec![
+                            "Butter 10 muffin cups (or 12, for slightly smaller muffins) or line with paper liners.Combine the flour, bran, baking powder, salt, and ground ginger in a large bowl and whisk to blend.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        position: vec![HowToStepPositionFieldEnum::Integer(3)],
+                        text: vec![
+                            "Add the crystallized ginger, mix, and make a well.In a separate bowl, whisk the egg until frothy.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        position: vec![HowToStepPositionFieldEnum::Integer(4)],
+                        text: vec![
+                            "Add the applesauce, brown sugar, oil, milk, and molasses and whisk to blend.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        position: vec![HowToStepPositionFieldEnum::Integer(5)],
+                        text: vec![
+                            "Pour into the well and stir with a wooden spoon until evenly blended.Divide the batter evenly among the prepared cups.Bake for 23 to 25 minutes, or until the muffins form domes that spring back when touched.Transfer the pan to a cooling rack for 5 minutes, then remove the muffins from the pan and place on the rack until ready to serve.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
+                ),
             ],
             recipe_yield: vec![
                 RecipeRecipeYieldFieldEnum::Text(
@@ -1451,29 +1646,65 @@ mod tests {
                 ),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Preheat the oven to 425°F and lightly oil a large rimmed sheet pan. Pat the chicken dry and slice against the grain. Slice the peppers and onion into similar thickness for even cooking.",
-                    None,
-                    Some("Preheat the oven to 425°F and lightly oil a large rimmed sheet pan. Pat the chicken dry and slice against the grain. Slice the peppers and onion into similar thickness for even cooking."),
-                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-0"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-0".into(),
+                        ],
+                        name: vec![
+                            "Preheat the oven to 425°F and lightly oil a large rimmed sheet pan. Pat the chicken dry and slice against the grain. Slice the peppers and onion into similar thickness for even cooking.".into(),
+                        ],
+                        text: vec![
+                            "Preheat the oven to 425°F and lightly oil a large rimmed sheet pan. Pat the chicken dry and slice against the grain. Slice the peppers and onion into similar thickness for even cooking.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Add the chicken, peppers, and onion to the pan. Drizzle with olive oil and sprinkle with the fajita seasoning. Toss to coat, then spread into a roomy single layer.",
-                    None,
-                    Some("Add the chicken, peppers, and onion to the pan. Drizzle with olive oil and sprinkle with the fajita seasoning. Toss to coat, then spread into a roomy single layer."),
-                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-1"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-1".into(),
+                        ],
+                        name: vec![
+                            "Add the chicken, peppers, and onion to the pan. Drizzle with olive oil and sprinkle with the fajita seasoning. Toss to coat, then spread into a roomy single layer.".into(),
+                        ],
+                        text: vec![
+                            "Add the chicken, peppers, and onion to the pan. Drizzle with olive oil and sprinkle with the fajita seasoning. Toss to coat, then spread into a roomy single layer.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Bake on the top rack for 20 to 25 minutes until the chicken is opaque and the vegetables are tender with caramelized edges. For more char, broil for 1 to 2 minutes at the end.",
-                    None,
-                    Some("Bake on the top rack for 20 to 25 minutes until the chicken is opaque and the vegetables are tender with caramelized edges. For more char, broil for 1 to 2 minutes at the end."),
-                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-2"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-2".into(),
+                        ],
+                        name: vec![
+                            "Bake on the top rack for 20 to 25 minutes until the chicken is opaque and the vegetables are tender with caramelized edges. For more char, broil for 1 to 2 minutes at the end.".into(),
+                        ],
+                        text: vec![
+                            "Bake on the top rack for 20 to 25 minutes until the chicken is opaque and the vegetables are tender with caramelized edges. For more char, broil for 1 to 2 minutes at the end.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Wrap the tortillas in foil and warm them in the oven during the last few minutes. Squeeze fresh lime over the fajitas, sprinkle with cilantro, and serve hot with guacamole and pico de gallo.",
-                    None,
-                    Some("Wrap the tortillas in foil and warm them in the oven during the last few minutes. Squeeze fresh lime over the fajitas, sprinkle with cilantro, and serve hot with guacamole and pico de gallo."),
-                    Some("https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-3"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alphafoodie.com/sheet-pan-chicken-fajitas/#wprm-recipe-148738-step-0-3".into(),
+                        ],
+                        name: vec![
+                            "Wrap the tortillas in foil and warm them in the oven during the last few minutes. Squeeze fresh lime over the fajitas, sprinkle with cilantro, and serve hot with guacamole and pico de gallo.".into(),
+                        ],
+                        text: vec![
+                            "Wrap the tortillas in foil and warm them in the oven during the last few minutes. Squeeze fresh lime over the fajitas, sprinkle with cilantro, and serve hot with guacamole and pico de gallo.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
             ],
             review: vec![
@@ -1602,85 +1833,125 @@ mod tests {
                 RecipeRecipeIngredientFieldEnum::Text("1/2 tsp salt".into()),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Preheat the oven to 350°F (177°C) and line a 9x9-inch (23x23cm) brownie pan with parchment paper. Set aside.",
-                    None,
-                    Some(
-                        "Preheat the oven to 350°F (177°C) and line a 9x9-inch (23x23cm) brownie pan with parchment paper. Set aside.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-0",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-0".into(),
+                        ],
+                        name: vec![
+                            "Preheat the oven to 350°F (177°C) and line a 9x9-inch (23x23cm) brownie pan with parchment paper. Set aside.".into(),
+                        ],
+                        text: vec![
+                            "Preheat the oven to 350°F (177°C) and line a 9x9-inch (23x23cm) brownie pan with parchment paper. Set aside.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "In a large mixing bowl, whisk the peanut butter, powdered sugar, and melted butter until smooth and combined. Set aside.",
-                    None,
-                    Some(
-                        "In a large mixing bowl, whisk the peanut butter, powdered sugar, and melted butter until smooth and combined. Set aside.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-1",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-1".into(),
+                        ],
+                        name: vec![
+                            "In a large mixing bowl, whisk the peanut butter, powdered sugar, and melted butter until smooth and combined. Set aside.".into(),
+                        ],
+                        text: vec![
+                            "In a large mixing bowl, whisk the peanut butter, powdered sugar, and melted butter until smooth and combined. Set aside.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Place the chocolate and butter in a microwave-safe bowl and heat until melted. Stir every 15-20 seconds to prevent the chocolate from overheating and burning. Remove the bowl from the microwave, add the cocoa powder and stir until combined. Let rest for 5 minutes.",
-                    None,
-                    Some(
-                        "Place the chocolate and butter in a microwave-safe bowl and heat until melted. Stir every 15-20 seconds to prevent the chocolate from overheating and burning. Remove the bowl from the microwave, add the cocoa powder and stir until combined. Let rest for 5 minutes.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-2",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-2".into(),
+                        ],
+                        name: vec![
+                            "Place the chocolate and butter in a microwave-safe bowl and heat until melted. Stir every 15-20 seconds to prevent the chocolate from overheating and burning. Remove the bowl from the microwave, add the cocoa powder and stir until combined. Let rest for 5 minutes.".into(),
+                        ],
+                        text: vec![
+                            "Place the chocolate and butter in a microwave-safe bowl and heat until melted. Stir every 15-20 seconds to prevent the chocolate from overheating and burning. Remove the bowl from the microwave, add the cocoa powder and stir until combined. Let rest for 5 minutes.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "In a large mixing bowl, beat the eggs, sugar and vanilla for about 2-3 minutes until frothy. Add the chocolate mixture and whisk to combine. Then add the flour and salt and stir just to combine.",
-                    None,
-                    Some(
-                        "In a large mixing bowl, beat the eggs, sugar and vanilla for about 2-3 minutes until frothy. Add the chocolate mixture and whisk to combine. Then add the flour and salt and stir just to combine.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-3",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-3".into(),
+                        ],
+                        name: vec![
+                            "In a large mixing bowl, beat the eggs, sugar and vanilla for about 2-3 minutes until frothy. Add the chocolate mixture and whisk to combine. Then add the flour and salt and stir just to combine.".into(),
+                        ],
+                        text: vec![
+                            "In a large mixing bowl, beat the eggs, sugar and vanilla for about 2-3 minutes until frothy. Add the chocolate mixture and whisk to combine. Then add the flour and salt and stir just to combine.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "You can assemble the brownie batter and peanut butter filling in two ways, filled or swirled. Either pour half of the brownie batter into the pan and cover the bottom, then add the peanut butter filling and top with the remaining brownie batter. Or you can alternate spoon dollops of peanut butter filling and chocolate brownie batter into the pan and draw a swirl.",
-                    None,
-                    Some(
-                        "You can assemble the brownie batter and peanut butter filling in two ways, filled or swirled. Either pour half of the brownie batter into the pan and cover the bottom, then add the peanut butter filling and top with the remaining brownie batter. Or you can alternate spoon dollops of peanut butter filling and chocolate brownie batter into the pan and draw a swirl.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-4",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-4".into(),
+                        ],
+                        name: vec![
+                            "You can assemble the brownie batter and peanut butter filling in two ways, filled or swirled. Either pour half of the brownie batter into the pan and cover the bottom, then add the peanut butter filling and top with the remaining brownie batter. Or you can alternate spoon dollops of peanut butter filling and chocolate brownie batter into the pan and draw a swirl.".into(),
+                        ],
+                        text: vec![
+                            "You can assemble the brownie batter and peanut butter filling in two ways, filled or swirled. Either pour half of the brownie batter into the pan and cover the bottom, then add the peanut butter filling and top with the remaining brownie batter. Or you can alternate spoon dollops of peanut butter filling and chocolate brownie batter into the pan and draw a swirl.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Bake for 15 minutes. Then, remove the brownies from the oven and let them cool for 10 minutes. Turn the pan around, return to the oven, and bake for another 15-20 minutes, or until a toothpick comes out slightly dirty with a few crumbs attached.",
-                    None,
-                    Some(
-                        "Bake for 15 minutes. Then, remove the brownies from the oven and let them cool for 10 minutes. Turn the pan around, return to the oven, and bake for another 15-20 minutes, or until a toothpick comes out slightly dirty with a few crumbs attached.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-5",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-5".into(),
+                        ],
+                        name: vec![
+                            "Bake for 15 minutes. Then, remove the brownies from the oven and let them cool for 10 minutes. Turn the pan around, return to the oven, and bake for another 15-20 minutes, or until a toothpick comes out slightly dirty with a few crumbs attached.".into(),
+                        ],
+                        text: vec![
+                            "Bake for 15 minutes. Then, remove the brownies from the oven and let them cool for 10 minutes. Turn the pan around, return to the oven, and bake for another 15-20 minutes, or until a toothpick comes out slightly dirty with a few crumbs attached.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Remove from the oven and let cool in the pan until firm enough to lift them out of the pan without breaking them, about 45-60 minutes. Then transfer to a cooling rack and let cool completely.",
-                    None,
-                    Some(
-                        "Remove from the oven and let cool in the pan until firm enough to lift them out of the pan without breaking them, about 45-60 minutes. Then transfer to a cooling rack and let cool completely.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-6",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-6".into(),
+                        ],
+                        name: vec![
+                            "Remove from the oven and let cool in the pan until firm enough to lift them out of the pan without breaking them, about 45-60 minutes. Then transfer to a cooling rack and let cool completely.".into(),
+                        ],
+                        text: vec![
+                            "Remove from the oven and let cool in the pan until firm enough to lift them out of the pan without breaking them, about 45-60 minutes. Then transfer to a cooling rack and let cool completely.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Cut into squares and serve. Store leftovers in an airtight container for up to 4 days or freeze for up to 3 months.",
-                    None,
-                    Some(
-                        "Cut into squares and serve. Store leftovers in an airtight container for up to 4 days or freeze for up to 3 months.",
-                    ),
-                    Some(
-                        "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-7",
-                    ),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://www.alsothecrumbsplease.com/the-best-peanut-butter-brownies-recipe/#wprm-recipe-6353-step-0-7".into(),
+                        ],
+                        name: vec![
+                            "Cut into squares and serve. Store leftovers in an airtight container for up to 4 days or freeze for up to 3 months.".into(),
+                        ],
+                        text: vec![
+                            "Cut into squares and serve. Store leftovers in an airtight container for up to 4 days or freeze for up to 3 months.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
             ],
             review: vec![
@@ -2008,77 +2279,185 @@ mod tests {
                 RecipeRecipeIngredientFieldEnum::Text("sesame seeds (optional)".into()),
             ],
             recipe_instructions: vec![
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "In a medium bowl place hot water, cold milk, salt, and mix well. Add pre-measured flour and mix until all of the flour is moistened.",
-                    None,
-                    Some("In a medium bowl place hot water, cold milk, salt, and mix well. Add pre-measured flour and mix until all of the flour is moistened."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-0"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-0".into(),
+                        ],
+                        name: vec![
+                            "In a medium bowl place hot water, cold milk, salt, and mix well. Add pre-measured flour and mix until all of the flour is moistened.".into(),
+                        ],
+                        text: vec![
+                            "In a medium bowl place hot water, cold milk, salt, and mix well. Add pre-measured flour and mix until all of the flour is moistened.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Start kneading the dough until smooth. At most you may need an extra tablespoon of flour in order to scrape the sides of the bowl, clean the dough off of your hands and to finish of kneading. This process can also be done in a stand mixer.",
-                    None,
-                    Some("Start kneading the dough until smooth. At most you may need an extra tablespoon of flour in order to scrape the sides of the bowl, clean the dough off of your hands and to finish of kneading. This process can also be done in a stand mixer."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-1"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-1".into(),
+                        ],
+                        name: vec![
+                            "Start kneading the dough until smooth. At most you may need an extra tablespoon of flour in order to scrape the sides of the bowl, clean the dough off of your hands and to finish of kneading. This process can also be done in a stand mixer.".into(),
+                        ],
+                        text: vec![
+                            "Start kneading the dough until smooth. At most you may need an extra tablespoon of flour in order to scrape the sides of the bowl, clean the dough off of your hands and to finish of kneading. This process can also be done in a stand mixer.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "The final dough will not be very soft, but it will be pliable and easily manageable. Divide it into two and cover it with a plastic wrap (or lately my favorite – reusable silicone pouches). Let the dough rest for about 15 minutes.",
-                    None,
-                    Some("The final dough will not be very soft, but it will be pliable and easily manageable. Divide it into two and cover it with a plastic wrap (or lately my favorite – reusable silicone pouches). Let the dough rest for about 15 minutes."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-2"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-2".into(),
+                        ],
+                        name: vec![
+                            "The final dough will not be very soft, but it will be pliable and easily manageable. Divide it into two and cover it with a plastic wrap (or lately my favorite – reusable silicone pouches). Let the dough rest for about 15 minutes.".into(),
+                        ],
+                        text: vec![
+                            "The final dough will not be very soft, but it will be pliable and easily manageable. Divide it into two and cover it with a plastic wrap (or lately my favorite – reusable silicone pouches). Let the dough rest for about 15 minutes.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Once the dough has rested, take one dough out and place it on a flat surface where you will be rolling it. Sprinkle some flour on it. Using your knuckles press the dough into a thinner disk. This way you will create a big enough disk for you to be able to roll it into a rolling pin. Latch one section of the dough onto the rolling pin until the entire dough is wrapped around the pin somewhat tightly. Begin expanding the dough by performing front and back repetitive motion with your palms against the rolling pin for a few seconds. As the dough gets bigger, it will feel loose around the rolling pin. Unroll the dough and grab the next section to roll around the rolling pin. Repeat the same process until you have a large, thin disc. You can also use a smaller rolling pin to roll out the thicker sides of the dough in order to create some sort of uniformity.",
-                    None,
-                    Some("Once the dough has rested, take one dough out and place it on a flat surface where you will be rolling it. Sprinkle some flour on it. Using your knuckles press the dough into a thinner disk. This way you will create a big enough disk for you to be able to roll it into a rolling pin. Latch one section of the dough onto the rolling pin until the entire dough is wrapped around the pin somewhat tightly. Begin expanding the dough by performing front and back repetitive motion with your palms against the rolling pin for a few seconds. As the dough gets bigger, it will feel loose around the rolling pin. Unroll the dough and grab the next section to roll around the rolling pin. Repeat the same process until you have a large, thin disc. You can also use a smaller rolling pin to roll out the thicker sides of the dough in order to create some sort of uniformity."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-3"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-3".into(),
+                        ],
+                        name: vec![
+                            "Once the dough has rested, take one dough out and place it on a flat surface where you will be rolling it. Sprinkle some flour on it. Using your knuckles press the dough into a thinner disk. This way you will create a big enough disk for you to be able to roll it into a rolling pin. Latch one section of the dough onto the rolling pin until the entire dough is wrapped around the pin somewhat tightly. Begin expanding the dough by performing front and back repetitive motion with your palms against the rolling pin for a few seconds. As the dough gets bigger, it will feel loose around the rolling pin. Unroll the dough and grab the next section to roll around the rolling pin. Repeat the same process until you have a large, thin disc. You can also use a smaller rolling pin to roll out the thicker sides of the dough in order to create some sort of uniformity.".into(),
+                        ],
+                        text: vec![
+                            "Once the dough has rested, take one dough out and place it on a flat surface where you will be rolling it. Sprinkle some flour on it. Using your knuckles press the dough into a thinner disk. This way you will create a big enough disk for you to be able to roll it into a rolling pin. Latch one section of the dough onto the rolling pin until the entire dough is wrapped around the pin somewhat tightly. Begin expanding the dough by performing front and back repetitive motion with your palms against the rolling pin for a few seconds. As the dough gets bigger, it will feel loose around the rolling pin. Unroll the dough and grab the next section to roll around the rolling pin. Repeat the same process until you have a large, thin disc. You can also use a smaller rolling pin to roll out the thicker sides of the dough in order to create some sort of uniformity.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "You may also stretch the dough out a bit with your hands if you wish to have thinner and much crispier layers. Totally your call. Once the desired size of the dough is reached, you may stop rolling the dough and proceed to the next step.",
-                    None,
-                    Some("You may also stretch the dough out a bit with your hands if you wish to have thinner and much crispier layers. Totally your call. Once the desired size of the dough is reached, you may stop rolling the dough and proceed to the next step."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-4"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-4".into(),
+                        ],
+                        name: vec![
+                            "You may also stretch the dough out a bit with your hands if you wish to have thinner and much crispier layers. Totally your call. Once the desired size of the dough is reached, you may stop rolling the dough and proceed to the next step.".into(),
+                        ],
+                        text: vec![
+                            "You may also stretch the dough out a bit with your hands if you wish to have thinner and much crispier layers. Totally your call. Once the desired size of the dough is reached, you may stop rolling the dough and proceed to the next step.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "With a tablespoon randomly pour half of the melted, clarified butter all over the dough. Using your hand spread out the butter evenly all over the dough. Let the clarified butter rest for 2 minutes before you roll it onto the pin. When the time is up, wrap the dough around the rolling tightly. Yes, the pin will get a little butter on it. No problem there.",
-                    None,
-                    Some("With a tablespoon randomly pour half of the melted, clarified butter all over the dough. Using your hand spread out the butter evenly all over the dough. Let the clarified butter rest for 2 minutes before you roll it onto the pin. When the time is up, wrap the dough around the rolling tightly. Yes, the pin will get a little butter on it. No problem there."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-5"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-5".into(),
+                        ],
+                        name: vec![
+                            "With a tablespoon randomly pour half of the melted, clarified butter all over the dough. Using your hand spread out the butter evenly all over the dough. Let the clarified butter rest for 2 minutes before you roll it onto the pin. When the time is up, wrap the dough around the rolling tightly. Yes, the pin will get a little butter on it. No problem there.".into(),
+                        ],
+                        text: vec![
+                            "With a tablespoon randomly pour half of the melted, clarified butter all over the dough. Using your hand spread out the butter evenly all over the dough. Let the clarified butter rest for 2 minutes before you roll it onto the pin. When the time is up, wrap the dough around the rolling tightly. Yes, the pin will get a little butter on it. No problem there.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Using a sharp knife slice through the middle of the rolling pin. Now you have a big layered strip of dough. Remove the rolling pin and again cut through the middle of the dough creating two thinner strips of stacks of dough.",
-                    None,
-                    Some("Using a sharp knife slice through the middle of the rolling pin. Now you have a big layered strip of dough. Remove the rolling pin and again cut through the middle of the dough creating two thinner strips of stacks of dough."),
-                        Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-6"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-6".into(),
+                        ],
+                        name: vec![
+                            "Using a sharp knife slice through the middle of the rolling pin. Now you have a big layered strip of dough. Remove the rolling pin and again cut through the middle of the dough creating two thinner strips of stacks of dough.".into(),
+                        ],
+                        text: vec![
+                            "Using a sharp knife slice through the middle of the rolling pin. Now you have a big layered strip of dough. Remove the rolling pin and again cut through the middle of the dough creating two thinner strips of stacks of dough.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Take one strip of stacked dough and gently place it over the other strip. Starting from the long edge of the strips start rolling them towards the other end, creating one chubby roll.",
-                    None,
-                    Some("Take one strip of stacked dough and gently place it over the other strip. Starting from the long edge of the strips start rolling them towards the other end, creating one chubby roll."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-7"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-7".into(),
+                        ],
+                        name: vec![
+                            "Take one strip of stacked dough and gently place it over the other strip. Starting from the long edge of the strips start rolling them towards the other end, creating one chubby roll.".into(),
+                        ],
+                        text: vec![
+                            "Take one strip of stacked dough and gently place it over the other strip. Starting from the long edge of the strips start rolling them towards the other end, creating one chubby roll.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Tuck the edge of the dough under itself, place the dough on the work surface and gently press on it to create yet another disk.",
-                    None,
-                    Some("Tuck the edge of the dough under itself, place the dough on the work surface and gently press on it to create yet another disk."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-8"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-8".into(),
+                        ],
+                        name: vec![
+                            "Tuck the edge of the dough under itself, place the dough on the work surface and gently press on it to create yet another disk.".into(),
+                        ],
+                        text: vec![
+                            "Tuck the edge of the dough under itself, place the dough on the work surface and gently press on it to create yet another disk.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Use a small rolling pin to roll out a large pancake measuring about 1/2 an inch thick. Don’t make it too thick and don’t make it too thin either.",
-                    None,
-                    Some("Use a small rolling pin to roll out a large pancake measuring about 1/2 an inch thick. Don’t make it too thick and don’t make it too thin either."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-9"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-9".into(),
+                        ],
+                        name: vec![
+                            "Use a small rolling pin to roll out a large pancake measuring about 1/2 an inch thick. Don’t make it too thick and don’t make it too thin either.".into(),
+                        ],
+                        text: vec![
+                            "Use a small rolling pin to roll out a large pancake measuring about 1/2 an inch thick. Don’t make it too thick and don’t make it too thin either.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Using either a chakich (indentation maker in the Uzbek language) or a fork, stab the pancakes creating many indentations. If you would like to use an egg wash to give a nice shin to your bread, do so now. Simply mix 1 egg with 1 tbsp of water and whisk well. Spread the egg wash on the qatlama and decorate it with sesame seeds.",
-                    None,
-                    Some("Using either a chakich (indentation maker in the Uzbek language) or a fork, stab the pancakes creating many indentations. If you would like to use an egg wash to give a nice shin to your bread, do so now. Simply mix 1 egg with 1 tbsp of water and whisk well. Spread the egg wash on the qatlama and decorate it with sesame seeds."),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-10"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-10".into(),
+                        ],
+                        name: vec![
+                            "Using either a chakich (indentation maker in the Uzbek language) or a fork, stab the pancakes creating many indentations. If you would like to use an egg wash to give a nice shin to your bread, do so now. Simply mix 1 egg with 1 tbsp of water and whisk well. Spread the egg wash on the qatlama and decorate it with sesame seeds.".into(),
+                        ],
+                        text: vec![
+                            "Using either a chakich (indentation maker in the Uzbek language) or a fork, stab the pancakes creating many indentations. If you would like to use an egg wash to give a nice shin to your bread, do so now. Simply mix 1 egg with 1 tbsp of water and whisk well. Spread the egg wash on the qatlama and decorate it with sesame seeds.".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
-                RecipeRecipeInstructionsFieldEnum::new_creative_work(
-                    "Repeat the process for the second dough because one qatlama patir is just not enough!",
-                    None,
-                    Some("Repeat the process for the second dough because one qatlama patir is just not enough!"),
-                    Some("https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-11"),
+                RecipeRecipeInstructionsFieldEnum::HowToStep(
+                    HowToStep {
+                        r#type: AtType::HowToStep.to_opt(),
+                        url: vec![
+                            "https://arbuz.com/recipes/layered-bread/#wprm-recipe-20973-step-0-11".into(),
+                        ],
+                        name: vec![
+                            "Repeat the process for the second dough because one qatlama patir is just not enough!".into(),
+                        ],
+                        text: vec![
+                            "Repeat the process for the second dough because one qatlama patir is just not enough!".into(),
+                        ],
+                        ..Default::default()
+                    }.into(),
                 ),
             ],
             recipe_yield: vec![

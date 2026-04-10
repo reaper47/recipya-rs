@@ -240,7 +240,7 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
                     hx-trigger="mousedown"
                     hx-push-url="true"
                     hx-swap="innerHTML transition:true" {
-                    a class="tooltip tooltip-right active" data-tip="Recipes" {
+                    a {
                         (icon_utensils())
                         "Recipes"
                     }
@@ -252,7 +252,7 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
                    hx-push-url="true"
                    hx-swap="innerHTML transition:true"
                   _="on click call alert('Not implemented yet')" {
-                     a class="tooltip tooltip-right" data-tip="Cookbooks" {
+                     a {
                         (icon_book_open())
                         "Cookbooks"
                     }

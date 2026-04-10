@@ -831,6 +831,7 @@ pub type VideoObjectVideoFieldEnum = FieldEnum19;
 pub enum FieldEnum20 {
     ///<https://schema.org/QuantitativeValue>
     QuantitativeValue(Box<QuantitativeValue>),
+    Number(f64),
     ///<https://schema.org/Text>
     Text(String),
 }
@@ -859,6 +860,7 @@ impl FieldEnum20 {
                     .unwrap_or_default(),
                 QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
             }),
+            Self::Number(n) => Some(float_to_i16_safe(*n)),
             Self::Text(s) => s
                 .split_whitespace()
                 .find_map(|part| part.parse::<i16>().ok()),
@@ -1757,9 +1759,8 @@ impl Default for FieldEnum129 {
 }
 pub type ImageObjectExifDataFieldEnum = FieldEnum129;
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
-#[serde(untagged)]
 pub enum FieldEnum141 {
     ///<https://schema.org/CreativeWork>
     CreativeWork(Box<CreativeWork>),
@@ -1773,6 +1774,58 @@ pub enum FieldEnum141 {
 impl Default for FieldEnum141 {
     fn default() -> Self {
         Self::Text(String::default())
+    }
+}
+impl<'de> Deserialize<'de> for FieldEnum141 {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = Value::deserialize(deserializer)?;
+
+        if let Some(t) = value.get("@type") {
+            let types: Vec<&str> = match t {
+                Value::String(s) => vec![s.as_str()],
+                Value::Array(arr) => arr.iter().filter_map(|v| v.as_str()).collect(),
+                _ => vec![],
+            };
+
+            for t in &types {
+                match *t {
+                    "HowToStep" => {
+                        return serde_json::from_value::<HowToStep>(value)
+                            .map(|v| Self::HowToStep(Box::new(v)))
+                            .map_err(serde::de::Error::custom);
+                    }
+                    "ItemList" | "HowToSection" if value.get("itemListElement").is_some() => {
+                        return serde_json::from_value::<ItemList>(value)
+                            .map(|v| Self::ItemList(Box::new(v)))
+                            .map_err(serde::de::Error::custom);
+                    }
+                    "CreativeWork" => {
+                        return serde_json::from_value::<CreativeWork>(value)
+                            .map(|v| Self::CreativeWork(Box::new(v)))
+                            .map_err(serde::de::Error::custom);
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        if value.is_string() {
+            return Ok(Self::Text(value.as_str().unwrap().to_string()));
+        }
+
+        if let Ok(v) = serde_json::from_value::<HowToStep>(value.clone()) {
+            return Ok(Self::HowToStep(Box::new(v)));
+        }
+        if let Ok(v) = serde_json::from_value::<ItemList>(value.clone()) {
+            return Ok(Self::ItemList(Box::new(v)));
+        }
+        if let Ok(v) = serde_json::from_value::<CreativeWork>(value) {
+            return Ok(Self::CreativeWork(Box::new(v)));
+        }
+
+        Err(serde::de::Error::custom(
+            "data did not match any variant of FieldEnum141",
+        ))
     }
 }
 ///<https://schema.org/steps>
