@@ -1272,6 +1272,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_almanac_ok() -> Result<()> {
         let got = scrape(Website::Almanac, 0).await?;
 

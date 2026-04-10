@@ -136,6 +136,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zabihahalal_ok() -> Result<()> {
         let got = scrape(Website::ZabihaHalal, 0).await?;
 
@@ -893,6 +894,7 @@ mod tests {
     #[tokio::test]
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_zeezest_ok() -> Result<()> {
         let got = scrape(Website::Zeezest, 0).await?;
 
