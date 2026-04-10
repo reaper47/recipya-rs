@@ -19,6 +19,7 @@ use schema_org::field::{
     RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum,
 };
 use schema_org::{Comment, Recipe};
+use support::numbers::float_to_i16_safe;
 use support::strings::extract_number;
 use winnow::token::{literal, take_till, take_until};
 
@@ -225,6 +226,7 @@ impl From<Recipe> for RecipeSage {
                             QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
                         })
                         .unwrap_or_default(),
+                    RecipeRecipeYieldFieldEnum::Number(n) => float_to_i16_safe(*n),
                     RecipeRecipeYieldFieldEnum::Text(s) => {
                         s.parse::<i16>().ok().unwrap_or_default()
                     }

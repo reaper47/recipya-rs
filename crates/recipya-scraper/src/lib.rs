@@ -5,6 +5,7 @@ mod websites;
 
 pub mod tests;
 
+use serde_json::Value;
 pub use websites::*;
 
 pub use client::{AppHttpClient, HttpClient};
@@ -64,38 +65,49 @@ impl Scraper {
 
         doc.select(&sel)
             .filter_map(|el| {
-                let json = &el
+                let json = el
                     .inner_html()
                     .split_whitespace()
                     .collect::<Vec<_>>()
                     .join(" ");
 
-                let value: serde_json::Value = serde_json::from_str(json).ok()?;
-                let object = value.as_array().and_then(|arr| arr.first()).cloned().unwrap_or(value);
-                let r#type = object.get("@type");
+                let value: serde_json::Value = serde_json::from_str(&json).ok()?;
+                let object = value
+                    .as_array()
+                    .and_then(|arr| arr.first())
+                    .cloned()
+                    .unwrap_or(value);
+                let type_recipe = AtType::Recipe.to_opt();
 
-                if r#type.and_then(|v| v.as_array()).is_some() || r#type.and_then(|v| v.as_str()).is_some() {
-                    serde_json::from_value::<Recipe>(object)
+                let is_recipe_type = |obj: &Value| match obj.get("@type") {
+                    Some(t) if t.as_str() == type_recipe.as_deref() => true,
+                    Some(t) => t.as_array().is_some_and(|arr| {
+                        arr.iter().any(|v| v.as_str() == type_recipe.as_deref())
+                    }),
+                    None => false,
+                };
+
+                if is_recipe_type(&object) {
+                    return serde_json::from_value::<Recipe>(object)
                         .inspect_err(|err| {
                             error!("Error parsing schema: {err}\nURL: {url}\nJSON: {json}\n-----");
                         })
-                        .ok()
-                } else {
-                    if let Some(graph) = object.get("@graph").and_then(|g| g.as_array()) {
-                        for item in graph {
-                            if item.get("@type").and_then(|t| t.as_str()) == Some("Recipe") {
-                                return serde_json::from_value::<Recipe>(item.clone())
-                                    .inspect_err(|err| {
-                                        error!(
-                                            "Failed to deserialize recipe json for url '{url}' and JSON '{item}': {err}"
-                                        );
-                                    })
-                                    .ok();
-                            }
-                        }
-                    }
-                    None
+                        .ok();
                 }
+
+                object
+                    .get("@graph")
+                    .and_then(|g| g.as_array())
+                    .and_then(|graph| {
+                        graph
+                            .iter()
+                            .find(|item| is_recipe_type(item))
+                            .and_then(|item| {
+                                serde_json::from_value::<Recipe>(item.clone())
+                                    .inspect_err(|err| error!("Failed for '{url}': {err}"))
+                                    .ok()
+                            })
+                    })
             })
             .find_map(|recipe| {
                 let mut recipe = match recipe.graph {

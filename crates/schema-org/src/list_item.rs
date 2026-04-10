@@ -65,4 +65,8 @@ pub struct ListItem {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
+    /// Extension field not present in schema.
+    #[serde(default, deserialize_with = "one_or_many")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub text: Vec<String>,
 }

@@ -132,6 +132,7 @@ pub enum AtType {
     CreativeWork,
     Duration,
     Energy,
+    HowToSection,
     HowToStep,
     HowToTool,
     ImageObject,
@@ -161,6 +162,7 @@ impl Display for AtType {
                 Self::Energy => "Energy".to_string(),
                 Self::Recipe => "Recipe".to_string(),
                 Self::AggregateRating => "AggregateRating".to_string(),
+                Self::HowToSection => "HowToSection".to_string(),
                 Self::HowToStep => "HowToStep".to_string(),
                 Self::HowToTool => "HowToTool".to_string(),
                 Self::ImageObject => "ImageObject".to_string(),
@@ -188,6 +190,7 @@ impl AtType {
             Self::CreativeWork => Some(Self::CreativeWork.to_string()),
             Self::Duration => Some(Self::Duration.to_string()),
             Self::Energy => Some(Self::Energy.to_string()),
+            Self::HowToSection => Some(Self::HowToSection.to_string()),
             Self::HowToStep => Some(Self::HowToStep.to_string()),
             Self::HowToTool => Some(Self::HowToTool.to_string()),
             Self::ImageObject => Some(Self::ImageObject.to_string()),
@@ -218,6 +221,7 @@ mod tests {
         assert_eq!(AtType::Energy.to_string(), "Energy");
         assert_eq!(AtType::Recipe.to_string(), "Recipe");
         assert_eq!(AtType::AggregateRating.to_string(), "AggregateRating");
+        assert_eq!(AtType::HowToSection.to_string(), "HowToSection");
         assert_eq!(AtType::HowToStep.to_string(), "HowToStep");
         assert_eq!(AtType::HowToTool.to_string(), "HowToTool");
         assert_eq!(AtType::ImageObject.to_string(), "ImageObject");
@@ -248,6 +252,10 @@ mod tests {
         assert_eq!(
             AtType::AggregateRating.to_opt(),
             Some("AggregateRating".to_string())
+        );
+        assert_eq!(
+            AtType::HowToSection.to_opt(),
+            Some("HowToSection".to_string())
         );
         assert_eq!(AtType::HowToStep.to_opt(), Some("HowToStep".to_string()));
         assert_eq!(AtType::HowToTool.to_opt(), Some("HowToTool".to_string()));
