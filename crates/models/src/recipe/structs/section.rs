@@ -454,7 +454,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                                 text: item.text.first().cloned().unwrap_or_default(),
                                 duration_seconds: None,
                             }),
-                            _ => None,
+                            ItemListItemListElementFieldEnum::Thing(_) => None,
                         })
                         .collect();
 
