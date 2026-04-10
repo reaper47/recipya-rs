@@ -119,6 +119,19 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    downloads (id) {
+        id -> Int8,
+        user_id -> Uuid,
+        token -> Uuid,
+        file_path -> Text,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     email_verification_tokens (id) {
         id -> Uuid,
         user_id -> Uuid,
@@ -659,6 +672,7 @@ diesel::joinable!(cookbooks_recipes -> recipes (recipe_id));
 diesel::joinable!(counts -> users (user_id));
 diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
 diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
+diesel::joinable!(downloads -> users (user_id));
 diesel::joinable!(email_verification_tokens -> users (user_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_food_portions (portion_id));
 diesel::joinable!(fdc_food_portions_fdc_foods -> fdc_foods (food_id));
@@ -719,6 +733,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     counts,
     cuisines,
     cuisines_recipes,
+    downloads,
     email_verification_tokens,
     fdc_food_portions,
     fdc_food_portions_fdc_foods,

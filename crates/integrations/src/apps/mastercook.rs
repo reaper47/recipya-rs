@@ -819,7 +819,7 @@ mod tests {
 
     mod files {
         use std::io::Cursor;
-        use testing::utils::open_test_file;
+        use test_fixtures::open_test_file;
 
         pub fn mx2<'a>() -> &'a str {
             r#"<?xml version="1.0" standalone="yes" encoding="ISO-8859-1"?>

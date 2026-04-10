@@ -646,6 +646,14 @@ pub type AudioObjectContentRatingFieldEnum = FieldEnum14;
 pub type MediaObjectContentRatingFieldEnum = FieldEnum14;
 ///<https://schema.org/contentRating>
 pub type RecipeContentRatingFieldEnum = FieldEnum14;
+
+impl RecipeContentRatingFieldEnum {
+    /// Creates a new `RecipeContentRatingFieldEnum` instance with the given rating value.
+    pub fn new_rating(rating: f32) -> Self {
+        Self::Rating(Box::new(Rating::new(rating)))
+    }
+}
+
 ///<https://schema.org/contentRating>
 pub type TextObjectContentRatingFieldEnum = FieldEnum14;
 ///<https://schema.org/contentRating>

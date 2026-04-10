@@ -2,21 +2,26 @@ use std::fmt::Write;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use axum::Json;
+use axum::body::Body;
 use axum::extract::ws::WebSocket;
 use axum::extract::{Multipart, Query, State, WebSocketUpgrade};
-use axum::http::StatusCode;
+use axum::http::{Response, StatusCode};
 use axum::response::{Html, IntoResponse, Redirect};
-use reqwest::header::CONTENT_TYPE;
+use futures_util::StreamExt;
+use models::download::Download;
+use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use serde_json::{Value, json};
 use tokio::fs;
 use tokio::net::lookup_host;
+use tokio_util::bytes;
+use tokio_util::io::ReaderStream;
 use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
 use app::state::AppState;
 use models::Recipe;
-use models::params::{FetchParams, SearchParams};
+use models::params::{DownloadParams, FetchParams, SearchParams};
 use models::user::User;
 
 use crate::handlers::message::broadcast_error;
@@ -30,6 +35,70 @@ pub async fn index_handler(OptionalAuth(user): OptionalAuth) -> Redirect {
     match user {
         Some(_) => Redirect::to("/recipes"),
         None => Redirect::to("/auth/login"),
+    }
+}
+
+/// Handles downloading a file from a public URL.
+pub async fn download_handler(
+    RequireAuth(user): RequireAuth,
+    Query(params): Query<DownloadParams>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let token = params.token;
+
+    let file_path = match Download::find_by_token(&state.mm, token).await {
+        Ok(Some(dl)) => dl.file_path,
+        Ok(_) => {
+            warn!("Token '{token}' not found for user '{}'", user.id);
+            return StatusCode::NOT_FOUND.into_response();
+        }
+        Err(err) => {
+            error!(
+                "Failed to find download token '{token}' for user {}: {err:?}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to find download token.").await;
+            return StatusCode::NOT_FOUND.into_response();
+        }
+    };
+
+    let file = match tokio::fs::File::open(&file_path).await {
+        Ok(f) => f,
+        Err(err) => {
+            error!(
+                "Failed to open file '{file_path}' for user {}: {err:?}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to open export file.").await;
+            return Error::Fs.into_response();
+        }
+    };
+
+    let mm = state.mm.clone();
+    let stream = ReaderStream::new(file).chain(futures::stream::once(async move {
+        if let Err(err) = Download::delete_by_token(&mm, token, file_path).await {
+            error!(
+                "Failed to delete download token '{token}' for user {}: {err:?}",
+                user.id
+            );
+        }
+        Ok(bytes::Bytes::new())
+    }));
+
+    match Response::builder()
+        .header(CONTENT_TYPE, "application/zip")
+        .header(
+            CONTENT_DISPOSITION,
+            "attachment; filename=\"recipya-data-export.zip\"",
+        )
+        .body(Body::from_stream(stream))
+    {
+        Ok(res) => res,
+        Err(err) => {
+            error!("Failed to create response for user {}: {err:?}", user.id);
+            broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Error::Fs.into_response()
+        }
     }
 }
 

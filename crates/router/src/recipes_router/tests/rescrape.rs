@@ -5,17 +5,13 @@ mod tests {
     use axum_test::{TestServer, TestWebSocket};
     use models::{
         Recipe,
-        recipe::structs::{
-            recipe::RecipeForCreate, test_utils::a_complete_recipe_for_create, types::Source,
-        },
+        recipe::structs::{recipe::RecipeForCreate, types::Source},
         user::User,
     };
     use recipya_scraper::tests::support::scraper::scrape_test_websites;
     use reqwest::StatusCode;
-    use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_ws,
-        create_app_state,
-    };
+    use test_fixtures::{assert_html, assert_ws_message};
+    use test_utils::{assert_must_be_logged_in, build_server_ws, create_app_state};
 
     use crate::recipes_router::params::RecipeScrapeForm;
 
@@ -40,6 +36,8 @@ mod tests {
             },
             reports::ViewReport,
         };
+        use test_db::TestDb;
+        use test_models::a_complete_recipe_for_create;
 
         use super::*;
 
@@ -61,7 +59,7 @@ mod tests {
             let (server, mut ws_server) = build_server_ws(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.name = "Not a valid URL".into();
             recipe.source = Source::new("a magazine");
             let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
@@ -393,6 +391,7 @@ mod tests {
             time::Times,
             tool::ToolRecipe,
         };
+        use test_db::TestDb;
         use uuid::Uuid;
 
         use super::*;

@@ -22,6 +22,7 @@ chrono.workspace = true
 config.workspace = true
 derive_more.workspace = true
 email.workspace = true
+futures.workspace = true
 futures-util.workspace = true
 humantime.workspace = true
 indexmap.workspace = true
@@ -31,7 +32,7 @@ iso8601.workspace = true
 itertools.workspace = true
 math.workspace = true
 mime_guess = "2.0.5"
-models = { workspace = true, features = ["test-utils"] }
+models = { workspace = true }
 rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
@@ -40,10 +41,12 @@ rust-embed = { version = "8.11.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
+serde_qs = "1.1.1"
 strum_macros.workspace = true
 support.workspace = true
 templates.workspace = true
 tokio.workspace = true
+tokio-util = "0.7.18"
 tower-cookies.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
@@ -60,8 +63,11 @@ diesel-async.workspace = true
 image = "0.25.10"
 jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
-testing.workspace = true
+test-utils.workspace = true
 time.workspace = true
 tokio.workspace = true
 tower = "0.5.3"
 tracing-test.workspace = true
+test-db = { path = "../test-db" }
+test-fixtures = { path = "../test-fixtures" }
+test-models = { path = "../test-models" }

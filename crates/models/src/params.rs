@@ -1,4 +1,11 @@
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+/// Download params holds the download query parameters of the URL.
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct DownloadParams {
+    pub token: Uuid,
+}
 
 /// Fetch params holds the fetch query parameters of the URL.
 #[derive(Debug, Default, Deserialize, Serialize)]

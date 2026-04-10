@@ -238,7 +238,8 @@ mod tests {
 
     use super::*;
 
-    use testing::utils::{TestDb, create_app_state, insert_user};
+    use test_db::TestDb;
+    use test_utils::{create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

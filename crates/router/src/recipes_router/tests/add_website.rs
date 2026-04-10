@@ -10,10 +10,9 @@ mod tests {
     use config::Config;
     use recipya_scraper::tests::support::scraper::scrape_test_websites;
     use repository::schema;
-    use testing::utils::{
-        HIDDEN_WS_NOTIFICATION, TestDb, assert_must_be_logged_in, assert_ws_message,
-        build_server_ws, collect_ws_messages, create_app_state,
-    };
+    use test_db::TestDb;
+    use test_fixtures::{HIDDEN_WS_NOTIFICATION, assert_ws_message, collect_ws_messages};
+    use test_utils::{assert_must_be_logged_in, build_server_ws, create_app_state};
 
     use crate::recipes_router::params::RecipeScrapeForm;
 

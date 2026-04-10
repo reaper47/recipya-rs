@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_to_markdown_complete_recipe_ok() -> Result<()> {
-        let mut recipe = a_complete_recipe();
+        let (mut recipe, _) = a_complete_recipe();
         recipe.recipe.image = Some(Uuid::parse_str("637bcefb-9fa4-4970-b490-b73023ac772f")?);
 
         let got = recipe.to_markdown("https://example.com/images")?;

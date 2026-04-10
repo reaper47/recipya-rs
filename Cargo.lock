@@ -2657,7 +2657,8 @@ dependencies = [
  "strum 0.28.0",
  "strum_macros 0.28.0",
  "support",
- "testing",
+ "test-fixtures",
+ "test-utils",
  "tokio",
  "tracing",
  "url",
@@ -2884,9 +2885,9 @@ checksum = "2c4a545a15244c7d945065b5d392b2d2d7f21526fba56ce51467b06ed445e8f7"
 
 [[package]]
 name = "libc"
-version = "0.2.180"
+version = "0.2.184"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcc35a38544a891a5f7c865aca548a982ccb3b8650a5b06d0fd33a10283c56fc"
+checksum = "48f5d2a454e16a5ea0f4ced81bd44e4cfc7bd3a507b61887c99fd3538b28e4af"
 
 [[package]]
 name = "libflate"
@@ -2967,6 +2968,12 @@ dependencies = [
  "cc",
  "glob",
 ]
+
+[[package]]
+name = "linux-raw-sys"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
 name = "litemap"
@@ -3227,6 +3234,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
+ "futures",
  "humantime",
  "indexmap",
  "infer",
@@ -3248,7 +3256,10 @@ dependencies = [
  "strum 0.28.0",
  "strum_macros 0.28.0",
  "support",
- "testing",
+ "tempfile",
+ "test-db",
+ "test-fixtures",
+ "test-utils",
  "time",
  "tokio",
  "tracing",
@@ -4512,6 +4523,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "email",
+ "futures",
  "futures-util",
  "humantime",
  "image",
@@ -4533,12 +4545,17 @@ dependencies = [
  "schema-org",
  "serde",
  "serde_json",
+ "serde_qs",
  "strum_macros 0.28.0",
  "support",
  "templates",
- "testing",
+ "test-db",
+ "test-fixtures",
+ "test-models",
+ "test-utils",
  "time",
  "tokio",
+ "tokio-util",
  "tower",
  "tower-cookies",
  "tower-http",
@@ -4634,6 +4651,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
 dependencies = [
  "semver",
+]
+
+[[package]]
+name = "rustix"
+version = "1.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190"
+dependencies = [
+ "bitflags",
+ "errno",
+ "libc",
+ "linux-raw-sys",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4956,6 +4986,18 @@ dependencies = [
  "itoa",
  "serde",
  "serde_core",
+]
+
+[[package]]
+name = "serde_qs"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2316d01592c3382277c5062105510e35e0a6bfb2851e30028485f7af8cf1240"
+dependencies = [
+ "itoa",
+ "percent-encoding",
+ "ryu",
+ "serde",
 ]
 
 [[package]]
@@ -5372,6 +5414,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tempfile"
+version = "3.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
+dependencies = [
+ "fastrand",
+ "getrandom 0.4.2",
+ "once_cell",
+ "rustix",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "templates"
 version = "0.1.0"
 dependencies = [
@@ -5401,7 +5456,37 @@ dependencies = [
 ]
 
 [[package]]
-name = "testing"
+name = "test-db"
+version = "0.0.0"
+dependencies = [
+ "config",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "repository",
+ "uuid",
+]
+
+[[package]]
+name = "test-fixtures"
+version = "0.0.0"
+dependencies = [
+ "axum-test",
+ "uuid",
+]
+
+[[package]]
+name = "test-models"
+version = "0.0.0"
+dependencies = [
+ "chrono",
+ "models",
+ "test-fixtures",
+ "uuid",
+]
+
+[[package]]
+name = "test-utils"
 version = "0.0.0"
 dependencies = [
  "app",
@@ -5409,17 +5494,14 @@ dependencies = [
  "axum",
  "axum-test",
  "config",
- "diesel",
- "diesel-async",
- "dotenvy",
  "models",
  "recipya-scraper",
  "repository",
  "router",
  "support",
+ "test-db",
  "tower-cookies",
  "tracing",
- "uuid",
 ]
 
 [[package]]

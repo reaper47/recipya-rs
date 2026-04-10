@@ -1,15 +1,24 @@
 use bitflags::bitflags;
 use diesel::prelude::*;
-use schema_org::ToIso8601;
-use support::regexp::time::TimeParser;
+use serde_json::json;
 use tracing::error;
 use uuid::Uuid;
 use whatlang::Lang;
 
 use math::cooking::units::system;
 use repository::schema;
-use schema_org::field::{FieldEnum20, RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum};
+use schema_org::{
+    AggregateRating, AtType, Duration, DurationOrText, Energy, HowToTool, Mass,
+    NutritionInformation, ToIso8601, VideoObject, at_context,
+    field::{
+        FieldEnum20, HowToToolPositionFieldEnum, HowToToolRequiredQuantityFieldEnum,
+        RecipeContentRatingFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
+        RecipeInLanguageFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeYieldFieldEnum,
+        RecipeToolFieldEnum, RecipeVideoFieldEnum, VideoObjectDurationFieldEnum,
+    },
+};
 use support::name_entity_with_relations;
+use support::regexp::time::TimeParser;
 use support::strings::extract_number;
 
 use crate::recipe::RecipeForm;
@@ -164,6 +173,182 @@ impl RecipeDetails {
     }
 }
 
+impl From<RecipeDetails> for schema_org::Recipe {
+    #[allow(clippy::too_many_lines)]
+    fn from(recipe: RecipeDetails) -> Self {
+        let all_images = recipe.all_images();
+        let r = recipe.recipe;
+
+        Self {
+            r#type: AtType::Recipe.to_opt(),
+            context: at_context(),
+            nutrition: recipe
+                .nutrition
+                .per_100g
+                .map(|n| {
+                    vec![NutritionInformation {
+                        calories: n
+                            .calories_kcal
+                            .map(|c| vec![Energy::new(c.to_string())])
+                            .unwrap_or_default(),
+                        carbohydrate_content: n
+                            .total_carbohydrates
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        cholesterol_content: n
+                            .cholesterol_mg
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        context: at_context(),
+                        fat_content: n
+                            .total_fat_g
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        fiber_content: n
+                            .fiber_g
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        protein_content: n
+                            .protein_g
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        saturated_fat_content: n
+                            .saturated_fat_g
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        serving_size: vec![],
+                        sodium_content: n
+                            .sodium_mg
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        sugar_content: n
+                            .sugars_g
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        trans_fat_content: n
+                            .trans_fat_g
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                        unsaturated_fat_content: n
+                            .unsaturated_fat_g
+                            .map(|n| vec![Mass::new(n.to_string())])
+                            .unwrap_or_default(),
+                    }]
+                })
+                .unwrap_or_default(),
+            recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(
+                f64::from(r.r#yield),
+            )],
+            recipe_cuisine: recipe
+                .cuisine
+                .map(|cuisine| vec![cuisine])
+                .unwrap_or_default(),
+            recipe_ingredient: recipe.ingredients.into(),
+            cook_time: vec![DurationOrText::Text(format!(
+                "PT{}S",
+                recipe.times.cook_seconds
+            ))],
+            recipe_instructions: recipe.instructions.into(),
+            recipe_category: vec![recipe.category],
+            tool: recipe
+                .tools
+                .into_iter()
+                .map(|tool| {
+                    RecipeToolFieldEnum::HowToTool(Box::new(HowToTool {
+                        r#type: AtType::HowToTool.to_opt(),
+                        context: at_context(),
+                        required_quantity: vec![HowToToolRequiredQuantityFieldEnum::Number(
+                            f32::from(tool.quantity),
+                        )],
+                        position: vec![HowToToolPositionFieldEnum::Integer(i32::from(
+                            tool.tool_order,
+                        ))],
+                        name: vec![tool.name],
+                        ..Default::default()
+                    }))
+                })
+                .collect(),
+            prep_time: vec![DurationOrText::Text(format!(
+                "PT{}S",
+                recipe.times.prep_seconds
+            ))],
+            total_time: vec![DurationOrText::Text(format!(
+                "PT{}S",
+                recipe.times.total_seconds
+            ))],
+            date_created: vec![r.created_at.to_string()],
+            date_modified: vec![r.updated_at.to_string()],
+            keywords: recipe
+                .keywords
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
+            content_rating: r
+                .rating
+                .filter(|rating| rating > &0)
+                .map(|rating| vec![RecipeContentRatingFieldEnum::new_rating(f32::from(rating))])
+                .unwrap_or_default(),
+            text: vec![
+                json!({
+                    "recipeId": r.id,
+                    "isFavourite": r.is_favourite,
+                    "measurementSystemId": r.measurement_system_id,
+                    "notes": r.notes.unwrap_or_default(),
+                })
+                .to_string(),
+            ],
+            aggregate_rating: r
+                .rating
+                .filter(|rating| rating > &0)
+                .map(|rating| vec![AggregateRating::new(f32::from(rating), 1)])
+                .unwrap_or_default(),
+            in_language: vec![RecipeInLanguageFieldEnum::Text(r.language)],
+            video: recipe
+                .videos
+                .into_iter()
+                .map(|video| {
+                    RecipeVideoFieldEnum::VideoObject(Box::new(VideoObject {
+                        r#type: AtType::VideoObject.to_opt(),
+                        context: at_context(),
+                        duration: video
+                            .duration
+                            .map(|d| {
+                                vec![VideoObjectDurationFieldEnum::Duration(Duration {
+                                    context: at_context(),
+                                    name: vec![d.to_string()],
+                                    r#type: AtType::Duration.to_opt(),
+                                    ..Default::default()
+                                })]
+                            })
+                            .unwrap_or_default(),
+                        content_url: video.content_url.map(|u| vec![u]).unwrap_or_default(),
+                        embed_url: video.embed_url.map(|u| vec![u]).unwrap_or_default(),
+                        date_created: vec![video.created_at.to_string()],
+                        url: vec![video.video.to_string()],
+                        ..Default::default()
+                    }))
+                })
+                .collect(),
+            schema_version: vec!["29.3".into()],
+            image: all_images
+                .into_iter()
+                .map(|s| RecipeImageFieldEnum::URL(format!("{s}.webp")))
+                .collect(),
+            description: r
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            url: {
+                let s = r.source.into_string();
+                if s.is_empty() { vec![] } else { vec![s] }
+            },
+            name: vec![r.name],
+            ..Default::default()
+        }
+    }
+}
+
 impl From<RecipeForCreate> for RecipeDetails {
     fn from(recipe_c: RecipeForCreate) -> Self {
         Self {
@@ -230,7 +415,10 @@ impl RecipeForCreate {
     /// Returns the first image UUID if available and a vector of the remaining image UUIDs.
     pub fn first_and_rest_images(&self) -> (Option<Uuid>, Vec<Uuid>) {
         match self.images.as_slice() {
-            [first, rest @ ..] => (Some(*first), rest.to_vec()),
+            [first, rest @ ..] => (
+                Some(*first).filter(|u| !u.is_nil()),
+                rest.iter().copied().filter(|u| !u.is_nil()).collect(),
+            ),
             [] => (None, Vec::new()),
         }
     }

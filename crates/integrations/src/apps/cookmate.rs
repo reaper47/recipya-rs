@@ -258,7 +258,7 @@ mod tests {
 
     mod files {
         use std::io::Cursor;
-        use testing::utils::open_test_file;
+        use test_fixtures::open_test_file;
 
         #[allow(clippy::too_many_lines)]
         pub fn xml_file<'a>() -> &'a str {

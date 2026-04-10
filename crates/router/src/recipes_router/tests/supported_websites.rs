@@ -4,7 +4,8 @@ mod tests {
     use axum_test::{TestResponse, http::header::CONTENT_TYPE};
 
     use recipya_scraper::Website;
-    use testing::utils::{TestDb, assert_must_be_logged_in, build_server_logged_in};
+    use test_db::TestDb;
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

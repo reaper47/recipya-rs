@@ -33,9 +33,11 @@ mod tests {
 
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
-    use config::Config;
-    use testing::utils::{create_app_state, default_config, test_database_url};
     use tower::ServiceExt;
+
+    use config::Config;
+    use test_db::{default_config, test_database_url};
+    use test_utils::create_app_state;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

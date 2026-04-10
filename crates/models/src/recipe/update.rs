@@ -291,7 +291,8 @@ impl Recipe {
 mod tests {
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
-    use testing::utils::{TestDb, create_app_state, insert_user};
+    use test_db::TestDb;
+    use test_utils::{create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -303,7 +304,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let user = insert_user(config.clone()).await?;
-            let recipe = a_complete_recipe_for_create();
+            let (recipe, _) = a_complete_recipe_for_create();
             let id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
             if Recipe::toggle_favourite(&state.mm, Uuid::new_v4(), id)
@@ -320,7 +321,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let user = insert_user(config.clone()).await?;
-            let recipe = a_complete_recipe_for_create();
+            let (recipe, _) = a_complete_recipe_for_create();
             let initial_state = recipe.is_favourite;
             let id = Recipe::create(&state.mm, user.id, &recipe).await?;
 

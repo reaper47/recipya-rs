@@ -626,7 +626,7 @@ fn render_media(
                     img style="object-fit: cover"
                         alt="Image of the recipe"
                         class="w-full max-h-80 md:max-h-[34rem]"
-                        src="/data/images/Placeholders/placeholder.recipe.webp" {}
+                        src="/data/images/Placeholders/placeholder.recipe.webp";
                 },
                 1 => {
                     @if recipe_details.num_images() == 1 {

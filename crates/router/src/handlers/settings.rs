@@ -1,13 +1,20 @@
 use axum::Form;
-use axum::extract::State;
-use axum::http::{HeaderMap, StatusCode};
+use axum::body::Body;
+use axum::extract::{RawForm, State};
+use axum::http::{HeaderMap, Response, StatusCode};
 use axum::response::IntoResponse;
+use axum_htmx::HX_CURRENT_URL;
 use iso8601::DateTime;
+use models::download::{Download, DownloadForCreate};
+use serde_json::json;
 use tracing::error;
+use url::Url;
 use uuid::Uuid;
 
 use app::state::AppState;
+use models::Recipe;
 use models::data::{AboutData, Data};
+use models::export::ExportData;
 use models::nutrition::NutritionDataSource;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
@@ -16,10 +23,10 @@ use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::Error;
 use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::broadcast_error;
+use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
-use crate::schemas::settings::{NutritionSourcePayload, ThemePayload};
+use crate::schemas::settings::{ExportDataPayload, NutritionSourcePayload, ThemePayload};
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
@@ -100,6 +107,129 @@ pub async fn settings_handler(
         },
     )
     .into_response()
+}
+
+/// Handles exporting data for the target user.
+pub async fn export_data_handler(
+    RequireAuth(user): RequireAuth,
+    headers: HeaderMap,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let recipes = match Recipe::all(&state.mm, user.id).await {
+        Ok(recipes) => recipes,
+        Err(err) => {
+            error!("Failed to retrieve recipes for user {}: {err}", user.id);
+            broadcast_error(&state, user.id, "Failed to retrieve recipes.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    if recipes.is_empty() {
+        broadcast_warning(&state, user.id, "No recipes found for export.").await;
+        return StatusCode::NOT_FOUND.into_response();
+    }
+
+    let current_url = headers
+        .get(HX_CURRENT_URL)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| Url::parse(s).ok())
+        .map_or_else(
+            || "/".into(),
+            |u| {
+                format!(
+                    "{}://{}{}",
+                    u.scheme(),
+                    u.host_str().unwrap_or(""),
+                    u.port().map(|p| format!(":{p}")).unwrap_or_default()
+                )
+            },
+        );
+
+    templates::settings::render_export_data_dialog_recipes(&current_url, recipes).into_response()
+}
+
+/// Handles exporting data for the target user.
+pub async fn export_data_post_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    RawForm(bytes): RawForm,
+) -> impl IntoResponse {
+    let payload: ExportDataPayload = match serde_qs::from_bytes(&bytes)
+        .map_err(|err| (StatusCode::BAD_REQUEST, err.to_string()))
+    {
+        Ok(payload) => payload,
+        Err(err) => {
+            error!(
+                "Failed to parse export form '{bytes:?}' user {}: {err:?}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to parse export form.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    if payload.recipe_ids.is_empty() {
+        broadcast_warning(&state, user.id, "No recipes selected for export.").await;
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+
+    let recipes = match Recipe::get_many(&state.mm, user.id, &payload.recipe_ids).await {
+        Ok(r) => r,
+        Err(err) => {
+            error!(
+                "Failed to fetch recipes for user '{}' with payload {:?}: {err:?}",
+                user.id, payload
+            );
+            broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    if recipes.is_empty() {
+        broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
+
+    let file_path = match ExportData::new(payload.r#type, recipes, &state.data_dir.images.root)
+        .export()
+        .await
+    {
+        Ok(file) => file,
+        Err(err) => {
+            error!("Failed to export recipes for user {}: {err:?}", user.id);
+            broadcast_error(&state, user.id, "Failed to export recipes.").await;
+            return Error::Fs.into_response();
+        }
+    };
+
+    let token = Uuid::new_v4();
+    if let Err(err) =
+        Download::create(&state.mm, DownloadForCreate::new(user.id, token, file_path)).await
+    {
+        error!("Failed to create download for user {}: {err:?}", user.id);
+        broadcast_error(&state, user.id, "Failed to create export data response.").await;
+        return Error::Database.into_response();
+    }
+
+    match Response::builder()
+        .header(
+            "HX-Trigger",
+            json!({
+                "downloadReady": {
+                    "url": format!("/download?token={}", token)
+                }
+            })
+            .to_string(),
+        )
+        .body(Body::empty())
+    {
+        Ok(res) => res,
+        Err(err) => {
+            error!("Failed to create response for user {}: {err:?}", user.id);
+            broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Error::Fs.into_response()
+        }
+    }
 }
 
 /// Handles setting the nutrition source for the target user.

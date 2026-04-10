@@ -158,7 +158,8 @@ impl RecipeTimeline {
 
 #[cfg(test)]
 mod tests {
-    use testing::utils::{TestDb, build_server_anonymous, create_app_state, insert_other_user};
+    use test_db::TestDb;
+    use test_utils::{build_server_anonymous, create_app_state, insert_other_user};
 
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
@@ -176,9 +177,9 @@ mod tests {
             let user1 = User::all(&state.mm).await?[0].clone();
             let user2 = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
             let recipe_id1 =
-                Recipe::create(&state.mm, user1.id, &a_complete_recipe_for_create()).await?;
+                Recipe::create(&state.mm, user1.id, &a_complete_recipe_for_create().0).await?;
             let recipe_id2 =
-                Recipe::create(&state.mm, user2.id, &a_complete_recipe_for_create()).await?;
+                Recipe::create(&state.mm, user2.id, &a_complete_recipe_for_create().0).await?;
             RecipeTimeline::create(&state.mm, 1, user1.id, &RecipeTimelineForCreate::default())
                 .await?;
             let image = Uuid::new_v4();
@@ -222,8 +223,8 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let user = User::all(&state.mm).await?[0].clone();
-            let recipe_id =
-                Recipe::create(&state.mm, user.id, &a_complete_recipe_for_create()).await?;
+            let (recipe, _) = a_complete_recipe_for_create();
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
             let timeline_c = RecipeTimelineForCreate {
                 title: "A title".into(),
                 comment: Some("hello".into()),
@@ -276,8 +277,8 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let user = User::all(&state.mm).await?[0].clone();
-            let recipe_id =
-                Recipe::create(&state.mm, user.id, &a_complete_recipe_for_create()).await?;
+            let (recipe, _) = a_complete_recipe_for_create();
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
             let timeline_c = RecipeTimelineForCreate {
                 title: "A title".into(),
                 comment: Some("hello".into()),

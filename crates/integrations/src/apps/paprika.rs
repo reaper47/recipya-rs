@@ -181,7 +181,7 @@ mod tests {
 
     mod files {
         use std::io::Cursor;
-        use testing::utils::open_test_file;
+        use test_fixtures::open_test_file;
 
         pub fn example1() -> Cursor<Vec<u8>> {
             open_test_file("integrations/example1.paprikarecipes")

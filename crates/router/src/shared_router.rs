@@ -13,16 +13,17 @@ pub fn shared_routes() -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
-    use models::recipe::structs::recipe::RecipeForCreate;
     use models::user::User;
+    use models::{Recipe, recipe::structs::recipe::RecipeForCreate};
+    use test_db::TestDb;
+    use test_models::a_complete_recipe_for_create;
     use uuid::Uuid;
 
     use axum_test::TestResponse;
     use models::share::ShareRecipe;
-    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
-    use testing::utils::{
-        TestDb, assert_html, assert_not_in_html, build_server_anonymous, build_server_logged_in,
-        create_app_state, insert_other_user,
+    use test_fixtures::{RecipeImages, assert_html, assert_not_in_html};
+    use test_utils::{
+        build_server_anonymous, build_server_logged_in, create_app_state, insert_other_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -48,14 +49,15 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
-        let recipe_id =
-            Recipe::create(&state.mm, users[0].id, &a_complete_recipe_for_create()).await?;
+        let (recipe1, images) = a_complete_recipe_for_create();
+        let recipe_id = Recipe::create(&state.mm, users[0].id, &recipe1).await?;
         let share = ShareRecipe::new(&state.mm, recipe_id, users[0].id, None).await?;
 
         let res = server.get(&base_uri(share.link)).await;
 
         res.assert_status_ok();
-        assert_complete_recipe(&res, &a_complete_recipe_for_create());
+        let (recipe, _) = a_complete_recipe_for_create();
+        assert_complete_recipe(&res, &recipe, &images);
         assert_html(
             &res,
             vec![
@@ -81,7 +83,8 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let user = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
         let state = create_app_state(config).await;
-        let recipe_id = Recipe::create(&state.mm, user.id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
         let share = ShareRecipe::new(&state.mm, recipe_id, user.id, None).await?;
 
         let res = server.get(&base_uri(share.link)).await;
@@ -103,14 +106,15 @@ mod tests {
         let server = build_server_anonymous(config.clone()).await?;
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
-        let recipe_id =
-            Recipe::create(&state.mm, users[0].id, &a_complete_recipe_for_create()).await?;
+        let (recipe, images) = a_complete_recipe_for_create();
+        let recipe_id = Recipe::create(&state.mm, users[0].id, &recipe).await?;
         let share = ShareRecipe::new(&state.mm, recipe_id, users[0].id, None).await?;
 
         let res = server.get(&base_uri(share.link)).await;
 
         res.assert_status_ok();
-        assert_complete_recipe(&res, &a_complete_recipe_for_create());
+        let (recipe, _) = a_complete_recipe_for_create();
+        assert_complete_recipe(&res, &recipe, &images);
         assert_html(
             &res,
             vec![
@@ -130,7 +134,7 @@ mod tests {
         Ok(())
     }
 
-    fn assert_complete_recipe(res: &TestResponse, recipe: &RecipeForCreate) {
+    fn assert_complete_recipe(res: &TestResponse, recipe: &RecipeForCreate, images: &RecipeImages) {
         assert_html(
             res,
             vec![
@@ -145,8 +149,14 @@ mod tests {
                 ),
                 r#"<li title="Print recipe" _="on click print()">"#,
                 r#"<iframe src="https://example.com/embed/j43yfe3.mp4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;"></iframe>"#,
-                r#"<div id="media-0" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp">"#,
-                r#"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp">"#,
+                &format!(
+                    r#"<div id="media-0" class="carousel-item relative w-full"><img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp">"#,
+                    images.main
+                ),
+                &format!(
+                    r#"<img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/{}.webp">"#,
+                    images.main
+                ),
                 r#"<div class="badge badge-primary badge-outline">dinner</div>"#,
                 r#"<div class="badge badge-sm badge-neutral m-1 flex-auto">tofu</div><div class="badge badge-sm badge-neutral m-1 flex-auto">vegetarian</div>"#,
                 r#"<a class="btn btn-sm btn-outline no-underline print:hidden" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"></path></svg>Source</a>"#,

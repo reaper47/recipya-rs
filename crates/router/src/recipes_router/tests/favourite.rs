@@ -3,10 +3,12 @@ mod tests {
     use axum::http::Method;
 
     use config::Config;
-    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create, user::User};
-    use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
-        build_server_ws, create_app_state,
+    use models::{Recipe, user::User};
+    use test_db::TestDb;
+    use test_fixtures::{assert_html, assert_ws_message};
+    use test_models::a_complete_recipe_for_create;
+    use test_utils::{
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
     };
 
     use crate::recipes_router::params::FavouriteParams;
@@ -48,7 +50,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
         let res = server.post(&base_uri(1)).form(&form()).await;
 
@@ -68,7 +71,7 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let mut recipe = a_complete_recipe_for_create();
+        let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.is_favourite = true;
         let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
@@ -90,7 +93,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
         let _ = server.post(&base_uri(1)).form(&form()).await;
         let res = server.post(&base_uri(1)).form(&form()).await;
@@ -111,7 +115,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
         let res = server
             .post(&base_uri(1))

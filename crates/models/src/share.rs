@@ -87,7 +87,8 @@ impl ShareRecipe {
 mod tests {
     use app::state::AppState;
     use config::Config;
-    use testing::utils::build_server_logged_in;
+    use test_db::TestDb;
+    use test_utils::build_server_logged_in;
 
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
@@ -97,7 +98,7 @@ mod tests {
     mod test_new {
         use diesel::internal::derives::multiconnection::chrono;
 
-        use testing::utils::{TestDb, create_app_state};
+        use test_utils::create_app_state;
 
         use super::*;
         use crate::user::{User, UserForCreate};
@@ -206,7 +207,7 @@ mod tests {
     }
 
     mod tests_fetch_by_link {
-        use testing::utils::{TestDb, create_app_state};
+        use test_utils::create_app_state;
 
         use super::*;
         use crate::user::{User, UserForCreate};
@@ -254,7 +255,8 @@ mod tests {
 
     async fn insert_recipe(config: &Config, state: &AppState, user_id: Uuid) -> Result<()> {
         let _ = build_server_logged_in(config.clone()).await?;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         Ok(())
     }
 }

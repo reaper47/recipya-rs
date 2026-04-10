@@ -14,9 +14,6 @@ readme.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-[features]
-test-utils = []
-
 [dependencies]
 async-trait.workspace = true
 auth.workspace = true
@@ -28,6 +25,7 @@ derive_more.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 diesel_full_text_search.workspace = true
+futures.workspace = true
 humantime.workspace = true
 indexmap.workspace = true
 infer.workspace = true
@@ -48,6 +46,7 @@ simd-json = "0.17.0"
 strum.workspace = true
 strum_macros.workspace = true
 support.workspace = true
+tempfile = "3.27.0"
 time.workspace = true
 tokio.workspace = true
 tracing.workspace = true
@@ -60,4 +59,6 @@ zip.workspace = true
 [dev-dependencies]
 app.workspace = true
 pretty_assertions.workspace = true
-testing = { path = "../testing" }
+test-utils.workspace = true
+test-db = { path = "../test-db" }
+test-fixtures = { path = "../test-fixtures" }

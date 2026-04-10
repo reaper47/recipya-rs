@@ -16,16 +16,17 @@ mod tests {
             },
             recipe::RecipeForCreate,
             section::{Item, SectionComponents, SectionItem},
-            test_utils::a_complete_recipe_for_create,
             time::{Times, TimesForCreate},
             tool::{ToolForCreate, ToolRecipe},
             types::Source,
         },
         user::User,
     };
-    use testing::utils::{
-        TestDb, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
-        build_server_ws, create_app_state,
+    use test_db::TestDb;
+    use test_fixtures::{RecipeImages, assert_ws_message};
+    use test_models::a_complete_recipe_for_create;
+    use test_utils::{
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
     };
 
     use crate::recipes_router::tests::helpers::create_form;
@@ -64,11 +65,12 @@ mod tests {
             let state = create_app_state(config).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+            let (recipe, images) = a_complete_recipe_for_create();
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
-            assert_recipe_form(&res);
+            assert_recipe_form(&res, &images);
             Ok(())
         }
 
@@ -80,11 +82,12 @@ mod tests {
             let state = create_app_state(config).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+            let (recipe, images) = a_complete_recipe_for_create();
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
             let res = server.get(&base_uri(1)).await;
 
-            assert_recipe_form(&res);
+            assert_recipe_form(&res, &images);
             Ok(())
         }
     }
@@ -156,7 +159,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
             recipe.images = Vec::new();
             recipe.videos = Vec::new();
@@ -184,7 +187,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             Recipe::create(&state.mm, user_id, &recipe).await?;
             recipe.name = "Maple Syrup Korean Chicken".into();
             recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
@@ -215,7 +218,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             Recipe::create(&state.mm, user_id, &recipe).await?;
             recipe.category = Some("breakfast,dinner".into());
 
@@ -266,7 +269,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             Recipe::create(&state.mm, user_id, &recipe).await?;
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
@@ -363,7 +366,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             Recipe::create(&state.mm, user_id, &recipe).await?;
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
@@ -437,7 +440,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let users = User::all(&state.mm).await?;
             let user_id = users[0].id;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             Recipe::create(&state.mm, user_id, &recipe).await?;
             recipe.instructions = SectionComponents::Flat(vec![
                 Item::new("Mix the apples"),
@@ -493,7 +496,7 @@ mod tests {
         }
     }
 
-    fn assert_recipe_form(res: &TestResponse) {
+    fn assert_recipe_form(res: &TestResponse, images: &RecipeImages) {
         let body = res.text();
         let normalized = body.split_whitespace().collect::<Vec<_>>().join(" ");
 
@@ -501,9 +504,18 @@ mod tests {
             r#"<title hx-swap-oob="true">Edit Best Chinese Kale | Recipya</title>"#,
             r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/1/edit" hx-indicator="#fullscreen-loader">"##,
             r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale">"#,
-            r#"<img src="" alt="Image #1 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector p-4"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
-            r#"<img src="" alt="Image #2 of the recipe" class="block w-full h-full object-contain"></div><span class="grid gap-1"><div class="mr-1 image-selector p-4"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm""#,
-            r#"<img src="" alt="" class="mb-2"><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1 hidden"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="""#,
+            &format!(
+                r#"<img src="/data/images/{}.webp" alt="Image #1 of the recipe" class="block w-full h-full object-contain"><input type="hidden" name="media-existing-image" value="/data/images/{}.webp">"#,
+                images.main, images.main
+            ),
+            &format!(
+                r#"<img src="/data/images/{}.webp" alt="Image #2 of the recipe" class="block w-full h-full object-contain"><input type="hidden" name="media-existing-image" value="/data/images/{}.webp">"#,
+                images.additional, images.additional
+            ),
+            &format!(
+                r#"<img src="" alt="" class="mb-2"><video controls class="mb-2" src="/data/videos/{}.webm" type="video/webm"></video><span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;"><div class="mr-1 hidden"><input type="file" accept="image/*,video/*" name="media" class="file-input file-input-sm file-input-bordered w-full max-w-sm" value="/data/videos/{}.webm"#,
+                images.video, images.video
+            ),
             r#"<input id="servings" type="number" min="1" name="yield" value="4" class="input input-sm w-11/12">"#,
             r#"<input id="category" type="text" list="categories" name="category" class="input input-sm w-11/12" placeholder="Breakfast" autocomplete="off" value="dinner"><datalist id="categories"><option>uncategorized</option><option>appetizers</option><option>bread</option><option>breakfasts</option><option>condiments</option><option>dessert</option><option>lunch</option><option>main dish</option><option>salad</option><option>side dish</option><option>snacks</option><option>soups</option><option>stews</option><option>dinner</option></datalist>"#,
             r#"<textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none focus:outline-none">This is the most delicious recipe!</textarea>"#,

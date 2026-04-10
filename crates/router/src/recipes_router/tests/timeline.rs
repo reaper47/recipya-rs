@@ -3,16 +3,17 @@ mod tests {
     use axum_test::http::StatusCode;
     use axum_test::multipart::MultipartForm;
     use chrono::{DateTime, Utc};
-    use models::recipe::structs::test_utils::a_complete_recipe_for_create;
     use models::user::User;
+    use test_models::a_complete_recipe_for_create;
     use uuid::Uuid;
 
     use models::Recipe;
     use models::recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate};
     use reqwest::Method;
-    use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, assert_ws_message, build_server_logged_in,
-        build_server_ws, create_app_state,
+    use test_db::TestDb;
+    use test_fixtures::{assert_html, assert_ws_message};
+    use test_utils::{
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -60,7 +61,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let recipe_id = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
         let an_image = Uuid::new_v4();
         let now = DateTime::from_timestamp(1_643_609_600, 0)
             .expect("Invalid timestamp")
@@ -132,7 +134,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
         let res = server
             .post(&base_uri(1))
@@ -166,7 +169,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let recipe_id = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
         let event_id = RecipeTimeline::create(
             &state.mm,
             recipe_id,
@@ -218,7 +222,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         let _ = server
             .post(&base_uri(1))
             .multipart(create_timeline_event_form())
@@ -265,7 +270,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         let _ = server
             .post(&base_uri(1))
             .multipart(create_timeline_event_form())

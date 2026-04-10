@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Action;
 use crate::field::{
     RatingAuthorFieldEnum, RatingBestRatingFieldEnum, RatingDescriptionFieldEnum,
     RatingIdentifierFieldEnum, RatingImageFieldEnum, RatingRatingValueFieldEnum,
     RatingSubjectOfFieldEnum, RatingWorstRatingFieldEnum,
 };
 use crate::helpers::one_or_many;
+use crate::{Action, AtType, at_context};
 
 ///<https://schema.org/additionalType>
 ///<https://schema.org/Text>
@@ -90,4 +90,16 @@ pub struct Rating {
     #[serde(default, deserialize_with = "one_or_many")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
+}
+
+impl Rating {
+    /// Creates a new `Rating` instance with the given rating value.
+    pub fn new(rating: f32) -> Self {
+        Self {
+            r#type: AtType::Rating.to_opt(),
+            context: at_context(),
+            rating_value: vec![RatingRatingValueFieldEnum::Number(rating)],
+            ..Default::default()
+        }
+    }
 }

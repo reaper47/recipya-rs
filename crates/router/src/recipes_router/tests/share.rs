@@ -6,13 +6,14 @@ mod tests {
     use diesel_async::RunQueryDsl;
 
     use app::state::AppState;
+    use models::Recipe;
     use models::share::ShareRecipe;
     use models::user::User;
-    use models::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
     use repository::schema;
-    use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, build_server_logged_in, create_app_state,
-    };
+    use test_db::TestDb;
+    use test_fixtures::assert_html;
+    use test_models::a_complete_recipe_for_create;
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
     use uuid::Uuid;
 
     use crate::recipes_router::params::ShareRecipeForm;
@@ -35,7 +36,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
         let res = server
             .post(&base_uri(1))
@@ -67,7 +69,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
 
         let res = server
@@ -102,7 +105,8 @@ mod tests {
         let state = create_app_state(config).await;
         let users = User::all(&state.mm).await?;
         let user_id = users[0].id;
-        let _ = Recipe::create(&state.mm, user_id, &a_complete_recipe_for_create()).await?;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         let now = chrono::Utc::now().naive_utc();
 
         let res = server

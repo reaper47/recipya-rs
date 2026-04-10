@@ -670,3 +670,12 @@ function filterNutritionRows(el, type) {
       row.classList.toggle("hidden", row.dataset.nutritionType !== type),
     );
 }
+
+function checkExportDataSubmit() {
+  const isDisabled =
+    document.querySelectorAll(".checkbox-recipe-id:checked").length === 0;
+  const button = document.getElementById("export-data-submit-button");
+
+  button.disabled = isDisabled;
+  button.parentElement.classList.toggle("cursor-not-allowed", isDisabled);
+}

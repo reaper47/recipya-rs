@@ -4,8 +4,8 @@ use axum::{Router, middleware};
 use app::state::AppState;
 
 use crate::handlers::settings::{
-    set_default_theme_handler, set_nutrition_source_handler, set_selected_theme_handler,
-    settings_handler,
+    export_data_handler, export_data_post_handler, set_default_theme_handler,
+    set_nutrition_source_handler, set_selected_theme_handler, settings_handler,
 };
 use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
@@ -13,6 +13,10 @@ use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 pub fn settings_routes(state: &AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
+        .route(
+            "/export-data",
+            get(export_data_handler).post(export_data_post_handler),
+        )
         .route("/nutrition/source", post(set_nutrition_source_handler))
         .route(
             "/theme-default",
@@ -30,14 +34,17 @@ pub fn settings_routes(state: &AppState) -> Router<AppState> {
 mod tests {
     use axum::http::{Method, StatusCode};
 
-    use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, assert_not_in_html, build_server_logged_in,
+    use test_fixtures::{assert_html, assert_not_in_html, assert_ws_message};
+    use test_utils::{
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
         build_server_ws_other_user, create_app_state, insert_other_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_settings {
+        use test_db::TestDb;
+
         use super::*;
 
         const BASE_URI: &str = "/settings";
@@ -150,8 +157,207 @@ mod tests {
         }
     }
 
+    mod tests_export {
+        use models::{Recipe, user::User};
+
+        use super::*;
+
+        const BASE_URI: &str = "/settings/export-data";
+        const CONTENT_TYPE: &str = "application/x-www-form-urlencoded";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, BASE_URI).await?;
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        mod tests_get {
+            use test_db::TestDb;
+            use test_models::a_complete_recipe_for_create;
+
+            use super::*;
+
+            #[tokio::test]
+            async fn test_no_recipes_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config).await?;
+
+                let res = server.get(BASE_URI).await;
+
+                res.assert_status_not_found();
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"No recipes found for export.","status":"alert-warning","title":"Attention"}}"# ).await;
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_with_recipes_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let server = build_server_logged_in(config.clone()).await?;
+                let (recipe1, _) = a_complete_recipe_for_create();
+                let (mut recipe2, _) = a_complete_recipe_for_create();
+                recipe2.name = "Taco Tuesday".to_string();
+                recipe2.category = Some("Meat".to_string());
+                let state = create_app_state(config).await;
+                let user_id = User::all(&state.mm).await?[0].id;
+                let _ = Recipe::create(&state.mm, user_id, &recipe1).await?;
+                let _ = Recipe::create(&state.mm, user_id, &recipe2).await?;
+
+                let res = server.get(BASE_URI).await;
+
+                res.assert_status_ok();
+                assert_html(
+                    &res,
+                    vec![
+                        r##"<form class="card bg-base-100 shadow-sm min-w-[50vw]" hx-post="/settings/export-data" hx-indicator="#export-data-spinner" hx-on:download-ready="document.querySelector('#export-data-dialog').close(); window.location.href = event.detail.url;">"##,
+                        r#"<div class="card-body"><h3 class="mb-1 grid grid-flow-col"><label class="input input-sm"><svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg><input type="search" placeholder="Search a recipe" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label><select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end"><option value="json" selected>JSON</option><option value="pdf">PDF</option></select></h3>"#,
+                        r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" class="checkbox" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked then call checkExportDataSubmit()"></label></th><th class="py-1 text-left">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-results">"#,
+                        r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="1" _="on change call checkExportDataSubmit()"></label></td><td class="py-1">Best Chinese Kale</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/1" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
+                        r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="2" _="on change call checkExportDataSubmit()"></label></td><td class="py-1">Taco Tuesday</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/2" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
+                        r#"</tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="export-data-submit-button" type="submit" class="btn btn-sm" disabled><img id="export-data-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading..."><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></div></form>"#,
+                    ],
+                );
+                Ok(())
+            }
+        }
+
+        mod tests_post {
+            use models::download::Download;
+            use test_db::TestDb;
+            use test_models::a_complete_recipe_for_create;
+
+            use super::*;
+
+            #[tokio::test]
+            async fn test_invalid_payload_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config).await?;
+
+                let res = server
+                    .post(BASE_URI)
+                    .content_type(CONTENT_TYPE)
+                    .bytes(b"not_valid_qs%%%".as_ref().into())
+                    .await;
+
+                res.assert_status_internal_server_error();
+                assert_ws_message(
+                        &mut ws_server,
+                        r#"{"showMessageHtmx":{"type":"toast","message":"Failed to parse export form.","status":"alert-error","title":"Operation Failed"}}"#,
+                    )
+                    .await;
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_empty_recipe_ids_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config).await?;
+
+                let res = server
+                    .post(BASE_URI)
+                    .content_type(CONTENT_TYPE)
+                    .bytes(b"type=json&recipe_ids=".as_ref().into())
+                    .await;
+
+                res.assert_status_bad_request();
+                assert_ws_message(
+                        &mut ws_server,
+                        r#"{"showMessageHtmx":{"type":"toast","message":"No recipes selected for export.","status":"alert-warning","title":"Attention"}}"#,
+                    )
+                    .await;
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_export_json_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let server = build_server_logged_in(config).await?;
+                let user_id = User::all(&state.mm).await?[0].id;
+                let (recipe, _) = a_complete_recipe_for_create();
+                let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+
+                let res = server
+                    .post(BASE_URI)
+                    .content_type(CONTENT_TYPE)
+                    .bytes(
+                        format!("type=json&recipe-ids={recipe_id}")
+                            .into_bytes()
+                            .into(),
+                    )
+                    .await;
+
+                res.assert_status_ok();
+                let hx_trigger = res.header("HX-Trigger");
+                let hx_str = hx_trigger.to_str()?;
+                assert!(hx_str.contains("downloadReady"));
+                assert!(hx_str.contains("/download?token="));
+                let token_str = hx_str
+                    .split_once("/download?token=")
+                    .and_then(|(_, after)| after.split('"').next())
+                    .expect("HX-Trigger should contain a download token");
+                let token = token_str.parse::<uuid::Uuid>()?;
+                let dl = Download::find_by_token(&state.mm, token).await?;
+                assert_eq!(dl.unwrap().user_id, user_id);
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_export_multiple_recipes_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let server = build_server_logged_in(config).await?;
+                let user_id = User::all(&state.mm).await?[0].id;
+                let (recipe, _) = a_complete_recipe_for_create();
+                let id1 = Recipe::create(&state.mm, user_id, &recipe).await?;
+                let (mut recipe, _) = a_complete_recipe_for_create();
+                recipe.name = "Recipe 2".to_string();
+                let id2 = Recipe::create(&state.mm, user_id, &recipe).await?;
+
+                let res = server
+                    .post(BASE_URI)
+                    .content_type(CONTENT_TYPE)
+                    .bytes(
+                        format!("type=json&recipe-ids={id1}&recipe-ids={id2}")
+                            .into_bytes()
+                            .into(),
+                    )
+                    .await;
+
+                res.assert_status_ok();
+                let hx_trigger = res.header("HX-Trigger");
+                assert!(hx_trigger.to_str()?.contains("downloadReady"));
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_export_nonexistent_recipe_ids_broadcasts_error_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config).await?;
+
+                let res = server
+                    .post(BASE_URI)
+                    .content_type(CONTENT_TYPE)
+                    .bytes(
+                        format!("type=json&recipe-ids={}", i64::MAX)
+                            .into_bytes()
+                            .into(),
+                    )
+                    .await;
+
+                res.assert_status_internal_server_error();
+                assert_ws_message(
+                        &mut ws_server,
+                        r#"{"showMessageHtmx":{"type":"toast","message":"Failed to fetch recipes.","status":"alert-error","title":"Operation Failed"}}"#,
+                    )
+                    .await;
+                Ok(())
+            }
+        }
+    }
+
     mod tests_nutrition {
         use models::{nutrition::NutritionDataSource, settings::UserSettingDetails, user::User};
+        use test_db::TestDb;
 
         use crate::schemas::settings::NutritionSourcePayload;
 
@@ -193,6 +399,7 @@ mod tests {
             settings::{Theme, UserSettingDetails},
             user::User,
         };
+        use test_db::TestDb;
 
         use crate::schemas::settings::ThemePayload;
 

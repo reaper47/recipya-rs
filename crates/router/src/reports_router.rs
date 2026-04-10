@@ -31,9 +31,9 @@ mod tests {
     };
     use models::user::User;
     use repository::ModelManager;
-    use testing::utils::{
-        TestDb, assert_html, assert_must_be_logged_in, build_server_logged_in, create_app_state,
-    };
+    use test_db::TestDb;
+    use test_fixtures::assert_html;
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
     use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;

@@ -202,7 +202,8 @@ impl Recipe {
 mod tests {
     use app::state::AppState;
     use chrono::NaiveDateTime;
-    use testing::utils::{TestDb, build_server_logged_in, create_app_state, insert_user};
+    use test_db::TestDb;
+    use test_utils::{build_server_logged_in, create_app_state, insert_user};
 
     use super::*;
     use crate::{
@@ -403,7 +404,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let recipe = a_complete_recipe_for_create();
+        let (recipe, _) = a_complete_recipe_for_create();
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
 
@@ -418,7 +419,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let mut recipe = a_complete_recipe_for_create();
+        let (mut recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
         recipe.name = "Duplicate".into();
 
@@ -435,7 +436,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let recipe = a_complete_recipe_for_create();
+        let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
 
         let got = Recipe::create(&state.mm, user.id, &recipe).await;

@@ -6,7 +6,7 @@ use axum::routing::{get, post};
 use app::state::AppState;
 
 use crate::handlers::general::{
-    fetch_handler, index_handler, search_suggestions_handler, upload_note_image,
+    download_handler, fetch_handler, index_handler, search_suggestions_handler, upload_note_image,
     user_initials_handler, ws_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
@@ -14,6 +14,7 @@ use crate::middleware::mw_auth::mw_refresh_token;
 /// Defines the routes for general endpoints of the web application.
 pub fn general_routes(state: &AppState) -> Router<AppState> {
     let protected = Router::new()
+        .route("/download", get(download_handler))
         .route("/fetch", get(fetch_handler))
         .route("/search-suggestions", get(search_suggestions_handler))
         .route(
@@ -34,9 +35,8 @@ mod tests {
     use axum::http::Method;
     use axum_test::multipart::{MultipartForm, Part};
     use serde_json::json;
-    use testing::utils::{
-        TestDb, assert_must_be_logged_in, build_server_logged_in, create_app_state,
-    };
+    use test_db::TestDb;
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
     use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -190,11 +190,92 @@ mod tests {
         }
     }
 
+    mod tests_download {
+        use std::path::PathBuf;
+
+        use models::{
+            download::{Download, DownloadForCreate},
+            user::User,
+        };
+
+        use super::*;
+
+        fn url(token: Uuid) -> String {
+            format!("/download?token={token}")
+        }
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, &url(Uuid::new_v4())).await
+        }
+
+        #[tokio::test]
+        async fn test_token_not_found_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config).await?;
+
+            let res = server.get(&url(Uuid::new_v4())).await;
+
+            res.assert_status_not_found();
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_download_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let server = build_server_logged_in(config).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let file_path = "/tmp/test_export.zip".to_string();
+            tokio::fs::write(&file_path, b"some zip bytes").await?;
+            let token = Uuid::new_v4();
+            Download::create(
+                &state.mm,
+                DownloadForCreate::new(user_id, token, PathBuf::from(&file_path)),
+            )
+            .await?;
+
+            let res = server.get(&url(token)).await;
+
+            res.assert_status_ok();
+            res.assert_header("content-type", "application/zip");
+            res.assert_header(
+                "content-disposition",
+                "attachment; filename=\"recipya-data-export.zip\"",
+            );
+            assert!(Download::find_by_token(&state.mm, token).await?.is_none());
+            assert!(!tokio::fs::try_exists(&file_path).await?);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_download_file_missing_on_disk_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let state = create_app_state(config.clone()).await;
+            let server = build_server_logged_in(config).await?;
+            let user = User::all(&state.mm).await?[0].clone();
+            let token = Uuid::new_v4();
+            Download::create(
+                &state.mm,
+                DownloadForCreate {
+                    user_id: user.id,
+                    token,
+                    file_path: PathBuf::from("/tmp/nonexistent_export.zip"),
+                },
+            )
+            .await?;
+
+            let res = server.get(&url(token)).await;
+
+            res.assert_status_internal_server_error();
+            Ok(())
+        }
+    }
+
     mod tests_search_suggestions {
         use config::Config;
-        use models::{
-            Recipe, recipe::structs::test_utils::a_complete_recipe_for_create, user::User,
-        };
+        use models::{Recipe, user::User};
+        use test_models::a_complete_recipe_for_create;
 
         use super::*;
 
@@ -227,7 +308,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
             let _ = insert_basic_recipe(config).await;
-            let mut recipe = a_complete_recipe_for_create();
+            let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.name = "Test Recipe".into();
             recipe.cuisine = Some("Italian".into());
             let user = User::all(&state.mm).await?[0].clone();
@@ -338,7 +419,7 @@ mod tests {
         async fn insert_basic_recipe(config: Config) -> Result<()> {
             let state = create_app_state(config.clone()).await;
             let user = User::all(&state.mm).await?[0].clone();
-            let recipe = a_complete_recipe_for_create();
+            let (recipe, _) = a_complete_recipe_for_create();
             let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
             Ok(())
         }
@@ -442,7 +523,7 @@ mod tests {
     mod tests_user_initials {
         use axum::http::Method;
 
-        use testing::utils::{TestDb, assert_must_be_logged_in, build_server_logged_in};
+        use test_utils::{assert_must_be_logged_in, build_server_logged_in};
 
         use super::*;
 

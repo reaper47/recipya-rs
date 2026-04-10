@@ -2,6 +2,7 @@ use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
 
 use math::cooking::units::system::MeasurementSystem;
+use models::Recipe;
 use models::data::Data;
 use models::nutrition::NutritionDataSource;
 use models::recipe::structs::recipe::Category;
@@ -10,9 +11,12 @@ use models::user::User;
 
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
-    icon_circle_stack, icon_cloud, icon_cube_transparent, icon_information_circle, icon_pencil,
-    icon_plus_circle, icon_server, icon_trash, icon_user_circle, icon_x_circle,
+    icon_chevron_right, icon_circle_stack, icon_cloud, icon_cube_transparent,
+    icon_information_circle, icon_pencil, icon_plus_circle, icon_server, icon_trash,
+    icon_user_circle, icon_x_circle,
 };
+
+const SEARCH_INPUT_JS: &str = "on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()";
 
 /// Stores all the settings required for rendering the settings page.
 pub struct SettingsForView {
@@ -131,6 +135,7 @@ pub fn settings(
                 (settings_about(data))
             }
         }
+        (export_data_dialog())
         (supported_nutrition_sources_dialog(user_setting))
     }
 }
@@ -279,7 +284,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
 fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
     html! {
         dialog #supported-nutrition-sources-dialog class="justify-self-center self-center" {
-            div class="card bg-base-100 shadow-sm" {
+            div class="card bg-base-100 shadow-sm min-w-[50vw]" {
                 div class="card-body" {
                     h3 class="mb-1" {
                         label class="input input-sm" {
@@ -289,8 +294,7 @@ fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
                                     path d="m21 21-4.3-4.3" {}
                                  }
                             }
-                            input type="search" placeholder="Search a source"
-                                  _=(PreEscaped("on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"));
+                            input type="search" placeholder="Search a source" _=(PreEscaped(SEARCH_INPUT_JS));
                         }
                     }
                     div class="overflow-auto h-96" {
@@ -652,18 +656,12 @@ fn settings_data(_data: &Data) -> Markup {
                         "Download your data in the selected file format."
                     }
                 }
-                form class="flex items-center gap-1" hx-get="/settings/export/recipes" hx-include="select[name='type']" hx-swap="none" _="on submit halt the event then call alert('Not implemented yet')" {
-                    fieldset class="w-20 fieldset" {
-                        select required #file-type name="type" class="[display:ruby] md:block select select-sm" {
-                            optgroup label="Recipes" {
-                                option value="json" selected { "JSON" }
-                                option value="pdf" { "PDF" }
-                            }
-                        }
-                    }
-                    button class="btn btn-soft btn-sm" {
-                        (icon_arrow_down_tray())
-                    }
+                button class="btn btn-soft btn-sm"
+                    hx-get="/settings/export-data"
+                    hx-on::after-request="if (event.detail.successful) document.querySelector('#export-data-dialog').showModal()"
+                    hx-target="#export-data-dialog"
+                    hx-swap="innerHTML" {
+                    (icon_chevron_right())
                 }
             }
             /*@if data.Settings.Backups.len() > 0 {
@@ -698,6 +696,100 @@ fn settings_data(_data: &Data) -> Markup {
                     }
                 }
             }*/
+        }
+    }
+}
+
+fn export_data_dialog() -> Markup {
+    html! {
+        dialog #export-data-dialog class="justify-self-center self-center" {}
+    }
+}
+
+/// Renders the content of the export data dialog.
+pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>) -> Markup {
+    html! {
+        form class="card bg-base-100 shadow-sm min-w-[50vw]"
+            hx-post="/settings/export-data"
+            hx-indicator="#export-data-spinner"
+            hx-on:download-ready="document.querySelector('#export-data-dialog').close(); window.location.href = event.detail.url;" {
+            div class="card-body" {
+                h3 class="mb-1 grid grid-flow-col" {
+                    label class="input input-sm" {
+                        svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {
+                            g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor" {
+                                circle cx="11" cy="11" r="8" {}
+                                path d="m21 21-4.3-4.3" {}
+                             }
+                        }
+                        input type="search" placeholder="Search a recipe" _=(PreEscaped(SEARCH_INPUT_JS));
+                    }
+                    select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end" {
+                        option value="json" selected { "JSON" }
+                        option value="pdf" { "PDF" }
+                    }
+                }
+                div class="overflow-auto h-[50vh]" {
+                    table class="table table-zebra table-sm" {
+                        thead {
+                            tr class="text-center" {
+                                th class="py-1 text-left" {
+                                    label {
+                                        input type="checkbox" class="checkbox" _="on change set <input.checkbox-recipe-id/>'s checked to my checked then call checkExportDataSubmit()";
+                                    }
+                                }
+                                th class="py-1 text-left" { "Name" }
+                                th class="py-1" { "Favourite" }
+                                th class="py-1" { "Rating" }
+                                th class="py-1" { "Page" }
+                                th class="py-1" { "Source" }
+                            }
+                        }
+                        tbody #search-results {
+                            @for recipe in recipes {
+                                tr {
+                                    td class="py-1" {
+                                        label {
+                                            input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value=(recipe.id) _="on change call checkExportDataSubmit()";
+                                        }
+                                    }
+                                    td class="py-1" { (recipe.name) }
+                                    td class="py-1 text-center select-none" {
+                                        @if recipe.is_favourite {
+                                            span aria-label="Favorite" { "♥" }
+                                        }
+                                    }
+                                    td class="py-1 text-center" {
+                                        @if let Some(rating) = recipe.rating {
+                                            (format!("{}/5", rating))
+                                        }
+                                    }
+                                    td class="py-1 text-center" {
+                                        a class="link" href=(format!("{current_url}/recipes/{}", recipe.id)) target="_blank" {
+                                            "View"
+                                        }
+
+                                    }
+                                    td class="py-1 text-center" {
+                                        a class="link" href=(recipe.source) target="_blank" {
+                                            "Visit"
+                                        }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            div class="card-actions justify-end" {
+                button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()" { "Cancel" }
+                div .cursor-not-allowed {
+                    button #export-data-submit-button type="submit" class="btn btn-sm" disabled {
+                        img #export-data-spinner class="htmx-indicator" src="/public/img/bars.svg" alt="Loading...";
+                        (icon_arrow_down_tray())
+                    }
+                }
+            }
+          }
         }
     }
 }

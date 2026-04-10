@@ -338,12 +338,13 @@ impl User {
 
 #[cfg(test)]
 mod tests {
+    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
+
     use super::*;
 
-    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
-    use testing::utils::{
-        TEST_USER_EMAIL, TestDb, build_server_logged_in, create_app_state, insert_other_user,
-        insert_user,
+    use test_db::TestDb;
+    use test_utils::{
+        TEST_USER_EMAIL, build_server_logged_in, create_app_state, insert_other_user, insert_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -375,7 +376,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         use repository::schema;
-        use testing::utils::{build_server_logged_in, create_app_state};
+        use test_utils::{build_server_logged_in, create_app_state};
 
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_categories)]
@@ -491,7 +492,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         use repository::schema;
-        use testing::utils::{build_server_logged_in, create_app_state};
+        use test_utils::{build_server_logged_in, create_app_state};
 
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_keywords)]
@@ -595,11 +596,11 @@ mod tests {
         let _ = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
         let user_id = User::all(&state.mm).await?[0].id;
-        let recipe1 = a_complete_recipe_for_create();
-        let mut recipe2 = a_complete_recipe_for_create();
+        let (recipe1, _) = a_complete_recipe_for_create();
+        let (mut recipe2, _) = a_complete_recipe_for_create();
         recipe2.name = "recipe 2".into();
         recipe2.is_favourite = true;
-        let mut recipe3 = a_complete_recipe_for_create();
+        let (mut recipe3, _) = a_complete_recipe_for_create();
         recipe3.name = "recipe 3".into();
         recipe3.is_favourite = true;
         let _ = Recipe::create(&state.mm, user_id, &recipe1).await?;

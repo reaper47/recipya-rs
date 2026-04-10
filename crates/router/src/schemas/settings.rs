@@ -1,9 +1,19 @@
 use serde::{Deserialize, Serialize};
 
+use models::export::ExportType;
+
 /// Represents the payload for setting themes.
 #[derive(Deserialize, Serialize)]
 pub struct ThemePayload {
     pub theme: String,
+}
+
+/// Represents the payload for exporting data.
+#[derive(Debug, Deserialize)]
+pub struct ExportDataPayload {
+    pub r#type: ExportType,
+    #[serde(rename = "recipe-ids", default)]
+    pub recipe_ids: Vec<i64>,
 }
 
 /// Represents the payload for setting nutrition sources.
