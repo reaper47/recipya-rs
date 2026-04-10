@@ -1,5 +1,6 @@
-use schema_org::{AggregateRating, Recipe, field::RecipeRecipeInstructionsFieldEnum};
 use scraper::{ElementRef, Html, Selector};
+
+use schema_org::{AggregateRating, Recipe, field::RecipeRecipeInstructionsFieldEnum};
 use support::strings::extract_number;
 
 use crate::{
@@ -17,7 +18,8 @@ pub fn add_info(doc: &Html, mut recipe: Recipe) -> Recipe {
         .unwrap();
 
     recipe.aggregate_rating = extract_rating(&content).unwrap_or_default();
-    recipe.date_modified = extract_metadata_property(doc, "og:updated_time").unwrap_or_default();
+    recipe.date_modified =
+        extract_metadata_property(doc, "article:modified_time").unwrap_or_default();
     recipe.date_published =
         extract_metadata_property(doc, "article:published_time").unwrap_or_default();
     recipe.keywords = extract_keywords(&content, ".wprm-recipe-keyword").unwrap_or_default();
