@@ -185,7 +185,7 @@ pub fn list_recipes(
                         (category_badge(&details.category, false))
                     }
                     figure class="relative cursor-pointer" hx-get=(format!("/recipes/{}", recipe.id)) hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true" {
-                        img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full"
+                        img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full w-full"
                             src=(match details.all_images().first() {
                                 Some(&first_image) => {
                                     if !details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images.root, ".webp") {
