@@ -5,11 +5,12 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
-use crate::{Result, user::User};
 use repository::{ModelManager, schema};
 
+use crate::{Result, user::User};
+
 /// Represents a download item.
-#[derive(Debug, Eq, PartialEq, Queryable, Identifiable, Selectable)]
+#[derive(Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
 #[diesel(belongs_to(User))]
 #[diesel(table_name = schema::downloads)]
 #[diesel(check_for_backend(diesel::pg::Pg))]

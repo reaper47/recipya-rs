@@ -1,0 +1,825 @@
+use chrono::NaiveDateTime;
+use diesel::prelude::*;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use uuid::Uuid;
+
+use repository::{ModelManager, schema};
+
+use crate::{Error, Result, user::User};
+
+/// Represents a shopping list.
+#[derive(Clone, Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
+#[diesel(belongs_to(User))]
+#[diesel(table_name = schema::shopping_lists)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct ShoppingList {
+    pub id: Uuid,
+    pub name: String,
+    pub user_id: Uuid,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Associations, Insertable)]
+#[diesel(belongs_to(User))]
+#[diesel(table_name = schema::shopping_lists)]
+struct ShoppingListForInsert {
+    name: String,
+    user_id: Uuid,
+}
+
+/// Represents a shopping list label.
+#[derive(Debug, Eq, PartialEq, Queryable, Identifiable, Selectable)]
+#[diesel(table_name = schema::shopping_list_labels)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct ShoppingListLabel {
+    id: i64,
+    name: String,
+}
+
+#[derive(AsChangeset, Insertable, Queryable, Selectable)]
+#[diesel(table_name = schema::shopping_list_labels)]
+struct ShoppingListLabelForInsert<'a> {
+    name: &'a str,
+}
+
+/// Represents a shopping list item.
+#[derive(Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
+#[diesel(belongs_to(ShoppingList), belongs_to(ShoppingListLabel))]
+#[diesel(table_name = schema::shopping_list_items)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+struct ShoppingListItem {
+    id: i64,
+    shopping_list_id: Uuid,
+    ingredient: String,
+    quantity: String,
+    shopping_list_label_id: Option<i64>,
+    position: i32,
+    is_checked: bool,
+    created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
+}
+
+/// Represents a shopping list item for creation.
+pub struct ShoppingListItemForCreate {
+    pub ingredient: String,
+    pub quantity: String,
+    pub label: Option<String>,
+    pub recipe_id: Option<i64>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = schema::shopping_list_items)]
+struct ShoppingListItemForInsert {
+    shopping_list_id: Uuid,
+    ingredient: String,
+    quantity: String,
+    shopping_list_label_id: Option<i64>,
+}
+
+/// Represents a shopping list item for update.
+#[derive(Default)]
+pub struct ShoppingListItemForUpdate {
+    pub ingredient: Option<String>,
+    pub quantity: Option<String>,
+    pub label: Option<String>,
+    pub position: Option<i32>,
+    pub is_checked: Option<bool>,
+}
+
+impl ShoppingListItemForUpdate {
+    /// Creates a new item for update only for the checked state.
+    pub fn new_checked(state: bool) -> Self {
+        Self {
+            is_checked: Some(state),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug, AsChangeset)]
+#[diesel(table_name = schema::shopping_list_items)]
+struct ShoppingListItemForUpdateInternal {
+    ingredient: Option<String>,
+    quantity: Option<String>,
+    shopping_list_label_id: Option<i64>,
+    position: Option<i32>,
+    is_checked: Option<bool>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = schema::shopping_list_recipes)]
+struct ShoppingListRecipeForInsert {
+    shopping_list_item_id: i64,
+    recipe_id: i64,
+}
+
+#[derive(Associations, Insertable)]
+#[diesel(belongs_to(User))]
+#[diesel(belongs_to(ShoppingListLabel, foreign_key = label_id))]
+#[diesel(table_name = schema::users_shopping_list_labels)]
+struct UserShoppingListLabelForInsert {
+    user_id: Uuid,
+    label_id: i64,
+}
+
+/// Represents a shopping list with its details.
+#[derive(Debug, PartialEq, Eq)]
+pub struct ShoppingListDetails {
+    pub id: Uuid,
+    pub name: String,
+    pub items: Vec<ShoppingListItemDetails>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+/// Represents a shopping list item with its details.
+#[derive(Debug, PartialEq, Eq)]
+pub struct ShoppingListItemDetails {
+    pub id: i64,
+    pub ingredient: String,
+    pub quantity: String,
+    pub label: Option<String>,
+    pub position: i32,
+    pub recipe: Option<ShoppingListRecipeDetails>,
+    pub is_checked: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+/// Represents a recipe with its details for a shopping list item.
+#[derive(Debug, PartialEq, Eq)]
+pub struct ShoppingListRecipeDetails {
+    pub id: i64,
+    pub name: String,
+}
+
+#[derive(QueryableByName)]
+struct IdRow {
+    #[diesel(sql_type = diesel::sql_types::BigInt)]
+    id: i64,
+}
+
+impl ShoppingList {
+    /// Creates a new shopping list with the given name for the given user.
+    pub async fn create(mm: &ModelManager, name: impl Into<String>, user_id: Uuid) -> Result<Uuid> {
+        let list_id = diesel::insert_into(schema::shopping_lists::table)
+            .values(&ShoppingListForInsert {
+                name: name.into(),
+                user_id,
+            })
+            .returning(schema::shopping_lists::id)
+            .get_result::<Uuid>(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(list_id)
+    }
+
+    /// Gets all of the user's shopping lists.
+    pub async fn get_all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
+        let mut conn = mm.pool.get().await?;
+
+        let lists = schema::shopping_lists::table
+            .filter(schema::shopping_lists::user_id.eq(user_id))
+            .order(schema::shopping_lists::created_at.asc())
+            .load::<Self>(&mut conn)
+            .await?;
+
+        Ok(lists)
+    }
+
+    /// Adds an item to a shopping list.
+    pub async fn add_item(
+        mm: &ModelManager,
+        list_id: Uuid,
+        item_c: ShoppingListItemForCreate,
+        user_id: Uuid,
+    ) -> Result<i64> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        let label_id = if let Some(label) = item_c
+            .label
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+        {
+            Some(Self::upsert_label_for_user(&mut conn, label, user_id).await?)
+        } else {
+            None
+        };
+
+        let item_id: i64 = diesel::insert_into(schema::shopping_list_items::table)
+            .values(&ShoppingListItemForInsert {
+                shopping_list_id: list_id,
+                ingredient: item_c.ingredient,
+                quantity: item_c.quantity,
+                shopping_list_label_id: label_id,
+            })
+            .returning(schema::shopping_list_items::id)
+            .get_result(&mut conn)
+            .await?;
+
+        if let Some(recipe_id) = item_c.recipe_id {
+            diesel::insert_into(schema::shopping_list_recipes::table)
+                .values(&ShoppingListRecipeForInsert {
+                    shopping_list_item_id: item_id,
+                    recipe_id,
+                })
+                .execute(&mut conn)
+                .await?;
+        }
+
+        Ok(item_id)
+    }
+
+    /// Deletes a shopping list.
+    pub async fn delete(mm: &ModelManager, list_id: Uuid, user_id: Uuid) -> Result<()> {
+        diesel::delete(schema::shopping_lists::table)
+            .filter(schema::shopping_lists::id.eq(list_id))
+            .filter(schema::shopping_lists::user_id.eq(user_id))
+            .execute(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Deletes an item from a shopping list.
+    pub async fn delete_item(
+        mm: &ModelManager,
+        list_id: Uuid,
+        item_id: i64,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        diesel::delete(schema::shopping_list_items::table)
+            .filter(schema::shopping_list_items::id.eq(item_id))
+            .filter(schema::shopping_list_items::shopping_list_id.eq(list_id))
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Updates the title of a shopping list.
+    pub async fn update_title<T: AsRef<str>>(
+        mm: &ModelManager,
+        list_id: Uuid,
+        title: T,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        diesel::update(schema::shopping_lists::table)
+            .filter(schema::shopping_lists::id.eq(list_id))
+            .set(schema::shopping_lists::name.eq(title.as_ref()))
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Updates an item in a shopping list.
+    pub async fn update_item(
+        mm: &ModelManager,
+        list_id: Uuid,
+        item_id: i64,
+        item_u: ShoppingListItemForUpdate,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        let label_id = if let Some(label) = item_u
+            .label
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+        {
+            Some(Self::upsert_label_for_user(&mut conn, label, user_id).await?)
+        } else {
+            None
+        };
+
+        let _ = diesel::update(schema::shopping_list_items::table)
+            .filter(schema::shopping_list_items::id.eq(item_id))
+            .set(&ShoppingListItemForUpdateInternal {
+                ingredient: item_u.ingredient,
+                quantity: item_u.quantity,
+                shopping_list_label_id: label_id,
+                position: item_u.position,
+                is_checked: item_u.is_checked,
+            })
+            .get_result::<ShoppingListItem>(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn verify_ownership(
+        conn: &mut AsyncPgConnection,
+        list_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let exists: bool = diesel::select(diesel::dsl::exists(
+            schema::shopping_lists::table
+                .filter(schema::shopping_lists::id.eq(list_id))
+                .filter(schema::shopping_lists::user_id.eq(user_id)),
+        ))
+        .get_result(conn)
+        .await?;
+
+        if !exists {
+            return Err(Error::EntityNotFound {
+                id: format!("(list_id: {list_id}, user_id: {user_id})"),
+                entity: "shopping_list",
+            });
+        }
+
+        Ok(())
+    }
+
+    async fn upsert_label_for_user(
+        conn: &mut diesel_async::AsyncPgConnection,
+        label_name: &str,
+        user_id: Uuid,
+    ) -> Result<i64> {
+        let label_id: i64 = diesel::sql_query(
+            "INSERT INTO shopping_list_labels (name)
+             VALUES ($1)
+             ON CONFLICT (lower(name)) DO UPDATE SET name = EXCLUDED.name
+             RETURNING id",
+        )
+        .bind::<diesel::sql_types::Text, _>(label_name)
+        .get_result::<IdRow>(conn)
+        .await?
+        .id;
+
+        diesel::insert_into(schema::users_shopping_list_labels::table)
+            .values(&UserShoppingListLabelForInsert { user_id, label_id })
+            .on_conflict_do_nothing()
+            .execute(conn)
+            .await?;
+
+        Ok(label_id)
+    }
+}
+
+impl ShoppingListDetails {
+    /// Gets the details of a shopping list.
+    pub async fn get(mm: &ModelManager, list_id: Uuid, user_id: Uuid) -> Result<Self> {
+        let mut conn = mm.pool.get().await?;
+
+        let list = schema::shopping_lists::table
+            .filter(schema::shopping_lists::id.eq(list_id))
+            .filter(schema::shopping_lists::user_id.eq(user_id))
+            .select(ShoppingList::as_select())
+            .first(&mut conn)
+            .await?;
+
+        let items = schema::shopping_list_items::table
+            .filter(schema::shopping_list_items::shopping_list_id.eq(list_id))
+            .left_join(schema::shopping_list_labels::table)
+            .left_join(schema::shopping_list_recipes::table.left_join(schema::recipes::table))
+            .order(schema::shopping_list_items::position.asc())
+            .select((
+                ShoppingListItem::as_select(),
+                schema::shopping_list_labels::name.nullable(),
+                schema::recipes::id.nullable(),
+                schema::recipes::name.nullable(),
+            ))
+            .load::<(
+                ShoppingListItem,
+                Option<String>,
+                Option<i64>,
+                Option<String>,
+            )>(&mut conn)
+            .await?
+            .into_iter()
+            .map(
+                |(item, label_name, recipe_id, recipe_name)| ShoppingListItemDetails {
+                    id: item.id,
+                    ingredient: item.ingredient,
+                    quantity: item.quantity,
+                    position: item.position,
+                    label: label_name,
+                    is_checked: item.is_checked,
+                    recipe: recipe_id
+                        .zip(recipe_name)
+                        .map(|(id, name)| ShoppingListRecipeDetails { id, name }),
+                    created_at: item.created_at,
+                    updated_at: item.updated_at,
+                },
+            )
+            .collect::<Vec<_>>();
+
+        Ok(Self {
+            id: list.id,
+            name: list.name,
+            items,
+            created_at: list.created_at,
+            updated_at: list.updated_at,
+        })
+    }
+}
+
+impl ShoppingListItemForCreate {
+    /// Creates a new `ShoppingListItemForCreate` with the given quantity, ingredient, label, and recipe ID.
+    pub fn new(
+        quantity: impl Into<String>,
+        ingredient: impl Into<String>,
+        label: Option<String>,
+        recipe_id: Option<i64>,
+    ) -> Self {
+        Self {
+            ingredient: ingredient.into(),
+            quantity: quantity.into(),
+            label,
+            recipe_id,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_db::TestDb;
+    use test_utils::{build_server_anonymous, create_app_state};
+
+    use crate::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
+
+    use super::*;
+
+    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+    fn a_meat_item() -> ShoppingListItemForCreate {
+        ShoppingListItemForCreate::new("1 cup", "chicken", Some("Meat".into()), None)
+    }
+
+    fn other_meat_item() -> ShoppingListItemForCreate {
+        ShoppingListItemForCreate::new("500g", "beef", Some("Meat".into()), None)
+    }
+
+    fn a_list_name() -> String {
+        String::from("Costco")
+    }
+
+    fn an_item_with_recipe(recipe_id: i64) -> ShoppingListItemForCreate {
+        let mut item = a_meat_item();
+        item.recipe_id = Some(recipe_id);
+        item
+    }
+
+    fn other_item_with_recipe(recipe_id: i64) -> ShoppingListItemForCreate {
+        let mut item = other_meat_item();
+        item.recipe_id = Some(recipe_id);
+        item
+    }
+
+    #[tokio::test]
+    async fn test_get_all_shopping_lists_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        for i in 0..3 {
+            let _ = ShoppingList::create(&state.mm, format!("List {i}"), user_id).await?;
+        }
+
+        let lists = ShoppingList::get_all(&state.mm, user_id).await?;
+
+        assert_eq!(lists.len(), 3);
+        pretty_assertions::assert_eq!(
+            lists.into_iter().map(|l| l.name).collect::<Vec<_>>(),
+            vec![
+                "List 0".to_string(),
+                "List 1".to_string(),
+                "List 2".to_string()
+            ]
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_add_item_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+
+        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        pretty_assertions::assert_eq!(
+            got,
+            ShoppingListDetails {
+                id: list_id,
+                name: "Costco".into(),
+                items: vec![ShoppingListItemDetails {
+                    id: 1,
+                    ingredient: "chicken".into(),
+                    quantity: "1 cup".into(),
+                    label: Some("Meat".into()),
+                    position: 1,
+                    recipe: None,
+                    is_checked: false,
+                    created_at: got.items[0].created_at,
+                    updated_at: got.items[0].updated_at,
+                }],
+                created_at: got.created_at,
+                updated_at: got.updated_at,
+            }
+        );
+        let mut conn = state.mm.pool.get().await?;
+        let count: i64 = schema::users_shopping_list_labels::table
+            .count()
+            .get_result(&mut conn)
+            .await?;
+        assert_eq!(count, 1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[allow(unused)]
+    async fn test_add_item_to_list_that_does_not_belong_to_user_err() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = Uuid::new_v4();
+
+        let res = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await;
+
+        assert!(matches!(res, Err(Error::EntityNotFound { .. })));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_shopping_list_name_err() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let _ = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+
+        let got_res = ShoppingList::create(&state.mm, "COSTCO", user_id).await;
+
+        assert!(matches!(got_res, Err(Error::Diesel(_))));
+        let lists = ShoppingList::get_all(&state.mm, user_id).await?;
+        assert_eq!(lists.len(), 1);
+        pretty_assertions::assert_eq!(
+            lists.into_iter().map(|l| l.name).collect::<Vec<_>>(),
+            vec![a_list_name()]
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_shopping_list_label_name_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+
+        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let _ = ShoppingList::add_item(&state.mm, list_id, other_meat_item(), user_id).await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        pretty_assertions::assert_eq!(
+            got,
+            ShoppingListDetails {
+                id: list_id,
+                name: "Costco".into(),
+                items: vec![
+                    ShoppingListItemDetails {
+                        id: 1,
+                        ingredient: "chicken".into(),
+                        quantity: "1 cup".into(),
+                        label: Some("Meat".into()),
+                        position: 1,
+                        recipe: None,
+                        is_checked: false,
+                        created_at: got.items[0].created_at,
+                        updated_at: got.items[0].updated_at
+                    },
+                    ShoppingListItemDetails {
+                        id: 2,
+                        ingredient: "beef".into(),
+                        quantity: "500g".into(),
+                        label: Some("Meat".into()),
+                        position: 2,
+                        recipe: None,
+                        is_checked: false,
+                        created_at: got.items[1].created_at,
+                        updated_at: got.items[1].updated_at
+                    },
+                ],
+                created_at: got.created_at,
+                updated_at: got.updated_at,
+            },
+        );
+        let mut conn = state.mm.pool.get().await?;
+        let count: i64 = schema::users_shopping_list_labels::table
+            .count()
+            .get_result(&mut conn)
+            .await?;
+        assert_eq!(count, 1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_add_item_with_recipe_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let recipe1 = a_complete_recipe_for_create().0;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe1).await?;
+        let mut recipe2 = a_complete_recipe_for_create().0;
+        recipe2.name = "Blueberry Pie".into();
+        let recipe_id2 = Recipe::create(&state.mm, user_id, &recipe2).await?;
+        let item1 = an_item_with_recipe(recipe_id);
+        let item2 = other_item_with_recipe(recipe_id2);
+
+        let _ = ShoppingList::add_item(&state.mm, list_id, item1, user_id).await?;
+        let _ = ShoppingList::add_item(&state.mm, list_id, item2, user_id).await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        pretty_assertions::assert_eq!(
+            got,
+            ShoppingListDetails {
+                id: list_id,
+                name: "Costco".into(),
+                items: vec![
+                    ShoppingListItemDetails {
+                        id: 1,
+                        ingredient: "chicken".into(),
+                        quantity: "1 cup".into(),
+                        label: Some("Meat".into()),
+                        position: 1,
+                        recipe: Some(ShoppingListRecipeDetails {
+                            id: 1,
+                            name: recipe1.name,
+                        }),
+                        is_checked: false,
+                        created_at: got.items[0].created_at,
+                        updated_at: got.items[0].updated_at
+                    },
+                    ShoppingListItemDetails {
+                        id: 2,
+                        ingredient: "beef".into(),
+                        quantity: "500g".into(),
+                        label: Some("Meat".into()),
+                        position: 2,
+                        recipe: Some(ShoppingListRecipeDetails {
+                            id: 2,
+                            name: recipe2.name,
+                        }),
+                        is_checked: false,
+                        created_at: got.items[1].created_at,
+                        updated_at: got.items[1].updated_at
+                    },
+                ],
+                created_at: got.created_at,
+                updated_at: got.updated_at,
+            },
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_item_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let item_id = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        ShoppingList::delete_item(&state.mm, list_id, item_id, user_id).await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        assert!(got.items.is_empty());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_update_item_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let item_id = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let new_item = other_meat_item();
+
+        ShoppingList::update_item(
+            &state.mm,
+            list_id,
+            item_id,
+            ShoppingListItemForUpdate {
+                ingredient: Some(new_item.ingredient.clone()),
+                quantity: Some(new_item.quantity.clone()),
+                position: None,
+                label: Some("Super C".into()),
+                ..Default::default()
+            },
+            user_id,
+        )
+        .await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        assert_eq!(got.items.len(), 1);
+        pretty_assertions::assert_eq!(
+            got.items,
+            vec![ShoppingListItemDetails {
+                id: 1,
+                ingredient: new_item.ingredient,
+                quantity: new_item.quantity,
+                label: Some("Super C".into()),
+                position: 1,
+                recipe: None,
+                is_checked: false,
+                created_at: got.items[0].created_at,
+                updated_at: got.items[0].updated_at
+            }]
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_item_toggle_check_item_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let item_id = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        ShoppingList::update_item(
+            &state.mm,
+            list_id,
+            item_id,
+            ShoppingListItemForUpdate::new_checked(true),
+            user_id,
+        )
+        .await?;
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        assert!(got.items[0].is_checked);
+
+        ShoppingList::update_item(
+            &state.mm,
+            list_id,
+            item_id,
+            ShoppingListItemForUpdate::new_checked(false),
+            user_id,
+        )
+        .await?;
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        assert!(!got.items[0].is_checked);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_update_shopping_list_name_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let original_list = ShoppingList::get_all(&state.mm, user_id).await?[0].clone();
+
+        ShoppingList::update_title(&state.mm, list_id, "New Title", user_id).await?;
+
+        let modified_list = ShoppingList::get_all(&state.mm, user_id).await?[0].clone();
+        pretty_assertions::assert_ne!(original_list, modified_list);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_shopping_list_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        ShoppingList::delete(&state.mm, list_id, user_id).await?;
+
+        let got = ShoppingList::get_all(&state.mm, user_id).await?;
+        assert!(got.is_empty());
+        let got_res = ShoppingListDetails::get(&state.mm, list_id, user_id).await;
+        assert!(got_res.is_err());
+        Ok(())
+    }
+}

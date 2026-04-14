@@ -145,6 +145,7 @@ This project is supported by these kind people:
 
 This project was mainly coded to blasting the following albums:
 
+- [1914 - Viribus Unitis](https://www.youtube.com/watch?v=IET5AyShGYc)
 - [4am](https://www.youtube.com/watch?v=tBcPji_jRDc)
 - [Abysmal Dawn - Phylogenesis](https://www.youtube.com/watch?v=xJMybqRMedk&pp=ygUMYWJ5c21hbCBkYXdu)
 - [Archspire - Bleed the Future](https://www.youtube.com/watch?v=o8H9ahswldM)
