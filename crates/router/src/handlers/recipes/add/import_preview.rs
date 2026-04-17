@@ -5,7 +5,6 @@ use axum::{
     extract::State,
     response::{Html, IntoResponse},
 };
-use iso8601::DateTime;
 use reqwest::StatusCode;
 use tracing::error;
 
@@ -51,12 +50,7 @@ pub async fn add_recipe_import_preview_handler(
                     is_autologin,
                     is_hx_request: true,
                     is_preview: true,
-                    about: AboutData {
-                        is_update_available: false,
-                        is_check_update: false,
-                        last_checked_update_at: DateTime::default(),
-                        last_updated_at: DateTime::default(),
-                    },
+                    about: AboutData::default(),
                     pagination: Some(PaginationData::hidden()),
                     searchbar: Some(SearchbarData {
                         is_favourites: false,
@@ -68,7 +62,7 @@ pub async fn add_recipe_import_preview_handler(
                         is_shared: false,
                     }),
                     recipes: vec![view_recipe],
-                    reports: None,
+                    ..Default::default()
                 },
             ) {
                 Ok(res) => Ok(res.into_response()),

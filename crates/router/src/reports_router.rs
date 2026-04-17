@@ -9,7 +9,7 @@ use crate::{
 
 /// Defines the routes for endpoints related to the reports module.
 #[allow(clippy::literal_string_with_formatting_args)]
-pub fn reports_router(state: &AppState) -> Router<AppState> {
+pub fn reports_routes(state: &AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(reports_handler))
         .route("/{:report_id}", get(report_handler))

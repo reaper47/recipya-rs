@@ -3,6 +3,7 @@ use iso8601::DateTime;
 use crate::RecipeDetails;
 use crate::params::SearchParams;
 use crate::reports::ViewReport;
+use crate::shopping::{ShoppingList, ShoppingListDetails};
 use crate::time::FormattedTimes;
 
 /// Data holds data to pass on to the templates.
@@ -21,6 +22,7 @@ pub struct Data {
     pub share: Option<ShareData>,
     pub recipes: Vec<ViewRecipe>,
     pub reports: Option<ReportsData>,
+    pub shopping: Option<ShoppingData>,
 }
 
 /// Creates a new instance of `AboutData`.
@@ -240,6 +242,12 @@ impl SearchbarData {
 pub struct ShareData {
     pub is_from_host: bool,
     pub is_shared: bool,
+}
+
+/// Holds data related to the shopping module.
+pub struct ShoppingData {
+    pub shopping_lists: Vec<ShoppingList>,
+    pub selected_shopping_list: Option<ShoppingListDetails>,
 }
 
 /// Holds template data related to viewing a recipe.

@@ -131,7 +131,7 @@ async fn extract_images(
 
     let results = join_all(futures).await;
 
-    stream::iter(urls.into_iter().zip(results.into_iter()))
+    stream::iter(urls.into_iter().zip(results))
         .filter_map(|(_, res)| {
             let fs_support = fs_support.clone();
 
@@ -195,7 +195,7 @@ async fn extract_videos(
 
     let results = join_all(futures).await;
 
-    stream::iter(urls.into_iter().zip(results.into_iter()))
+    stream::iter(urls.into_iter().zip(results))
         .filter_map(|((_url, content_url, embed_url), res)| {
             let fs_support = fs_support.clone();
 

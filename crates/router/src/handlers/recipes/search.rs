@@ -78,8 +78,6 @@ pub async fn search_recipes_handler(
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
-            // TODO: Populate AboutData with good values.
-            is_preview: false,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
@@ -87,9 +85,8 @@ pub async fn search_recipes_handler(
                 headers.get(axum_htmx::HX_REQUEST).is_some(),
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
-            share: None,
             recipes,
-            reports: None,
+            ..Default::default()
         },
         &state.data_dir,
         &settings,

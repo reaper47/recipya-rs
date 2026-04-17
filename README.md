@@ -94,13 +94,13 @@ Add the following to `/var/lib/pgsql/data/postgresql.conf` once `pg_cron` is ins
 
 To build:
 
-1. Set the environment variables in `.cargo/config.toml`
-2. Run recipya: `cargo run -p recipya`
+1. Set the environment variables in the `.env` file. The template is found in /deploy.
+2. Run recipya: `cargo run server`
 
 #### Development Container
 
 You may use the devcontainer to help develop Recipya. The `DATABASE_URL` environment variable in your
-`.cargo/config.toml` file would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432"`.
+`.env` file would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432"`.
 
 #### Once recipya-rs becomes the defacto Recipya:
 
@@ -149,6 +149,7 @@ This project was mainly coded to blasting the following albums:
 - [4am](https://www.youtube.com/watch?v=tBcPji_jRDc)
 - [Abysmal Dawn - Phylogenesis](https://www.youtube.com/watch?v=xJMybqRMedk&pp=ygUMYWJ5c21hbCBkYXdu)
 - [Archspire - Bleed the Future](https://www.youtube.com/watch?v=o8H9ahswldM)
+- [Archspire - Too Fast to Die](https://www.youtube.com/watch?v=bKlxhjKfnMQ)
 - [Astralborne - Eternity's End](https://www.youtube.com/watch?v=MilBEj5W9io)
 - [Atavistia - Cosmic Warfare](https://www.youtube.com/watch?v=VjJ_zb4RF2E)
 - [Beast In Black - Dark Connection](https://www.youtube.com/watch?v=7NyON-NzBr4)

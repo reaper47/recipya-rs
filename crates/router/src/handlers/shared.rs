@@ -59,11 +59,7 @@ pub async fn share_recipe_handler(
                     is_authenticated: true,
                     is_autologin: state.config.read().await.is_autologin,
                     is_hx_request: is_hx_request(&header_map),
-                    // TODO: Populate AboutData with good values.
-                    is_preview: false,
                     about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
-                    pagination: None,
-                    searchbar: None,
                     share: Some(ShareData {
                         is_shared: true,
                         is_from_host: user.id == share.user_id,
@@ -72,7 +68,7 @@ pub async fn share_recipe_handler(
                         recipe_details: recipe,
                         formatted_times,
                     }],
-                    reports: None,
+                    ..Default::default()
                 },
                 &settings,
             )
@@ -82,20 +78,15 @@ pub async fn share_recipe_handler(
             uri.path(),
             &state.data_dir,
             &Data {
-                is_admin: false,
                 is_authenticated: true,
                 is_autologin: state.config.read().await.is_autologin,
                 is_hx_request: is_hx_request(&header_map),
-                // TODO: Populate AboutData with good values.
-                is_preview: false,
                 about: AboutData {
                     is_update_available: false,
                     is_check_update: false,
                     last_checked_update_at: DateTime::default(),
                     last_updated_at: DateTime::default(),
                 },
-                pagination: None,
-                searchbar: None,
                 share: Some(ShareData {
                     is_shared: true,
                     is_from_host: false,
@@ -104,7 +95,7 @@ pub async fn share_recipe_handler(
                     recipe_details: recipe,
                     formatted_times,
                 }],
-                reports: None,
+                ..Default::default()
             },
             &UserSettingDetails::default(),
         ),

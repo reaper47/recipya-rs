@@ -631,6 +631,29 @@ function syncLayout() {
   ["add-recipe", "pagination-recipes"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("hidden", !isAside);
   });
+
+  highlightActiveSidebarItem();
+}
+
+function highlightActiveSidebarItem() {
+  document.querySelectorAll(".sidebar-item").forEach((item) => {
+    item.classList.remove("bg-secondary");
+  });
+
+  const currentPath = window.location.pathname;
+  if (currentPath.startsWith("/recipes")) {
+    document
+      .getElementById("recipes-sidebar-recipes")
+      .classList.add("bg-secondary");
+  } else if (currentPath.startsWith("/cookbooks")) {
+    document
+      .getElementById("recipes-sidebar-cookbooks")
+      .classList.add("bg-secondary");
+  } else if (currentPath.startsWith("/shopping")) {
+    document
+      .getElementById("recipes-sidebar-shopping")
+      .classList.add("bg-secondary");
+  }
 }
 
 async function loadURLToInputField(url, containerId) {

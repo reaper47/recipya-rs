@@ -6,6 +6,7 @@ use models::settings::UserSettingDetails;
 use super::core::{head, toast, toast_ws};
 use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
+    icon_shopping_cart,
 };
 use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
@@ -231,10 +232,7 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
         aside #desktop-nav class="hidden" data-layout=(menu_data_layout) {
             ul class="menu w-full menu-sm bg-base-300 rounded-box h-full gap-1" style="border-radius: 0" {
                 li #recipes-sidebar-recipes
-                    class={
-                        "rounded-lg"
-                        @if path == "/recipes" || path == "/" { " bg-secondary" }
-                    }
+                    class="sidebar-item rounded-lg"
                     hx-get="/recipes"
                     hx-target="#content"
                     hx-trigger="mousedown"
@@ -246,15 +244,31 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
                     }
                 }
                 li #recipes-sidebar-cookbooks
+                   class="sidebar-item rounded-lg"
                    hx-get="/cookbooks"
                    hx-target="#content"
                    hx-trigger="mousedown"
                    hx-push-url="true"
                    hx-swap="innerHTML transition:true"
-                  _="on click call alert('Not implemented yet')" {
+                  _="on mousedown call alert('Not implemented yet')" {
                      a {
                         (icon_book_open())
                         "Cookbooks"
+                    }
+                }
+                li #recipes-sidebar-shopping
+                    class={
+                        "sidebar-item rounded-lg"
+                        @if path.starts_with("/shopping") { " bg-secondary" }
+                    }
+                   hx-get="/shopping/lists"
+                   hx-target="#content"
+                   hx-trigger="mousedown"
+                   hx-push-url="true"
+                   hx-swap="innerHTML transition:true" {
+                     a {
+                        (icon_shopping_cart())
+                        "Shopping"
                     }
                 }
             }
@@ -266,6 +280,9 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
             }
             button hx-get="/cookbooks" hx-target="#content" hx-push-url="true" hx-swap="innerHTML transition:true" {
                 "Cookbooks"
+            }
+            button hx-get="/shopping/lists" hx-target="#content" hx-push-url="true" hx-swap="innerHTML transition:true" {
+                "Shopping"
             }
         }
     }
