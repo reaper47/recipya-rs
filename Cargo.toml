@@ -16,53 +16,37 @@ rust-version = "1.95.0"
 version = "0.1.0"
 
 [workspace.dependencies]
-app = { path = "./crates/app" }
 async-stream = "0.3.6"
 async-trait = "0.1.89"
-auth = { path = "./crates/auth", default-features = false }
-axum = { version = "0.8.8", features = ["macros", "multipart", "ws"] }
+axum = { version = "0.8.9", features = ["macros", "multipart", "ws"] }
 axum-test = { version = "19.1.1", features = ["ws"] }
 base64 = "0.22.1"
 chrono = "0.4.44"
-config = { path = "./crates/config" }
 derive_more = { version = "2.1.1", features = ["from", "display"] }
 diesel = { version = "2.3.7", features = ["postgres", "chrono", "serde_json", "time", "uuid"] }
 diesel-async = { version = "0.8.0", features = ["postgres", "bb8", "async-connection-wrapper"] }
 diesel_full_text_search = "2.3.0"
 dotenvy = "0.15.7"
-email = { path = "./crates/email" }
 futures = "0.3.32"
 futures-core = "0.3.32"
 futures-util = "0.3.32"
 humantime = "2.3.0"
 indexmap = "2.13.0"
 infer = "0.19.0"
-integrations = { path = "./crates/integrations" }
 iso8601 = { version = "0.6.3", features = ["serde"] }
 itertools = "0.14.0"
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 lru = "0.16.3"
-math = { path = "./crates/math" }
-models = { path = "./crates/models" }
 pretty_assertions = "1.4.1"
 rand = "0.10.0"
-recipya-scraper = { path = "crates/recipya-scraper" }
 regex = "1.12.3"
-repository = { path = "./crates/repository" }
 reqwest = { version = "0.13.2", features = ["blocking", "form", "json"] }
-router = { path = "./crates/router" }
 rustls = { version = "0.23.37", default-features = false, features = ["ring"] }
-schema-org = { path = "./crates/schema-org", default-features = false }
 scraper = "0.26.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 strum = { version = "0.28.0", features = ["derive"] }
 strum_macros = "0.28.0"
-support = { path = "./crates/support" }
-templates = { path = "./crates/templates" }
-test-db = { path = "./crates/test-db" }
-test-fixtures = { path = "./crates/test-fixtures" }
-test-utils = { path = "./crates/test-utils" }
 time = { version = "0.3.47", features = ["serde"] }
 tracing-test = "0.2.6"
 tokio = { version = "1.50.0", features = ["full"] }
@@ -75,6 +59,24 @@ validator = { version = "0.20.0", features = ["derive"] }
 whatlang = "0.16.4"
 winnow = "1.0.1"
 zip = "8.4.0"
+
+# Local crates
+app = { path = "./crates/app" }
+auth = { path = "./crates/auth", default-features = false }
+config = { path = "./crates/config" }
+email = { path = "./crates/email" }
+integrations = { path = "./crates/integrations" }
+math = { path = "./crates/math" }
+models = { path = "./crates/models" }
+recipya-scraper = { path = "crates/recipya-scraper" }
+repository = { path = "./crates/repository" }
+router = { path = "./crates/router" }
+schema-org = { path = "./crates/schema-org", default-features = false }
+support = { path = "./crates/support" }
+templates = { path = "./crates/templates" }
+test-db = { path = "./crates/test-db" }
+test-fixtures = { path = "./crates/test-fixtures" }
+test-utils = { path = "./crates/test-utils" }
 
 [workspace.metadata.tasks]
 web-install-deps = "npm --prefix ./web/app install"
