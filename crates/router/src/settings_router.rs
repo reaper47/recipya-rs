@@ -64,7 +64,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<div id="settings-recipes""#,
                     r#"<div id="settings-data""#,
                     r#"<div id="settings-account""#,
@@ -73,7 +73,7 @@ mod tests {
             );
             assert_not_in_html(
                 &res,
-                vec![
+                &[
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"#,
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"#,
                     r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections">"#,
@@ -96,7 +96,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<table class="table table-xs"><thead><tr><th></th><th>Setting</th><th>Environment</th><th>Value</th></tr></thead><tbody>"#,
                     r"<td>Host</td><td>SMTP_HOST</td><td>smtp.gmail.com</td></tr>",
                     r"<tr><th></th><td>From</td><td>SMTP_FROM_EMAIL</td><td>demo@demo.com</td></tr>",
@@ -133,7 +133,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<div class="flex flex-col menu-sm sm:flex-row sm:menu-md">"#,
                     r#"<ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical" _="on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target">"#,
                     r#"<a class="setting-tab menu-active" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-recipes">"#,
@@ -207,7 +207,7 @@ mod tests {
                 res.assert_status_ok();
                 assert_html(
                     &res,
-                    vec![
+                    &[
                         r##"<form class="card bg-base-100 shadow-sm min-w-[50vw]" hx-post="/settings/export-data" hx-indicator="#export-data-spinner" hx-on:download-ready="document.querySelector('#export-data-dialog').close(); window.location.href = event.detail.url;">"##,
                         r#"<div class="card-body"><h3 class="mb-1 grid grid-flow-col"><label class="input input-sm"><svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg><input type="search" placeholder="Search a recipe" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label><select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end"><option value="json" selected>JSON</option><option value="pdf">PDF</option></select></h3>"#,
                         r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" class="checkbox" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked then call checkExportDataSubmit()"></label></th><th class="py-1 text-left">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-results">"#,

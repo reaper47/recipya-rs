@@ -117,7 +117,7 @@ mod tests {
             res.assert_header(axum_htmx::HX_RESWAP, "innerHTML transition:true");
             assert_html(
                 &res,
-                vec![
+                &[
                     // Title
                     r#"<input type="hidden" name="title-source" value="old">"#,
                     r#"<input type="hidden" name="title-old" value="Polish Kielbasa Sheet Pan and Potatoes">"#,
@@ -268,7 +268,7 @@ mod tests {
             res.assert_header(axum_htmx::HX_RESWAP, "innerHTML transition:true");
             assert_html(
                 &res,
-                vec![
+                &[
                     // Title
                     r#"<input type="radio" name="title-source" value="old" class="radio radio-sm radio-error">"#,
                     r#"<input type="radio" name="title-source" value="new" class="radio radio-sm radio-success" checked>"#,

@@ -57,7 +57,7 @@ mod tests {
 
         assert_html(
             &res,
-            vec![
+            &[
                 r##"<button id="favourite-1" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/1/favourite" hx-target="#favourite-1" hx-swap="outerHTML" hx-push-url="false" hx-vals="{&quot;view-recipe&quot;:false}" aria-label="Add to favorites" aria-pressed="true" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor""##,
             ],
         );
@@ -79,7 +79,7 @@ mod tests {
 
         assert_html(
             &res,
-            vec![
+            &[
                 r##"<button id="favourite-1" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/1/favourite" hx-target="#favourite-1" hx-swap="outerHTML" hx-push-url="false" hx-vals="{&quot;view-recipe&quot;:false}" aria-label="Add to favorites" aria-pressed="false" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor""##,
             ],
         );
@@ -101,7 +101,7 @@ mod tests {
 
         assert_html(
             &res,
-            vec![
+            &[
                 r##"<button id="favourite-1" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/1/favourite" hx-target="#favourite-1" hx-swap="outerHTML" hx-push-url="false" hx-vals="{&quot;view-recipe&quot;:false}" aria-label="Add to favorites" aria-pressed="false" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="none""##,
             ],
         );
@@ -127,7 +127,7 @@ mod tests {
 
         assert_html(
             &res,
-            vec![
+            &[
                 r##"<button id="favourite-1" class="mr-2 hidden sm:block hover:text-secondary" title="Add to favourites" hx-post="/recipes/1/favourite" hx-target="#favourite-1" hx-swap="outerHTML" hx-push-url="false" hx-vals="{&quot;view-recipe&quot;:true}" aria-label="Add to favorites" aria-pressed="true" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor""##,
             ],
         );

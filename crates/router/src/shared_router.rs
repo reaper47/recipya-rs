@@ -60,13 +60,13 @@ mod tests {
         assert_complete_recipe(&res, &recipe, &images);
         assert_html(
             &res,
-            vec![
+            &[
                 r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input max-w-18 md:max-w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
             ],
         );
         assert_not_in_html(
             &res,
-            vec![
+            &[
                 r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
                 r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
                 r##"#<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
@@ -92,7 +92,7 @@ mod tests {
         res.assert_status_ok();
         assert_html(
             &res,
-            vec![
+            &[
                 r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
                 r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input max-w-18 md:max-w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
             ],
@@ -117,14 +117,14 @@ mod tests {
         assert_complete_recipe(&res, &recipe, &images);
         assert_html(
             &res,
-            vec![
+            &[
                 r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
                 "<p class=\"text-xs\">Nutrition Facts\nPer 100g: calories 300 kcal; total carbohydrates 55g; sugar 43g; protein 7g; total fat 6g; saturated fat 1g; unsaturated fat 2g; trans fat 3g; cholesterol 5mg; sodium 12mg; fiber 10g</p>",
             ],
         );
         assert_not_in_html(
             &res,
-            vec![
+            &[
                 r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
                 r##"<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
                 r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/1/share" hx-target="#share-dialog-result""##,
@@ -137,7 +137,7 @@ mod tests {
     fn assert_complete_recipe(res: &TestResponse, recipe: &RecipeForCreate, images: &RecipeImages) {
         assert_html(
             res,
-            vec![
+            &[
                 &format!(
                     "<title hx-swap-oob=\"true\">{} | Recipya</title>",
                     recipe.name

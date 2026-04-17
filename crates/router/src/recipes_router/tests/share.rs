@@ -48,7 +48,7 @@ mod tests {
         res.assert_status_ok();
         assert_html(
             &res,
-            vec![
+            &[
                 &format!(
                     r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
                     share.link
@@ -84,7 +84,7 @@ mod tests {
         res.assert_status_ok();
         assert_html(
             &res,
-            vec![
+            &[
                 &format!(
                     r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
                     share.link

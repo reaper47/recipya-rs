@@ -26,7 +26,7 @@ mod tests {
 
         assert_html(
             &res,
-            vec![
+            &[
                 r#"<title hx-swap-oob="true">Recipes | Recipya</title>"#,
                 r##"<p class="pb-2">Your recipe collection looks a bit empty at the moment.</p><p>Why not start adding recipes by clicking the <a class="underline font-semibold cursor-pointer" hx-get="/recipes/add" hx-target="#content" hx-push-url="true">Add recipe</a> button at the top?</p>"##,
             ],
@@ -52,7 +52,7 @@ mod tests {
 
         assert_html(
             &res,
-            vec![
+            &[
                 r#"<title hx-swap-oob="true">Recipes | Recipya</title>"#,
                 r##"<form class="flex w-full" hx-get="/recipes/search" hx-vals="{&quot;page&quot;:1}" hx-target="#list-recipes" hx-swap="outerHTML" hx-push-url="true" hx-trigger="submit, change target:.sort-option"><div class="relative w-full"><label class="input input-sm flex justify-between px-0 gap-2 z-20 w-full"><button id="search-shortcut" type="button" class="pl-2" popovertarget="search-help" _="on click toggle .hidden on #search-help"><svg xmlns="http://www.w3.org/2000/svg" class="size-6 self-center hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button><input id="search-recipes" type="search" name="q" placeholder="Search for recipes..." autocomplete="off" value="""##,
                 r#"<div class="dropdown dropdown-left ml-1"><div tabindex="0" role="button" class="btn btn-sm p-1"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"></path></svg></div><div tabindex="0" class="dropdown-content z-10 menu menu-sm p-2 shadow bg-base-200 w-36 sm:menu-md prose"><h4 class="text-center underline">Sort</h4><fieldset class="fieldset flex"><label class="label cursor-pointer text-inherit" for="sort-opt-default"><input id="sort-opt-default" type="radio" name="sort" class="radio radio-sm sort-option" value="default"><span class="ml-1">Default</span></label></fieldset><fieldset class="fieldset flex"><label class="label cursor-pointer text-inherit" for="sort-opt-a-z"><input id="sort-opt-a-z" type="radio" name="sort" class="radio radio-sm sort-option" value="a-z"><span class="ml-1">Name:<br/>A to Z</span></label></fieldset><fieldset class="fieldset flex"><label class="label cursor-pointer text-inherit" for="sort-opt-z-a"><input id="sort-opt-z-a" type="radio" name="sort" class="radio radio-sm sort-option" value="z-a"><span class="ml-1">Name:<br/>Z to A</span></label></fieldset><fieldset class="fieldset flex"><label class="label cursor-pointer text-inherit" for="sort-opt-new-old"><input id="sort-opt-new-old" type="radio" name="sort" class="radio radio-sm sort-option" value="new-old"><span class="ml-1">Date created:<br/>Newest to oldest</span></label></fieldset><fieldset class="fieldset flex"><label class="label cursor-pointer text-inherit" for="sort-opt-old-new"><input id="sort-opt-old-new" type="radio" name="sort" class="radio radio-sm sort-option" value="old-new"><span class="ml-1">Date created:<br/>Oldest to newest</span></label></fieldset><fieldset class="fieldset flex"><label class="label cursor-pointer text-inherit" for="sort-opt-random"><input id="sort-opt-random" type="radio" name="sort" class="radio radio-sm sort-option" value="random"><span class="ml-1">Random</span></label></fieldset></div>"#,
@@ -90,7 +90,7 @@ mod tests {
 
         let _ = assert_not_in_html(
             &res,
-            vec![
+            &[
                 r#"<div class="rating rating-sm"><div class="mask mask-star-2" aria-label="1 star"></div>"#,
             ],
         );

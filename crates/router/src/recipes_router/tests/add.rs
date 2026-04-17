@@ -42,7 +42,7 @@ mod tests {
     fn assert_content(res: &TestResponse) {
         assert_html(
             res,
-            vec![
+            &[
                 r#"<title hx-swap-oob="true">Add Recipe | Recipya</title>"#,
                 r#"<img class="object-cover w-full h-40 rounded-t-xl" src="/public/img/recipes/new/manual.webp" alt="Writing on a piece of paper with a traditional pen.">"#,
                 r#"<img class="object-cover w-full h-40 rounded-t-xl" src="/public/img/recipes/new/import.webp" alt="Earth connected from end-to-end by telecommunications.">"#,

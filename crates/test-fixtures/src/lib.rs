@@ -26,7 +26,7 @@ impl Default for RecipeImages {
 }
 
 /// Asserts that the response HTML contains all of the expected strings.
-pub fn assert_html(got: &TestResponse, want: Vec<&str>) {
+pub fn assert_html(got: &TestResponse, want: &[&str]) {
     for s in want {
         got.assert_text_contains(s);
     }
@@ -37,7 +37,7 @@ pub fn assert_html(got: &TestResponse, want: Vec<&str>) {
 /// # Panics
 ///
 /// Panics if any of the unwanted strings are found in the response HTML.
-pub fn assert_not_in_html(got: &TestResponse, not_want: Vec<&str>) -> Result<()> {
+pub fn assert_not_in_html(got: &TestResponse, not_want: &[&str]) -> Result<()> {
     let text = got.text();
     for s in not_want {
         assert!(
