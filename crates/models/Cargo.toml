@@ -60,5 +60,5 @@ zip.workspace = true
 app.workspace = true
 pretty_assertions.workspace = true
 test-utils.workspace = true
-test-db = { path = "../test-db" }
-test-fixtures = { path = "../test-fixtures" }
+test-db.workspace = true
+test-fixtures.workspace = true

@@ -68,6 +68,6 @@ time.workspace = true
 tokio.workspace = true
 tower = "0.5.3"
 tracing-test.workspace = true
-test-db = { path = "../test-db" }
-test-fixtures = { path = "../test-fixtures" }
+test-db.workspace = true
+test-fixtures.workspace = true
 test-models = { path = "../test-models" }

@@ -43,6 +43,6 @@ zip.workspace = true
 
 [dev-dependencies]
 pretty_assertions.workspace = true
-test-fixtures = { path = "../test-fixtures" }
+test-fixtures.workspace = true
 test-utils.workspace = true
 tokio.workspace = true
