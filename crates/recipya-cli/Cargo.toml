@@ -37,13 +37,13 @@ tracing.workspace = true
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 [target.'aarch64-unknown-linux-gnu'.dependencies]
-openssl = { version = "0.10.77", features = ["vendored"] }
+openssl = { version = "0.10.78", features = ["vendored"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
 
 [target.'x86_64-unknown-linux-gnu'.dependencies]
-openssl = { version = "0.10.77", features = ["vendored"] }
+openssl = { version = "0.10.78", features = ["vendored"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
 
 [target.'x86_64-unknown-linux-musl'.dependencies]
-openssl = { version = "0.10.77", features = ["vendored"] }
+openssl = { version = "0.10.78", features = ["vendored"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
