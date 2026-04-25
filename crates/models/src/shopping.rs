@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use indexmap::IndexMap;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -15,6 +16,7 @@ use crate::{Error, Result, user::User};
 pub struct ShoppingList {
     pub id: Uuid,
     pub name: String,
+    pub num_items: i64,
     pub user_id: Uuid,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
@@ -52,7 +54,7 @@ struct ShoppingListItem {
     id: i64,
     shopping_list_id: Uuid,
     ingredient: String,
-    quantity: String,
+    quantity: Option<String>,
     shopping_list_label_id: Option<i64>,
     position: i32,
     is_checked: bool,
@@ -63,7 +65,7 @@ struct ShoppingListItem {
 /// Represents a shopping list item for creation.
 pub struct ShoppingListItemForCreate {
     pub ingredient: String,
-    pub quantity: String,
+    pub quantity: Option<String>,
     pub label: Option<String>,
     pub recipe_id: Option<i64>,
 }
@@ -73,7 +75,7 @@ pub struct ShoppingListItemForCreate {
 struct ShoppingListItemForInsert {
     shopping_list_id: Uuid,
     ingredient: String,
-    quantity: String,
+    quantity: Option<String>,
     shopping_list_label_id: Option<i64>,
 }
 
@@ -133,12 +135,28 @@ pub struct ShoppingListDetails {
     pub updated_at: NaiveDateTime,
 }
 
+impl ShoppingListDetails {
+    /// Returns a map of items grouped by their label.
+    pub fn items_per_label(&self) -> IndexMap<&str, Vec<&ShoppingListItemDetails>> {
+        let mut map: IndexMap<&str, Vec<&ShoppingListItemDetails>> = IndexMap::new();
+
+        for item in &self.items {
+            let label = item.label.as_deref().unwrap_or("No label");
+            map.entry(label)
+                .and_modify(|v| v.push(item))
+                .or_insert(vec![item]);
+        }
+
+        map
+    }
+}
+
 /// Represents a shopping list item with its details.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ShoppingListItemDetails {
     pub id: i64,
     pub ingredient: String,
-    pub quantity: String,
+    pub quantity: Option<String>,
     pub label: Option<String>,
     pub position: i32,
     pub recipe: Option<ShoppingListRecipeDetails>,
@@ -161,11 +179,15 @@ struct IdRow {
 }
 
 impl ShoppingList {
-    /// Creates a new shopping list with the given name for the given user.
-    pub async fn create(mm: &ModelManager, name: impl Into<String>, user_id: Uuid) -> Result<Uuid> {
+    /// Creates a new shopping list with the given title for the given user.
+    pub async fn create(
+        mm: &ModelManager,
+        title: impl Into<String>,
+        user_id: Uuid,
+    ) -> Result<Uuid> {
         let list_id = diesel::insert_into(schema::shopping_lists::table)
             .values(&ShoppingListForInsert {
-                name: name.into(),
+                name: title.into(),
                 user_id,
             })
             .returning(schema::shopping_lists::id)
@@ -194,7 +216,7 @@ impl ShoppingList {
         list_id: Uuid,
         item_c: ShoppingListItemForCreate,
         user_id: Uuid,
-    ) -> Result<i64> {
+    ) -> Result<ShoppingListItemDetails> {
         let mut conn = mm.pool.get().await?;
 
         Self::verify_ownership(&mut conn, list_id, user_id).await?;
@@ -210,28 +232,38 @@ impl ShoppingList {
             None
         };
 
-        let item_id: i64 = diesel::insert_into(schema::shopping_list_items::table)
+        let item: ShoppingListItem = diesel::insert_into(schema::shopping_list_items::table)
             .values(&ShoppingListItemForInsert {
                 shopping_list_id: list_id,
                 ingredient: item_c.ingredient,
                 quantity: item_c.quantity,
                 shopping_list_label_id: label_id,
             })
-            .returning(schema::shopping_list_items::id)
+            .returning(ShoppingListItem::as_select())
             .get_result(&mut conn)
             .await?;
 
         if let Some(recipe_id) = item_c.recipe_id {
             diesel::insert_into(schema::shopping_list_recipes::table)
                 .values(&ShoppingListRecipeForInsert {
-                    shopping_list_item_id: item_id,
+                    shopping_list_item_id: item.id,
                     recipe_id,
                 })
                 .execute(&mut conn)
                 .await?;
         }
 
-        Ok(item_id)
+        Ok(ShoppingListItemDetails {
+            id: item.id,
+            ingredient: item.ingredient,
+            quantity: item.quantity,
+            label: item_c.label,
+            position: item.position,
+            recipe: None,
+            is_checked: false,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+        })
     }
 
     /// Deletes a shopping list.
@@ -433,14 +465,14 @@ impl ShoppingListDetails {
 impl ShoppingListItemForCreate {
     /// Creates a new `ShoppingListItemForCreate` with the given quantity, ingredient, label, and recipe ID.
     pub fn new(
-        quantity: impl Into<String>,
+        quantity: Option<impl Into<String>>,
         ingredient: impl Into<String>,
         label: Option<String>,
         recipe_id: Option<i64>,
     ) -> Self {
         Self {
             ingredient: ingredient.into(),
-            quantity: quantity.into(),
+            quantity: quantity.map(Into::into),
             label,
             recipe_id,
         }
@@ -459,11 +491,11 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     fn a_meat_item() -> ShoppingListItemForCreate {
-        ShoppingListItemForCreate::new("1 cup", "chicken", Some("Meat".into()), None)
+        ShoppingListItemForCreate::new(Some("1 cup"), "chicken", Some("Meat".into()), None)
     }
 
     fn other_meat_item() -> ShoppingListItemForCreate {
-        ShoppingListItemForCreate::new("500g", "beef", Some("Meat".into()), None)
+        ShoppingListItemForCreate::new(Some("500g"), "beef", Some("Meat".into()), None)
     }
 
     fn a_list_name() -> String {
@@ -525,7 +557,7 @@ mod tests {
                 items: vec![ShoppingListItemDetails {
                     id: 1,
                     ingredient: "chicken".into(),
-                    quantity: "1 cup".into(),
+                    quantity: Some("1 cup".into()),
                     label: Some("Meat".into()),
                     position: 1,
                     recipe: None,
@@ -602,7 +634,7 @@ mod tests {
                     ShoppingListItemDetails {
                         id: 1,
                         ingredient: "chicken".into(),
-                        quantity: "1 cup".into(),
+                        quantity: Some("1 cup".into()),
                         label: Some("Meat".into()),
                         position: 1,
                         recipe: None,
@@ -613,7 +645,7 @@ mod tests {
                     ShoppingListItemDetails {
                         id: 2,
                         ingredient: "beef".into(),
-                        quantity: "500g".into(),
+                        quantity: Some("500g".into()),
                         label: Some("Meat".into()),
                         position: 2,
                         recipe: None,
@@ -663,7 +695,7 @@ mod tests {
                     ShoppingListItemDetails {
                         id: 1,
                         ingredient: "chicken".into(),
-                        quantity: "1 cup".into(),
+                        quantity: Some("1 cup".into()),
                         label: Some("Meat".into()),
                         position: 1,
                         recipe: Some(ShoppingListRecipeDetails {
@@ -677,7 +709,7 @@ mod tests {
                     ShoppingListItemDetails {
                         id: 2,
                         ingredient: "beef".into(),
-                        quantity: "500g".into(),
+                        quantity: Some("500g".into()),
                         label: Some("Meat".into()),
                         position: 2,
                         recipe: Some(ShoppingListRecipeDetails {
@@ -703,9 +735,9 @@ mod tests {
         let _ = build_server_anonymous(config.clone()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
-        let item_id = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
-        ShoppingList::delete_item(&state.mm, list_id, item_id, user_id).await?;
+        ShoppingList::delete_item(&state.mm, list_id, item.id, user_id).await?;
 
         let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
         assert!(got.items.is_empty());
@@ -719,16 +751,16 @@ mod tests {
         let _ = build_server_anonymous(config.clone()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
-        let item_id = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
         let new_item = other_meat_item();
 
         ShoppingList::update_item(
             &state.mm,
             list_id,
-            item_id,
+            item.id,
             ShoppingListItemForUpdate {
                 ingredient: Some(new_item.ingredient.clone()),
-                quantity: Some(new_item.quantity.clone()),
+                quantity: new_item.quantity.clone(),
                 position: None,
                 label: Some("Super C".into()),
                 ..Default::default()
@@ -763,12 +795,12 @@ mod tests {
         let _ = build_server_anonymous(config.clone()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
-        let item_id = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         ShoppingList::update_item(
             &state.mm,
             list_id,
-            item_id,
+            item.id,
             ShoppingListItemForUpdate::new_checked(true),
             user_id,
         )
@@ -779,7 +811,7 @@ mod tests {
         ShoppingList::update_item(
             &state.mm,
             list_id,
-            item_id,
+            item.id,
             ShoppingListItemForUpdate::new_checked(false),
             user_id,
         )

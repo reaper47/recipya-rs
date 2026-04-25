@@ -1,16 +1,20 @@
-use axum::extract::OriginalUri;
+use axum::Form;
+use axum::extract::{OriginalUri, Path};
 use axum::http::HeaderMap;
 use axum::{extract::State, response::IntoResponse};
+use axum_htmx::HX_PROMPT;
 use tracing::error;
 
 use app::state::AppState;
 use models::data::{Data, ShoppingData};
-use models::shopping::{ShoppingList, ShoppingListDetails};
+use models::shopping::{ShoppingList, ShoppingListDetails, ShoppingListItemForCreate};
+use uuid::Uuid;
 
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::broadcast_error;
+use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::middleware::mw_auth::RequireAuth;
+use crate::schemas::shopping::ListItemPayload;
 use crate::{Error, Result};
 
 /// Handles fetching the user's shopping lists.
@@ -66,4 +70,73 @@ pub async fn shopping_lists_handler(
         &settings,
     )
     .into_response())
+}
+
+pub async fn shopping_lists_post_handler(
+    header_map: HeaderMap,
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let Some(title) = header_map
+        .get(HX_PROMPT)
+        .map(|h| h.to_str().ok().unwrap_or_default().trim())
+        .filter(|s| !s.is_empty())
+    else {
+        broadcast_warning(&state, user.id, "List title must not be empty.").await;
+        return Error::InvalidPayload.into_response();
+    };
+
+    let list_id = match ShoppingList::create(&state.mm, title, user.id).await {
+        Ok(id) => id,
+        Err(err) => {
+            error!("Failed to create shopping list: {err:?}");
+            broadcast_error(&state, user.id, "Failed to create shopping list.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::shopping::render_new_shopping_list(list_id, title).into_response()
+}
+
+pub async fn shopping_list_item_post_handler(
+    RequireAuth(user): RequireAuth,
+    Path(list_id): Path<Uuid>,
+    State(state): State<AppState>,
+    Form(payload): Form<ListItemPayload>,
+) -> impl IntoResponse {
+    let item = payload.item.trim();
+    if item.is_empty() {
+        broadcast_warning(&state, user.id, "Item name must not be empty.").await;
+        return Error::InvalidPayload.into_response();
+    }
+
+    let item = match ShoppingList::add_item(
+        &state.mm,
+        list_id,
+        ShoppingListItemForCreate::new(
+            payload.quantity.filter(|q| !q.is_empty()),
+            item,
+            payload.label,
+            None,
+        ),
+        user.id,
+    )
+    .await
+    {
+        Ok(id) => id,
+        Err(err) if err.to_string().contains("duplicate") => {
+            broadcast_warning(&state, user.id, "Item already exists in the label.").await;
+            return Error::EntityExists {
+                entity: "shopping list item",
+            }
+            .into_response();
+        }
+        Err(err) => {
+            error!("Failed to add shopping list item: {err:?}");
+            broadcast_error(&state, user.id, "Failed to add shopping list item.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::shopping::render_shopping_list_item(&item).into_response()
 }

@@ -15,6 +15,7 @@ rust-version.workspace = true
 [dependencies]
 app.workspace = true
 axum-extra = { version = "0.12.6", features = ["cookie"] }
+axum-test = { workspace = true }
 auth.workspace = true
 axum.workspace = true
 axum-htmx = "0.8.1"
@@ -53,7 +54,6 @@ tracing.workspace = true
 url.workspace = true
 uuid.workspace = true
 validator.workspace = true
-axum-test = { workspace = true }
 
 [dev-dependencies]
 auth = { workspace = true, features = ["test-helpers"] }

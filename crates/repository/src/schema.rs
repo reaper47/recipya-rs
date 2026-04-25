@@ -543,7 +543,7 @@ diesel::table! {
         id -> Int8,
         shopping_list_id -> Uuid,
         ingredient -> Text,
-        quantity -> Text,
+        quantity -> Nullable<Text>,
         shopping_list_label_id -> Nullable<Int8>,
         position -> Int4,
         is_checked -> Bool,
@@ -579,6 +579,7 @@ diesel::table! {
     shopping_lists (id) {
         id -> Uuid,
         name -> Text,
+        num_items -> Int8,
         user_id -> Uuid,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
