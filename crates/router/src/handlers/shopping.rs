@@ -3,6 +3,7 @@ use axum::extract::{OriginalUri, Path};
 use axum::http::HeaderMap;
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::HX_PROMPT;
+use reqwest::StatusCode;
 use tracing::error;
 
 use app::state::AppState;
@@ -72,6 +73,20 @@ pub async fn shopping_lists_handler(
     .into_response())
 }
 
+pub async fn shopping_list_delete_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+) -> impl IntoResponse {
+    if let Err(err) = ShoppingList::delete(&state.mm, list_id, user.id).await {
+        error!("Failed to delete shopping list: {err}");
+        broadcast_error(&state, user.id, "Failed to delete shopping list.").await;
+        return Error::Database.into_response();
+    }
+
+    (StatusCode::SEE_OTHER, [("HX-Redirect", "/shopping/lists")]).into_response()
+}
+
 pub async fn shopping_lists_post_handler(
     header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
@@ -138,5 +153,19 @@ pub async fn shopping_list_item_post_handler(
         }
     };
 
-    templates::shopping::render_shopping_list_item(&item).into_response()
+    templates::shopping::render_shopping_list_item(list_id, &item).into_response()
+}
+
+pub async fn shopping_list_item_delete_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path((list_id, item_id)): Path<(Uuid, i64)>,
+) -> impl IntoResponse {
+    if let Err(err) = ShoppingList::delete_item(&state.mm, list_id, item_id, user.id).await {
+        error!("Failed to delete shopping list item: {err}");
+        broadcast_error(&state, user.id, "Failed to delete shopping list item.").await;
+        return Error::Database.into_response();
+    }
+
+    (StatusCode::OK).into_response()
 }

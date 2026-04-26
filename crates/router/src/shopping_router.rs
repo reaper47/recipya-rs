@@ -1,13 +1,14 @@
 use axum::{
     Router,
     middleware::from_fn_with_state,
-    routing::{get, post},
+    routing::{delete, get, post},
 };
 
 use app::state::AppState;
 
 use crate::{
     handlers::shopping::{
+        shopping_list_delete_handler, shopping_list_item_delete_handler,
         shopping_list_item_post_handler, shopping_lists_handler, shopping_lists_post_handler,
     },
     middleware::mw_auth::mw_refresh_token,
@@ -21,13 +22,19 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
             "/lists",
             get(shopping_lists_handler).post(shopping_lists_post_handler),
         )
-        .route("/lists/{:id}/item", post(shopping_list_item_post_handler))
+        .route("/lists/{:id}", delete(shopping_list_delete_handler))
+        .route("/lists/{:id}/items", post(shopping_list_item_post_handler))
+        .route(
+            "/lists/{:id}/items/{:item_id}",
+            delete(shopping_list_item_delete_handler),
+        )
         .layer(from_fn_with_state(state.clone(), mw_refresh_token))
 }
 
 #[cfg(test)]
 mod tests {
     use reqwest::Method;
+    use uuid::Uuid;
 
     use models::{shopping::ShoppingList, user::User};
     use test_db::TestDb;
@@ -113,7 +120,51 @@ mod tests {
         }
     }
 
+    mod tests_list {
+        use axum_htmx::HX_REDIRECT;
+
+        use super::*;
+
+        fn base_uri(list_id: Uuid) -> String {
+            format!("/shopping/lists/{list_id}",)
+        }
+
+        #[tokio::test]
+        async fn test_delete_list_exists_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+
+            let res = server.delete(&base_uri(list_id)).await;
+
+            res.assert_status_see_other();
+            let lists = ShoppingList::get_all(&state.mm, user_id).await?;
+            assert!(lists.is_empty());
+            res.assert_header(HX_REDIRECT, "/shopping/lists");
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_list_not_exists_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+
+            let res = server.delete(&base_uri(Uuid::new_v4())).await;
+
+            res.assert_status_see_other();
+            let lists = ShoppingList::get_all(&state.mm, user_id).await?;
+            assert!(lists.is_empty());
+            res.assert_header(HX_REDIRECT, "/shopping/lists");
+            Ok(())
+        }
+    }
+
     mod tests_list_items {
+        use models::shopping::{ShoppingListDetails, ShoppingListItemForCreate};
         use reqwest::StatusCode;
         use uuid::Uuid;
 
@@ -122,12 +173,22 @@ mod tests {
         use super::*;
 
         fn base_uri(list_id: Uuid) -> String {
-            format!("/shopping/lists/{}/item", list_id)
+            format!("/shopping/lists/{}/items", list_id)
+        }
+
+        fn an_item_c() -> ShoppingListItemForCreate {
+            ShoppingListItemForCreate {
+                ingredient: "Spaghetti".into(),
+                quantity: None,
+                label: None,
+                recipe_id: None,
+            }
         }
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in(Method::POST, &base_uri(Uuid::new_v4())).await
+            assert_must_be_logged_in(Method::POST, &base_uri(Uuid::new_v4())).await?;
+            assert_must_be_logged_in(Method::DELETE, &base_uri(Uuid::new_v4())).await
         }
 
         #[tokio::test]
@@ -206,6 +267,43 @@ mod tests {
                     r#"<li class="list-row grid grid-cols-[1fr_auto]"><div class="grid gap-1 min-w-0"><label class="label"><input class="checkbox" type="checkbox">Spaghetti (500g)</label></div><div class="flex gap-1"><button class="btn join-item btn-sm"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button><button class="btn join-item btn-sm"><svg xmlns="http://www.w3.org/2000/svg" class="size-6 hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"></path></svg></button><button class="btn join-item btn-sm cursor-grab h-full"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"></svg></button></div></li>"#,
                 ],
             );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_item_not_found_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+
+            let res = server
+                .delete(&format!("{}/{}", base_uri(list_id), 666))
+                .await;
+
+            res.assert_status_ok();
+            let list = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+            assert!(list.items.is_empty());
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_delete_item_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+            let item = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
+
+            let res = server
+                .delete(&format!("{}/{}", base_uri(list_id), item.id))
+                .await;
+
+            res.assert_status_ok();
+            let list = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+            assert!(list.items.is_empty());
             Ok(())
         }
     }

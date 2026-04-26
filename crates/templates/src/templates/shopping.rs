@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::templates::{
     icons::{
-        icon_arrows_up_down, icon_carrot, icon_check, icon_pencil, icon_plus_circle, icon_scale,
+        icon_arrows_up_down, icon_carrot, icon_pencil, icon_plus, icon_plus_circle, icon_scale,
         icon_trash,
     },
     layouts,
@@ -61,12 +61,12 @@ fn render_lists_index(data: &Data) -> Markup {
                             @match shopping.selected_shopping_list {
                                 Some(ref list) => {
                                     div {
-                                        (shopping_list_actions())
+                                        (shopping_list_actions(list.id))
                                     }
                                     h1 class="text-2xl font-bold underline p-2" {
                                         (list.name)
                                     }
-                                    div class="min-w-[30vw] place-self-center" {
+                                    div class="min-w-[33rem] place-self-center" {
                                         @if list.items.is_empty() {
                                             details open {
                                                 summary class="text-left" {
@@ -85,7 +85,7 @@ fn render_lists_index(data: &Data) -> Markup {
                                                     }
                                                     ol class="list bg-base-100 rounded-box shadow-md" {
                                                         @for item in items {
-                                                            (render_shopping_list_item(item))
+                                                            (render_shopping_list_item(list.id, item))
                                                         }
                                                         (new_shopping_list_item(list.id, Some(label)))
                                                     }
@@ -183,12 +183,12 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
         }
         div #shopping-list-view-pane hx-swap-oob="innerHTML" {
             div {
-                (shopping_list_actions())
+                (shopping_list_actions(list_id))
                 h1 class="text-2xl font-bold underline p-2" {
                     (title.as_ref())
                 }
                 div class="grid" {
-                    div class="min-w-[30vw] place-self-center" {
+                    div class="min-w-[33rem] place-self-center" {
                         details open {
                             summary class="text-left" {
                                 "No label"
@@ -204,7 +204,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
     }
 }
 
-fn shopping_list_actions() -> Markup {
+fn shopping_list_actions(list_id: Uuid) -> Markup {
     html! {
         div class="join border border-gray-700 mb-2 w-fit" {
             button class="btn join-item" {
@@ -225,7 +225,7 @@ fn shopping_list_actions() -> Markup {
             button class="btn join-item" {
                 "Upload to app"
             }
-            button class="btn join-item" {
+            button class="btn join-item" hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
                 "Delete"
             }
         }
@@ -251,14 +251,11 @@ fn new_shopping_list_item(list_id: Uuid, label: Option<&str>) -> Markup {
             div class="grid grid-flow-col gap-1 place-self-end" {
                 div class="grid grid-col gap-2 w-12" {
                     button class="btn join-item btn-sm"
-                        hx-post=(format!("/shopping/lists/{list_id}/item"))
+                        hx-post=(format!("/shopping/lists/{list_id}/items"))
                         hx-include="closest li"
                         hx-target="closest li"
                         hx-swap="beforebegin" {
-                        (icon_check())
-                    }
-                    button class="btn join-item btn-sm" {
-                        (icon_trash())
+                        (icon_plus())
                     }
                 }
             }
@@ -267,11 +264,11 @@ fn new_shopping_list_item(list_id: Uuid, label: Option<&str>) -> Markup {
 }
 
 /// Renders a shopping list item as an HTML list item.
-pub fn render_shopping_list_item(item: &ShoppingListItemDetails) -> Markup {
+pub fn render_shopping_list_item(list_id: Uuid, item: &ShoppingListItemDetails) -> Markup {
     html! {
         li class="list-row grid grid-cols-[1fr_auto]" {
             div class="grid gap-1 min-w-0" {
-                label class="label" {
+                label class="label text-base-content" {
                     input class="checkbox" type="checkbox" checked[item.is_checked] checked[item.is_checked];
                     @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
                         (format!("{} ({q})", item.ingredient))
@@ -280,27 +277,17 @@ pub fn render_shopping_list_item(item: &ShoppingListItemDetails) -> Markup {
                     }
                 }
             }
-            // div class="grid grid-flow-col gap-1" {
-            //     div class="grid grid-col gap-2" {
-            //         button class="btn join-item btn-sm" {
-            //             (icon_pencil(false))
-            //         }
-            //         button class="btn join-item btn-sm" {
-            //             (icon_trash())
-            //         }
-            //     }
-            //     button class="btn join-item btn-sm cursor-grab h-full" {
-            //         (icon_arrows_up_down())
-            //     }
-            // }
             div class="flex gap-1" {
-                button class="btn join-item btn-sm" {
+                button class="btn join-item btn-square btn-sm" {
                     (icon_pencil(false))
                 }
-                button class="btn join-item btn-sm" {
+                button class="btn join-item btn-square btn-sm"
+                    hx-target="closest li"
+                    hx-swap="delete"
+                    hx-delete=(format!("/shopping/lists/{list_id}/items/{}", item.id)) {
                     (icon_trash())
                 }
-                button class="btn join-item btn-sm cursor-grab h-full" {
+                button class="btn join-item btn-square btn-sm cursor-grab h-full" {
                     (icon_arrows_up_down())
                 }
             }
